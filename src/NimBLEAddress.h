@@ -2,7 +2,7 @@
  * NimBLEAddress.h
  *
  *  Created: on Jan 24 2020
- *		Author H2zero
+ *      Author H2zero
  * 
  * Originally:
  *
@@ -44,15 +44,15 @@ typedef uint8_t esp_bd_addr_t[ESP_BD_ADDR_LEN];
  */
 class NimBLEAddress {
 public:
-	NimBLEAddress(ble_addr_t address);
-	NimBLEAddress(esp_bd_addr_t address);
-	NimBLEAddress(std::string stringAddress);
-	bool           equals(NimBLEAddress otherAddress);
-	uint8_t* 	   getNative();
-	std::string    toString();
+    NimBLEAddress(ble_addr_t address);
+    NimBLEAddress(esp_bd_addr_t address);
+    NimBLEAddress(std::string stringAddress);
+    bool           equals(NimBLEAddress otherAddress);
+    uint8_t*       getNative();
+    std::string    toString();
 
 private:
-	uint8_t 	   m_address[6];
+    uint8_t        m_address[6];
 };
 
 #endif /* CONFIG_BT_ENABLED */

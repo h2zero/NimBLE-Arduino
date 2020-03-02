@@ -2,7 +2,7 @@
  * NimBLEScan.h
  *
  *  Created: on Jan 24 2020
- *		Author H2zero
+ *      Author H2zero
  * 
  * Originally:
  *
@@ -37,13 +37,13 @@ class NimBLEAdvertisedDeviceCallbacks;
  */
 class NimBLEScanResults {
 public:
-	void                dump();
-	int                 getCount();
-	NimBLEAdvertisedDevice getDevice(uint32_t i);
+    void                dump();
+    int                 getCount();
+    NimBLEAdvertisedDevice getDevice(uint32_t i);
 
 private:
-	friend NimBLEScan;
-	std::map<std::string, NimBLEAdvertisedDevice*> m_advertisedDevicesMap;
+    friend NimBLEScan;
+    std::map<std::string, NimBLEAdvertisedDevice*> m_advertisedDevicesMap;
 };
 
 /**
@@ -53,32 +53,32 @@ private:
  */
 class NimBLEScan {
 public:
-	bool           		start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue = false);
-	NimBLEScanResults 	start(uint32_t duration, bool is_continue = false);
-	void           		setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks/*, bool wantDuplicates = false*/);
-	void           		setActiveScan(bool active);
-	void           		setInterval(uint16_t intervalMSecs);
-	void           		setWindow(uint16_t windowMSecs);
-	void           		stop();
-	void				clearResults();
-	NimBLEScanResults	getResults();
-	void 				erase(NimBLEAddress address);
-	
-	
+    bool                start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue = false);
+    NimBLEScanResults   start(uint32_t duration, bool is_continue = false);
+    void                setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks/*, bool wantDuplicates = false*/);
+    void                setActiveScan(bool active);
+    void                setInterval(uint16_t intervalMSecs);
+    void                setWindow(uint16_t windowMSecs);
+    void                stop();
+    void                clearResults();
+    NimBLEScanResults   getResults();
+    void                erase(NimBLEAddress address);
+    
+    
 private:
-	NimBLEScan();
-	friend class NimBLEDevice;
-	static int 		   	handleGapEvent(ble_gap_event*  event, void* arg);
-	void				onHostReset();
-	
-	NimBLEAdvertisedDeviceCallbacks* 	m_pAdvertisedDeviceCallbacks = nullptr;
-	void                        		(*m_scanCompleteCB)(NimBLEScanResults scanResults);
-	ble_gap_disc_params         		m_scan_params;
-	uint8_t 							m_own_addr_type;
-	bool                       			m_stopped;
-	bool                        		m_wantDuplicates;
-	NimBLEScanResults           		m_scanResults;
-	FreeRTOS::Semaphore           		m_semaphoreScanEnd = FreeRTOS::Semaphore("ScanEnd");
+    NimBLEScan();
+    friend class NimBLEDevice;
+    static int          handleGapEvent(ble_gap_event*  event, void* arg);
+    void                onHostReset();
+    
+    NimBLEAdvertisedDeviceCallbacks*    m_pAdvertisedDeviceCallbacks = nullptr;
+    void                                (*m_scanCompleteCB)(NimBLEScanResults scanResults);
+    ble_gap_disc_params                 m_scan_params;
+    uint8_t                             m_own_addr_type;
+    bool                                m_stopped;
+    bool                                m_wantDuplicates;
+    NimBLEScanResults                   m_scanResults;
+    FreeRTOS::Semaphore                 m_semaphoreScanEnd = FreeRTOS::Semaphore("ScanEnd");
 };
 
 

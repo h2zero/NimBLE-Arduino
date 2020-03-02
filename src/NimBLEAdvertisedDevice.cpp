@@ -2,7 +2,7 @@
  * NimBLEAdvertisedDevice.cpp
  *
  *  Created: on Jan 24 2020
- *		Author H2zero
+ *      Author H2zero
  * 
  * Originally:
  *
@@ -35,23 +35,23 @@ static const char* LOG_TAG = "NimBLEAdvertisedDevice";
  * @brief Constructor
  */
 NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
-	m_advType          = 0;
-	m_appearance       = 0;
-	m_deviceType       = 0;
-	m_manufacturerData = "";
-	m_name             = "";
-	m_rssi             = -9999;
-	m_serviceData      = "";
-	m_txPower          = 0;
-	m_pScan            = nullptr;
+    m_advType          = 0;
+    m_appearance       = 0;
+    m_deviceType       = 0;
+    m_manufacturerData = "";
+    m_name             = "";
+    m_rssi             = -9999;
+    m_serviceData      = "";
+    m_txPower          = 0;
+    m_pScan            = nullptr;
 
-	m_haveAppearance       = false;
-	m_haveManufacturerData = false;
-	m_haveName             = false;
-	m_haveRSSI             = false;
-	m_haveServiceData      = false;
-	m_haveServiceUUID      = false;
-	m_haveTXPower          = false;
+    m_haveAppearance       = false;
+    m_haveManufacturerData = false;
+    m_haveName             = false;
+    m_haveRSSI             = false;
+    m_haveServiceData      = false;
+    m_haveServiceUUID      = false;
+    m_haveTXPower          = false;
 
 } // NimBLEAdvertisedDevice
 
@@ -65,7 +65,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
  * @return The address of the advertised device.
  */
 NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
-	return m_address;
+    return m_address;
 } // getAddress
 
 
@@ -78,7 +78,7 @@ NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
  * @return The appearance of the advertised device.
  */
 uint16_t NimBLEAdvertisedDevice::getAppearance() {
-	return m_appearance;
+    return m_appearance;
 } // getAppearance
 
 
@@ -87,7 +87,7 @@ uint16_t NimBLEAdvertisedDevice::getAppearance() {
  * @return The manufacturer data of the advertised device.
  */
 std::string NimBLEAdvertisedDevice::getManufacturerData() {
-	return m_manufacturerData;
+    return m_manufacturerData;
 } // getManufacturerData
 
 
@@ -96,7 +96,7 @@ std::string NimBLEAdvertisedDevice::getManufacturerData() {
  * @return The name of the advertised device.
  */
 std::string NimBLEAdvertisedDevice::getName() {
-	return m_name;
+    return m_name;
 } // getName
 
 
@@ -105,7 +105,7 @@ std::string NimBLEAdvertisedDevice::getName() {
  * @return The RSSI of the advertised device.
  */
 int NimBLEAdvertisedDevice::getRSSI() {
-	return m_rssi;
+    return m_rssi;
 } // getRSSI
 
 
@@ -114,7 +114,7 @@ int NimBLEAdvertisedDevice::getRSSI() {
  * @return The scan object.
  */
 NimBLEScan* NimBLEAdvertisedDevice::getScan() {
-	return m_pScan;
+    return m_pScan;
 } // getScan
 
 
@@ -123,7 +123,7 @@ NimBLEScan* NimBLEAdvertisedDevice::getScan() {
  * @return The ServiceData of the advertised device.
  */
 std::string NimBLEAdvertisedDevice::getServiceData() {
-	return m_serviceData;
+    return m_serviceData;
 } //getServiceData
 
 
@@ -133,7 +133,7 @@ std::string NimBLEAdvertisedDevice::getServiceData() {
  */
  
 NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID() {
-	return m_serviceDataUUID;
+    return m_serviceDataUUID;
 } // getServiceDataUUID
 
 
@@ -143,7 +143,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID() {
  */
  
 NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID() {  //TODO Remove it eventually, is no longer useful
-	return m_serviceUUIDs[0];
+    return m_serviceUUIDs[0];
 } // getServiceUUID
 
 
@@ -152,11 +152,11 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID() {  //TODO Remove it eventual
  * @return Return true if service is advertised
  */
 bool NimBLEAdvertisedDevice::isAdvertisingService(NimBLEUUID uuid){
-	for (int i = 0; i < m_serviceUUIDs.size(); i++) {
-		NIMBLE_LOGI(LOG_TAG, "Comparing UUIDS: %s %s", m_serviceUUIDs[i].toString().c_str(), uuid.toString().c_str());
-		if (m_serviceUUIDs[i].equals(uuid)) return true;
-	}
-	return false;
+    for (int i = 0; i < m_serviceUUIDs.size(); i++) {
+        NIMBLE_LOGI(LOG_TAG, "Comparing UUIDS: %s %s", m_serviceUUIDs[i].toString().c_str(), uuid.toString().c_str());
+        if (m_serviceUUIDs[i].equals(uuid)) return true;
+    }
+    return false;
 }
 
 
@@ -165,7 +165,7 @@ bool NimBLEAdvertisedDevice::isAdvertisingService(NimBLEUUID uuid){
  * @return The TX Power of the advertised device.
  */
 int8_t NimBLEAdvertisedDevice::getTXPower() {
-	return m_txPower;
+    return m_txPower;
 } // getTXPower
 
 
@@ -174,7 +174,7 @@ int8_t NimBLEAdvertisedDevice::getTXPower() {
  * @return True if there is an appearance value present.
  */
 bool NimBLEAdvertisedDevice::haveAppearance() {
-	return m_haveAppearance;
+    return m_haveAppearance;
 } // haveAppearance
 
 
@@ -183,7 +183,7 @@ bool NimBLEAdvertisedDevice::haveAppearance() {
  * @return True if there is manufacturer data present.
  */
 bool NimBLEAdvertisedDevice::haveManufacturerData() {
-	return m_haveManufacturerData;
+    return m_haveManufacturerData;
 } // haveManufacturerData
 
 
@@ -192,7 +192,7 @@ bool NimBLEAdvertisedDevice::haveManufacturerData() {
  * @return True if there is a name value present.
  */
 bool NimBLEAdvertisedDevice::haveName() {
-	return m_haveName;
+    return m_haveName;
 } // haveName
 
 
@@ -201,7 +201,7 @@ bool NimBLEAdvertisedDevice::haveName() {
  * @return True if there is a signal strength value present.
  */
 bool NimBLEAdvertisedDevice::haveRSSI() {
-	return m_haveRSSI;
+    return m_haveRSSI;
 } // haveRSSI
 
 
@@ -210,7 +210,7 @@ bool NimBLEAdvertisedDevice::haveRSSI() {
  * @return True if there is a service data value present.
  */
 bool NimBLEAdvertisedDevice::haveServiceData() {
-	return m_haveServiceData;
+    return m_haveServiceData;
 } // haveServiceData
 
 
@@ -219,7 +219,7 @@ bool NimBLEAdvertisedDevice::haveServiceData() {
  * @return True if there is a service UUID value present.
  */
 bool NimBLEAdvertisedDevice::haveServiceUUID() {
-	return m_haveServiceUUID;
+    return m_haveServiceUUID;
 } // haveServiceUUID
 
 
@@ -228,7 +228,7 @@ bool NimBLEAdvertisedDevice::haveServiceUUID() {
  * @return True if there is a transmission power value present.
  */
 bool NimBLEAdvertisedDevice::haveTXPower() {
-	return m_haveTXPower;
+    return m_haveTXPower;
 } // haveTXPower
 
 
@@ -245,90 +245,90 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
  * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
  */
  void NimBLEAdvertisedDevice::parseAdvertisement(ble_hs_adv_fields *fields) {
-	//char s[BLE_HS_ADV_MAX_SZ];
+    //char s[BLE_HS_ADV_MAX_SZ];
     uint8_t *u8p;
-	uint8_t length;
+    uint8_t length;
     int i;
 
     if (fields->uuids16 != NULL) {
         for (i = 0; i < fields->num_uuids16; i++) {
-			setServiceUUID(NimBLEUUID(fields->uuids16[i].value));
+            setServiceUUID(NimBLEUUID(fields->uuids16[i].value));
         }
     }
 
     if (fields->uuids32 != NULL) {
         for (i = 0; i < fields->num_uuids32; i++) {
-			setServiceUUID(NimBLEUUID(fields->uuids32[i].value));
+            setServiceUUID(NimBLEUUID(fields->uuids32[i].value));
         }
     }
 
     if (fields->uuids128 != NULL) {
         for (i = 0; i < fields->num_uuids128; i++) {
-			setServiceUUID(NimBLEUUID(&fields->uuids128[i]));
+            setServiceUUID(NimBLEUUID(&fields->uuids128[i]));
         }
     }
 
     if (fields->name != NULL) {
-		setName(std::string(reinterpret_cast<char*>(fields->name), fields->name_len));
+        setName(std::string(reinterpret_cast<char*>(fields->name), fields->name_len));
     }
 
     if (fields->tx_pwr_lvl_is_present) {
-		setTXPower(fields->tx_pwr_lvl);
+        setTXPower(fields->tx_pwr_lvl);
     }
 
     if (fields->svc_data_uuid16 != NULL) {
 
-		u8p = fields->svc_data_uuid16;
-		length = fields->svc_data_uuid16_len;
-		
-		if (length < 2) {
-			NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_SERVICE_DATA");
-		}
-		else{
-			uint16_t uuid = *(uint16_t*)u8p;
-			setServiceDataUUID(NimBLEUUID(uuid));
-			if (length > 2) {
-				setServiceData(std::string(reinterpret_cast<char*>(u8p + 2), length - 2));
-			}
-		}
+        u8p = fields->svc_data_uuid16;
+        length = fields->svc_data_uuid16_len;
+        
+        if (length < 2) {
+            NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_SERVICE_DATA");
+        }
+        else{
+            uint16_t uuid = *(uint16_t*)u8p;
+            setServiceDataUUID(NimBLEUUID(uuid));
+            if (length > 2) {
+                setServiceData(std::string(reinterpret_cast<char*>(u8p + 2), length - 2));
+            }
+        }
     }
 
     if (fields->svc_data_uuid32 != NULL) {
 
-		u8p = fields->svc_data_uuid16;
-		length = fields->svc_data_uuid16_len;
-		
-		if (length < 4) {
-			NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_32SERVICE_DATA");
-		}
-		
-		uint32_t uuid = *(uint32_t*) u8p;
-		setServiceDataUUID(NimBLEUUID(uuid));
-		if (length > 4) {
-			setServiceData(std::string(reinterpret_cast<char*>(u8p + 4), length - 4));
-		}
+        u8p = fields->svc_data_uuid16;
+        length = fields->svc_data_uuid16_len;
+        
+        if (length < 4) {
+            NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_32SERVICE_DATA");
+        }
+        
+        uint32_t uuid = *(uint32_t*) u8p;
+        setServiceDataUUID(NimBLEUUID(uuid));
+        if (length > 4) {
+            setServiceData(std::string(reinterpret_cast<char*>(u8p + 4), length - 4));
+        }
     }
-	
+    
     if (fields->svc_data_uuid128 != NULL) {
 
-		u8p = fields->svc_data_uuid16;
-		length = fields->svc_data_uuid16_len;
-		
-		if (length < 16) {
-			NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_128SERVICE_DATA");
-		}
+        u8p = fields->svc_data_uuid16;
+        length = fields->svc_data_uuid16_len;
+        
+        if (length < 16) {
+            NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_128SERVICE_DATA");
+        }
 
-		setServiceDataUUID(NimBLEUUID(u8p, (size_t)16, false));
-		if (length > 16) {
-			setServiceData(std::string(reinterpret_cast<char*>(u8p + 16), length - 16));
-		}
+        setServiceDataUUID(NimBLEUUID(u8p, (size_t)16, false));
+        if (length > 16) {
+            setServiceData(std::string(reinterpret_cast<char*>(u8p + 16), length - 16));
+        }
     }
 
     if (fields->appearance_is_present) {
         NIMBLE_LOGD(LOG_TAG, "    appearance=0x%04x", fields->appearance);
-		setAppearance(fields->appearance);
+        setAppearance(fields->appearance);
     }
-	
+    
 /**** TODO: create storage and fucntions for these parameters
     if (fields->public_tgt_addr != NULL) {
         NIMBLE_LOGD(LOG_TAG, "    public_tgt_addr=");
@@ -339,7 +339,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
         }
         NIMBLE_LOGD(LOG_TAG, "\n");
     }
-	
+    
     if (fields->slave_itvl_range != NULL) {
         NIMBLE_LOGD(LOG_TAG, "    slave_itvl_range=");
         print_bytes(fields->slave_itvl_range, BLE_HS_ADV_SLAVE_ITVL_RANGE_LEN);
@@ -357,7 +357,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
     }
 */
     if (fields->mfg_data != NULL) {
-		setManufacturerData(std::string(reinterpret_cast<char*>(fields->mfg_data), fields->mfg_data_len));
+        setManufacturerData(std::string(reinterpret_cast<char*>(fields->mfg_data), fields->mfg_data_len));
     }
  } //parseAdvertisement
  
@@ -367,7 +367,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
  * @param [in] address The address of the advertised device.
  */
 void NimBLEAdvertisedDevice::setAddress(NimBLEAddress address) {
-	m_address = address;
+    m_address = address;
 } // setAddress
 
 
@@ -376,7 +376,7 @@ void NimBLEAdvertisedDevice::setAddress(NimBLEAddress address) {
  * @param [in] The discovered adFlag.
  */
 void NimBLEAdvertisedDevice::setAdvType(uint8_t advType) {
-	m_advType = advType;
+    m_advType = advType;
 } // setAdvType
 
 
@@ -385,9 +385,9 @@ void NimBLEAdvertisedDevice::setAdvType(uint8_t advType) {
  * @param [in] The discovered appearance.
  */
 void NimBLEAdvertisedDevice::setAppearance(uint16_t appearance) {
-	m_appearance     = appearance;
-	m_haveAppearance = true;
-	NIMBLE_LOGD(LOG_TAG,"- appearance: %d", m_appearance);
+    m_appearance     = appearance;
+    m_haveAppearance = true;
+    NIMBLE_LOGD(LOG_TAG,"- appearance: %d", m_appearance);
 } // setAppearance
 
 
@@ -396,12 +396,12 @@ void NimBLEAdvertisedDevice::setAppearance(uint16_t appearance) {
  * @param [in] The discovered manufacturer data.
  */
 void NimBLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
-	m_manufacturerData     = manufacturerData;
-	m_haveManufacturerData = true;
+    m_manufacturerData     = manufacturerData;
+    m_haveManufacturerData = true;
 
-	char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*) m_manufacturerData.data(), (uint8_t) m_manufacturerData.length());
-	NIMBLE_LOGD(LOG_TAG,"- manufacturer data: %s", pHex);
-	free(pHex);
+    char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*) m_manufacturerData.data(), (uint8_t) m_manufacturerData.length());
+    NIMBLE_LOGD(LOG_TAG,"- manufacturer data: %s", pHex);
+    free(pHex);
 } // setManufacturerData
 
 
@@ -410,9 +410,9 @@ void NimBLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
  * @param [in] name The discovered name.
  */
 void NimBLEAdvertisedDevice::setName(std::string name) {
-	m_name     = name;
-	m_haveName = true;
-	NIMBLE_LOGD(LOG_TAG,"- setName(): name: %s", m_name.c_str());
+    m_name     = name;
+    m_haveName = true;
+    NIMBLE_LOGD(LOG_TAG,"- setName(): name: %s", m_name.c_str());
 } // setName
 
 
@@ -421,9 +421,9 @@ void NimBLEAdvertisedDevice::setName(std::string name) {
  * @param [in] rssi The discovered RSSI.
  */
 void NimBLEAdvertisedDevice::setRSSI(int rssi) {
-	m_rssi     = rssi;
-	m_haveRSSI = true;
-	NIMBLE_LOGD(LOG_TAG,"- setRSSI(): rssi: %d", m_rssi);
+    m_rssi     = rssi;
+    m_haveRSSI = true;
+    NIMBLE_LOGD(LOG_TAG,"- setRSSI(): rssi: %d", m_rssi);
 } // setRSSI
 
 
@@ -432,7 +432,7 @@ void NimBLEAdvertisedDevice::setRSSI(int rssi) {
  * @param pScan The Scan that created this advertised device.
  */
 void NimBLEAdvertisedDevice::setScan(NimBLEScan* pScan) {
-	m_pScan = pScan;
+    m_pScan = pScan;
 } // setScan
 
 
@@ -442,7 +442,7 @@ void NimBLEAdvertisedDevice::setScan(NimBLEScan* pScan) {
  */
  
 void NimBLEAdvertisedDevice::setServiceUUID(const char* serviceUUID) {
-	return setServiceUUID(NimBLEUUID(serviceUUID));
+    return setServiceUUID(NimBLEUUID(serviceUUID));
 } // setServiceUUID
 
 
@@ -451,9 +451,9 @@ void NimBLEAdvertisedDevice::setServiceUUID(const char* serviceUUID) {
  * @param [in] serviceUUID The discovered serviceUUID
  */
 void NimBLEAdvertisedDevice::setServiceUUID(NimBLEUUID serviceUUID) {
-	m_serviceUUIDs.push_back(serviceUUID);
-	m_haveServiceUUID = true;
-	NIMBLE_LOGD(LOG_TAG,"- addServiceUUID(): serviceUUID: %s", serviceUUID.toString().c_str());
+    m_serviceUUIDs.push_back(serviceUUID);
+    m_haveServiceUUID = true;
+    NIMBLE_LOGD(LOG_TAG,"- addServiceUUID(): serviceUUID: %s", serviceUUID.toString().c_str());
 } // setServiceUUID
 
 
@@ -462,8 +462,8 @@ void NimBLEAdvertisedDevice::setServiceUUID(NimBLEUUID serviceUUID) {
  * @param [in] data ServiceData value.
  */
 void NimBLEAdvertisedDevice::setServiceData(std::string serviceData) {
-	m_haveServiceData = true;         // Set the flag that indicates we have service data.
-	m_serviceData     = serviceData;  // Save the service data that we received.
+    m_haveServiceData = true;         // Set the flag that indicates we have service data.
+    m_serviceData     = serviceData;  // Save the service data that we received.
 } //setServiceData
 
 
@@ -472,8 +472,8 @@ void NimBLEAdvertisedDevice::setServiceData(std::string serviceData) {
  * @param [in] data ServiceDataUUID value.
  */
 void NimBLEAdvertisedDevice::setServiceDataUUID(NimBLEUUID uuid) {
-	m_haveServiceData = true;         // Set the flag that indicates we have service data.
-	m_serviceDataUUID = uuid;
+    m_haveServiceData = true;         // Set the flag that indicates we have service data.
+    m_serviceDataUUID = uuid;
 } // setServiceDataUUID
 
 
@@ -482,9 +482,9 @@ void NimBLEAdvertisedDevice::setServiceDataUUID(NimBLEUUID uuid) {
  * @param [in] txPower The discovered power level.
  */
 void NimBLEAdvertisedDevice::setTXPower(int8_t txPower) {
-	m_txPower     = txPower;
-	m_haveTXPower = true;
-	NIMBLE_LOGD(LOG_TAG,"- txPower: %d", m_txPower);
+    m_txPower     = txPower;
+    m_haveTXPower = true;
+    NIMBLE_LOGD(LOG_TAG,"- txPower: %d", m_txPower);
 } // setTXPower
 
 
@@ -492,64 +492,64 @@ void NimBLEAdvertisedDevice::setTXPower(int8_t txPower) {
  * @brief Create a string representation of this device.
  * @return A string representation of this device.
  */
-std::string NimBLEAdvertisedDevice::toString() {	
-	std::string res = "Name: " + getName() + ", Address: " + getAddress().toString();
-	
-	if (haveAppearance()) {
-		char val[6];
-		snprintf(val, sizeof(val), "%d", getAppearance());
-		res += ", appearance: ";
-		res += val;
-	}
+std::string NimBLEAdvertisedDevice::toString() {    
+    std::string res = "Name: " + getName() + ", Address: " + getAddress().toString();
+    
+    if (haveAppearance()) {
+        char val[6];
+        snprintf(val, sizeof(val), "%d", getAppearance());
+        res += ", appearance: ";
+        res += val;
+    }
 
-	if (haveManufacturerData()) {
-		char *pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)getManufacturerData().data(), getManufacturerData().length());
-		res += ", manufacturer data: ";
-		res += pHex;
-		free(pHex);
-	}
+    if (haveManufacturerData()) {
+        char *pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*)getManufacturerData().data(), getManufacturerData().length());
+        res += ", manufacturer data: ";
+        res += pHex;
+        free(pHex);
+    }
 
-	if (haveServiceUUID()) {
-		res += ", serviceUUID: " + getServiceUUID().toString();
-	}
-	
-	if (haveTXPower()) {
-		char val[4];
-		snprintf(val, sizeof(val), "%d", getTXPower());
-		res += ", txPower: ";
-		res += val;
-	}
-	
-	res += ", advType: " + std::string(NimBLEUtils::advTypeToString(m_advType));
-	
-	return res;
+    if (haveServiceUUID()) {
+        res += ", serviceUUID: " + getServiceUUID().toString();
+    }
+    
+    if (haveTXPower()) {
+        char val[4];
+        snprintf(val, sizeof(val), "%d", getTXPower());
+        res += ", txPower: ";
+        res += val;
+    }
+    
+    res += ", advType: " + std::string(NimBLEUtils::advTypeToString(m_advType));
+    
+    return res;
 
 } // toString
 
 
 uint8_t* NimBLEAdvertisedDevice::getPayload() {
-	return m_payload;
+    return m_payload;
 }
 
 
 uint8_t NimBLEAdvertisedDevice::getAddressType() {
-	return m_addressType;
+    return m_addressType;
 }
 
 
 void NimBLEAdvertisedDevice::setAddressType(uint8_t type) {
-	m_addressType = type;
+    m_addressType = type;
 }
 
 
 size_t NimBLEAdvertisedDevice::getPayloadLength() {
-	return m_payloadLength;
+    return m_payloadLength;
 }
 
 
 void NimBLEAdvertisedDevice::setAdvertisementResult(uint8_t* payload, uint8_t length){
-	m_payload = payload;
-	m_payloadLength = length;
+    m_payload = payload;
+    m_payloadLength = length;
 }
 
 #endif /* CONFIG_BT_ENABLED */
