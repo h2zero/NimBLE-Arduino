@@ -48,9 +48,9 @@ static const char* LOG_TAG = "NimBLEDevice";
 /**
  * Singletons for the NimBLEDevice.
  */
-//BLEServer* BLEDevice::m_pServer = nullptr;
 bool            initialized = false;
 NimBLEScan*     NimBLEDevice::m_pScan = nullptr;
+NimBLEServer*   NimBLEDevice::m_pServer = nullptr;
 uint32_t        NimBLEDevice::m_passkey = 123456;
 bool            NimBLEDevice::m_synced = false;
 
@@ -69,6 +69,20 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 
 //gattc_event_handler BLEDevice::m_customGattcHandler = nullptr;
 //gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
+
+
+/**
+ * @brief Create a new instance of a server.
+ * @return A new instance of the server.
+ */
+/* STATIC */ NimBLEServer* NimBLEDevice::createServer() {
+#ifndef CONFIG_GATTS_ENABLE  // Check that BLE GATTS is enabled in make menuconfig
+    NIMBLE_LOGE(LOG_TAG, "BLE GATTS is not enabled - CONFIG_GATTS_ENABLE not defined");
+    abort();
+#endif // CONFIG_GATTS_ENABLE
+    NimBLEDevice::m_pServer = new NimBLEServer();
+    return m_pServer;
+} // createServer
 
 
 /**

@@ -20,6 +20,7 @@
 #include "NimbleScan.h"
 #include "NimBLEUtils.h"
 #include "NimBLEClient.h"
+#include "NimBLEServer.h"
 #include "NimBLESecurity.h"
 
 #include "esp_bt.h"
@@ -65,6 +66,7 @@ public:
     static std::string      toString();
     static NimBLEScan*      getScan();                     // Get the scan object
     static NimBLEClient*    createClient();
+	static NimBLEServer*    createServer();
     static bool             deleteClient(NimBLEClient* pClient);
     static void             setPower(esp_power_level_t powerLevel);
     static void             setCustomGapHandler(gap_event_handler handler);
@@ -97,6 +99,7 @@ private:
     
     static bool                       m_synced;
     static NimBLEScan*                m_pScan;
+    static NimBLEServer*              m_pServer;
     static ble_gap_event_listener     m_listener;
     static uint32_t                   m_passkey;
     static std::list <NimBLEClient*>  m_cList;
