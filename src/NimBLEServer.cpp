@@ -52,11 +52,11 @@ void BLEServer::createApp(uint16_t appId) {
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the new service object.
  */
- /*
-BLEService* BLEServer::createService(const char* uuid) {
-	return createService(BLEUUID(uuid));
+ 
+NimBLEService* NimBLEServer::createService(const char* uuid) {
+	return createService(NimBLEUUID(uuid));
 }
-*/
+
 
 /**
  * @brief Create a %BLE Service.
@@ -68,29 +68,29 @@ BLEService* BLEServer::createService(const char* uuid) {
  * @param [in] inst_id With multiple services with the same UUID we need to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
- /*
-BLEService* BLEServer::createService(BLEUUID uuid, uint32_t numHandles, uint8_t inst_id) {
-	ESP_LOGD(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
-	m_semaphoreCreateEvt.take("createService");
+ 
+NimBLEService* NimBLEServer::createService(NimBLEUUID uuid, uint32_t numHandles, uint8_t inst_id) {
+	NIMBLE_LOGD(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
+	//m_semaphoreCreateEvt.take("createService");
 
 	// Check that a service with the supplied UUID does not already exist.
-	if (m_serviceMap.getByUUID(uuid) != nullptr) {
+/*	if (m_serviceMap.getByUUID(uuid) != nullptr) {
 		ESP_LOGW(LOG_TAG, "<< Attempt to create a new service with uuid %s but a service with that UUID already exists.",
 			uuid.toString().c_str());
 	}
-
-	BLEService* pService = new BLEService(uuid, numHandles);
-	pService->m_instId = inst_id;
-	m_serviceMap.setByUUID(uuid, pService); // Save a reference to this service being on this server.
+*/
+	NimBLEService* pService = new NimBLEService(uuid, numHandles);
+//	pService->m_instId = inst_id;
+//	m_serviceMap.setByUUID(uuid, pService); // Save a reference to this service being on this server.
 	pService->executeCreate(this);          // Perform the API calls to actually create the service.
 
-	m_semaphoreCreateEvt.wait("createService");
+//	m_semaphoreCreateEvt.wait("createService");
 
-	ESP_LOGD(LOG_TAG, "<< createService");
+	NIMBLE_LOGD(LOG_TAG, "<< createService");
 	return pService;
 } // createService
 
-*/
+
 /**
  * @brief Get a %BLE Service by its UUID
  * @param [in] uuid The UUID of the new service.

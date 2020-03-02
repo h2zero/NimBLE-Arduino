@@ -23,13 +23,14 @@
 #include "NimBLEUUID.h"
 //#include "BLEAdvertising.h"
 //#include "BLECharacteristic.h"
-//#include "BLEService.h"
+#include "NimBLEService.h"
 #include "NimBLESecurity.h"
 #include "FreeRTOS.h"
 
 
 #include <map>
 
+class NimBLEService;
 class NimBLEServerCallbacks;
 /* TODO possibly refactor this struct */ 
 typedef struct {
@@ -71,8 +72,8 @@ private:
 class NimBLEServer {
 public:
     uint32_t        getConnectedCount();
-//    BLEService*     createService(const char* uuid);    
-//    BLEService*     createService(BLEUUID uuid, uint32_t numHandles=15, uint8_t inst_id=0);
+    NimBLEService*     createService(const char* uuid);    
+    NimBLEService*     createService(NimBLEUUID uuid, uint32_t numHandles=15, uint8_t inst_id=0);
 //    BLEAdvertising* getAdvertising();
     void            setCallbacks(NimBLEServerCallbacks* pCallbacks);
 //    void            startAdvertising();
