@@ -136,14 +136,35 @@ NimBLEUUID NimBLEService::getUUID() {
  * Starting a service also means that we can create the corresponding characteristics.
  * @return Start the service.
  */
- /*
-void BLEService::start() {
+ 
+void NimBLEService::start() {
 // We ask the BLE runtime to start the service and then create each of the characteristics.
 // We start the service through its local handle which was returned in the ESP_GATTS_CREATE_EVT event
 // obtained as a result of calling esp_ble_gatts_create_service().
 //
-	ESP_LOGD(LOG_TAG, ">> start(): Starting service (esp_ble_gatts_start_service): %s", toString().c_str());
-	if (m_handle == NULL_HANDLE) {
+	NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service (esp_ble_gatts_start_service): %s", toString().c_str());
+    
+    ble_gatt_svc_def svc;
+    int rc = 0;
+    
+    svc.type = BLE_GATT_SVC_TYPE_PRIMARY;
+    svc.uuid = (const ble_uuid_t*)&m_uuid.getNative()->u;
+    svc.characteristics = NULL;
+    
+    rc = ble_gatts_count_cfg((const ble_gatt_svc_def*)&svc);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_count_cfg failed, rc= %d", rc);
+        return;
+    }
+    
+    rc = ble_gatts_add_svcs((const ble_gatt_svc_def*)&svc);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_add_svcs, rc= %d", rc);
+        return;
+    }
+    
+    
+/*	if (m_handle == NULL_HANDLE) {
 		ESP_LOGE(LOG_TAG, "<< !!! We attempted to start a service but don't know its handle!");
 		return;
 	}
@@ -166,10 +187,10 @@ void BLEService::start() {
 		return;
 	}
 	m_semaphoreStartEvt.wait("start");
-
-	ESP_LOGD(LOG_TAG, "<< start()");
-} // start
 */
+	NIMBLE_LOGD(LOG_TAG, "<< start()");
+} // start
+
 
 /**
  * @brief Stop the service.

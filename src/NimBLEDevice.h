@@ -44,8 +44,8 @@
 #define BLEClientCallbacks              NimBLEClientCallbacks
 #define BLEAdvertisedDeviceCallbacks    NimBLEAdvertisedDeviceCallbacks
 #define BLEScanResults                  NimBLEScanResults
-
-
+#define BLEServer                       NimBLEServer
+#define BLEService                      NimBLEService
 
 
 /**

@@ -26,6 +26,7 @@
 #include "host/ble_hs.h"
 #include "host/util/util.h"
 #include "services/gap/ble_svc_gap.h"
+#include "services/gatt/ble_svc_gatt.h"
 
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-bt.h"
@@ -76,11 +77,17 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
  * @return A new instance of the server.
  */
 /* STATIC */ NimBLEServer* NimBLEDevice::createServer() {
-#ifndef CONFIG_GATTS_ENABLE  // Check that BLE GATTS is enabled in make menuconfig
+/*#ifndef CONFIG_GATTS_ENABLE  // Check that BLE GATTS is enabled in make menuconfig
     NIMBLE_LOGE(LOG_TAG, "BLE GATTS is not enabled - CONFIG_GATTS_ENABLE not defined");
     abort();
 #endif // CONFIG_GATTS_ENABLE
-    NimBLEDevice::m_pServer = new NimBLEServer();
+*/
+    if(NimBLEDevice::m_pServer == nullptr) {
+        NimBLEDevice::m_pServer = new NimBLEServer();
+        ble_svc_gap_init();
+        ble_svc_gatt_init();
+    }
+
     return m_pServer;
 } // createServer
 

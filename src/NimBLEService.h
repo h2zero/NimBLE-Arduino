@@ -66,7 +66,7 @@ public:
 	//BLECharacteristic* getCharacteristic(BLEUUID uuid);
 	NimBLEUUID            getUUID();
 	NimBLEServer*         getServer();
-//	void               start();
+	void               start();
 //	void			   stop();
 	std::string        toString();
 	uint16_t           getHandle();
