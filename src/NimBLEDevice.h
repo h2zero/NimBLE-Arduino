@@ -46,6 +46,7 @@
 #define BLEScanResults                  NimBLEScanResults
 #define BLEServer                       NimBLEServer
 #define BLEService                      NimBLEService
+#define BLECharacteristic               NimBLECharacteristic
 
 
 /**

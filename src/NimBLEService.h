@@ -18,37 +18,38 @@
 #if defined(CONFIG_BT_ENABLED)
 
 //#include <esp_gatts_api.h>
-
-//#include "BLECharacteristic.h"
+#include "NimBLECharacteristic.h"
 #include "NimBLEServer.h"
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
 
+
 class NimBLEServer;
+class NimBLECharacteristic;
 
 /**
  * @brief A data mapping used to manage the set of %BLE characteristics known to the server.
  */
- /*
-class BLECharacteristicMap {
+class NimBLECharacteristicMap {
 public:
-	void setByUUID(BLECharacteristic* pCharacteristic, const char* uuid);
-	void setByUUID(BLECharacteristic* pCharacteristic, BLEUUID uuid);
-	void setByHandle(uint16_t handle, BLECharacteristic* pCharacteristic);
-	BLECharacteristic* getByUUID(const char* uuid);	
-	BLECharacteristic* getByUUID(BLEUUID uuid);
-	BLECharacteristic* getByHandle(uint16_t handle);
-	BLECharacteristic* getFirst();
-	BLECharacteristic* getNext();
+	void setByUUID(NimBLECharacteristic* pCharacteristic, const char* uuid);
+	void setByUUID(NimBLECharacteristic* pCharacteristic, NimBLEUUID uuid);
+	void setByHandle(uint16_t handle, NimBLECharacteristic* pCharacteristic);
+	NimBLECharacteristic* getByUUID(const char* uuid);	
+	NimBLECharacteristic* getByUUID(NimBLEUUID uuid);
+	NimBLECharacteristic* getByHandle(uint16_t handle);
+	NimBLECharacteristic* getFirst();
+	NimBLECharacteristic* getNext();
+	uint8_t getSize();
 	std::string toString();
-	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
+//	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 
 private:
-	std::map<BLECharacteristic*, std::string> m_uuidMap;
-	std::map<uint16_t, BLECharacteristic*> m_handleMap;
-	std::map<BLECharacteristic*, std::string>::iterator m_iterator;
+	std::map<NimBLECharacteristic*, std::string> m_uuidMap;
+	std::map<uint16_t, NimBLECharacteristic*> m_handleMap;
+	std::map<NimBLECharacteristic*, std::string>::iterator m_iterator;
 };
-*/
+
 
 /**
  * @brief The model of a %BLE service.
@@ -56,17 +57,17 @@ private:
  */
 class NimBLEService {
 public:
-	//void               addCharacteristic(BLECharacteristic* pCharacteristic);
-	//BLECharacteristic* createCharacteristic(const char* uuid, uint32_t properties);
-	//BLECharacteristic* createCharacteristic(BLEUUID uuid, uint32_t properties);
+	void               addCharacteristic(NimBLECharacteristic* pCharacteristic);
+	NimBLECharacteristic* createCharacteristic(const char* uuid, uint32_t properties);
+	NimBLECharacteristic* createCharacteristic(NimBLEUUID uuid, uint32_t properties);
 	void               dump();
 	void               executeCreate(NimBLEServer* pServer);
 	void			   executeDelete();
-	//BLECharacteristic* getCharacteristic(const char* uuid);
-	//BLECharacteristic* getCharacteristic(BLEUUID uuid);
+	NimBLECharacteristic* getCharacteristic(const char* uuid);
+	NimBLECharacteristic* getCharacteristic(NimBLEUUID uuid);
 	NimBLEUUID            getUUID();
 	NimBLEServer*         getServer();
-	void               start();
+	bool               start();
 //	void			   stop();
 	std::string        toString();
 	uint16_t           getHandle();
@@ -81,9 +82,9 @@ private:
 //	friend class BLECharacteristic;
 	friend class NimBLEDevice;
 
-//	BLECharacteristicMap m_characteristicMap;
+	NimBLECharacteristicMap m_characteristicMap;
 	uint16_t             m_handle;
-//	BLECharacteristic*   m_lastCreatedCharacteristic = nullptr;
+	NimBLECharacteristic*   m_lastCreatedCharacteristic = nullptr;
 	NimBLEServer*           m_pServer = nullptr;
 	NimBLEUUID              m_uuid;
 
@@ -94,7 +95,7 @@ private:
 
 	uint16_t             m_numHandles;
 
-//	BLECharacteristic* getLastCreatedCharacteristic();
+	NimBLECharacteristic* getLastCreatedCharacteristic();
 //	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 	void               setHandle(uint16_t handle);
 	//void               setService(esp_gatt_srvc_id_t srvc_id);

@@ -118,7 +118,7 @@ private:
     //void            handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
 	static int 		handleGapEvent(struct ble_gap_event *event, void *arg);
     //void            registerApp(uint16_t);
-}; // BLEServer
+}; // NimBLEServer
 
 
 /**

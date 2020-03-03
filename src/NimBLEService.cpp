@@ -54,7 +54,7 @@ NimBLEService::NimBLEService(NimBLEUUID uuid, uint16_t numHandles) {
 	m_handle    = NULL_HANDLE;
 	m_pServer   = nullptr;
 	//m_serializeMutex.setName("BLEService");
-	//m_lastCreatedCharacteristic = nullptr;
+	m_lastCreatedCharacteristic = nullptr;
 	m_numHandles = numHandles;
 } // NimBLEService
 
@@ -137,33 +137,62 @@ NimBLEUUID NimBLEService::getUUID() {
  * @return Start the service.
  */
  
-void NimBLEService::start() {
+bool NimBLEService::start() {
 // We ask the BLE runtime to start the service and then create each of the characteristics.
 // We start the service through its local handle which was returned in the ESP_GATTS_CREATE_EVT event
 // obtained as a result of calling esp_ble_gatts_create_service().
 //
 	NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service (esp_ble_gatts_start_service): %s", toString().c_str());
     
-    ble_gatt_svc_def svc;
-    int rc = 0;
+	int rc = 0;
+	// Nimble requires an array of services to be sent to the api
+	// Since we are adding 1 at a time we create an array of 2 and set the type
+	// of the second service to 0 to indicate the end of the array.
+    ble_gatt_svc_def svc[2];
+	ble_gatt_chr_def* pChtr_a = nullptr;
     
-    svc.type = BLE_GATT_SVC_TYPE_PRIMARY;
-    svc.uuid = (const ble_uuid_t*)&m_uuid.getNative()->u;
-    svc.characteristics = NULL;
+    svc[0].type = BLE_GATT_SVC_TYPE_PRIMARY;
+    svc[0].uuid = (const ble_uuid_t*)&m_uuid.getNative()->u;
+	uint8_t numChtrs = m_characteristicMap.getSize();
+	if(numChtrs < 1){
+		svc[0].characteristics = NULL;
+	}else{
+		pChtr_a = new ble_gatt_chr_def[numChtrs+1];
+		NimBLECharacteristic* pCharacteristic = m_characteristicMap.getFirst();
+		for(int i=0; i < numChtrs; i++) {
+			pChtr_a[i].uuid = (const ble_uuid_t*)&pCharacteristic->getUUID().getNative()->u;
+			pCharacteristic = m_characteristicMap.getNext();
+		}
+		
+		pChtr_a[numChtrs].uuid = NULL;
+		svc[0].characteristics = (const ble_gatt_chr_def*)pChtr_a;
+	}
+	
+	svc[1].type = 0;
     
     rc = ble_gatts_count_cfg((const ble_gatt_svc_def*)&svc);
     if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "ble_gatts_count_cfg failed, rc= %d", rc);
-        return;
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_count_cfg failed, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+		if(pChtr_a != nullptr) {
+			delete[] pChtr_a;
+		}
+        return false;
     }
     
     rc = ble_gatts_add_svcs((const ble_gatt_svc_def*)&svc);
     if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "ble_gatts_add_svcs, rc= %d", rc);
-        return;
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_add_svcs, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+		if(pChtr_a != nullptr) {
+			delete[] pChtr_a;
+		}
+        return false;
     }
     
-    
+	if(pChtr_a != nullptr) {
+		delete[] pChtr_a;
+	}
+	
+    return true;
 /*	if (m_handle == NULL_HANDLE) {
 		ESP_LOGE(LOG_TAG, "<< !!! We attempted to start a service but don't know its handle!");
 		return;
@@ -247,20 +276,19 @@ uint16_t NimBLEService::getHandle() {
  * @brief Add a characteristic to the service.
  * @param [in] pCharacteristic A pointer to the characteristic to be added.
  */
- /*
-void BLEService::addCharacteristic(BLECharacteristic* pCharacteristic) {
+void NimBLEService::addCharacteristic(NimBLECharacteristic* pCharacteristic) {
 	// We maintain a mapping of characteristics owned by this service.  These are managed by the
 	// BLECharacteristicMap class instance found in m_characteristicMap.  We add the characteristic
 	// to the map and then ask the service to add the characteristic at the BLE level (ESP-IDF).
 
-	ESP_LOGD(LOG_TAG, ">> addCharacteristic()");
-	ESP_LOGD(LOG_TAG, "Adding characteristic: uuid=%s to service: %s",
+	NIMBLE_LOGD(LOG_TAG, ">> addCharacteristic()");
+	NIMBLE_LOGD(LOG_TAG, "Adding characteristic: uuid=%s to service: %s",
 		pCharacteristic->getUUID().toString().c_str(),
 		toString().c_str());
 
 	// Check that we don't add the same characteristic twice.
 	if (m_characteristicMap.getByUUID(pCharacteristic->getUUID()) != nullptr) {
-		ESP_LOGW(LOG_TAG, "<< Adding a new characteristic with the same UUID as a previous one");
+		NIMBLE_LOGW(LOG_TAG, "<< Adding a new characteristic with the same UUID as a previous one");
 		//return;
 	}
 
@@ -268,9 +296,9 @@ void BLEService::addCharacteristic(BLECharacteristic* pCharacteristic) {
 	// but not by handle.  The handle is allocated to us on the ESP_GATTS_ADD_CHAR_EVT.
 	m_characteristicMap.setByUUID(pCharacteristic, pCharacteristic->getUUID());
 
-	ESP_LOGD(LOG_TAG, "<< addCharacteristic()");
+	NIMBLE_LOGD(LOG_TAG, "<< addCharacteristic()");
 } // addCharacteristic
-*/
+
 
 /**
  * @brief Create a new BLE Characteristic associated with this service.
@@ -278,11 +306,10 @@ void BLEService::addCharacteristic(BLECharacteristic* pCharacteristic) {
  * @param [in] properties - The properties of the characteristic.
  * @return The new BLE characteristic.
  */
- /*
-BLECharacteristic* BLEService::createCharacteristic(const char* uuid, uint32_t properties) {
-	return createCharacteristic(BLEUUID(uuid), properties);
+NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint32_t properties) {
+	return createCharacteristic(NimBLEUUID(uuid), properties);
 }
-*/	
+
 
 /**
  * @brief Create a new BLE Characteristic associated with this service.
@@ -290,13 +317,12 @@ BLECharacteristic* BLEService::createCharacteristic(const char* uuid, uint32_t p
  * @param [in] properties - The properties of the characteristic.
  * @return The new BLE characteristic.
  */
- /*
-BLECharacteristic* BLEService::createCharacteristic(BLEUUID uuid, uint32_t properties) {
-	BLECharacteristic* pCharacteristic = new BLECharacteristic(uuid, properties);
+NimBLECharacteristic* NimBLEService::createCharacteristic(NimBLEUUID uuid, uint32_t properties) {
+	NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties);
 	addCharacteristic(pCharacteristic);
 	return pCharacteristic;
 } // createCharacteristic
-*/
+
 
 /**
  * @brief Handle a GATTS server event.
@@ -400,16 +426,16 @@ void BLEService::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t
 } // handleGATTServerEvent
 */
 
-/*
-BLECharacteristic* BLEService::getCharacteristic(const char* uuid) {
-	return getCharacteristic(BLEUUID(uuid));
+
+NimBLECharacteristic* NimBLEService::getCharacteristic(const char* uuid) {
+	return getCharacteristic(NimBLEUUID(uuid));
 }
 
 
-BLECharacteristic* BLEService::getCharacteristic(BLEUUID uuid) {
+NimBLECharacteristic* NimBLEService::getCharacteristic(NimBLEUUID uuid) {
 	return m_characteristicMap.getByUUID(uuid);
 }
-*/
+
 
 /**
  * @brief Return a string representation of this service.
@@ -435,11 +461,10 @@ std::string NimBLEService::toString() {
  * is associated with the last characteristics created and we need that information.
  * @return The last created characteristic.
  */
- /*
-BLECharacteristic* BLEService::getLastCreatedCharacteristic() {
+NimBLECharacteristic* NimBLEService::getLastCreatedCharacteristic() {
 	return m_lastCreatedCharacteristic;
 } // getLastCreatedCharacteristic
-*/
+
 
 /**
  * @brief Get the BLE server associated with this service.
