@@ -152,7 +152,7 @@ bool NimBLEService::start() {
 	ble_gatt_chr_def* pChtr_a = nullptr;
     
     svc[0].type = BLE_GATT_SVC_TYPE_PRIMARY;
-    svc[0].uuid = (const ble_uuid_t*)&m_uuid.getNative()->u;
+    svc[0].uuid = (const ble_uuid_t*)&m_uuid.getNative();
 	uint8_t numChtrs = m_characteristicMap.getSize();
 	if(numChtrs < 1){
 		svc[0].characteristics = NULL;
@@ -160,7 +160,7 @@ bool NimBLEService::start() {
 		pChtr_a = new ble_gatt_chr_def[numChtrs+1];
 		NimBLECharacteristic* pCharacteristic = m_characteristicMap.getFirst();
 		for(int i=0; i < numChtrs; i++) {
-			pChtr_a[i].uuid = (const ble_uuid_t*)&pCharacteristic->getUUID().getNative()->u;
+			pChtr_a[i].uuid = (const ble_uuid_t*)&pCharacteristic->getUUID().getNative();
         //    pChtr_a[i].access_cb = NULL;
         //    pChtr_a[i].arg = NULL;
             pChtr_a[i].descriptors = NULL;

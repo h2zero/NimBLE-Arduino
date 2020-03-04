@@ -30,18 +30,26 @@ static const char* LOG_TAG = "NimBLEAdvertising";
  */
 NimBLEAdvertising::NimBLEAdvertising() {
     memset(&m_advData, 0, sizeof m_advData);
+	memset(&m_advParams, 0, sizeof m_advParams);
     const char *name = ble_svc_gap_device_name();
     
-	m_advData.set_scan_rsp        = false;
 	m_advData.name                = (uint8_t *)name;
     m_advData.name_len            = strlen(name);
     m_advData.name_is_complete    = 1;
     m_advData.tx_pwr_lvl_is_present = 1;
     m_advData.tx_pwr_lvl          = BLE_HS_ADV_TX_PWR_LVL_AUTO;
     m_advData.flags               = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
-/*	m_advData.min_interval        = 0x20;
-	m_advData.max_interval        = 0x40;
 	m_advData.appearance          = 0x00;
+	m_advData.appearance_is_present = 0;
+	m_advData.mfg_data_len    	  = 0;
+	m_advData.mfg_data			  = nullptr;
+	
+	m_advParams.conn_mode         = BLE_GAP_CONN_MODE_UND;
+    m_advParams.disc_mode         = BLE_GAP_DISC_MODE_GEN;
+	m_advParams.itvl_min          = 0x20;
+	m_advParams.itvl_max          = 0x40;
+	
+/*	m_advData.set_scan_rsp        = false;
 	m_advData.manufacturer_len    = 0;
 	m_advData.p_manufacturer_data = nullptr;
 	m_advData.service_data_len    = 0;
@@ -60,14 +68,14 @@ NimBLEAdvertising::NimBLEAdvertising() {
 	m_customAdvData               = false;   // No custom advertising data
 	m_customScanResponseData      = false;   // No custom scan response data
  */   
-} // BLEAdvertising
+} // NimBLEAdvertising
 
 
 /**
  * @brief Add a service uuid to exposed list of services.
  * @param [in] serviceUUID The UUID of the service to expose.
  */
-void BLEAdvertising::addServiceUUID(BLEUUID serviceUUID) {
+void NimBLEAdvertising::addServiceUUID(NimBLEUUID serviceUUID) {
 	m_serviceUUIDs.push_back(serviceUUID);
 } // addServiceUUID
 
@@ -76,8 +84,8 @@ void BLEAdvertising::addServiceUUID(BLEUUID serviceUUID) {
  * @brief Add a service uuid to exposed list of services.
  * @param [in] serviceUUID The string representation of the service to expose.
  */
-void BLEAdvertising::addServiceUUID(const char* serviceUUID) {
-	addServiceUUID(BLEUUID(serviceUUID));
+void NimBLEAdvertising::addServiceUUID(const char* serviceUUID) {
+	addServiceUUID(NimBLEUUID(serviceUUID));
 } // addServiceUUID
 
 
@@ -88,8 +96,9 @@ void BLEAdvertising::addServiceUUID(const char* serviceUUID) {
  * @param [in] appearance The appearance of the device in the advertising data.
  * @return N/A.
  */
-void BLEAdvertising::setAppearance(uint16_t appearance) {
+void NimBLEAdvertising::setAppearance(uint16_t appearance) {
 	m_advData.appearance = appearance;
+	m_advData.appearance_is_present = 1;
 } // setAppearance
 
 void BLEAdvertising::setMinInterval(uint16_t mininterval) {
@@ -99,7 +108,7 @@ void BLEAdvertising::setMinInterval(uint16_t mininterval) {
 void BLEAdvertising::setMaxInterval(uint16_t maxinterval) {
 	m_advParams.adv_int_max = maxinterval;
 } // setMaxInterval
-
+/*
 void BLEAdvertising::setMinPreferred(uint16_t mininterval) {
 	m_advData.min_interval = mininterval;
 } // 
@@ -107,8 +116,8 @@ void BLEAdvertising::setMinPreferred(uint16_t mininterval) {
 void BLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
 	m_advData.max_interval = maxinterval;
 } // 
-
-void BLEAdvertising::setScanResponse(bool set) {
+*/
+void NimBLEAdvertising::setScanResponse(bool set) {
 	m_scanResp = set;
 }
 
@@ -117,6 +126,7 @@ void BLEAdvertising::setScanResponse(bool set) {
  * @param [in] scanRequestWhitelistOnly If true, only allow scan requests from those on the white list.
  * @param [in] connectWhitelistOnly If true, only allow connections from those on the white list.
  */
+ /*
 void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly) {
 	ESP_LOGD(LOG_TAG, ">> setScanFilter: scanRequestWhitelistOnly: %d, connectWhitelistOnly: %d", scanRequestWhitelistOnly, connectWhitelistOnly);
 	if (!scanRequestWhitelistOnly && !connectWhitelistOnly) {
@@ -140,22 +150,23 @@ void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWh
 		return;
 	}
 } // setScanFilter
-
+*/
 
 /**
  * @brief Set the advertisement data that is to be published in a regular advertisement.
  * @param [in] advertisementData The data to be advertised.
  */
-void BLEAdvertising::setAdvertisementData(BLEAdvertisementData& advertisementData) {
-	ESP_LOGD(LOG_TAG, ">> setAdvertisementData");
-	esp_err_t errRc = ::esp_ble_gap_config_adv_data_raw(
+ 
+void NimBLEAdvertising::setAdvertisementData(NimBLEAdvertisementData& advertisementData) {
+	NIMBLE_LOGD(LOG_TAG, ">> setAdvertisementData");
+	int rc = ble_gap_adv_set_data(
 		(uint8_t*)advertisementData.getPayload().data(),
 		advertisementData.getPayload().length());
-	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "esp_ble_gap_config_adv_data_raw: %d %s", errRc, GeneralUtils::errorToString(errRc));
+	if (rc != 0) {
+		NIMBLE_LOGE(LOG_TAG, "ble_gap_adv_set_data: %d %s", rc, NimBLEUtils::returnCodeToString(rc));
 	}
 	m_customAdvData = true;   // Set the flag that indicates we are using custom advertising data.
-	ESP_LOGD(LOG_TAG, "<< setAdvertisementData");
+	NIMBLE_LOGD(LOG_TAG, "<< setAdvertisementData");
 } // setAdvertisementData
 
 
@@ -163,6 +174,7 @@ void BLEAdvertising::setAdvertisementData(BLEAdvertisementData& advertisementDat
  * @brief Set the advertisement data that is to be published in a scan response.
  * @param [in] advertisementData The data to be advertised.
  */
+ /*
 void BLEAdvertising::setScanResponseData(BLEAdvertisementData& advertisementData) {
 	ESP_LOGD(LOG_TAG, ">> setScanResponseData");
 	esp_err_t errRc = ::esp_ble_gap_config_scan_rsp_data_raw(
@@ -174,15 +186,37 @@ void BLEAdvertising::setScanResponseData(BLEAdvertisementData& advertisementData
 	m_customScanResponseData = true;   // Set the flag that indicates we are using custom scan response data.
 	ESP_LOGD(LOG_TAG, "<< setScanResponseData");
 } // setScanResponseData
-
+*/
 /**
  * @brief Start advertising.
  * Start advertising.
  * @return N/A.
  */
-void BLEAdvertising::start() {
-	ESP_LOGD(LOG_TAG, ">> start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
-
+void NimBLEAdvertising::start() {
+	NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
+	
+	int numServices = m_serviceUUIDs.size();
+	if (numServices > 0) {
+		for (int i = 0; i < numServices; i++) {
+			if(m_serviceUUIDs[i].getNative().u.type == BLE_UUID_TYPE_16){
+				m_advData.uuids16
+			}
+		}
+		
+		m_advData.service_uuid_len = 16 * numServices;
+		m_advData.p_service_uuid = new uint8_t[m_advData.service_uuid_len];
+		uint8_t* p = m_advData.p_service_uuid;
+		for (int i = 0; i < numServices; i++) {
+			ESP_LOGD(LOG_TAG, "- advertising service: %s", m_serviceUUIDs[i].toString().c_str());
+			BLEUUID serviceUUID128 = m_serviceUUIDs[i].to128();
+			memcpy(p, serviceUUID128.getNative()->uuid.uuid128, 16);
+			p += 16;
+		}
+	} else {
+		m_advData.service_uuid_len = 0;
+		ESP_LOGD(LOG_TAG, "- no services advertised");
+	}
+/*
 	// We have a vector of service UUIDs that we wish to advertise.  In order to use the
 	// ESP-IDF framework, these must be supplied in a contiguous array of their 128bit (16 byte)
 	// representations.  If we have 1 or more services to advertise then we allocate enough
@@ -241,7 +275,8 @@ void BLEAdvertising::start() {
 		ESP_LOGE(LOG_TAG, "<< esp_ble_gap_start_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		return;
 	}
-	ESP_LOGD(LOG_TAG, "<< start");
+*/
+	NIMBLE_LOGD(LOG_TAG, "<< Advertising start");
 } // start
 
 
@@ -250,20 +285,23 @@ void BLEAdvertising::start() {
  * Stop advertising.
  * @return N/A.
  */
-void BLEAdvertising::stop() {
-	ESP_LOGD(LOG_TAG, ">> stop");
+void NimBLEAdvertising::stop() {
+	NIMBLE_LOGD(LOG_TAG, ">> stop");
+	/*
 	esp_err_t errRc = ::esp_ble_gap_stop_advertising();
 	if (errRc != ESP_OK) {
 		ESP_LOGE(LOG_TAG, "esp_ble_gap_stop_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
 		return;
 	}
-	ESP_LOGD(LOG_TAG, "<< stop");
+	*/
+	NIMBLE_LOGD(LOG_TAG, "<< stop");
 } // stop
 
 /**
  * @brief Add data to the payload to be advertised.
  * @param [in] data The data to be added to the payload.
  */
+ 
 void BLEAdvertisementData::addData(std::string data) {
 	if ((m_payload.length() + data.length()) > ESP_BLE_ADV_DATA_LEN_MAX) {
 		return;
@@ -279,6 +317,7 @@ void BLEAdvertisementData::addData(std::string data) {
  * See also:
  * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.gap.appearance.xml
  */
+ 
 void BLEAdvertisementData::setAppearance(uint16_t appearance) {
 	char cdata[2];
 	cdata[0] = 3;

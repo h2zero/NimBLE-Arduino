@@ -64,13 +64,13 @@ public:
 	void setMaxInterval(uint16_t maxinterval);
 	void setMinInterval(uint16_t mininterval);
 	void setAdvertisementData(NimBLEAdvertisementData& advertisementData);
-	void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
-	void setScanResponseData(NimBLEAdvertisementData& advertisementData);
+//	void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
+//	void setScanResponseData(NimBLEAdvertisementData& advertisementData);
 	void setPrivateAddress(uint8_t type = BLE_ADDR_TYPE_RANDOM);
 
 	//void handleGAPEvent(esp_gap_ble_cb_event_t  event, esp_ble_gap_cb_param_t* param);
-	void setMinPreferred(uint16_t);
-	void setMaxPreferred(uint16_t);
+//	void setMinPreferred(uint16_t);
+//	void setMaxPreferred(uint16_t);
 	void setScanResponse(bool);
 
 private:
