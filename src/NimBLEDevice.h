@@ -84,6 +84,9 @@ public:
     static bool             isIgnored(NimBLEAddress address);
     static void             addIgnored(NimBLEAddress address);
     static void             removeIgnored(NimBLEAddress address);
+    static NimBLEAdvertising* getAdvertising();
+	static void		   		startAdvertising();
+	static void		   		stopAdvertising();
     
     static std::list<NimBLEClient*>* getClientList(); 
         

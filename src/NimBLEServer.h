@@ -21,7 +21,7 @@
 // #include "BLEDevice.h"
 #include "NimBLEAddress.h"
 #include "NimBLEUUID.h"
-//#include "BLEAdvertising.h"
+#include "NimBLEAdvertising.h"
 //#include "BLECharacteristic.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"

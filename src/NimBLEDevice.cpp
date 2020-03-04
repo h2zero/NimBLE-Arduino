@@ -92,6 +92,22 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 } // createServer
 
 
+NimBLEAdvertising* NimBLEDevice::getAdvertising() {
+	if(m_bleAdvertising == nullptr) {
+		m_bleAdvertising = new NimBLEAdvertising();
+	}
+	return m_bleAdvertising; 
+}
+
+void NimBLEDevice::startAdvertising() {
+	getAdvertising()->start();
+} // startAdvertising
+
+void NimBLEDevice::stopAdvertising() {
+    getAdvertising()->stop();
+} // stopAdvertising
+
+
 /**
  * @brief Retrieve the Scan object that we use for scanning.
  * @return The scanning object reference.  This is a singleton object.  The caller should not

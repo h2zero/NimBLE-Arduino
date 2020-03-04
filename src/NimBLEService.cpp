@@ -161,6 +161,12 @@ bool NimBLEService::start() {
 		NimBLECharacteristic* pCharacteristic = m_characteristicMap.getFirst();
 		for(int i=0; i < numChtrs; i++) {
 			pChtr_a[i].uuid = (const ble_uuid_t*)&pCharacteristic->getUUID().getNative()->u;
+        //    pChtr_a[i].access_cb = NULL;
+        //    pChtr_a[i].arg = NULL;
+            pChtr_a[i].descriptors = NULL;
+            pChtr_a[i].flags = pCharacteristic->m_properties;
+            pChtr_a[i].min_key_size = 0;
+            pChtr_a[i].val_handle = &pCharacteristic->m_handle;
 			pCharacteristic = m_characteristicMap.getNext();
 		}
 		
@@ -192,7 +198,7 @@ bool NimBLEService::start() {
 		delete[] pChtr_a;
 	}
 	
-    return true;
+
 /*	if (m_handle == NULL_HANDLE) {
 		ESP_LOGE(LOG_TAG, "<< !!! We attempted to start a service but don't know its handle!");
 		return;
@@ -218,6 +224,7 @@ bool NimBLEService::start() {
 	m_semaphoreStartEvt.wait("start");
 */
 	NIMBLE_LOGD(LOG_TAG, "<< start()");
+    return true;
 } // start
 
 
