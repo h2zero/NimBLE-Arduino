@@ -194,15 +194,25 @@ void BLEAdvertising::setScanResponseData(BLEAdvertisementData& advertisementData
  */
 void NimBLEAdvertising::start() {
 	NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
-	
+	ble_uuid16_t* uuids16 = nullptr;
+	ble_uuid32_t* uuids32 = nullptr;
+	ble_uuid128_t* uuids128 = nullptr;
 	int numServices = m_serviceUUIDs.size();
+	
 	if (numServices > 0) {
 		for (int i = 0; i < numServices; i++) {
 			if(m_serviceUUIDs[i].getNative().u.type == BLE_UUID_TYPE_16){
-				m_advData.uuids16
+				m_advData.num_uuids16++;
+			}
+			if(m_serviceUUIDs[i].getNative().u.type == BLE_UUID_TYPE_32){
+				m_advData.num_uuids32++;
+			}
+			if(m_serviceUUIDs[i].getNative().u.type == BLE_UUID_TYPE_128){
+				m_advData.num_uuids128++;
 			}
 		}
-		
+
+/*
 		m_advData.service_uuid_len = 16 * numServices;
 		m_advData.p_service_uuid = new uint8_t[m_advData.service_uuid_len];
 		uint8_t* p = m_advData.p_service_uuid;
