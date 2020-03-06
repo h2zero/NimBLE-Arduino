@@ -111,12 +111,15 @@ private:
 	NimBLEUUID                     m_bleUUID;
 //	BLEDescriptorMap            m_descriptorMap;
 	uint16_t                    m_handle;
-	uint8_t				        m_properties;
+	uint16_t				        m_properties;
 	NimBLECharacteristicCallbacks* m_pCallbacks;
 	NimBLEService*                 m_pService;
 //	BLEValue                    m_value;
 	uint16_t             m_permissions = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
 	bool						m_writeEvt = false;
+	static int handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
+                             struct ble_gatt_access_ctxt *ctxt,
+                             void *arg);
 /*
 	void handleGATTServerEvent(
 			esp_gatts_cb_event_t      event,

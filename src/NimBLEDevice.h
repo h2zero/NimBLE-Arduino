@@ -47,6 +47,7 @@
 #define BLEServer                       NimBLEServer
 #define BLEService                      NimBLEService
 #define BLECharacteristic               NimBLECharacteristic
+#define BLEAdvertising                  NimBLEAdvertising
 
 
 /**

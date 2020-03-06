@@ -212,7 +212,10 @@ void NimBLEAdvertising::start() {
                 }
                 memcpy(&uuids16[m_advData.num_uuids16].value, &m_serviceUUIDs[i].getNative()->u16.value, sizeof(uint16_t));
                 uuids16[m_advData.num_uuids16].u.type = BLE_UUID_TYPE_16;
-                //m_advData.uuids16_is_complete = 1;
+				char buf[BLE_UUID_STR_LEN];
+				ble_uuid_to_str(&uuids128[m_advData.num_uuids128].u, buf);
+				NIMBLE_LOGE(LOG_TAG, "Advertising UUID: %s", buf);
+                m_advData.uuids16_is_complete = 1;
                 m_advData.uuids16 = uuids16;  
 			}
 			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_32){
@@ -223,7 +226,10 @@ void NimBLEAdvertising::start() {
                 }
                 memcpy(&uuids32[m_advData.num_uuids32].value, &m_serviceUUIDs[i].getNative()->u32.value, sizeof(uint32_t));
                 uuids32[m_advData.num_uuids32].u.type = BLE_UUID_TYPE_32;
-                //m_advData.uuids32_is_complete = 1;
+				char buf[BLE_UUID_STR_LEN];
+				ble_uuid_to_str(&uuids128[m_advData.num_uuids128].u, buf);
+				NIMBLE_LOGE(LOG_TAG, "Advertising UUID: %s", buf);
+                m_advData.uuids32_is_complete = 1;
                 m_advData.uuids32 = uuids32; 
 			}
 			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_128){
@@ -234,7 +240,10 @@ void NimBLEAdvertising::start() {
                 }
                 memcpy(&uuids128[m_advData.num_uuids128].value, &m_serviceUUIDs[i].getNative()->u128.value, 16);
                 uuids128[m_advData.num_uuids128].u.type = BLE_UUID_TYPE_128;
-                //m_advData.uuids128_is_complete = 1;
+				char buf[BLE_UUID_STR_LEN];
+				ble_uuid_to_str(&uuids128[m_advData.num_uuids128].u, buf);
+				NIMBLE_LOGE(LOG_TAG, "Advertising UUID: %s", buf);
+                m_advData.uuids128_is_complete = 1;
                 m_advData.uuids128 = uuids128; 
 			}
 		}
@@ -251,6 +260,12 @@ void NimBLEAdvertising::start() {
             abort();
         }
         
+		rc = ble_gatts_start();
+		if (rc != 0) {
+			NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+			abort();
+		}
+		
         rc = ble_gap_adv_start(addressType, NULL, BLE_HS_FOREVER,
                            &m_advParams, NULL, NULL);
         if (rc != 0) {
@@ -334,6 +349,7 @@ void NimBLEAdvertising::start() {
 	}
 */
 	NIMBLE_LOGD(LOG_TAG, "<< Advertising start");
+	ble_gatts_show_local();
 } // start
 
 

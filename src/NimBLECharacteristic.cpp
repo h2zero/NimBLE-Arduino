@@ -41,15 +41,15 @@ NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint32_t properties
 NimBLECharacteristic::NimBLECharacteristic(NimBLEUUID uuid, uint32_t properties) {
 	m_bleUUID    = uuid;
 	m_handle     = NULL_HANDLE;
-	m_properties = (uint8_t)0;
+	m_properties = (uint16_t) 0;
 	m_pCallbacks = nullptr;
 
-	setBroadcastProperty((properties & BLE_GATT_CHR_PROP_BROADCAST) != 0);
-	setReadProperty((properties & BLE_GATT_CHR_PROP_READ) != 0);
-	setWriteProperty((properties & BLE_GATT_CHR_PROP_WRITE) != 0);
-	setNotifyProperty((properties & BLE_GATT_CHR_PROP_NOTIFY) != 0);
-	setIndicateProperty((properties & BLE_GATT_CHR_PROP_INDICATE) != 0);
-	setWriteNoResponseProperty((properties & BLE_GATT_CHR_PROP_WRITE_NO_RSP) != 0);
+	setBroadcastProperty((properties & PROPERTY_BROADCAST) != 0);
+	setReadProperty((properties & PROPERTY_READ) != 0);
+	setWriteProperty((properties & PROPERTY_WRITE) != 0);
+	setNotifyProperty((properties & PROPERTY_NOTIFY) != 0);
+	setIndicateProperty((properties & PROPERTY_INDICATE) != 0);
+	setWriteNoResponseProperty((properties & PROPERTY_WRITE_NR) != 0);
 } // NimBLECharacteristic
 
 /**
@@ -195,6 +195,28 @@ uint8_t* BLECharacteristic::getData() {
 } // getData
 */
 
+
+int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
+                             struct ble_gatt_access_ctxt *ctxt,
+                             void *arg)
+{
+	const ble_uuid_t *uuid;
+    int rand_num;
+    int rc;
+	NimBLECharacteristic* pCharacteristic = (NimBLECharacteristic*)arg;
+	
+	NIMBLE_LOGE(LOG_TAG, "Characteristic gap event for %s", pCharacteristic->getUUID().toString().c_str());
+	uuid = ctxt->chr->uuid;
+	if(ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0){
+		assert(ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR);
+		rand_num = rand();
+        rc = os_mbuf_append(ctxt->om, &rand_num, sizeof rand_num);
+        return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+	}
+	assert(0);
+    return BLE_ATT_ERR_UNLIKELY;
+}
+							 
 /**
  * Handle a GATT server event.
  */
@@ -559,9 +581,9 @@ void BLECharacteristic::notify(bool is_notification) {
  */
 void NimBLECharacteristic::setBroadcastProperty(bool value) {
 	if (value) {
-		m_properties = (m_properties | BLE_GATT_CHR_PROP_BROADCAST);
+		m_properties = (m_properties | BLE_GATT_CHR_F_BROADCAST);
 	} else {
-		m_properties = (m_properties & ~BLE_GATT_CHR_PROP_BROADCAST);
+		m_properties = (m_properties & ~BLE_GATT_CHR_F_BROADCAST);
 	}
 } // setBroadcastProperty
 
@@ -598,9 +620,9 @@ void NimBLECharacteristic::setHandle(uint16_t handle) {
  */
 void NimBLECharacteristic::setIndicateProperty(bool value) {
 	if (value) {
-		m_properties = (m_properties | BLE_GATT_CHR_PROP_INDICATE);
+		m_properties = (m_properties | BLE_GATT_CHR_F_INDICATE);
 	} else {
-		m_properties = (m_properties & ~BLE_GATT_CHR_PROP_INDICATE);
+		m_properties = (m_properties & ~BLE_GATT_CHR_F_INDICATE);
 	}
 } // setIndicateProperty
 
@@ -611,9 +633,9 @@ void NimBLECharacteristic::setIndicateProperty(bool value) {
  */
 void NimBLECharacteristic::setNotifyProperty(bool value) {
 	if (value) {
-		m_properties = (m_properties | BLE_GATT_CHR_PROP_NOTIFY);
+		m_properties = (m_properties | BLE_GATT_CHR_F_NOTIFY);
 	} else {
-		m_properties = (m_properties & ~BLE_GATT_CHR_PROP_NOTIFY);
+		m_properties = (m_properties & ~BLE_GATT_CHR_F_NOTIFY);
 	}
 } // setNotifyProperty
 
@@ -624,9 +646,9 @@ void NimBLECharacteristic::setNotifyProperty(bool value) {
  */
 void NimBLECharacteristic::setReadProperty(bool value) {
 	if (value) {
-		m_properties = (m_properties | BLE_GATT_CHR_PROP_READ );
+		m_properties = (m_properties | BLE_GATT_CHR_F_READ );
 	} else {
-		m_properties = (m_properties & ~BLE_GATT_CHR_PROP_READ );
+		m_properties = (m_properties & ~BLE_GATT_CHR_F_READ );
 	}
 } // setReadProperty
 
@@ -706,9 +728,9 @@ void BLECharacteristic::setValue(double& data64) {
  */
 void NimBLECharacteristic::setWriteNoResponseProperty(bool value) {
 	if (value) {
-		m_properties = (m_properties | BLE_GATT_CHR_PROP_WRITE_NO_RSP);
+		m_properties = (m_properties | BLE_GATT_CHR_F_WRITE_NO_RSP);
 	} else {
-		m_properties = (m_properties & ~BLE_GATT_CHR_PROP_WRITE_NO_RSP);
+		m_properties = (m_properties & ~BLE_GATT_CHR_F_WRITE_NO_RSP);
 	}
 } // setWriteNoResponseProperty
 
@@ -719,9 +741,9 @@ void NimBLECharacteristic::setWriteNoResponseProperty(bool value) {
  */
 void NimBLECharacteristic::setWriteProperty(bool value) {
 	if (value) {
-		m_properties = (m_properties | BLE_GATT_CHR_PROP_WRITE );
+		m_properties = (m_properties | BLE_GATT_CHR_F_WRITE );
 	} else {
-		m_properties = (m_properties & ~BLE_GATT_CHR_PROP_WRITE );
+		m_properties = (m_properties & ~BLE_GATT_CHR_F_WRITE );
 	}
 } // setWriteProperty
 
