@@ -16,9 +16,13 @@
 #define MAIN_BLEADVERTISING_H_
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+#include "host/ble_hs.h"
+#include "host/ble_gap.h"
 //#include <esp_gap_ble_api.h>
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
+
+
 
 #include <vector>
 
@@ -31,15 +35,15 @@ class NimBLEAdvertisementData {
 	// be exposed on demand/request or as time permits.
 	//
 public:
-	void setAppearance(uint16_t appearance);
-	void setCompleteServices(NimBLEUUID uuid);
-	void setFlags(uint8_t);
-	void setManufacturerData(std::string data);
-	void setName(std::string name);
-	void setPartialServices(NimBLEUUID uuid);
-	void setServiceData(NimBLEUUID uuid, std::string data);
-	void setShortName(std::string name);
-	void        addData(std::string data);  // Add data to the payload.
+//	void setAppearance(uint16_t appearance);
+//	void setCompleteServices(NimBLEUUID uuid);
+//	void setFlags(uint8_t);
+//	void setManufacturerData(std::string data);
+//	void setName(std::string name);
+//	void setPartialServices(NimBLEUUID uuid);
+//	void setServiceData(NimBLEUUID uuid, std::string data);
+//	void setShortName(std::string name);
+//	void        addData(std::string data);  // Add data to the payload.
 	std::string getPayload();               // Retrieve the current advert payload.
 
 private:
@@ -66,7 +70,7 @@ public:
 	void setAdvertisementData(NimBLEAdvertisementData& advertisementData);
 //	void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
 //	void setScanResponseData(NimBLEAdvertisementData& advertisementData);
-	void setPrivateAddress(uint8_t type = BLE_ADDR_TYPE_RANDOM);
+	void setPrivateAddress(uint8_t type = BLE_ADDR_RANDOM);
 
 	//void handleGAPEvent(esp_gap_ble_cb_event_t  event, esp_ble_gap_cb_param_t* param);
 //	void setMinPreferred(uint16_t);

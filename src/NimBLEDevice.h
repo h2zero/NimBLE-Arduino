@@ -104,6 +104,7 @@ private:
     static bool                       m_synced;
     static NimBLEScan*                m_pScan;
     static NimBLEServer*              m_pServer;
+    static NimBLEAdvertising*         m_bleAdvertising;
     static ble_gap_event_listener     m_listener;
     static uint32_t                   m_passkey;
     static std::list <NimBLEClient*>  m_cList;

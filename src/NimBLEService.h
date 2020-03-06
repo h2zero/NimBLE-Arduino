@@ -18,11 +18,11 @@
 #if defined(CONFIG_BT_ENABLED)
 
 //#include <esp_gatts_api.h>
-#include "NimBLECharacteristic.h"
+
 #include "NimBLEServer.h"
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
-
+#include "NimBLECharacteristic.h"
 
 class NimBLEServer;
 class NimBLECharacteristic;

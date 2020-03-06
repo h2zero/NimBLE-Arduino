@@ -54,6 +54,7 @@ NimBLEScan*     NimBLEDevice::m_pScan = nullptr;
 NimBLEServer*   NimBLEDevice::m_pServer = nullptr;
 uint32_t        NimBLEDevice::m_passkey = 123456;
 bool            NimBLEDevice::m_synced = false;
+NimBLEAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
 
 gap_event_handler           NimBLEDevice::m_customGapHandler = nullptr;
 ble_gap_event_listener      NimBLEDevice::m_listener;
