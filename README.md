@@ -1,7 +1,15 @@
+# *** UPDATE ***
+
+Server code nearing readyness, checkout the ServerDev branch if you would like to assist with testing
+
+# **************
+
+
 # NimBLE-Arduino
 A fork of the NimBLE library structured for compilation with Ardruino, designed for use with ESP32.
 
 Why? Because the Bluedroid library is too bulky, In testing I have found an initial code size reduction of ~115k and reduced ram usage by ~37k.
+
 
 # Installation:
 
@@ -16,13 +24,15 @@ This library is intended to be compatible with the current BLE library classes, 
 At this time only the client code has been (nearly) fully implemented and work has started on the server code.
 
 
-# New Features:
+# Features:
 
 Multiple clients are supported, up to 3 presently.
 
+
 # Todo:
 
-1. Implement server code.
-2. Create documentation.
-3. Examples.
+1. Complete server implementation.
+2. Code cleanup.
+3. Create documentation.
+4. Examples.
 
