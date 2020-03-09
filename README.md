@@ -2,7 +2,7 @@
 
 Server code nearing readyness, checkout the ServerDev branch if you would like to assist with testing
 
-# **************
+# ****************
 
 
 # NimBLE-Arduino
