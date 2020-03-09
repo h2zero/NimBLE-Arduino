@@ -32,8 +32,9 @@ static const char* LOG_TAG = "NimBLEServer";
 NimBLEServer::NimBLEServer() {
 //	m_appId            = ESP_GATT_IF_NONE;
 //	m_gatts_if         = ESP_GATT_IF_NONE;
-	m_connectedCount   = 0;
+//	m_connectedCount   = 0;
 	m_connId           = BLE_HS_CONN_HANDLE_NONE;
+    m_svcChgChrHdl     = 0xffff;
 	m_pServerCallbacks = nullptr;
 } // BLEServer
 
@@ -74,15 +75,15 @@ NimBLEService* NimBLEServer::createService(NimBLEUUID uuid, uint32_t numHandles,
 	//m_semaphoreCreateEvt.take("createService");
 
 	// Check that a service with the supplied UUID does not already exist.
-/*	if (m_serviceMap.getByUUID(uuid) != nullptr) {
-		ESP_LOGW(LOG_TAG, "<< Attempt to create a new service with uuid %s but a service with that UUID already exists.",
+	if (m_serviceMap.getByUUID(uuid) != nullptr) {
+		NIMBLE_LOGW(LOG_TAG, "<< Attempt to create a new service with uuid %s but a service with that UUID already exists.",
 			uuid.toString().c_str());
 	}
-*/
-	NimBLEService* pService = new NimBLEService(uuid, numHandles);
-//	pService->m_instId = inst_id;
-//	m_serviceMap.setByUUID(uuid, pService); // Save a reference to this service being on this server.
-	pService->executeCreate(this);          // Perform the API calls to actually create the service.
+
+	NimBLEService* pService = new NimBLEService(uuid, numHandles, this);
+	pService->m_instId = inst_id;
+	m_serviceMap.setByUUID(uuid, pService); // Save a reference to this service being on this server.
+//	pService->executeCreate(this);          // Perform the API calls to actually create the service.
 
 //	m_semaphoreCreateEvt.wait("createService");
 
@@ -96,34 +97,84 @@ NimBLEService* NimBLEServer::createService(NimBLEUUID uuid, uint32_t numHandles,
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the service object.
  */
- /*
-BLEService* BLEServer::getServiceByUUID(const char* uuid) {
+NimBLEService* NimBLEServer::getServiceByUUID(const char* uuid) {
 	return m_serviceMap.getByUUID(uuid);
 }
-*/
+
+
 /**
  * @brief Get a %BLE Service by its UUID
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the service object.
  */
- /*
-BLEService* BLEServer::getServiceByUUID(BLEUUID uuid) {
+NimBLEService* NimBLEServer::getServiceByUUID(NimBLEUUID uuid) {
 	return m_serviceMap.getByUUID(uuid);
 }
-*/
+
+
 /**
  * @brief Retrieve the advertising object that can be used to advertise the existence of the server.
  *
  * @return An advertising object.
  */
- /*
-BLEAdvertising* BLEServer::getAdvertising() {
+NimBLEAdvertising* NimBLEServer::getAdvertising() {
 	return BLEDevice::getAdvertising();
 }
-*/
 
+
+/**
+ * @brief Retrieve the connection id of the last connected client.
+ * @todo Not very useful, should refactor or remove.
+ * @return Client connection id.
+ */
 uint16_t NimBLEServer::getConnId() {
 	return m_connId;
+}
+
+
+/**
+ * @brief Start the GATT server, required to be called after setup of all 
+ * services and characteristics / descriptors for the NimBLE host to register them
+ */
+void NimBLEServer::start() {
+    int rc = ble_gatts_start();
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        abort();
+    }
+    
+    ble_gatts_show_local();
+    
+    ble_uuid16_t svc = {BLE_UUID_TYPE_16, 0x1801};
+    ble_uuid16_t chr = {BLE_UUID_TYPE_16, 0x2a05};
+    
+    //int ble_gatts_find_chr(const ble_uuid_t * svc_uuid, const ble_uuid_t * chr_uuid, uint16_t * out_def_handle, uint16_t * out_val_handle)
+    rc = ble_gatts_find_chr(&svc.u, &chr.u, NULL, &m_svcChgChrHdl); 
+    if(rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_find_chr: rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        abort();
+    }
+    
+    NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
+}
+
+
+/**
+ * @brief Disconnect the specified client with optional reason.
+ * @param [in] Connection Id of the client to disconnect.
+ * @param [in] Reason code for disconnecting.
+ * @return NimBLE host return code.
+ */
+int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
+    NIMBLE_LOGD(LOG_TAG, ">> disconnect()");
+    
+    int rc = ble_gap_terminate(connId, reason);
+    if(rc != 0){
+        NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+    
+    return rc;
+    NIMBLE_LOGD(LOG_TAG, "<< disconnect()");
 }
 
 
@@ -132,14 +183,9 @@ uint16_t NimBLEServer::getConnId() {
  * @return The number of connected clients.
  */
 uint32_t NimBLEServer::getConnectedCount() {
-	return m_connectedCount;
+	return m_connectedServersMap.size();
 } // getConnectedCount
 
-/*
-uint16_t BLEServer::getGattsIf() {
-	return m_gatts_if;
-}
-*/
 
 /**
  * @brief Handle a GATT Server Event.
@@ -153,151 +199,119 @@ uint16_t BLEServer::getGattsIf() {
 	NimBLEServer* server = (NimBLEServer*)arg;
 	NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent: %s",
 		NimBLEUtils::gapEventToString(event->type));
-/*
-	switch(event) {
-		// ESP_GATTS_ADD_CHAR_EVT - Indicate that a characteristic was added to the service.
-		// add_char:
-		// - esp_gatt_status_t status
-		// - uint16_t          attr_handle
-		// - uint16_t          service_handle
-		// - esp_bt_uuid_t     char_uuid
-		//
-		case ESP_GATTS_ADD_CHAR_EVT: {
-			break;
-		} // ESP_GATTS_ADD_CHAR_EVT
 
-		case ESP_GATTS_MTU_EVT:
-			updatePeerMTU(param->mtu.conn_id, param->mtu.mtu);
-			break;
+	switch(event->type) {
+        
+		case BLE_GAP_EVENT_CONNECT: {
+            if (event->connect.status != 0) {
+                /* Connection failed; resume advertising */
+                NimBLEDevice::startAdvertising();
+                server->m_connId = BLE_HS_CONN_HANDLE_NONE;
+            }
+            else {
+                server->m_connId = event->connect.conn_handle;
+                server->addPeerDevice((void*)server, false, server->m_connId);
+                if (server->m_pServerCallbacks != nullptr) {
+                    server->m_pServerCallbacks->onConnect(server);
+                    //m_pServerCallbacks->onConnect(this, param);			
+                }
+            }
 
-		// ESP_GATTS_CONNECT_EVT
-		// connect:
-		// - uint16_t      conn_id
-		// - esp_bd_addr_t remote_bda
-		//
-		case ESP_GATTS_CONNECT_EVT: {
-			m_connId = param->connect.conn_id;
-			addPeerDevice((void*)this, false, m_connId);
-			if (m_pServerCallbacks != nullptr) {
-				m_pServerCallbacks->onConnect(this);
-				m_pServerCallbacks->onConnect(this, param);			
+            break;
+		} // BLE_GAP_EVENT_CONNECT
+        
+        
+        case BLE_GAP_EVENT_DISCONNECT: {
+            server->m_connId = BLE_HS_CONN_HANDLE_NONE;
+            if (server->m_pServerCallbacks != nullptr) {       
+				server->m_pServerCallbacks->onDisconnect(server);
 			}
-			m_connectedCount++;   // Increment the number of connected devices count.	
-			break;
-		} // ESP_GATTS_CONNECT_EVT
-
-
-		// ESP_GATTS_CREATE_EVT
-		// Called when a new service is registered as having been created.
-		//
-		// create:
-		// * esp_gatt_status_t  status
-		// * uint16_t           service_handle
-		// * esp_gatt_srvc_id_t service_id
-		//
-		case ESP_GATTS_CREATE_EVT: {
-			BLEService* pService = m_serviceMap.getByUUID(param->create.service_id.id.uuid, param->create.service_id.id.inst_id);  // <--- very big bug for multi services with the same uuid
-			m_serviceMap.setByHandle(param->create.service_handle, pService);
-			m_semaphoreCreateEvt.give();
-			break;
-		} // ESP_GATTS_CREATE_EVT
-
-
-		// ESP_GATTS_DISCONNECT_EVT
-		//
-		// disconnect
-		// - uint16_t      					conn_id
-		// - esp_bd_addr_t 					remote_bda
-		// - esp_gatt_conn_reason_t         reason
-		//
-		// If we receive a disconnect event then invoke the callback for disconnects (if one is present).
-		// we also want to start advertising again.
-		case ESP_GATTS_DISCONNECT_EVT: {
-			m_connectedCount--;                          // Decrement the number of connected devices count.
-			if (m_pServerCallbacks != nullptr) {         // If we have callbacks, call now.
-				m_pServerCallbacks->onDisconnect(this);
-			}
-			startAdvertising(); //- do this with some delay from the loop()
-			removePeerDevice(param->disconnect.conn_id, false);
-			break;
-		} // ESP_GATTS_DISCONNECT_EVT
-
-
-		// ESP_GATTS_READ_EVT - A request to read the value of a characteristic has arrived.
-		//
-		// read:
-		// - uint16_t      conn_id
-		// - uint32_t      trans_id
-		// - esp_bd_addr_t bda
-		// - uint16_t      handle
-		// - uint16_t      offset
-		// - bool          is_long
-		// - bool          need_rsp
-		//
-		case ESP_GATTS_READ_EVT: {
-			break;
-		} // ESP_GATTS_READ_EVT
-
-
-		// ESP_GATTS_REG_EVT
-		// reg:
-		// - esp_gatt_status_t status
-		// - uint16_t app_id
-		//
-		case ESP_GATTS_REG_EVT: {
-			m_gatts_if = gatts_if;
-			m_semaphoreRegisterAppEvt.give(); // Unlock the mutex waiting for the registration of the app.
-			break;
-		} // ESP_GATTS_REG_EVT
-
-
-		// ESP_GATTS_WRITE_EVT - A request to write the value of a characteristic has arrived.
-		//
-		// write:
-		// - uint16_t      conn_id
-		// - uint16_t      trans_id
-		// - esp_bd_addr_t bda
-		// - uint16_t      handle
-		// - uint16_t      offset
-		// - bool          need_rsp
-		// - bool          is_prep
-		// - uint16_t      len
-		// - uint8_t*      value
-		//
-		case ESP_GATTS_WRITE_EVT: {
-			break;
-		}
-
-		case ESP_GATTS_OPEN_EVT:
-			m_semaphoreOpenEvt.give(param->open.status);
-			break;
+            /* Connection terminated; resume advertising */
+            //NimBLEDevice::startAdvertising();
+            server->removePeerDevice(event->disconnect.conn.conn_handle, false);
+            break;
+        } // BLE_GAP_EVENT_DISCONNECT
+        
+        case BLE_GAP_EVENT_SUBSCRIBE: {
+            NIMBLE_LOGI(LOG_TAG, "subscribe event; cur_notify=%d\n value handle; "
+                              "val_handle=%d\n",
+                        event->subscribe.cur_notify, event->subscribe.attr_handle);
+                     
+            NimBLECharacteristic* pChr = server->getChrByHandle(event->subscribe.attr_handle);
+            if(pChr != nullptr) {
+                pChr->setSubscribe(event);
+            }
+        /*    
+            uint8_t numSvcs = server->m_serviceMap.getRegisteredServiceCount();
+            NimBLEService* pService = server->m_serviceMap.getFirst();
+            
+            for(int i = 0; i < numSvcs; i++) {
+                uint8_t numChrs = pService->m_characteristicMap.getSize();
+                NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
+                
+                for( int d = 0; d < numChrs; d++) {
+                    if(pChr->m_handle == event->subscribe.attr_handle) {
+                        pChr->setSubscribe(event);
+                        return 0;
+                    }
+                    pChr = pService->m_characteristicMap.getNext();
+                }
+                
+                pService = server->m_serviceMap.getNext();
+            }
+            
+            NIMBLE_LOGE(LOG_TAG, "Subscribe handle not found");
+        */
+            break;
+        } // BLE_GAP_EVENT_SUBSCRIBE
+ 
+        case BLE_GAP_EVENT_MTU: {
+            NIMBLE_LOGI(LOG_TAG, "mtu update event; conn_handle=%d mtu=%d",
+                        event->mtu.conn_handle,
+                        event->mtu.value);
+            server->updatePeerMTU(event->mtu.conn_handle, event->mtu.value);
+            break;
+        } // BLE_GAP_EVENT_MTU
+        
+        case BLE_GAP_EVENT_NOTIFY_TX: {
+            if(event->notify_tx.indication && event->notify_tx.status != 0) {
+                NimBLECharacteristic* pChr = server->getChrByHandle(event->notify_tx.attr_handle);
+                if(pChr != nullptr) {
+                    pChr->m_semaphoreConfEvt.give(event->notify_tx.status);
+                }
+            /*    
+                uint8_t numSvcs = server->m_serviceMap.getRegisteredServiceCount();
+                NimBLEService* pService = server->m_serviceMap.getFirst();
+                
+                for(int i = 0; i < numSvcs; i++) {
+                    uint8_t numChrs = pService->m_characteristicMap.getSize();
+                    NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
+                    
+                    for( int d = 0; d < numChrs; d++) {
+                        if(pChr->m_handle == event->notify_tx.attr_handle) {
+                            pChr->m_semaphoreConfEvt.give(event->notify_tx.status);
+                            return 0;
+                        }
+                        pChr = pService->m_characteristicMap.getNext();
+                    }
+                    
+                    pService = server->m_serviceMap.getNext();
+                }
+                
+                NIMBLE_LOGE(LOG_TAG, "Subscribe handle not found");
+            */
+            }
+            break;
+        } // BLE_GAP_EVENT_NOTIFY_TX
 
 		default:
 			break;
 	}
 
-	// Invoke the handler for every Service we have.
-	m_serviceMap.handleGATTServerEvent(event, gatts_if, param);
-*/
-    return 0;
 	NIMBLE_LOGD(LOG_TAG, "<< handleGATTServerEvent");
+    return 0;
 } // handleGATTServerEvent
 
-
-/**
- * @brief Register the app.
- *
- * @return N/A
- */
- /*
-void BLEServer::registerApp(uint16_t m_appId) {
-	ESP_LOGD(LOG_TAG, ">> registerApp - %d", m_appId);
-	m_semaphoreRegisterAppEvt.take("registerApp"); // Take the mutex, will be released by ESP_GATTS_REG_EVT event.
-	::esp_ble_gatts_app_register(m_appId);
-	m_semaphoreRegisterAppEvt.wait("registerApp");
-	ESP_LOGD(LOG_TAG, "<< registerApp");
-} // registerApp
-*/
 
 /**
  * @brief Set the server callbacks.
@@ -328,13 +342,48 @@ void BLEServer::removeService(BLEService* service) {
  * Start the server advertising its existence.  This is a convenience function and is equivalent to
  * retrieving the advertising object and invoking start upon it.
  */
- /*
-void BLEServer::startAdvertising() {
-	ESP_LOGD(LOG_TAG, ">> startAdvertising");
-	BLEDevice::startAdvertising();
-	ESP_LOGD(LOG_TAG, "<< startAdvertising");
+void NimBLEServer::startAdvertising() {
+	NIMBLE_LOGD(LOG_TAG, ">> startAdvertising");
+	NimBLEDevice::startAdvertising();
+	NIMBLE_LOGD(LOG_TAG, "<< startAdvertising");
 } // startAdvertising
-*/
+
+
+/**
+ * @brief Stop advertising.
+ */
+void NimBLEServer::stopAdvertising() {
+	NIMBLE_LOGD(LOG_TAG, ">> stopAdvertising");
+	NimBLEDevice::stopAdvertising();
+	NIMBLE_LOGD(LOG_TAG, "<< stopAdvertising");
+} // startAdvertising
+
+
+NimBLECharacteristic* NimBLEServer::getChrByHandle(uint16_t handle) {
+    if(handle == m_svcChgChrHdl) {
+        return nullptr;
+    }
+    uint8_t numSvcs = m_serviceMap.getRegisteredServiceCount();
+    NimBLEService* pService = m_serviceMap.getFirst();
+    
+    for(int i = 0; i < numSvcs; i++) {
+        uint8_t numChrs = pService->m_characteristicMap.getSize();
+        NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
+        
+        for( int d = 0; d < numChrs; d++) {
+            if(pChr->m_handle == handle) {
+                return pChr;
+            }
+            pChr = pService->m_characteristicMap.getNext();
+        }
+        
+        pService = m_serviceMap.getNext();
+    }
+    
+    NIMBLE_LOGE(LOG_TAG, "Characteristic by handle not found");
+    return nullptr;
+}
+    
 /**
  * Allow to connect GATT server to peer device
  * Probably can be used in ANCS for iPhone
@@ -382,24 +431,31 @@ void NimBLEServerCallbacks::onDisconnect(NimBLEServer* pServer) {
 	NIMBLE_LOGD("BLEServerCallbacks", "<< onDisconnect()");
 } // onDisconnect
 
+
 /* multi connect support */
-/* TODO do some more tweaks */
 void NimBLEServer::updatePeerMTU(uint16_t conn_id, uint16_t mtu) {
-	// set mtu in conn_status_t
 	const std::map<uint16_t, conn_status_t>::iterator it = m_connectedServersMap.find(conn_id);
 	if (it != m_connectedServersMap.end()) {
 		it->second.mtu = mtu;
-		std::swap(m_connectedServersMap[conn_id], it->second);
 	}
 }
 
-std::map<uint16_t, conn_status_t> NimBLEServer::getPeerDevices(bool _client) {
+std::map<uint16_t, conn_status_t> NimBLEServer::getPeerDevices() {
 	return m_connectedServersMap;
 }
 
 
+/**
+ * @brief Get the MTU of the client.
+ * @returns The client MTU or 0 if not found/connected.
+ */
 uint16_t NimBLEServer::getPeerMTU(uint16_t conn_id) {
-	return m_connectedServersMap.find(conn_id)->second.mtu;
+    auto it = m_connectedServersMap.find(conn_id);
+    if(it != m_connectedServersMap.cend()) {
+        return (*it).second.mtu;
+    } else {
+        return 0;
+    }
 }
 
 void NimBLEServer::addPeerDevice(void* peer, bool _client, uint16_t conn_id) {
@@ -417,6 +473,7 @@ void NimBLEServer::removePeerDevice(uint16_t conn_id, bool _client) {
 }
 /* multi connect support */
 
+
 /**
  * Update connection parameters can be called only after connection has been established
  */
@@ -431,9 +488,5 @@ void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval,
 	esp_ble_gap_update_conn_params(&conn_params); 
 }
 */
-/*
-void BLEServer::disconnect(uint16_t connId){
-	esp_ble_gatts_close(m_gatts_if, connId);
-}
-*/
+
 #endif // CONFIG_BT_ENABLED

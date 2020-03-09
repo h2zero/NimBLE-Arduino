@@ -40,7 +40,8 @@ static const char* LOG_TAG = "NimBLEService"; // Tag for logging.
  * @param [in] uuid The UUID of the service.
  * @param [in] numHandles The maximum number of handles associated with the service.
  */
-NimBLEService::NimBLEService(const char* uuid, uint16_t numHandles) : NimBLEService(NimBLEUUID(uuid), numHandles) {
+NimBLEService::NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer) 
+: NimBLEService(NimBLEUUID(uuid), numHandles, pServer) {
 }
 
 
@@ -49,10 +50,10 @@ NimBLEService::NimBLEService(const char* uuid, uint16_t numHandles) : NimBLEServ
  * @param [in] uuid The UUID of the service.
  * @param [in] numHandles The maximum number of handles associated with the service.
  */
-NimBLEService::NimBLEService(NimBLEUUID uuid, uint16_t numHandles) {
+NimBLEService::NimBLEService(NimBLEUUID uuid, uint16_t numHandles, NimBLEServer* pServer) {
 	m_uuid      = uuid;
 	m_handle    = NULL_HANDLE;
-	m_pServer   = nullptr;
+	m_pServer   = pServer;
 	//m_serializeMutex.setName("BLEService");
 	m_lastCreatedCharacteristic = nullptr;
 	m_numHandles = numHandles;
@@ -65,7 +66,7 @@ NimBLEService::NimBLEService(NimBLEUUID uuid, uint16_t numHandles) {
  * @param [in] gatts_if The handle of the GATT server interface.
  * @return N/A.
  */
-
+/*
 void NimBLEService::executeCreate(NimBLEServer* pServer) {
 	NIMBLE_LOGD(LOG_TAG, ">> executeCreate() - Creating service service uuid: %s", getUUID().toString().c_str());
 	m_pServer          = pServer;
@@ -85,14 +86,14 @@ void NimBLEService::executeCreate(NimBLEServer* pServer) {
 //	m_semaphoreCreateEvt.wait("executeCreate");
 	NIMBLE_LOGD(LOG_TAG, "<< executeCreate");
 } // executeCreate
-
+*/
 
 /**
  * @brief Delete the service.
  * Delete the service.
  * @return N/A.
  */
-
+/*
 void NimBLEService::executeDelete() {
 	NIMBLE_LOGD(LOG_TAG, ">> executeDelete()");
 //	m_semaphoreDeleteEvt.take("executeDelete"); // Take the mutex and release at event ESP_GATTS_DELETE_EVT
@@ -107,7 +108,7 @@ void NimBLEService::executeDelete() {
 //	m_semaphoreDeleteEvt.wait("executeDelete");
 	NIMBLE_LOGD(LOG_TAG, "<< executeDelete");
 } // executeDelete
-
+*/
 
 /**
  * @brief Dump details of this BLE GATT service.
@@ -138,46 +139,46 @@ NimBLEUUID NimBLEService::getUUID() {
  */
  
 bool NimBLEService::start() {
-// We ask the BLE runtime to start the service and then create each of the characteristics.
-// We start the service through its local handle which was returned in the ESP_GATTS_CREATE_EVT event
-// obtained as a result of calling esp_ble_gatts_create_service().
-//
-	NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service (esp_ble_gatts_start_service): %s", toString().c_str());
+	NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service: %s", toString().c_str());
 	int rc = 0;
 	// Nimble requires an array of services to be sent to the api
 	// Since we are adding 1 at a time we create an array of 2 and set the type
 	// of the second service to 0 to indicate the end of the array.
     ble_gatt_svc_def* svc = new ble_gatt_svc_def[2];
-	ble_gatt_chr_def* pChtr_a = nullptr;
+	ble_gatt_chr_def* pChr_a = nullptr;
     
     svc[0].type = BLE_GATT_SVC_TYPE_PRIMARY;
     svc[0].uuid = &m_uuid.getNative()->u;
-	uint8_t numChtrs = m_characteristicMap.getSize();
-	NIMBLE_LOGE(LOG_TAG,"adding %d characteristics", numChtrs);
-	if(numChtrs < 1){
+    
+	uint8_t numChrs = m_characteristicMap.getSize();
+    
+	NIMBLE_LOGD(LOG_TAG,"Adding %d characteristics for service %s", numChrs, toString().c_str());
+    
+	if(numChrs < 1){
 		svc[0].characteristics = NULL;
 	}else{
-		pChtr_a = new ble_gatt_chr_def[numChtrs+1];
+        // Nimble requires the last characteristic to have it's uuid = 0 to indicate the end
+        // of the characteristics for the service. We create 1 extra and set it to null
+        // for this purpose.
+		pChr_a = new ble_gatt_chr_def[numChrs+1];
 		NimBLECharacteristic* pCharacteristic = m_characteristicMap.getFirst();
-		for(uint8_t i=0; i < numChtrs; i++) {
-			char buf[50];
-			NIMBLE_LOGI(LOG_TAG,"adding char uuid: %s", ble_uuid_to_str(&pCharacteristic->getUUID().getNative()->u, buf));
-			pChtr_a[i].uuid = &pCharacteristic->getUUID().getNative()->u;
-			NIMBLE_LOGI(LOG_TAG, "pchtr_a[%d] uuid: %s", i, ble_uuid_to_str(pChtr_a[i].uuid, buf));
-            pChtr_a[i].access_cb = NimBLECharacteristic::handleGapEvent;
-            pChtr_a[i].arg = pCharacteristic;
-            pChtr_a[i].descriptors = NULL;
-            pChtr_a[i].flags = pCharacteristic->m_properties;
-			NIMBLE_LOGI(LOG_TAG, "pchtr_a props: %04x", pChtr_a[i].flags);
-            pChtr_a[i].min_key_size = 0;
-            pChtr_a[i].val_handle = &pCharacteristic->m_handle;
+        
+		for(uint8_t i=0; i < numChrs; i++) {
+			pChr_a[i].uuid = &pCharacteristic->m_uuid.getNative()->u;
+            pChr_a[i].access_cb = NimBLECharacteristic::handleGapEvent;
+            pChr_a[i].arg = pCharacteristic;
+            pChr_a[i].descriptors = NULL;
+            pChr_a[i].flags = pCharacteristic->m_properties;
+            pChr_a[i].min_key_size = 0;
+            pChr_a[i].val_handle = &pCharacteristic->m_handle;
 			pCharacteristic = m_characteristicMap.getNext();
 		}
 		
-		pChtr_a[numChtrs].uuid = NULL;
-		svc[0].characteristics = pChtr_a;
+		pChr_a[numChrs].uuid = NULL;
+		svc[0].characteristics = pChr_a;
 	}
-	
+    
+	// end of services must indicate to api with type = 0
 	svc[1].type = 0;
     
     rc = ble_gatts_count_cfg((const ble_gatt_svc_def*)svc);
@@ -295,8 +296,9 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint
  * @return The new BLE characteristic.
  */
 NimBLECharacteristic* NimBLEService::createCharacteristic(NimBLEUUID uuid, uint32_t properties) {
-	NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties);
+	NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, this);
 	addCharacteristic(pCharacteristic);
+    //pCharacteristic->executeCreate(this);
 	return pCharacteristic;
 } // createCharacteristic
 

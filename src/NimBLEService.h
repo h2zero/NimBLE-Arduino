@@ -61,8 +61,8 @@ public:
 	NimBLECharacteristic* createCharacteristic(const char* uuid, uint32_t properties);
 	NimBLECharacteristic* createCharacteristic(NimBLEUUID uuid, uint32_t properties);
 	void               dump();
-	void               executeCreate(NimBLEServer* pServer);
-	void			   executeDelete();
+//	void               executeCreate(NimBLEServer* pServer);
+//	void			   executeDelete();
 	NimBLECharacteristic* getCharacteristic(const char* uuid);
 	NimBLECharacteristic* getCharacteristic(NimBLEUUID uuid);
 	NimBLEUUID            getUUID();
@@ -71,11 +71,11 @@ public:
 //	void			   stop();
 	std::string        toString();
 	uint16_t           getHandle();
-//	uint8_t			   m_instId = 0;
+	uint8_t			   m_instId = 0;
 
 private:
-	NimBLEService(const char* uuid, uint16_t numHandles);
-	NimBLEService(NimBLEUUID uuid, uint16_t numHandles);
+	NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer);
+	NimBLEService(NimBLEUUID uuid, uint16_t numHandles, NimBLEServer* pServer);
 	friend class NimBLEServer;
 //	friend class BLEServiceMap;
 //	friend class BLEDescriptor;

@@ -48,7 +48,8 @@
 #define BLEService                      NimBLEService
 #define BLECharacteristic               NimBLECharacteristic
 #define BLEAdvertising                  NimBLEAdvertising
-
+#define BLEServerCallbacks              NimBLEServerCallbacks
+#define BLECharacteristicCallbacks      NimBLECharacteristicCallbacks
 
 /**
  * @brief BLE functions.

@@ -17,11 +17,12 @@
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
 //#include "BLE2902.h"
-//#include "GeneralUtils.h"
 
 #include <string>
 
 #define NULL_HANDLE (0xffff)
+
+static NimBLECharacteristicCallbacks defaultCallback;
 
 static const char* LOG_TAG = "NimBLECharacteristic";
 
@@ -30,7 +31,8 @@ static const char* LOG_TAG = "NimBLECharacteristic";
  * @param [in] uuid - UUID (const char*) for the characteristic.
  * @param [in] properties - Properties for the characteristic.
  */
-NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint32_t properties) : NimBLECharacteristic(NimBLEUUID(uuid), properties) {
+NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint32_t properties, NimBLEService* pService) 
+: NimBLECharacteristic(NimBLEUUID(uuid), properties, pService) {
 }
 
 /**
@@ -38,11 +40,12 @@ NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint32_t properties
  * @param [in] uuid - UUID for the characteristic.
  * @param [in] properties - Properties for the characteristic.
  */
-NimBLECharacteristic::NimBLECharacteristic(NimBLEUUID uuid, uint32_t properties) {
-	m_bleUUID    = uuid;
+NimBLECharacteristic::NimBLECharacteristic(NimBLEUUID uuid, uint32_t properties, NimBLEService* pService) {
+	m_uuid       = uuid;
 	m_handle     = NULL_HANDLE;
 	m_properties = (uint16_t) 0;
-	m_pCallbacks = nullptr;
+	m_pCallbacks = &defaultCallback;
+    m_pService   = pService;
 
 	setBroadcastProperty((properties & PROPERTY_BROADCAST) != 0);
 	setReadProperty((properties & PROPERTY_READ) != 0);
@@ -77,16 +80,17 @@ void BLECharacteristic::addDescriptor(BLEDescriptor* pDescriptor) {
  * @brief Register a new characteristic with the ESP runtime.
  * @param [in] pService The service with which to associate this characteristic.
  */
+ /*
 void NimBLECharacteristic::executeCreate(NimBLEService* pService) {
 	NIMBLE_LOGD(LOG_TAG, ">> executeCreate()");
-/*
+
 	if (m_handle != NULL_HANDLE) {
 		ESP_LOGE(LOG_TAG, "Characteristic already has a handle.");
 		return;
 	}
-*/
+
 	m_pService = pService; // Save the service to which this characteristic belongs.
-/*
+
 	ESP_LOGD(LOG_TAG, "Registering characteristic (esp_ble_gatts_add_char): uuid: %s, service: %s",
 		getUUID().toString().c_str(),
 		m_pService->toString().c_str());
@@ -114,10 +118,10 @@ void NimBLECharacteristic::executeCreate(NimBLEService* pService) {
 		pDescriptor->executeCreate(this);
 		pDescriptor = m_descriptorMap.getNext();
 	} // End while
-*/
+
 	NIMBLE_LOGD(LOG_TAG, "<< executeCreate");
 } // executeCreate
-
+*/
 
 /**
  * @brief Return the BLE Descriptor for the given UUID if associated with this characteristic.
@@ -171,7 +175,7 @@ NimBLEService* NimBLECharacteristic::getService() {
  * @return The UUID of the characteristic.
  */
 NimBLEUUID NimBLECharacteristic::getUUID() {
-	return m_bleUUID;
+	return m_uuid;
 } // getUUID
 
 
@@ -179,21 +183,18 @@ NimBLEUUID NimBLECharacteristic::getUUID() {
  * @brief Retrieve the current value of the characteristic.
  * @return A pointer to storage containing the current characteristic value.
  */
- /*
-std::string BLECharacteristic::getValue() {
+std::string NimBLECharacteristic::getValue() {
 	return m_value.getValue();
 } // getValue
-*/
+
 
 /**
  * @brief Retrieve the current raw data of the characteristic.
  * @return A pointer to storage containing the current characteristic data.
  */
- /*
-uint8_t* BLECharacteristic::getData() {
+uint8_t* NimBLECharacteristic::getData() {
 	return m_value.getData();
 } // getData
-*/
 
 
 int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
@@ -201,19 +202,39 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                              void *arg)
 {
 	const ble_uuid_t *uuid;
-    int rand_num;
     int rc;
 	NimBLECharacteristic* pCharacteristic = (NimBLECharacteristic*)arg;
 	
-	NIMBLE_LOGE(LOG_TAG, "Characteristic gap event for %s", pCharacteristic->getUUID().toString().c_str());
+	NIMBLE_LOGD(LOG_TAG, "Characteristic %s %s event", pCharacteristic->getUUID().toString().c_str(),
+                                    ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR ? "Read" : "Write");
+                                    
 	uuid = ctxt->chr->uuid;
 	if(ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0){
-		assert(ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR);
-		rand_num = rand();
-        rc = os_mbuf_append(ctxt->om, &rand_num, sizeof rand_num);
-        return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+        switch(ctxt->op) {
+            case BLE_GATT_ACCESS_OP_READ_CHR: {
+                //if (pCharacteristic->m_pCallbacks != nullptr) {
+                    pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
+                //}
+                rc = os_mbuf_append(ctxt->om, pCharacteristic->getData(), pCharacteristic->m_value.getLength());
+                return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+            }
+            
+            case BLE_GATT_ACCESS_OP_WRITE_CHR: {
+                if (ctxt->om->om_len > BLE_ATT_ATTR_MAX_LEN) {
+                    return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+                }
+                
+                pCharacteristic->setValue(ctxt->om->om_data, ctxt->om->om_len);
+                //if (pCharacteristic->m_pCallbacks != nullptr) {
+                    pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
+                //}
+                return 0;
+            }
+            default:
+                break;
+        }
 	}
-	assert(0);
+    
     return BLE_ATT_ERR_UNLIKELY;
 }
 							 
@@ -492,85 +513,150 @@ void BLECharacteristic::handleGATTServerEvent(
 } // handleGATTServerEvent
 */
 
+
+/**
+ * @brief Set the subscribe status for this characteristic.
+ * This will maintain a map of subscribed clients and their indicate/notify status.
+ * @return N/A
+ */
+void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
+    uint16_t subVal;
+    if(event->subscribe.cur_notify) {
+        subVal = 1;
+    }else if(event->subscribe.cur_indicate) {
+        subVal = 2;
+    }else {
+        subVal = 0;
+    }
+    
+    m_semaphoreConfEvt.give(subVal == 2 ? 0 : NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
+    
+    NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d", event->subscribe.conn_handle, subVal);
+    
+    auto it = m_subscribedMap.find(event->subscribe.conn_handle);
+    if(it == m_subscribedMap.cend()) {
+        m_subscribedMap.insert(std::pair<uint16_t, uint16_t>(event->subscribe.conn_handle, subVal));
+        return;
+    }
+    
+    if(event->subscribe.reason == BLE_GAP_SUBSCRIBE_REASON_TERM) {
+        m_subscribedMap.erase(event->subscribe.conn_handle);
+        return;
+    }
+    
+    (*it).second = subVal;
+}
+
+
 /**
  * @brief Send an indication.
  * An indication is a transmission of up to the first 20 bytes of the characteristic value.  An indication
  * will block waiting a positive confirmation from the client.
  * @return N/A
  */
- /*
-void BLECharacteristic::indicate() {
-
-	ESP_LOGD(LOG_TAG, ">> indicate: length: %d", m_value.getValue().length());
+void NimBLECharacteristic::indicate() {
+	NIMBLE_LOGD(LOG_TAG, ">> indicate: length: %d", m_value.getValue().length());
 	notify(false);
-	ESP_LOGD(LOG_TAG, "<< indicate");
+	NIMBLE_LOGD(LOG_TAG, "<< indicate");
 } // indicate
-*/
-
+    
 /**
  * @brief Send a notify.
  * A notification is a transmission of up to the first 20 bytes of the characteristic value.  An notification
  * will not block; it is a fire and forget.
  * @return N/A.
  */
- /*
-void BLECharacteristic::notify(bool is_notification) {
-	ESP_LOGD(LOG_TAG, ">> notify: length: %d", m_value.getValue().length());
+void NimBLECharacteristic::notify(bool is_notification) {
+	NIMBLE_LOGD(LOG_TAG, ">> notify: length: %d", m_value.getValue().length());
 
 	assert(getService() != nullptr);
 	assert(getService()->getServer() != nullptr);
 
-	GeneralUtils::hexDump((uint8_t*)m_value.getValue().data(), m_value.getValue().length());
-
-	if (getService()->getServer()->getConnectedCount() == 0) {
-		ESP_LOGD(LOG_TAG, "<< notify: No connected clients.");
+/*
+    if (getService()->getServer()->getConnectedCount() == 0) {
+		NIMBLE_LOGD(LOG_TAG, "<< notify: No connected clients.");
 		return;
 	}
-
-	// Test to see if we have a 0x2902 descriptor.  If we do, then check to see if notification is enabled
-	// and, if not, prevent the notification.
-
-	BLE2902* p2902 = (BLE2902*)getDescriptorByUUID((uint16_t)0x2902);
-	if(p2902 == nullptr){
-		ESP_LOGE(LOG_TAG, "Characteristic without 0x2902 descriptor");
-		return;
-	}
-	if(is_notification) {
-		if (p2902 != nullptr && !p2902->getNotifications()) {
-			ESP_LOGD(LOG_TAG, "<< notifications disabled; ignoring");
-			return;
-		}
-	}
-	else{
-		if (p2902 != nullptr && !p2902->getIndications()) {
-			ESP_LOGD(LOG_TAG, "<< indications disabled; ignoring");
-			return;
-		}
-	}
-	for (auto &myPair : getService()->getServer()->getPeerDevices(false)) {
-		uint16_t _mtu = (myPair.second.mtu);
-		if (m_value.getValue().length() > _mtu - 3) {
-			ESP_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
-		}
-
-		size_t length = m_value.getValue().length();
-		if(!is_notification)
-			m_semaphoreConfEvt.take("indicate");
-		esp_err_t errRc = ::esp_ble_gatts_send_indicate(
-				getService()->getServer()->getGattsIf(),
-				myPair.first,
-				getHandle(), length, (uint8_t*)m_value.getValue().data(), !is_notification); // The need_confirm = false makes this a notify.
-		if (errRc != ESP_OK) {
-			ESP_LOGE(LOG_TAG, "<< esp_ble_gatts_send_ %s: rc=%d %s",is_notification?"notify":"indicate", errRc, GeneralUtils::errorToString(errRc));
-			m_semaphoreConfEvt.give();
-			return;
-		}
-		if(!is_notification)
-			m_semaphoreConfEvt.wait("indicate");
-	}
-	ESP_LOGD(LOG_TAG, "<< notify");
-} // Notify
 */
+    m_pCallbacks->onNotify(this);
+    
+    int rc = 0;
+    os_mbuf *om;
+    size_t length = m_value.getValue().length();
+    uint8_t* data = (uint8_t*)m_value.getValue().data();
+    
+    for (auto it = m_subscribedMap.cbegin(); it != m_subscribedMap.cend(); ++it) {
+        uint16_t _mtu = getService()->getServer()->getPeerMTU((*it).first);
+        
+        if(_mtu == 0) {
+            NIMBLE_LOGD(LOG_TAG, "peer not connected, removing from map");
+            m_subscribedMap.erase((*it).first);
+            it = m_subscribedMap.cbegin();
+            if(it == m_subscribedMap.cend()) {
+                return;
+            }
+            continue;
+        }
+        
+        NIMBLE_LOGD(LOG_TAG, "Client MTU = %d", _mtu);
+        
+        if (length > _mtu - 3) {
+			NIMBLE_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
+		}
+        
+        if((*it).second == 0) {
+            NIMBLE_LOGI(LOG_TAG, "Skipping unsubscribed client");
+            continue;
+        }
+        
+        if((*it).second == 2 && is_notification) {
+            NIMBLE_LOGW(LOG_TAG, 
+            "Sending notification to client subscribed to indications, sending indication instead");
+            is_notification = false;
+        }
+        
+        if((*it).second == 1 && !is_notification) {
+            NIMBLE_LOGW(LOG_TAG,
+            "Sending indication to client subscribed to notifications, sending notifications instead");
+            is_notification = true;
+        }
+        
+        // don't create the m_buf until we are sure to send the data or else
+        // we could be allocating a buffer that doesn't get released.
+        // We also must create it in each loop iteration because it is consumed with each host call.
+        om = ble_hs_mbuf_from_flat(data, length);
+        
+        if(!is_notification) {
+            m_semaphoreConfEvt.take("indicate");
+            rc = ble_gattc_indicate_custom((*it).first, m_handle, om);
+            if(rc != 0){
+                m_semaphoreConfEvt.give();
+                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_GATT, rc);
+                return;
+            }
+            
+            rc = m_semaphoreConfEvt.wait();
+            
+            if(rc == BLE_HS_ETIMEOUT) {
+                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT, 0);
+            } else if(rc == BLE_HS_EDONE) {
+                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE, rc);
+            } else {
+                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE, rc);
+            }
+        } else {
+            rc = ble_gattc_notify_custom((*it).first, m_handle, om);
+            if(rc == 0) {
+                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::SUCCESS_NOTIFY, 0);
+            } else {
+                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_GATT, rc); 
+            }
+        }
+	}
+    
+	NIMBLE_LOGD(LOG_TAG, "<< notify");
+} // Notify
+
 
 /**
  * @brief Set the permission to broadcast.
@@ -593,7 +679,11 @@ void NimBLECharacteristic::setBroadcastProperty(bool value) {
  * @param [in] pCallbacks An instance of a callbacks structure used to define any callbacks for the characteristic.
  */
 void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallbacks) {
-	m_pCallbacks = pCallbacks;
+	if (pCallbacks != nullptr){
+		m_pCallbacks = pCallbacks;
+	} else {
+		m_pCallbacks = &defaultCallback;
+	}
 } // setCallbacks
 
 
@@ -658,19 +748,25 @@ void NimBLECharacteristic::setReadProperty(bool value) {
  * @param [in] data The data to set for the characteristic.
  * @param [in] length The length of the data in bytes.
  */
- /*
-void BLECharacteristic::setValue(uint8_t* data, size_t length) {
-	char* pHex = BLEUtils::buildHexData(nullptr, data, length);
-	ESP_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
+void NimBLECharacteristic::setValue(uint8_t* data, size_t length) {
+	char* pHex = NimBLEUtils::buildHexData(nullptr, data, length);
+	NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
 	free(pHex);
-	if (length > ESP_GATT_MAX_ATTR_LEN) {
-		ESP_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
+
+	if (length > BLE_ATT_ATTR_MAX_LEN) {
+		NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, BLE_ATT_ATTR_MAX_LEN);
 		return;
 	}
+    
 	m_value.setValue(data, length);
-	ESP_LOGD(LOG_TAG, "<< setValue");
+    
+  //  if(m_handle != NULL_HANDLE) {
+        //ble_gatts_chr_updated(m_handle);
+       // ble_gattc_notify(getService()->getServer()->m_connId, m_handle);
+  //  }
+    
+	NIMBLE_LOGD(LOG_TAG, "<< setValue");
 } // setValue
-*/
 
 /**
  * @brief Set the value of the characteristic from string data.
@@ -679,19 +775,19 @@ void BLECharacteristic::setValue(uint8_t* data, size_t length) {
  * @param [in] Set the value of the characteristic.
  * @return N/A.
  */
- /*
-void BLECharacteristic::setValue(std::string value) {
+ 
+void NimBLECharacteristic::setValue(std::string value) {
 	setValue((uint8_t*)(value.data()), value.length());
 } // setValue
 
-void BLECharacteristic::setValue(uint16_t& data16) {
+void NimBLECharacteristic::setValue(uint16_t& data16) {
 	uint8_t temp[2];
 	temp[0] = data16;
 	temp[1] = data16 >> 8;
 	setValue(temp, 2);
 } // setValue
 
-void BLECharacteristic::setValue(uint32_t& data32) {
+void NimBLECharacteristic::setValue(uint32_t& data32) {
 	uint8_t temp[4];
 	temp[0] = data32;
 	temp[1] = data32 >> 8;
@@ -700,7 +796,7 @@ void BLECharacteristic::setValue(uint32_t& data32) {
 	setValue(temp, 4);
 } // setValue
 
-void BLECharacteristic::setValue(int& data32) {
+void NimBLECharacteristic::setValue(int& data32) {
 	uint8_t temp[4];
 	temp[0] = data32;
 	temp[1] = data32 >> 8;
@@ -709,18 +805,16 @@ void BLECharacteristic::setValue(int& data32) {
 	setValue(temp, 4);
 } // setValue
 
-void BLECharacteristic::setValue(float& data32) {
-	uint8_t temp[4];
-	*((float*)temp) = data32;
-	setValue(temp, 4);
+void NimBLECharacteristic::setValue(float& data32) {
+	float temp = data32;
+	setValue((uint8_t*)&temp, 4);
 } // setValue
 
-void BLECharacteristic::setValue(double& data64) {
-	uint8_t temp[8];
-	*((double*)temp) = data64;
-	setValue(temp, 8);
+void NimBLECharacteristic::setValue(double& data64) {
+	double temp = data64;
+	setValue((uint8_t*)&temp, 8);
 } // setValue
-*/
+
 
 /**
  * @brief Set the Write No Response property value.
@@ -753,7 +847,7 @@ void NimBLECharacteristic::setWriteProperty(bool value) {
  * @return A string representation of the characteristic.
  */
 std::string NimBLECharacteristic::toString() {
-	std::string res = "UUID: " + m_bleUUID.toString() + ", handle : 0x";
+	std::string res = "UUID: " + m_uuid.toString() + ", handle : 0x";
 	char hex[5];
 	snprintf(hex, sizeof(hex), "%04x", m_handle);
 	res += hex;
@@ -776,8 +870,8 @@ NimBLECharacteristicCallbacks::~NimBLECharacteristicCallbacks() {}
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic) {
-	NIMBLE_LOGD("BLECharacteristicCallbacks", ">> onRead: default");
-	NIMBLE_LOGD("BLECharacteristicCallbacks", "<< onRead");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", ">> onRead: default");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "<< onRead");
 } // onRead
 
 
@@ -786,8 +880,30 @@ void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
-	NIMBLE_LOGD("BLECharacteristicCallbacks", ">> onWrite: default");
-	NIMBLE_LOGD("BLECharacteristicCallbacks", "<< onWrite");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", ">> onWrite: default");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "<< onWrite");
 } // onWrite
+
+
+/**
+ * @brief Callback function to support a Notify request.
+ * @param [in] pCharacteristic The characteristic that is the source of the event.
+ */
+void NimBLECharacteristicCallbacks::onNotify(NimBLECharacteristic* pCharacteristic) {
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", ">> onNotify: default");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "<< onNotify");
+} // onNotify
+
+
+/**
+ * @brief Callback function to support a Notify/Indicate Status report.
+ * @param [in] pCharacteristic The characteristic that is the source of the event.
+ * @param [in] s Status of the notification/indication
+ * @param [in] code Additional code of underlying errors
+ */
+void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code) {
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", ">> onStatus: default");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "<< onStatus");
+} // onStatus
 
 #endif /* CONFIG_BT_ENABLED */

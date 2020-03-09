@@ -17,6 +17,8 @@
 #if defined(CONFIG_BT_ENABLED)
 #include "services/gap/ble_svc_gap.h"
 #include "NimBLEAdvertising.h"
+#include "NimBLEDevice.h"
+#include "NimBLEServer.h"
 //#include <esp_err.h>
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -118,6 +120,7 @@ void BLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
 	m_advData.max_interval = maxinterval;
 } // 
 */
+
 void NimBLEAdvertising::setScanResponse(bool set) {
 	m_scanResp = set;
 }
@@ -195,56 +198,68 @@ void BLEAdvertising::setScanResponseData(BLEAdvertisementData& advertisementData
  */
 void NimBLEAdvertising::start() {
 	NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
-	ble_uuid16_t* uuids16 = nullptr;
-	ble_uuid32_t* uuids32 = nullptr;
-	ble_uuid128_t* uuids128 = nullptr;
+    
 	int numServices = m_serviceUUIDs.size();
     int rc = 0;
     uint8_t addressType;
-	
-	if (numServices > 0) {
+	        
+	if (!m_advSvcsSet && numServices > 0) {
 		for (int i = 0; i < numServices; i++) {
-			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_16){
-				m_advData.num_uuids16++;
-                if(nullptr == (uuids16 = (ble_uuid16_t*)realloc(uuids16, m_advData.num_uuids16 * sizeof(ble_uuid16_t)))) {
+			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_16) {
+                if(nullptr == (m_advData.uuids16 = (ble_uuid16_t*)realloc(m_advData.uuids16, 
+                                    (m_advData.num_uuids16 + 1) * sizeof(ble_uuid16_t)))) 
+                {
                     NIMBLE_LOGE(LOG_TAG, "Error, no mem");
                     abort();
                 }
-                memcpy(&uuids16[m_advData.num_uuids16].value, &m_serviceUUIDs[i].getNative()->u16.value, sizeof(uint16_t));
-                uuids16[m_advData.num_uuids16].u.type = BLE_UUID_TYPE_16;
+                memcpy(&m_advData.uuids16[m_advData.num_uuids16].value, 
+                            &m_serviceUUIDs[i].getNative()->u16.value, sizeof(uint16_t));
+                            
+                m_advData.uuids16[m_advData.num_uuids16].u.type = BLE_UUID_TYPE_16;
+      /*          
 				char buf[BLE_UUID_STR_LEN];
-				ble_uuid_to_str(&uuids128[m_advData.num_uuids128].u, buf);
-				NIMBLE_LOGE(LOG_TAG, "Advertising UUID: %s", buf);
+				ble_uuid_to_str(&m_advData.uuids16[m_advData.num_uuids16].u, buf);
+				NIMBLE_LOGI(LOG_TAG, "Advertising UUID: %s", buf);
+      */         
                 m_advData.uuids16_is_complete = 1;
-                m_advData.uuids16 = uuids16;  
+                m_advData.num_uuids16++;
 			}
-			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_32){
-				m_advData.num_uuids32++;
-                if(nullptr == (uuids32 = (ble_uuid32_t*)realloc(uuids32, m_advData.num_uuids32 * sizeof(ble_uuid32_t)))) {
+			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_32) {
+                if(nullptr == (m_advData.uuids32 = (ble_uuid32_t*)realloc(m_advData.uuids32,
+                                    (m_advData.num_uuids32 + 1) * sizeof(ble_uuid32_t)))) 
+                {
                     NIMBLE_LOGE(LOG_TAG, "Error, no mem");
                     abort();
                 }
-                memcpy(&uuids32[m_advData.num_uuids32].value, &m_serviceUUIDs[i].getNative()->u32.value, sizeof(uint32_t));
-                uuids32[m_advData.num_uuids32].u.type = BLE_UUID_TYPE_32;
+                memcpy(&m_advData.uuids32[m_advData.num_uuids32].value, 
+                            &m_serviceUUIDs[i].getNative()->u32.value, sizeof(uint32_t));
+                            
+                m_advData.uuids32[m_advData.num_uuids32].u.type = BLE_UUID_TYPE_32;
+      /*           
 				char buf[BLE_UUID_STR_LEN];
-				ble_uuid_to_str(&uuids128[m_advData.num_uuids128].u, buf);
-				NIMBLE_LOGE(LOG_TAG, "Advertising UUID: %s", buf);
+				ble_uuid_to_str(&m_advData.uuids32[m_advData.num_uuids32].u, buf);
+				NIMBLE_LOGI(LOG_TAG, "Advertising UUID: %s", buf);
+      */         
                 m_advData.uuids32_is_complete = 1;
-                m_advData.uuids32 = uuids32; 
+                m_advData.num_uuids32++;
 			}
 			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_128){
-				m_advData.num_uuids128++;
-                if(nullptr == (uuids128 = (ble_uuid128_t*)realloc(uuids128, m_advData.num_uuids128 * sizeof(ble_uuid128_t)))) {
+                if(nullptr == (m_advData.uuids128 = (ble_uuid128_t*)realloc(m_advData.uuids128, 
+                                    (m_advData.num_uuids128 + 1) * sizeof(ble_uuid128_t)))) {
                     NIMBLE_LOGE(LOG_TAG, "Error, no mem");
                     abort();
                 }
-                memcpy(&uuids128[m_advData.num_uuids128].value, &m_serviceUUIDs[i].getNative()->u128.value, 16);
-                uuids128[m_advData.num_uuids128].u.type = BLE_UUID_TYPE_128;
+                memcpy(&m_advData.uuids128[m_advData.num_uuids128].value, 
+                            &m_serviceUUIDs[i].getNative()->u128.value, 16);
+                            
+                m_advData.uuids128[m_advData.num_uuids128].u.type = BLE_UUID_TYPE_128;
+      /*          
 				char buf[BLE_UUID_STR_LEN];
-				ble_uuid_to_str(&uuids128[m_advData.num_uuids128].u, buf);
-				NIMBLE_LOGE(LOG_TAG, "Advertising UUID: %s", buf);
+				ble_uuid_to_str(&m_advData.uuids128[m_advData.num_uuids128].u, buf);
+				NIMBLE_LOGI(LOG_TAG, "Advertising UUID: %s", buf);
+      */         
                 m_advData.uuids128_is_complete = 1;
-                m_advData.uuids128 = uuids128; 
+                m_advData.num_uuids128++;
 			}
 		}
         
@@ -254,25 +269,40 @@ void NimBLEAdvertising::start() {
             abort();
         }
         
-        rc = ble_hs_id_infer_auto(0, &addressType);
-        if (rc != 0) {
-            NIMBLE_LOGE(LOG_TAG, "error determining address type; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
-            abort();
+        if(m_advData.num_uuids128 > 0) {
+            free(m_advData.uuids128);
+            m_advData.uuids128 = nullptr;
+            m_advData.num_uuids128 = 0;
         }
         
-		rc = ble_gatts_start();
-		if (rc != 0) {
-			NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
-			abort();
-		}
-		
-        rc = ble_gap_adv_start(addressType, NULL, BLE_HS_FOREVER,
-                           &m_advParams, NULL, NULL);
-        if (rc != 0) {
-            NIMBLE_LOGE(LOG_TAG, "error enabling advertisement; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
-            abort();
+        if(m_advData.num_uuids32 > 0) {
+            free(m_advData.uuids32);
+            m_advData.uuids32 = nullptr;
+            m_advData.num_uuids32 = 0;
         }
+        
+        if(m_advData.num_uuids16 > 0) {
+            free(m_advData.uuids16);
+            m_advData.uuids16 = nullptr;
+            m_advData.num_uuids16 = 0;
+        }
+        
+        m_advSvcsSet = true;
     }
+    
+    rc = ble_hs_id_infer_auto(0, &addressType);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "error determining address type; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        abort();
+    }      
+
+    rc = ble_gap_adv_start(addressType, NULL, BLE_HS_FOREVER,
+                &m_advParams, NimBLEServer::handleGapEvent, NimBLEDevice::createServer()); //get a reference to the server (does not create a new one)
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "error enabling advertisement; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        abort();
+    }
+
 /*
 		m_advData.service_uuid_len = 16 * numServices;
 		m_advData.p_service_uuid = new uint8_t[m_advData.service_uuid_len];
@@ -289,27 +319,7 @@ void NimBLEAdvertising::start() {
 	}
 */
 /*
-	// We have a vector of service UUIDs that we wish to advertise.  In order to use the
-	// ESP-IDF framework, these must be supplied in a contiguous array of their 128bit (16 byte)
-	// representations.  If we have 1 or more services to advertise then we allocate enough
-	// storage to host them and then copy them in one at a time into the contiguous storage.
-	int numServices = m_serviceUUIDs.size();
-	if (numServices > 0) {
-		m_advData.service_uuid_len = 16 * numServices;
-		m_advData.p_service_uuid = new uint8_t[m_advData.service_uuid_len];
-		uint8_t* p = m_advData.p_service_uuid;
-		for (int i = 0; i < numServices; i++) {
-			ESP_LOGD(LOG_TAG, "- advertising service: %s", m_serviceUUIDs[i].toString().c_str());
-			BLEUUID serviceUUID128 = m_serviceUUIDs[i].to128();
-			memcpy(p, serviceUUID128.getNative()->uuid.uuid128, 16);
-			p += 16;
-		}
-	} else {
-		m_advData.service_uuid_len = 0;
-		ESP_LOGD(LOG_TAG, "- no services advertised");
-	}
 
-	esp_err_t errRc;
 
 	if (!m_customAdvData) {
 		// Set the configuration for advertising.
@@ -349,7 +359,6 @@ void NimBLEAdvertising::start() {
 	}
 */
 	NIMBLE_LOGD(LOG_TAG, "<< Advertising start");
-	ble_gatts_show_local();
 } // start
 
 
@@ -360,28 +369,27 @@ void NimBLEAdvertising::start() {
  */
 void NimBLEAdvertising::stop() {
 	NIMBLE_LOGD(LOG_TAG, ">> stop");
-	/*
-	esp_err_t errRc = ::esp_ble_gap_stop_advertising();
-	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "esp_ble_gap_stop_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+	int rc = ble_gap_adv_stop();
+	if (rc != 0 && rc != BLE_HS_EALREADY) {
+		NIMBLE_LOGE(LOG_TAG, "ble_gap_adv_stop rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
 		return;
 	}
-	*/
+
 	NIMBLE_LOGD(LOG_TAG, "<< stop");
 } // stop
+
 
 /**
  * @brief Add data to the payload to be advertised.
  * @param [in] data The data to be added to the payload.
  */
- /*
 void NimBLEAdvertisementData::addData(std::string data) {
-	if ((m_payload.length() + data.length()) > ESP_BLE_ADV_DATA_LEN_MAX) {
+	if ((m_payload.length() + data.length()) > BLE_HS_ADV_MAX_SZ) {
 		return;
 	}
 	m_payload.append(data);
 } // addData
-*/
+
 
 /**
  * @brief Set the appearance.
@@ -390,44 +398,42 @@ void NimBLEAdvertisementData::addData(std::string data) {
  * See also:
  * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.gap.appearance.xml
  */
- /*
 void NimBLEAdvertisementData::setAppearance(uint16_t appearance) {
 	char cdata[2];
 	cdata[0] = 3;
-	cdata[1] = ESP_BLE_AD_TYPE_APPEARANCE; // 0x19
+	cdata[1] = BLE_HS_ADV_TYPE_APPEARANCE; // 0x19
 	addData(std::string(cdata, 2) + std::string((char*) &appearance, 2));
 } // setAppearance
-*/
+
 
 /**
  * @brief Set the complete services.
  * @param [in] uuid The single service to advertise.
  */
- /*
-void NimBLEAdvertisementData::setCompleteServices(BLEUUID uuid) {
+void NimBLEAdvertisementData::setCompleteServices(NimBLEUUID uuid) {
 	char cdata[2];
 	switch (uuid.bitSize()) {
 		case 16: {
 			// [Len] [0x02] [LL] [HH]
 			cdata[0] = 3;
-			cdata[1] = ESP_BLE_AD_TYPE_16SRV_CMPL;  // 0x03
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid16, 2));
+			cdata[1] = BLE_HS_ADV_TYPE_COMP_UUIDS16;  // 0x03
+			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->u16.value, 2));
 			break;
 		}
 
 		case 32: {
 			// [Len] [0x04] [LL] [LL] [HH] [HH]
 			cdata[0] = 5;
-			cdata[1] = ESP_BLE_AD_TYPE_32SRV_CMPL;  // 0x05
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid32, 4));
+			cdata[1] = BLE_HS_ADV_TYPE_COMP_UUIDS32;  // 0x05
+			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->u32.value, 4));
 			break;
 		}
 
 		case 128: {
 			// [Len] [0x04] [0] [1] ... [15]
 			cdata[0] = 17;
-			cdata[1] = ESP_BLE_AD_TYPE_128SRV_CMPL;  // 0x07
-			addData(std::string(cdata, 2) + std::string((char*) uuid.getNative()->uuid.uuid128, 16));
+			cdata[1] = BLE_HS_ADV_TYPE_COMP_UUIDS128;  // 0x07
+			addData(std::string(cdata, 2) + std::string((char*) uuid.getNative()->u128.value, 16));
 			break;
 		}
 
@@ -435,89 +441,89 @@ void NimBLEAdvertisementData::setCompleteServices(BLEUUID uuid) {
 			return;
 	}
 } // setCompleteServices
-*/
+
 
 /**
  * @brief Set the advertisement flags.
  * @param [in] The flags to be set in the advertisement.
- *
+ * * ****DO NOT USE THESE****
  * * ESP_BLE_ADV_FLAG_LIMIT_DISC
  * * ESP_BLE_ADV_FLAG_GEN_DISC
  * * ESP_BLE_ADV_FLAG_BREDR_NOT_SPT
  * * ESP_BLE_ADV_FLAG_DMT_CONTROLLER_SPT
  * * ESP_BLE_ADV_FLAG_DMT_HOST_SPT
  * * ESP_BLE_ADV_FLAG_NON_LIMIT_DISC
+ * * 
+ * * ****THESE ARE SUPPORTED****
+ * * BLE_HS_ADV_F_DISC_LTD
+ * * BLE_HS_ADV_F_DISC_GEN
+ * * BLE_HS_ADV_F_BREDR_UNSUP - must always use with NimBLE
  */
- /*
 void NimBLEAdvertisementData::setFlags(uint8_t flag) {
 	char cdata[3];
 	cdata[0] = 2;
-	cdata[1] = ESP_BLE_AD_TYPE_FLAG;  // 0x01
-	cdata[2] = flag;
+	cdata[1] = BLE_HS_ADV_TYPE_FLAGS;  // 0x01
+	cdata[2] = flag | BLE_HS_ADV_F_BREDR_UNSUP;
 	addData(std::string(cdata, 3));
 } // setFlag
-*/
 
 
 /**
  * @brief Set manufacturer specific data.
  * @param [in] data Manufacturer data.
  */
- /*
 void NimBLEAdvertisementData::setManufacturerData(std::string data) {
-	ESP_LOGD("BLEAdvertisementData", ">> setManufacturerData");
+	NIMBLE_LOGD("NimBLEAdvertisementData", ">> setManufacturerData");
 	char cdata[2];
 	cdata[0] = data.length() + 1;
-	cdata[1] = ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE;  // 0xff
+	cdata[1] = BLE_HS_ADV_TYPE_MFG_DATA ;  // 0xff
 	addData(std::string(cdata, 2) + data);
-	ESP_LOGD("BLEAdvertisementData", "<< setManufacturerData");
+	NIMBLE_LOGD("NimBLEAdvertisementData", "<< setManufacturerData");
 } // setManufacturerData
-*/
+
 
 /**
  * @brief Set the name.
  * @param [in] The complete name of the device.
  */
- /*
 void NimBLEAdvertisementData::setName(std::string name) {
-	ESP_LOGD("NimBLEAdvertisementData", ">> setName: %s", name.c_str());
+	NIMBLE_LOGD("NimBLEAdvertisementData", ">> setName: %s", name.c_str());
 	char cdata[2];
 	cdata[0] = name.length() + 1;
-	cdata[1] = ESP_BLE_AD_TYPE_NAME_CMPL;  // 0x09
+	cdata[1] = BLE_HS_ADV_TYPE_COMP_NAME;  // 0x09
 	addData(std::string(cdata, 2) + name);
-	ESP_LOGD("NimBLEAdvertisementData", "<< setName");
+	NIMBLE_LOGD("NimBLEAdvertisementData", "<< setName");
 } // setName
-*/
+
 
 /**
  * @brief Set the partial services.
  * @param [in] uuid The single service to advertise.
  */
- /*
 void NimBLEAdvertisementData::setPartialServices(NimBLEUUID uuid) {
 	char cdata[2];
 	switch (uuid.bitSize()) {
 		case 16: {
 			// [Len] [0x02] [LL] [HH]
 			cdata[0] = 3;
-			cdata[1] = ESP_BLE_AD_TYPE_16SRV_PART;  // 0x02
-			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->uuid.uuid16, 2));
+			cdata[1] =  BLE_HS_ADV_TYPE_INCOMP_UUIDS16;  // 0x02
+			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->u16.value, 2));
 			break;
 		}
 
 		case 32: {
 			// [Len] [0x04] [LL] [LL] [HH] [HH]
 			cdata[0] = 5;
-			cdata[1] = ESP_BLE_AD_TYPE_32SRV_PART; // 0x04
-			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->uuid.uuid32, 4));
+			cdata[1] =  BLE_HS_ADV_TYPE_INCOMP_UUIDS32; // 0x04
+			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->u32.value, 4));
 			break;
 		}
 
 		case 128: {
 			// [Len] [0x04] [0] [1] ... [15]
 			cdata[0] = 17;
-			cdata[1] = ESP_BLE_AD_TYPE_128SRV_PART;  // 0x06
-			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->uuid.uuid128, 16));
+			cdata[1] = BLE_HS_ADV_TYPE_INCOMP_UUIDS128;  // 0x06
+			addData(std::string(cdata, 2) + std::string((char *) &uuid.getNative()->u128.value, 16));
 			break;
 		}
 
@@ -525,38 +531,37 @@ void NimBLEAdvertisementData::setPartialServices(NimBLEUUID uuid) {
 			return;
 	}
 } // setPartialServices
-*/
+
 
 /**
  * @brief Set the service data (UUID + data)
  * @param [in] uuid The UUID to set with the service data.  Size of UUID will be used.
  * @param [in] data The data to be associated with the service data advert.
  */
- /*
-void NimBLEAdvertisementData::setServiceData(BLEUUID uuid, std::string data) {
+void NimBLEAdvertisementData::setServiceData(NimBLEUUID uuid, std::string data) {
 	char cdata[2];
 	switch (uuid.bitSize()) {
 		case 16: {
 			// [Len] [0x16] [UUID16] data
 			cdata[0] = data.length() + 3;
-			cdata[1] = ESP_BLE_AD_TYPE_SERVICE_DATA;  // 0x16
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid16, 2) + data);
+			cdata[1] = BLE_HS_ADV_TYPE_SVC_DATA_UUID16;  // 0x16
+			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->u16.value, 2) + data);
 			break;
 		}
 
 		case 32: {
 			// [Len] [0x20] [UUID32] data
 			cdata[0] = data.length() + 5;
-			cdata[1] = ESP_BLE_AD_TYPE_32SERVICE_DATA; // 0x20
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid32, 4) + data);
+			cdata[1] = BLE_HS_ADV_TYPE_SVC_DATA_UUID32; // 0x20
+			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->u32.value, 4) + data);
 			break;
 		}
 
 		case 128: {
 			// [Len] [0x21] [UUID128] data
 			cdata[0] = data.length() + 17;
-			cdata[1] = ESP_BLE_AD_TYPE_128SERVICE_DATA;  // 0x21
-			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->uuid.uuid128, 16) + data);
+			cdata[1] = BLE_HS_ADV_TYPE_SVC_DATA_UUID128;  // 0x21
+			addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->u128.value, 16) + data);
 			break;
 		}
 
@@ -564,22 +569,21 @@ void NimBLEAdvertisementData::setServiceData(BLEUUID uuid, std::string data) {
 			return;
 	}
 } // setServiceData
-*/
+
 
 /**
  * @brief Set the short name.
  * @param [in] The short name of the device.
  */
- /*
 void NimBLEAdvertisementData::setShortName(std::string name) {
-	ESP_LOGD("NimBLEAdvertisementData", ">> setShortName: %s", name.c_str());
+	NIMBLE_LOGD("NimBLEAdvertisementData", ">> setShortName: %s", name.c_str());
 	char cdata[2];
 	cdata[0] = name.length() + 1;
-	cdata[1] = ESP_BLE_AD_TYPE_NAME_SHORT;  // 0x08
+	cdata[1] = BLE_HS_ADV_TYPE_INCOMP_NAME;  // 0x08
 	addData(std::string(cdata, 2) + name);
-	ESP_LOGD("NimBLEAdvertisementData", "<< setShortName");
+	NIMBLE_LOGD("NimBLEAdvertisementData", "<< setShortName");
 } // setShortName
-*/
+
 
 /**
  * @brief Retrieve the payload that is to be advertised.

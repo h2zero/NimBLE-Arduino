@@ -16,16 +16,22 @@
 #define MAIN_BLEADVERTISING_H_
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
-#include "host/ble_hs.h"
+
 #include "host/ble_gap.h"
-//#include <esp_gap_ble_api.h>
+
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
 
-
-
 #include <vector>
 
+/* COMPATIBILITY - DO NOT USE */
+#define ESP_BLE_ADV_FLAG_LIMIT_DISC         (0x01 << 0)
+#define ESP_BLE_ADV_FLAG_GEN_DISC           (0x01 << 1)
+#define ESP_BLE_ADV_FLAG_BREDR_NOT_SPT      (0x01 << 2)
+#define ESP_BLE_ADV_FLAG_DMT_CONTROLLER_SPT (0x01 << 3)
+#define ESP_BLE_ADV_FLAG_DMT_HOST_SPT       (0x01 << 4)
+#define ESP_BLE_ADV_FLAG_NON_LIMIT_DISC     (0x00 )
+ /* ************************* */
 
 /**
  * @brief Advertisement data set by the programmer to be published by the %BLE server.
@@ -35,15 +41,15 @@ class NimBLEAdvertisementData {
 	// be exposed on demand/request or as time permits.
 	//
 public:
-//	void setAppearance(uint16_t appearance);
-//	void setCompleteServices(NimBLEUUID uuid);
-//	void setFlags(uint8_t);
-//	void setManufacturerData(std::string data);
-//	void setName(std::string name);
-//	void setPartialServices(NimBLEUUID uuid);
-//	void setServiceData(NimBLEUUID uuid, std::string data);
-//	void setShortName(std::string name);
-//	void        addData(std::string data);  // Add data to the payload.
+	void setAppearance(uint16_t appearance);
+	void setCompleteServices(NimBLEUUID uuid);
+	void setFlags(uint8_t);
+	void setManufacturerData(std::string data);
+	void setName(std::string name);
+	void setPartialServices(NimBLEUUID uuid);
+	void setServiceData(NimBLEUUID uuid, std::string data);
+	void setShortName(std::string name);
+	void addData(std::string data);  // Add data to the payload.
 	std::string getPayload();               // Retrieve the current advert payload.
 
 private:
@@ -84,7 +90,8 @@ private:
 	bool                 m_customAdvData = false;  // Are we using custom advertising data?
 	bool                 m_customScanResponseData = false;  // Are we using custom scan response data?
 //	FreeRTOS::Semaphore  m_semaphoreSetAdv = FreeRTOS::Semaphore("startAdvert");
-	bool				m_scanResp = true;
+	bool				 m_scanResp = true;
+    bool                 m_advSvcsSet = false;
 
 };
 #endif /* CONFIG_BT_ENABLED */

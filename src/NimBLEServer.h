@@ -22,7 +22,7 @@
 #include "NimBLEAddress.h"
 #include "NimBLEUUID.h"
 #include "NimBLEAdvertising.h"
-//#include "BLECharacteristic.h"
+//#include "NimBLECharacteristic.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"
 #include "FreeRTOS.h"
@@ -31,6 +31,7 @@
 #include <map>
 
 class NimBLEService;
+class NimBLECharacteristic;
 class NimBLEServerCallbacks;
 /* TODO possibly refactor this struct */ 
 typedef struct {
@@ -43,74 +44,76 @@ typedef struct {
 /**
  * @brief A data structure that manages the %BLE servers owned by a BLE server.
  */
- /*
-class BLEServiceMap {
+class NimBLEServiceMap {
 public:
-    BLEService* getByHandle(uint16_t handle);
-    BLEService* getByUUID(const char* uuid);    
-    BLEService* getByUUID(BLEUUID uuid, uint8_t inst_id = 0);
-    void        handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
-    void        setByHandle(uint16_t handle, BLEService* service);
-    void        setByUUID(const char* uuid, BLEService* service);
-    void        setByUUID(BLEUUID uuid, BLEService* service);
-    std::string toString();
-    BLEService* getFirst();
-    BLEService* getNext();
-    void        removeService(BLEService *service);
-    int         getRegisteredServiceCount();
+//    NimBLEService* getByHandle(uint16_t handle);
+    NimBLEService* getByUUID(const char* uuid);    
+    NimBLEService* getByUUID(NimBLEUUID uuid, uint8_t inst_id = 0);
+//    void           handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
+//    void           setByHandle(uint16_t handle, NimBLEService* service);
+    void           setByUUID(const char* uuid, NimBLEService* service);
+    void           setByUUID(NimBLEUUID uuid, NimBLEService* service);
+    std::string    toString();
+    NimBLEService* getFirst();
+    NimBLEService* getNext();
+    void           removeService(NimBLEService *service);
+    int            getRegisteredServiceCount();
 
 private:
-    std::map<uint16_t, BLEService*>    m_handleMap;
-    std::map<BLEService*, std::string> m_uuidMap;
-    std::map<BLEService*, std::string>::iterator m_iterator;
+//    std::map<uint16_t, NimBLEService*>    m_handleMap;
+    std::map<NimBLEService*, std::string> m_uuidMap;
+    std::map<NimBLEService*, std::string>::iterator m_iterator;
 };
-*/
+
 
 /**
  * @brief The model of a %BLE server.
  */
 class NimBLEServer {
 public:
-    uint32_t        getConnectedCount();
-    NimBLEService*     createService(const char* uuid);    
-    NimBLEService*     createService(NimBLEUUID uuid, uint32_t numHandles=15, uint8_t inst_id=0);
-//    BLEAdvertising* getAdvertising();
-    void            setCallbacks(NimBLEServerCallbacks* pCallbacks);
-//    void            startAdvertising();
-//    void            removeService(BLEService* service);
-//    BLEService*     getServiceByUUID(const char* uuid);
-//    BLEService*     getServiceByUUID(BLEUUID uuid);
-//    bool            connect(BLEAddress address);
-//    void            disconnect(uint16_t connId);
-//    uint16_t        m_appId;
-//    void            updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
+    uint32_t              getConnectedCount();
+    NimBLEService*        createService(const char* uuid);    
+    NimBLEService*        createService(NimBLEUUID uuid, uint32_t numHandles=15, uint8_t inst_id=0);
+    NimBLEAdvertising*    getAdvertising();
+    void                  setCallbacks(NimBLEServerCallbacks* pCallbacks);
+    void                  startAdvertising();
+    void                  stopAdvertising();
+    void                  start();
+//    void                  removeService(BLEService* service);
+    NimBLEService*        getServiceByUUID(const char* uuid);
+    NimBLEService*        getServiceByUUID(NimBLEUUID uuid);
+    int                   disconnect(uint16_t connID, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
+    NimBLECharacteristic* getChrByHandle(uint16_t handle);
+//    bool                connect(BLEAddress address);
+//    uint16_t            m_appId;
+//    void                updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
 
     /* multi connection support */
-    std::map<uint16_t, conn_status_t> getPeerDevices(bool client);
-    void addPeerDevice(void* peer, bool is_client, uint16_t conn_id);
-    void removePeerDevice(uint16_t conn_id, bool client);
+    std::map<uint16_t, conn_status_t> getPeerDevices();
+    void          addPeerDevice(void* peer, bool is_client, uint16_t conn_id);
+    void          removePeerDevice(uint16_t conn_id, bool client);
     NimBLEServer* getServerByConnId(uint16_t conn_id);
-    void updatePeerMTU(uint16_t connId, uint16_t mtu);
-    uint16_t getPeerMTU(uint16_t conn_id);
-    uint16_t        getConnId();
+    void          updatePeerMTU(uint16_t connId, uint16_t mtu);
+    uint16_t      getPeerMTU(uint16_t conn_id);
+    uint16_t      getConnId();
 
 
 private:
     NimBLEServer();
     //friend class BLEService;
-    //friend class BLECharacteristic;
+    friend class NimBLECharacteristic;
     friend class NimBLEDevice;
+    friend class NimBLEAdvertising;
     //esp_ble_adv_data_t  m_adv_data;
     // BLEAdvertising      m_bleAdvertising;
-    uint16_t            m_connId;
-    uint32_t            m_connectedCount;
-    uint16_t            m_gatts_if;
+    uint16_t               m_connId;
+    uint16_t               m_svcChgChrHdl;
     std::map<uint16_t, conn_status_t> m_connectedServersMap;
 
     //FreeRTOS::Semaphore m_semaphoreRegisterAppEvt   = FreeRTOS::Semaphore("RegisterAppEvt");
     //FreeRTOS::Semaphore m_semaphoreCreateEvt        = FreeRTOS::Semaphore("CreateEvt");
     //FreeRTOS::Semaphore m_semaphoreOpenEvt          = FreeRTOS::Semaphore("OpenEvt");
-    //BLEServiceMap       m_serviceMap;
+    NimBLEServiceMap       m_serviceMap;
     NimBLEServerCallbacks* m_pServerCallbacks = nullptr;
 
     //void            createApp(uint16_t appId);

@@ -88,7 +88,6 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 		ble_gatts_reset();
         ble_svc_gap_init();
         ble_svc_gatt_init();
-		vTaskDelay(1);
     }
 
     return m_pServer;
@@ -102,9 +101,11 @@ NimBLEAdvertising* NimBLEDevice::getAdvertising() {
 	return m_bleAdvertising; 
 }
 
+
 void NimBLEDevice::startAdvertising() {
 	getAdvertising()->start();
 } // startAdvertising
+
 
 void NimBLEDevice::stopAdvertising() {
     getAdvertising()->stop();
