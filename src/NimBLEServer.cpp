@@ -36,6 +36,7 @@ NimBLEServer::NimBLEServer() {
 	m_connId           = BLE_HS_CONN_HANDLE_NONE;
     m_svcChgChrHdl     = 0xffff;
 	m_pServerCallbacks = nullptr;
+	m_gattsStarted 	   = false;
 } // BLEServer
 
 /*
@@ -137,6 +138,11 @@ uint16_t NimBLEServer::getConnId() {
  * services and characteristics / descriptors for the NimBLE host to register them
  */
 void NimBLEServer::start() {
+	if(m_gattsStarted) {
+		NIMBLE_LOGW(LOG_TAG, "Gatt server already started");
+		return;
+	}
+	
     int rc = ble_gatts_start();
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
@@ -156,6 +162,7 @@ void NimBLEServer::start() {
     }
     
     NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
+	m_gattsStarted = true;
 }
 
 

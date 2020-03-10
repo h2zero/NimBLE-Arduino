@@ -202,6 +202,11 @@ void NimBLEAdvertising::start() {
 	int numServices = m_serviceUUIDs.size();
     int rc = 0;
     uint8_t addressType;
+	
+	NimBLEServer* pServer = NimBLEDevice::createServer();
+	if(!pServer->m_gattsStarted){
+		pServer->start();
+	}
 	        
 	if (!m_customAdvData && !m_advSvcsSet && numServices > 0) {
 		for (int i = 0; i < numServices; i++) {

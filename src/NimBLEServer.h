@@ -108,13 +108,14 @@ private:
     // BLEAdvertising      m_bleAdvertising;
     uint16_t               m_connId;
     uint16_t               m_svcChgChrHdl;
+	bool				   m_gattsStarted;
     std::map<uint16_t, conn_status_t> m_connectedServersMap;
 
     //FreeRTOS::Semaphore m_semaphoreRegisterAppEvt   = FreeRTOS::Semaphore("RegisterAppEvt");
     //FreeRTOS::Semaphore m_semaphoreCreateEvt        = FreeRTOS::Semaphore("CreateEvt");
     //FreeRTOS::Semaphore m_semaphoreOpenEvt          = FreeRTOS::Semaphore("OpenEvt");
     NimBLEServiceMap       m_serviceMap;
-    NimBLEServerCallbacks* m_pServerCallbacks = nullptr;
+    NimBLEServerCallbacks* m_pServerCallbacks;
 
     //void            createApp(uint16_t appId);
     //uint16_t        getGattsIf();

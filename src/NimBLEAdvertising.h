@@ -33,6 +33,7 @@
 #define ESP_BLE_ADV_FLAG_NON_LIMIT_DISC     (0x00 )
  /* ************************* */
 
+
 /**
  * @brief Advertisement data set by the programmer to be published by the %BLE server.
  */
