@@ -178,19 +178,19 @@ void NimBLEAdvertising::setAdvertisementData(NimBLEAdvertisementData& advertisem
  * @brief Set the advertisement data that is to be published in a scan response.
  * @param [in] advertisementData The data to be advertised.
  */
- /*
-void BLEAdvertising::setScanResponseData(BLEAdvertisementData& advertisementData) {
-	ESP_LOGD(LOG_TAG, ">> setScanResponseData");
-	esp_err_t errRc = ::esp_ble_gap_config_scan_rsp_data_raw(
+void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertisementData) {
+	NIMBLE_LOGD(LOG_TAG, ">> setScanResponseData");
+	int rc = ble_gap_adv_rsp_set_data(
 		(uint8_t*)advertisementData.getPayload().data(),
 		advertisementData.getPayload().length());
-	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "esp_ble_gap_config_scan_rsp_data_raw: %d %s", errRc, GeneralUtils::errorToString(errRc));
+	if (rc != 0) {
+		NIMBLE_LOGE(LOG_TAG, "ble_gap_adv_rsp_set_data: %d %s", rc,  NimBLEUtils::returnCodeToString(rc));
 	}
 	m_customScanResponseData = true;   // Set the flag that indicates we are using custom scan response data.
-	ESP_LOGD(LOG_TAG, "<< setScanResponseData");
+	NIMBLE_LOGD(LOG_TAG, "<< setScanResponseData");
 } // setScanResponseData
-*/
+
+
 /**
  * @brief Start advertising.
  * Start advertising.
@@ -203,7 +203,7 @@ void NimBLEAdvertising::start() {
     int rc = 0;
     uint8_t addressType;
 	        
-	if (!m_advSvcsSet && numServices > 0) {
+	if (!m_customAdvData && !m_advSvcsSet && numServices > 0) {
 		for (int i = 0; i < numServices; i++) {
 			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_16) {
                 if(nullptr == (m_advData.uuids16 = (ble_uuid16_t*)realloc(m_advData.uuids16, 
@@ -302,62 +302,7 @@ void NimBLEAdvertising::start() {
         NIMBLE_LOGE(LOG_TAG, "error enabling advertisement; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
         abort();
     }
-
-/*
-		m_advData.service_uuid_len = 16 * numServices;
-		m_advData.p_service_uuid = new uint8_t[m_advData.service_uuid_len];
-		uint8_t* p = m_advData.p_service_uuid;
-		for (int i = 0; i < numServices; i++) {
-			ESP_LOGD(LOG_TAG, "- advertising service: %s", m_serviceUUIDs[i].toString().c_str());
-			BLEUUID serviceUUID128 = m_serviceUUIDs[i].to128();
-			memcpy(p, serviceUUID128.getNative()->uuid.uuid128, 16);
-			p += 16;
-		}
-	} else {
-		m_advData.service_uuid_len = 0;
-		ESP_LOGD(LOG_TAG, "- no services advertised");
-	}
-*/
-/*
-
-
-	if (!m_customAdvData) {
-		// Set the configuration for advertising.
-		m_advData.set_scan_rsp = false;
-		m_advData.include_name = !m_scanResp;
-		m_advData.include_txpower = !m_scanResp;
-		errRc = ::esp_ble_gap_config_adv_data(&m_advData);
-		if (errRc != ESP_OK) {
-			ESP_LOGE(LOG_TAG, "<< esp_ble_gap_config_adv_data: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
-		}
-	}
-
-	if (!m_customScanResponseData && m_scanResp) {
-		m_advData.set_scan_rsp = true;
-		m_advData.include_name = m_scanResp;
-		m_advData.include_txpower = m_scanResp;
-		errRc = ::esp_ble_gap_config_adv_data(&m_advData);
-		if (errRc != ESP_OK) {
-			ESP_LOGE(LOG_TAG, "<< esp_ble_gap_config_adv_data (Scan response): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-			return;
-		}
-	}
-
-	// If we had services to advertise then we previously allocated some storage for them.
-	// Here we release that storage.
-	if (m_advData.service_uuid_len > 0) {
-		delete[] m_advData.p_service_uuid;
-		m_advData.p_service_uuid = nullptr;
-	}
-
-	// Start advertising.
-	errRc = ::esp_ble_gap_start_advertising(&m_advParams);
-	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "<< esp_ble_gap_start_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-		return;
-	}
-*/
+	
 	NIMBLE_LOGD(LOG_TAG, "<< Advertising start");
 } // start
 
