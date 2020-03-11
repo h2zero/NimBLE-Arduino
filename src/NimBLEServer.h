@@ -16,13 +16,10 @@
 #define MAIN_NIMBLESERVER_H_
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
-//#include <esp_gatts_api.h>
 
-// #include "BLEDevice.h"
 #include "NimBLEAddress.h"
 #include "NimBLEUUID.h"
 #include "NimBLEAdvertising.h"
-//#include "NimBLECharacteristic.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"
 #include "FreeRTOS.h"

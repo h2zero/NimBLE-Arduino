@@ -68,13 +68,12 @@ NimBLECharacteristic::~NimBLECharacteristic() {
  * @param [in] pDescriptor
  * @return N/A.
  */
- /*
-void BLECharacteristic::addDescriptor(BLEDescriptor* pDescriptor) {
-	ESP_LOGD(LOG_TAG, ">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
+void BLECharacteristic::addDescriptor(NimBLEDescriptor* pDescriptor) {
+	NIMBLE_LOGD(LOG_TAG, ">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
 	m_descriptorMap.setByUUID(pDescriptor->getUUID(), pDescriptor);
-	ESP_LOGD(LOG_TAG, "<< addDescriptor()");
+	NIMBLE_LOGD(LOG_TAG, "<< addDescriptor()");
 } // addDescriptor
-*/
+
 
 /**
  * @brief Register a new characteristic with the ESP runtime.
@@ -123,27 +122,26 @@ void NimBLECharacteristic::executeCreate(NimBLEService* pService) {
 } // executeCreate
 */
 
-/**
- * @brief Return the BLE Descriptor for the given UUID if associated with this characteristic.
- * @param [in] descriptorUUID The UUID of the descriptor that we wish to retrieve.
- * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
- */
- /*
-BLEDescriptor* BLECharacteristic::getDescriptorByUUID(const char* descriptorUUID) {
-	return m_descriptorMap.getByUUID(BLEUUID(descriptorUUID));
-} // getDescriptorByUUID
-*/
 
 /**
  * @brief Return the BLE Descriptor for the given UUID if associated with this characteristic.
  * @param [in] descriptorUUID The UUID of the descriptor that we wish to retrieve.
  * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
  */
- /*
-BLEDescriptor* BLECharacteristic::getDescriptorByUUID(BLEUUID descriptorUUID) {
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* descriptorUUID) {
+	return m_descriptorMap.getByUUID(NimBLEUUID(descriptorUUID));
+} // getDescriptorByUUID
+
+
+/**
+ * @brief Return the BLE Descriptor for the given UUID if associated with this characteristic.
+ * @param [in] descriptorUUID The UUID of the descriptor that we wish to retrieve.
+ * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
+ */
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(NimBLEUUID descriptorUUID) {
 	return m_descriptorMap.getByUUID(descriptorUUID);
 } // getDescriptorByUUID
-*/
+
 
 /**
  * @brief Get the handle of the characteristic.
@@ -153,9 +151,11 @@ uint16_t NimBLECharacteristic::getHandle() {
 	return m_handle;
 } // getHandle
 
+
 void NimBLECharacteristic::setAccessPermissions(uint16_t perm) {
 	m_permissions = perm;
 }
+
 
 uint8_t NimBLECharacteristic::getProperties() {
 	return m_properties;
@@ -870,8 +870,7 @@ NimBLECharacteristicCallbacks::~NimBLECharacteristicCallbacks() {}
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic) {
-	NIMBLE_LOGD("NimBLECharacteristicCallbacks", ">> onRead: default");
-	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "<< onRead");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onRead: default");
 } // onRead
 
 
@@ -880,8 +879,7 @@ void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
-	NIMBLE_LOGD("NimBLECharacteristicCallbacks", ">> onWrite: default");
-	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "<< onWrite");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onWrite: default");
 } // onWrite
 
 
@@ -890,8 +888,7 @@ void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristi
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  */
 void NimBLECharacteristicCallbacks::onNotify(NimBLECharacteristic* pCharacteristic) {
-	NIMBLE_LOGD("NimBLECharacteristicCallbacks", ">> onNotify: default");
-	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "<< onNotify");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onNotify: default");
 } // onNotify
 
 
@@ -902,8 +899,7 @@ void NimBLECharacteristicCallbacks::onNotify(NimBLECharacteristic* pCharacterist
  * @param [in] code Additional code of underlying errors
  */
 void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code) {
-	NIMBLE_LOGD("NimBLECharacteristicCallbacks", ">> onStatus: default");
-	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "<< onStatus");
+	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onStatus: default");
 } // onStatus
 
 #endif /* CONFIG_BT_ENABLED */

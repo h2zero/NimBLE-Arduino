@@ -15,10 +15,11 @@
 #define MAIN_NIMBLECHARACTERISTIC_H_
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+
 #include "NimBLEService.h"
 #include "NimBLEUUID.h"
-//#include "BLEDescriptor.h"
 #include "NimBLEValue.h"
+#include "NimBLEDescriptor.h"
 #include "FreeRTOS.h"
 
 #include "host/ble_hs.h"
@@ -27,31 +28,30 @@
 #include <map>
 
 class NimBLEService;
-//class NimBLEDescriptor;
+class NimBLEDescriptor;
 class NimBLECharacteristicCallbacks;
 
 /**
  * @brief A management structure for %BLE descriptors.
  */
- /*
-class BLEDescriptorMap {
+class NimBLEDescriptorMap {
 public:
-	void setByUUID(const char* uuid, BLEDescriptor* pDescriptor);
-	void setByUUID(BLEUUID uuid, BLEDescriptor* pDescriptor);
-	void setByHandle(uint16_t handle, BLEDescriptor* pDescriptor);
-	BLEDescriptor* getByUUID(const char* uuid);
-	BLEDescriptor* getByUUID(BLEUUID uuid);
-	BLEDescriptor* getByHandle(uint16_t handle);
+	void setByUUID(const char* uuid, NimBLEDescriptor* pDescriptor);
+	void setByUUID(NimBLEUUID uuid, NimBLEDescriptor* pDescriptor);
+//	void setByHandle(uint16_t handle, NimBLEDescriptor* pDescriptor);
+	NimBLEDescriptor* getByUUID(const char* uuid);
+	NimBLEDescriptor* getByUUID(NimBLEUUID uuid);
+//	NimBLEDescriptor* getByHandle(uint16_t handle);
 	std::string	toString();
-	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
-	BLEDescriptor* getFirst();
-	BLEDescriptor* getNext();
+//	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
+	NimBLEDescriptor* getFirst();
+	NimBLEDescriptor* getNext();
 private:
-	std::map<BLEDescriptor*, std::string> m_uuidMap;
-	std::map<uint16_t, BLEDescriptor*> m_handleMap;
-	std::map<BLEDescriptor*, std::string>::iterator m_iterator;
+	std::map<NimBLEDescriptor*, std::string> m_uuidMap;
+//	std::map<uint16_t, BLEDescriptor*> m_handleMap;
+	std::map<NimBLEDescriptor*, std::string>::iterator m_iterator;
 };
-*/
+
 
 /**
  * @brief The model of a %BLE Characteristic.
@@ -61,12 +61,12 @@ private:
  */
 class NimBLECharacteristic {
 public:
-//	void           addDescriptor(BLEDescriptor* pDescriptor);
-//	BLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
-//	BLEDescriptor* getDescriptorByUUID(BLEUUID descriptorUUID);
+	void              addDescriptor(NimBLEDescriptor* pDescriptor);
+	NimBLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
+	NimBLEDescriptor* getDescriptorByUUID(NimBLEUUID descriptorUUID);
 	NimBLEUUID        getUUID();
-	std::string    getValue();
-	uint8_t*       getData();
+	std::string       getValue();
+	uint8_t*          getData();
 
 	void indicate();
 	void notify(bool is_notification = true);
@@ -99,15 +99,15 @@ private:
 
 	friend class NimBLEServer;
 	friend class NimBLEService;
-//	friend class BLEDescriptor;
-//	friend class BLECharacteristicMap;
+//	friend class NimBLEDescriptor;
+//	friend class NimBLECharacteristicMap;
 
 	NimBLECharacteristic(const char* uuid, uint32_t properties = 0, NimBLEService* pService = nullptr);
 	NimBLECharacteristic(NimBLEUUID uuid, uint32_t properties = 0, NimBLEService* pService = nullptr);
 	virtual ~NimBLECharacteristic();
 
 	NimBLEUUID                     m_uuid;
-//	BLEDescriptorMap               m_descriptorMap;
+	NimBLEDescriptorMap            m_descriptorMap;
 	uint16_t                       m_handle;
 	uint16_t				       m_properties;
 	NimBLECharacteristicCallbacks* m_pCallbacks;

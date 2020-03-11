@@ -17,9 +17,9 @@
 #if defined(CONFIG_BT_ENABLED)
 #include "sdkconfig.h"
 
+#include "NimBLEAddress.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
-#include "NimBLEAddress.h"
 
 #include <map>
 #include <string>

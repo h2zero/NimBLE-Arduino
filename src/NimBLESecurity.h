@@ -18,6 +18,11 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "host/ble_gap.h"
+/****  FIX COMPILATION ****/
+#undef min
+#undef max
+/**************************/
+
 
 #include <stdint.h>
 //#include "esp_gap_ble_api.h"
