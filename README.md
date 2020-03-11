@@ -1,6 +1,8 @@
 # *** UPDATE ***
 
-Server code nearing readyness, checkout the ServerDev branch if you would like to assist with testing
+Server code nearing readiness, checkout the ServerDev branch if you would like to assist with testing.
+
+Client code working with all functionality.
 
 # ****************
 
