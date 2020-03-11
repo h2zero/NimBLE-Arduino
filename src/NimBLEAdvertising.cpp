@@ -33,14 +33,15 @@ static const char* LOG_TAG = "NimBLEAdvertising";
  */
 NimBLEAdvertising::NimBLEAdvertising() {
     memset(&m_advData, 0, sizeof m_advData);
+	memset(&m_scanData, 0, sizeof m_scanData);
 	memset(&m_advParams, 0, sizeof m_advParams);
     const char *name = ble_svc_gap_device_name();
     
 	m_advData.name                = (uint8_t *)name;
     m_advData.name_len            = strlen(name);
     m_advData.name_is_complete    = 1;
-    m_advData.tx_pwr_lvl_is_present = 1;
-    m_advData.tx_pwr_lvl          = BLE_HS_ADV_TX_PWR_LVL_AUTO;
+    m_scanData.tx_pwr_lvl_is_present = 1;
+    m_scanData.tx_pwr_lvl          = BLE_HS_ADV_TX_PWR_LVL_AUTO;
     m_advData.flags               = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
 	m_advData.appearance          = 0x00;
 	m_advData.appearance_is_present = 0;
@@ -202,6 +203,7 @@ void NimBLEAdvertising::start() {
 	int numServices = m_serviceUUIDs.size();
     int rc = 0;
     uint8_t addressType;
+	uint8_t payloadLen = 3; //start with 3 bytes for the flags data
 	
 	NimBLEServer* pServer = NimBLEDevice::createServer();
 	if(!pServer->m_gattsStarted){
@@ -211,6 +213,13 @@ void NimBLEAdvertising::start() {
 	if (!m_customAdvData && !m_advSvcsSet && numServices > 0) {
 		for (int i = 0; i < numServices; i++) {
 			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_16) {
+				int add = (m_advData.num_uuids16 > 0) ? 2 : 4;
+				if((payloadLen + add) > 31){
+					m_advData.uuids16_is_complete = 0;
+					continue;
+				}
+				payloadLen += add;
+				
                 if(nullptr == (m_advData.uuids16 = (ble_uuid16_t*)realloc(m_advData.uuids16, 
                                     (m_advData.num_uuids16 + 1) * sizeof(ble_uuid16_t)))) 
                 {
@@ -230,6 +239,13 @@ void NimBLEAdvertising::start() {
                 m_advData.num_uuids16++;
 			}
 			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_32) {
+				int add = (m_advData.num_uuids32 > 0) ? 4 : 6;
+				if((payloadLen + add) > 31){
+					m_advData.uuids32_is_complete = 0;
+					continue;
+				}
+				payloadLen += add;
+				
                 if(nullptr == (m_advData.uuids32 = (ble_uuid32_t*)realloc(m_advData.uuids32,
                                     (m_advData.num_uuids32 + 1) * sizeof(ble_uuid32_t)))) 
                 {
@@ -249,6 +265,13 @@ void NimBLEAdvertising::start() {
                 m_advData.num_uuids32++;
 			}
 			if(m_serviceUUIDs[i].getNative()->u.type == BLE_UUID_TYPE_128){
+				int add = (m_advData.num_uuids128 > 0) ? 16 : 18;
+				if((payloadLen + add) > 31){
+					m_advData.uuids128_is_complete = 0;
+					continue;
+				}
+				payloadLen += add;
+								
                 if(nullptr == (m_advData.uuids128 = (ble_uuid128_t*)realloc(m_advData.uuids128, 
                                     (m_advData.num_uuids128 + 1) * sizeof(ble_uuid128_t)))) {
                     NIMBLE_LOGE(LOG_TAG, "Error, no mem");
@@ -267,7 +290,52 @@ void NimBLEAdvertising::start() {
                 m_advData.num_uuids128++;
 			}
 		}
-        
+		
+		// check if there is room for the name, if not put it in scan data
+		if((payloadLen + m_advData.name_len) > 29) {
+			if(m_scanResp){
+				m_scanData.name = m_advData.name;
+				m_scanData.name_len = m_advData.name_len;
+				m_scanData.name_is_complete = m_advData.name_is_complete;
+				m_advData.name = nullptr;
+				m_advData.name_len = 0;
+			} else {
+				// if not using scan response just cut the name down 
+				// leaving 2 bytes for the data specifier.
+				m_advData.name_len = (29 - payloadLen);
+			}
+			m_advData.name_is_complete = 0;
+		}
+		
+		if(m_advData.name_len > 0) {
+			payloadLen += (m_advData.name_len + 2);
+		}
+		
+		if(m_scanResp) {
+			// name length + type byte + length byte + tx power type + length + data
+			if((m_scanData.name_len + 5) > 31) {
+				// prioritize name data over tx power
+				m_scanData.tx_pwr_lvl_is_present = 0;
+				m_scanData.tx_pwr_lvl = 0;
+				// limit name to 29 to leave room for the data specifiers
+				if(m_scanData.name_len > 29) {
+					m_scanData.name_len = 29;
+					m_scanData.name_is_complete = false;
+				}
+			}
+				
+			rc = ble_gap_adv_rsp_set_fields(&m_scanData);
+			if (rc != 0) {
+				NIMBLE_LOGE(LOG_TAG, "error setting scan response data; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+				abort();
+			}
+		// if not using scan response and there is room, 
+		// throw the tx power data into the advertisment
+        } else if (payloadLen < 29) {
+			m_advData.tx_pwr_lvl_is_present = 1;
+			m_advData.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
+		}
+			
         rc = ble_gap_adv_set_fields(&m_advData);
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "error setting advertisement data; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
@@ -413,7 +481,7 @@ void NimBLEAdvertisementData::setFlags(uint8_t flag) {
 	char cdata[3];
 	cdata[0] = 2;
 	cdata[1] = BLE_HS_ADV_TYPE_FLAGS;  // 0x01
-	cdata[2] = flag | BLE_HS_ADV_F_BREDR_UNSUP;
+	cdata[2] = (flag | BLE_HS_ADV_F_BREDR_UNSUP);
 	addData(std::string(cdata, 3));
 } // setFlag
 

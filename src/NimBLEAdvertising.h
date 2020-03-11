@@ -86,6 +86,7 @@ public:
 
 private:
 	ble_hs_adv_fields    m_advData;
+	ble_hs_adv_fields    m_scanData;
 	ble_gap_adv_params   m_advParams;
 	std::vector<NimBLEUUID> m_serviceUUIDs;
 	bool                 m_customAdvData = false;  // Are we using custom advertising data?
