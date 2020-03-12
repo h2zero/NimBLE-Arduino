@@ -20,9 +20,10 @@
 
 #include <string>
 
-static const char* LOG_TAG = "NimBLEDescriptor";
-
 #define NULL_HANDLE (0xffff)
+
+static const char* LOG_TAG = "NimBLEDescriptor";
+static NimBLEDescriptorCallbacks defaultCallbacks;
 
 
 /**
@@ -40,7 +41,7 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t max_len) {
 	m_value.attr_max_len = max_len;                     // Maximum length of the data.
 	m_handle             = NULL_HANDLE;                 // Handle is initially unknown.
 	m_pCharacteristic    = nullptr;                     // No initial characteristic.
-	m_pCallbacks         = nullptr;                     // No initial callback.
+	m_pCallbacks         = &defaultCallbacks;             // No initial callback.
 
 	m_value.attr_value   = (uint8_t*) malloc(max_len);  // Allocate storage for the value.
 } // NimBLEDescriptor
@@ -209,8 +210,12 @@ void NimBLEDescriptor::handleGATTServerEvent(
  * @brief Set the callback handlers for this descriptor.
  * @param [in] pCallbacks An instance of a callback structure used to define any callbacks for the descriptor.
  */
-void NimBLEDescriptor::setCallbacks(NimBLEDescriptorCallbacks* pCallback) {
-	m_pCallbacks = pCallback;
+void NimBLEDescriptor::setCallbacks(NimBLEDescriptorCallbacks* pCallbacks) {
+    if (pCallbacks != nullptr){
+		m_pCallbacks = pCallbacks;
+	} else {
+		m_pCallbacks = &defaultCallbacks;
+	}
 } // setCallbacks
 
 

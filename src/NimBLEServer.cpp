@@ -30,8 +30,6 @@ static const char* LOG_TAG = "NimBLEServer";
  * the BLEDevice class.
  */
 NimBLEServer::NimBLEServer() {
-//	m_appId            = ESP_GATT_IF_NONE;
-//	m_gatts_if         = ESP_GATT_IF_NONE;
 //	m_connectedCount   = 0;
 	m_connId           = BLE_HS_CONN_HANDLE_NONE;
     m_svcChgChrHdl     = 0xffff;
@@ -39,12 +37,6 @@ NimBLEServer::NimBLEServer() {
 	m_gattsStarted 	   = false;
 } // BLEServer
 
-/*
-void BLEServer::createApp(uint16_t appId) {
-	m_appId = appId;
-	registerApp(appId);
-} // createApp
-*/
 
 /**
  * @brief Create a %BLE Service.
@@ -54,7 +46,6 @@ void BLEServer::createApp(uint16_t appId) {
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the new service object.
  */
- 
 NimBLEService* NimBLEServer::createService(const char* uuid) {
 	return createService(NimBLEUUID(uuid));
 }
@@ -70,10 +61,8 @@ NimBLEService* NimBLEServer::createService(const char* uuid) {
  * @param [in] inst_id With multiple services with the same UUID we need to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
- 
 NimBLEService* NimBLEServer::createService(NimBLEUUID uuid, uint32_t numHandles, uint8_t inst_id) {
 	NIMBLE_LOGD(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
-	//m_semaphoreCreateEvt.take("createService");
 
 	// Check that a service with the supplied UUID does not already exist.
 	if (m_serviceMap.getByUUID(uuid) != nullptr) {
@@ -84,9 +73,6 @@ NimBLEService* NimBLEServer::createService(NimBLEUUID uuid, uint32_t numHandles,
 	NimBLEService* pService = new NimBLEService(uuid, numHandles, this);
 	pService->m_instId = inst_id;
 	m_serviceMap.setByUUID(uuid, pService); // Save a reference to this service being on this server.
-//	pService->executeCreate(this);          // Perform the API calls to actually create the service.
-
-//	m_semaphoreCreateEvt.wait("createService");
 
 	NIMBLE_LOGD(LOG_TAG, "<< createService");
 	return pService;
@@ -134,8 +120,8 @@ uint16_t NimBLEServer::getConnId() {
 
 
 /**
- * @brief Start the GATT server, required to be called after setup of all 
- * services and characteristics / descriptors for the NimBLE host to register them
+ * @brief Start the GATT server. Required to be called after setup of all 
+ * services and characteristics / descriptors for the NimBLE host to register them.
  */
 void NimBLEServer::start() {
 	if(m_gattsStarted) {
@@ -145,7 +131,8 @@ void NimBLEServer::start() {
 	
     int rc = ble_gatts_start();
     if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, 
+                            NimBLEUtils::returnCodeToString(rc));
         abort();
     }
     
@@ -154,14 +141,51 @@ void NimBLEServer::start() {
     ble_uuid16_t svc = {BLE_UUID_TYPE_16, 0x1801};
     ble_uuid16_t chr = {BLE_UUID_TYPE_16, 0x2a05};
     
-    //int ble_gatts_find_chr(const ble_uuid_t * svc_uuid, const ble_uuid_t * chr_uuid, uint16_t * out_def_handle, uint16_t * out_val_handle)
     rc = ble_gatts_find_chr(&svc.u, &chr.u, NULL, &m_svcChgChrHdl); 
     if(rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "ble_gatts_find_chr: rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_find_chr: rc=%d, %s", rc, 
+                            NimBLEUtils::returnCodeToString(rc));
         abort();
     }
     
     NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
+    
+    uint8_t numSvcs = m_serviceMap.getRegisteredServiceCount();
+    NimBLEService* pService = m_serviceMap.getFirst();
+    
+    for(int i = 0; i < numSvcs; i++) {
+        uint8_t numChrs = pService->m_characteristicMap.getSize();
+        uint16_t chrHdl = 0xffff;
+                
+        NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
+        
+        if(pChr != nullptr) {
+            for( int d = 0; d < numChrs; d++) {
+                rc = ble_gatts_find_chr(&pService->getUUID().getNative()->u, 
+                            &pChr->getUUID().getNative()->u, NULL, &chrHdl); 
+                if(rc != 0) {
+                    NIMBLE_LOGE(LOG_TAG, "ble_gatts_find_chr: rc=%d, %s", rc, 
+                                        NimBLEUtils::returnCodeToString(rc));
+                    abort();
+                }
+                
+                pChr->setHandle(chrHdl);
+                    
+                if((pChr->m_properties & BLE_GATT_CHR_F_INDICATE) || 
+                    (pChr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
+                        
+                    if(nullptr == pChr->getDescriptorByUUID("2902")) {
+                        pChr->addDescriptor(new NimBLE2902());
+                    }
+                    m_notifyChrMap.insert(std::pair<uint16_t, NimBLECharacteristic*>
+                                                    (chrHdl, pChr));
+                }
+                pChr = pService->m_characteristicMap.getNext();
+            }
+        }
+        pService = m_serviceMap.getNext();
+    }
+    
 	m_gattsStarted = true;
 }
 
@@ -177,7 +201,8 @@ int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
     
     int rc = ble_gap_terminate(connId, reason);
     if(rc != 0){
-        NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+        NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, 
+                                    NimBLEUtils::returnCodeToString(rc));
     }
     
     return rc;
@@ -244,31 +269,11 @@ uint32_t NimBLEServer::getConnectedCount() {
                               "val_handle=%d\n",
                         event->subscribe.cur_notify, event->subscribe.attr_handle);
                      
-            NimBLECharacteristic* pChr = server->getChrByHandle(event->subscribe.attr_handle);
-            if(pChr != nullptr) {
-                pChr->setSubscribe(event);
+            auto it = server->m_notifyChrMap.find(event->subscribe.attr_handle);
+            if(it != server->m_notifyChrMap.cend()) {
+                (*it).second->setSubscribe(event);
             }
-        /*    
-            uint8_t numSvcs = server->m_serviceMap.getRegisteredServiceCount();
-            NimBLEService* pService = server->m_serviceMap.getFirst();
-            
-            for(int i = 0; i < numSvcs; i++) {
-                uint8_t numChrs = pService->m_characteristicMap.getSize();
-                NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
-                
-                for( int d = 0; d < numChrs; d++) {
-                    if(pChr->m_handle == event->subscribe.attr_handle) {
-                        pChr->setSubscribe(event);
-                        return 0;
-                    }
-                    pChr = pService->m_characteristicMap.getNext();
-                }
-                
-                pService = server->m_serviceMap.getNext();
-            }
-            
-            NIMBLE_LOGE(LOG_TAG, "Subscribe handle not found");
-        */
+
             break;
         } // BLE_GAP_EVENT_SUBSCRIBE
  
@@ -282,32 +287,12 @@ uint32_t NimBLEServer::getConnectedCount() {
         
         case BLE_GAP_EVENT_NOTIFY_TX: {
             if(event->notify_tx.indication && event->notify_tx.status != 0) {
-                NimBLECharacteristic* pChr = server->getChrByHandle(event->notify_tx.attr_handle);
-                if(pChr != nullptr) {
-                    pChr->m_semaphoreConfEvt.give(event->notify_tx.status);
+                auto it = server->m_notifyChrMap.find(event->notify_tx.attr_handle);
+                if(it != server->m_notifyChrMap.cend()) {
+                    (*it).second->m_semaphoreConfEvt.give(event->notify_tx.status);
                 }
-            /*    
-                uint8_t numSvcs = server->m_serviceMap.getRegisteredServiceCount();
-                NimBLEService* pService = server->m_serviceMap.getFirst();
-                
-                for(int i = 0; i < numSvcs; i++) {
-                    uint8_t numChrs = pService->m_characteristicMap.getSize();
-                    NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
-                    
-                    for( int d = 0; d < numChrs; d++) {
-                        if(pChr->m_handle == event->notify_tx.attr_handle) {
-                            pChr->m_semaphoreConfEvt.give(event->notify_tx.status);
-                            return 0;
-                        }
-                        pChr = pService->m_characteristicMap.getNext();
-                    }
-                    
-                    pService = server->m_serviceMap.getNext();
-                }
-                
-                NIMBLE_LOGE(LOG_TAG, "Subscribe handle not found");
-            */
             }
+            
             break;
         } // BLE_GAP_EVENT_NOTIFY_TX
 
@@ -365,31 +350,6 @@ void NimBLEServer::stopAdvertising() {
 	NIMBLE_LOGD(LOG_TAG, "<< stopAdvertising");
 } // startAdvertising
 
-
-NimBLECharacteristic* NimBLEServer::getChrByHandle(uint16_t handle) {
-    if(handle == m_svcChgChrHdl) {
-        return nullptr;
-    }
-    uint8_t numSvcs = m_serviceMap.getRegisteredServiceCount();
-    NimBLEService* pService = m_serviceMap.getFirst();
-    
-    for(int i = 0; i < numSvcs; i++) {
-        uint8_t numChrs = pService->m_characteristicMap.getSize();
-        NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
-        
-        for( int d = 0; d < numChrs; d++) {
-            if(pChr->m_handle == handle) {
-                return pChr;
-            }
-            pChr = pService->m_characteristicMap.getNext();
-        }
-        
-        pService = m_serviceMap.getNext();
-    }
-    
-    NIMBLE_LOGE(LOG_TAG, "Characteristic by handle not found");
-    return nullptr;
-}
     
 /**
  * Allow to connect GATT server to peer device

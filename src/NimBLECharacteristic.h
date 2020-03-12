@@ -20,6 +20,7 @@
 #include "NimBLEUUID.h"
 #include "NimBLEValue.h"
 #include "NimBLEDescriptor.h"
+#include "NimBLE2902.h"
 #include "FreeRTOS.h"
 
 #include "host/ble_hs.h"
@@ -115,7 +116,6 @@ private:
 	NimBLEValue                    m_value;
 	uint16_t                       m_permissions = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
 	bool						   m_writeEvt = false;
-    std::map<uint16_t, uint16_t>   m_subscribedMap;
     
     NimBLEService*  getService();
     uint8_t         getProperties();

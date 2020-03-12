@@ -19,6 +19,9 @@
 
 #include "NimBLEDescriptor.h"
 
+#include <map>
+
+
 /**
  * @brief Descriptor for Client Characteristic Configuration.
  *
@@ -34,6 +37,9 @@ public:
 	bool getIndications();
 	void setNotifications(bool flag);
 	void setIndications(bool flag);
+private:
+    friend class NimBLECharacteristic;
+    std::map<uint16_t, uint16_t> m_subscribedMap;
 
 }; // NimBLE2902
 

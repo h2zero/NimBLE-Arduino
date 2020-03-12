@@ -80,9 +80,7 @@ public:
     NimBLEService*        getServiceByUUID(const char* uuid);
     NimBLEService*        getServiceByUUID(NimBLEUUID uuid);
     int                   disconnect(uint16_t connID, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
-    NimBLECharacteristic* getChrByHandle(uint16_t handle);
 //    bool                connect(BLEAddress address);
-//    uint16_t            m_appId;
 //    void                updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
 
     /* multi connection support */
@@ -101,24 +99,19 @@ private:
     friend class NimBLECharacteristic;
     friend class NimBLEDevice;
     friend class NimBLEAdvertising;
-    //esp_ble_adv_data_t  m_adv_data;
+
     // BLEAdvertising      m_bleAdvertising;
     uint16_t               m_connId;
     uint16_t               m_svcChgChrHdl;
 	bool				   m_gattsStarted;
+    
     std::map<uint16_t, conn_status_t> m_connectedServersMap;
+    std::map<uint16_t, NimBLECharacteristic*> m_notifyChrMap;
 
-    //FreeRTOS::Semaphore m_semaphoreRegisterAppEvt   = FreeRTOS::Semaphore("RegisterAppEvt");
-    //FreeRTOS::Semaphore m_semaphoreCreateEvt        = FreeRTOS::Semaphore("CreateEvt");
-    //FreeRTOS::Semaphore m_semaphoreOpenEvt          = FreeRTOS::Semaphore("OpenEvt");
     NimBLEServiceMap       m_serviceMap;
     NimBLEServerCallbacks* m_pServerCallbacks;
 
-    //void            createApp(uint16_t appId);
-    //uint16_t        getGattsIf();
-    //void            handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
 	static int 		handleGapEvent(struct ble_gap_event *event, void *arg);
-    //void            registerApp(uint16_t);
 }; // NimBLEServer
 
 

@@ -16,7 +16,6 @@
 #include "NimBLEDevice.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
-//#include "BLE2902.h"
 
 #include <string>
 
@@ -520,27 +519,37 @@ void BLECharacteristic::handleGATTServerEvent(
  * @return N/A
  */
 void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
-    uint16_t subVal;
+    uint16_t subVal = 0;
     if(event->subscribe.cur_notify) {
-        subVal = 1;
-    }else if(event->subscribe.cur_indicate) {
-        subVal = 2;
-    }else {
-        subVal = 0;
+        subVal |= BLE_GATT_CHR_F_NOTIFY;
+    }
+    if(event->subscribe.cur_indicate) {
+        subVal |= BLE_GATT_CHR_F_INDICATE;
     }
     
     m_semaphoreConfEvt.give(subVal == 2 ? 0 : NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
     
     NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d", event->subscribe.conn_handle, subVal);
     
-    auto it = m_subscribedMap.find(event->subscribe.conn_handle);
-    if(it == m_subscribedMap.cend()) {
-        m_subscribedMap.insert(std::pair<uint16_t, uint16_t>(event->subscribe.conn_handle, subVal));
+    NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID((uint16_t)0x2902);
+	if(p2902 == nullptr){
+		ESP_LOGE(LOG_TAG, "No 2902 descriptor found for %s", getUUID().toString().c_str());
+        return;
+	}
+    
+    p2902->setNotifications((subVal & BLE_GATT_CHR_F_NOTIFY) != 0);
+    p2902->setIndications((subVal & BLE_GATT_CHR_F_INDICATE) != 0);
+    p2902->m_pCallbacks->onWrite(p2902);
+    
+    
+    auto it = p2902->m_subscribedMap.find(event->subscribe.conn_handle);
+    if(it == p2902->m_subscribedMap.cend()) {
+        p2902->m_subscribedMap.insert(std::pair<uint16_t, uint16_t>(event->subscribe.conn_handle, subVal));
         return;
     }
     
     if(event->subscribe.reason == BLE_GAP_SUBSCRIBE_REASON_TERM) {
-        m_subscribedMap.erase(event->subscribe.conn_handle);
+        p2902->m_subscribedMap.erase(event->subscribe.conn_handle);
         return;
     }
     
@@ -584,15 +593,16 @@ void NimBLECharacteristic::notify(bool is_notification) {
     os_mbuf *om;
     size_t length = m_value.getValue().length();
     uint8_t* data = (uint8_t*)m_value.getValue().data();
+    NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID((uint16_t)0x2902);
     
-    for (auto it = m_subscribedMap.cbegin(); it != m_subscribedMap.cend(); ++it) {
+    for (auto it = p2902->m_subscribedMap.cbegin(); it != p2902->m_subscribedMap.cend(); ++it) {
         uint16_t _mtu = getService()->getServer()->getPeerMTU((*it).first);
         
         if(_mtu == 0) {
             NIMBLE_LOGD(LOG_TAG, "peer not connected, removing from map");
-            m_subscribedMap.erase((*it).first);
-            it = m_subscribedMap.cbegin();
-            if(it == m_subscribedMap.cend()) {
+            p2902->m_subscribedMap.erase((*it).first);
+            it = p2902->m_subscribedMap.cbegin();
+            if(it == p2902->m_subscribedMap.cend()) {
                 return;
             }
             continue;
@@ -609,13 +619,13 @@ void NimBLECharacteristic::notify(bool is_notification) {
             continue;
         }
         
-        if((*it).second == 2 && is_notification) {
+        if(is_notification && (!((*it).second & BLE_GATT_CHR_F_NOTIFY))) {
             NIMBLE_LOGW(LOG_TAG, 
             "Sending notification to client subscribed to indications, sending indication instead");
             is_notification = false;
         }
         
-        if((*it).second == 1 && !is_notification) {
+        if(!is_notification && (!((*it).second & BLE_GATT_CHR_F_INDICATE))) {
             NIMBLE_LOGW(LOG_TAG,
             "Sending indication to client subscribed to notifications, sending notifications instead");
             is_notification = true;
