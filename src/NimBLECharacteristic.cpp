@@ -211,9 +211,7 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
 	if(ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0){
         switch(ctxt->op) {
             case BLE_GATT_ACCESS_OP_READ_CHR: {
-                //if (pCharacteristic->m_pCallbacks != nullptr) {
-                    pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
-                //}
+                pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
                 rc = os_mbuf_append(ctxt->om, pCharacteristic->getData(), pCharacteristic->m_value.getLength());
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
@@ -224,9 +222,7 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                 }
                 
                 pCharacteristic->setValue(ctxt->om->om_data, ctxt->om->om_len);
-                //if (pCharacteristic->m_pCallbacks != nullptr) {
-                    pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
-                //}
+                pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
                 return 0;
             }
             default:

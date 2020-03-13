@@ -47,6 +47,8 @@ public:
 //	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 	NimBLEDescriptor* getFirst();
 	NimBLEDescriptor* getNext();
+    uint8_t           getSize();
+    
 private:
 	std::map<NimBLEDescriptor*, std::string> m_uuidMap;
 //	std::map<uint16_t, BLEDescriptor*> m_handleMap;

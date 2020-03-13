@@ -43,7 +43,7 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t max_len) {
 	m_pCharacteristic    = nullptr;                     // No initial characteristic.
 	m_pCallbacks         = &defaultCallbacks;             // No initial callback.
 
-	m_value.attr_value   = (uint8_t*) malloc(max_len);  // Allocate storage for the value.
+	m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
 } // NimBLEDescriptor
 
 
@@ -122,6 +122,44 @@ NimBLEUUID NimBLEDescriptor::getUUID() {
 uint8_t* NimBLEDescriptor::getValue() {
 	return m_value.attr_value;
 } // getValue
+
+
+int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
+                             struct ble_gatt_access_ctxt *ctxt,
+                             void *arg)
+{
+    const ble_uuid_t *uuid;
+    int rc;
+	NimBLEDescriptor* pDescriptor = (NimBLEDescriptor*)arg;
+	
+	NIMBLE_LOGD(LOG_TAG, "Descriptor %s %s event", pDescriptor->getUUID().toString().c_str(),
+                                    ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR ? "Read" : "Write");
+                                    
+	uuid = ctxt->chr->uuid;
+	if(ble_uuid_cmp(uuid, &pDescriptor->getUUID().getNative()->u) == 0){
+        switch(ctxt->op) {
+            case BLE_GATT_ACCESS_OP_READ_CHR: {
+                pDescriptor->m_pCallbacks->onRead(pDescriptor);
+                rc = os_mbuf_append(ctxt->om, pDescriptor->getValue(), pDescriptor->getLength());
+                return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+            }
+            
+            case BLE_GATT_ACCESS_OP_WRITE_CHR: {
+                if (ctxt->om->om_len > BLE_ATT_ATTR_MAX_LEN) {
+                    return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+                }
+                
+                pDescriptor->setValue(ctxt->om->om_data, ctxt->om->om_len);
+                pDescriptor->m_pCallbacks->onWrite(pDescriptor);
+                return 0;
+            }
+            default:
+                break;
+        }
+	}
+    
+    return BLE_ATT_ERR_UNLIKELY;
+}
 
 
 /**

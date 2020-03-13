@@ -146,6 +146,7 @@ bool NimBLEService::start() {
 	// of the second service to 0 to indicate the end of the array.
     ble_gatt_svc_def* svc = new ble_gatt_svc_def[2];
 	ble_gatt_chr_def* pChr_a = nullptr;
+    ble_gatt_dsc_def* pDsc_a = nullptr;
     
     svc[0].type = BLE_GATT_SVC_TYPE_PRIMARY;
     svc[0].uuid = &m_uuid.getNative()->u;
@@ -154,7 +155,7 @@ bool NimBLEService::start() {
     
 	NIMBLE_LOGD(LOG_TAG,"Adding %d characteristics for service %s", numChrs, toString().c_str());
     
-	if(numChrs < 1){
+	if(!numChrs){
 		svc[0].characteristics = NULL;
 	}else{
         // Nimble requires the last characteristic to have it's uuid = 0 to indicate the end
@@ -164,10 +165,46 @@ bool NimBLEService::start() {
 		NimBLECharacteristic* pCharacteristic = m_characteristicMap.getFirst();
         
 		for(uint8_t i=0; i < numChrs; i++) {
+            uint8_t numDscs = pCharacteristic->m_descriptorMap.getSize();
+            if(numDscs) {
+                // skip 2902 as it's automatically created by NimBLE
+                // if Indicate or Notify flags are set
+                if((pCharacteristic->m_properties & BLE_GATT_CHR_F_INDICATE) || 
+                    (pCharacteristic->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
+                    numDscs--;
+                }
+            }
+            
+            if(!numDscs){
+                pChr_a[i].descriptors = NULL;
+            } else {
+                // Must have last descriptor uuid = 0 so we have to create 1 extra
+                NIMBLE_LOGE(LOG_TAG, "Adding %d descriptors", numDscs);
+                pDsc_a = new ble_gatt_dsc_def[numDscs+1];
+                NimBLEDescriptor* pDescriptor = pCharacteristic->m_descriptorMap.getFirst();
+                for(uint8_t d=0; d < numDscs;) {
+                    // skip 2902
+                    if(pDescriptor->m_uuid.equals(NimBLEUUID((uint16_t)0x2902))) {
+                        NIMBLE_LOGE(LOG_TAG, "Skipped 0x2902");
+                        pDescriptor = pCharacteristic->m_descriptorMap.getNext();
+                        continue;
+                    }
+                    pDsc_a[d].uuid = &pDescriptor->m_uuid.getNative()->u;
+                    pDsc_a[d].att_flags = pDescriptor->m_permissions;
+                    pDsc_a[d].min_key_size = 0;
+                    pDsc_a[d].access_cb = NimBLEDescriptor::handleGapEvent;
+                    pDsc_a[d].arg = pDescriptor;
+                    pDescriptor = pCharacteristic->m_descriptorMap.getNext();
+                    d++;
+                }
+                
+                pDsc_a[numDscs].uuid = NULL;
+                pChr_a[i].descriptors = pDsc_a;
+            }
+                    
 			pChr_a[i].uuid = &pCharacteristic->m_uuid.getNative()->u;
             pChr_a[i].access_cb = NimBLECharacteristic::handleGapEvent;
             pChr_a[i].arg = pCharacteristic;
-            pChr_a[i].descriptors = NULL;
             pChr_a[i].flags = pCharacteristic->m_properties;
             pChr_a[i].min_key_size = 0;
             pChr_a[i].val_handle = &pCharacteristic->m_handle;

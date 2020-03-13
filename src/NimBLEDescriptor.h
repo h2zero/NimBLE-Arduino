@@ -63,6 +63,8 @@ public:
 private:
 	friend class NimBLEDescriptorMap;
 	friend class NimBLECharacteristic;
+    friend class NimBLEService;
+    
 	NimBLEUUID                 m_uuid;
 	uint16_t                   m_handle;
 	NimBLEDescriptorCallbacks* m_pCallbacks;
@@ -72,6 +74,9 @@ private:
 	attr_value_t               m_value;
 
 //	void executeCreate(BLECharacteristic* pCharacteristic);
+	static int handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
+                           struct ble_gatt_access_ctxt *ctxt, void *arg);
+                           
 	void setHandle(uint16_t handle);
 }; // BLEDescriptor
 

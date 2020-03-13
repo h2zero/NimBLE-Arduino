@@ -88,6 +88,15 @@ void NimBLEDescriptorMap::setByHandle(uint16_t handle, NimBLEDescriptor* pDescri
 } // setByHandle
 */
 
+
+/**
+ * @brief Get the number of descriptors in the map.
+ */
+uint8_t NimBLEDescriptorMap::getSize() {
+	return (uint8_t)m_uuidMap.size();
+} // getSize
+
+
 /**
  * @brief Return a string representation of the descriptor map.
  * @return A string representation of the descriptor map.

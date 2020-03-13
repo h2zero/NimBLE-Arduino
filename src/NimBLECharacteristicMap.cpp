@@ -56,7 +56,7 @@ NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(NimBLEUUID uuid) {
  */
 uint8_t NimBLECharacteristicMap::getSize() {
 	return (uint8_t)m_uuidMap.size();
-} // getFirst
+} // getSize
 
 /**
  * @brief Get the first characteristic in the map.
