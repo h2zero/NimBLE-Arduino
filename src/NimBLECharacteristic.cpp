@@ -13,6 +13,7 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLECharacteristic.h"
+#include "NimBLE2902.h"
 #include "NimBLEDevice.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"

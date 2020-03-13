@@ -20,7 +20,6 @@
 #include "NimBLEUUID.h"
 #include "NimBLEValue.h"
 #include "NimBLEDescriptor.h"
-#include "NimBLE2902.h"
 #include "FreeRTOS.h"
 
 #include "host/ble_hs.h"

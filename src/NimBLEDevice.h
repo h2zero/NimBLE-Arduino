@@ -51,6 +51,10 @@
 #define BLEServerCallbacks              NimBLEServerCallbacks
 #define BLECharacteristicCallbacks      NimBLECharacteristicCallbacks
 #define BLEAdvertisementData			NimBLEAdvertisementData
+#define BLEDescriptor					NimBLEDescriptor
+#define BLE2902							NimBLE2902
+#define BLEDescriptorCallbacks			NimBLEDescriptorCallbacks
+
 
 /**
  * @brief BLE functions.
