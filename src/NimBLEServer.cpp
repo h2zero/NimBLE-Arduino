@@ -31,7 +31,6 @@ static const char* LOG_TAG = "NimBLEServer";
  * the BLEDevice class.
  */
 NimBLEServer::NimBLEServer() {
-//	m_connectedCount   = 0;
 	m_connId           = BLE_HS_CONN_HANDLE_NONE;
     m_svcChgChrHdl     = 0xffff;
 	m_pServerCallbacks = nullptr;
@@ -151,6 +150,7 @@ void NimBLEServer::start() {
     
     NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
     
+    // Build a map of characteristics with Notify / Indicate capabilities for event handling
     uint8_t numSvcs = m_serviceMap.getRegisteredServiceCount();
     NimBLEService* pService = m_serviceMap.getFirst();
     
@@ -162,7 +162,8 @@ void NimBLEServer::start() {
         
         if(pChr != nullptr) {
             for( int d = 0; d < numChrs; d++) {
-                rc = ble_gatts_find_chr(&pService->getUUID().getNative()->u, 
+                // Not needed as NimBLE sets the handle for us 
+                /*rc = ble_gatts_find_chr(&pService->getUUID().getNative()->u, 
                             &pChr->getUUID().getNative()->u, NULL, &chrHdl); 
                 if(rc != 0) {
                     NIMBLE_LOGE(LOG_TAG, "ble_gatts_find_chr: rc=%d, %s", rc, 
@@ -171,7 +172,9 @@ void NimBLEServer::start() {
                 }
                 
                 pChr->setHandle(chrHdl);
-                    
+                */
+                // if Notify / Indicate is enabled but we didn't create the descriptor
+                // we do it now.
                 if((pChr->m_properties & BLE_GATT_CHR_F_INDICATE) || 
                     (pChr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
                         
@@ -245,8 +248,11 @@ uint32_t NimBLEServer::getConnectedCount() {
                 server->m_connId = event->connect.conn_handle;
                 server->addPeerDevice((void*)server, false, server->m_connId);
                 if (server->m_pServerCallbacks != nullptr) {
+                    ble_gap_conn_desc desc;
+                    int rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
+                    assert(rc == 0);
                     server->m_pServerCallbacks->onConnect(server);
-                    //m_pServerCallbacks->onConnect(this, param);			
+                    server->m_pServerCallbacks->onConnect(server, &desc);			
                 }
             }
 
@@ -380,23 +386,23 @@ bool BLEServer::connect(BLEAddress address) {
 
 
 void NimBLEServerCallbacks::onConnect(NimBLEServer* pServer) {
-	NIMBLE_LOGD("BLEServerCallbacks", ">> onConnect(): Default");
-	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
-	NIMBLE_LOGD("BLEServerCallbacks", "<< onConnect()");
+	NIMBLE_LOGD("NimBLEServerCallbacks", "onConnect(): Default");
+//	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
+//	NIMBLE_LOGD("BLEServerCallbacks", "<< onConnect()");
 } // onConnect
 
-/*
-void NimBLEServerCallbacks::onConnect(NimBLEServer* pServer, esp_ble_gatts_cb_param_t* param) {
-	NIMBLE_LOGD("BLEServerCallbacks", ">> onConnect(): Default");
-	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
-	NIMBLE_LOGD("BLEServerCallbacks", "<< onConnect()");
+
+void NimBLEServerCallbacks::onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
+	NIMBLE_LOGD("NimBLEServerCallbacks", "onConnect(): Default");
+//	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
+//	NIMBLE_LOGD("BLEServerCallbacks", "<< onConnect()");
 } // onConnect
-*/
+
 
 void NimBLEServerCallbacks::onDisconnect(NimBLEServer* pServer) {
-	NIMBLE_LOGD("BLEServerCallbacks", ">> onDisconnect(): Default");
-	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
-	NIMBLE_LOGD("BLEServerCallbacks", "<< onDisconnect()");
+	NIMBLE_LOGD("NimBLEServerCallbacks", "onDisconnect(): Default");
+//	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
+//	NIMBLE_LOGD("BLEServerCallbacks", "<< onDisconnect()");
 } // onDisconnect
 
 
@@ -445,16 +451,24 @@ void NimBLEServer::removePeerDevice(uint16_t conn_id, bool _client) {
 /**
  * Update connection parameters can be called only after connection has been established
  */
- /*
-void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
-	esp_ble_conn_update_params_t conn_params;
-	memcpy(conn_params.bda, remote_bda, sizeof(esp_bd_addr_t));
-	conn_params.latency = latency;
-	conn_params.max_int = maxInterval;    // max_int = 0x20*1.25ms = 40ms
-	conn_params.min_int = minInterval;    // min_int = 0x10*1.25ms = 20ms
-	conn_params.timeout = timeout;    // timeout = 400*10ms = 4000ms
-	esp_ble_gap_update_conn_params(&conn_params); 
+void NimBLEServer::updateConnParams(ble_gap_conn_desc* desc, 
+                            uint16_t minInterval, uint16_t maxInterval, 
+                            uint16_t latency, uint16_t timeout,
+                            uint16_t minConnTime, uint16_t maxConnTime) 
+{
+	ble_gap_upd_params params;
+
+	params.latency  = latency;
+	params.itvl_max = maxInterval;    // max_int = 0x20*1.25ms = 40ms
+	params.itvl_min = minInterval;    // min_int = 0x10*1.25ms = 20ms
+	params.supervision_timeout = timeout;    // timeout = 400*10ms = 4000ms
+    params.min_ce_len = minConnTime;  // Minimum length of connection event in 0.625ms units
+    params.max_ce_len = maxConnTime;  // Maximum length of connection event in 0.625ms units
+    
+    int rc = ble_gap_update_params(desc->conn_handle, &params);
+    if(rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
 }
-*/
 
 #endif // CONFIG_BT_ENABLED

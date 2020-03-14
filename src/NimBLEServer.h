@@ -81,7 +81,10 @@ public:
     NimBLEService*        getServiceByUUID(NimBLEUUID uuid);
     int                   disconnect(uint16_t connID, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
 //    bool                connect(BLEAddress address);
-//    void                updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
+    void                  updateConnParams(ble_gap_conn_desc* desc, 
+                                    uint16_t minInterval, uint16_t maxInterval, 
+                                    uint16_t latency, uint16_t timeout,
+                                    uint16_t minConnTime=0, uint16_t maxConnTime=0);
 
     /* multi connection support */
     std::map<uint16_t, conn_status_t> getPeerDevices();
@@ -129,7 +132,7 @@ public:
      * @param [in] pServer A reference to the %BLE server that received the client connection.
      */
     virtual void onConnect(NimBLEServer* pServer);
-    //virtual void onConnect(BLEServer* pServer, esp_ble_gatts_cb_param_t *param);
+    virtual void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc);
     /**
      * @brief Handle an existing client disconnection.
      *
