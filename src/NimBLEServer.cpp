@@ -156,7 +156,7 @@ void NimBLEServer::start() {
     
     for(int i = 0; i < numSvcs; i++) {
         uint8_t numChrs = pService->m_characteristicMap.getSize();
-        uint16_t chrHdl = 0xffff;
+        //uint16_t chrHdl = 0xffff;
                 
         NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
         
@@ -182,7 +182,7 @@ void NimBLEServer::start() {
                         pChr->addDescriptor(new NimBLE2902());
                     }
                     m_notifyChrMap.insert(std::pair<uint16_t, NimBLECharacteristic*>
-                                                    (chrHdl, pChr));
+                                                    (pChr->getHandle() /*chrHdl*/, pChr));
                 }
                 pChr = pService->m_characteristicMap.getNext();
             }
@@ -387,22 +387,16 @@ bool BLEServer::connect(BLEAddress address) {
 
 void NimBLEServerCallbacks::onConnect(NimBLEServer* pServer) {
 	NIMBLE_LOGD("NimBLEServerCallbacks", "onConnect(): Default");
-//	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
-//	NIMBLE_LOGD("BLEServerCallbacks", "<< onConnect()");
 } // onConnect
 
 
 void NimBLEServerCallbacks::onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
 	NIMBLE_LOGD("NimBLEServerCallbacks", "onConnect(): Default");
-//	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
-//	NIMBLE_LOGD("BLEServerCallbacks", "<< onConnect()");
 } // onConnect
 
 
 void NimBLEServerCallbacks::onDisconnect(NimBLEServer* pServer) {
 	NIMBLE_LOGD("NimBLEServerCallbacks", "onDisconnect(): Default");
-//	NIMBLE_LOGD("BLEServerCallbacks", "Device: %s", NimBLEDevice::toString().c_str());
-//	NIMBLE_LOGD("BLEServerCallbacks", "<< onDisconnect()");
 } // onDisconnect
 
 

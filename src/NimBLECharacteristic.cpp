@@ -518,10 +518,10 @@ void BLECharacteristic::handleGATTServerEvent(
 void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     uint16_t subVal = 0;
     if(event->subscribe.cur_notify) {
-        subVal |= BLE_GATT_CHR_F_NOTIFY;
+        subVal |= NIMBLE_DESC_FLAG_NOTIFY;
     }
     if(event->subscribe.cur_indicate) {
-        subVal |= BLE_GATT_CHR_F_INDICATE;
+        subVal |= NIMBLE_DESC_FLAG_INDICATE;
     }
     
     m_semaphoreConfEvt.give(subVal == 2 ? 0 : NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
@@ -534,8 +534,8 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         return;
 	}
     
-    p2902->setNotifications((subVal & BLE_GATT_CHR_F_NOTIFY) != 0);
-    p2902->setIndications((subVal & BLE_GATT_CHR_F_INDICATE) != 0);
+    p2902->setNotifications(subVal & NIMBLE_DESC_FLAG_NOTIFY);
+    p2902->setIndications(subVal & NIMBLE_DESC_FLAG_INDICATE);
     p2902->m_pCallbacks->onWrite(p2902);
     
     
@@ -616,13 +616,13 @@ void NimBLECharacteristic::notify(bool is_notification) {
             continue;
         }
         
-        if(is_notification && (!((*it).second & BLE_GATT_CHR_F_NOTIFY))) {
+        if(is_notification && (!((*it).second & NIMBLE_DESC_FLAG_NOTIFY))) {
             NIMBLE_LOGW(LOG_TAG, 
             "Sending notification to client subscribed to indications, sending indication instead");
             is_notification = false;
         }
         
-        if(!is_notification && (!((*it).second & BLE_GATT_CHR_F_INDICATE))) {
+        if(!is_notification && (!((*it).second & NIMBLE_DESC_FLAG_INDICATE))) {
             NIMBLE_LOGW(LOG_TAG,
             "Sending indication to client subscribed to notifications, sending notifications instead");
             is_notification = true;

@@ -21,6 +21,9 @@
 
 #include <map>
 
+#define NIMBLE_DESC_FLAG_NOTIFY   0x0001
+#define NIMBLE_DESC_FLAG_INDICATE 0x0002
+
 
 /**
  * @brief Descriptor for Client Characteristic Configuration.
