@@ -54,41 +54,6 @@ NimBLEDescriptor::~NimBLEDescriptor() {
 	free(m_value.attr_value);   // Release the storage we created in the constructor.
 } // ~NimBLEDescriptor
 
-
-/**
- * @brief Execute the creation of the descriptor with the BLE runtime in ESP.
- * @param [in] pCharacteristic The characteristic to which to register this descriptor.
- */
- /*
-void NimBLEDescriptor::executeCreate(BLECharacteristic* pCharacteristic) {
-	NIMBLE_LOGD(LOG_TAG, ">> executeCreate(): %s", toString().c_str());
-
-	if (m_handle != NULL_HANDLE) {
-		NIMBLE_LOGE(LOG_TAG, "Descriptor already has a handle.");
-		return;
-	}
-
-	m_pCharacteristic = pCharacteristic; // Save the characteristic associated with this service.
-
-	esp_attr_control_t control;
-	control.auto_rsp = ESP_GATT_AUTO_RSP;
-	m_semaphoreCreateEvt.take("executeCreate");
-	esp_err_t errRc = ::esp_ble_gatts_add_char_descr(
-			pCharacteristic->getService()->getHandle(),
-			getUUID().getNative(),
-			(esp_gatt_perm_t)m_permissions,
-			&m_value,
-			&control);
-	if (errRc != ESP_OK) {
-		NIMBLE_LOGE(LOG_TAG, "<< esp_ble_gatts_add_char_descr: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-		return;
-	}
-
-	m_semaphoreCreateEvt.wait("executeCreate");
-	NIMBLE_LOGD(LOG_TAG, "<< executeCreate");
-} // executeCreate
-*/
-
 /**
  * @brief Get the BLE handle for this descriptor.
  * @return The handle for this descriptor.
@@ -160,89 +125,6 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
     
     return BLE_ATT_ERR_UNLIKELY;
 }
-
-
-/**
- * @brief Handle GATT server events for the descripttor.
- * @param [in] event
- * @param [in] gatts_if
- * @param [in] param
- */
- /*
-void NimBLEDescriptor::handleGATTServerEvent(
-		esp_gatts_cb_event_t      event,
-		esp_gatt_if_t             gatts_if,
-		esp_ble_gatts_cb_param_t* param) {
-	switch (event) {
-		// ESP_GATTS_ADD_CHAR_DESCR_EVT
-		//
-		// add_char_descr:
-		// - esp_gatt_status_t status
-		// - uint16_t          attr_handle
-		// - uint16_t          service_handle
-		// - esp_bt_uuid_t     char_uuid
-		case ESP_GATTS_ADD_CHAR_DESCR_EVT: {
-			if (m_pCharacteristic != nullptr &&
-					m_uuid.equals(NimBLEUUID(param->add_char_descr.descr_uuid)) &&
-					m_pCharacteristic->getService()->getHandle() == param->add_char_descr.service_handle &&
-					m_pCharacteristic == m_pCharacteristic->getService()->getLastCreatedCharacteristic()) {
-				setHandle(param->add_char_descr.attr_handle);
-				m_semaphoreCreateEvt.give();
-			}
-			break;
-		} // ESP_GATTS_ADD_CHAR_DESCR_EVT
-
-		// ESP_GATTS_WRITE_EVT - A request to write the value of a descriptor has arrived.
-		//
-		// write:
-		// - uint16_t conn_id
-		// - uint16_t trans_id
-		// - esp_bd_addr_t bda
-		// - uint16_t handle
-		// - uint16_t offset
-		// - bool need_rsp
-		// - bool is_prep
-		// - uint16_t len
-		// - uint8_t *value
-		case ESP_GATTS_WRITE_EVT: {
-			if (param->write.handle == m_handle) {
-				setValue(param->write.value, param->write.len);   // Set the value of the descriptor.
-
-				if (m_pCallbacks != nullptr) {   // We have completed the write, if there is a user supplied callback handler, invoke it now.
-					m_pCallbacks->onWrite(this);   // Invoke the onWrite callback handler.
-				}
-			}  // End of ... this is our handle.
-
-			break;
-		} // ESP_GATTS_WRITE_EVT
-
-		// ESP_GATTS_READ_EVT - A request to read the value of a descriptor has arrived.
-		//
-		// read:
-		// - uint16_t conn_id
-		// - uint32_t trans_id
-		// - esp_bd_addr_t bda
-		// - uint16_t handle
-		// - uint16_t offset
-		// - bool is_long
-		// - bool need_rsp
-		//
-		case ESP_GATTS_READ_EVT: {
-			if (param->read.handle == m_handle) {  // If this event is for this descriptor ... process it
-
-				if (m_pCallbacks != nullptr) {   // If we have a user supplied callback, invoke it now.
-					m_pCallbacks->onRead(this);    // Invoke the onRead callback method in the callback handler.
-				}
-
-			} // End of this is our handle
-			break;
-		} // ESP_GATTS_READ_EVT
-
-		default:
-			break;
-	} // switch event
-} // handleGATTServerEvent
-*/
 
 /**
  * @brief Set the callback handlers for this descriptor.

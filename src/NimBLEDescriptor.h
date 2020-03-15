@@ -48,11 +48,6 @@ public:
 	size_t   getLength();                                   // Get the length of the value of the descriptor.
 	NimBLEUUID  getUUID();                                     // Get the UUID of the descriptor.
 	uint8_t* getValue();                                    // Get a pointer to the value of the descriptor.
-/*	void handleGATTServerEvent(
-			esp_gatts_cb_event_t      event,
-			esp_gatt_if_t             gatts_if,
-			esp_ble_gatts_cb_param_t* param);
-*/
 	void setAccessPermissions(uint8_t perm);	      // Set the permissions of the descriptor.
 	void setCallbacks(NimBLEDescriptorCallbacks* pCallbacks);  // Set callbacks to be invoked for the descriptor.
 	void setValue(uint8_t* data, size_t size);              // Set the value of the descriptor as a pointer to data.
@@ -70,10 +65,8 @@ private:
 	NimBLEDescriptorCallbacks* m_pCallbacks;
 	NimBLECharacteristic*      m_pCharacteristic;
 	uint8_t     			   m_permissions = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
-//	FreeRTOS::Semaphore     m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
 	attr_value_t               m_value;
 
-//	void executeCreate(BLECharacteristic* pCharacteristic);
 	static int handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                            struct ble_gatt_access_ctxt *ctxt, void *arg);
                            

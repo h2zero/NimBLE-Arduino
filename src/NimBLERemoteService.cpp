@@ -17,16 +17,6 @@
 #include "NimBLERemoteService.h"
 #include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
-/*
-#include <esp_err.h>
-#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
-#include "esp32-hal-log.h"
-#define LOG_TAG ""
-#else
-#include "esp_log.h"
-static const char* LOG_TAG = "NimBLERemoteService";
-#endif
-*/
 #include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLERemoteService";

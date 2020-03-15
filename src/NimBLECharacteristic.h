@@ -43,7 +43,6 @@ public:
 	NimBLEDescriptor* getByUUID(NimBLEUUID uuid);
 //	NimBLEDescriptor* getByHandle(uint16_t handle);
 	std::string	toString();
-//	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 	NimBLEDescriptor* getFirst();
 	NimBLEDescriptor* getNext();
     uint8_t           getSize();
@@ -72,11 +71,15 @@ public:
 
 	void indicate();
 	void notify(bool is_notification = true);
-	void setBroadcastProperty(bool value);
 	void setCallbacks(NimBLECharacteristicCallbacks* pCallbacks);
+//  Backward Compatibility - to be removed
+    void setBroadcastProperty(bool value);
 	void setIndicateProperty(bool value);
 	void setNotifyProperty(bool value);
 	void setReadProperty(bool value);
+    void setWriteProperty(bool value);
+	void setWriteNoResponseProperty(bool value);
+//////////////////////////////////////////////////////    
 	void setValue(uint8_t* data, size_t size);
 	void setValue(std::string value);
 	void setValue(uint16_t& data16);
@@ -84,19 +87,22 @@ public:
 	void setValue(int& data32);
 	void setValue(float& data32);
 	void setValue(double& data64); 
-	void setWriteProperty(bool value);
-	void setWriteNoResponseProperty(bool value);
+
 	std::string toString();
 	uint16_t getHandle();
 	void setAccessPermissions(uint16_t perm);
 
+//  Backward Compatibility - to be removed
 	static const uint32_t PROPERTY_READ      = 1<<0;
 	static const uint32_t PROPERTY_WRITE     = 1<<1;
 	static const uint32_t PROPERTY_NOTIFY    = 1<<2;
 	static const uint32_t PROPERTY_BROADCAST = 1<<3;
 	static const uint32_t PROPERTY_INDICATE  = 1<<4;
 	static const uint32_t PROPERTY_WRITE_NR  = 1<<5;
-
+//////////////////////////////////////////////////////
+    #define PROPERTY_READ_ENC BLE_GATT_CHR_F_READ_ENC 
+    #define PROPERTY_WRITE_ENC BLE_GATT_CHR_F_WRITE_ENC
+    
 private:
 
 	friend class NimBLEServer;
@@ -104,8 +110,8 @@ private:
 //	friend class NimBLEDescriptor;
 //	friend class NimBLECharacteristicMap;
 
-	NimBLECharacteristic(const char* uuid, uint32_t properties = 0, NimBLEService* pService = nullptr);
-	NimBLECharacteristic(NimBLEUUID uuid, uint32_t properties = 0, NimBLEService* pService = nullptr);
+	NimBLECharacteristic(const char* uuid, uint16_t properties = 0, NimBLEService* pService = nullptr);
+	NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties = 0, NimBLEService* pService = nullptr);
 	virtual ~NimBLECharacteristic();
 
 	NimBLEUUID                     m_uuid;
@@ -121,11 +127,9 @@ private:
     NimBLEService*  getService();
     uint8_t         getProperties();
     void            setSubscribe(struct ble_gap_event *event);
-    void            setHandle(uint16_t handle);
 	static int      handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                                 struct ble_gatt_access_ctxt *ctxt, void *arg);
 
-//	FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
 	FreeRTOS::Semaphore m_semaphoreConfEvt   = FreeRTOS::Semaphore("ConfEvt");
 }; // NimBLECharacteristic
 

@@ -52,26 +52,7 @@ NimBLEAdvertising::NimBLEAdvertising() {
     m_advParams.disc_mode         = BLE_GAP_DISC_MODE_GEN;
 	m_advParams.itvl_min          = 0x20;
 	m_advParams.itvl_max          = 0x40;
-	
-/*	m_advData.set_scan_rsp        = false;
-	m_advData.manufacturer_len    = 0;
-	m_advData.p_manufacturer_data = nullptr;
-	m_advData.service_data_len    = 0;
-	m_advData.p_service_data      = nullptr;
-	m_advData.service_uuid_len    = 0;
-	m_advData.p_service_uuid      = nullptr;
-
-	m_advParams.adv_int_min       = 0x20;
-	m_advParams.adv_int_max       = 0x40;
-	m_advParams.adv_type          = ADV_TYPE_IND;
-	m_advParams.own_addr_type     = BLE_ADDR_TYPE_PUBLIC;
-	m_advParams.channel_map       = ADV_CHNL_ALL;
-	m_advParams.adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY;
-	m_advParams.peer_addr_type    = BLE_ADDR_TYPE_PUBLIC;
-
-	m_customAdvData               = false;   // No custom advertising data
-	m_customScanResponseData      = false;   // No custom scan response data
- */   
+	 
 } // NimBLEAdvertising
 
 
@@ -131,31 +112,29 @@ void NimBLEAdvertising::setScanResponse(bool set) {
  * @param [in] scanRequestWhitelistOnly If true, only allow scan requests from those on the white list.
  * @param [in] connectWhitelistOnly If true, only allow connections from those on the white list.
  */
- /*
-void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly) {
-	ESP_LOGD(LOG_TAG, ">> setScanFilter: scanRequestWhitelistOnly: %d, connectWhitelistOnly: %d", scanRequestWhitelistOnly, connectWhitelistOnly);
+void NimBLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly) {
+	NIMBLE_LOGD(LOG_TAG, ">> setScanFilter: scanRequestWhitelistOnly: %d, connectWhitelistOnly: %d", scanRequestWhitelistOnly, connectWhitelistOnly);
 	if (!scanRequestWhitelistOnly && !connectWhitelistOnly) {
-		m_advParams.adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY;
-		ESP_LOGD(LOG_TAG, "<< setScanFilter");
+		m_advParams.filter_policy = BLE_HCI_ADV_FILT_NONE;
+		NIMBLE_LOGD(LOG_TAG, "<< setScanFilter");
 		return;
 	}
 	if (scanRequestWhitelistOnly && !connectWhitelistOnly) {
-		m_advParams.adv_filter_policy = ADV_FILTER_ALLOW_SCAN_WLST_CON_ANY;
-		ESP_LOGD(LOG_TAG, "<< setScanFilter");
+		m_advParams.filter_policy = BLE_HCI_ADV_FILT_SCAN;
+		NIMBLE_LOGD(LOG_TAG, "<< setScanFilter");
 		return;
 	}
 	if (!scanRequestWhitelistOnly && connectWhitelistOnly) {
-		m_advParams.adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_WLST;
-		ESP_LOGD(LOG_TAG, "<< setScanFilter");
+		m_advParams.filter_policy = BLE_HCI_ADV_FILT_CONN;
+		NIMBLE_LOGD(LOG_TAG, "<< setScanFilter");
 		return;
 	}
 	if (scanRequestWhitelistOnly && connectWhitelistOnly) {
-		m_advParams.adv_filter_policy = ADV_FILTER_ALLOW_SCAN_WLST_CON_WLST;
-		ESP_LOGD(LOG_TAG, "<< setScanFilter");
+		m_advParams.filter_policy = BLE_HCI_ADV_FILT_BOTH;
+		NIMBLE_LOGD(LOG_TAG, "<< setScanFilter");
 		return;
 	}
 } // setScanFilter
-*/
 
 /**
  * @brief Set the advertisement data that is to be published in a regular advertisement.
@@ -610,35 +589,5 @@ void NimBLEAdvertisementData::setShortName(std::string name) {
 std::string NimBLEAdvertisementData::getPayload() {
 	return m_payload;
 } // getPayload
-/*
-void NimBLEAdvertising::handleGAPEvent(
-		esp_gap_ble_cb_event_t  event,
-		esp_ble_gap_cb_param_t* param)  {
-
-	ESP_LOGD(LOG_TAG, "handleGAPEvent [event no: %d]", (int)event);
-
-	switch(event) {
-		case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT: {
-			// m_semaphoreSetAdv.give();
-			break;
-		}
-		case ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT: {
-			// m_semaphoreSetAdv.give();
-			break;
-		}
-		case ESP_GAP_BLE_ADV_START_COMPLETE_EVT: {
-			// m_semaphoreSetAdv.give();
-			break;
-		}
-		case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT: {
-			ESP_LOGI(LOG_TAG, "STOP advertising");
-			start();
-			break;
-		}
-		default:
-			break;
-	}
-}
-*/
 
 #endif /* CONFIG_BT_ENABLED */

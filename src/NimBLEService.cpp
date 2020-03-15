@@ -16,19 +16,12 @@
 
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
-//#include <esp_err.h>
-//#include <esp_gatts_api.h>
 
 #include "NimBLEService.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
 
-//#include <iomanip>
-//#include <sstream>
 #include <string>
-
-//#include "BLEServer.h"
-//#include "GeneralUtils.h"
 
 static const char* LOG_TAG = "NimBLEService"; // Tag for logging.
 
@@ -59,56 +52,6 @@ NimBLEService::NimBLEService(NimBLEUUID uuid, uint16_t numHandles, NimBLEServer*
 	m_numHandles = numHandles;
 } // NimBLEService
 
-
-/**
- * @brief Create the service.
- * Create the service.
- * @param [in] gatts_if The handle of the GATT server interface.
- * @return N/A.
- */
-/*
-void NimBLEService::executeCreate(NimBLEServer* pServer) {
-	NIMBLE_LOGD(LOG_TAG, ">> executeCreate() - Creating service service uuid: %s", getUUID().toString().c_str());
-	m_pServer          = pServer;
-//	m_semaphoreCreateEvt.take("executeCreate"); // Take the mutex and release at event ESP_GATTS_CREATE_EVT
-
-//	esp_gatt_srvc_id_t srvc_id;
-//	srvc_id.is_primary = true;
-//	srvc_id.id.inst_id = m_instId;
-//	srvc_id.id.uuid    = *m_uuid.getNative();
-//	esp_err_t errRc = ::esp_ble_gatts_create_service(getServer()->getGattsIf(), &srvc_id, m_numHandles); // The maximum number of handles associated with the service.
-
-//	if (errRc != ESP_OK) {
-//		ESP_LOGE(LOG_TAG, "esp_ble_gatts_create_service: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-//		return;
-//	}
-
-//	m_semaphoreCreateEvt.wait("executeCreate");
-	NIMBLE_LOGD(LOG_TAG, "<< executeCreate");
-} // executeCreate
-*/
-
-/**
- * @brief Delete the service.
- * Delete the service.
- * @return N/A.
- */
-/*
-void NimBLEService::executeDelete() {
-	NIMBLE_LOGD(LOG_TAG, ">> executeDelete()");
-//	m_semaphoreDeleteEvt.take("executeDelete"); // Take the mutex and release at event ESP_GATTS_DELETE_EVT
-
-//	esp_err_t errRc = ::esp_ble_gatts_delete_service(getHandle());
-
-//	if (errRc != ESP_OK) {
-//		ESP_LOGE(LOG_TAG, "esp_ble_gatts_delete_service: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-//		return;
-//	}
-
-//	m_semaphoreDeleteEvt.wait("executeDelete");
-	NIMBLE_LOGD(LOG_TAG, "<< executeDelete");
-} // executeDelete
-*/
 
 /**
  * @brief Dump details of this BLE GATT service.
@@ -237,33 +180,6 @@ bool NimBLEService::start() {
 
 
 /**
- * @brief Stop the service.
- */
- /*
-void BLEService::stop() {
-// We ask the BLE runtime to start the service and then create each of the characteristics.
-// We start the service through its local handle which was returned in the ESP_GATTS_CREATE_EVT event
-// obtained as a result of calling esp_ble_gatts_create_service().
-	ESP_LOGD(LOG_TAG, ">> stop(): Stopping service (esp_ble_gatts_stop_service): %s", toString().c_str());
-	if (m_handle == NULL_HANDLE) {
-		ESP_LOGE(LOG_TAG, "<< !!! We attempted to stop a service but don't know its handle!");
-		return;
-	}
-
-	m_semaphoreStopEvt.take("stop");
-	esp_err_t errRc = ::esp_ble_gatts_stop_service(m_handle);
-
-	if (errRc != ESP_OK) {
-		ESP_LOGE(LOG_TAG, "<< esp_ble_gatts_stop_service: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-		return;
-	}
-	m_semaphoreStopEvt.wait("stop");
-
-	ESP_LOGD(LOG_TAG, "<< stop()");
-} // start
-*/
-
-/**
  * @brief Set the handle associated with this service.
  * @param [in] handle The handle associated with the service.
  */
@@ -338,109 +254,6 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(NimBLEUUID uuid, uint3
     //pCharacteristic->executeCreate(this);
 	return pCharacteristic;
 } // createCharacteristic
-
-
-/**
- * @brief Handle a GATTS server event.
- */
- /*
-void BLEService::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param) {
-	switch (event) {
-		// ESP_GATTS_ADD_CHAR_EVT - Indicate that a characteristic was added to the service.
-		// add_char:
-		// - esp_gatt_status_t status
-		// - uint16_t attr_handle
-		// - uint16_t service_handle
-		// - esp_bt_uuid_t char_uuid
-
-		// If we have reached the correct service, then locate the characteristic and remember the handle
-		// for that characteristic.
-		case ESP_GATTS_ADD_CHAR_EVT: {
-			if (m_handle == param->add_char.service_handle) {
-				BLECharacteristic *pCharacteristic = getLastCreatedCharacteristic();
-				if (pCharacteristic == nullptr) {
-					ESP_LOGE(LOG_TAG, "Expected to find characteristic with UUID: %s, but didnt!",
-							BLEUUID(param->add_char.char_uuid).toString().c_str());
-					dump();
-					break;
-				}
-				pCharacteristic->setHandle(param->add_char.attr_handle);
-				m_characteristicMap.setByHandle(param->add_char.attr_handle, pCharacteristic);
-				break;
-			} // Reached the correct service.
-			break;
-		} // ESP_GATTS_ADD_CHAR_EVT
-
-
-		// ESP_GATTS_START_EVT
-		//
-		// start:
-		// esp_gatt_status_t status
-		// uint16_t service_handle
-		case ESP_GATTS_START_EVT: {
-			if (param->start.service_handle == getHandle()) {
-				m_semaphoreStartEvt.give();
-			}
-			break;
-		} // ESP_GATTS_START_EVT
-
-		// ESP_GATTS_STOP_EVT
-		//
-		// stop:
-		// esp_gatt_status_t status
-		// uint16_t service_handle
-		//
-		case ESP_GATTS_STOP_EVT: {
-			if (param->stop.service_handle == getHandle()) {
-				m_semaphoreStopEvt.give();
-			}
-			break;
-		} // ESP_GATTS_STOP_EVT
-
-
-		// ESP_GATTS_CREATE_EVT
-		// Called when a new service is registered as having been created.
-		//
-		// create:
-		// * esp_gatt_status_t status
-		// * uint16_t service_handle
-		// * esp_gatt_srvc_id_t service_id
-		// * - esp_gatt_id id
-		// *   - esp_bt_uuid uuid
-		// *   - uint8_t inst_id
-		// * - bool is_primary
-		//
-		case ESP_GATTS_CREATE_EVT: {
-			if (getUUID().equals(BLEUUID(param->create.service_id.id.uuid)) && m_instId == param->create.service_id.id.inst_id) {
-				setHandle(param->create.service_handle);
-				m_semaphoreCreateEvt.give();
-			}
-			break;
-		} // ESP_GATTS_CREATE_EVT
-
-
-		// ESP_GATTS_DELETE_EVT
-		// Called when a service is deleted.
-		//
-		// delete:
-		// * esp_gatt_status_t status
-		// * uint16_t service_handle
-		//
-		case ESP_GATTS_DELETE_EVT: {
-			if (param->del.service_handle == getHandle()) {
-				m_semaphoreDeleteEvt.give();
-			}
-			break;
-		} // ESP_GATTS_DELETE_EVT
-
-		default:
-			break;
-	} // Switch
-
-	// Invoke the GATTS handler in each of the associated characteristics.
-	m_characteristicMap.handleGATTServerEvent(event, gatts_if, param);
-} // handleGATTServerEvent
-*/
 
 
 NimBLECharacteristic* NimBLEService::getCharacteristic(const char* uuid) {

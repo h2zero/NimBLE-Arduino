@@ -98,6 +98,7 @@ public:
     static std::list<NimBLEClient*>* getClientList(); 
         
 private:
+    friend class NimBLEServer;
     friend class NimBLEClient;
     friend class NimBLEScan;
 //  friend class NimBLERemoteService;

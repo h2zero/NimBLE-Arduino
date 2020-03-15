@@ -75,11 +75,10 @@ public:
 	void setMaxInterval(uint16_t maxinterval);
 	void setMinInterval(uint16_t mininterval);
 	void setAdvertisementData(NimBLEAdvertisementData& advertisementData);
-//	void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
+	void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
 	void setScanResponseData(NimBLEAdvertisementData& advertisementData);
 	void setPrivateAddress(uint8_t type = BLE_ADDR_RANDOM);
 
-	//void handleGAPEvent(esp_gap_ble_cb_event_t  event, esp_ble_gap_cb_param_t* param);
 //	void setMinPreferred(uint16_t);
 //	void setMaxPreferred(uint16_t);
 	void setScanResponse(bool);
@@ -91,7 +90,6 @@ private:
 	std::vector<NimBLEUUID> m_serviceUUIDs;
 	bool                 m_customAdvData = false;  // Are we using custom advertising data?
 	bool                 m_customScanResponseData = false;  // Are we using custom scan response data?
-//	FreeRTOS::Semaphore  m_semaphoreSetAdv = FreeRTOS::Semaphore("startAdvert");
 	bool				 m_scanResp = true;
     bool                 m_advSvcsSet = false;
 

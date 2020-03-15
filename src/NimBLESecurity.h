@@ -107,7 +107,7 @@ public:
     /**
      * Provide us information when authentication process is completed
      */
-    virtual void onAuthenticationComplete(ble_gap_conn_desc) = 0;
+    virtual void onAuthenticationComplete(ble_gap_conn_desc*) = 0;
 
     virtual bool onConfirmPIN(uint32_t pin) = 0;
 }; // BLESecurityCallbacks

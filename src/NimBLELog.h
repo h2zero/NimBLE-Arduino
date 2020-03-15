@@ -10,6 +10,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "syscfg/syscfg.h"
 #include "modlog/modlog.h"
  
 #define NIMBLE_LOGE( tag, format, ... ) MODLOG_DFLT(ERROR,      "\033[0;31mE %s: "#format"\033[0m\n",tag,##__VA_ARGS__)

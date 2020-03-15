@@ -42,7 +42,6 @@ public:
 	NimBLECharacteristic* getNext();
 	uint8_t getSize();
 	std::string toString();
-//	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 
 private:
 	std::map<NimBLECharacteristic*, std::string> m_uuidMap;
@@ -61,8 +60,6 @@ public:
 	NimBLECharacteristic* createCharacteristic(const char* uuid, uint32_t properties);
 	NimBLECharacteristic* createCharacteristic(NimBLEUUID uuid, uint32_t properties);
 	void               dump();
-//	void               executeCreate(NimBLEServer* pServer);
-//	void			   executeDelete();
 	NimBLECharacteristic* getCharacteristic(const char* uuid);
 	NimBLECharacteristic* getCharacteristic(NimBLEUUID uuid);
 	NimBLEUUID            getUUID();
@@ -77,9 +74,6 @@ private:
 	NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer);
 	NimBLEService(NimBLEUUID uuid, uint16_t numHandles, NimBLEServer* pServer);
 	friend class NimBLEServer;
-//	friend class BLEServiceMap;
-//	friend class BLEDescriptor;
-//	friend class BLECharacteristic;
 	friend class NimBLEDevice;
 
 	NimBLECharacteristicMap m_characteristicMap;
@@ -88,17 +82,10 @@ private:
 	NimBLEServer*           m_pServer = nullptr;
 	NimBLEUUID              m_uuid;
 
-//	FreeRTOS::Semaphore  m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
-//	FreeRTOS::Semaphore  m_semaphoreDeleteEvt = FreeRTOS::Semaphore("DeleteEvt");
-//	FreeRTOS::Semaphore  m_semaphoreStartEvt  = FreeRTOS::Semaphore("StartEvt");
-//	FreeRTOS::Semaphore  m_semaphoreStopEvt   = FreeRTOS::Semaphore("StopEvt");
-
 	uint16_t             m_numHandles;
 
 	NimBLECharacteristic* getLastCreatedCharacteristic();
-//	void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 	void               setHandle(uint16_t handle);
-	//void               setService(esp_gatt_srvc_id_t srvc_id);
 }; // BLEService
 
 

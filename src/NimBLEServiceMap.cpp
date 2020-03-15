@@ -92,17 +92,6 @@ std::string NimBLEServiceMap::toString() {
 	return res;
 } // toString
 
-/*
-void BLEServiceMap::handleGATTServerEvent(
-		esp_gatts_cb_event_t      event,
-		esp_gatt_if_t             gatts_if,
-		esp_ble_gatts_cb_param_t* param) {
-	// Invoke the handler for every Service we have.
-	for (auto &myPair : m_uuidMap) {
-		myPair.first->handleGATTServerEvent(event, gatts_if, param);
-	}
-}
-*/
 
 /**
  * @brief Get the first service in the map.

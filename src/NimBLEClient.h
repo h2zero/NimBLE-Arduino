@@ -94,7 +94,7 @@ public:
     virtual uint32_t onPassKeyRequest(){return 0;}
     virtual void onPassKeyNotify(uint32_t pass_key){}
     virtual bool onSecurityRequest(){return false;}
-    virtual void onAuthenticationComplete(ble_gap_conn_desc){};
+    virtual void onAuthenticationComplete(ble_gap_conn_desc*){};
     virtual bool onConfirmPIN(uint32_t pin){return false;}
 };
 

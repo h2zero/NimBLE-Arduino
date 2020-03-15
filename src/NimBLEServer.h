@@ -46,7 +46,6 @@ public:
 //    NimBLEService* getByHandle(uint16_t handle);
     NimBLEService* getByUUID(const char* uuid);    
     NimBLEService* getByUUID(NimBLEUUID uuid, uint8_t inst_id = 0);
-//    void           handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param);
 //    void           setByHandle(uint16_t handle, NimBLEService* service);
     void           setByUUID(const char* uuid, NimBLEService* service);
     void           setByUUID(NimBLEUUID uuid, NimBLEService* service);
@@ -141,6 +140,12 @@ public:
      * @param [in] pServer A reference to the %BLE server that received the existing client disconnection.
      */
     virtual void onDisconnect(NimBLEServer* pServer);
+    
+    virtual uint32_t onPassKeyRequest(){return 0;}
+    virtual void onPassKeyNotify(uint32_t pass_key){}
+    virtual bool onSecurityRequest(){return true;}
+    virtual void onAuthenticationComplete(ble_gap_conn_desc*){};
+    virtual bool onConfirmPIN(uint32_t pin){return true;}
 }; // BLEServerCallbacks
 
 

@@ -400,7 +400,7 @@ bool NimBLEDevice::getInitialized() {
  * @param sc, if true we will perform secure connection pairing, false we will use legacy pairing.
  */
 /*STATIC*/ void NimBLEDevice::setSecuityAuth(bool bonding, bool mitm, bool sc) {
-    NIMBLE_LOGE(LOG_TAG, "Setting bonding: %d, mitm: %d, sc: %d",bonding,mitm,sc);
+    NIMBLE_LOGD(LOG_TAG, "Setting bonding: %d, mitm: %d, sc: %d",bonding,mitm,sc);
     ble_hs_cfg.sm_bonding = bonding;
     ble_hs_cfg.sm_mitm = mitm;
     ble_hs_cfg.sm_sc = sc;

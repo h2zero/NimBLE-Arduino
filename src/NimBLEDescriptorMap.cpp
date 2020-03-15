@@ -118,24 +118,6 @@ std::string NimBLEDescriptorMap::toString() {
 
 
 /**
- * @breif Pass the GATT server event onwards to each of the descriptors found in the mapping
- * @param [in] event
- * @param [in] gatts_if
- * @param [in] param
- */
- /*
-void NimBLEDescriptorMap::handleGATTServerEvent(
-		esp_gatts_cb_event_t      event,
-		esp_gatt_if_t             gatts_if,
-		esp_ble_gatts_cb_param_t* param) {
-	// Invoke the handler for every descriptor we have.
-	for (auto &myPair : m_uuidMap) {
-		myPair.first->handleGATTServerEvent(event, gatts_if, param);
-	}
-} // handleGATTServerEvent
-*/
-
-/**
  * @brief Get the first descriptor in the map.
  * @return The first descriptor in the map.
  */

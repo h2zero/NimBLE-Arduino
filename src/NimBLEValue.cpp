@@ -15,7 +15,7 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLEValue.h"
-//#include "NimBLELog.h"
+#include "NimBLELog.h"
 
 static const char* LOG_TAG="NimBLEValue";
 
@@ -32,7 +32,7 @@ NimBLEValue::NimBLEValue() {
  * @param [in] part A message part being added.
  */
 void NimBLEValue::addPart(std::string part) {
-//	NIMBLE_LOGD(LOG_TAG, ">> addPart: length=%d", part.length());
+	NIMBLE_LOGD(LOG_TAG, ">> addPart: length=%d", part.length());
 	m_accumulation += part;
 } // addPart
 
@@ -44,7 +44,7 @@ void NimBLEValue::addPart(std::string part) {
  * @param [in] length The number of bytes being added.
  */
 void NimBLEValue::addPart(uint8_t* pData, size_t length) {
-//	NIMBLE_LOGD(LOG_TAG, ">> addPart: length=%d", length);
+	NIMBLE_LOGD(LOG_TAG, ">> addPart: length=%d", length);
 	m_accumulation += std::string((char*) pData, length);
 } // addPart
 
@@ -53,7 +53,7 @@ void NimBLEValue::addPart(uint8_t* pData, size_t length) {
  * @brief Cancel the current accumulation.
  */
 void NimBLEValue::cancel() {
-//	NIMBLE_LOGD(LOG_TAG, ">> cancel");
+	NIMBLE_LOGD(LOG_TAG, ">> cancel");
 	m_accumulation = "";
 	m_readOffset   = 0;
 } // cancel
@@ -66,7 +66,7 @@ void NimBLEValue::cancel() {
  * we now have the complete message and commit the change as a unit.
  */
 void NimBLEValue::commit() {
-//	NIMBLE_LOGD(LOG_TAG, ">> commit");
+	NIMBLE_LOGD(LOG_TAG, ">> commit");
 	// If there is nothing to commit, do nothing.
 	if (m_accumulation.length() == 0) return;
 	setValue(m_accumulation);

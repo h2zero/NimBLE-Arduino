@@ -235,6 +235,7 @@ uint32_t NimBLEServer::getConnectedCount() {
 	NimBLEServer* server = (NimBLEServer*)arg;
 	NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent: %s",
 		NimBLEUtils::gapEventToString(event->type));
+    int rc = 0;
 
 	switch(event->type) {
         
@@ -249,14 +250,14 @@ uint32_t NimBLEServer::getConnectedCount() {
                 server->addPeerDevice((void*)server, false, server->m_connId);
                 if (server->m_pServerCallbacks != nullptr) {
                     ble_gap_conn_desc desc;
-                    int rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
+                    rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
                     assert(rc == 0);
                     server->m_pServerCallbacks->onConnect(server);
                     server->m_pServerCallbacks->onConnect(server, &desc);			
                 }
             }
 
-            break;
+            return 0;
 		} // BLE_GAP_EVENT_CONNECT
         
         
@@ -268,7 +269,7 @@ uint32_t NimBLEServer::getConnectedCount() {
             /* Connection terminated; resume advertising */
             //NimBLEDevice::startAdvertising();
             server->removePeerDevice(event->disconnect.conn.conn_handle, false);
-            break;
+            return 0;
         } // BLE_GAP_EVENT_DISCONNECT
         
         case BLE_GAP_EVENT_SUBSCRIBE: {
@@ -281,7 +282,7 @@ uint32_t NimBLEServer::getConnectedCount() {
                 (*it).second->setSubscribe(event);
             }
 
-            break;
+            return 0;
         } // BLE_GAP_EVENT_SUBSCRIBE
  
         case BLE_GAP_EVENT_MTU: {
@@ -289,7 +290,7 @@ uint32_t NimBLEServer::getConnectedCount() {
                         event->mtu.conn_handle,
                         event->mtu.value);
             server->updatePeerMTU(event->mtu.conn_handle, event->mtu.value);
-            break;
+            return 0;
         } // BLE_GAP_EVENT_MTU
         
         case BLE_GAP_EVENT_NOTIFY_TX: {
@@ -300,8 +301,93 @@ uint32_t NimBLEServer::getConnectedCount() {
                 }
             }
             
-            break;
+            return 0;
         } // BLE_GAP_EVENT_NOTIFY_TX
+        
+        case BLE_GAP_EVENT_CONN_UPDATE: {
+            NIMBLE_LOGD(LOG_TAG, "Peer requesting to update connection parameters");
+            return 0;
+        } // BLE_GAP_EVENT_CONN_UPDATE
+        
+        case BLE_GAP_EVENT_ENC_CHANGE: {
+            //if(client->m_conn_id != event->enc_change.conn_handle)
+            //    return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
+            
+            struct ble_gap_conn_desc desc;
+            int rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
+            if(rc != 0) {
+                return BLE_ATT_ERR_INVALID_HANDLE;
+            }
+
+            server->m_pServerCallbacks->onAuthenticationComplete(&desc);
+            if(NimBLEDevice::m_securityCallbacks != nullptr) {
+                NimBLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
+            }
+            
+            return 0;
+        } // BLE_GAP_EVENT_ENC_CHANGE
+        
+        case BLE_GAP_EVENT_PASSKEY_ACTION: {
+            struct ble_sm_io pkey = {0};
+
+            if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
+                pkey.action = event->passkey.params.action;
+                pkey.passkey = NimBLEDevice::m_passkey; // This is the passkey to be entered on peer
+                rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+                NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
+                
+            } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
+                NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %d", event->passkey.params.numcmp);
+                pkey.action = event->passkey.params.action;
+                // Compatibility only - Do not use, should be removed the in future
+                if(NimBLEDevice::m_securityCallbacks != nullptr) {
+                    pkey.numcmp_accept = NimBLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
+                /////////////////////////////////////////////
+                }else if(server->m_pServerCallbacks != nullptr) {
+                    pkey.numcmp_accept = server->m_pServerCallbacks->onConfirmPIN(event->passkey.params.numcmp);
+                }else{
+                    pkey.numcmp_accept = false;
+                }
+                
+                rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+                NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_NUMCMP; ble_sm_inject_io result: %d", rc);
+              
+            //TODO: Handle out of band pairing      
+            } else if (event->passkey.params.action == BLE_SM_IOACT_OOB) {
+                static uint8_t tem_oob[16] = {0};
+                pkey.action = event->passkey.params.action;
+                for (int i = 0; i < 16; i++) {
+                    pkey.oob[i] = tem_oob[i];
+                }
+                rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+                NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_OOB; ble_sm_inject_io result: %d", rc);
+            //////////////////////////////////    
+            } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
+                NIMBLE_LOGD(LOG_TAG, "Enter the passkey");
+                pkey.action = event->passkey.params.action;
+                
+                // Compatibility only - Do not use, should be removed the in future
+                if(NimBLEDevice::m_securityCallbacks != nullptr) {
+                    pkey.passkey = NimBLEDevice::m_securityCallbacks->onPassKeyRequest();
+                /////////////////////////////////////////////
+                }else if(server->m_pServerCallbacks != nullptr) {
+                    pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
+                    NIMBLE_LOGD(LOG_TAG, "Sending passkey: %d", pkey.passkey);
+                }else{
+                    pkey.passkey = 0;
+                    NIMBLE_LOGE(LOG_TAG, "No Callback! Sending 0 as the passkey");
+                }
+;
+                rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+                NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_INPUT; ble_sm_inject_io result: %d", rc);
+                
+            } else if (event->passkey.params.action == BLE_SM_IOACT_NONE) {
+                NIMBLE_LOGD(LOG_TAG, "No passkey action required");
+            }
+            
+            NIMBLE_LOGD(LOG_TAG, "<< handleGATTServerEvent");
+            return 0;
+        } // BLE_GAP_EVENT_PASSKEY_ACTION
 
 		default:
 			break;

@@ -84,21 +84,6 @@ NimBLECharacteristic* NimBLECharacteristicMap::getNext() {
 
 
 /**
- * @brief Pass the GATT server event onwards to each of the characteristics found in the mapping
- * @param [in] event
- * @param [in] gatts_if
- * @param [in] param
- */
-/*
-void BLECharacteristicMap::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t* param) {
-	// Invoke the handler for every Service we have.
-	for (auto& myPair : m_uuidMap) {
-		myPair.first->handleGATTServerEvent(event, gatts_if, param);
-	}
-} // handleGATTServerEvent
-*/
-
-/**
  * @brief Set the characteristic by handle.
  * @param [in] handle The handle of the characteristic.
  * @param [in] characteristic The characteristic to cache.

@@ -31,7 +31,6 @@ public:
     NimBLEUUID(uint32_t uuid);
     NimBLEUUID(ble_uuid128_t* uuid);
     NimBLEUUID(uint8_t* pData, size_t size, bool msbFirst);
-//  BLEUUID(esp_gatt_id_t gattId);
     NimBLEUUID();
     uint8_t        bitSize();   // Get the number of bits in this uuid.
     bool           equals(NimBLEUUID uuid);

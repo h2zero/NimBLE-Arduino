@@ -10,18 +10,6 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLEUtils.h"
-/*
-#if defined(CONFIG_ARDUHAL_ESP_LOG)
-#include "esp32-hal-log.h"
-#define LOG_TAG ""
-#else
-#include "esp_log.h"
-static const char* LOG_TAG = "NimBLEUtils"; 
-#endif
-
-#include "modlog/modlog.h"
-*/
-
 #include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLEUtils"; 

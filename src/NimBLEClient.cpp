@@ -17,16 +17,6 @@
 #include "NimBLEClient.h"
 #include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
-/*
-#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
-#include "esp32-hal-log.h"
-#define LOG_TAG ""
-#else
-#include "esp_log.h"
-static const char* LOG_TAG = "NimBLEClient";
-#endif
-*/
-
 #include "NimBLELog.h"
 
 #include <string>
@@ -645,7 +635,7 @@ uint16_t NimBLEClient::getMTU() {
                 struct ble_gap_conn_desc desc;
                 rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
                 assert(rc == 0);
-                client->m_pClientCallbacks->onAuthenticationComplete(desc);
+                client->m_pClientCallbacks->onAuthenticationComplete(&desc);
             }
             
             client->m_semeaphoreSecEvt.give(event->enc_change.status);
@@ -655,7 +645,6 @@ uint16_t NimBLEClient::getMTU() {
         
         case BLE_GAP_EVENT_PASSKEY_ACTION: {
             struct ble_sm_io pkey = {0};
-            //int key = 0;
             
             if(client->m_conn_id != event->passkey.conn_handle) 
                 return 0;
@@ -669,7 +658,11 @@ uint16_t NimBLEClient::getMTU() {
             } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
                 NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %d", event->passkey.params.numcmp);
                 pkey.action = event->passkey.params.action;
-                if(client->m_pClientCallbacks != nullptr) {
+                // Compatibility only - Do not use, should be removed the in future
+                if(NimBLEDevice::m_securityCallbacks != nullptr) {
+                    pkey.numcmp_accept = NimBLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
+                ////////////////////////////////////////////////////
+                }else if(client->m_pClientCallbacks != nullptr) {
                     pkey.numcmp_accept = client->m_pClientCallbacks->onConfirmPIN(event->passkey.params.numcmp);
                 }else{
                     pkey.numcmp_accept = false;
@@ -691,7 +684,11 @@ uint16_t NimBLEClient::getMTU() {
                 NIMBLE_LOGD(LOG_TAG, "Enter the passkey");
                 pkey.action = event->passkey.params.action;
                 
-                if(client->m_pClientCallbacks != nullptr) {
+                // Compatibility only - Do not use, should be removed the in future
+                if(NimBLEDevice::m_securityCallbacks != nullptr) {
+                    pkey.passkey = NimBLEDevice::m_securityCallbacks->onPassKeyRequest();
+                /////////////////////////////////////////////
+                }else if(client->m_pClientCallbacks != nullptr) {
                     pkey.passkey = client->m_pClientCallbacks->onPassKeyRequest();
                     NIMBLE_LOGD(LOG_TAG, "Sending passkey: %d", pkey.passkey);
                 }else{
@@ -710,7 +707,6 @@ uint16_t NimBLEClient::getMTU() {
         }
         
         default: {
-            //NimBLEUtils::dumpGapEvent(event, arg);
             return 0;
         }
     } // Switch

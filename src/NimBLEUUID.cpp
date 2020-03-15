@@ -16,57 +16,10 @@
 
 #include "NimBLEUtils.h"
 #include "NimBLEUUID.h"
-/*
-#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
-#include "esp32-hal-log.h"
-#define LOG_TAG ""
-#else
-#include "esp_log.h"
-static const char* LOG_TAG = "NimBLEUUID";
-#endif
-*/
 #include "NimBLELog.h"
 
-//#include <string.h>
-//#include <iomanip>
-//#include <stdio.h>
-//#include <assert.h>
-//#include <stdlib.h>
-
 static const char* LOG_TAG = "NimBLEUUID";
 
-
-/**
- * @brief Copy memory from source to target but in reverse order.
- *
- * When we move memory from one location it is normally:
- *
- * ```
- * [0][1][2]...[n] -> [0][1][2]...[n]
- * ```
- *
- * with this function, it is:
- *
- * ```
- * [0][1][2]...[n] -> [n][n-1][n-2]...[0]
- * ```
- *
- * @param [in] target The target of the copy
- * @param [in] source The source of the copy
- * @param [in] size The number of bytes to copy
- */
- /*
-static void memrcpy(uint8_t* target, uint8_t* source, uint32_t size) {
-    assert(size > 0);
-    target += (size - 1); // Point target to the last byte of the target data
-    while (size > 0) {
-        *target = *source;
-        target--;
-        source++;
-        size--;
-    }
-} // memrcpy
-*/
 
 /**
  * @brief Create a UUID from a string.
