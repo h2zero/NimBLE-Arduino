@@ -19,10 +19,8 @@
 #include "NimBLEAdvertising.h"
 #include "NimBLEDevice.h"
 #include "NimBLEServer.h"
-//#include <esp_err.h>
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
-//#include "GeneralUtils.h"
 
 static const char* LOG_TAG = "NimBLEAdvertising";
 
@@ -183,6 +181,11 @@ void NimBLEAdvertising::start() {
     int rc = 0;
     uint8_t addressType;
 	uint8_t payloadLen = 3; //start with 3 bytes for the flags data
+    
+    // If already advertising just return
+    if(ble_gap_adv_active()) {
+        return;
+    }
 	
 	NimBLEServer* pServer = NimBLEDevice::createServer();
 	if(!pServer->m_gattsStarted){

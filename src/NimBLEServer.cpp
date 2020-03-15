@@ -155,24 +155,11 @@ void NimBLEServer::start() {
     NimBLEService* pService = m_serviceMap.getFirst();
     
     for(int i = 0; i < numSvcs; i++) {
-        uint8_t numChrs = pService->m_characteristicMap.getSize();
-        //uint16_t chrHdl = 0xffff;
-                
+        uint8_t numChrs = pService->m_characteristicMap.getSize();  
         NimBLECharacteristic* pChr = pService->m_characteristicMap.getFirst(); 
         
         if(pChr != nullptr) {
             for( int d = 0; d < numChrs; d++) {
-                // Not needed as NimBLE sets the handle for us 
-                /*rc = ble_gatts_find_chr(&pService->getUUID().getNative()->u, 
-                            &pChr->getUUID().getNative()->u, NULL, &chrHdl); 
-                if(rc != 0) {
-                    NIMBLE_LOGE(LOG_TAG, "ble_gatts_find_chr: rc=%d, %s", rc, 
-                                        NimBLEUtils::returnCodeToString(rc));
-                    abort();
-                }
-                
-                pChr->setHandle(chrHdl);
-                */
                 // if Notify / Indicate is enabled but we didn't create the descriptor
                 // we do it now.
                 if((pChr->m_properties & BLE_GATT_CHR_F_INDICATE) || 
@@ -182,7 +169,7 @@ void NimBLEServer::start() {
                         pChr->addDescriptor(new NimBLE2902());
                     }
                     m_notifyChrMap.insert(std::pair<uint16_t, NimBLECharacteristic*>
-                                                    (pChr->getHandle() /*chrHdl*/, pChr));
+                                                    (pChr->getHandle(), pChr));
                 }
                 pChr = pService->m_characteristicMap.getNext();
             }
@@ -309,10 +296,7 @@ uint32_t NimBLEServer::getConnectedCount() {
             return 0;
         } // BLE_GAP_EVENT_CONN_UPDATE
         
-        case BLE_GAP_EVENT_ENC_CHANGE: {
-            //if(client->m_conn_id != event->enc_change.conn_handle)
-            //    return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
-            
+        case BLE_GAP_EVENT_ENC_CHANGE: {            
             struct ble_gap_conn_desc desc;
             int rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
             if(rc != 0) {

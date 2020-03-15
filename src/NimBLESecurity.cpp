@@ -19,8 +19,9 @@
 #include "NimBLEDevice.h"
 
 /**
- * @brief These class methods are for backward compatibility with the bluedroid based library.
+ * @brief This class is for backward compatibility with the bluedroid based library.
  * Use the new security functions in NimBLEDevice instead.
+ * New callback functions in NimBLEServer and NimBLEClient.
  */
 
 NimBLESecurity::NimBLESecurity() {

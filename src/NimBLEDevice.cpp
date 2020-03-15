@@ -52,11 +52,6 @@ std::list <NimBLEClient*>   NimBLEDevice::m_cList;
 std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
 NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
   
-//esp_ble_sec_act_t BLEDevice::m_securityLevel = (esp_ble_sec_act_t)0;
-//BLESecurityCallbacks* BLEDevice::m_securityCallbacks = nullptr;
-//uint16_t   BLEDevice::m_localMTU = 23;  // not sure if this variable is useful
-//BLEAdvertising* BLEDevice::m_bleAdvertising = nullptr;
-//uint16_t BLEDevice::m_appId = 0;
 //std::map<uint16_t, conn_status_t> BLEDevice::m_connectedClientsMap;
 
 //gattc_event_handler BLEDevice::m_customGattcHandler = nullptr;
@@ -281,14 +276,6 @@ void NimBLEDevice::stopAdvertising() {
     rc = ble_hs_util_ensure_addr(0);
     assert(rc == 0);
     
-    /*rc = ble_gap_event_listener_register(&m_listener, NimBLEDevice::gapEventHandler, NULL);
-    if(rc == BLE_HS_EALREADY){
-        NIMBLE_LOGI(LOG_TAG, "Already listening to GAP events.");
-    }
-    else{
-        assert(rc == 0);
-    }
-    */
     NIMBLE_LOGI(LOG_TAG, "NimBle host synced.");
     
     m_synced = true;
@@ -553,6 +540,13 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  */
 void NimBLEDevice::setCustomGapHandler(gap_event_handler handler) {
     m_customGapHandler = handler;
+    int rc = ble_gap_event_listener_register(&m_listener, m_customGapHandler, NULL);
+    if(rc == BLE_HS_EALREADY){
+        NIMBLE_LOGI(LOG_TAG, "Already listening to GAP events.");
+    }
+    else{
+        assert(rc == 0);
+    }
 } // setCustomGapHandler
 
 

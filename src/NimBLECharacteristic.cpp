@@ -60,7 +60,6 @@ NimBLECharacteristic::NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties,
  * @brief Destructor.
  */
 NimBLECharacteristic::~NimBLECharacteristic() {
-	//free(m_value.attr_value); // Release the storage for the value.
 } // ~NimBLECharacteristic
 
 
@@ -265,13 +264,17 @@ void NimBLECharacteristic::notify(bool is_notification) {
     m_pCallbacks->onNotify(this);
     
     int rc = 0;
-    os_mbuf *om;
-    size_t length = m_value.getValue().length();
-    uint8_t* data = (uint8_t*)m_value.getValue().data();
+    //os_mbuf *om;
+    //size_t length = m_value.getValue().length();
+    //uint8_t* data = (uint8_t*)m_value.getValue().data();
     NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID((uint16_t)0x2902);
     
     for (auto it = p2902->m_subscribedMap.cbegin(); it != p2902->m_subscribedMap.cend(); ++it) {
         uint16_t _mtu = getService()->getServer()->getPeerMTU((*it).first);
+        // Must rebuild the data on each loop iteration as NimBLE will release it. 
+        size_t length = m_value.getValue().length();
+        uint8_t* data = (uint8_t*)m_value.getValue().data();
+        os_mbuf *om;
         
         if(_mtu == 0) {
             NIMBLE_LOGD(LOG_TAG, "peer not connected, removing from map");

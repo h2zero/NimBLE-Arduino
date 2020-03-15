@@ -17,8 +17,6 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-//#include <esp_gatts_api.h>
-
 #include "NimBLEServer.h"
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
@@ -78,13 +76,10 @@ private:
 
 	NimBLECharacteristicMap m_characteristicMap;
 	uint16_t             m_handle;
-	NimBLECharacteristic*   m_lastCreatedCharacteristic = nullptr;
 	NimBLEServer*           m_pServer = nullptr;
 	NimBLEUUID              m_uuid;
 
 	uint16_t             m_numHandles;
-
-	NimBLECharacteristic* getLastCreatedCharacteristic();
 	void               setHandle(uint16_t handle);
 }; // BLEService
 

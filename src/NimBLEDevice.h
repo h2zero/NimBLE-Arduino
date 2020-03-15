@@ -53,13 +53,14 @@
 #define BLEAdvertisementData			NimBLEAdvertisementData
 #define BLEDescriptor					NimBLEDescriptor
 #define BLE2902							NimBLE2902
+#define BLE2904							NimBLE2904
 #define BLEDescriptorCallbacks			NimBLEDescriptorCallbacks
 
 
 /**
  * @brief BLE functions.
  */
- typedef void (*gap_event_handler)(ble_gap_event *event, void *arg);
+ typedef int (*gap_event_handler)(ble_gap_event *event, void *arg);
 //typedef void (*gattc_event_handler)(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t* param);
 //typedef void (*gatts_event_handler)(esp_gatts_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gatts_cb_param_t* param);
 

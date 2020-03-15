@@ -40,6 +40,7 @@ static const char* LOG_TAG = "NimBLEScan";
  *      directed advertisement shall not be ignored if the InitA is a
  *      resolvable private address.
  */
+ 
 //#define BLE_HCI_SCAN_FILT_NO_WL             (0)
 //#define BLE_HCI_SCAN_FILT_USE_WL            (1)
 //#define BLE_HCI_SCAN_FILT_NO_WL_INITA       (2)

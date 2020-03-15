@@ -47,8 +47,6 @@ NimBLEService::NimBLEService(NimBLEUUID uuid, uint16_t numHandles, NimBLEServer*
 	m_uuid      = uuid;
 	m_handle    = NULL_HANDLE;
 	m_pServer   = pServer;
-	//m_serializeMutex.setName("BLEService");
-	m_lastCreatedCharacteristic = nullptr;
 	m_numHandles = numHandles;
 } // NimBLEService
 
@@ -61,7 +59,7 @@ void NimBLEService::dump() {
 	NIMBLE_LOGD(LOG_TAG, "Service: uuid:%s, handle: 0x%.2x",
 		m_uuid.toString().c_str(),
 		m_handle);
-//	NIMBLE_LOGD(LOG_TAG, "Characteristics:\n%s", m_characteristicMap.toString().c_str());
+	NIMBLE_LOGD(LOG_TAG, "Characteristics:\n%s", m_characteristicMap.toString().c_str());
 } // dump
 
 
@@ -281,18 +279,6 @@ std::string NimBLEService::toString() {
 	res += hex;
 	return res;
 } // toString
-
-
-/**
- * @brief Get the last created characteristic.
- * It is lamentable that this function has to exist.  It returns the last created characteristic.
- * We need this because the descriptor API is built around the notion that a new descriptor, when created,
- * is associated with the last characteristics created and we need that information.
- * @return The last created characteristic.
- */
-NimBLECharacteristic* NimBLEService::getLastCreatedCharacteristic() {
-	return m_lastCreatedCharacteristic;
-} // getLastCreatedCharacteristic
 
 
 /**

@@ -47,7 +47,7 @@ NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(NimBLEUUID uuid) {
 			return myPair.first;
 		}
 	}
-	//return m_uuidMap.at(uuid.toString());
+
 	return nullptr;
 } // getByUUID
 

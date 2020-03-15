@@ -59,11 +59,6 @@ NimBLEClient::NimBLEClient()
  * to ensure proper disconnect and removal from device list.
  */
 NimBLEClient::~NimBLEClient() { 
-    //m_isConnected = false;
-    //m_semaphoreOpenEvt.give(1);
-    //m_semaphoreSearchCmplEvt.give(1);
-    //m_semeaphoreSecEvt.give(1);
-
     // We may have allocated service references associated with this client.  
     // Before we are finished with the client, we must release resources.
     clearServices();
@@ -509,7 +504,8 @@ uint16_t NimBLEClient::getMTU() {
             if(client->m_conn_id != event->disconnect.conn.conn_handle)
                 return 0;
             
-            NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d ", event->disconnect.reason);
+            NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d, %s", event->disconnect.reason,
+                                    NimBLEUtils::returnCodeToString(event->disconnect.reason));
             //print_conn_desc(&event->disconnect.conn);
             //MODLOG_DFLT(INFO, "\n");
 
@@ -565,7 +561,6 @@ uint16_t NimBLEClient::getMTU() {
             //  print_conn_desc(&desc);
             //  MODLOG_DFLT(INFO, "\n");
 
-                //  BLEDevice::updatePeerDevice(this, true, m_gattc_if);
                 client->m_isConnected = true;
                 
                 if (client->m_pClientCallbacks != nullptr) {
@@ -618,14 +613,8 @@ uint16_t NimBLEClient::getMTU() {
         
         case BLE_GAP_EVENT_L2CAP_UPDATE_REQ: {
             NIMBLE_LOGD(LOG_TAG, "Peer requesting to update connection parameters");
-            //NimBLEDevice::gapEventHandler(event, arg);
             return 0;
         }
-        
-/*      case BLE_GAP_EVENT_CONN_UPDATE: {
-            return 0;
-        }
-*/
         
         case BLE_GAP_EVENT_ENC_CHANGE: {
             if(client->m_conn_id != event->enc_change.conn_handle)
@@ -639,7 +628,6 @@ uint16_t NimBLEClient::getMTU() {
             }
             
             client->m_semeaphoreSecEvt.give(event->enc_change.status);
-            //NimBLEDevice::gapEventHandler(event, arg);
             return 0;
         }
         

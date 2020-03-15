@@ -12,6 +12,9 @@
  *      Author: chegewara
  */
 
+// This class exists for backward compatibility - Should not be used in new code //
+// See the security functions in NimBLEDevice and callbacks in NimBLEServer / NimBLEClient //
+
 #ifndef COMPONENTS_NIMBLESECURITY_H_
 #define COMPONENTS_NIMBLESECURITY_H_
 #include "sdkconfig.h"
@@ -23,11 +26,8 @@
 #undef max
 /**************************/
 
-
 #include <stdint.h>
-//#include "esp_gap_ble_api.h"
 
-/* relate to BTM_LE_AUTH_xxx in stack/btm_api.h */
 #define ESP_LE_AUTH_NO_BOND                 0x00                                     /*!< 0*/                     /* relate to BTM_LE_AUTH_NO_BOND in stack/btm_api.h */
 #define ESP_LE_AUTH_BOND                    0x01                                     /*!< 1 << 0 */               /* relate to BTM_LE_AUTH_BOND in stack/btm_api.h */
 #define ESP_LE_AUTH_REQ_MITM                (1 << 2)                                 /*!< 1 << 2 */               /* relate to BTM_LE_AUTH_REQ_MITM in stack/btm_api.h */

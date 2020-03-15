@@ -63,7 +63,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  */
 NimBLERemoteCharacteristic::~NimBLERemoteCharacteristic() {
     removeDescriptors();   // Release resources for any descriptor information we may have allocated.
-    //if(m_rawData != nullptr) free(m_rawData); 
+    if(m_rawData != nullptr) free(m_rawData); 
 } // ~NimBLERemoteCharacteristic
 
 /*
@@ -383,13 +383,17 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     
     NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
     
+    if(characteristic->m_rawData != nullptr) {
+        free(characteristic->m_rawData);
+    }
+    
     if (error->status == 0) {       
         characteristic->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
         characteristic->m_semaphoreReadCharEvt.give(0);
-        //if(m_rawData != nullptr) free(m_rawData);
-        //m_rawData = (uint8_t*) calloc(evtParam->read.value_len, sizeof(uint8_t));
-        //memcpy(m_rawData, evtParam->read.value, evtParam->read.value_len);
+        characteristic->m_rawData = (uint8_t*) calloc(attr->om->om_len, sizeof(uint8_t));
+        memcpy(characteristic->m_rawData, attr->om->om_data, attr->om->om_len);
     } else {
+        characteristic->m_rawData = nullptr;
         characteristic->m_value = "";
         characteristic->m_semaphoreReadCharEvt.give(error->status);
     }
@@ -410,64 +414,26 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
     NIMBLE_LOGD(LOG_TAG, ">> registerForNotify(): %s", toString().c_str());
 
     m_notifyCallback = notifyCallback;   // Save the notification callback.
-    
-//  int rc = 0;
-    //m_registeredForNotify = false;
 
     uint8_t val[] = {0x01, 0x00};
 
     NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
     if(desc == nullptr) 
         return false;
-    
-    /*if(!m_registeredForNotify){
 
-        if (notifyCallback != nullptr) {   // If we have a callback function, then this is a registration.
-            if(!notifications) val[0] = 0x02;   
-        } 
-        else {   // If we weren't passed a callback function, then this is an unregistration.
-            val[0] = 0x00;
-        } 
-        
-        if (rc != 0) {
-            NIMBLE_LOGE(LOG_TAG, "ESP_GATTC_WRITE_CHAR_DESC: rc=%d %s", rc, GeneralUtils::errorToString(rc));
-            return false;
-        }
-
-        m_registeredForNotify = true;
-    }
-*/
-    // If subscribing register a callback to receive GAP events for notifications / indications
     if(notifyCallback != nullptr){
-    //  rc = ble_gap_event_listener_register(&m_gapEventListener, NimBLERemoteCharacteristic::gapEventHandler, this);
-        // only return false if there is a value error otherwise continue with writing to the descriptor
-        // if it's already registered theres no issue
-    //  if(rc == BLE_HS_EINVAL){ 
-    //      return false;
-    //  }
-        
         if(!notifications){
             val[0] = 0x02;
         }
     }
 
     else if (notifyCallback == nullptr){
-        //rc = ble_gap_event_listener_unregister(&m_gapEventListener);
-//      if(rc == BLE_HS_EINVAL){
-//          return false;
-//      }
         val[0] = 0x00;
     }
-/*
-    if(!desc->writeValue(val, 2, response)){
-        return false;
-    }
-*/
-    NIMBLE_LOGD(LOG_TAG, "<< registerForNotify()");
 
-    //m_registeredForNotify = true;
+    NIMBLE_LOGD(LOG_TAG, "<< registerForNotify()");
     
-    return desc->writeValue(val, 2, response);  //true;
+    return desc->writeValue(val, 2, response);
 } // registerForNotify
 //END_H2ZERO_MOD
 
@@ -634,11 +600,9 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
  * @brief Read raw data from remote characteristic as hex bytes
  * @return return pointer data read
  */
- /*
-uint8_t* BLERemoteCharacteristic::readRawData() {
+uint8_t* NimBLERemoteCharacteristic::readRawData() {
     return m_rawData;
 }
-*/
 
 
 void NimBLERemoteCharacteristic::releaseSemaphores() {
