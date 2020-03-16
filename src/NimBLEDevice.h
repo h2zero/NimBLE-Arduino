@@ -55,6 +55,9 @@
 #define BLE2902							NimBLE2902
 #define BLE2904							NimBLE2904
 #define BLEDescriptorCallbacks			NimBLEDescriptorCallbacks
+#define BLEBeacon                       NimBLEBeacon
+#define BLEEddystoneTLM                 NimBLEEddystoneTLM
+#define BLEEddystoneURL                 NimBLEEddystoneURL
 
 
 /**

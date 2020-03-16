@@ -79,8 +79,8 @@ public:
 	void setScanResponseData(NimBLEAdvertisementData& advertisementData);
 	void setPrivateAddress(uint8_t type = BLE_ADDR_RANDOM);
 
-//	void setMinPreferred(uint16_t);
-//	void setMaxPreferred(uint16_t);
+	void setMinPreferred(uint16_t);
+	void setMaxPreferred(uint16_t);
 	void setScanResponse(bool);
 
 private:

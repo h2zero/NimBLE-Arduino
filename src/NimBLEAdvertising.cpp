@@ -91,15 +91,16 @@ void NimBLEAdvertising::setMinInterval(uint16_t mininterval) {
 void NimBLEAdvertising::setMaxInterval(uint16_t maxinterval) {
 	m_advParams.itvl_max = maxinterval;
 } // setMaxInterval
-/*
-void BLEAdvertising::setMinPreferred(uint16_t mininterval) {
-	m_advData.min_interval = mininterval;
+
+// These are dummy functions for now for compatibility
+void NimBLEAdvertising::setMinPreferred(uint16_t mininterval) {
+	//m_advData.min_interval = mininterval;
 } // 
 
-void BLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
-	m_advData.max_interval = maxinterval;
+void NimBLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
+	//m_advData.max_interval = maxinterval;
 } // 
-*/
+//////////////////////////////////////////////////////////
 
 void NimBLEAdvertising::setScanResponse(bool set) {
 	m_scanResp = set;
@@ -463,7 +464,7 @@ void NimBLEAdvertisementData::setFlags(uint8_t flag) {
 	char cdata[3];
 	cdata[0] = 2;
 	cdata[1] = BLE_HS_ADV_TYPE_FLAGS;  // 0x01
-	cdata[2] = (flag | BLE_HS_ADV_F_BREDR_UNSUP);
+	cdata[2] = flag | BLE_HS_ADV_F_BREDR_UNSUP;
 	addData(std::string(cdata, 3));
 } // setFlag
 
