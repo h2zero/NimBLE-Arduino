@@ -72,7 +72,15 @@ private:
  */
 class NimBLECharacteristic {
 public:
-	void              addDescriptor(NimBLEDescriptor* pDescriptor);
+	NimBLEDescriptor* createDescriptor(const char* uuid, 
+						uint32_t properties = BLE_GATT_CHR_F_READ | 
+											  BLE_GATT_CHR_F_WRITE,
+											  uint16_t max_len = 100);
+	NimBLEDescriptor* createDescriptor(NimBLEUUID uuid,
+						uint32_t properties = BLE_GATT_CHR_F_READ | 
+											  BLE_GATT_CHR_F_WRITE,
+											  uint16_t max_len = 100);
+											  
 	NimBLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
 	NimBLEDescriptor* getDescriptorByUUID(NimBLEUUID descriptorUUID);
 	NimBLEUUID        getUUID();
@@ -119,8 +127,10 @@ private:
 //	friend class NimBLEDescriptor;
 //	friend class NimBLECharacteristicMap;
 
-	NimBLECharacteristic(const char* uuid, uint16_t properties = 0, NimBLEService* pService = nullptr);
-	NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties = 0, NimBLEService* pService = nullptr);
+	NimBLECharacteristic(const char* uuid, uint16_t properties = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE,
+														NimBLEService* pService = nullptr);
+	NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE,
+														NimBLEService* pService = nullptr);
 	virtual ~NimBLECharacteristic();
 
 	NimBLEUUID                     m_uuid;
@@ -130,9 +140,9 @@ private:
 	NimBLECharacteristicCallbacks* m_pCallbacks;
 	NimBLEService*                 m_pService;
 	NimBLEValue                    m_value;
-	uint16_t                       m_permissions = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
-	bool						   m_writeEvt = false;
+	uint16_t                       m_permissions; //= BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
     
+	void            addDescriptor(NimBLEDescriptor* pDescriptor);
     NimBLEService*  getService();
     uint8_t         getProperties();
     void            setSubscribe(struct ble_gap_event *event);

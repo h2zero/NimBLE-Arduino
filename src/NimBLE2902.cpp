@@ -22,7 +22,12 @@
 
 #include "NimBLE2902.h"
 
-NimBLE2902::NimBLE2902() : NimBLEDescriptor(NimBLEUUID((uint16_t) 0x2902)) {
+NimBLE2902::NimBLE2902(NimBLECharacteristic* pCharacterisitic) 
+: NimBLEDescriptor(NimBLEUUID((uint16_t) 0x2902), 
+						BLE_GATT_CHR_PROP_READ | 
+						BLE_GATT_CHR_PROP_WRITE,
+							2, pCharacterisitic) 
+{
 	uint8_t data[2] = { 0, 0 };
 	setValue(data, 2);
 } // NimBLE2902

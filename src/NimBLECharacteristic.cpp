@@ -14,6 +14,7 @@
 
 #include "NimBLECharacteristic.h"
 #include "NimBLE2902.h"
+#include "NimBLE2904.h"
 #include "NimBLEDevice.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -69,11 +70,49 @@ NimBLECharacteristic::~NimBLECharacteristic() {
  * @param [in] pDescriptor
  * @return N/A.
  */
-void BLECharacteristic::addDescriptor(NimBLEDescriptor* pDescriptor) {
+void NimBLECharacteristic::addDescriptor(NimBLEDescriptor* pDescriptor) {
 	NIMBLE_LOGD(LOG_TAG, ">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
+	// Check that we don't add the same descriptor twice.
+	if (m_descriptorMap.getByUUID(pDescriptor->getUUID()) != nullptr) {
+		NIMBLE_LOGW(LOG_TAG, "<< Adding a new descriptor with the same UUID as a previous one");
+		//return;
+	}
 	m_descriptorMap.setByUUID(pDescriptor->getUUID(), pDescriptor);
 	NIMBLE_LOGD(LOG_TAG, "<< addDescriptor()");
 } // addDescriptor
+
+
+/**
+ * @brief Create a new BLE Descriptor associated with this characteristic.
+ * @param [in] uuid - The UUID of the descriptor.
+ * @param [in] properties - The properties of the descriptor.
+ * @return The new BLE descriptor.
+ */
+NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint32_t properties, uint16_t max_len) {
+	return createDescriptor(NimBLEUUID(uuid), properties, max_len);
+}
+
+
+/**
+ * @brief Create a new BLE Descriptor associated with this characteristic.
+ * @param [in] uuid - The UUID of the descriptor.
+ * @param [in] properties - The properties of the descriptor.
+ * @return The new BLE descriptor.
+ */
+NimBLEDescriptor* NimBLECharacteristic::createDescriptor(NimBLEUUID uuid, uint32_t properties, uint16_t max_len) {
+	NimBLEDescriptor* pDescriptor = nullptr;
+	if(uuid.equals(NimBLEUUID((uint16_t)0x2902))) {
+		pDescriptor = new NimBLE2902(this);
+		
+	} else if (uuid.equals(NimBLEUUID((uint16_t)0x2904))) {
+		pDescriptor = new NimBLE2904(this);
+		
+	} else {
+		pDescriptor = new NimBLEDescriptor(uuid, properties, max_len, this);
+	}
+	addDescriptor(pDescriptor);
+	return pDescriptor;
+} // createCharacteristic
 
 
 /**

@@ -54,9 +54,14 @@ private:
  */
 class NimBLEService {
 public:
-	void               addCharacteristic(NimBLECharacteristic* pCharacteristic);
-	NimBLECharacteristic* createCharacteristic(const char* uuid, uint32_t properties);
-	NimBLECharacteristic* createCharacteristic(NimBLEUUID uuid, uint32_t properties);
+	NimBLECharacteristic* createCharacteristic(const char* uuid, 
+					    uint32_t properties = BLE_GATT_CHR_PROP_READ | 
+											  BLE_GATT_CHR_PROP_WRITE);
+											  
+	NimBLECharacteristic* createCharacteristic(NimBLEUUID uuid,
+						uint32_t properties = BLE_GATT_CHR_PROP_READ | 
+											  BLE_GATT_CHR_PROP_WRITE);
+											  
 	void               dump();
 	NimBLECharacteristic* getCharacteristic(const char* uuid);
 	NimBLECharacteristic* getCharacteristic(NimBLEUUID uuid);
@@ -73,6 +78,8 @@ private:
 	NimBLEService(NimBLEUUID uuid, uint16_t numHandles, NimBLEServer* pServer);
 	friend class NimBLEServer;
 	friend class NimBLEDevice;
+	
+	void               addCharacteristic(NimBLECharacteristic* pCharacteristic);
 
 	NimBLECharacteristicMap m_characteristicMap;
 	uint16_t             m_handle;

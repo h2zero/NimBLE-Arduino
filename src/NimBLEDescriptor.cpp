@@ -29,20 +29,25 @@ static NimBLEDescriptorCallbacks defaultCallbacks;
 /**
  * @brief NimBLEDescriptor constructor.
  */
-NimBLEDescriptor::NimBLEDescriptor(const char* uuid, uint16_t len) : NimBLEDescriptor(NimBLEUUID(uuid), len) {
+NimBLEDescriptor::NimBLEDescriptor(const char* uuid, uint16_t properties, uint16_t max_len, 
+									NimBLECharacteristic* pCharacteristic)
+: NimBLEDescriptor(NimBLEUUID(uuid), max_len, properties, pCharacteristic) {
 }	
 
 /**
  * @brief NimBLEDescriptor constructor.
  */
-NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t max_len) {
+NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_t max_len,
+									NimBLECharacteristic* pCharacteristic) 
+{
 	m_uuid               = uuid;
 	m_value.attr_len     = 0;                           // Initial length is 0.
 	m_value.attr_max_len = max_len;                     // Maximum length of the data.
 	m_handle             = NULL_HANDLE;                 // Handle is initially unknown.
 	m_pCharacteristic    = nullptr;                     // No initial characteristic.
+	m_permissions		 = properties;
 	m_pCallbacks         = &defaultCallbacks;             // No initial callback.
-
+	NIMBLE_LOGE(LOG_TAG, "%s Permissions = %d", m_uuid.toString().c_str(), m_permissions); 
 	m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
 } // NimBLEDescriptor
 

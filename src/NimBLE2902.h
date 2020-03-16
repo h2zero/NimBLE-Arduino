@@ -35,12 +35,12 @@
  */
 class NimBLE2902: public NimBLEDescriptor {
 public:
-	NimBLE2902();
 	bool getNotifications();
 	bool getIndications();
 	void setNotifications(bool flag);
 	void setIndications(bool flag);
 private:
+	NimBLE2902(NimBLECharacteristic* pCharacterisitic);
     friend class NimBLECharacteristic;
     std::map<uint16_t, uint16_t> m_subscribedMap;
 

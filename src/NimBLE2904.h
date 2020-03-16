@@ -38,7 +38,6 @@ struct BLE2904_Data {
  */
 class NimBLE2904: public NimBLEDescriptor {
 public:
-	NimBLE2904();
 	static const uint8_t FORMAT_BOOLEAN   = 1;
 	static const uint8_t FORMAT_UINT2     = 2;
 	static const uint8_t FORMAT_UINT4     = 3;
@@ -74,6 +73,8 @@ public:
 	void setUnit(uint16_t unit);
 
 private:
+	NimBLE2904(NimBLECharacteristic* pCharacterisitic);
+    friend class NimBLECharacteristic;
 	BLE2904_Data m_data;
 }; // BLE2904
 

@@ -166,7 +166,7 @@ void NimBLEServer::start() {
                     (pChr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
                         
                     if(nullptr == pChr->getDescriptorByUUID("2902")) {
-                        pChr->addDescriptor(new NimBLE2902());
+                        pChr->createDescriptor("2902");
                     }
                     m_notifyChrMap.insert(std::pair<uint16_t, NimBLECharacteristic*>
                                                     (pChr->getHandle(), pChr));

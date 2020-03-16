@@ -40,10 +40,7 @@ class NimBLEDescriptorCallbacks;
  */
 class NimBLEDescriptor {
 public:
-	NimBLEDescriptor(const char* uuid, uint16_t max_len = 100);
-	NimBLEDescriptor(NimBLEUUID uuid, uint16_t max_len = 100);
 	virtual ~NimBLEDescriptor();
-
 	uint16_t getHandle();                                   // Get the handle of the descriptor.
 	size_t   getLength();                                   // Get the length of the value of the descriptor.
 	NimBLEUUID  getUUID();                                     // Get the UUID of the descriptor.
@@ -59,12 +56,22 @@ private:
 	friend class NimBLEDescriptorMap;
 	friend class NimBLECharacteristic;
     friend class NimBLEService;
+	friend class NimBLE2902;
+	friend class NimBLE2904;
+	
+	NimBLEDescriptor(const char* uuid, uint16_t properties,
+							uint16_t max_len,
+							NimBLECharacteristic* pCharacteristic);
+							
+	NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties,
+							uint16_t max_len,
+							NimBLECharacteristic* pCharacteristic);
     
 	NimBLEUUID                 m_uuid;
 	uint16_t                   m_handle;
 	NimBLEDescriptorCallbacks* m_pCallbacks;
 	NimBLECharacteristic*      m_pCharacteristic;
-	uint8_t     			   m_permissions = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
+	uint16_t     			   m_permissions; // = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
 	attr_value_t               m_value;
 
 	static int handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
