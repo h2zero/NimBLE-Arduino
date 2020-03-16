@@ -80,7 +80,7 @@ public:
     NimBLEService*        getServiceByUUID(NimBLEUUID uuid);
     int                   disconnect(uint16_t connID, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
 //    bool                connect(BLEAddress address);
-    void                  updateConnParams(ble_gap_conn_desc* desc, 
+    void                  updateConnParams(uint16_t conn_handle, 
                                     uint16_t minInterval, uint16_t maxInterval, 
                                     uint16_t latency, uint16_t timeout,
                                     uint16_t minConnTime=0, uint16_t maxConnTime=0);

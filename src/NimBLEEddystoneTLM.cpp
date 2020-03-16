@@ -17,6 +17,8 @@
 #include "NimBLEEddystoneTLM.h"
 #include "NimBLELog.h"
 
+#include <cstring>
+
 #define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00)>>8) + (((x)&0xFF)<<8))
 #define ENDIAN_CHANGE_U32(x) ((((x)&0xFF000000)>>24) + (((x)&0x00FF0000)>>8)) + ((((x)&0xFF00)<<8) + (((x)&0xFF)<<24))
 
@@ -107,7 +109,8 @@ std::string NimBLEEddystoneTLM::toString() {
  */
 void NimBLEEddystoneTLM::setData(std::string data) {
 	if (data.length() != sizeof(m_eddystoneData)) {
-		log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
+		NIMBLE_LOGE(LOG_TAG, "Unable to set the data ... length passed in was %d and expected %d", 
+                                                data.length(), sizeof(m_eddystoneData));
 		return;
 	}
   memcpy(&m_eddystoneData, data.data(), data.length());

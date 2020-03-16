@@ -23,8 +23,8 @@ void setup() {
   BLEService *pService = pServer->createService(SERVICE_UUID);
   BLECharacteristic *pCharacteristic = pService->createCharacteristic(
                                          CHARACTERISTIC_UUID,
-                                         BLECharacteristic::PROPERTY_READ |
-                                         BLECharacteristic::PROPERTY_WRITE
+                                         PROPERTY_READ |
+                                         PROPERTY_WRITE
                                        );
 
   pCharacteristic->setValue("Hello World says Neil");

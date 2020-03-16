@@ -47,12 +47,13 @@ NimBLECharacteristic::NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties,
 	m_pCallbacks = &defaultCallback;
     m_pService   = pService;
 //  Backward Compatibility - to be removed
-	setBroadcastProperty((properties & PROPERTY_BROADCAST) != 0);
+/*	setBroadcastProperty((properties & PROPERTY_BROADCAST) != 0);
 	setReadProperty((properties & PROPERTY_READ) != 0);
 	setWriteProperty((properties & PROPERTY_WRITE) != 0);
 	setNotifyProperty((properties & PROPERTY_NOTIFY) != 0);
 	setIndicateProperty((properties & PROPERTY_INDICATE) != 0);
 	setWriteNoResponseProperty((properties & PROPERTY_WRITE_NR) != 0);
+*/
 ///////////////////////////////////////////
 } // NimBLECharacteristic
 

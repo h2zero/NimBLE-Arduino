@@ -515,7 +515,7 @@ void NimBLEServer::removePeerDevice(uint16_t conn_id, bool _client) {
 /**
  * Update connection parameters can be called only after connection has been established
  */
-void NimBLEServer::updateConnParams(ble_gap_conn_desc* desc, 
+void NimBLEServer::updateConnParams(uint16_t conn_handle, 
                             uint16_t minInterval, uint16_t maxInterval, 
                             uint16_t latency, uint16_t timeout,
                             uint16_t minConnTime, uint16_t maxConnTime) 
@@ -529,7 +529,7 @@ void NimBLEServer::updateConnParams(ble_gap_conn_desc* desc,
     params.min_ce_len = minConnTime;  // Minimum length of connection event in 0.625ms units
     params.max_ce_len = maxConnTime;  // Maximum length of connection event in 0.625ms units
     
-    int rc = ble_gap_update_params(desc->conn_handle, &params);
+    int rc = ble_gap_update_params(conn_handle, &params);
     if(rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
     }

@@ -46,8 +46,8 @@ void setup() {
 
   BLECharacteristic *pCharacteristic = pService->createCharacteristic(
                                          CHARACTERISTIC_UUID,
-                                         BLECharacteristic::PROPERTY_READ |
-                                         BLECharacteristic::PROPERTY_WRITE
+                                         PROPERTY_READ |
+                                         PROPERTY_WRITE
                                        );
 
   pCharacteristic->setCallbacks(new MyCallbacks());

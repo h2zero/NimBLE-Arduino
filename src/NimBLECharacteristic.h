@@ -27,6 +27,16 @@
 #include <string>
 #include <map>
 
+#define PROPERTY_READ           BLE_GATT_CHR_F_READ 
+#define PROPERTY_READ_ENC       BLE_GATT_CHR_F_READ_ENC 
+#define PROPERTY_NOTIFY         BLE_GATT_CHR_F_NOTIFY
+#define PROPERTY_WRITE          BLE_GATT_CHR_F_WRITE
+#define PROPERTY_WRITE_ENC      BLE_GATT_CHR_F_WRITE_ENC
+#define PROPERTY_BROADCAST      BLE_GATT_CHR_F_BROADCAST
+#define PROPERTY_INDICATE       BLE_GATT_CHR_F_INDICATE
+#define PROPERTY_WRITE_NR       BLE_GATT_CHR_F_WRITE_NO_RSP
+
+
 class NimBLEService;
 class NimBLEDescriptor;
 class NimBLECharacteristicCallbacks;
@@ -93,15 +103,14 @@ public:
 	void setAccessPermissions(uint16_t perm);
 
 //  Backward Compatibility - to be removed
-	static const uint32_t PROPERTY_READ      = 1<<0;
+/*	static const uint32_t PROPERTY_READ      = 1<<0;
 	static const uint32_t PROPERTY_WRITE     = 1<<1;
 	static const uint32_t PROPERTY_NOTIFY    = 1<<2;
 	static const uint32_t PROPERTY_BROADCAST = 1<<3;
 	static const uint32_t PROPERTY_INDICATE  = 1<<4;
 	static const uint32_t PROPERTY_WRITE_NR  = 1<<5;
+*/
 //////////////////////////////////////////////////////
-    #define PROPERTY_READ_ENC BLE_GATT_CHR_F_READ_ENC 
-    #define PROPERTY_WRITE_ENC BLE_GATT_CHR_F_WRITE_ENC
     
 private:
 

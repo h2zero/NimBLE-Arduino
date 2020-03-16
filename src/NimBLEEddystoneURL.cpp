@@ -17,6 +17,8 @@
 #include "NimBLEEddystoneURL.h"
 #include "NimBLELog.h"
 
+#include <cstring>
+
 static const char LOG_TAG[] = "NimBLEEddystoneURL";
 
 NimBLEEddystoneURL::NimBLEEddystoneURL() {
