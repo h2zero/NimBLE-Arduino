@@ -91,6 +91,7 @@ bool NimBLEService::start() {
     
     svc[0].type = BLE_GATT_SVC_TYPE_PRIMARY;
     svc[0].uuid = &m_uuid.getNative()->u;
+	svc[0].includes = NULL;
     
 	uint8_t numChrs = m_characteristicMap.getSize();
     
