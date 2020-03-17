@@ -21,7 +21,7 @@
 
 #include "esp_attr.h"
 #include "esp_heap_caps.h"
-#include "sdkconfig.h"
+#include "nimconfig.h"
 #include "esp_nimble_mem.h"
 
 IRAM_ATTR void *nimble_platform_mem_malloc(size_t size)

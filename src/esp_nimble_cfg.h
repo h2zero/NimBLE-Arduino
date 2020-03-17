@@ -1,6 +1,6 @@
 #ifndef __ESP_NIMBLE_CFG__
 #define __ESP_NIMBLE_CFG__
-#include "sdkconfig.h"
+#include "nimconfig.h"
 
 /**
  * This macro exists to ensure code includes this header when needed.  If code

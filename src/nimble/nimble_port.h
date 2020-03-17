@@ -21,7 +21,7 @@
 #define _NIMBLE_PORT_H
 
 #include "nimble/nimble_npl.h"
-#include "sdkconfig.h"
+#include "nimconfig.h"
 
 #define NIMBLE_CORE (CONFIG_BT_NIMBLE_PINNED_TO_CORE < portNUM_PROCESSORS ? CONFIG_BT_NIMBLE_PINNED_TO_CORE : tskNO_AFFINITY)
 #define NIMBLE_STACK_SIZE CONFIG_BT_NIMBLE_TASK_STACK_SIZE

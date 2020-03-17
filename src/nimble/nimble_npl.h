@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "sdkconfig.h"
+#include "nimconfig.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
