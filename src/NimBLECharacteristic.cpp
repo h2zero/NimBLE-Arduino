@@ -143,11 +143,11 @@ uint16_t NimBLECharacteristic::getHandle() {
 	return m_handle;
 } // getHandle
 
-
+/*
 void NimBLECharacteristic::setAccessPermissions(uint16_t perm) {
 	m_permissions = perm;
 }
-
+*/
 
 uint8_t NimBLECharacteristic::getProperties() {
 	return m_properties;

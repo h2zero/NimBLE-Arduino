@@ -16,6 +16,19 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#define PROPERTY_READ           BLE_GATT_CHR_F_READ 
+#define PROPERTY_READ_ENC       BLE_GATT_CHR_F_READ_ENC
+#define PROPERTY_READ_AUTHEN    BLE_GATT_CHR_F_READ_AUTHEN
+#define PROPERTY_READ_AUTHOR    BLE_GATT_CHR_F_READ_AUTHOR 
+#define PROPERTY_WRITE          BLE_GATT_CHR_F_WRITE
+#define PROPERTY_WRITE_NR       BLE_GATT_CHR_F_WRITE_NO_RSP
+#define PROPERTY_WRITE_ENC      BLE_GATT_CHR_F_WRITE_ENC
+#define PROPERTY_WRITE_AUTHEN   BLE_GATT_CHR_F_WRITE_AUTHEN
+#define PROPERTY_WRITE_AUTHOR   BLE_GATT_CHR_F_WRITE_AUTHOR
+#define PROPERTY_BROADCAST      BLE_GATT_CHR_F_BROADCAST
+#define PROPERTY_NOTIFY         BLE_GATT_CHR_F_NOTIFY
+#define PROPERTY_INDICATE       BLE_GATT_CHR_F_INDICATE
+
 #include "NimBLEService.h"
 #include "NimBLEUUID.h"
 #include "NimBLEValue.h"
@@ -27,19 +40,10 @@
 #include <string>
 #include <map>
 
-#define PROPERTY_READ           BLE_GATT_CHR_F_READ 
-#define PROPERTY_READ_ENC       BLE_GATT_CHR_F_READ_ENC 
-#define PROPERTY_NOTIFY         BLE_GATT_CHR_F_NOTIFY
-#define PROPERTY_WRITE          BLE_GATT_CHR_F_WRITE
-#define PROPERTY_WRITE_ENC      BLE_GATT_CHR_F_WRITE_ENC
-#define PROPERTY_BROADCAST      BLE_GATT_CHR_F_BROADCAST
-#define PROPERTY_INDICATE       BLE_GATT_CHR_F_INDICATE
-#define PROPERTY_WRITE_NR       BLE_GATT_CHR_F_WRITE_NO_RSP
-
-
 class NimBLEService;
 class NimBLEDescriptor;
 class NimBLECharacteristicCallbacks;
+
 
 /**
  * @brief A management structure for %BLE descriptors.
@@ -73,13 +77,13 @@ private:
 class NimBLECharacteristic {
 public:
 	NimBLEDescriptor* createDescriptor(const char* uuid, 
-						uint32_t properties = BLE_GATT_CHR_F_READ | 
-											  BLE_GATT_CHR_F_WRITE,
-											  uint16_t max_len = 100);
+						uint32_t properties = PROPERTY_READ | 
+											  PROPERTY_WRITE,
+                                     uint16_t max_len = 100);
 	NimBLEDescriptor* createDescriptor(NimBLEUUID uuid,
-						uint32_t properties = BLE_GATT_CHR_F_READ | 
-											  BLE_GATT_CHR_F_WRITE,
-											  uint16_t max_len = 100);
+						uint32_t properties = PROPERTY_READ | 
+											  PROPERTY_WRITE,
+                                     uint16_t max_len = 100);
 											  
 	NimBLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
 	NimBLEDescriptor* getDescriptorByUUID(NimBLEUUID descriptorUUID);
@@ -108,7 +112,7 @@ public:
 
 	std::string toString();
 	uint16_t getHandle();
-	void setAccessPermissions(uint16_t perm);
+//	void setAccessPermissions(uint16_t perm);
 
 //  Backward Compatibility - to be removed
 /*	static const uint32_t PROPERTY_READ      = 1<<0;
@@ -140,7 +144,7 @@ private:
 	NimBLECharacteristicCallbacks* m_pCallbacks;
 	NimBLEService*                 m_pService;
 	NimBLEValue                    m_value;
-	uint16_t                       m_permissions; //= BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
+//	uint16_t                       m_permissions;
     
 	void            addDescriptor(NimBLEDescriptor* pDescriptor);
     NimBLEService*  getService();

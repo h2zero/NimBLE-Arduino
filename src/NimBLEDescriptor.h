@@ -16,10 +16,12 @@
 #define MAIN_NIMBLEDESCRIPTOR_H_
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
-#include <string>
+
 #include "NimBLEUUID.h"
 #include "NimBLECharacteristic.h"
 #include "FreeRTOS.h"
+
+#include <string>
 
 
 typedef struct
@@ -35,6 +37,7 @@ class NimBLEService;
 class NimBLECharacteristic;
 class NimBLEDescriptorCallbacks;
 
+
 /**
  * @brief A model of a %BLE descriptor.
  */
@@ -45,7 +48,7 @@ public:
 	size_t   getLength();                                   // Get the length of the value of the descriptor.
 	NimBLEUUID  getUUID();                                     // Get the UUID of the descriptor.
 	uint8_t* getValue();                                    // Get a pointer to the value of the descriptor.
-	void setAccessPermissions(uint8_t perm);	      // Set the permissions of the descriptor.
+//	void setAccessPermissions(uint8_t perm);	      // Set the permissions of the descriptor.
 	void setCallbacks(NimBLEDescriptorCallbacks* pCallbacks);  // Set callbacks to be invoked for the descriptor.
 	void setValue(uint8_t* data, size_t size);              // Set the value of the descriptor as a pointer to data.
 	void setValue(std::string value);                       // Set the value of the descriptor as a data buffer.
@@ -71,7 +74,7 @@ private:
 	uint16_t                   m_handle;
 	NimBLEDescriptorCallbacks* m_pCallbacks;
 	NimBLECharacteristic*      m_pCharacteristic;
-	uint16_t     			   m_permissions; // = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE;
+	uint8_t     			   m_properties;
 	attr_value_t               m_value;
 
 	static int handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,

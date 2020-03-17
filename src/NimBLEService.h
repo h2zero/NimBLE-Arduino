@@ -55,12 +55,12 @@ private:
 class NimBLEService {
 public:
 	NimBLECharacteristic* createCharacteristic(const char* uuid, 
-					    uint32_t properties = BLE_GATT_CHR_PROP_READ | 
-											  BLE_GATT_CHR_PROP_WRITE);
+					    uint32_t properties = PROPERTY_READ | 
+											  PROPERTY_WRITE);
 											  
 	NimBLECharacteristic* createCharacteristic(NimBLEUUID uuid,
-						uint32_t properties = BLE_GATT_CHR_PROP_READ | 
-											  BLE_GATT_CHR_PROP_WRITE);
+					    uint32_t properties = PROPERTY_READ | 
+											  PROPERTY_WRITE);
 											  
 	void               dump();
 	NimBLECharacteristic* getCharacteristic(const char* uuid);

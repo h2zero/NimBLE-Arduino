@@ -45,10 +45,35 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_
 	m_value.attr_max_len = max_len;                     // Maximum length of the data.
 	m_handle             = NULL_HANDLE;                 // Handle is initially unknown.
 	m_pCharacteristic    = nullptr;                     // No initial characteristic.
-	m_permissions		 = properties;
-	m_pCallbacks         = &defaultCallbacks;             // No initial callback.
-	NIMBLE_LOGE(LOG_TAG, "%s Permissions = %d", m_uuid.toString().c_str(), m_permissions); 
-	m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
+    m_pCallbacks         = &defaultCallbacks;           // No initial callback.
+    m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
+    m_properties         = 0;
+    
+    if (properties & BLE_GATT_CHR_F_READ) {             // convert uint16_t properties to uint8_t
+        m_properties |= BLE_ATT_F_READ;
+    }
+    if (properties & (BLE_GATT_CHR_F_WRITE_NO_RSP | BLE_GATT_CHR_F_WRITE)) {
+        m_properties |= BLE_ATT_F_WRITE;
+    }
+    if (properties & BLE_GATT_CHR_F_READ_ENC) {
+        m_properties |= BLE_ATT_F_READ_ENC;
+    }
+    if (properties & BLE_GATT_CHR_F_READ_AUTHEN) {
+        m_properties |= BLE_ATT_F_READ_AUTHEN;
+    }
+    if (properties & BLE_GATT_CHR_F_READ_AUTHOR) {
+        m_properties |= BLE_ATT_F_READ_AUTHOR;
+    }
+    if (properties & BLE_GATT_CHR_F_WRITE_ENC) {
+        m_properties |= BLE_ATT_F_WRITE_ENC;
+    }
+    if (properties & BLE_GATT_CHR_F_WRITE_AUTHEN) {
+        m_properties |= BLE_ATT_F_WRITE_AUTHEN;
+    }
+    if (properties & BLE_GATT_CHR_F_WRITE_AUTHOR) {
+        m_properties |= BLE_ATT_F_WRITE_AUTHOR;
+    }
+
 } // NimBLEDescriptor
 
 
@@ -180,9 +205,13 @@ void NimBLEDescriptor::setValue(std::string value) {
 	setValue((uint8_t*) value.data(), value.length());
 } // setValue
 
+
+/*
 void NimBLEDescriptor::setAccessPermissions(uint8_t perm) {
 	m_permissions = perm;
 }
+*/ 
+
 
 /**
  * @brief Return a string representation of the descriptor.

@@ -136,8 +136,10 @@ void NimBLEServer::start() {
         abort();
     }
     
+#if CONFIG_LOG_DEFAULT_LEVEL > 3 || ARDUHAL_LOG_LEVEL_INFO > 3   
     ble_gatts_show_local();
-    
+#endif    
+
     ble_uuid16_t svc = {BLE_UUID_TYPE_16, 0x1801};
     ble_uuid16_t chr = {BLE_UUID_TYPE_16, 0x2a05};
     
