@@ -23,6 +23,7 @@
 #include <unordered_set>
 
 static const char* LOG_TAG = "NimBLEClient";
+static NimBLEClientCallbacks defaultCallbacks;
 
 /*
  * Design
@@ -47,7 +48,7 @@ static const char* LOG_TAG = "NimBLEClient";
 
 NimBLEClient::NimBLEClient()
 {
-    m_pClientCallbacks = nullptr;
+    m_pClientCallbacks = &defaultCallbacks;
     m_conn_id          = BLE_HS_CONN_HANDLE_NONE;
     m_haveServices     = false;
     m_isConnected      = false;
@@ -525,9 +526,9 @@ uint16_t NimBLEClient::getMTU() {
             client->m_semaphoreSearchCmplEvt.give(1);
             client->m_semeaphoreSecEvt.give(1);
             
-            if (client->m_pClientCallbacks != nullptr) {
-                client->m_pClientCallbacks->onDisconnect(client);
-            }
+            //if (client->m_pClientCallbacks != nullptr) {
+            client->m_pClientCallbacks->onDisconnect(client);
+            //}
             
             //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
             
@@ -563,9 +564,10 @@ uint16_t NimBLEClient::getMTU() {
 
                 client->m_isConnected = true;
                 
-                if (client->m_pClientCallbacks != nullptr) {
-                    client->m_pClientCallbacks->onConnect(client);
-                }
+                //if (client->m_pClientCallbacks != nullptr) {
+                client->m_pClientCallbacks->onConnect(client);
+                //}
+                
                 // Incase of a multiconnecting device we ignore this device when scanning since we are already connected to it
                 NimBLEDevice::addIgnored(client->m_peerAddress);
                 client->m_semaphoreOpenEvt.give(0);
@@ -617,13 +619,17 @@ uint16_t NimBLEClient::getMTU() {
         }
         
         case BLE_GAP_EVENT_ENC_CHANGE: {
-            if(client->m_conn_id != event->enc_change.conn_handle)
+            if(client->m_conn_id != event->enc_change.conn_handle){
                 return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
+            }
+            
+            struct ble_gap_conn_desc desc;
+            rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
+            assert(rc == 0);
             
             if(NimBLEDevice::m_securityCallbacks != nullptr) {
-                struct ble_gap_conn_desc desc;
-                rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
-                assert(rc == 0);
+                NimBLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
+            } else {
                 client->m_pClientCallbacks->onAuthenticationComplete(&desc);
             }
             
@@ -650,11 +656,15 @@ uint16_t NimBLEClient::getMTU() {
                 if(NimBLEDevice::m_securityCallbacks != nullptr) {
                     pkey.numcmp_accept = NimBLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
                 ////////////////////////////////////////////////////
-                }else if(client->m_pClientCallbacks != nullptr) {
+                } else {
+                    pkey.numcmp_accept = client->m_pClientCallbacks->onConfirmPIN(event->passkey.params.numcmp);
+                }
+            /*    }else if(client->m_pClientCallbacks != nullptr) {
                     pkey.numcmp_accept = client->m_pClientCallbacks->onConfirmPIN(event->passkey.params.numcmp);
                 }else{
                     pkey.numcmp_accept = false;
                 }
+            */
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "ble_sm_inject_io result: %d", rc);
                 
@@ -676,14 +686,17 @@ uint16_t NimBLEClient::getMTU() {
                 if(NimBLEDevice::m_securityCallbacks != nullptr) {
                     pkey.passkey = NimBLEDevice::m_securityCallbacks->onPassKeyRequest();
                 /////////////////////////////////////////////
-                }else if(client->m_pClientCallbacks != nullptr) {
+                } else {
+                    client->m_pClientCallbacks->onPassKeyRequest();
+                }
+            /*    }else if(client->m_pClientCallbacks != nullptr) {
                     pkey.passkey = client->m_pClientCallbacks->onPassKeyRequest();
                     NIMBLE_LOGD(LOG_TAG, "Sending passkey: %d", pkey.passkey);
                 }else{
                     pkey.passkey = 0;
                     NIMBLE_LOGE(LOG_TAG, "No Callback! Sending 0 as the passkey");
                 }
-;
+            */
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "ble_sm_inject_io result: %d", rc);
                 
@@ -714,7 +727,11 @@ bool NimBLEClient::isConnected() {
  * @brief Set the callbacks that will be invoked.
  */
 void NimBLEClient::setClientCallbacks(NimBLEClientCallbacks* pClientCallbacks, bool deleteCallbacks) {
-    m_pClientCallbacks = pClientCallbacks;
+    if (pClientCallbacks != nullptr){
+		m_pClientCallbacks = pClientCallbacks;
+	} else {
+		m_pClientCallbacks = &defaultCallbacks;
+	}
     m_deleteCallbacks = deleteCallbacks;
 } // setClientCallbacks
 
@@ -733,5 +750,34 @@ std::string NimBLEClient::toString() {
     return res;
 } // toString
 
+
+void NimBLEClientCallbacks::onConnect(NimBLEClient *pClient) {
+    NIMBLE_LOGD("NimBLEClientCallbacks", "onConnect: default");
+}
+
+void NimBLEClientCallbacks::onDisconnect(NimBLEClient *pClient) {
+    NIMBLE_LOGD("NimBLEClientCallbacks", "onDisconnect: default");
+}
+
+uint32_t NimBLEClientCallbacks::onPassKeyRequest(){
+    NIMBLE_LOGD("NimBLEClientCallbacks", "onPassKeyRequest: default: 123456");
+    return 123456;
+}
+
+void NimBLEClientCallbacks::onPassKeyNotify(uint32_t pass_key){
+    NIMBLE_LOGD("NimBLEClientCallbacks", "onPassKeyNotify: default: %d", pass_key);
+}
+
+bool NimBLEClientCallbacks::onSecurityRequest(){
+    NIMBLE_LOGD("NimBLEClientCallbacks", "onSecurityRequest: default: true");
+    return true;
+}
+void NimBLEClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc*){
+    NIMBLE_LOGD("NimBLEClientCallbacks", "onAuthenticationComplete: default");
+}
+bool NimBLEClientCallbacks::onConfirmPIN(uint32_t pin){
+    NIMBLE_LOGD("NimBLEClientCallbacks", "onConfirmPIN: default: true");
+    return true;
+}
 
 #endif // CONFIG_BT_ENABLED

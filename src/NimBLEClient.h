@@ -33,8 +33,8 @@ class NimBLEAdvertisedDevice;
  */
 class NimBLEClient {
 public:
-    bool                                       connect(NimBLEAdvertisedDevice* device, bool refreshServices = false);
-    bool                                       connect(NimBLEAddress address, uint8_t type = BLE_ADDR_TYPE_PUBLIC, bool refreshServices = false);   // Connect to the remote BLE Server
+    bool                                       connect(NimBLEAdvertisedDevice* device, bool refreshServices = true);
+    bool                                       connect(NimBLEAddress address, uint8_t type = BLE_ADDR_TYPE_PUBLIC, bool refreshServices = true);   // Connect to the remote BLE Server
     int                                        disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);                  // Disconnect from the remote BLE Server
     NimBLEAddress                              getPeerAddress();              // Get the address of the remote BLE Server
     int                                        getRssi();                     // Get the RSSI of the remote BLE Server
@@ -89,13 +89,13 @@ private:
 class NimBLEClientCallbacks {
 public:
     virtual ~NimBLEClientCallbacks() {};
-    virtual void onConnect(NimBLEClient *pClient) = 0;
-    virtual void onDisconnect(NimBLEClient *pClient) = 0;
-    virtual uint32_t onPassKeyRequest(){return 0;}
-    virtual void onPassKeyNotify(uint32_t pass_key){}
-    virtual bool onSecurityRequest(){return false;}
-    virtual void onAuthenticationComplete(ble_gap_conn_desc*){};
-    virtual bool onConfirmPIN(uint32_t pin){return false;}
+    virtual void onConnect(NimBLEClient *pClient); // = 0;
+    virtual void onDisconnect(NimBLEClient *pClient); // = 0;
+    virtual uint32_t onPassKeyRequest(); //{return 0;}
+    virtual void onPassKeyNotify(uint32_t pass_key); //{}
+    virtual bool onSecurityRequest(); //{return false;}
+    virtual void onAuthenticationComplete(ble_gap_conn_desc*); //{};
+    virtual bool onConfirmPIN(uint32_t pin); //{return false;}
 };
 
 #endif // CONFIG_BT_ENABLED
