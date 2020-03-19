@@ -3,6 +3,15 @@
    Ported to Arduino ESP32 by Evandro Copercini
 */
 
+/** NimBLE differences highlighted in comment blocks **/
+
+/*******original********
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEScan.h>
+#include <BLEAdvertisedDevice.h>
+***********************/
+
 #include <NimBLEDevice.h>
 #include <NimBLEUtils.h>
 #include <NimBLEScan.h>
@@ -12,7 +21,10 @@ int scanTime = 5; //In seconds
 BLEScan* pBLEScan;
 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
+  /*** Only a reference to the advertised device is passed now
+    void onResult(BLEAdvertisedDevice advertisedDevice) { **/
     void onResult(BLEAdvertisedDevice* advertisedDevice) {
+  /** Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str()); **/
       Serial.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
     }
 };

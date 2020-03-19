@@ -123,10 +123,9 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
  /**
    * Called for each advertising BLE server.
    */
-/********************************************************
-  void onResult(BLEAdvertisedDevice advertisedDevice) {
-  Only a reference to the advertised device is passed now
-********************************************************/      
+   
+/*** Only a reference to the advertised device is passed now
+  void onResult(BLEAdvertisedDevice advertisedDevice) { **/     
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
     Serial.print("BLE Advertised Device found: ");
     Serial.println(advertisedDevice->toString().c_str());
