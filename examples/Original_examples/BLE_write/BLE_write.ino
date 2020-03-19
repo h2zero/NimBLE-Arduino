@@ -3,6 +3,13 @@
     Ported to Arduino ESP32 by Evandro Copercini
 */
 
+/** NimBLE differences highlighted in comment blocks **/
+
+/*******original********
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+***********************/
 #include <NimBLEDevice.h>
 #include <NimBLEUtils.h>
 #include <NimBLEServer.h>
@@ -45,10 +52,15 @@ void setup() {
   BLEService *pService = pServer->createService(SERVICE_UUID);
 
   BLECharacteristic *pCharacteristic = pService->createCharacteristic(
-                                         CHARACTERISTIC_UUID,
-                                         PROPERTY_READ |
-                                         PROPERTY_WRITE
-                                       );
+                                        CHARACTERISTIC_UUID,
+                              /************** Defined Values now ************      
+                                        BLECharacteristic::PROPERTY_READ   |
+                                        BLECharacteristic::PROPERTY_WRITE
+                                        );
+                              **********************************************/
+                                        PROPERTY_READ |
+                                        PROPERTY_WRITE
+                                        );
 
   pCharacteristic->setCallbacks(new MyCallbacks());
 

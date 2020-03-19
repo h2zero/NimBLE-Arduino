@@ -19,6 +19,15 @@
    In this example rxValue is the data received (only accessible inside that function).
    And txValue is the data to be sent, in this example just a byte incremented every second. 
 */
+
+/** NimBLE differences highlighted in comment blocks **/
+
+/*******original********
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+***********************/
 #include <NimBLEDevice.h>
 #include <NimBLEServer.h>
 #include <NimBLEUtils.h>
@@ -38,6 +47,8 @@ uint8_t txValue = 0;
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
 
+/**  None of these are required as they will be handled by the library with defaults. **
+ **                       Remove as you see fit for your needs                        */  
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
       deviceConnected = true;
@@ -46,6 +57,22 @@ class MyServerCallbacks: public BLEServerCallbacks {
     void onDisconnect(BLEServer* pServer) {
       deviceConnected = false;
     }
+  /***************** New - Security handled here ********************
+  ****** Note: these are the same return values as defaults ********/
+    uint32_t onPassKeyRequest(){
+      Serial.println("Server PassKeyRequest");
+      return 123456; 
+    }
+
+    bool onConfirmPIN(uint32_t pass_key){
+      Serial.print("The passkey YES/NO number: ");Serial.println(pass_key);
+      return true; 
+    }
+
+    void onAuthenticationComplete(ble_gap_conn_desc desc){
+      Serial.println("Starting BLE work!");
+    }
+  /*******************************************************************/
 };
 
 class MyCallbacks: public BLECharacteristicCallbacks {
@@ -81,13 +108,25 @@ void setup() {
   // Create a BLE Characteristic
   pTxCharacteristic = pService->createCharacteristic(
 										CHARACTERISTIC_UUID_TX,
+                                    /************** Defined Values now ************      
+                                        BLECharacteristic::PROPERTY_WRITE
+                                        );
+                                    **********************************************/  
 										PROPERTY_NOTIFY
 									);
-                      
-  pTxCharacteristic->createDescriptor("2902");
+                                    
+  /******* New createDescriptor method ********
+   Add properties the same as characteristics now
+   pTxCharacteristic->addDescriptor(new BLE2902());
+  ********************************************/
+  pTxCharacteristic->createDescriptor("2902" /** , PROPERTY_READ | PROPERTY_WRITE **/);                      
 
   BLECharacteristic * pRxCharacteristic = pService->createCharacteristic(
-											 CHARACTERISTIC_UUID_RX,
+											CHARACTERISTIC_UUID_RX,
+                                    /************** Defined Values now ************      
+                                            BLECharacteristic::PROPERTY_WRITE
+                                            );
+                                    **********************************************/  
 											PROPERTY_WRITE
 										);
 

@@ -19,10 +19,18 @@
    A connect hander associated with the server starts a background task that performs notification
    every couple of seconds.
 */
+
+/** NimBLE differences highlighted in comment blocks **/
+
+/*******original********
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+***********************/
 #include <NimBLEDevice.h>
 #include <NimBLEServer.h>
 #include <NimBLEUtils.h>
-#include <NimBLE2902.h>
 
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
@@ -37,6 +45,8 @@ uint32_t value = 0;
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
 
+/**  None of these are required as they will be handled by the library with defaults. **
+ **                       Remove as you see fit for your needs                        */  
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
       deviceConnected = true;
@@ -46,6 +56,22 @@ class MyServerCallbacks: public BLEServerCallbacks {
     void onDisconnect(BLEServer* pServer) {
       deviceConnected = false;
     }
+  /***************** New - Security handled here ********************
+  ****** Note: these are the same return values as defaults ********/
+    uint32_t onPassKeyRequest(){
+      Serial.println("Server PassKeyRequest");
+      return 123456; 
+    }
+
+    bool onConfirmPIN(uint32_t pass_key){
+      Serial.print("The passkey YES/NO number: ");Serial.println(pass_key);
+      return true; 
+    }
+
+    void onAuthenticationComplete(ble_gap_conn_desc desc){
+      Serial.println("Starting BLE work!");
+    }
+  /*******************************************************************/
 };
 
 
@@ -66,6 +92,13 @@ void setup() {
   // Create a BLE Characteristic
   pCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID,
+                /************** Defined Values now ************      
+                      BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_WRITE  |
+                      BLECharacteristic::PROPERTY_NOTIFY |
+                      BLECharacteristic::PROPERTY_INDICATE
+                    );
+                **********************************************/    
                       PROPERTY_READ   |
                       PROPERTY_WRITE  |
                       PROPERTY_NOTIFY |
@@ -74,7 +107,11 @@ void setup() {
 
   // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
   // Create a BLE Descriptor
-  pCharacteristic->createDescriptor("2902");
+  /******* New createDescriptor method ********
+   Add properties the same as characteristics now
+   pCharacteristic->addDescriptor(new BLE2902());
+  ********************************************/
+  pCharacteristic->createDescriptor("2902" /** , PROPERTY_READ | PROPERTY_WRITE **/);
 
   // Start the service
   pService->start();
