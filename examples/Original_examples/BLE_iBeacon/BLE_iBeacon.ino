@@ -15,8 +15,17 @@
    6. deep sleep
    
 */
-#include "sys/time.h"
 
+
+/** NimBLE differences highlighted in comment blocks **/
+
+
+#include "sys/time.h"
+/*******original********
+#include "BLEDevice.h"
+#include "BLEUtils.h"
+#include "BLEBeacon.h"
+***********************/
 #include "NimBLEDevice.h"
 #include "NimBLEUtils.h"
 #include "NimBLEBeacon.h"
@@ -65,6 +74,13 @@ void setBeacon() {
   
   pAdvertising->setAdvertisementData(oAdvertisementData);
   pAdvertising->setScanResponseData(oScanResponseData);
+  /**  pAdvertising->setAdvertisementType(ADV_TYPE_NONCONN_IND);
+  *    Advertising mode. Can be one of following constants:
+  *  - BLE_GAP_CONN_MODE_NON (non-connectable; 3.C.9.3.2).
+  *  - BLE_GAP_CONN_MODE_DIR (directed-connectable; 3.C.9.3.3).
+  *  - BLE_GAP_CONN_MODE_UND (undirected-connectable; 3.C.9.3.4).
+  */
+  pAdvertising->setAdvertisementType(BLE_GAP_CONN_MODE_NON);
 
 }
 

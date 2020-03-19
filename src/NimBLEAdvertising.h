@@ -72,6 +72,7 @@ public:
 	void start();
 	void stop();
 	void setAppearance(uint16_t appearance);
+    void setAdvertisementType(uint8_t adv_type);
 	void setMaxInterval(uint16_t maxinterval);
 	void setMinInterval(uint16_t mininterval);
 	void setAdvertisementData(NimBLEAdvertisementData& advertisementData);

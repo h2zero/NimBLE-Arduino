@@ -35,21 +35,21 @@ NimBLEAdvertising::NimBLEAdvertising() {
 	memset(&m_advParams, 0, sizeof m_advParams);
     const char *name = ble_svc_gap_device_name();
     
-	m_advData.name                = (uint8_t *)name;
-    m_advData.name_len            = strlen(name);
-    m_advData.name_is_complete    = 1;
+	m_advData.name                   = (uint8_t *)name;
+    m_advData.name_len               = strlen(name);
+    m_advData.name_is_complete       = 1;
     m_scanData.tx_pwr_lvl_is_present = 1;
-    m_scanData.tx_pwr_lvl          = BLE_HS_ADV_TX_PWR_LVL_AUTO;
-    m_advData.flags               = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
-	m_advData.appearance          = 0x00;
-	m_advData.appearance_is_present = 0;
-	m_advData.mfg_data_len    	  = 0;
-	m_advData.mfg_data			  = nullptr;
+    m_scanData.tx_pwr_lvl            = BLE_HS_ADV_TX_PWR_LVL_AUTO;
+    m_advData.flags                  = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
+	m_advData.appearance             = 0;
+	m_advData.appearance_is_present  = 0;
+	m_advData.mfg_data_len    	     = 0;
+	m_advData.mfg_data			     = nullptr;
 	
-	m_advParams.conn_mode         = BLE_GAP_CONN_MODE_UND;
-    m_advParams.disc_mode         = BLE_GAP_DISC_MODE_GEN;
-	m_advParams.itvl_min          = 0x20;
-	m_advParams.itvl_max          = 0x40;
+	m_advParams.conn_mode            = BLE_GAP_CONN_MODE_UND;
+    m_advParams.disc_mode            = BLE_GAP_DISC_MODE_GEN;
+	m_advParams.itvl_min             = 0;
+	m_advParams.itvl_max             = 0;
 	 
 } // NimBLEAdvertising
 
@@ -83,6 +83,10 @@ void NimBLEAdvertising::setAppearance(uint16_t appearance) {
 	m_advData.appearance = appearance;
 	m_advData.appearance_is_present = 1;
 } // setAppearance
+
+void NimBLEAdvertising::setAdvertisementType(uint8_t adv_type){
+	m_advParams.conn_mode = adv_type;
+} // setAdvertisementType
 
 void NimBLEAdvertising::setMinInterval(uint16_t mininterval) {
 	m_advParams.itvl_min = mininterval;
