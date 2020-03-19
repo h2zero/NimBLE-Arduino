@@ -22,6 +22,7 @@
 #include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLEServer";
+static NimBLEServerCallbacks defaultCallbacks;
 
 
 /**
@@ -33,7 +34,7 @@ static const char* LOG_TAG = "NimBLEServer";
 NimBLEServer::NimBLEServer() {
 	m_connId           = BLE_HS_CONN_HANDLE_NONE;
     m_svcChgChrHdl     = 0xffff;
-	m_pServerCallbacks = nullptr;
+	m_pServerCallbacks = &defaultCallbacks;
 	m_gattsStarted 	   = false;
 } // BLEServer
 
@@ -237,13 +238,13 @@ uint32_t NimBLEServer::getConnectedCount() {
             else {
                 server->m_connId = event->connect.conn_handle;
                 server->addPeerDevice((void*)server, false, server->m_connId);
-                if (server->m_pServerCallbacks != nullptr) {
-                    ble_gap_conn_desc desc;
-                    rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
-                    assert(rc == 0);
-                    server->m_pServerCallbacks->onConnect(server);
-                    server->m_pServerCallbacks->onConnect(server, &desc);			
-                }
+                //if (server->m_pServerCallbacks != nullptr) {
+                ble_gap_conn_desc desc;
+                rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
+                assert(rc == 0);
+                server->m_pServerCallbacks->onConnect(server);
+                server->m_pServerCallbacks->onConnect(server, &desc);			
+                //}
             }
 
             return 0;
@@ -252,9 +253,9 @@ uint32_t NimBLEServer::getConnectedCount() {
         
         case BLE_GAP_EVENT_DISCONNECT: {
             server->m_connId = BLE_HS_CONN_HANDLE_NONE;
-            if (server->m_pServerCallbacks != nullptr) {       
-				server->m_pServerCallbacks->onDisconnect(server);
-			}
+            //if (server->m_pServerCallbacks != nullptr) {       
+            server->m_pServerCallbacks->onDisconnect(server);
+			//}
             /* Connection terminated; resume advertising */
             //NimBLEDevice::startAdvertising();
             server->removePeerDevice(event->disconnect.conn.conn_handle, false);
@@ -304,10 +305,12 @@ uint32_t NimBLEServer::getConnectedCount() {
             if(rc != 0) {
                 return BLE_ATT_ERR_INVALID_HANDLE;
             }
-
-            server->m_pServerCallbacks->onAuthenticationComplete(&desc);
+            // Compatibility only - Do not use, should be removed the in future
             if(NimBLEDevice::m_securityCallbacks != nullptr) {
                 NimBLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
+            /////////////////////////////////////////////
+            } else {
+                server->m_pServerCallbacks->onAuthenticationComplete(&desc);
             }
             
             return 0;
@@ -318,7 +321,8 @@ uint32_t NimBLEServer::getConnectedCount() {
 
             if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
                 pkey.action = event->passkey.params.action;
-                pkey.passkey = NimBLEDevice::m_passkey; // This is the passkey to be entered on peer
+                //pkey.passkey = NimBLEDevice::m_passkey; // This is the passkey to be entered on peer
+                pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
                 
@@ -329,12 +333,15 @@ uint32_t NimBLEServer::getConnectedCount() {
                 if(NimBLEDevice::m_securityCallbacks != nullptr) {
                     pkey.numcmp_accept = NimBLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
                 /////////////////////////////////////////////
-                }else if(server->m_pServerCallbacks != nullptr) {
+                } else {
+                    pkey.numcmp_accept = server->m_pServerCallbacks->onConfirmPIN(event->passkey.params.numcmp);
+                }
+            /*    }else if(server->m_pServerCallbacks != nullptr) {
                     pkey.numcmp_accept = server->m_pServerCallbacks->onConfirmPIN(event->passkey.params.numcmp);
                 }else{
                     pkey.numcmp_accept = false;
                 }
-                
+            */    
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_NUMCMP; ble_sm_inject_io result: %d", rc);
               
@@ -356,14 +363,17 @@ uint32_t NimBLEServer::getConnectedCount() {
                 if(NimBLEDevice::m_securityCallbacks != nullptr) {
                     pkey.passkey = NimBLEDevice::m_securityCallbacks->onPassKeyRequest();
                 /////////////////////////////////////////////
-                }else if(server->m_pServerCallbacks != nullptr) {
+                } else {
+                    pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
+                }                    
+             /*   }else if(server->m_pServerCallbacks != nullptr) {
                     pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
                     NIMBLE_LOGD(LOG_TAG, "Sending passkey: %d", pkey.passkey);
                 }else{
                     pkey.passkey = 0;
                     NIMBLE_LOGE(LOG_TAG, "No Callback! Sending 0 as the passkey");
                 }
-;
+            */
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_INPUT; ble_sm_inject_io result: %d", rc);
                 
@@ -394,7 +404,11 @@ uint32_t NimBLEServer::getConnectedCount() {
  * @param [in] pCallbacks The callbacks to be invoked.
  */
 void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks) {
-	m_pServerCallbacks = pCallbacks;
+    if (pCallbacks != nullptr){
+		m_pServerCallbacks = pCallbacks;
+	} else {
+		m_pServerCallbacks = &defaultCallbacks;
+	}
 } // setCallbacks
 
 /*
@@ -471,6 +485,26 @@ void NimBLEServerCallbacks::onDisconnect(NimBLEServer* pServer) {
 	NIMBLE_LOGD("NimBLEServerCallbacks", "onDisconnect(): Default");
 } // onDisconnect
 
+uint32_t NimBLEServerCallbacks::onPassKeyRequest(){
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyRequest: default: 123456");
+    return 123456;
+}
+
+void NimBLEServerCallbacks::onPassKeyNotify(uint32_t pass_key){
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyNotify: default: %d", pass_key);
+}
+
+bool NimBLEServerCallbacks::onSecurityRequest(){
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onSecurityRequest: default: true");
+    return true;
+}
+void NimBLEServerCallbacks::onAuthenticationComplete(ble_gap_conn_desc*){
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onAuthenticationComplete: default");
+}
+bool NimBLEServerCallbacks::onConfirmPIN(uint32_t pin){
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onConfirmPIN: default: true");
+    return true;
+}
 
 /* multi connect support */
 void NimBLEServer::updatePeerMTU(uint16_t conn_id, uint16_t mtu) {

@@ -141,11 +141,11 @@ public:
      */
     virtual void onDisconnect(NimBLEServer* pServer);
     
-    virtual uint32_t onPassKeyRequest(){return 0;}
-    virtual void onPassKeyNotify(uint32_t pass_key){}
-    virtual bool onSecurityRequest(){return true;}
-    virtual void onAuthenticationComplete(ble_gap_conn_desc*){};
-    virtual bool onConfirmPIN(uint32_t pin){return true;}
+    virtual uint32_t onPassKeyRequest(); //{return 0;}
+    virtual void onPassKeyNotify(uint32_t pass_key); //{}
+    virtual bool onSecurityRequest(); //{return true;}
+    virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);//{};
+    virtual bool onConfirmPIN(uint32_t pin);//{return true;}
 }; // BLEServerCallbacks
 
 
