@@ -13,28 +13,31 @@
 #include "syscfg/syscfg.h"
 #include "modlog/modlog.h"
 
-//If Arduino is being used, strip out the colors and ignore log printing below ui setting. 
+
+// If Arduino is being used, strip out the colors and ignore log printing below ui setting. 
+// Note: because CONFIG_LOG_DEFAULT_LEVEL is set at ERROR in Arduino we must use MODLOG_DFLT(ERROR 
+// otherwise no messages will be printed above that level.
 #ifdef ARDUINO_ARCH_ESP32
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-#define NIMBLE_LOGD( tag, format, ... ) MODLOG_DFLT(DEBUG,      "D %s: "#format"\n",tag,##__VA_ARGS__)
+#if CORE_DEBUG_LEVEL >= 4
+#define NIMBLE_LOGD( tag, format, ... ) MODLOG_DFLT(ERROR,      "D %s: "#format"\n",tag,##__VA_ARGS__)
 #else
 #define NIMBLE_LOGD( tag, format, ... )
 #endif
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-#define NIMBLE_LOGI( tag, format, ... ) MODLOG_DFLT(INFO,       "I %s: "#format"\n",tag,##__VA_ARGS__)
+#if CORE_DEBUG_LEVEL >= 3
+#define NIMBLE_LOGI( tag, format, ... ) MODLOG_DFLT(ERROR,      "I %s: "#format"\n",tag,##__VA_ARGS__)
 #else
 #define NIMBLE_LOGI( tag, format, ... )
 #endif
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN
-#define NIMBLE_LOGW( tag, format, ... ) MODLOG_DFLT(WARN,       "W %s: "#format"\n",tag,##__VA_ARGS__)
+#if CORE_DEBUG_LEVEL >= 2
+#define NIMBLE_LOGW( tag, format, ... ) MODLOG_DFLT(ERROR,      "W %s: "#format"\n",tag,##__VA_ARGS__)
 #else
 #define NIMBLE_LOGW( tag, format, ... )
 #endif
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+#if CORE_DEBUG_LEVEL >= 1
 #define NIMBLE_LOGE( tag, format, ... ) MODLOG_DFLT(ERROR,      "E %s: "#format"\n",tag,##__VA_ARGS__)
 #else
 #define NIMBLE_LOGE( tag, format, ... )
