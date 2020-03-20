@@ -49,6 +49,11 @@ public:
     uint16_t                                   getConnId();
     uint16_t                                   getMTU();
     bool                                       secureConnection();
+	void 									   setInitialConnectionParams(uint16_t itvl_min, uint16_t itvl_max,
+															uint16_t latency, uint16_t supervision_timeout);
+	void 										updateConnParams(uint16_t minInterval, uint16_t maxInterval, 
+															uint16_t latency, uint16_t timeout,
+															uint16_t minConnTime, uint16_t maxConnTime); 
 
 
 private:
@@ -69,6 +74,8 @@ private:
     bool             m_isConnected = false;     // Are we currently connected.
     bool             m_waitingToConnect =false;
     bool             m_deleteCallbacks = true;
+	int32_t			 m_connectTimeout;
+	ble_gap_conn_params* m_pConnParams;
     //uint16_t       m_mtu = 23;
 
 

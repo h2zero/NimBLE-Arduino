@@ -52,6 +52,8 @@ NimBLEClient::NimBLEClient()
     m_conn_id          = BLE_HS_CONN_HANDLE_NONE;
     m_haveServices     = false;
     m_isConnected      = false;
+	m_connectTimeout   = 30000;
+	m_pConnParams	   = nullptr;
 } // NimBLEClient
 
 
@@ -152,7 +154,7 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
      * timeout. Loop on BLE_HS_EBUSY if the scan hasn't stopped yet.
      */
     do{
-        rc = ble_gap_connect(BLE_OWN_ADDR_PUBLIC, &peerAddrt, 30000, NULL,
+        rc = ble_gap_connect(BLE_OWN_ADDR_PUBLIC, &peerAddrt, m_connectTimeout, m_pConnParams,
                             NimBLEClient::handleGapEvent, this);
     }while(rc == BLE_HS_EBUSY);
                          
@@ -231,6 +233,61 @@ int NimBLEClient::disconnect(uint8_t reason) {
     return rc;
     NIMBLE_LOGD(LOG_TAG, "<< disconnect()");
 } // disconnect
+
+
+/**
+ * @brief Set the connection paramaters to use when connecting to a server.
+ */
+void NimBLEClient::setInitialConnectionParams(uint16_t itvl_min, uint16_t itvl_max,
+								uint16_t latency, uint16_t supervision_timeout)
+{
+	if(m_pConnParams == nullptr) {
+		m_pConnParams = (ble_gap_conn_params*)calloc(1, sizeof(ble_gap_conn_params));
+		if(m_pConnParams == nullptr) {
+			NIMBLE_LOGE(LOG_TAG, "setInitialConnectionParams: Error No Mem");
+			return;
+		}
+	}else if(0 == (itvl_min | itvl_max | latency | supervision_timeout)) {
+		free(m_pConnParams);
+		m_pConnParams = nullptr;
+		return;
+	}
+	
+	m_pConnParams->itvl_min = itvl_min;
+	m_pConnParams->itvl_max = itvl_max;
+	m_pConnParams->latency  = latency;
+	m_pConnParams->supervision_timeout = supervision_timeout;
+	
+	int rc = ble_gap_check_conn_params( BLE_HCI_LE_PHY_2M, m_pConnParams);
+	if(rc != 0) {
+		NIMBLE_LOGE(LOG_TAG,"setInitialConnectionParams : %s", NimBLEUtils::returnCodeToString(rc));
+		free(m_pConnParams);
+		m_pConnParams = nullptr;
+	}
+}
+
+
+/**
+ * Update connection parameters can be called only after connection has been established
+ */
+void NimBLEClient::updateConnParams(uint16_t minInterval, uint16_t maxInterval, 
+                            uint16_t latency, uint16_t timeout,
+                            uint16_t minConnTime, uint16_t maxConnTime) 
+{
+	ble_gap_upd_params params;
+
+	params.latency  = latency;
+	params.itvl_max = maxInterval;    // max_int = 0x20*1.25ms = 40ms
+	params.itvl_min = minInterval;    // min_int = 0x10*1.25ms = 20ms
+	params.supervision_timeout = timeout;    // timeout = 400*10ms = 4000ms
+    params.min_ce_len = minConnTime;  // Minimum length of connection event in 0.625ms units
+    params.max_ce_len = maxConnTime;  // Maximum length of connection event in 0.625ms units
+    
+    int rc = ble_gap_update_params(m_conn_id, &params);
+    if(rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+}
 
 
 /**
