@@ -257,16 +257,19 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     
     
     auto it = p2902->m_subscribedMap.find(event->subscribe.conn_handle);
-    if(it == p2902->m_subscribedMap.cend()) {
+    if(subVal > 0 && it == p2902->m_subscribedMap.cend()) {
         p2902->m_subscribedMap.insert(std::pair<uint16_t, uint16_t>(event->subscribe.conn_handle, subVal));
         return;
+    } else if(it != p2902->m_subscribedMap.cend()) {
+        p2902->m_subscribedMap.erase(event->subscribe.conn_handle);
+        return;
     }
-    
+/*    
     if(event->subscribe.reason == BLE_GAP_SUBSCRIBE_REASON_TERM) {
         p2902->m_subscribedMap.erase(event->subscribe.conn_handle);
         return;
     }
-    
+*/    
     (*it).second = subVal;
 }
 
@@ -317,7 +320,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
         os_mbuf *om;
         
         if(_mtu == 0) {
-            NIMBLE_LOGD(LOG_TAG, "peer not connected, removing from map");
+            //NIMBLE_LOGD(LOG_TAG, "peer not connected, removing from map");
             p2902->m_subscribedMap.erase((*it).first);
             it = p2902->m_subscribedMap.cbegin();
             if(it == p2902->m_subscribedMap.cend()) {
@@ -326,14 +329,12 @@ void NimBLECharacteristic::notify(bool is_notification) {
             continue;
         }
         
-        NIMBLE_LOGD(LOG_TAG, "Client MTU = %d", _mtu);
-        
         if (length > _mtu - 3) {
 			NIMBLE_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
 		}
         
         if((*it).second == 0) {
-            NIMBLE_LOGI(LOG_TAG, "Skipping unsubscribed client");
+            //NIMBLE_LOGI(LOG_TAG, "Skipping unsubscribed client");
             continue;
         }
         
