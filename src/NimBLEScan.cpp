@@ -96,7 +96,7 @@ NimBLEScan::NimBLEScan() {
             NimBLEAddress advertisedAddress(event->disc.addr);
 
             // Print advertisement data
-            print_adv_fields(&fields);
+    //        print_adv_fields(&fields);
 
             // If we are not scanning, nothing to do with the extra results.
             if (pScan->m_stopped) { 
@@ -128,20 +128,27 @@ NimBLEScan::NimBLEScan() {
                 NIMBLE_LOGI(LOG_TAG, "UPDATING PREVIOUSLY FOUND DEVICE: %s", advertisedAddress.toString().c_str());
             }
             advertisedDevice->setRSSI(event->disc.rssi); 
+        //    NIMBLE_LOGI(LOG_TAG, "advertisement type: %d, %s",advType, NimBLEUtils::advTypeToString(event->disc.event_type));
             advertisedDevice->setAdvType(event->disc.event_type);
             advertisedDevice->parseAdvertisement(&fields);
             advertisedDevice->setScan(pScan);
             advertisedDevice->setAdvertisementResult(event->disc.data, event->disc.length_data);
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
-                pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                // If not active scanning report the result to the listener.
+                if(pScan->m_scan_params.passive) {
+                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                // Otherwise wait for the scan response so we can report all of the data at once.
+                } else if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                }
                 //m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
             }
 
             return 0;
         }
         case BLE_GAP_EVENT_DISC_COMPLETE: {
-            NIMBLE_LOGI(LOG_TAG, "discovery complete; reason=%d\n",
+            NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d",
                     event->disc_complete.reason);
                     
             pScan->m_stopped = true;
