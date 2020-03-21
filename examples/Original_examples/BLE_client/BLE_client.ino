@@ -57,10 +57,6 @@ class MyClientCallback : public BLEClientCallbacks {
     Serial.print("The passkey YES/NO number: ");Serial.println(pass_key);
     return true; 
   }
-  bool onSecurityRequest(){
-    ESP_LOGI(tag, "SecurityRequest");
-    return true; 
-  }
 
   void onAuthenticationComplete(ble_gap_conn_desc desc){
     Serial.println("Starting BLE work!");

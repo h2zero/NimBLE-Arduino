@@ -260,8 +260,16 @@ void NimBLEDevice::stopAdvertising() {
         m_pScan->onHostReset();
     }
     
-    NIMBLE_LOGE(LOG_TAG, "Resetting state; reason=%d", reason);
-    NIMBLE_LOGE(LOG_TAG,"%s", NimBLEUtils::returnCodeToString(reason));
+    if(m_pServer != nullptr) {
+        m_pServer->onHostReset();
+    }
+    
+    if(m_bleAdvertising != nullptr) {
+        m_bleAdvertising->onHostReset();
+    }
+    
+    NIMBLE_LOGE(LOG_TAG, "Resetting state; reason=%d, %s", reason, 
+                        NimBLEUtils::returnCodeToString(reason));
 } // onReset
 
 
@@ -484,10 +492,10 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @returns host return code 0 if success.
  */
 /* STATIC */int NimBLEDevice::startSecurity(uint16_t conn_id) {
-    if(m_securityCallbacks != nullptr) {
+  /*  if(m_securityCallbacks != nullptr) {
         m_securityCallbacks->onSecurityRequest(); 
     }
-    
+  */  
     int rc = ble_gap_security_initiate(conn_id);
     if(rc != 0){
         NIMBLE_LOGE(LOG_TAG, "ble_gap_security_initiate: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));

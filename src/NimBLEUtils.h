@@ -29,6 +29,7 @@ public:
     static const char*          advTypeToString(uint8_t advType);
     static const char*          returnCodeToString(int rc);
     static void                 memrcpy(uint8_t* target, uint8_t* source, uint32_t size);
+    static int                  checkConnParams(ble_gap_conn_params* params);
 };
 
 

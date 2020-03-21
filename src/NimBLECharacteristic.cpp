@@ -241,7 +241,8 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         subVal |= NIMBLE_DESC_FLAG_INDICATE;
     }
     
-    m_semaphoreConfEvt.give(subVal == 2 ? 0 : NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
+    m_semaphoreConfEvt.give((subVal | NIMBLE_DESC_FLAG_INDICATE) ? 0 :
+            NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
     
     NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d", event->subscribe.conn_handle, subVal);
     

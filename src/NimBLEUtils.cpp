@@ -44,6 +44,38 @@ void NimBLEUtils::memrcpy(uint8_t* target, uint8_t* source, uint32_t size) {
     }
 } // memrcpy
 
+int NimBLEUtils::checkConnParams(ble_gap_conn_params* params) {
+    /* Check connection interval min */
+    if ((params->itvl_min < BLE_HCI_CONN_ITVL_MIN) ||
+        (params->itvl_min > BLE_HCI_CONN_ITVL_MAX)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+    /* Check connection interval max */
+    if ((params->itvl_max < BLE_HCI_CONN_ITVL_MIN) ||
+        (params->itvl_max > BLE_HCI_CONN_ITVL_MAX) ||
+        (params->itvl_max < params->itvl_min)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    /* Check connection latency */
+    if (params->latency > BLE_HCI_CONN_LATENCY_MAX) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    /* Check supervision timeout */
+    if ((params->supervision_timeout < BLE_HCI_CONN_SPVN_TIMEOUT_MIN) ||
+        (params->supervision_timeout > BLE_HCI_CONN_SPVN_TIMEOUT_MAX)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    /* Check connection event length */
+    if (params->min_ce_len > params->max_ce_len) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    return 0;
+}
+
 
 const char* NimBLEUtils::returnCodeToString(int rc) {
     switch(rc) {

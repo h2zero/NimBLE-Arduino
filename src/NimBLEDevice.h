@@ -105,6 +105,7 @@ private:
     friend class NimBLEServer;
     friend class NimBLEClient;
     friend class NimBLEScan;
+    friend class NimBLEAdvertising;
 //  friend class NimBLERemoteService;
 //  friend class NimBLERemoteCharacteristic;
     

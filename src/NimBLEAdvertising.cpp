@@ -384,6 +384,11 @@ void NimBLEAdvertising::stop() {
 } // stop
 
 
+void NimBLEAdvertising::onHostReset() {
+ //   m_advSvcsSet = false;
+}
+    
+
 /**
  * @brief Add data to the payload to be advertised.
  * @param [in] data The data to be added to the payload.

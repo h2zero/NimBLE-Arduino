@@ -109,7 +109,6 @@ void setup() {
    pCharacteristic->addDescriptor(new BLE2902());
   ********************************************/
   pCharacteristic->createDescriptor("2902" /** , PROPERTY_READ | PROPERTY_WRITE **/);
-
   // Start the service
   pService->start();
 

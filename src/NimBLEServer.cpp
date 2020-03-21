@@ -295,7 +295,7 @@ uint32_t NimBLEServer::getConnectedCount() {
         } // BLE_GAP_EVENT_NOTIFY_TX
         
         case BLE_GAP_EVENT_CONN_UPDATE: {
-            NIMBLE_LOGD(LOG_TAG, "Peer requesting to update connection parameters");
+            NIMBLE_LOGD(LOG_TAG, "Connection parameters updated.");
             return 0;
         } // BLE_GAP_EVENT_CONN_UPDATE
         
@@ -569,6 +569,14 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
     if(rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
+}
+
+
+void NimBLEServer::onHostReset() {
+ /*   for(auto it = m_notifyChrMap.cbegin(); it != m_notifyChrMap.cend(); ++it) {
+        (*it).second->m_semaphoreConfEvt.give(0);
+    }
+  */
 }
 
 #endif // CONFIG_BT_ENABLED
