@@ -34,7 +34,7 @@ void setup() {
                                         BLECharacteristic::PROPERTY_WRITE  
                                         );
                             **********************************************/
-                                        PROPERTY_READ_ENC |
+                                        PROPERTY_READ |
                                         PROPERTY_WRITE
                                        );
 
