@@ -321,8 +321,13 @@ uint32_t NimBLEServer::getConnectedCount() {
 
             if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
                 pkey.action = event->passkey.params.action;
-                //pkey.passkey = NimBLEDevice::m_passkey; // This is the passkey to be entered on peer
-                pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
+                // backward compatibility
+                pkey.passkey = NimBLEDevice::getSecurityPasskey(); // This is the passkey to be entered on peer
+                // if the (static)passkey is the default, check the callback for custom value
+                // both values default to the same.
+                if(pkey.passkey == 123456) {
+                    pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
+                }
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
                 
