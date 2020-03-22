@@ -18,8 +18,6 @@
 #include <Arduino.h>
 
 #include <NimBLEDevice.h>
-#include <NimBLEUtils.h>
-#include <NimBLEScan.h>
 #include <NimBLEAdvertisedDevice.h>
 #include "NimBLEEddystoneURL.h"
 #include "NimBLEEddystoneTLM.h"

@@ -27,7 +27,6 @@
 #include "BLEBeacon.h"
 ***********************/
 #include "NimBLEDevice.h"
-#include "NimBLEUtils.h"
 #include "NimBLEBeacon.h"
 #include "esp_sleep.h"
 

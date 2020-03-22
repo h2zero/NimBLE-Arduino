@@ -11,8 +11,6 @@
 #include <BLEServer.h>
 ***********************/
 #include <NimBLEDevice.h>
-#include <NimBLEUtils.h>
-#include <NimBLEServer.h>
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/

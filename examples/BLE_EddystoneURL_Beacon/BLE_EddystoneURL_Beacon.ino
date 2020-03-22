@@ -15,28 +15,24 @@
    6. deep sleep
 
 */
-#include "sys/time.h"
-
-#include <Arduino.h>
 
 #include "NimBLEDevice.h"
-#include "NimBLEUtils.h"
 #include "NimBLEBeacon.h"
-#include "NimBLEAdvertising.h"
 #include "NimBLEEddystoneURL.h"
 
+#include "sys/time.h"
 #include "esp_sleep.h"
 
 #define GPIO_DEEP_SLEEP_DURATION 10     // sleep x seconds and then wake up
+
+// UUID 1 128-Bit (may use linux tool uuidgen or random numbers via https://www.uuidgenerator.net/)
+#define BEACON_UUID "8ec76ea3-6668-48da-9866-75be8bc86f4d" 
+
 RTC_DATA_ATTR static time_t last;    // remember last boot in RTC Memory
 RTC_DATA_ATTR static uint32_t bootcount; // remember number of boots in RTC Memory
 
-// See the following for generating UUIDs:
-// https://www.uuidgenerator.net/
 BLEAdvertising *pAdvertising;
 struct timeval now;
-
-#define BEACON_UUID "8ec76ea3-6668-48da-9866-75be8bc86f4d" // UUID 1 128-Bit (may use linux tool uuidgen or random numbers via https://www.uuidgenerator.net/)
 
 static const char *eddystone_url_prefix_subs[] = {
   "http://www.",
@@ -170,9 +166,6 @@ void setup()
   BLEDevice::init("MeBeacon");
 
   BLEDevice::setPower(ESP_PWR_LVL_N12);
-
-  // Create the BLE Server
-  // BLEServer *pServer = BLEDevice::createServer(); // <-- no longer required to instantiate BLEServer, less flash and ram usage
 
   pAdvertising = BLEDevice::getAdvertising();
 

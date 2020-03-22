@@ -13,9 +13,6 @@
 ***********************/
 
 #include <NimBLEDevice.h>
-#include <NimBLEUtils.h>
-#include <NimBLEScan.h>
-#include <NimBLEAdvertisedDevice.h>
 
 int scanTime = 5; //In seconds
 BLEScan* pBLEScan;

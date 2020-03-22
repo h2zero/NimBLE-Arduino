@@ -105,7 +105,7 @@ NimBLEScan::NimBLEScan() {
 
             // Examine our list of ignored addresses and stop processing if we don't want to see it or are already connected
             if(NimBLEDevice::isIgnored(advertisedAddress)) {
-                NIMBLE_LOGI(LOG_TAG, "Ignoring device address: %s", advertisedAddress.toString().c_str());
+                NIMBLE_LOGI(LOG_TAG, "Ignoring device: address: %s", advertisedAddress.toString().c_str());
                 return 0;
             }
             

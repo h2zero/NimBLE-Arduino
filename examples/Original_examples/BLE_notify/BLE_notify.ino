@@ -29,8 +29,6 @@
 #include <BLE2902.h>
 ***********************/
 #include <NimBLEDevice.h>
-#include <NimBLEServer.h>
-#include <NimBLEUtils.h>
 
 BLEServer* pServer = NULL;
 BLECharacteristic* pCharacteristic = NULL;
@@ -104,10 +102,15 @@ void setup() {
 
   // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
   // Create a BLE Descriptor
-  /******* New createDescriptor method ********
-   Add properties the same as characteristics now
+  /*********** New createDescriptor method ************   
+   NOTE: There is no need to create the 2902 descriptor 
+   as it will be created automatically if notifications 
+   or indications are enabled on a characteristic.
+   
    pCharacteristic->addDescriptor(new BLE2902());
-  ********************************************/
+  ****************************************************/
+  /** Add properties the same way as characteristics now **/
+  
   pCharacteristic->createDescriptor("2902" /** , PROPERTY_READ | PROPERTY_WRITE **/);
   // Start the service
   pService->start();

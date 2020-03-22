@@ -13,8 +13,6 @@
 ***********************/
 
 #include <NimBLEDevice.h>
-#include <NimBLEUtils.h>
-#include <NimBLEServer.h>
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
@@ -36,7 +34,7 @@ void setup() {
                                         BLECharacteristic::PROPERTY_WRITE  
                                         );
                             **********************************************/
-                                        PROPERTY_READ |
+                                        PROPERTY_READ_ENC |
                                         PROPERTY_WRITE
                                        );
 
