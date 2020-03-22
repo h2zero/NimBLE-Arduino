@@ -85,8 +85,8 @@ public:
     static void             setSecuityAuth(bool bonding, bool mitm, bool sc);
     static void             setSecuityAuth(uint8_t auth_req);
     static void             setSecurityIOCap(uint8_t iocap);
-    static void             setsScurityInitKey(uint8_t init_key);
-    static void             setsScurityRespKey(uint8_t init_key);
+    static void             setSecurityInitKey(uint8_t init_key);
+    static void             setSecurityRespKey(uint8_t init_key);
     static void             setSecurityPasskey(uint32_t pin);
     static uint32_t         getSecurityPasskey();
     static void             setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);

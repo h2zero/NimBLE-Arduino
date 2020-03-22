@@ -442,7 +442,7 @@ bool NimBLEDevice::getInitialized() {
  ** 0x04: BLE_SM_PAIR_KEY_DIST_SIGN
  ** 0x08: BLE_SM_PAIR_KEY_DIST_LINK
  */
-/*STATIC*/void NimBLEDevice::setsScurityInitKey(uint8_t init_key) {
+/*STATIC*/void NimBLEDevice::setSecurityInitKey(uint8_t init_key) {
     ble_hs_cfg.sm_our_key_dist = init_key;
 } // setsScurityInitKey
 
@@ -456,7 +456,7 @@ bool NimBLEDevice::getInitialized() {
  ** 0x04: BLE_SM_PAIR_KEY_DIST_SIGN
  ** 0x08: BLE_SM_PAIR_KEY_DIST_LINK
  */
-/*STATIC*/void NimBLEDevice::setsScurityRespKey(uint8_t init_key) {
+/*STATIC*/void NimBLEDevice::setSecurityRespKey(uint8_t init_key) {
     ble_hs_cfg.sm_their_key_dist = init_key;
 } // setsScurityRespKey
 

@@ -55,7 +55,7 @@ void NimBLESecurity::setCapability(esp_ble_io_cap_t iocap) {
  * @param key_size is value between 7 and 16
  */
 void NimBLESecurity::setInitEncryptionKey(uint8_t init_key) {
-    NimBLEDevice::setsScurityInitKey(init_key);
+    NimBLEDevice::setSecurityInitKey(init_key);
 } // setInitEncryptionKey
 
 
@@ -64,7 +64,7 @@ void NimBLESecurity::setInitEncryptionKey(uint8_t init_key) {
  * @param key_size is value between 7 and 16
  */
 void NimBLESecurity::setRespEncryptionKey(uint8_t resp_key) {
-    NimBLEDevice::setsScurityRespKey(resp_key);
+    NimBLEDevice::setSecurityRespKey(resp_key);
 } // setRespEncryptionKey
 
 
