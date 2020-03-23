@@ -66,7 +66,7 @@ uint32_t NimBLEEddystoneTLM::getTime() {
 std::string NimBLEEddystoneTLM::toString() {
   std::string out = "";
   uint32_t rawsec = ENDIAN_CHANGE_U32(m_eddystoneData.tmil);
-  char val[6];
+  char val[12];
 
   out += "Version "; // + std::string(m_eddystoneData.version);
   snprintf(val, sizeof(val), "%d", m_eddystoneData.version);
