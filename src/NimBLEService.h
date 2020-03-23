@@ -18,6 +18,7 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLEServer.h"
+#include "NimBLEDevice.h"
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
 #include "NimBLECharacteristic.h"
@@ -55,12 +56,12 @@ private:
 class NimBLEService {
 public:
 	NimBLECharacteristic* createCharacteristic(const char* uuid, 
-					    uint32_t properties = PROPERTY_READ | 
-											  PROPERTY_WRITE);
+					    uint32_t properties = NIMBLE_PROPERTY::READ | 
+											  NIMBLE_PROPERTY::WRITE);
 											  
 	NimBLECharacteristic* createCharacteristic(NimBLEUUID uuid,
-					    uint32_t properties = PROPERTY_READ | 
-											  PROPERTY_WRITE);
+					    uint32_t properties = NIMBLE_PROPERTY::READ | 
+											  NIMBLE_PROPERTY::WRITE);
 											  
 	void               dump();
 	NimBLECharacteristic* getCharacteristic(const char* uuid);

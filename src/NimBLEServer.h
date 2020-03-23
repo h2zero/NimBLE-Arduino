@@ -30,6 +30,7 @@
 class NimBLEService;
 class NimBLECharacteristic;
 class NimBLEServerCallbacks;
+
 /* TODO possibly refactor this struct */ 
 typedef struct {
     void *peer_device;      // peer device BLEClient or BLEServer - maybe its better to have 2 structures or union here

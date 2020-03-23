@@ -15,10 +15,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEDevice.h"
 #include "NimBLEServer.h"
 #include "NimBLE2902.h"
 #include "NimBLEUtils.h"
-#include "NimBLEDevice.h"
 #include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLEServer";
@@ -416,6 +416,7 @@ void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks) {
 	}
 } // setCallbacks
 
+
 /*
  * Remove service
  */
@@ -426,6 +427,8 @@ void BLEServer::removeService(BLEService* service) {
 	m_serviceMap.removeService(service);
 }
 */
+
+
 /**
  * @brief Start advertising.
  *

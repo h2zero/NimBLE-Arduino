@@ -15,7 +15,7 @@
 #define MAIN_NIMBLECHARACTERISTIC_H_
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
-
+/*
 #define PROPERTY_READ           BLE_GATT_CHR_F_READ 
 #define PROPERTY_READ_ENC       BLE_GATT_CHR_F_READ_ENC
 #define PROPERTY_READ_AUTHEN    BLE_GATT_CHR_F_READ_AUTHEN
@@ -28,7 +28,7 @@
 #define PROPERTY_BROADCAST      BLE_GATT_CHR_F_BROADCAST
 #define PROPERTY_NOTIFY         BLE_GATT_CHR_F_NOTIFY
 #define PROPERTY_INDICATE       BLE_GATT_CHR_F_INDICATE
-
+*/
 #include "NimBLEService.h"
 #include "NimBLEUUID.h"
 #include "NimBLEValue.h"
@@ -77,12 +77,12 @@ private:
 class NimBLECharacteristic {
 public:
 	NimBLEDescriptor* createDescriptor(const char* uuid, 
-						uint32_t properties = PROPERTY_READ | 
-											  PROPERTY_WRITE,
+						uint32_t properties = NIMBLE_PROPERTY::READ | 
+											  NIMBLE_PROPERTY::WRITE,
                                      uint16_t max_len = 100);
 	NimBLEDescriptor* createDescriptor(NimBLEUUID uuid,
-						uint32_t properties = PROPERTY_READ | 
-											  PROPERTY_WRITE,
+						uint32_t properties = NIMBLE_PROPERTY::READ | 
+											  NIMBLE_PROPERTY::WRITE,
                                      uint16_t max_len = 100);
 											  
 	NimBLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
@@ -131,9 +131,9 @@ private:
 //	friend class NimBLEDescriptor;
 //	friend class NimBLECharacteristicMap;
 
-	NimBLECharacteristic(const char* uuid, uint16_t properties = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE,
+	NimBLECharacteristic(const char* uuid, uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
 														NimBLEService* pService = nullptr);
-	NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties = BLE_GATT_CHR_PROP_READ | BLE_GATT_CHR_PROP_WRITE,
+	NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
 														NimBLEService* pService = nullptr);
 	virtual ~NimBLECharacteristic();
 
