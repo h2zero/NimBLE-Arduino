@@ -15,30 +15,33 @@
 #define MAIN_NIMBLECHARACTERISTIC_H_
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
-/*
-#define PROPERTY_READ           BLE_GATT_CHR_F_READ 
-#define PROPERTY_READ_ENC       BLE_GATT_CHR_F_READ_ENC
-#define PROPERTY_READ_AUTHEN    BLE_GATT_CHR_F_READ_AUTHEN
-#define PROPERTY_READ_AUTHOR    BLE_GATT_CHR_F_READ_AUTHOR 
-#define PROPERTY_WRITE          BLE_GATT_CHR_F_WRITE
-#define PROPERTY_WRITE_NR       BLE_GATT_CHR_F_WRITE_NO_RSP
-#define PROPERTY_WRITE_ENC      BLE_GATT_CHR_F_WRITE_ENC
-#define PROPERTY_WRITE_AUTHEN   BLE_GATT_CHR_F_WRITE_AUTHEN
-#define PROPERTY_WRITE_AUTHOR   BLE_GATT_CHR_F_WRITE_AUTHOR
-#define PROPERTY_BROADCAST      BLE_GATT_CHR_F_BROADCAST
-#define PROPERTY_NOTIFY         BLE_GATT_CHR_F_NOTIFY
-#define PROPERTY_INDICATE       BLE_GATT_CHR_F_INDICATE
-*/
-#include "NimBLEService.h"
-#include "NimBLEUUID.h"
-#include "NimBLEValue.h"
-#include "NimBLEDescriptor.h"
-#include "FreeRTOS.h"
 
 #include "host/ble_hs.h"
 
+typedef enum {
+    READ         =  BLE_GATT_CHR_F_READ, 
+    READ_ENC     =  BLE_GATT_CHR_F_READ_ENC,
+    READ_AUTHEN  =  BLE_GATT_CHR_F_READ_AUTHEN,
+    READ_AUTHOR  =  BLE_GATT_CHR_F_READ_AUTHOR, 
+    WRITE        =  BLE_GATT_CHR_F_WRITE,
+    WRITE_NR     =  BLE_GATT_CHR_F_WRITE_NO_RSP,
+    WRITE_ENC    =  BLE_GATT_CHR_F_WRITE_ENC,
+    WRITE_AUTHEN =  BLE_GATT_CHR_F_WRITE_AUTHEN,
+    WRITE_AUTHOR =  BLE_GATT_CHR_F_WRITE_AUTHOR,
+    BROADCAST    =  BLE_GATT_CHR_F_BROADCAST,
+    NOTIFY       =  BLE_GATT_CHR_F_NOTIFY,
+    INDICATE     =  BLE_GATT_CHR_F_INDICATE
+} NIMBLE_PROPERTY;
+
+#include "NimBLEService.h"
+#include "NimBLEDescriptor.h"
+#include "NimBLEUUID.h"
+#include "NimBLEValue.h"
+#include "FreeRTOS.h"
+
 #include <string>
 #include <map>
+
 
 class NimBLEService;
 class NimBLEDescriptor;

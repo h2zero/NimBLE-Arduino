@@ -104,13 +104,13 @@ void setup() {
 
   // Create a BLE Characteristic
   pTxCharacteristic = pService->createCharacteristic(
-										CHARACTERISTIC_UUID_TX,
-                                    /************** Defined Values now ************      
+                                        CHARACTERISTIC_UUID_TX,
+                                    /******* Enum Type NIMBLE_PROPERTY now *******      
                                         BLECharacteristic::PROPERTY_WRITE
                                         );
                                     **********************************************/  
-										PROPERTY_NOTIFY
-									);
+                                        NIMBLE_PROPERTY::WRITE
+                                       );
                                     
   /******* New createDescriptor method ********   
    NOTE: There is no need to create the 2902 descriptor 
@@ -120,16 +120,16 @@ void setup() {
   pCharacteristic->addDescriptor(new BLE2902());
   ********************************************/
   /** Add properties the same way as characteristics now **/
-  pTxCharacteristic->createDescriptor("2902" /** , PROPERTY_READ | PROPERTY_WRITE **/);                      
+  pTxCharacteristic->createDescriptor("2902" /** , NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE **/);                      
 
   BLECharacteristic * pRxCharacteristic = pService->createCharacteristic(
-											CHARACTERISTIC_UUID_RX,
-                                    /************** Defined Values now ************      
+                                            CHARACTERISTIC_UUID_RX,
+                                    /******* Enum Type NIMBLE_PROPERTY now *******       
                                             BLECharacteristic::PROPERTY_WRITE
                                             );
-                                    **********************************************/  
-											PROPERTY_WRITE
-										);
+                                    *********************************************/  
+                                            NIMBLE_PROPERTY::WRITE
+                                            );
 
   pRxCharacteristic->setCallbacks(new MyCallbacks());
 
@@ -147,8 +147,8 @@ void loop() {
         pTxCharacteristic->setValue(&txValue, 1);
         pTxCharacteristic->notify();
         txValue++;
-		delay(10); // bluetooth stack will go into congestion, if too many packets are sent
-	}
+        delay(10); // bluetooth stack will go into congestion, if too many packets are sent
+    }
 
     // disconnecting
     if (!deviceConnected && oldDeviceConnected) {
@@ -159,7 +159,7 @@ void loop() {
     }
     // connecting
     if (deviceConnected && !oldDeviceConnected) {
-		// do stuff here on connecting
+        // do stuff here on connecting
         oldDeviceConnected = deviceConnected;
     }
 }

@@ -15,10 +15,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEDevice.h"
 #include "NimBLEServer.h"
 #include "NimBLE2902.h"
 #include "NimBLEUtils.h"
+#include "NimBLEDevice.h"
 #include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLEServer";

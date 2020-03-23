@@ -17,8 +17,8 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEUUID.h"
 #include "NimBLECharacteristic.h"
+#include "NimBLEUUID.h"
 #include "FreeRTOS.h"
 
 #include <string>

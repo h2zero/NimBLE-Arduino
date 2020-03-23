@@ -17,23 +17,6 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "host/ble_gap.h"
-
-typedef enum {
-    READ         =  BLE_GATT_CHR_F_READ, 
-    READ_ENC     =  BLE_GATT_CHR_F_READ_ENC,
-    READ_AUTHEN  =  BLE_GATT_CHR_F_READ_AUTHEN,
-    READ_AUTHOR  =  BLE_GATT_CHR_F_READ_AUTHOR, 
-    WRITE        =  BLE_GATT_CHR_F_WRITE,
-    WRITE_NR     =  BLE_GATT_CHR_F_WRITE_NO_RSP,
-    WRITE_ENC    =  BLE_GATT_CHR_F_WRITE_ENC,
-    WRITE_AUTHEN =  BLE_GATT_CHR_F_WRITE_AUTHEN,
-    WRITE_AUTHOR =  BLE_GATT_CHR_F_WRITE_AUTHOR,
-    BROADCAST    =  BLE_GATT_CHR_F_BROADCAST,
-    NOTIFY       =  BLE_GATT_CHR_F_NOTIFY,
-    INDICATE     =  BLE_GATT_CHR_F_INDICATE
-} NIMBLE_PROPERTY;
-
 #include "NimbleScan.h"
 #include "NimBLEUtils.h"
 #include "NimBLEClient.h"

@@ -90,17 +90,17 @@ void setup() {
   // Create a BLE Characteristic
   pCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID,
-                /************** Defined Values now ************      
+                /******* Enum Type NIMBLE_PROPERTY now *******     
                       BLECharacteristic::PROPERTY_READ   |
                       BLECharacteristic::PROPERTY_WRITE  |
                       BLECharacteristic::PROPERTY_NOTIFY |
                       BLECharacteristic::PROPERTY_INDICATE
                     );
                 **********************************************/    
-                      PROPERTY_READ   |
-                      PROPERTY_WRITE  |
-                      PROPERTY_NOTIFY |
-                      PROPERTY_INDICATE
+                      NIMBLE_PROPERTY::READ   |
+                      NIMBLE_PROPERTY::WRITE  |
+                      NIMBLE_PROPERTY::NOTIFY |
+                      NIMBLE_PROPERTY::INDICATE
                     );
 
   // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
@@ -114,7 +114,7 @@ void setup() {
   ****************************************************/
   /** Add properties the same way as characteristics now **/
   
-  pCharacteristic->createDescriptor("2902" /** , PROPERTY_READ | PROPERTY_WRITE **/);
+  pCharacteristic->createDescriptor("2902" /** , NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE **/);
 
   // Start the service
   pService->start();

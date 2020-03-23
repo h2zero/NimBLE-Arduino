@@ -17,11 +17,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLECharacteristic.h"
 #include "NimBLEServer.h"
-#include "NimBLEDevice.h"
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
-#include "NimBLECharacteristic.h"
+
 
 class NimBLEServer;
 class NimBLECharacteristic;
