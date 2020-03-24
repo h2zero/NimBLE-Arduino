@@ -75,7 +75,7 @@ ble_sm_alg_xor_128(uint8_t *p, uint8_t *q, uint8_t *r)
     }
 }
 
-static int
+int
 ble_sm_alg_encrypt(uint8_t *key, uint8_t *plaintext, uint8_t *enc_data)
 {
     uint8_t tmp[16];

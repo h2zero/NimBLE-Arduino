@@ -20,9 +20,22 @@
 #include <string.h>
 #include "host/ble_hs_id.h"
 #include "ble_hs_priv.h"
+#include "ble_hs_resolv_priv.h"
 
 static uint8_t ble_hs_id_pub[6];
 static uint8_t ble_hs_id_rnd[6];
+
+bool
+ble_hs_is_rpa(uint8_t *addr, uint8_t addr_type)
+{
+    bool rc = 0;
+    /* According to spec v4.2, Vol 6, Part B, section 1.3.2.2, the two most
+     * significant bits of RPA shall be equal to 0 and 1 */
+    if (addr_type && ((addr[5] & 0xc0) == 0x40)) {
+        rc = 1;
+    }
+    return rc;
+}
 
 void
 ble_hs_id_set_pub(const uint8_t *pub_addr)
@@ -53,19 +66,76 @@ ble_hs_id_gen_rnd(int nrpa, ble_addr_t *out_addr)
     return 0;
 }
 
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+/**
+ * Sets the device's pseudo RPA address when 'Host based privacy' is in use.
+ * The address type (RPA) is inferred from the most-significant bits. The
+ * address is specified in host byte order (little-endian!).
+ *
+ * @param rnd_addr              The RPA address to set.
+ *
+ * @return                      0 on success;
+ *                              BLE_HS_EINVAL if the specified address is not a
+ *                                  resolvable private address.
+ *                              Other nonzero on error.
+ */
+int
+ble_hs_id_set_pseudo_rnd(const uint8_t *rnd_addr)
+{
+    uint8_t addr_type_byte;
+    int rc;
+    int i, rnd_part_sum = 0;
+
+    ble_hs_lock();
+
+    /* Make sure all bits of rnd_addr are neither one nor zero (3rd, 4th and
+     * 5th bytes of rnd_addr(RPA) are prand) Vol 6, Part B, section 1.3.2.2
+     * The two most significant bits of RPA shall be equal to 0 and 1 */
+    addr_type_byte = rnd_addr[5] & 0xc0;
+    for (i = 3; i < BLE_DEV_ADDR_LEN; i++) {
+        rnd_part_sum += *(rnd_addr + i);
+    }
+    rnd_part_sum -= addr_type_byte;
+
+    /* All ones in random part: 3*(0xFF) - 0x40 = 0x2BD  */
+    if ((addr_type_byte != 0x40) ||
+        (rnd_part_sum == 0) || (rnd_part_sum == 0x2BD)) {
+        rc = BLE_HS_EINVAL;
+        goto done;
+    }
+    /* set the RPA address as pseudo random address in controller */
+    rc = ble_hs_hci_util_set_random_addr(rnd_addr);
+    if (rc != 0) {
+        goto done;
+    }
+
+    memcpy(ble_hs_id_rnd, rnd_addr, BLE_DEV_ADDR_LEN);
+
+done:
+    ble_hs_unlock();
+    return rc;
+}
+#endif
+
 int
 ble_hs_id_set_rnd(const uint8_t *rnd_addr)
 {
     uint8_t addr_type_byte;
     int rc;
-    uint8_t all_zeros[BLE_DEV_ADDR_LEN] = {0}, all_ones[BLE_DEV_ADDR_LEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    int i, rnd_part_sum = 0;
 
     ble_hs_lock();
 
-    /* Make sure all bits of rnd_addr are neither one nor zero */
+    /* Make sure random part of rnd_addr is not all ones or zeros */
     addr_type_byte = rnd_addr[5] & 0xc0;
+    for (i = 0; i < BLE_DEV_ADDR_LEN; i++) {
+        rnd_part_sum += *(rnd_addr + i);
+    }
+    rnd_part_sum -= addr_type_byte;
+
+    /* All ones in random part: 5*(0xFF) + 0x3F = 0x53A  */
     if ((addr_type_byte != 0x00 && addr_type_byte != 0xc0) ||
-        !memcmp(rnd_addr, all_zeros, BLE_DEV_ADDR_LEN) || !memcmp(rnd_addr, all_ones, BLE_DEV_ADDR_LEN)) {
+        (rnd_part_sum == 0) || (rnd_part_sum == 0x53A)) {
         rc = BLE_HS_EINVAL;
         goto done;
     }

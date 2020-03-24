@@ -1,4 +1,6 @@
 /*
+ * Copyright 2020 Espressif Systems (Shanghai) PTE LTD
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,30 +19,22 @@
  * under the License.
  */
 
-#ifndef H_BLE_HS_PVCY_PRIV_
-#define H_BLE_HS_PVCY_PRIV_
-
-#include <inttypes.h>
+#include "host/ble_hs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern const uint8_t ble_hs_pvcy_default_irk[16];
-
-int ble_hs_pvcy_set_our_irk(const uint8_t *irk);
-int ble_hs_pvcy_our_irk(const uint8_t **out_irk);
-int ble_hs_pvcy_remove_entry(uint8_t addr_type, const uint8_t *addr);
-int ble_hs_pvcy_add_entry(const uint8_t *addr, uint8_t addrtype,
-                          const uint8_t *irk);
-int ble_hs_pvcy_ensure_started(void);
-int ble_hs_pvcy_set_mode(const ble_addr_t *addr, uint8_t priv_mode);
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
-bool ble_hs_pvcy_enabled(void);
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
+/* Called to configure local(own) privacy (RPA) when using host based privacy. In
+ * Host based privacy as controller is not aware of RPA, we do it via
+ * 'BLE_ADDR_RANDOM' addr_type route.
+ *
+ * @param                enable RPA when enable is not 0
+ *                       disable RPA otherwise
+ *
+ * @return               return 0 when successful.
+ *                       return appropriate error code otherwise
+ */
+int ble_hs_pvcy_rpa_config(uint8_t enable);
 #endif

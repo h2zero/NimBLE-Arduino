@@ -50,6 +50,9 @@ static inline int ble_store_config_persist_peer_secs(void)  { return 0; }
 static inline int ble_store_config_persist_cccds(void)      { return 0; }
 static inline void ble_store_config_conf_init(void)         { }
 
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+static inline int ble_store_persist_peer_records(void)      { return 0; }
+#endif
 #endif /* MYNEWT_VAL(BLE_STORE_CONFIG_PERSIST) */
 
 #ifdef __cplusplus

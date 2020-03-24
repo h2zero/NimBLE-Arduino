@@ -23,6 +23,7 @@
 #include "os/os.h"
 #include "host/ble_hs_id.h"
 #include "ble_hs_priv.h"
+#include "ble_hs_resolv_priv.h"
 
 /** At least three channels required per connection (sig, att, sm). */
 #define BLE_HS_CONN_MIN_CHANS       3
@@ -406,6 +407,35 @@ ble_hs_conn_addrs(const struct ble_hs_conn *conn,
     /* Determine peer address information. */
     addrs->peer_id_addr = conn->bhc_peer_addr;
     addrs->peer_ota_addr = conn->bhc_peer_addr;
+
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+    /* RPA: Override peer address information. */
+    struct ble_hs_resolv_entry *rl = NULL;
+
+    ble_addr_t bhc_peer_addr;
+    bhc_peer_addr.type = conn->bhc_peer_addr.type;
+    memcpy(bhc_peer_addr.val, conn->bhc_peer_addr.val, BLE_DEV_ADDR_LEN);
+    if (ble_host_rpa_enabled()) {
+
+        uint8_t *local_id = NULL;
+        ble_hs_id_addr(BLE_ADDR_PUBLIC, (const uint8_t **) &local_id, NULL);
+
+        rl = ble_hs_resolv_list_find(bhc_peer_addr.val);
+        if (rl != NULL) {
+            memcpy(addrs->peer_ota_addr.val, addrs->peer_id_addr.val, BLE_DEV_ADDR_LEN);
+            memcpy(addrs->peer_id_addr.val, rl->rl_identity_addr, BLE_DEV_ADDR_LEN);
+
+            addrs->peer_id_addr.type = rl->rl_addr_type;
+
+            /* RL is present: populate our id addr with public ID */
+            memcpy(addrs->our_id_addr.val, local_id, BLE_DEV_ADDR_LEN);
+            addrs->our_id_addr.type = BLE_ADDR_PUBLIC;
+            BLE_HS_LOG(DEBUG, "Revised our id addr:\n");
+            ble_hs_log_flat_buf(our_id_addr_val, BLE_DEV_ADDR_LEN);
+            BLE_HS_LOG(DEBUG, "\n");
+        }
+    }
+#endif
     switch (conn->bhc_peer_addr.type) {
     case BLE_ADDR_PUBLIC:
     case BLE_ADDR_RANDOM:

@@ -27,9 +27,10 @@
 extern "C" {
 #endif
 
-#define BLE_STORE_OBJ_TYPE_OUR_SEC      1
-#define BLE_STORE_OBJ_TYPE_PEER_SEC     2
-#define BLE_STORE_OBJ_TYPE_CCCD         3
+#define BLE_STORE_OBJ_TYPE_OUR_SEC           1
+#define BLE_STORE_OBJ_TYPE_PEER_SEC          2
+#define BLE_STORE_OBJ_TYPE_CCCD              3
+#define BLE_STORE_OBJ_TYPE_PEER_DEV_REC      4
 
 /** Failed to persist record; insufficient storage capacity. */
 #define BLE_STORE_EVENT_OVERFLOW        1
