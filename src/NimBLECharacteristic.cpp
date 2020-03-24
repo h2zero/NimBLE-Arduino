@@ -308,9 +308,6 @@ void NimBLECharacteristic::notify(bool is_notification) {
     m_pCallbacks->onNotify(this);
     
     int rc = 0;
-    //os_mbuf *om;
-    //size_t length = m_value.getValue().length();
-    //uint8_t* data = (uint8_t*)m_value.getValue().data();
     NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID((uint16_t)0x2902);
     
     for (auto it = p2902->m_subscribedMap.cbegin(); it != p2902->m_subscribedMap.cend(); ++it) {
@@ -368,7 +365,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
             rc = m_semaphoreConfEvt.wait();
             
             if(rc == BLE_HS_ETIMEOUT) {
-                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT, 0);
+                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT, rc);
             } else if(rc == BLE_HS_EDONE) {
                 m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE, rc);
             } else {
@@ -383,7 +380,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
             }
         }
 	}
-    
+
 	NIMBLE_LOGD(LOG_TAG, "<< notify");
 } // Notify
 

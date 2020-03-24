@@ -1,5 +1,7 @@
 
-/** NimBLE_Server example
+/** NimBLE_Server Demo:
+ *
+ *  Demonstrates many of the available features of the NimBLE server library.
  *  
  *  Created: on March 22 2020
  *      Author: H2zero
@@ -11,21 +13,25 @@
 #include <NimBLE2902.h>
 
 
-NimBLEServer* pServer;
-
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */  
 class ServerCallbacks: public NimBLEServerCallbacks {
   void onConnect(NimBLEServer* pServer) {
     Serial.println("Client connected");
-    Serial.println("Multi-connect support advertising");
+    Serial.println("Multi-connect support: start advertising");
     NimBLEDevice::startAdvertising();
   };
-
+ /** Alternative onConnect() method to extract details of the connection. 
+  *  See: src/ble_gap.h for the details of the ble_gap_conn_desc struct.
+  */  
   void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
     Serial.print("Client address: ");
     Serial.println(NimBLEAddress(desc->peer_ota_addr).toString().c_str());
-    //pServer->updateConnParams( desc->conn_handle, 0x10, 0x10, 0, 400 );
+  /** We can use the connection handle here to ask for different connection parameters.
+   *  Args: connection handle, min connection interval, max connection interval
+   *  latency, supervision timeout.
+   */
+    pServer->updateConnParams(desc->conn_handle, 24, 48, 0, 800);
   };
   void onDisconnect(NimBLEServer* pServer) {
     Serial.println("Client disconnected - starting advertising");
@@ -78,12 +84,16 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
     Serial.println("Sending notification to client");
   };
   
+  
+  /** The status returned in s is defined in NimBLECharacteristic.h.
+   *  The value returned in code is the NimBLE host return code.
+   */
   void onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code){
     Serial.print("Notification/Indication status code: ");
     Serial.print(s);
     Serial.print(", return code: ");
-    Serial.println(code);
-  }
+    Serial.println(NimBLEUtils::returnCodeToString(code));
+  };
 };
     
     
@@ -92,6 +102,7 @@ class DescriptorCallbacks : public NimBLEDescriptorCallbacks
   void onWrite(NimBLEDescriptor* pDescriptor)
   {
     if(pDescriptor->getUUID().equals(NimBLEUUID("2902"))){
+      /** Cast to NimBLE2902 to use the class specific functions. **/
       NimBLE2902* p2902 = (NimBLE2902*)pDescriptor;
 	  if(p2902->getNotifications())
 	  {
@@ -111,25 +122,37 @@ class DescriptorCallbacks : public NimBLEDescriptorCallbacks
   
   void onRead(NimBLEDescriptor* pDescriptor)
   {
-    Serial.println("Descriptor onread()");
+    Serial.print(pDescriptor->getUUID().toString().c_str());
+    Serial.println(" Descriptor read");
   };
 };
 
+
+/** Define callback instances globally to use for multiple Charateristics \ Descriptors **/ 
 static DescriptorCallbacks dscCallbacks;
 static CharacteristicCallbacks chrCallbacks;
+
+static NimBLEServer* pServer;
 
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting NimBLE Server");
 
   NimBLEDevice::init("NimBLE-Arduino"); // sets device name
+  
+  /** Uncomment this if you encounter watchdog timer resets after pairing with the device.
+   *  Known bug in the NimBLE host that still needs to be resolved.
+   */
+  //ble_store_clear();
+  
   /** Set the IO capabilities of the device, each option will trigger a different pairing method.
    *  BLE_HS_IO_DISPLAY_ONLY    - Passkey pairing
    *  BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing
-   *  BLE_HS_IO_NO_INPUT_OUTPUT - The DEFAULT setting - just works pairing
+   *  BLE_HS_IO_NO_INPUT_OUTPUT - DEFAULT setting - just works pairing
    */
   //NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY); // use passkey
   //NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_YESNO); //use numeric comparison
+  
   /** 2 different ways to set security - both calls achieve the same result.
    *  no bonding, no man in the middle protection, secure connections. 
    *  These are the default values, only shown here for demonstration.   
@@ -157,7 +180,7 @@ void setup() {
    *  either of those uuid's it will create the associated class with the correct properties
    *  and sizes. However we must cast the returned reference to the correct type as the method
    *  only returns a pointer to the base NimBLEDescriptor class.
-  **/
+   */
   NimBLE2904* pBeef2904 = (NimBLE2904*)pBeefCharacteristic->createDescriptor("2904"); 
   pBeef2904->setFormat(NimBLE2904::FORMAT_UTF8);
   pBeef2904->setCallbacks(&dscCallbacks);
@@ -189,23 +212,30 @@ void setup() {
    *  notification or indication properties will have one created autmatically.
    *  Manually creating it is only useful if you wish to handle callback functions
    *  as shown here. Otherwise this can be removed without loss of functionality.
-  **/
+   */
   NimBLE2902* pFood2902 = (NimBLE2902*)pFoodCharacteristic->createDescriptor("2902"); 
   pFood2902->setCallbacks(&dscCallbacks);
-      
+  
+  /** Start the services when finished creating all Characteristics and Descriptors **/  
   pDeadService->start();
   pBaadService->start();
   
   NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
+  /** Add the services to the advertisment data **/
   pAdvertising->addServiceUUID(pDeadService->getUUID());
   pAdvertising->addServiceUUID(pBaadService->getUUID());
+  /** If your device is battery powered you may consider setting scan response
+   *  to false as it will extend battery life at the expense of less data sent.
+   */
   pAdvertising->setScanResponse(true);
   pAdvertising->start();
   
   Serial.println("Advertising Started");
 }
 
+
 void loop() {
+  /** Do your thing here, this just spams notifications to all connected clients */
   if(pServer->getConnectedCount()) {
     NimBLEService* pSvc = pServer->getServiceByUUID("BAAD");
     if(pSvc) {

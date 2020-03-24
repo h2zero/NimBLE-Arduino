@@ -79,6 +79,8 @@ int NimBLEUtils::checkConnParams(ble_gap_conn_params* params) {
 
 const char* NimBLEUtils::returnCodeToString(int rc) {
     switch(rc) {
+        case 0:
+            return "SUCCESS";
         case BLE_HS_EAGAIN:
             return "Temporary failure; try again.";
         case BLE_HS_EALREADY:
