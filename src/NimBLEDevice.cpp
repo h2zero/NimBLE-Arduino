@@ -168,6 +168,21 @@ void NimBLEDevice::stopAdvertising() {
 
 
 /**
+ * @brief Get a reference to a client by connection ID.
+ * @return A reference pointer to the client with the spcified connection ID.
+ */
+/* STATIC */NimBLEClient* NimBLEDevice::getClientByID(uint16_t conn_id) {
+    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
+        if((*it)->getConnId() == conn_id) {
+            return (*it);
+        }
+    }
+    assert(0);
+    return nullptr;
+} // getClientByID
+
+
+/**
  * @brief Set the transmission power.
  * The power level can be one of:
  * *   ESP_PWR_LVL_N12 = 0,                !< Corresponding to -12dbm 

@@ -98,7 +98,7 @@ public:
     static NimBLEAdvertising* getAdvertising();
 	static void		   		startAdvertising();
 	static void		   		stopAdvertising();
-    
+    static NimBLEClient*    getClientByID(uint16_t conn_id);
     static std::list<NimBLEClient*>* getClientList(); 
         
 private:
