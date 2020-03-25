@@ -603,9 +603,7 @@ uint16_t NimBLEClient::getMTU() {
             client->m_semaphoreSearchCmplEvt.give(1);
             client->m_semeaphoreSecEvt.give(1);
             
-            //if (client->m_pClientCallbacks != nullptr) {
             client->m_pClientCallbacks->onDisconnect(client);
-            //}
             
             //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
             
@@ -630,7 +628,7 @@ uint16_t NimBLEClient::getMTU() {
             
             if (event->connect.status == 0) {
                 // Connection successfully established.
-                NIMBLE_LOGI(LOG_TAG, "\nConnection established");
+                NIMBLE_LOGI(LOG_TAG, "Connection established");
                 
                 client->m_conn_id = event->connect.conn_handle;
                 
@@ -640,20 +638,19 @@ uint16_t NimBLEClient::getMTU() {
             //  MODLOG_DFLT(INFO, "\n");
 
                 client->m_isConnected = true;
-                
-                //if (client->m_pClientCallbacks != nullptr) {
+
                 client->m_pClientCallbacks->onConnect(client);
-                //}
                 
                 // Incase of a multiconnecting device we ignore this device when scanning since we are already connected to it
                 NimBLEDevice::addIgnored(client->m_peerAddress);
-                client->m_semaphoreOpenEvt.give(0);
-                
+
                 rc = ble_gattc_exchange_mtu(client->m_conn_id, NULL,NULL);
                 if(rc != 0) {
                     NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",rc,
                                             NimBLEUtils::returnCodeToString(rc));
                 }
+				
+				client->m_semaphoreOpenEvt.give(0);
 
             } else {
                 // Connection attempt failed
@@ -662,7 +659,7 @@ uint16_t NimBLEClient::getMTU() {
                 client->m_semaphoreOpenEvt.give(event->connect.status);
             }
 
-            return 0;
+            return event->connect.status;
         } // BLE_GAP_EVENT_CONNECT
 
         case BLE_GAP_EVENT_NOTIFY_RX: {
