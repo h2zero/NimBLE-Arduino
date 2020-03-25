@@ -5300,8 +5300,12 @@ ble_gap_enc_event(uint16_t conn_handle, int status, int security_restored)
 
     ble_gap_event_listener_call(&event);
     ble_gap_call_conn_event_cb(&event, conn_handle);
-
-    if (status == 0) {
+/* H2zero mod
+   If bonding is not enabled don't store cccd data
+   if (status == 0) {
+*/
+    if (status == 0 && ble_hs_cfg.sm_bonding) {
+/* End mod */
         if (security_restored) {
             ble_gatts_bonding_restored(conn_handle);
         } else {

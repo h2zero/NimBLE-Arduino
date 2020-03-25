@@ -140,11 +140,6 @@ void setup() {
 
   NimBLEDevice::init("NimBLE-Arduino"); // sets device name
   
-  /** Uncomment this if you encounter watchdog timer resets after pairing with the device.
-   *  Known bug in the NimBLE host that still needs to be resolved.
-   */
-  //ble_store_clear();
-  
   /** Set the IO capabilities of the device, each option will trigger a different pairing method.
    *  BLE_HS_IO_DISPLAY_ONLY    - Passkey pairing
    *  BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing
