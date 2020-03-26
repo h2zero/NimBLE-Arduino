@@ -89,7 +89,7 @@ int NimBLERemoteDescriptor::onReadCB(uint16_t conn_handle,
         return 0;
     }
     
-    NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
+    NIMBLE_LOGD(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
     
     if (error->status == 0) {       
         desc->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
@@ -209,7 +209,7 @@ int NimBLERemoteDescriptor::onWriteCB(uint16_t conn_handle,
         return 0;
     }
     
-    NIMBLE_LOGI(LOG_TAG, "Write complete; status=%d conn_handle=%d", error->status, conn_handle);
+    NIMBLE_LOGD(LOG_TAG, "Write complete; status=%d conn_handle=%d", error->status, conn_handle);
     
     if (error->status == 0) {       
         descriptor->m_semaphoreDescWrite.give(0);

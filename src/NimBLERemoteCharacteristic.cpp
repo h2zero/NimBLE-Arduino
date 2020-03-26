@@ -160,8 +160,6 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
         }
         case BLE_HS_EDONE:{
             /* All descriptors in this characteristic discovered; */
-
-            NIMBLE_LOGD(LOG_TAG,"Giving search Descriptor semaphore - completed");
             characteristic->m_semaphoreGetDescEvt.give(0);
             rc = 0;
             break;
@@ -173,7 +171,6 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
     if (rc != 0) {
         /* Error; abort discovery. */
         // pass non-zero to semaphore on error to indicate an error finding descriptors
-        NIMBLE_LOGD(LOG_TAG,"Giving search Descriptor semaphore - failed");
         characteristic->m_semaphoreGetDescEvt.give(1);
     }
     NIMBLE_LOGD(LOG_TAG,"<< Descriptor Discovered. status: %d", rc);

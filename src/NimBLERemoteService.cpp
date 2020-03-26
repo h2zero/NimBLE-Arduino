@@ -116,11 +116,9 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
             break;
         }
         case BLE_HS_EDONE:{
-            /* All characteristics in this service discovered; start discovering
-            * characteristics in the next service.
-            */
-
-            NIMBLE_LOGD(LOG_TAG,"Giving search Characteristic semaphore - completed");
+            /** All characteristics in this service discovered; start discovering
+             *  characteristics in the next service.
+             */
             service->m_semaphoreGetCharEvt.give(0);
             rc = 0;
             break;
@@ -170,7 +168,7 @@ bool NimBLERemoteService::retrieveCharacteristics() {
     m_haveCharacteristics = (m_semaphoreGetCharEvt.wait("retrieveCharacteristics") == 0);
     if(m_haveCharacteristics){
         uint16_t endHdl = 0xFFFF;
-        NIMBLE_LOGI(LOG_TAG, "Found %d Characteristics", m_characteristicMapByHandle.size());
+        NIMBLE_LOGD(LOG_TAG, "Found %d Characteristics", m_characteristicMapByHandle.size());
         for (auto it = m_characteristicMapByHandle.cbegin(); it != m_characteristicMapByHandle.cend(); ++it) {
             NIMBLE_LOGD(LOG_TAG, "Found UUID: %s Handle: %d Def Handle: %d", (*it).second->getUUID().toString().c_str(), (*it).second->getHandle(), (*it).second->getDefHandle());
             // The descriptor handle is between this characteristic val_handle and the next ones def_handle
@@ -212,8 +210,6 @@ bool NimBLERemoteService::retrieveCharacteristics() {
  * @return A map of all the characteristics of this service.
  */
 std::map<std::string, NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics() {
-    NIMBLE_LOGD(LOG_TAG, "getCharacteristics() for service: %s", getUUID().toString().c_str());
-
     return &m_characteristicMap;
 } // getCharacteristics
 
@@ -223,8 +219,6 @@ std::map<std::string, NimBLERemoteCharacteristic*>* NimBLERemoteService::getChar
  * @return A map of all the characteristics of this service.
  */
 std::map<uint16_t, NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristicsByHandle() {
-    NIMBLE_LOGD(LOG_TAG, " getCharacteristicsByHandle() for service: %s", getUUID().toString().c_str());
-
     return &m_characteristicMapByHandle;
 } // getCharacteristicsByHandle
 
@@ -311,10 +305,6 @@ bool NimBLERemoteService::setValue(NimBLEUUID characteristicUuid, std::string va
  * @return N/A.
  */
 void NimBLERemoteService::removeCharacteristics() {
-/*  for (auto &myPair : m_characteristicMap) {
-       delete myPair.second;
-    }
-*/
     m_characteristicMap.clear();   // Clear the map
     
     for (auto &myPair : m_characteristicMapByHandle) {

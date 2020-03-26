@@ -153,11 +153,11 @@ NimBLEScan::NimBLEScan() {
                     
             pScan->m_stopped = true;
 
-            pScan->m_semaphoreScanEnd.give();
             if (pScan->m_scanCompleteCB != nullptr) {
                 pScan->m_scanCompleteCB(pScan->m_scanResults);
             }
             
+            pScan->m_semaphoreScanEnd.give();   
             return 0;
         }
 

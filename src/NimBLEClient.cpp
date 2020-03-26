@@ -143,7 +143,7 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
     }
 
     if(refreshServices) {
-        NIMBLE_LOGE(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
+        NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
         clearServices();
     }
     
@@ -154,8 +154,9 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
     
     m_semaphoreOpenEvt.take("connect");
     
-    /* Try to connect the the advertiser.  Allow 30 seconds (30000 ms) for
-     * timeout. Loop on BLE_HS_EBUSY if the scan hasn't stopped yet.
+    /** Try to connect the the advertiser.  Allow 30 seconds (30000 ms) for
+     *  timeout (default value of m_connectTimeout). 
+     *  Loop on BLE_HS_EBUSY if the scan hasn't stopped yet.
      */
     do{
         rc = ble_gap_connect(BLE_OWN_ADDR_PUBLIC, &peerAddrt, m_connectTimeout, m_pConnParams,
@@ -399,7 +400,7 @@ std::map<std::string, NimBLERemoteService*>* NimBLEClient::getServices() {
  * @return true on success otherwise false if an error occurred
  */ 
 bool NimBLEClient::retrieveServices() {
-/*
+/**
  * Design
  * ------
  * We invoke ble_gattc_disc_all_svcs.  This will request a list of the services exposed by the
@@ -407,7 +408,6 @@ bool NimBLEClient::retrieveServices() {
  */
  
     NIMBLE_LOGD(LOG_TAG, ">> retrieveServices");
-    //clearServices(); // Clear any services that may exist.
     
     if(!m_isConnected){
         NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve services -aborting");
@@ -430,10 +430,8 @@ bool NimBLEClient::retrieveServices() {
     m_haveServices = (m_semaphoreSearchCmplEvt.wait("retrieveServices") == 0);
     if(m_haveServices){
         for (auto &myPair : m_servicesMap) {
-            // if we were disconnected try to recover gracefully and release all resources
             if(!m_isConnected || !myPair.second->retrieveCharacteristics()) {
                 NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve characteristics -aborting");
-                //clearServices();
                 return false;
             }
         }
@@ -442,9 +440,7 @@ bool NimBLEClient::retrieveServices() {
         return true;
     }
     else {
-        // if there was an error make sure we release any resources
         NIMBLE_LOGE(LOG_TAG, "Could not retrieve services");
-        //clearServices();
         return false;
     }
 } // getServices
@@ -570,7 +566,7 @@ uint16_t NimBLEClient::getMTU() {
     //struct ble_hs_adv_fields fields;
     int rc;
 
-    NIMBLE_LOGI(LOG_TAG, "Got Client event %s", NimBLEUtils::gapEventToString(event->type));
+    NIMBLE_LOGD(LOG_TAG, "Got Client event %s", NimBLEUtils::gapEventToString(event->type));
 
     // Execute handler code based on the type of event received.
     switch(event->type) {
@@ -598,20 +594,21 @@ uint16_t NimBLEClient::getMTU() {
                     break;
             }
     */
-    
+            client->m_isConnected = false;
+            client->m_waitingToConnect=false;
+            
+            //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
+            
+
+            
+            // Indicate a non-success return value to any semaphores waiting 
             client->m_semaphoreOpenEvt.give(1);
             client->m_semaphoreSearchCmplEvt.give(1);
             client->m_semeaphoreSecEvt.give(1);
             
-            client->m_pClientCallbacks->onDisconnect(client);
-            
-            //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
-            
-            // Remove the device from ignore list so we can scan it again
+            // Remove the device from ignore list so we will scan it again
             NimBLEDevice::removeIgnored(client->m_peerAddress);
-            
-            client->m_isConnected = false;
-            client->m_waitingToConnect=false;
+            client->m_pClientCallbacks->onDisconnect(client);
             
             return 0;
         } // BLE_GAP_EVENT_DISCONNECT
@@ -654,12 +651,13 @@ uint16_t NimBLEClient::getMTU() {
 
             } else {
                 // Connection attempt failed
-                NIMBLE_LOGE(LOG_TAG, "Error: Connection failed; status=%d",
-                            event->connect.status);
+                NIMBLE_LOGE(LOG_TAG, "Error: Connection failed; status=%d %s",
+                            event->connect.status,
+                            NimBLEUtils::returnCodeToString(event->connect.status));
                 client->m_semaphoreOpenEvt.give(event->connect.status);
             }
 
-            return event->connect.status;
+            return 0;
         } // BLE_GAP_EVENT_CONNECT
 
         case BLE_GAP_EVENT_NOTIFY_RX: {

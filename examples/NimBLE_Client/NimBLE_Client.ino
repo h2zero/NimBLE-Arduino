@@ -141,7 +141,7 @@ void loop (){
 	
 	if(!pClient) {
 		if(clientCount >= 3) {
-			Serial.println("Max clients reached - no connections available");
+			Serial.println("Max clients reached - no more connections available");
 			return;
 		}
 		
