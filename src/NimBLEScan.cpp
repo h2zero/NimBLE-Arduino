@@ -121,6 +121,8 @@ NimBLEScan::NimBLEScan() {
                 advertisedDevice = new NimBLEAdvertisedDevice();
                 advertisedDevice->setAddressType(event->disc.addr.type);
                 advertisedDevice->setAddress(advertisedAddress);
+                //NIMBLE_LOGE(LOG_TAG, "advertisement type: %d, %s",event->disc.event_type, NimBLEUtils::advTypeToString(event->disc.event_type));
+                advertisedDevice->setAdvType(event->disc.event_type);
                 pScan->m_scanResults.m_advertisedDevicesMap.insert(std::pair<std::string, NimBLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
                 NIMBLE_LOGI(LOG_TAG, "NEW DEVICE FOUND: %s", advertisedAddress.toString().c_str());
             }
@@ -128,8 +130,6 @@ NimBLEScan::NimBLEScan() {
                 NIMBLE_LOGI(LOG_TAG, "UPDATING PREVIOUSLY FOUND DEVICE: %s", advertisedAddress.toString().c_str());
             }
             advertisedDevice->setRSSI(event->disc.rssi); 
-        //    NIMBLE_LOGI(LOG_TAG, "advertisement type: %d, %s",advType, NimBLEUtils::advTypeToString(event->disc.event_type));
-            advertisedDevice->setAdvType(event->disc.event_type);
             advertisedDevice->parseAdvertisement(&fields);
             advertisedDevice->setScan(pScan);
             advertisedDevice->setAdvertisementResult(event->disc.data, event->disc.length_data);
@@ -137,10 +137,10 @@ NimBLEScan::NimBLEScan() {
             if (pScan->m_pAdvertisedDeviceCallbacks) {
                 // If not active scanning report the result to the listener.
                 if(pScan->m_scan_params.passive) {
-                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                    pScan->m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
                 // Otherwise wait for the scan response so we can report all of the data at once.
                 } else if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
-                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                    pScan->m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
                 }
                 //m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
             }
@@ -151,12 +151,11 @@ NimBLEScan::NimBLEScan() {
             NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d",
                     event->disc_complete.reason);
                     
-            pScan->m_stopped = true;
-
             if (pScan->m_scanCompleteCB != nullptr) {
                 pScan->m_scanCompleteCB(pScan->m_scanResults);
             }
             
+            pScan->m_stopped = true;
             pScan->m_semaphoreScanEnd.give();   
             return 0;
         }
@@ -221,25 +220,20 @@ void NimBLEScan::setWindow(uint16_t windowMSecs) {
 bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue) {
     NIMBLE_LOGD(LOG_TAG, ">> start(duration=%d)", duration);
 
-    // If we are already scanning don't start again or we will get stuck on the semaphore.
-    if(!m_stopped) {
-        NIMBLE_LOGE(LOG_TAG, "Scan already in progress");
-        return false;
-    }
-    
-    //  if we are connecting to devices that are advertising even after being connected, multiconnecting peripherals
-    //  then we should not clear map or we will connect the same device few times
-    if(!is_continue) {
-        clearResults();
-    }
-    
     // If Host is not synced we cannot start scanning.
     if(!NimBLEDevice::m_synced) {
         NIMBLE_LOGE(LOG_TAG, "Host reset, wait for sync.");
         return false;
     }
     
+    // If we are already scanning don't start again or we will get stuck on the semaphore.
+    if(!m_stopped) {
+        NIMBLE_LOGE(LOG_TAG, "Scan already in progress");
+        return false;
+    }
+    
     m_semaphoreScanEnd.take("start");
+        
     // Save the callback to be invoked when the scan completes.
     m_scanCompleteCB = scanCompleteCB;                  
     
@@ -251,9 +245,16 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
         duration = duration*1000; // convert duration to milliseconds
     }
     
+    //  if we are connecting to devices that are advertising even after being connected, multiconnecting peripherals
+    //  then we should not clear map or we will connect the same device few times
+    if(!is_continue) {
+        clearResults();
+    }
+    
     int rc = ble_gap_disc(m_own_addr_type, duration, &m_scan_params, NimBLEScan::handleGapEvent, this);
     if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "Error initiating GAP discovery procedure; rc=%d\n", rc);
+        NIMBLE_LOGE(LOG_TAG, "Error initiating GAP discovery procedure; rc=%d, %s",
+                                        rc, NimBLEUtils::returnCodeToString(rc));
         m_semaphoreScanEnd.give();
         return false;
     }

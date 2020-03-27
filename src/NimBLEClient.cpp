@@ -121,9 +121,11 @@ void NimBLEClient::onHostReset() {
  * Add overloaded function to ease connect to peer device with not public address
  */
 bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices) {
-    NimBLEAddress address =  device->getAddress();
+    NimBLEAddress address(device->getAddress());
     uint8_t type = device->getAddressType();
-    return connect(address, type, refreshServices);
+    bool ret = connect(address, type, refreshServices);
+    delete device;
+    return ret; //connect(address, type, refreshServices);
 }
 
 
@@ -135,19 +137,14 @@ bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices)
 bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServices) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
     
-    int rc = 0;
-    
     if(!NimBLEDevice::m_synced) {
         NIMBLE_LOGE(LOG_TAG, "Host reset, wait for sync.");
         return false;
     }
-
-    if(refreshServices) {
-        NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
-        clearServices();
-    }
     
+    int rc = 0;
     m_peerAddress = address;
+    
     ble_addr_t peerAddrt;
     memcpy(&peerAddrt.val, address.getNative(),6);
     peerAddrt.type = type;
@@ -165,8 +162,11 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
                          
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Error: Failed to connect to device; addr_type=%d "
-                    "addr=%s",
-                    type, address.toString().c_str());
+                    "addr=%s, rc=%d; %s",
+                    type, 
+                    m_peerAddress.toString().c_str(),
+                    rc, NimBLEUtils::returnCodeToString(rc));
+                    
         m_semaphoreOpenEvt.give();
         m_waitingToConnect = false;
         return false;
@@ -179,7 +179,14 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
     if(rc != 0){
         return false;
     }
-
+    
+    if(refreshServices) {
+        NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
+        clearServices();
+    }
+    
+    taskYIELD(); // Let any waiting tasks finish before we get services / return
+    
     if (!m_haveServices) {
         if (!retrieveServices()) {
             // error getting services, make sure we disconnect and release any resources before returning
@@ -229,6 +236,7 @@ int NimBLEClient::disconnect(uint8_t reason) {
     NIMBLE_LOGD(LOG_TAG, ">> disconnect()");
     int rc = 0;
     if(m_isConnected){
+        m_isConnected = false; // flag the disconnect now so no calls are performed after
         rc = ble_gap_terminate(m_conn_id, reason);
         if(rc != 0){
             NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
@@ -583,24 +591,23 @@ uint16_t NimBLEClient::getMTU() {
             //print_conn_desc(&event->disconnect.conn);
             //MODLOG_DFLT(INFO, "\n");
 
-    /*      
+          
             switch(event->disconnect.reason) {
                 case BLE_HS_ETIMEOUT_HCI:
                 case BLE_HS_EOS:
                 case BLE_HS_ECONTROLLER:
                 case BLE_HS_ENOTSYNCED:
+                    NIMBLE_LOGE(LOG_TAG, "Disconnect - host reset, rc=%d", event->disconnect.reason);
                     break;
                 default: 
                     break;
             }
-    */
+    
             client->m_isConnected = false;
             client->m_waitingToConnect=false;
             
             //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
-            
-
-            
+             
             // Indicate a non-success return value to any semaphores waiting 
             client->m_semaphoreOpenEvt.give(1);
             client->m_semaphoreSearchCmplEvt.give(1);
@@ -645,9 +652,10 @@ uint16_t NimBLEClient::getMTU() {
                 if(rc != 0) {
                     NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",rc,
                                             NimBLEUtils::returnCodeToString(rc));
+                    client->m_semaphoreOpenEvt.give(rc);
+                } else {
+                    client->m_semaphoreOpenEvt.give(0);
                 }
-				
-				client->m_semaphoreOpenEvt.give(0);
 
             } else {
                 // Connection attempt failed

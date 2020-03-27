@@ -47,8 +47,8 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
 	void onAuthenticationComplete(ble_gap_conn_desc* desc){
 		if(!desc->sec_state.encrypted) {
-            NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
             Serial.println("Encrypt connection failed - disconnecting");
+            NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
             return;
         }
 	};
@@ -56,19 +56,20 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
 
 class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
-	void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
+	void onResult(NimBLEAdvertisedDevice advertisedDevice) {
 		Serial.print("Advertised Device found: ");
-        Serial.println(advertisedDevice->toString().c_str());
-		if(advertisedDevice->isAdvertisingService(NimBLEUUID("DEAD")))
+        Serial.println(advertisedDevice.toString().c_str());
+		if(advertisedDevice.isAdvertisingService(NimBLEUUID("DEAD")))
 		{
 			Serial.println("Found Our Service");
 			NimBLEDevice::getScan()->stop();
 
-			advDevice = advertisedDevice;
+			advDevice = new NimBLEAdvertisedDevice(advertisedDevice);
 			doConnect = true;
 		}
 	}
 };
+
 
 
 void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify){
@@ -149,13 +150,14 @@ void loop (){
 		pClient = pClient_a[clientCount];
 		clientCount++;
 	
-		pClient->setClientCallbacks(&clientCB);
-		pClient->setConnectionParams(6,6,0,400);
-		pClient->setConnectTimeout(10);
+		pClient->setClientCallbacks(&clientCB, false);
+		pClient->setConnectionParams(24,24,0,100);
+		pClient->setConnectTimeout(20);
 		
 		if (!pClient->connect(advDevice)) {
 			NimBLEDevice::deleteClient(pClient);
-			pClient_a[--clientCount] = nullptr;
+			pClient_a[clientCount] = nullptr;
+            clientCount--;
 			Serial.println("Failed to connect - Starting scan");
 			NimBLEDevice::getScan()->start(0,scanEndedCB);
 			return;
