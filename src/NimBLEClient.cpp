@@ -135,7 +135,7 @@ bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices)
  * @return True on success.
  */
 bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServices) {
-    NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
+    NIMBLE_LOGE(LOG_TAG, ">> connect(%s)", address.toString().c_str());
     
     if(!NimBLEDevice::m_synced) {
         NIMBLE_LOGE(LOG_TAG, "Host reset, wait for sync.");
@@ -185,8 +185,6 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
         clearServices();
     }
     
-    taskYIELD(); // Let any waiting tasks finish before we get services / return
-    
     if (!m_haveServices) {
         if (!retrieveServices()) {
             // error getting services, make sure we disconnect and release any resources before returning
@@ -199,6 +197,8 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
         }
     }
     
+	m_pClientCallbacks->onConnect(this);
+	
     NIMBLE_LOGD(LOG_TAG, "<< connect()");
     return true;
 } // connect
@@ -643,7 +643,7 @@ uint16_t NimBLEClient::getMTU() {
 
                 client->m_isConnected = true;
 
-                client->m_pClientCallbacks->onConnect(client);
+                //client->m_pClientCallbacks->onConnect(client);
                 
                 // Incase of a multiconnecting device we ignore this device when scanning since we are already connected to it
                 NimBLEDevice::addIgnored(client->m_peerAddress);

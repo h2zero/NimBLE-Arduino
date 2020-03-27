@@ -84,7 +84,10 @@ NimBLEScan::NimBLEScan() {
     switch(event->type) {
 
         case BLE_GAP_EVENT_DISC: {
-            NimBLEAdvertisedDevice* advertisedDevice = nullptr;
+			if(pScan->m_stopped) {
+				NIMBLE_LOGE(LOG_TAG, "Scan stop called, ignoring results.");
+				return 0;
+			}
             
             rc = ble_hs_adv_parse_fields(&fields, event->disc.data,
                                      event->disc.length_data);
@@ -109,6 +112,8 @@ NimBLEScan::NimBLEScan() {
                 return 0;
             }
             
+			NimBLEAdvertisedDevice* advertisedDevice = nullptr;
+						
             // If we've seen this device before get a pointer to it from the map
             auto it = pScan->m_scanResults.m_advertisedDevicesMap.find(advertisedAddress.toString());
             if(it != pScan->m_scanResults.m_advertisedDevicesMap.cend()) {
@@ -218,7 +223,7 @@ void NimBLEScan::setWindow(uint16_t windowMSecs) {
  * @return True if scan started or false if there was an error.
  */
 bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue) {
-    NIMBLE_LOGD(LOG_TAG, ">> start(duration=%d)", duration);
+    NIMBLE_LOGE(LOG_TAG, ">> start(duration=%d)", duration);
 
     // If Host is not synced we cannot start scanning.
     if(!NimBLEDevice::m_synced) {
@@ -227,11 +232,13 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     }
     
     // If we are already scanning don't start again or we will get stuck on the semaphore.
-    if(!m_stopped) {
-        NIMBLE_LOGE(LOG_TAG, "Scan already in progress");
+    if(!m_stopped || ble_gap_disc_active()) {
+        NIMBLE_LOGW(LOG_TAG, "Scan already in progress");
         return false;
     }
     
+	m_stopped = false;
+	
     m_semaphoreScanEnd.take("start");
         
     // Save the callback to be invoked when the scan completes.
@@ -256,10 +263,11 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
         NIMBLE_LOGE(LOG_TAG, "Error initiating GAP discovery procedure; rc=%d, %s",
                                         rc, NimBLEUtils::returnCodeToString(rc));
         m_semaphoreScanEnd.give();
+		m_stopped = true;
         return false;
     }
 
-    m_stopped = false;
+   // m_stopped = false;
 
     NIMBLE_LOGD(LOG_TAG, "<< start()");
     return true;
@@ -285,10 +293,10 @@ NimBLEScanResults NimBLEScan::start(uint32_t duration, bool is_continue) {
  */
 void NimBLEScan::stop() {
     NIMBLE_LOGD(LOG_TAG, ">> stop()");
-
+	
     int rc = ble_gap_disc_cancel();
-    if (rc != 0) {
-        NIMBLE_LOGD(LOG_TAG, "Failed to cancel scan; rc=%d\n", rc);
+    if (rc != 0 && rc != BLE_HS_EALREADY) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to cancel scan; rc=%d\n", rc);
         return;
     }
 
