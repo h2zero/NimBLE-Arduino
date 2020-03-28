@@ -125,8 +125,8 @@ public:
      * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
      * device that was found.  During any individual scan, a device will only be detected one time.
      */
-    virtual void onResult(NimBLEAdvertisedDevice advertisedDevice) = 0;
-    //virtual void onResult(NimBLEAdvertisedDevice* advertisedDevice) = 0;
+    //virtual void onResult(NimBLEAdvertisedDevice advertisedDevice) = 0;
+    virtual void onResult(NimBLEAdvertisedDevice* advertisedDevice) = 0;
 };
 
 #endif /* CONFIG_BT_ENABLED */

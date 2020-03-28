@@ -123,9 +123,7 @@ void NimBLEClient::onHostReset() {
 bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices) {
     NimBLEAddress address(device->getAddress());
     uint8_t type = device->getAddressType();
-    bool ret = connect(address, type, refreshServices);
-    delete device;
-    return ret; //connect(address, type, refreshServices);
+    return connect(address, type, refreshServices);
 }
 
 
@@ -306,7 +304,8 @@ void NimBLEClient::updateConnParams(uint16_t minInterval, uint16_t maxInterval,
     
     int rc = ble_gap_update_params(m_conn_id, &params);
     if(rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s",
+                    rc, NimBLEUtils::returnCodeToString(rc));
     } 
 }
 
@@ -351,7 +350,8 @@ int NimBLEClient::getRssi() {
     int8_t rssiValue = 0;
     int rc = ble_gap_conn_rssi(m_conn_id, &rssiValue);
     if(rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to read RSSI error code: %d", rc);
+        NIMBLE_LOGE(LOG_TAG, "Failed to read RSSI error code: %d, %s", 
+                                rc, NimBLEUtils::returnCodeToString(rc));
         return 0;
     }
     
@@ -586,25 +586,28 @@ uint16_t NimBLEClient::getMTU() {
             if(client->m_conn_id != event->disconnect.conn.conn_handle)
                 return 0;
             
+            client->m_isConnected = false;
+            client->m_waitingToConnect=false;
+            
             NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d, %s", event->disconnect.reason,
                                     NimBLEUtils::returnCodeToString(event->disconnect.reason));
             //print_conn_desc(&event->disconnect.conn);
             //MODLOG_DFLT(INFO, "\n");
 
           
+            // if Host reset tell the device now before returning to prevent 
+            // any errors caused by calling host functions before resyncing.
             switch(event->disconnect.reason) {
                 case BLE_HS_ETIMEOUT_HCI:
                 case BLE_HS_EOS:
                 case BLE_HS_ECONTROLLER:
                 case BLE_HS_ENOTSYNCED:
                     NIMBLE_LOGE(LOG_TAG, "Disconnect - host reset, rc=%d", event->disconnect.reason);
+                    NimBLEDevice::onReset(event->disconnect.reason);
                     break;
                 default: 
                     break;
             }
-    
-            client->m_isConnected = false;
-            client->m_waitingToConnect=false;
             
             //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
              
@@ -631,8 +634,9 @@ uint16_t NimBLEClient::getMTU() {
             client->m_waitingToConnect=false;
             
             if (event->connect.status == 0) {
-                // Connection successfully established.
-                NIMBLE_LOGI(LOG_TAG, "Connection established");
+                client->m_isConnected = true;
+                
+                NIMBLE_LOGD(LOG_TAG, "Connection established");
                 
                 client->m_conn_id = event->connect.conn_handle;
                 
@@ -641,21 +645,21 @@ uint16_t NimBLEClient::getMTU() {
             //  print_conn_desc(&desc);
             //  MODLOG_DFLT(INFO, "\n");
 
-                client->m_isConnected = true;
-
                 //client->m_pClientCallbacks->onConnect(client);
                 
-                // Incase of a multiconnecting device we ignore this device when scanning since we are already connected to it
+                // In the case of a multiconnecting device we ignore this device when 
+                // scanning since we are already connected to it
                 NimBLEDevice::addIgnored(client->m_peerAddress);
 
                 rc = ble_gattc_exchange_mtu(client->m_conn_id, NULL,NULL);
                 if(rc != 0) {
                     NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",rc,
                                             NimBLEUtils::returnCodeToString(rc));
+                    // if error getting mtu indicate a connection error.                        
                     client->m_semaphoreOpenEvt.give(rc);
-                } else {
+                } /*else {
                     client->m_semaphoreOpenEvt.give(0);
-                }
+                }*/
 
             } else {
                 // Connection attempt failed
@@ -760,7 +764,7 @@ uint16_t NimBLEClient::getMTU() {
             NIMBLE_LOGI(LOG_TAG, "mtu update event; conn_handle=%d mtu=%d",
                         event->mtu.conn_handle,
                         event->mtu.value);
-                        
+             client->m_semaphoreOpenEvt.give(0);       
             //client->m_mtu = event->mtu.value;
             return 0;
         } // BLE_GAP_EVENT_MTU

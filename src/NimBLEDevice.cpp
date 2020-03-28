@@ -266,7 +266,12 @@ void NimBLEDevice::stopAdvertising() {
  */
 /* STATIC */  void NimBLEDevice::onReset(int reason)
 {
+    if(!m_synced) {
+        return;
+    }
+    
     m_synced = false;
+    
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         (*it)->onHostReset();
     }
@@ -293,15 +298,23 @@ void NimBLEDevice::stopAdvertising() {
  */
 /* STATIC */ void NimBLEDevice::onSync(void)
 {
-    int rc;
-
+    NIMBLE_LOGE(LOG_TAG, "NimBle host synced.");
+    
     /* Make sure we have proper identity address set (public preferred) */
-    rc = ble_hs_util_ensure_addr(0);
+    int rc = ble_hs_util_ensure_addr(0);
     assert(rc == 0);
     
-    NIMBLE_LOGI(LOG_TAG, "NimBle host synced.");
-    
     m_synced = true;
+    
+    if(m_pScan != nullptr) {
+        // Restart scanning with the last values sent, allow to clear results.
+        m_pScan->start(m_pScan->m_duration, m_pScan->m_scanCompleteCB);
+    }
+    
+    if(m_bleAdvertising != nullptr) {
+        // Restart advertisng, parameters should already be set.
+        m_bleAdvertising->start();
+    }
 } // onSync
 
 

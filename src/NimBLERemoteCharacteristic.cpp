@@ -432,8 +432,6 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
     
     return desc->writeValue(val, 2, response);
 } // registerForNotify
-//END_H2ZERO_MOD
-
 
 
 /**

@@ -79,6 +79,7 @@ private:
     bool                                m_wantDuplicates;
     NimBLEScanResults                   m_scanResults;
     FreeRTOS::Semaphore                 m_semaphoreScanEnd = FreeRTOS::Semaphore("ScanEnd");
+    uint32_t                            m_duration;
 };
 
 

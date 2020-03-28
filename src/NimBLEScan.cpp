@@ -142,10 +142,10 @@ NimBLEScan::NimBLEScan() {
             if (pScan->m_pAdvertisedDeviceCallbacks) {
                 // If not active scanning report the result to the listener.
                 if(pScan->m_scan_params.passive) {
-                    pScan->m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
+                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
                 // Otherwise wait for the scan response so we can report all of the data at once.
                 } else if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
-                    pScan->m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
+                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
                 }
                 //m_pAdvertisedDeviceCallbacks->onResult(*advertisedDevice);
             }
@@ -224,7 +224,7 @@ void NimBLEScan::setWindow(uint16_t windowMSecs) {
  */
 bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue) {
     NIMBLE_LOGE(LOG_TAG, ">> start(duration=%d)", duration);
-
+    
     // If Host is not synced we cannot start scanning.
     if(!NimBLEDevice::m_synced) {
         NIMBLE_LOGE(LOG_TAG, "Host reset, wait for sync.");
@@ -232,17 +232,19 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     }
     
     // If we are already scanning don't start again or we will get stuck on the semaphore.
-    if(!m_stopped || ble_gap_disc_active()) {
+    if(!m_stopped || ble_gap_disc_active()) { // double check - can cause host reset.
         NIMBLE_LOGW(LOG_TAG, "Scan already in progress");
         return false;
     }
-    
+
 	m_stopped = false;
 	
     m_semaphoreScanEnd.take("start");
         
     // Save the callback to be invoked when the scan completes.
     m_scanCompleteCB = scanCompleteCB;                  
+    // Save the duration in the case that the host is reset so we can reuse it.
+    m_duration = duration;
     
     // If 0 duration specified then we assume a continuous scan is desired.
     if(duration == 0){

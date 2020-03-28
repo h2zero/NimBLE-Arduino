@@ -26,7 +26,7 @@ static bool doConnect = false;
 class ClientCallbacks : public NimBLEClientCallbacks {
 	void onConnect(NimBLEClient* pClient) {
 		Serial.println("Connected");
-        //pClient->updateConnParams(24,48,0,800);
+        pClient->updateConnParams(120,120,0,45);
 	};
 
 	void onDisconnect(NimBLEClient* pClient) {
@@ -56,15 +56,15 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
 
 class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
-	void onResult(NimBLEAdvertisedDevice advertisedDevice) {
+	void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
 		Serial.print("Advertised Device found: ");
-        Serial.println(advertisedDevice.toString().c_str());
-		if(advertisedDevice.isAdvertisingService(NimBLEUUID("DEAD")))
+        Serial.println(advertisedDevice->toString().c_str());
+		if(advertisedDevice->isAdvertisingService(NimBLEUUID("DEAD")))
 		{
 			Serial.println("Found Our Service");
 			NimBLEDevice::getScan()->stop();
 
-			advDevice = new NimBLEAdvertisedDevice(advertisedDevice);
+			advDevice = advertisedDevice;
 			doConnect = true;
 		}
 	}
@@ -151,8 +151,8 @@ void loop (){
 		clientCount++;
 	
 		pClient->setClientCallbacks(&clientCB, false);
-		pClient->setConnectionParams(24,24,0,100);
-		pClient->setConnectTimeout(20);
+		pClient->setConnectionParams(12,12,0,12);
+		pClient->setConnectTimeout(5);
 		
 		if (!pClient->connect(advDevice)) {
 			NimBLEDevice::deleteClient(pClient);

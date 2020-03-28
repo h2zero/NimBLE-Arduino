@@ -123,7 +123,7 @@ private:
     static std::list <NimBLEClient*>  m_cList;
     static std::list <NimBLEAddress>  m_ignoreList;
     static NimBLESecurityCallbacks*   m_securityCallbacks;
-    
+
 public:
     static gap_event_handler          m_customGapHandler;
 };
