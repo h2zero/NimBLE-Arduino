@@ -471,12 +471,12 @@ bool NimBLEDevice::getInitialized() {
  * @param mitm, if true we are capable of man in the middle protection, false if not.
  * @param sc, if true we will perform secure connection pairing, false we will use legacy pairing.
  */
-/*STATIC*/ void NimBLEDevice::setSecuityAuth(bool bonding, bool mitm, bool sc) {
+/*STATIC*/ void NimBLEDevice::setSecurityAuth(bool bonding, bool mitm, bool sc) {
     NIMBLE_LOGD(LOG_TAG, "Setting bonding: %d, mitm: %d, sc: %d",bonding,mitm,sc);
     ble_hs_cfg.sm_bonding = bonding;
     ble_hs_cfg.sm_mitm = mitm;
     ble_hs_cfg.sm_sc = sc;
-} // setSecuityAuth
+} // setSecurityAuth
 
 
 /**
@@ -489,11 +489,11 @@ bool NimBLEDevice::getInitialized() {
  ** 0x10 BLE_SM_PAIR_AUTHREQ_KEYPRESS  - not yet supported.         
  ** 0xe2 BLE_SM_PAIR_AUTHREQ_RESERVED  - for reference only.
  */ 
-/*STATIC*/void NimBLEDevice::setSecuityAuth(uint8_t auth_req) {
-    NimBLEDevice::setSecuityAuth((auth_req & BLE_SM_PAIR_AUTHREQ_BOND)>0,
+/*STATIC*/void NimBLEDevice::setSecurityAuth(uint8_t auth_req) {
+    NimBLEDevice::setSecurityAuth((auth_req & BLE_SM_PAIR_AUTHREQ_BOND)>0,
                                 (auth_req & BLE_SM_PAIR_AUTHREQ_MITM)>0,
                                 (auth_req & BLE_SM_PAIR_AUTHREQ_SC)>0);
-} // setSecuityAuth
+} // setSecurityAuth
 
 
 /**
@@ -521,7 +521,7 @@ bool NimBLEDevice::getInitialized() {
  */
 /*STATIC*/void NimBLEDevice::setSecurityInitKey(uint8_t init_key) {
     ble_hs_cfg.sm_our_key_dist = init_key;
-} // setsScurityInitKey
+} // setsSecurityInitKey
 
 
 /**
@@ -535,7 +535,7 @@ bool NimBLEDevice::getInitialized() {
  */
 /*STATIC*/void NimBLEDevice::setSecurityRespKey(uint8_t init_key) {
     ble_hs_cfg.sm_their_key_dist = init_key;
-} // setsScurityRespKey
+} // setsSecurityRespKey
 
 
 /**

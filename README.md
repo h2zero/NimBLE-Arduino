@@ -1,10 +1,9 @@
 # *** UPDATE ***
 
-This library is now ready with (mostly)all original BLE library compatiblity. 
+This library is now ready with (mostly)all original Arduino BLE library compatiblity.   
+Check the examples and API_DIFFERENCES document for details of using this library.
  
 3 simultaneous connections tested stable so far on both client and server.
-
-# ****************
 
 
 # NimBLE-Arduino
@@ -15,6 +14,7 @@ Why? Because the Bluedroid library is too bulky.
 Initial client code testing has resulted in code size reduction of ~115k and reduced ram consumption of ~37k.
 
 Server code testing results from @beegee-toyo [from the project here](https://github.com/beegee-tokyo/ESP32WiFiBLE-NimBLE):
+
 
 ### Memory usage (compilation output)
 #### Arduino BLE library
@@ -33,8 +33,7 @@ Flash: [=======   ]  69.5% (used 911378 bytes from 1310720 bytes)
 #### NimBLE-Arduino library
 **`Internal Total heap 290288, internal Free Heap 182344`** 
   
-
-
+  
 # Installation:
 
 Download as .zip and extract to Arduino/libraries folder, or in Arduino IDE from Sketch menu -> Include library -> Add .Zip library.
@@ -74,7 +73,6 @@ Also tracking the NimBLE related changes in esp-idf, master branch, currently [@
 
 1. Code cleanup.
 2. Create documentation.
-3. Examples.
+3. Expose more NimBLE features.
 4. Add BLE Mesh code.
-5. Expose more NimBLE features.
 

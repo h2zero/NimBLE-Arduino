@@ -83,8 +83,8 @@ public:
     static bool             deleteClient(NimBLEClient* pClient);
     static void             setPower(esp_power_level_t powerLevel);
     static void             setCustomGapHandler(gap_event_handler handler);
-    static void             setSecuityAuth(bool bonding, bool mitm, bool sc);
-    static void             setSecuityAuth(uint8_t auth_req);
+    static void             setSecurityAuth(bool bonding, bool mitm, bool sc);
+    static void             setSecurityAuth(uint8_t auth_req);
     static void             setSecurityIOCap(uint8_t iocap);
     static void             setSecurityInitKey(uint8_t init_key);
     static void             setSecurityRespKey(uint8_t init_key);

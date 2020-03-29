@@ -155,8 +155,8 @@ void setup() {
      *   
      *  These are the default values, only shown here for demonstration.   
      */ 
-    //NimBLEDevice::setSecuityAuth(false, false, true); 
-    NimBLEDevice::setSecuityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
+    //NimBLEDevice::setSecurityAuth(false, false, true); 
+    NimBLEDevice::setSecurityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
 
     pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(new ServerCallbacks());

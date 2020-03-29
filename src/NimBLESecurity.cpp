@@ -35,7 +35,7 @@ NimBLESecurity::~NimBLESecurity() {
  * @brief Set requested authentication mode
  */
 void NimBLESecurity::setAuthenticationMode(esp_ble_auth_req_t auth_req) {
-    NimBLEDevice::setSecuityAuth((auth_req & BLE_SM_PAIR_AUTHREQ_BOND)>0,
+    NimBLEDevice::setSecurityAuth((auth_req & BLE_SM_PAIR_AUTHREQ_BOND)>0,
                                 (auth_req & BLE_SM_PAIR_AUTHREQ_MITM)>0,
                                 (auth_req & BLE_SM_PAIR_AUTHREQ_SC)>0);
 }

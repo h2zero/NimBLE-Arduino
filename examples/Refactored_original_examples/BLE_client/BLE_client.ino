@@ -136,7 +136,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 /*******************************************************************
       myDevice = new BLEAdvertisedDevice(advertisedDevice);
 *******************************************************************/
-      myDevice = new BLEAdvertisedDevice(*advertisedDevice); /** dereference to copy data now **/
+      myDevice = advertisedDevice; /** Just save the reference now, no need to copy the object */
       doConnect = true;
       doScan = true;
 
