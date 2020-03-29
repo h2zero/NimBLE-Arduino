@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+ 
+/* Modifications copyright (C) 2020 Ryan Powell*/
 
 #ifndef _NIMBLE_NPL_H_
 #define _NIMBLE_NPL_H_

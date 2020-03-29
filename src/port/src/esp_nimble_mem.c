@@ -19,6 +19,8 @@
  * under the License.
  */
 
+ /* Modifications copyright (C) 2020 Ryan Powell */
+ 
 #include "esp_attr.h"
 #include "esp_heap_caps.h"
 #include "nimconfig.h"

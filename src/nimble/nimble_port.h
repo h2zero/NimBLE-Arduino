@@ -17,6 +17,7 @@
  * under the License.
  */
 
+ /* Modifications copyright (C) 2020 Ryan Powell */
 #ifndef _NIMBLE_PORT_H
 #define _NIMBLE_PORT_H
 
