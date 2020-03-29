@@ -102,7 +102,7 @@ private:
     friend class NimBLECharacteristic;
     friend class NimBLEDevice;
     friend class NimBLEAdvertising;
-    void         onHostReset();
+ //   void         onHostReset();
     // BLEAdvertising      m_bleAdvertising;
     uint16_t               m_connId;
     uint16_t               m_svcChgChrHdl;

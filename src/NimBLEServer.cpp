@@ -223,7 +223,7 @@ uint32_t NimBLEServer::getConnectedCount() {
  */
 /*STATIC*/int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
 	NimBLEServer* server = (NimBLEServer*)arg;
-	NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent: %s",
+	NIMBLE_LOGE(LOG_TAG, ">> handleGapEvent: %s",
 		NimBLEUtils::gapEventToString(event->type));
     int rc = 0;
 
@@ -232,19 +232,20 @@ uint32_t NimBLEServer::getConnectedCount() {
 		case BLE_GAP_EVENT_CONNECT: {
             if (event->connect.status != 0) {
                 /* Connection failed; resume advertising */
+                NIMBLE_LOGC(LOG_TAG, "Connection failed");
                 NimBLEDevice::startAdvertising();
                 server->m_connId = BLE_HS_CONN_HANDLE_NONE;
             }
             else {
                 server->m_connId = event->connect.conn_handle;
                 server->addPeerDevice((void*)server, false, server->m_connId);
-                //if (server->m_pServerCallbacks != nullptr) {
+                
                 ble_gap_conn_desc desc;
                 rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
                 assert(rc == 0);
+                
                 server->m_pServerCallbacks->onConnect(server);
                 server->m_pServerCallbacks->onConnect(server, &desc);			
-                //}
             }
 
             return 0;
@@ -252,13 +253,24 @@ uint32_t NimBLEServer::getConnectedCount() {
         
         
         case BLE_GAP_EVENT_DISCONNECT: {
-            server->m_connId = BLE_HS_CONN_HANDLE_NONE;
-            //if (server->m_pServerCallbacks != nullptr) {       
-            server->m_pServerCallbacks->onDisconnect(server);
-			//}
-            /* Connection terminated; resume advertising */
-            //NimBLEDevice::startAdvertising();
+            // If Host reset tell the device now before returning to prevent 
+            // any errors caused by calling host functions before resyncing.
+            switch(event->disconnect.reason) {
+                case BLE_HS_ETIMEOUT_HCI:
+                case BLE_HS_EOS:
+                case BLE_HS_ECONTROLLER:
+                case BLE_HS_ENOTSYNCED:
+                    NIMBLE_LOGC(LOG_TAG, "Disconnect - host reset, rc=%d", event->disconnect.reason);
+                    NimBLEDevice::onReset(event->disconnect.reason);
+                    break;
+                default: 
+                    break;
+            }
+            
             server->removePeerDevice(event->disconnect.conn.conn_handle, false);
+            server->m_connId = BLE_HS_CONN_HANDLE_NONE;      
+            server->m_pServerCallbacks->onDisconnect(server);
+            
             return 0;
         } // BLE_GAP_EVENT_DISCONNECT
         
@@ -341,12 +353,7 @@ uint32_t NimBLEServer::getConnectedCount() {
                 } else {
                     pkey.numcmp_accept = server->m_pServerCallbacks->onConfirmPIN(event->passkey.params.numcmp);
                 }
-            /*    }else if(server->m_pServerCallbacks != nullptr) {
-                    pkey.numcmp_accept = server->m_pServerCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-                }else{
-                    pkey.numcmp_accept = false;
-                }
-            */    
+  
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_NUMCMP; ble_sm_inject_io result: %d", rc);
               
@@ -371,14 +378,7 @@ uint32_t NimBLEServer::getConnectedCount() {
                 } else {
                     pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
                 }                    
-             /*   }else if(server->m_pServerCallbacks != nullptr) {
-                    pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
-                    NIMBLE_LOGD(LOG_TAG, "Sending passkey: %d", pkey.passkey);
-                }else{
-                    pkey.passkey = 0;
-                    NIMBLE_LOGE(LOG_TAG, "No Callback! Sending 0 as the passkey");
-                }
-            */
+
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_INPUT; ble_sm_inject_io result: %d", rc);
                 
@@ -579,12 +579,13 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
     }
 }
 
+/* Don't think this is needed
 
 void NimBLEServer::onHostReset() {
- /*   for(auto it = m_notifyChrMap.cbegin(); it != m_notifyChrMap.cend(); ++it) {
+    for(auto it = m_notifyChrMap.cbegin(); it != m_notifyChrMap.cend(); ++it) {
         (*it).second->m_semaphoreConfEvt.give(0);
     }
-  */
+  
 }
-
+*/
 #endif // CONFIG_BT_ENABLED

@@ -70,7 +70,7 @@ private:
     static int          serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
     void                clearServices();   // Clear any existing services.
     bool                retrieveServices();  //Retrieve services from the server
-    void                onHostReset();
+//    void                onHostReset();
 
     NimBLEAddress    m_peerAddress = NimBLEAddress("\0\0\0\0\0\0");   // The BD address of the remote server.
     uint16_t         m_conn_id;

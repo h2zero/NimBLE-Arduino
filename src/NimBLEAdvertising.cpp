@@ -182,6 +182,17 @@ void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertiseme
 void NimBLEAdvertising::start() {
 	NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
     
+    // If Host is not synced we cannot start advertising.
+    if(!NimBLEDevice::m_synced) {
+        NIMBLE_LOGE(LOG_TAG, "Host reset, wait for sync.");
+        return;
+    }
+    
+    if(NimBLEDevice::createServer()->getConnectedCount() >= NIMBLE_MAX_CONNECTIONS) {
+        NIMBLE_LOGW(LOG_TAG, "Max connections reached - not advertising");
+        return;
+    }
+    
 	int numServices = m_serviceUUIDs.size();
     int rc = 0;
     uint8_t addressType;
@@ -352,14 +363,14 @@ void NimBLEAdvertising::start() {
     
     rc = ble_hs_id_infer_auto(0, &addressType);
     if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "error determining address type; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        NIMBLE_LOGC(LOG_TAG, "Error determining address type; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
         abort();
     }      
 
     rc = ble_gap_adv_start(addressType, NULL, BLE_HS_FOREVER,
                 &m_advParams, NimBLEServer::handleGapEvent, NimBLEDevice::createServer()); //get a reference to the server (does not create a new one)
     if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "error enabling advertisement; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        NIMBLE_LOGC(LOG_TAG, "Error enabling advertising; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
         abort();
     }
 	
@@ -383,11 +394,11 @@ void NimBLEAdvertising::stop() {
 	NIMBLE_LOGD(LOG_TAG, "<< stop");
 } // stop
 
-
+/*
 void NimBLEAdvertising::onHostReset() {
  //   m_advSvcsSet = false;
 }
-    
+ */   
 
 /**
  * @brief Add data to the payload to be advertised.

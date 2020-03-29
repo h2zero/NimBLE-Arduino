@@ -12,261 +12,356 @@
 
 void scanEndedCB(NimBLEScanResults results);
 
-static NimBLERemoteService* pSvc = nullptr;
-static NimBLERemoteCharacteristic* pChr = nullptr;
-static NimBLERemoteDescriptor* pDsc = nullptr;
-
 static NimBLEAdvertisedDevice* advDevice;
 
-static NimBLEClient* pClient_a[3] = {nullptr};
-static uint8_t clientCount = 0;
 static bool doConnect = false;
+static uint32_t scanTime = 0; /** 0 = scan forever */
 
 
+/**  None of these are required as they will be handled by the library with defaults. **
+ **                       Remove as you see fit for your needs                        */  
 class ClientCallbacks : public NimBLEClientCallbacks {
-	void onConnect(NimBLEClient* pClient) {
-		Serial.println("Connected");
+    void onConnect(NimBLEClient* pClient) {
+        Serial.println("Connected");
+        /** After connection we should change the parameters if we don't need fast response times.
+         *  These settings are 150ms interval, 0 latency, 450ms timout. 
+         *  Timeout should be a multiple of the interval, minimum is 100ms.
+         *  I find a multiple of 3-5 * the interval works best for quick response/reconnect.
+         *  Min interval: 120 * 1.25ms = 150, Max interval: 120 * 1.25ms = 150, 0 latency, 45 * 10ms = 450ms timeout 
+         */
         pClient->updateConnParams(120,120,0,45);
-	};
+    };
 
-	void onDisconnect(NimBLEClient* pClient) {
-		Serial.println("Disconnected - Starting scanning");
-		NimBLEDevice::getScan()->start(0,scanEndedCB);
-	};
-	
-	uint32_t onPassKeyRequest(){
-		Serial.println("Client Passkey Request");
-		return 123456;
-	};
+    void onDisconnect(NimBLEClient* pClient) {
+        Serial.print(pClient->getPeerAddress().toString().c_str());
+        Serial.println(" Disconnected - Starting scan");
+        NimBLEDevice::getScan()->start(scanTime, scanEndedCB);
+    };
+    
+    /********************* Security handled here **********************
+    ****** Note: these are the same return values as defaults ********/
+    uint32_t onPassKeyRequest(){
+        Serial.println("Client Passkey Request");
+        /** return the passkey to send to the server */
+        return 123456;
+    };
 
-	bool onConfirmPIN(uint32_t pass_key){
-		Serial.print("The passkey YES/NO number: ");
+    bool onConfirmPIN(uint32_t pass_key){
+        Serial.print("The passkey YES/NO number: ");
         Serial.println(pass_key);
-		return true;
-	};
+    /** Return false if passkeys don't match. */
+        return true;
+    };
 
-	void onAuthenticationComplete(ble_gap_conn_desc* desc){
-		if(!desc->sec_state.encrypted) {
+    /** Pairing process complete, we can check the results in ble_gap_conn_desc */
+    void onAuthenticationComplete(ble_gap_conn_desc* desc){
+        if(!desc->sec_state.encrypted) {
             Serial.println("Encrypt connection failed - disconnecting");
+            /** Find the client with the connection handle provided in desc */
             NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
             return;
         }
-	};
+    };
 };
 
 
+/** Define a class to handle the callbacks when advertisments are received */
 class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
-	void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
-		Serial.print("Advertised Device found: ");
+    
+    void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
+        Serial.print("Advertised Device found: ");
         Serial.println(advertisedDevice->toString().c_str());
-		if(advertisedDevice->isAdvertisingService(NimBLEUUID("DEAD")))
-		{
-			Serial.println("Found Our Service");
-			NimBLEDevice::getScan()->stop();
-
-			advDevice = advertisedDevice;
-			doConnect = true;
-		}
-	}
+        if(advertisedDevice->isAdvertisingService(NimBLEUUID("DEAD")))
+        {
+            Serial.println("Found Our Service");
+            /** stop scan before connecting */
+            NimBLEDevice::getScan()->stop();
+            /** Save the device reference in a global for the client to use*/ 
+            advDevice = advertisedDevice;
+            /** Ready to connect now */ 
+            doConnect = true;
+        }
+    };
 };
 
 
-
+/** Notification / Indication receiving handler callback */
 void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify){
     Serial.print((isNotify == true) ? "Notify" : "Indication");
     Serial.print(" from ");
-	Serial.print(pRemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str());
-	Serial.print(": Service = ");
-	Serial.print(pRemoteCharacteristic->getRemoteService()->getUUID().toString().c_str());
-	Serial.print(", Characteristic = ");
-	Serial.print(pRemoteCharacteristic->getUUID().toString().c_str());
-	Serial.print(", Value = ");
+    Serial.print(pRemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str());
+    Serial.print(": Service = ");
+    Serial.print(pRemoteCharacteristic->getRemoteService()->getUUID().toString().c_str());
+    Serial.print(", Characteristic = ");
+    Serial.print(pRemoteCharacteristic->getUUID().toString().c_str());
+    Serial.print(", Value = ");
     Serial.println(std::string((char*)pData, length).c_str());
 }
 
-
+/** Callback to process the results of the last scan or restart it */
 void scanEndedCB(NimBLEScanResults results){
-	Serial.println("Scan Ended");
+    Serial.println("Scan Ended");
 }
 
+
+/** Create a single global instance of the callback class to be used by all clients */
 static ClientCallbacks clientCB;
 
-void setup (){
-  Serial.begin(115200);
-  Serial.println("Starting NimBLE Client");
-  NimBLEDevice::init("");
-  
-//  BLEDevice::addIgnored(NimBLEAddress ("cc:b8:6c:d6:a8:82"));
 
-//  BLEDevice::setPower(ESP_PWR_LVL_P9);
-  	
-  NimBLEScan* pScan = NimBLEDevice::getScan(); //create new scan
-  pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
-  pScan->setInterval(1349);
-  pScan->setWindow(449);
-  pScan->setActiveScan(true);
-  pScan->start(0, scanEndedCB);
+/** Handles the provisioning of clients and connects / interfaces with the server */
+bool connectToServer() {
+    NimBLEClient* pClient = nullptr;
+    
+    /** Check if we have a client we should reuse first **/
+    if(NimBLEDevice::getClientListSize()) {
+        /** Special case when we already know this device, we send false as the 
+         *  second argument in connect() to prevent refreshing the service database.
+         *  This saves considerable time and power.
+         */
+        pClient = NimBLEDevice::getClientByPeerAddress(advDevice->getAddress());
+        if(pClient){
+            if(!pClient->connect(advDevice, false)) {
+                Serial.println("Reconnect failed");
+                return false;
+            }
+            Serial.println("Reconnected client");
+        } 
+        /** We don't already have a client that knows this device,
+         *  we will check for a client that is disconnected that we can use.
+         */
+        else {
+            pClient = NimBLEDevice::getDisconnectedClient();
+        }
+    }
+    
+    /** No client to reuse? Create a new one. */
+    if(!pClient) {
+        if(NimBLEDevice::getClientListSize() >= NIMBLE_MAX_CONNECTIONS) {
+            Serial.println("Max clients reached - no more connections available");
+            return false;
+        }
+        
+        pClient = NimBLEDevice::createClient();
+        
+        Serial.println("New client created");
+    
+        pClient->setClientCallbacks(&clientCB, false);
+        /** Set initial connection parameters: These settings are 15ms interval, 0 latency, 120ms timout. 
+         *  These settings are safe for 3 clients to connect reliably, can go faster if you have less 
+         *  connections. Timeout should be a multiple of the interval, minimum is 100ms.
+         *  Min interval: 12 * 1.25ms = 15, Max interval: 12 * 1.25ms = 15, 0 latency, 12 * 10ms = 120ms timeout 
+         */
+        pClient->setConnectionParams(12,12,0,12);
+        /** Set how long we are willing to wait for the connection to complete (seconds), default is 30. */
+        pClient->setConnectTimeout(5);
+        
+
+        if (!pClient->connect(advDevice)) {
+            /** Created a client but failed to connect, don't need to keep it as it has no data */
+            NimBLEDevice::deleteClient(pClient);
+            Serial.println("Failed to connect, deleted client");
+            return false;
+        }
+    }         
+    
+    if(!pClient->isConnected()) {
+        if (!pClient->connect(advDevice)) {
+            Serial.println("Failed to connect");
+            return false;
+        }
+    }
+    
+    Serial.print("Connected to: ");
+    Serial.println(pClient->getPeerAddress().toString().c_str());
+    Serial.print("RSSI: ");
+    Serial.println(pClient->getRssi());
+    
+    /** Now we can read/write/subscribe the charateristics of the services we are interested in */
+    NimBLERemoteService* pSvc = nullptr;
+    NimBLERemoteCharacteristic* pChr = nullptr;
+    NimBLERemoteDescriptor* pDsc = nullptr;
+    
+    pSvc = pClient->getService("DEAD");
+    if(pSvc) {     /** make sure it's not null */
+        pChr = pSvc->getCharacteristic("BEEF");
+    }
+
+    if(pChr) {     /** make sure it's not null */
+        if(pChr->canRead()) {
+            Serial.print(pChr->getUUID().toString().c_str());
+            Serial.print(" Value: ");
+            Serial.println(pChr->readValue().c_str());
+        }
+        
+        if(pChr->canWrite()) {
+            if(pChr->writeValue("Tasty")) {
+                Serial.print("Wrote new value to: ");
+                Serial.println(pChr->getUUID().toString().c_str());
+            }
+            else {
+                /** Disconnect if write failed */ 
+                pClient->disconnect();
+                return false;
+            }
+            
+            if(pChr->canRead()) {
+                Serial.print("The value of: ");
+                Serial.print(pChr->getUUID().toString().c_str());
+                Serial.print(" is now: ");
+                Serial.println(pChr->readValue().c_str());
+            }
+        }
+        
+        if(pChr->canNotify()) {
+            /** Must send a callback to subscribe, if nullptr it will unsubscribe */
+            if(!pChr->registerForNotify(notifyCB)) {
+                /** Disconnect if subscribe failed */ 
+                pClient->disconnect();
+                return false;
+            }
+        }
+        else if(pChr->canIndicate()) {
+            /** Send false as second argument to subscribe to indications instead of notifications */
+            if(!pChr->registerForNotify(notifyCB, false)) {
+                /** Disconnect if subscribe failed */ 
+                pClient->disconnect();
+                return false;
+            }
+        }    
+    }
+    
+    else{
+        Serial.println("DEAD service not found.");
+    }
+    
+    pSvc = pClient->getService("BAAD");
+    if(pSvc) {     /** make sure it's not null */
+        pChr = pSvc->getCharacteristic("F00D");
+    }
+
+    if(pChr) {     /** make sure it's not null */
+        if(pChr->canRead()) {
+            Serial.print(pChr->getUUID().toString().c_str());
+            Serial.print(" Value: ");
+            Serial.println(pChr->readValue().c_str());
+        }
+        
+        pDsc = pChr->getDescriptor(NimBLEUUID("C01D"));
+        if(pDsc) {   /** make sure it's not null */
+            Serial.print("Descriptor: ");
+            Serial.print(pDsc->getUUID().toString().c_str());
+            Serial.print(" Value: ");
+            Serial.println(pDsc->readValue().c_str());
+        }
+        
+        if(pChr->canWrite()) {
+            if(pChr->writeValue("No tip!")) {
+                Serial.print("Wrote new value to: ");
+                Serial.println(pChr->getUUID().toString().c_str());
+            }
+            else {
+                /** Disconnect if write failed */ 
+                pClient->disconnect();
+                return false;
+            }
+            
+            if(pChr->canRead()) {
+                Serial.print("The value of: ");
+                Serial.print(pChr->getUUID().toString().c_str());
+                Serial.print(" is now: ");
+                Serial.println(pChr->readValue().c_str());
+            }
+        }
+        
+        if(pChr->canNotify()) {
+            /** Must send a callback to subscribe, if nullptr it will unsubscribe */
+            if(!pChr->registerForNotify(notifyCB)) {
+                /** Disconnect if subscribe failed */ 
+                pClient->disconnect();
+                return false;
+            }
+        }
+        else if(pChr->canIndicate()) {
+            /** Send false as second argument to subscribe to indications instead of notifications */
+            if(!pChr->registerForNotify(notifyCB, false)) {
+                /** Disconnect if subscribe failed */ 
+                pClient->disconnect();
+                return false;
+            }
+        }    
+    }        
+
+    else{
+        Serial.println("BAAD service not found.");
+    }
+    
+    Serial.println("Done with this device!");
+    return true;
+}
+
+void setup (){
+    Serial.begin(115200);
+    Serial.println("Starting NimBLE Client");
+    /** Initialize NimBLE, no device name spcified as we are not advertising */
+    NimBLEDevice::init("");
+    
+    /** Set the IO capabilities of the device, each option will trigger a different pairing method.
+     *  BLE_HS_IO_KEYBOARD_ONLY    - Passkey pairing
+     *  BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing
+     *  BLE_HS_IO_NO_INPUT_OUTPUT - DEFAULT setting - just works pairing
+     */
+    //NimBLEDevice::setSecurityIOCap(BLE_HS_IO_KEYBOARD_ONLY); // use passkey
+    //NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_YESNO); //use numeric comparison
+  
+    /** 2 different ways to set security - both calls achieve the same result.
+     *  no bonding, no man in the middle protection, secure connections.
+     *     
+     *  These are the default values, only shown here for demonstration.   
+     */ 
+    //NimBLEDevice::setSecuityAuth(false, false, true); 
+    NimBLEDevice::setSecuityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
+  
+    /** Optional: set the transmit power, default is -3db */
+    NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** 12db */
+    
+    /** Optional: set any devices you don't want to get advertisments from */
+    // NimBLEDevice::addIgnored(NimBLEAddress ("aa:bb:cc:dd:ee:ff")); 
+  
+    /** create new scan */  
+    NimBLEScan* pScan = NimBLEDevice::getScan(); 
+    
+    /** create a callback that gets called when advertisers are found */
+    pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
+    
+    /** Set scan interval (how often) and window (how long) in milliseconds */
+    pScan->setInterval(400);
+    pScan->setWindow(100);
+    
+    /** Active scan will gather scan response data from advertisers
+     *  but will use more energy from both devices
+     */
+    pScan->setActiveScan(true);
+    /** Start scanning for advertisers for the scan time specified (in seconds) 0 = forever
+     *  Optional callback for when scanning stops. 
+     */
+    pScan->start(scanTime, scanEndedCB);
 }
 
 
 void loop (){
-	while(!doConnect){
-		delay(1);
-	}
-	
-	doConnect = false;
-	NimBLEClient* pClient = nullptr;
-	
-	/** Find any disconnected clients to use first. **/
-	for(uint8_t i = 0; i < clientCount; ++i) {
-		if(!pClient_a[i]->isConnected()) {
-			pClient = pClient_a[i];
-		}
-		/** if there is more than one disconnected and this one was connected to this device before 
-		 *  we should prefer to use it so we don't have to build the services database again.
-		 */
-		if(pClient && pClient->getPeerAddress().equals(advDevice->getAddress())) {
-			pClient = pClient_a[i];
-			/** Send false as the second argument in connect() to prevent refreshing the service database.
-			 *  This saves considerable time and power use.
-			 */
-			if(!pClient->connect(advDevice, false)) {
-				Serial.println("Reconnect failed - Starting scanning");
-				NimBLEDevice::getScan()->start(0,scanEndedCB);
-				return;
-			}
-			
-			break;
-		}
-	}	
-	
-	if(!pClient) {
-		if(clientCount >= 3) {
-			Serial.println("Max clients reached - no more connections available");
-			return;
-		}
-		
-		pClient_a[clientCount] = NimBLEDevice::createClient();
-		pClient = pClient_a[clientCount];
-		clientCount++;
-	
-		pClient->setClientCallbacks(&clientCB, false);
-		pClient->setConnectionParams(12,12,0,12);
-		pClient->setConnectTimeout(5);
-		
-		if (!pClient->connect(advDevice)) {
-			NimBLEDevice::deleteClient(pClient);
-			pClient_a[clientCount] = nullptr;
-            clientCount--;
-			Serial.println("Failed to connect - Starting scan");
-			NimBLEDevice::getScan()->start(0,scanEndedCB);
-			return;
-		}
-	} 
-	
-	if(!pClient->isConnected()) {
-		if (!pClient->connect(advDevice)) {
-			Serial.println("Failed to connect - Starting scan");
-			NimBLEDevice::getScan()->start(0,scanEndedCB);
-			return;
-		}
-	}
-	
-	Serial.print("Connected to: ");
-	Serial.println(pClient->getPeerAddress().toString().c_str());
-	Serial.print("RSSI: ");
-	Serial.println(pClient->getRssi());
-	
-	pSvc = pClient->getService("DEAD");
-	if(pSvc) {
-		pChr = pSvc->getCharacteristic("BEEF");
-	}
-	
-	if(pChr != nullptr) {
-		if(pChr->canRead()) {
-			Serial.print(pChr->getUUID().toString().c_str());
-			Serial.print(" Value: ");
-			Serial.println(pChr->readValue().c_str());
-		}
-		
-		if(pChr->canWrite()) {
-			if(pChr->writeValue("Tasty")) {
-				Serial.print("Wrote new value to: ");
-				Serial.println(pChr->getUUID().toString().c_str());
-			}
-			else {
-				pClient->disconnect();
-				return;
-			}
-			
-			if(pChr->canRead()) {
-				Serial.print("The value of: ");
-				Serial.print(pChr->getUUID().toString().c_str());
-				Serial.print(" is now: ");
-				Serial.println(pChr->readValue().c_str());
-			}
-		}
-		
-		if(pChr->canNotify()) {
-			pChr->registerForNotify(notifyCB);
-		}
-		else if(pChr->canIndicate()) {
-			pChr->registerForNotify(notifyCB, false);
-		}    
-	}
-	
-	else{
-		Serial.println("DEAD service not found.");
-	}
-	
-	pSvc = pClient->getService("BAAD");
-	if(pSvc) {
-		pChr = pSvc->getCharacteristic("F00D");
-	}
-	
-	if(pChr != nullptr) {
-		if(pChr->canRead()) {
-			Serial.print(pChr->getUUID().toString().c_str());
-			Serial.print(" Value: ");
-			Serial.println(pChr->readValue().c_str());
-		}
-		
-		pDsc = pChr->getDescriptor(NimBLEUUID("C01D"));
-		if(pDsc != nullptr) {
-			Serial.print(pDsc->getUUID().toString().c_str());
-			Serial.print(" value: ");
-			Serial.println(pDsc->readValue().c_str());
-		}
-		
-		if(pChr->canWrite()) {
-			if(pChr->writeValue("Take it back")) {
-				Serial.print("Wrote new value to: ");
-				Serial.println(pChr->getUUID().toString().c_str());
-			}
-			else {
-				pClient->disconnect();
-				return;
-			}
-			
-			if(pChr->canRead()) {
-				Serial.print("The value of: ");
-				Serial.print(pChr->getUUID().toString().c_str());
-				Serial.print(" is now: ");
-				Serial.println(pChr->readValue().c_str());
-			}
-		}
-		
-		if(pChr->canNotify()) {
-			pChr->registerForNotify(notifyCB);
-		}
-		else if(pChr->canIndicate()) {
-			pChr->registerForNotify(notifyCB, false);
-		}    
-	}        
-
-	else{
-		Serial.println("BAAD service not found.");
-	}
+    /** Loop here until we find a device we want to connect to */
+    while(!doConnect){
+        delay(1);
+    }
     
-    NimBLEDevice::getScan()->start(0,scanEndedCB);
+    doConnect = false;
+    
+    /** Found a device we want to connect to, do it now */
+    if(connectToServer()) {
+        Serial.println("Success! we should now be getting notifications, scanning for more!");
+    } else {
+        Serial.println("Failed to connect, starting scan");
+    }
+    
+    NimBLEDevice::getScan()->start(scanTime,scanEndedCB);
 }

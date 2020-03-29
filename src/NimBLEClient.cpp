@@ -92,30 +92,13 @@ void NimBLEClient::clearServices() {
 
 
 /**
- * @brief If the host was reset try to gracefully recover and ensure all semaphores are unblocked
+ * NOT NEEDED
  */
+ /*
 void NimBLEClient::onHostReset() {
-    
-    // Dont think this is necessary
-    /*
-    m_isConnected = false; // make sure we change connected status before releasing semaphores
-    m_waitingToConnect = false;
-    
-    m_semaphoreOpenEvt.give(1);
-    m_semaphoreSearchCmplEvt.give(1);
-    m_semeaphoreSecEvt.give(1);
-    for (auto &sPair : m_servicesMap) {
-        sPair.second->releaseSemaphores();
-    }
-    //m_conn_id = BLE_HS_CONN_HANDLE_NONE; // old handle will be invalid, clear it just incase
-    
-    // tell the user we disconnected
-    if (m_pClientCallbacks != nullptr) {
-        m_pClientCallbacks->onDisconnect(this);
-    }
-    */
+   
 }
-    
+ */   
     
 /**
  * Add overloaded function to ease connect to peer device with not public address
@@ -133,10 +116,15 @@ bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices)
  * @return True on success.
  */
 bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServices) {
-    NIMBLE_LOGE(LOG_TAG, ">> connect(%s)", address.toString().c_str());
+    NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
     
     if(!NimBLEDevice::m_synced) {
-        NIMBLE_LOGE(LOG_TAG, "Host reset, wait for sync.");
+        NIMBLE_LOGC(LOG_TAG, "Host reset, wait for sync.");
+        return false;
+    }
+    
+    if(ble_gap_conn_active()) {
+        NIMBLE_LOGE(LOG_TAG, "Connection in progress - must wait.");
         return false;
     }
     
@@ -163,7 +151,7 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
                     "addr=%s, rc=%d; %s",
                     type, 
                     m_peerAddress.toString().c_str(),
-                    rc, NimBLEUtils::returnCodeToString(rc));
+                    rc, NimBLEUtils::returnCodeToString(BLE_HS_ATT_ERR(rc)));
                     
         m_semaphoreOpenEvt.give();
         m_waitingToConnect = false;
@@ -595,14 +583,14 @@ uint16_t NimBLEClient::getMTU() {
             //MODLOG_DFLT(INFO, "\n");
 
           
-            // if Host reset tell the device now before returning to prevent 
+            // If Host reset tell the device now before returning to prevent 
             // any errors caused by calling host functions before resyncing.
             switch(event->disconnect.reason) {
                 case BLE_HS_ETIMEOUT_HCI:
                 case BLE_HS_EOS:
                 case BLE_HS_ECONTROLLER:
                 case BLE_HS_ENOTSYNCED:
-                    NIMBLE_LOGE(LOG_TAG, "Disconnect - host reset, rc=%d", event->disconnect.reason);
+                    NIMBLE_LOGC(LOG_TAG, "Disconnect - host reset, rc=%d", event->disconnect.reason);
                     NimBLEDevice::onReset(event->disconnect.reason);
                     break;
                 default: 
@@ -734,7 +722,14 @@ uint16_t NimBLEClient::getMTU() {
         } // BLE_GAP_EVENT_CONN_UPDATE_REQ, BLE_GAP_EVENT_L2CAP_UPDATE_REQ
         
         case BLE_GAP_EVENT_CONN_UPDATE: {
-            NIMBLE_LOGD(LOG_TAG, "Connection parameters updated.");
+            if(client->m_conn_id != event->conn_update.conn_handle){
+                return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
+            }
+            if(event->conn_update.status == 0) {
+                NIMBLE_LOGI(LOG_TAG, "Connection parameters updated.");
+            } else {
+                NIMBLE_LOGE(LOG_TAG, "Update connection parameters failed.");
+            }
             return 0;
         } // BLE_GAP_EVENT_CONN_UPDATE
         
@@ -743,14 +738,16 @@ uint16_t NimBLEClient::getMTU() {
                 return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
             }
             
-            struct ble_gap_conn_desc desc;
-            rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
-            assert(rc == 0);
-            
-            if(NimBLEDevice::m_securityCallbacks != nullptr) {
-                NimBLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
-            } else {
-                client->m_pClientCallbacks->onAuthenticationComplete(&desc);
+            if(event->enc_change.status == 0) {
+                struct ble_gap_conn_desc desc;
+                rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
+                assert(rc == 0);
+                
+                if(NimBLEDevice::m_securityCallbacks != nullptr) {
+                    NimBLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
+                } else {
+                    client->m_pClientCallbacks->onAuthenticationComplete(&desc);
+                }
             }
             
             client->m_semeaphoreSecEvt.give(event->enc_change.status);
@@ -791,12 +788,7 @@ uint16_t NimBLEClient::getMTU() {
                 } else {
                     pkey.numcmp_accept = client->m_pClientCallbacks->onConfirmPIN(event->passkey.params.numcmp);
                 }
-            /*    }else if(client->m_pClientCallbacks != nullptr) {
-                    pkey.numcmp_accept = client->m_pClientCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-                }else{
-                    pkey.numcmp_accept = false;
-                }
-            */
+
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "ble_sm_inject_io result: %d", rc);
                 
@@ -821,14 +813,7 @@ uint16_t NimBLEClient::getMTU() {
                 } else {
                     client->m_pClientCallbacks->onPassKeyRequest();
                 }
-            /*    }else if(client->m_pClientCallbacks != nullptr) {
-                    pkey.passkey = client->m_pClientCallbacks->onPassKeyRequest();
-                    NIMBLE_LOGD(LOG_TAG, "Sending passkey: %d", pkey.passkey);
-                }else{
-                    pkey.passkey = 0;
-                    NIMBLE_LOGE(LOG_TAG, "No Callback! Sending 0 as the passkey");
-                }
-            */
+
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "ble_sm_inject_io result: %d", rc);
                 

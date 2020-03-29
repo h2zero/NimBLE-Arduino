@@ -86,7 +86,7 @@ public:
 
 private:
     friend class NimBLEDevice;
-    void                 onHostReset();
+   // void                 onHostReset();
 	ble_hs_adv_fields    m_advData;
 	ble_hs_adv_fields    m_scanData;
 	ble_gap_adv_params   m_advParams;

@@ -116,6 +116,11 @@ void NimBLEDevice::stopAdvertising() {
  * @return A reference to the new client object.
  */
 /* STATIC */ NimBLEClient* NimBLEDevice::createClient() {
+    if(m_cList.size() >= NIMBLE_MAX_CONNECTIONS) {
+        NIMBLE_LOGW("Number of clients exceeds Max connections. Max=(%d)", 
+                                            NIMBLE_MAX_CONNECTIONS);
+    }
+    
     NimBLEClient* pClient = new NimBLEClient();
     m_cList.push_back(pClient);
 
@@ -168,7 +173,17 @@ void NimBLEDevice::stopAdvertising() {
 
 
 /**
+ * @brief get the size of the list of clients.
+ * @return a pointer to the list of clients.
+ */
+/* STATIC */size_t NimBLEDevice::getClientListSize() {
+    return m_cList.size();
+} // getClientList
+
+
+/**
  * @brief Get a reference to a client by connection ID.
+ * @param [in] The client connection ID to search for.
  * @return A reference pointer to the client with the spcified connection ID.
  */
 /* STATIC */NimBLEClient* NimBLEDevice::getClientByID(uint16_t conn_id) {
@@ -180,6 +195,35 @@ void NimBLEDevice::stopAdvertising() {
     assert(0);
     return nullptr;
 } // getClientByID
+
+
+/**
+ * @brief Get a reference to a client by peer address.
+ * @param [in] a NimBLEAddress of the peer to search for.
+ * @return A reference pointer to the client with the peer address.
+ */
+/* STATIC */NimBLEClient* NimBLEDevice::getClientByPeerAddress(NimBLEAddress peer_addr) {
+    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
+        if((*it)->getPeerAddress().equals(peer_addr)) {
+            return (*it);
+        }
+    }
+    return nullptr;
+} // getClientPeerAddress
+
+
+/**
+ * @brief Finds the first disconnected client in the list.
+ * @return A reference pointer to the first client that is not connected to a peer.
+ */
+/* STATIC */NimBLEClient* NimBLEDevice::getDisconnectedClient() {
+    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
+        if(!(*it)->isConnected()) {
+            return (*it);
+        }
+    }
+    return nullptr;
+} // getDisconnectedClient
 
 
 /**
@@ -272,23 +316,23 @@ void NimBLEDevice::stopAdvertising() {
     
     m_synced = false;
     
-    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
-        (*it)->onHostReset();
-    }
-    
     if(m_pScan != nullptr) {
         m_pScan->onHostReset();
     }
-    
+/*  Not needed    
     if(m_pServer != nullptr) {
         m_pServer->onHostReset();
+    }
+    
+    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
+        (*it)->onHostReset();
     }
     
     if(m_bleAdvertising != nullptr) {
         m_bleAdvertising->onHostReset();
     }
-    
-    NIMBLE_LOGE(LOG_TAG, "Resetting state; reason=%d, %s", reason, 
+*/    
+    NIMBLE_LOGC(LOG_TAG, "Resetting state; reason=%d, %s", reason, 
                         NimBLEUtils::returnCodeToString(reason));
 } // onReset
 
@@ -298,7 +342,12 @@ void NimBLEDevice::stopAdvertising() {
  */
 /* STATIC */ void NimBLEDevice::onSync(void)
 {
-    NIMBLE_LOGE(LOG_TAG, "NimBle host synced.");
+    NIMBLE_LOGI(LOG_TAG, "NimBle host synced.");
+    // This check is needed due to potentially being called multiple times in succession
+    // If this happens, the call to scan start may get stuck or cause an advertising fault.
+    if(m_synced) {
+        return;
+    }
     
     /* Make sure we have proper identity address set (public preferred) */
     int rc = ble_hs_util_ensure_addr(0);

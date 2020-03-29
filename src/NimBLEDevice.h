@@ -59,6 +59,7 @@
 #define BLEEddystoneTLM                 NimBLEEddystoneTLM
 #define BLEEddystoneURL                 NimBLEEddystoneURL
 
+#define NIMBLE_MAX_CONNECTIONS          CONFIG_BT_NIMBLE_MAX_CONNECTIONS
     
 /**
  * @brief BLE functions.
@@ -99,6 +100,9 @@ public:
 	static void		   		startAdvertising();
 	static void		   		stopAdvertising();
     static NimBLEClient*    getClientByID(uint16_t conn_id);
+    static NimBLEClient*    getClientByPeerAddress(NimBLEAddress peer_addr);
+    static NimBLEClient*    getDisconnectedClient();
+    static size_t           getClientListSize(); 
     static std::list<NimBLEClient*>* getClientList(); 
         
 private:
@@ -106,8 +110,6 @@ private:
     friend class NimBLEClient;
     friend class NimBLEScan;
     friend class NimBLEAdvertising;
-//  friend class NimBLERemoteService;
-//  friend class NimBLERemoteCharacteristic;
     
     static void        onReset(int reason);
     static void        onSync(void);
