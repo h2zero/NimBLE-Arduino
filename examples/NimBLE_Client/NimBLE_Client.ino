@@ -87,15 +87,13 @@ class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
 
 /** Notification / Indication receiving handler callback */
 void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify){
-    Serial.print((isNotify == true) ? "Notify" : "Indication");
-    Serial.print(" from ");
-    Serial.print(pRemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString().c_str());
-    Serial.print(": Service = ");
-    Serial.print(pRemoteCharacteristic->getRemoteService()->getUUID().toString().c_str());
-    Serial.print(", Characteristic = ");
-    Serial.print(pRemoteCharacteristic->getUUID().toString().c_str());
-    Serial.print(", Value = ");
-    Serial.println(std::string((char*)pData, length).c_str());
+    std::string str = (isNotify == true) ? "Notification" : "Indication"; 
+    str += " from ";
+    str += pRemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress().toString();
+    str += ": Service = " + pRemoteCharacteristic->getRemoteService()->getUUID().toString();
+    str += ", Characteristic = " + pRemoteCharacteristic->getUUID().toString();
+    str += ", Value = " + std::string((char*)pData, length);
+    Serial.println(str.c_str());
 }
 
 /** Callback to process the results of the last scan or restart it */

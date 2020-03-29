@@ -223,7 +223,7 @@ uint32_t NimBLEServer::getConnectedCount() {
  */
 /*STATIC*/int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
 	NimBLEServer* server = (NimBLEServer*)arg;
-	NIMBLE_LOGE(LOG_TAG, ">> handleGapEvent: %s",
+	NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent: %s",
 		NimBLEUtils::gapEventToString(event->type));
     int rc = 0;
 

@@ -84,23 +84,24 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
         Serial.println(pCharacteristic->getValue().c_str());
     };
     /** Called before notification or indication is sent, 
-    *  the value can be changed here before sending if desired.
-    */
+     *  the value can be changed here before sending if desired.
+     */
     void onNotify(NimBLECharacteristic* pCharacteristic) {
         Serial.println("Sending notification to clients");
     };
 
 
-    /** The status returned in s is defined in NimBLECharacteristic.h.
-    *  The value returned in code is the NimBLE host return code.
-    */
-    void onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code) {
-        Serial.print("Notification/Indication status code: ");
-        Serial.print(s);
-        Serial.print(", return code: ");
-        Serial.print(code);
-        Serial.print(", ");
-        Serial.println(NimBLEUtils::returnCodeToString(code));
+    /** The status returned in status is defined in NimBLECharacteristic.h.
+     *  The value returned in code is the NimBLE host return code.
+     */
+    void onStatus(NimBLECharacteristic* pCharacteristic, Status status, int code) {
+        String str = ("Notification/Indication status code: ");
+        str += status;
+        str += ", return code: ";
+        str += code;
+        str += ", "; 
+        str += NimBLEUtils::returnCodeToString(code);
+        Serial.println(str);
     };
 };
     
@@ -142,18 +143,18 @@ void setup() {
     NimBLEDevice::init("NimBLE-Arduino");
 
     /** Set the IO capabilities of the device, each option will trigger a different pairing method.
-    *  BLE_HS_IO_DISPLAY_ONLY    - Passkey pairing
-    *  BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing
-    *  BLE_HS_IO_NO_INPUT_OUTPUT - DEFAULT setting - just works pairing
-    */
+     *  BLE_HS_IO_DISPLAY_ONLY    - Passkey pairing
+     *  BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing
+     *  BLE_HS_IO_NO_INPUT_OUTPUT - DEFAULT setting - just works pairing
+     */
     //NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY); // use passkey
     //NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_YESNO); //use numeric comparison
 
     /** 2 different ways to set security - both calls achieve the same result.
-    *  no bonding, no man in the middle protection, secure connections.
-    *   
-    *  These are the default values, only shown here for demonstration.   
-    */ 
+     *  no bonding, no man in the middle protection, secure connections.
+     *   
+     *  These are the default values, only shown here for demonstration.   
+     */ 
     //NimBLEDevice::setSecuityAuth(false, false, true); 
     NimBLEDevice::setSecuityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
 
@@ -174,10 +175,10 @@ void setup() {
     pBeefCharacteristic->setCallbacks(&chrCallbacks);
 
     /** 2902 and 2904 descriptors are a special case, when createDescriptor is called with
-    *  either of those uuid's it will create the associated class with the correct properties
-    *  and sizes. However we must cast the returned reference to the correct type as the method
-    *  only returns a pointer to the base NimBLEDescriptor class.
-    */
+     *  either of those uuid's it will create the associated class with the correct properties
+     *  and sizes. However we must cast the returned reference to the correct type as the method
+     *  only returns a pointer to the base NimBLEDescriptor class.
+     */
     NimBLE2904* pBeef2904 = (NimBLE2904*)pBeefCharacteristic->createDescriptor("2904"); 
     pBeef2904->setFormat(NimBLE2904::FORMAT_UTF8);
     pBeef2904->setCallbacks(&dscCallbacks);
@@ -206,10 +207,10 @@ void setup() {
     pC01Ddsc->setCallbacks(&dscCallbacks);
 
     /** Note a 2902 descriptor does NOT need to be created as any chactateristic with 
-    *  notification or indication properties will have one created autmatically.
-    *  Manually creating it is only useful if you wish to handle callback functions
-    *  as shown here. Otherwise this can be removed without loss of functionality.
-    */
+     *  notification or indication properties will have one created autmatically.
+     *  Manually creating it is only useful if you wish to handle callback functions
+     *  as shown here. Otherwise this can be removed without loss of functionality.
+     */
     NimBLE2902* pFood2902 = (NimBLE2902*)pFoodCharacteristic->createDescriptor("2902"); 
     pFood2902->setCallbacks(&dscCallbacks);
 
@@ -222,8 +223,8 @@ void setup() {
     pAdvertising->addServiceUUID(pDeadService->getUUID());
     pAdvertising->addServiceUUID(pBaadService->getUUID());
     /** If your device is battery powered you may consider setting scan response
-    *  to false as it will extend battery life at the expense of less data sent.
-    */
+     *  to false as it will extend battery life at the expense of less data sent.
+     */
     pAdvertising->setScanResponse(true);
     pAdvertising->start();
 
