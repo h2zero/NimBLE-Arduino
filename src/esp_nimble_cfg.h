@@ -1,4 +1,6 @@
 
+/* Modifications copyright (C) 2020 Ryan Powell */
+ 
 #ifndef __ESP_NIMBLE_CFG__
 #define __ESP_NIMBLE_CFG__
 #include "nimconfig.h"

@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+ 
+ /* Modifications copyright (C) 2020 Ryan Powell */
 
 #include <assert.h>
 #include <string.h>
