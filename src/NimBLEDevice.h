@@ -17,7 +17,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimbleScan.h"
+#include "NimBLEScan.h"
 #include "NimBLEUtils.h"
 #include "NimBLEClient.h"
 #include "NimBLEServer.h"
