@@ -120,13 +120,13 @@ The default configuration will use "just-works" pairing with no bonding, if you 
 Security callback functions are now incorporated in the client/server Callbacks class.   
 However backward compatibility with the `BLESecurity` class is retained to minimize app code changes.
 
-The relevent server callbacks are defined as:
+The relevant server callbacks are defined as:
 ```
 bool    onConfirmPIN(uint32_t pin); // accept or reject the passkey
 void    onAuthenticationComplete(ble_gap_conn_desc* desc); // auth complete - details in desc 
 bool    onPassKeyNotify(uint32_t pass_key); // receive the passkey sent by the client, accept or reject
 ```
-The relevent client callbacks are defined as:
+The relevant client callbacks are defined as:
 ```
 bool     onConfirmPIN(uint32_t pin); // accept or reject the passkey
 void     onAuthenticationComplete(ble_gap_conn_desc* desc); // auth complete - details in desc 
@@ -148,7 +148,7 @@ static void             setSecurityRespKey(uint8_t init_key);
  * @param mitm, if true we are capable of man in the middle protection, false if not.
  * @param sc, if true we will perform secure connection pairing, false we will use legacy pairing.
  */   
-void NimBLEDevice::setSecuityAuth(bool bonding, bool mitm, bool sc) 
+void NimBLEDevice::setSecurityAuth(bool bonding, bool mitm, bool sc) 
 
 
 
@@ -162,7 +162,7 @@ void NimBLEDevice::setSecuityAuth(bool bonding, bool mitm, bool sc)
  ** 0x10 BLE_SM_PAIR_AUTHREQ_KEYPRESS  - not yet supported.         
  ** 0xe2 BLE_SM_PAIR_AUTHREQ_RESERVED  - for reference only.
  */ 
-void NimBLEDevice::setSecuityAuth(uint8_t auth_req) 
+void NimBLEDevice::setSecurityAuth(uint8_t auth_req) 
 
 
 
