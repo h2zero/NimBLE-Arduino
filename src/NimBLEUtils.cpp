@@ -490,7 +490,7 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             
         case BLE_GAP_EVENT_EXT_DISC:                    //19
             return "BLE_GAP_EVENT_EXT_DISC";
-            
+#ifdef BLE_GAP_EVENT_PERIODIC_SYNC   // IDF 4.0 does not support these
         case BLE_GAP_EVENT_PERIODIC_SYNC:               //20
             return "BLE_GAP_EVENT_PERIODIC_SYNC";
             
@@ -502,7 +502,7 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             
         case BLE_GAP_EVENT_SCAN_REQ_RCVD:               //23
             return "BLE_GAP_EVENT_SCAN_REQ_RCVD";
-            
+#endif            
         default:
             NIMBLE_LOGD(LOG_TAG, "gapEventToString: Unknown event type %d 0x%.2x", eventType, eventType);
             return "Unknown event type";

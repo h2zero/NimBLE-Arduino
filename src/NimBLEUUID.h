@@ -18,6 +18,10 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "host/ble_uuid.h"
+/****  FIX COMPILATION ****/
+#undef min
+#undef max
+/**************************/
 
 #include <string>
 

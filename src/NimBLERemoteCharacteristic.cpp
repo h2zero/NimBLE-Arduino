@@ -346,13 +346,13 @@ std::string NimBLERemoteCharacteristic::readValue() {
         switch(rc){
             case 0:
                 break;
-                
+     
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
                 if (retryCount && pClient->secureConnection())
                     break;
-                
+            /* Else falls through. */                 
             default:
                 return "";
         }
@@ -545,13 +545,13 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
         switch(rc){
             case 0:
                 break;
-                
+   
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
                 if (retryCount && pClient->secureConnection())
                     break;
-                
+            /* Else falls through. */                 
             default:
                 return false;
         }

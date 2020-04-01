@@ -17,6 +17,10 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "host/ble_hs.h"
+/****  FIX COMPILATION ****/
+#undef min
+#undef max
+/**************************/
 
 typedef enum {
     READ         =  BLE_GATT_CHR_F_READ, 
