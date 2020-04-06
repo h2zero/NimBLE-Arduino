@@ -1,4 +1,5 @@
 # *** UPDATE ***
+Checkout the bugfix branch if you would like to test the upcoming stability revision.
 
 This library is now ready with (mostly) all original Arduino BLE library compatiblity.   
 Check the examples and API_DIFFERENCES document for details of using this library.
