@@ -892,15 +892,7 @@ void NimBLEClientCallbacks::onDisconnect(NimBLEClient* pClient) {
 }
 
 bool NimBLEClientCallbacks::onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
-    if(pClient->m_pConnParams != nullptr) {
-        if(params->itvl_min  != pClient->m_pConnParams->itvl_min ||
-            params->itvl_max != pClient->m_pConnParams->itvl_max ||
-            params->latency  != pClient->m_pConnParams->latency ||
-            params->supervision_timeout != pClient->m_pConnParams->supervision_timeout)
-        {
-            return false;
-        }
-    }
+	NIMBLE_LOGD("NimBLEClientCallbacks", "onConnParamsUpdateRequest: default");
     return true;
 }
 
