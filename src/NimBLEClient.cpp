@@ -717,6 +717,7 @@ uint16_t NimBLEClient::getMTU() {
                     event->conn_update_req.self_params->itvl_max = BLE_GAP_INITIAL_CONN_ITVL_MAX;
                     event->conn_update_req.self_params->latency  = BLE_GAP_INITIAL_CONN_LATENCY;
                     event->conn_update_req.self_params->supervision_timeout = BLE_GAP_INITIAL_SUPERVISION_TIMEOUT;
+				}
             }
             /*
             // if we set connection params and the peer is asking for new ones, reject them.
