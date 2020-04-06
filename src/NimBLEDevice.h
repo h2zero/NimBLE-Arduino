@@ -110,6 +110,7 @@ private:
     friend class NimBLEClient;
     friend class NimBLEScan;
     friend class NimBLEAdvertising;
+    friend class NimBLECharacteristic;
     
     static void        onReset(int reason);
     static void        onSync(void);

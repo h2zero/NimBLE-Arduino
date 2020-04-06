@@ -58,8 +58,6 @@ public:
                                                             uint16_t minConnTime=16, uint16_t maxConnTime=768);
  
                                               
-
-
 private:
     NimBLEClient();
     ~NimBLEClient();
@@ -79,9 +77,7 @@ private:
     bool             m_waitingToConnect =false;
     bool             m_deleteCallbacks = true;
 	int32_t			 m_connectTimeout;
-	ble_gap_conn_params* m_pConnParams;
     //uint16_t         m_mtu = 23;
-
 
     NimBLEClientCallbacks*  m_pClientCallbacks = nullptr;
 
@@ -90,6 +86,10 @@ private:
     FreeRTOS::Semaphore     m_semeaphoreSecEvt       = FreeRTOS::Semaphore("Security");
 
     std::map<std::string, NimBLERemoteService*> m_servicesMap;
+    
+private:
+    friend class NimBLEClientCallbacks;
+    ble_gap_conn_params* m_pConnParams;
 
 }; // class NimBLEClient 
 
@@ -100,13 +100,14 @@ private:
 class NimBLEClientCallbacks {
 public:
     virtual ~NimBLEClientCallbacks() {};
-    virtual void onConnect(NimBLEClient *pClient); // = 0;
-    virtual void onDisconnect(NimBLEClient *pClient); // = 0;
-    virtual uint32_t onPassKeyRequest(); //{return 0;}
-    virtual void onPassKeyNotify(uint32_t pass_key); //{}
-    virtual bool onSecurityRequest(); //{return false;}
-    virtual void onAuthenticationComplete(ble_gap_conn_desc*); //{};
-    virtual bool onConfirmPIN(uint32_t pin); //{return false;}
+    virtual void onConnect(NimBLEClient* pClient);
+    virtual void onDisconnect(NimBLEClient* pClient);
+    virtual bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params);
+    virtual uint32_t onPassKeyRequest();
+    virtual void onPassKeyNotify(uint32_t pass_key);
+    virtual bool onSecurityRequest();
+    virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);
+    virtual bool onConfirmPIN(uint32_t pin);
 };
 
 #endif // CONFIG_BT_ENABLED

@@ -16,8 +16,6 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLERemoteCharacteristic.h"
-
-#include <esp_err.h>
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
 
@@ -321,6 +319,7 @@ std::string NimBLERemoteCharacteristic::readValue() {
 
     int rc = 0;
     int retryCount = 1;
+
     NimBLEClient* pClient = getRemoteService()->getClient();
     
     // Check to see that we are connected.
@@ -334,19 +333,22 @@ std::string NimBLERemoteCharacteristic::readValue() {
         
         rc = ble_gattc_read(pClient->getConnId(), m_handle,
                             NimBLERemoteCharacteristic::onReadCB, this);
+  
+//  long read experiment
+/*        rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
+                        NimBLERemoteCharacteristic::onReadCB, this);
+*/
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d", rc);
-            //goto err;
             m_semaphoreReadCharEvt.give();
             return "";
         }
         
         rc = m_semaphoreReadCharEvt.wait("readValue");
-
         switch(rc){
             case 0:
                 break;
-     
+                
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
@@ -378,7 +380,13 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
         return 0;
     }
     
-    NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
+    NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d offset=%d len=%d", error->status, conn_handle, attr->offset,attr->om->om_len);
+// long read experiment
+/*    if(attr->om->om_len >= (ble_att_mtu(characteristic->getRemoteService()->getClient()->getConnId()) - 1)){
+        
+        return 0;
+    }
+*/   
     
     if(characteristic->m_rawData != nullptr) {
         free(characteristic->m_rawData);
@@ -395,7 +403,8 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
         characteristic->m_semaphoreReadCharEvt.give(error->status);
     }
     
-    return 0;
+//    characteristic->m_semaphoreReadCharEvt.give(error->status);
+    return 0; //1
 }
 
 
@@ -515,6 +524,7 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
     NimBLEClient* pClient = getRemoteService()->getClient();
     int rc = 0;
     int retryCount = 1;
+//    uint16_t mtu;
     
     // Check to see that we are connected.
     if (!pClient->isConnected()) {
@@ -522,18 +532,29 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
         return false;
     }
     
-    if(!response) {
+//    mtu = ble_att_mtu(pClient->getConnId()) - 3;
+
+    if(/*!length > mtu &&*/ !response) {
         rc =  ble_gattc_write_no_rsp_flat(pClient->getConnId(), m_handle, data, length);
         return (rc==0);
     }
     
     do {
         m_semaphoreWriteCharEvt.take("writeValue");
-        
+// long write experiment        
+/*        if(length > mtu) {
+            NIMBLE_LOGD(LOG_TAG,"long write");
+            os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
+            rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om,
+                                      NimBLERemoteCharacteristic::onWriteCB, 
+                                      this);
+        } else {
+*/       
         rc = ble_gattc_write_flat(pClient->getConnId(), m_handle,
                                   data, length, 
                                   NimBLERemoteCharacteristic::onWriteCB, 
-                                  this);;
+                                  this);
+//        }
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to write characteristic; rc=%d", rc);
             m_semaphoreWriteCharEvt.give();
@@ -558,7 +579,7 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
     } while(rc != 0 && retryCount--);
 
     NIMBLE_LOGD(LOG_TAG, "<< writeValue, rc: %d",rc);
-    return (rc == 0); //true;
+    return (rc == 0);
 } // writeValue
 
 

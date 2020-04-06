@@ -24,9 +24,9 @@
 
 NimBLE2902::NimBLE2902(NimBLECharacteristic* pCharacterisitic) 
 : NimBLEDescriptor(NimBLEUUID((uint16_t) 0x2902), 
-						BLE_GATT_CHR_PROP_READ | 
-						BLE_GATT_CHR_PROP_WRITE,
-							2, pCharacterisitic) 
+						BLE_GATT_CHR_F_READ | 
+						BLE_GATT_CHR_F_WRITE,
+                        2, pCharacterisitic) 
 {
 	uint8_t data[2] = { 0, 0 };
 	setValue(data, 2);

@@ -414,7 +414,7 @@ void NimBLEDevice::stopAdvertising() {
         ble_hs_cfg.sync_cb = NimBLEDevice::onSync;
         
         // Set initial security capabilities
-        ble_hs_cfg.sm_io_cap = BLE_SM_IO_CAP_NO_IO; 
+        ble_hs_cfg.sm_io_cap = BLE_HS_IO_NO_INPUT_OUTPUT; 
         ble_hs_cfg.sm_bonding = 0;
         ble_hs_cfg.sm_mitm = 0;
         ble_hs_cfg.sm_sc = 1;

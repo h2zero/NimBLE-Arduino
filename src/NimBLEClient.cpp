@@ -702,7 +702,23 @@ uint16_t NimBLEClient::getMTU() {
                                     event->conn_update_req.peer_params->itvl_max,
                                     event->conn_update_req.peer_params->latency,
                                     event->conn_update_req.peer_params->supervision_timeout);
-            rc = 0;
+
+            rc = client->m_pClientCallbacks->onConnParamsUpdateRequest(client,
+                                    event->conn_update_req.peer_params) ? 0 : BLE_ERR_CONN_PARMS;
+
+            if(!rc && event->type == BLE_GAP_EVENT_CONN_UPDATE_REQ ) {
+                if(client->m_pConnParams != nullptr) {
+                    event->conn_update_req.self_params->itvl_min = client->m_pConnParams->itvl_min;
+                    event->conn_update_req.self_params->itvl_max = client->m_pConnParams->itvl_max;
+                    event->conn_update_req.self_params->latency  = client->m_pConnParams->latency;
+                    event->conn_update_req.self_params->supervision_timeout = client->m_pConnParams->supervision_timeout;
+                } else {
+                    event->conn_update_req.self_params->itvl_min = BLE_GAP_INITIAL_CONN_ITVL_MIN;
+                    event->conn_update_req.self_params->itvl_max = BLE_GAP_INITIAL_CONN_ITVL_MAX;
+                    event->conn_update_req.self_params->latency  = BLE_GAP_INITIAL_CONN_LATENCY;
+                    event->conn_update_req.self_params->supervision_timeout = BLE_GAP_INITIAL_SUPERVISION_TIMEOUT;
+            }
+            /*
             // if we set connection params and the peer is asking for new ones, reject them.
             if(client->m_pConnParams != nullptr) {
                                          
@@ -711,13 +727,11 @@ uint16_t NimBLEClient::getMTU() {
                     event->conn_update_req.peer_params->latency != client->m_pConnParams->latency ||
                     event->conn_update_req.peer_params->supervision_timeout != client->m_pConnParams->supervision_timeout) 
                 {
-                    //event->conn_update_req.self_params->itvl_min = 6;//client->m_pConnParams->itvl_min;
                     rc = BLE_ERR_CONN_PARMS;
                 }
             }
-            if(rc != 0) {
-                NIMBLE_LOGD(LOG_TAG, "Rejected peer params");
-            }
+            */
+            NIMBLE_LOGD(LOG_TAG, "%s peer params", (rc == 0) ? "Accepted" : "Rejected");
             return rc;
         } // BLE_GAP_EVENT_CONN_UPDATE_REQ, BLE_GAP_EVENT_L2CAP_UPDATE_REQ
         
@@ -868,12 +882,25 @@ std::string NimBLEClient::toString() {
 } // toString
 
 
-void NimBLEClientCallbacks::onConnect(NimBLEClient *pClient) {
+void NimBLEClientCallbacks::onConnect(NimBLEClient* pClient) {
     NIMBLE_LOGD("NimBLEClientCallbacks", "onConnect: default");
 }
 
-void NimBLEClientCallbacks::onDisconnect(NimBLEClient *pClient) {
+void NimBLEClientCallbacks::onDisconnect(NimBLEClient* pClient) {
     NIMBLE_LOGD("NimBLEClientCallbacks", "onDisconnect: default");
+}
+
+bool NimBLEClientCallbacks::onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
+    if(pClient->m_pConnParams != nullptr) {
+        if(params->itvl_min  != pClient->m_pConnParams->itvl_min ||
+            params->itvl_max != pClient->m_pConnParams->itvl_max ||
+            params->latency  != pClient->m_pConnParams->latency ||
+            params->supervision_timeout != pClient->m_pConnParams->supervision_timeout)
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 uint32_t NimBLEClientCallbacks::onPassKeyRequest(){
@@ -889,7 +916,7 @@ bool NimBLEClientCallbacks::onSecurityRequest(){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onSecurityRequest: default: true");
     return true;
 }
-void NimBLEClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc*){
+void NimBLEClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onAuthenticationComplete: default");
 }
 bool NimBLEClientCallbacks::onConfirmPIN(uint32_t pin){

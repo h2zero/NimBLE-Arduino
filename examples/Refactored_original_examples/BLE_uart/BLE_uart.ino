@@ -106,10 +106,10 @@ void setup() {
   pTxCharacteristic = pService->createCharacteristic(
                                         CHARACTERISTIC_UUID_TX,
                                     /******* Enum Type NIMBLE_PROPERTY now *******      
-                                        BLECharacteristic::PROPERTY_WRITE
+                                        BLECharacteristic::PROPERTY_NOTIFY
                                         );
                                     **********************************************/  
-                                        NIMBLE_PROPERTY::WRITE
+                                        NIMBLE_PROPERTY::NOTIFY
                                        );
                                     
   /******* New createDescriptor method ********   
