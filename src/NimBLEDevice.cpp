@@ -241,12 +241,36 @@ void NimBLEDevice::stopAdvertising() {
  */
 /* STATIC */ void NimBLEDevice::setPower(esp_power_level_t powerLevel) {
     NIMBLE_LOGD(LOG_TAG, ">> setPower: %d", powerLevel);
-    esp_err_t errRc = ::esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, powerLevel);
+    esp_err_t errRc = esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, powerLevel);
     if (errRc != ESP_OK) {
-        //NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_set: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
         NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_set: rc=%d", errRc);
     };
     NIMBLE_LOGD(LOG_TAG, "<< setPower");
+} // setPower
+
+
+/* STATIC */ int NimBLEDevice::getPower(esp_ble_power_type_t powerType) {
+
+	switch(esp_ble_tx_power_get(powerType)) {
+		case ESP_PWR_LVL_N12:
+			return -12;
+		case ESP_PWR_LVL_N9:
+			return -9;
+		case ESP_PWR_LVL_N6:
+			return -6;
+		case ESP_PWR_LVL_N3:
+			return -6;
+		case ESP_PWR_LVL_N0:
+			return 0;
+		case ESP_PWR_LVL_P3:
+			return 3;
+		case ESP_PWR_LVL_P6:
+			return 6;
+		case ESP_PWR_LVL_P9:
+			return 9;
+		default:
+			return BLE_HS_ADV_TX_PWR_LVL_AUTO;
+	}
 } // setPower
 
 

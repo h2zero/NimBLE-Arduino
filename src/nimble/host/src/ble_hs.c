@@ -372,7 +372,6 @@ ble_hs_sync(void)
 static int
 ble_hs_reset(void)
 {
-    uint16_t conn_handle;
     int rc;
 
     STATS_INC(ble_hs_stats, reset);
@@ -387,14 +386,8 @@ ble_hs_reset(void)
 
     ble_hs_clear_rx_queue();
 
-    while (1) {
-        conn_handle = ble_hs_atomic_first_conn_handle();
-        if (conn_handle == BLE_HS_CONN_HANDLE_NONE) {
-            break;
-        }
-
-        ble_gap_conn_broken(conn_handle, ble_hs_reset_reason);
-    }
+    /* Clear adverising and scanning states. */
+    ble_gap_reset_state(ble_hs_reset_reason);
 
     /* Clear configured addresses. */
     ble_hs_id_reset();
