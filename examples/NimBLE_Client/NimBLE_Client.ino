@@ -38,6 +38,20 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         NimBLEDevice::getScan()->start(scanTime, scanEndedCB);
     };
     
+	bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
+		if(params->itvl_min < 24) {
+			return false;
+		} else if(params->itvl_max > 40) {
+			return false;
+		} else if(params->latency > 2) {
+			return false;
+		} else if(params->supervision_timeout > 100) {
+			return false;
+		}
+
+		return true;
+	};
+	
     /********************* Security handled here **********************
     ****** Note: these are the same return values as defaults ********/
     uint32_t onPassKeyRequest(){

@@ -34,12 +34,43 @@ NimBLEAdvertising::NimBLEAdvertising() {
 	memset(&m_scanData, 0, sizeof m_scanData);
 	memset(&m_advParams, 0, sizeof m_advParams);
     const char *name = ble_svc_gap_device_name();
-    
+	/*
+	int pwr;
+	switch(esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_DEFAULT)) {
+		case ESP_PWR_LVL_N12:
+			pwr = -12;
+			break;
+		case ESP_PWR_LVL_N9:
+			pwr = -9;
+			break;
+		case ESP_PWR_LVL_N6:
+			pwr = -6;
+			break;
+		case ESP_PWR_LVL_N3:
+			pwr = -6;
+			break;
+		case ESP_PWR_LVL_N0:
+			pwr = 0;
+			break;
+		case ESP_PWR_LVL_P3:
+			pwr = 3;
+			break;
+		case ESP_PWR_LVL_P6:
+			pwr = 6;
+			break;
+		case ESP_PWR_LVL_P9:
+			pwr = 9;
+			break;
+		default:
+			pwr = BLE_HS_ADV_TX_PWR_LVL_AUTO;
+			break;
+	}
+   */ 
 	m_advData.name                   = (uint8_t *)name;
     m_advData.name_len               = strlen(name);
     m_advData.name_is_complete       = 1;
     m_scanData.tx_pwr_lvl_is_present = 1;
-    m_scanData.tx_pwr_lvl            = BLE_HS_ADV_TX_PWR_LVL_AUTO;
+    m_scanData.tx_pwr_lvl            = NimBLEDevice::getPower(ESP_BLE_PWR_TYPE_DEFAULT);//pwr;
     m_advData.flags                  = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
 	m_advData.appearance             = 0;
 	m_advData.appearance_is_present  = 0;

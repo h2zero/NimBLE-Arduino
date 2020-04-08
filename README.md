@@ -1,5 +1,10 @@
 # *** UPDATE ***
-Checkout the bugfix branch if you would like to test the upcoming stability revision.
+<<<<<<< HEAD
+NEW Client callback created - ```bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params)```   
+Called when the server wants to change the connection parameters, return true to accept them or false if not.   
+Check NimBLE_Client.ino example for a demonstration.   
+
+>>>>>>> 82dd64ed142e7f53911974e6bb464d1cb6b0fe26
 
 This library is now ready with (mostly) all original Arduino BLE library compatiblity.   
 Check the examples and API_DIFFERENCES document for details of using this library.
@@ -59,7 +64,7 @@ Change the settings in the `nimconfig.h` file to customize NimBLE to your projec
 
 # Continuing development:
 
-This Library is tracking the esp-nimble repo, nimble-1.2.0-idf master branch, currently [@c4af628.](https://github.com/espressif/esp-nimble)
+This Library is tracking the esp-nimble repo, nimble-1.2.0-idf master branch, currently [@0a1604a.](https://github.com/espressif/esp-nimble)
 
 Also tracking the NimBLE related changes in esp-idf, master branch, currently [@48bd2d7.](https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble)
 
