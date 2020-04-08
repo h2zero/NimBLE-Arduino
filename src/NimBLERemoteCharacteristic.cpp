@@ -379,10 +379,9 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     if(characteristic->getRemoteService()->getClient()->getConnId() != conn_handle){
         return 0;
     }
-    
-    NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d offset=%d len=%d", error->status, conn_handle, attr->offset,attr->om->om_len);
+    NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
 // long read experiment
-/*    if(attr->om->om_len >= (ble_att_mtu(characteristic->getRemoteService()->getClient()->getConnId()) - 1)){
+/*    if(attr && (attr->om->om_len >= (ble_att_mtu(characteristic->getRemoteService()->getClient()->getConnId()) - 1))){
         
         return 0;
     }
@@ -394,9 +393,9 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     
     if (error->status == 0) {       
         characteristic->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
-        characteristic->m_semaphoreReadCharEvt.give(0);
         characteristic->m_rawData = (uint8_t*) calloc(attr->om->om_len, sizeof(uint8_t));
         memcpy(characteristic->m_rawData, attr->om->om_data, attr->om->om_len);
+        characteristic->m_semaphoreReadCharEvt.give(0);
     } else {
         characteristic->m_rawData = nullptr;
         characteristic->m_value = "";
