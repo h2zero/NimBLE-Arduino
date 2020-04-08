@@ -5303,12 +5303,48 @@ ble_gap_unpair_oldest_peer(void)
     }
 
     if (num_peers == 0) {
-        return 0;
+		return BLE_HS_ENOENT;
+        //return 0;
     }
 
     rc = ble_gap_unpair(&oldest_peer_id_addr);
     if (rc != 0) {
         return rc;
+    }
+
+    return 0;
+}
+
+int
+ble_gap_unpair_oldest_except_curr(const ble_addr_t *curr_peer)
+{
+    ble_addr_t oldest_peer_id_addr[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+    int num_peers;
+    int rc, i;
+
+    rc = ble_store_util_bonded_peers(
+            &oldest_peer_id_addr[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
+    if (rc != 0) {
+        return rc;
+    }
+
+    if (num_peers == 0) {
+        return BLE_HS_ENOENT;
+    }
+
+    for (i = 0; i < num_peers; i++) {
+        if (memcmp(curr_peer, &oldest_peer_id_addr[i], sizeof (ble_addr_t)) != 0) {
+            break;
+        }
+    }
+
+    if (i < num_peers) {
+        rc = ble_gap_unpair(&oldest_peer_id_addr[i]);
+        if (rc != 0) {
+            return rc;
+        }
+    } else {
+        return BLE_HS_ENOMEM;
     }
 
     return 0;

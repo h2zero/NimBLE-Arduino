@@ -1,12 +1,10 @@
 # *** UPDATE ***
+Server now handles long reads and writes, still work to do on client.
+
 NEW Client callback created - ```bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params)```   
 Called when the server wants to change the connection parameters, return true to accept them or false if not.   
 Check NimBLE_Client.ino example for a demonstration.   
 
-This library is now ready with (mostly) all original Arduino BLE library compatiblity.   
-Check the examples and API_DIFFERENCES document for details of using this library.
- 
-3 simultaneous connections tested stable so far on both client and server.
 
 
 # NimBLE-Arduino
