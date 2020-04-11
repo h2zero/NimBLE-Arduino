@@ -144,6 +144,9 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
     do{
         rc = ble_gap_connect(BLE_OWN_ADDR_PUBLIC, &peerAddrt, m_connectTimeout, m_pConnParams,
                             NimBLEClient::handleGapEvent, this);
+        if(rc == BLE_HS_EBUSY) {
+            vTaskDelay(1);
+        }
     }while(rc == BLE_HS_EBUSY);
                          
     if (rc != 0) {
@@ -166,6 +169,25 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
         return false;
     }
     
+
+    m_semaphoreOpenEvt.take("exg-mtu");
+    
+    rc = ble_gattc_exchange_mtu(m_conn_id, NULL,NULL);
+    if(rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",rc,
+                                NimBLEUtils::returnCodeToString(rc));
+        disconnect();
+        m_semaphoreOpenEvt.give();
+        return false;
+    }
+    
+    rc = m_semaphoreOpenEvt.wait("exg-mtu");
+    if(rc != 0){
+        disconnect();
+        return false;
+    }
+    
+
     if(refreshServices) {
         NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
         clearServices();
@@ -182,7 +204,7 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
             NIMBLE_LOGD(LOG_TAG, "Found %d services", getServices()->size());
         }
     }
-    
+
 	m_pClientCallbacks->onConnect(this);
 	
     NIMBLE_LOGD(LOG_TAG, "<< connect()");
@@ -229,8 +251,8 @@ int NimBLEClient::disconnect(uint8_t reason) {
         }
     }
     
-    return rc;
     NIMBLE_LOGD(LOG_TAG, "<< disconnect()");
+    return rc;
 } // disconnect
 
 
@@ -576,6 +598,8 @@ uint16_t NimBLEClient::getMTU() {
             
             client->m_isConnected = false;
             client->m_waitingToConnect=false;
+            // Remove the device from ignore list so we will scan it again
+            NimBLEDevice::removeIgnored(client->m_peerAddress);
             
             NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d, %s", event->disconnect.reason,
                                     NimBLEUtils::returnCodeToString(event->disconnect.reason));
@@ -604,8 +628,6 @@ uint16_t NimBLEClient::getMTU() {
             client->m_semaphoreSearchCmplEvt.give(1);
             client->m_semeaphoreSecEvt.give(1);
             
-            // Remove the device from ignore list so we will scan it again
-            NimBLEDevice::removeIgnored(client->m_peerAddress);
             client->m_pClientCallbacks->onDisconnect(client);
             
             return 0;
@@ -639,24 +661,24 @@ uint16_t NimBLEClient::getMTU() {
                 // scanning since we are already connected to it
                 NimBLEDevice::addIgnored(client->m_peerAddress);
 
-                rc = ble_gattc_exchange_mtu(client->m_conn_id, NULL,NULL);
+            /*    rc = ble_gattc_exchange_mtu(client->m_conn_id, NULL,NULL);
                 if(rc != 0) {
                     NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",rc,
                                             NimBLEUtils::returnCodeToString(rc));
                     // if error getting mtu indicate a connection error.                        
                     client->m_semaphoreOpenEvt.give(rc);
-                } /*else {
+                } else {
                     client->m_semaphoreOpenEvt.give(0);
-                }*/
-
+                }
+            */    
             } else {
                 // Connection attempt failed
                 NIMBLE_LOGE(LOG_TAG, "Error: Connection failed; status=%d %s",
                             event->connect.status,
                             NimBLEUtils::returnCodeToString(event->connect.status));
-                client->m_semaphoreOpenEvt.give(event->connect.status);
+               // client->m_semaphoreOpenEvt.give(event->connect.status);
             }
-
+            client->m_semaphoreOpenEvt.give(event->connect.status);
             return 0;
         } // BLE_GAP_EVENT_CONNECT
 
@@ -691,7 +713,7 @@ uint16_t NimBLEClient::getMTU() {
             return 0;
         } // BLE_GAP_EVENT_NOTIFY_RX
         
-        case BLE_GAP_EVENT_CONN_UPDATE_REQ:
+        case BLE_GAP_EVENT_CONN_UPDATE_REQ: 
         case BLE_GAP_EVENT_L2CAP_UPDATE_REQ: {
             if(client->m_conn_id != event->conn_update_req.conn_handle){
                 return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
@@ -705,6 +727,7 @@ uint16_t NimBLEClient::getMTU() {
 
             rc = client->m_pClientCallbacks->onConnParamsUpdateRequest(client,
                                     event->conn_update_req.peer_params) ? 0 : BLE_ERR_CONN_PARMS;
+                                            
 
             if(!rc && event->type == BLE_GAP_EVENT_CONN_UPDATE_REQ ) {
                 if(client->m_pConnParams != nullptr) {
@@ -719,19 +742,7 @@ uint16_t NimBLEClient::getMTU() {
                     event->conn_update_req.self_params->supervision_timeout = BLE_GAP_INITIAL_SUPERVISION_TIMEOUT;
 				}
             }
-            /*
-            // if we set connection params and the peer is asking for new ones, reject them.
-            if(client->m_pConnParams != nullptr) {
-                                         
-                if(event->conn_update_req.peer_params->itvl_min != client->m_pConnParams->itvl_min ||
-                    event->conn_update_req.peer_params->itvl_max != client->m_pConnParams->itvl_max ||
-                    event->conn_update_req.peer_params->latency != client->m_pConnParams->latency ||
-                    event->conn_update_req.peer_params->supervision_timeout != client->m_pConnParams->supervision_timeout) 
-                {
-                    rc = BLE_ERR_CONN_PARMS;
-                }
-            }
-            */
+
             NIMBLE_LOGD(LOG_TAG, "%s peer params", (rc == 0) ? "Accepted" : "Rejected");
             return rc;
         } // BLE_GAP_EVENT_CONN_UPDATE_REQ, BLE_GAP_EVENT_L2CAP_UPDATE_REQ

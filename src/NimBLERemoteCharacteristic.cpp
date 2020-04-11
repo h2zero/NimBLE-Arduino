@@ -607,7 +607,7 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
         characteristic->m_semaphoreWriteCharEvt.give(error->status);
     }
     
-    return error->status;
+    return 0;
 }
 
 

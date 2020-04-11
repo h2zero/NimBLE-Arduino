@@ -18,6 +18,9 @@
 // Note: because CONFIG_LOG_DEFAULT_LEVEL is set at ERROR in Arduino we must use MODLOG_DFLT(ERROR 
 // otherwise no messages will be printed above that level.
 #ifdef ARDUINO_ARCH_ESP32
+#ifndef CORE_DEBUG_LEVEL 
+#define CORE_DEBUG_LEVEL CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL
+#endif
 
 #if CORE_DEBUG_LEVEL >= 4
 #define NIMBLE_LOGD( tag, format, ... ) MODLOG_DFLT(ERROR,      "D %s: "#format"\n",tag,##__VA_ARGS__)

@@ -265,7 +265,10 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     do{    
         rc = ble_gap_disc(m_own_addr_type, duration, &m_scan_params, 
                                     NimBLEScan::handleGapEvent, this);
-    }while(rc == BLE_HS_EBUSY);
+        if(rc == BLE_HS_EBUSY) {
+            vTaskDelay(5);
+        }
+    } while(rc == BLE_HS_EBUSY);
     
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Error initiating GAP discovery procedure; rc=%d, %s",
@@ -274,8 +277,6 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
         m_semaphoreScanEnd.give();
         return false;
     }
-
-   // m_stopped = false;
 
     NIMBLE_LOGD(LOG_TAG, "<< start()");
     return true;
