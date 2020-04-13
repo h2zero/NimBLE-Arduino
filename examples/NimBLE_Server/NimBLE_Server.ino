@@ -142,6 +142,9 @@ void setup() {
     /** sets device name */
     NimBLEDevice::init("NimBLE-Arduino");
 
+    /** Optional: set the transmit power, default is 3db */
+    NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** +9db */
+    
     /** Set the IO capabilities of the device, each option will trigger a different pairing method.
      *  BLE_HS_IO_DISPLAY_ONLY    - Passkey pairing
      *  BLE_HS_IO_DISPLAY_YESNO   - Numeric comparison pairing

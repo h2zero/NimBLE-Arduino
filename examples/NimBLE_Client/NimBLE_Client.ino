@@ -27,9 +27,9 @@ class ClientCallbacks : public NimBLEClientCallbacks {
          *  These settings are 150ms interval, 0 latency, 450ms timout. 
          *  Timeout should be a multiple of the interval, minimum is 100ms.
          *  I find a multiple of 3-5 * the interval works best for quick response/reconnect.
-         *  Min interval: 120 * 1.25ms = 150, Max interval: 120 * 1.25ms = 150, 0 latency, 45 * 10ms = 450ms timeout 
+         *  Min interval: 120 * 1.25ms = 150, Max interval: 120 * 1.25ms = 150, 0 latency, 60 * 10ms = 600ms timeout 
          */
-        pClient->updateConnParams(120,120,0,45);
+        pClient->updateConnParams(120,120,0,60);
     };
 
     void onDisconnect(NimBLEClient* pClient) {
@@ -38,19 +38,23 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         NimBLEDevice::getScan()->start(scanTime, scanEndedCB);
     };
     
-	bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
-		if(params->itvl_min < 24) {
-			return false;
-		} else if(params->itvl_max > 40) {
-			return false;
-		} else if(params->latency > 2) {
-			return false;
-		} else if(params->supervision_timeout > 100) {
-			return false;
-		}
+    /** Called when the peripheral requests a change to the connection parameters.
+     *  Return true to accept and apply them or false to reject and keep 
+     *  the currently used parameters. Default will return true.
+     */
+    bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
+        if(params->itvl_min < 24) { /** 1.25ms units */
+            return false;
+        } else if(params->itvl_max > 40) { /** 1.25ms units */
+            return false;
+        } else if(params->latency > 2) { /** Number of intervals allowed to skip */
+            return false;
+        } else if(params->supervision_timeout > 100) { /** 10ms units */
+            return false;
+        }
 
-		return true;
-	};
+        return true;
+    };
 	
     /********************* Security handled here **********************
     ****** Note: these are the same return values as defaults ********/
@@ -161,9 +165,9 @@ bool connectToServer() {
         /** Set initial connection parameters: These settings are 15ms interval, 0 latency, 120ms timout. 
          *  These settings are safe for 3 clients to connect reliably, can go faster if you have less 
          *  connections. Timeout should be a multiple of the interval, minimum is 100ms.
-         *  Min interval: 12 * 1.25ms = 15, Max interval: 12 * 1.25ms = 15, 0 latency, 12 * 10ms = 120ms timeout 
+         *  Min interval: 12 * 1.25ms = 15, Max interval: 12 * 1.25ms = 15, 0 latency, 51 * 10ms = 510ms timeout 
          */
-        pClient->setConnectionParams(12,12,0,12);
+        pClient->setConnectionParams(12,12,0,51);
         /** Set how long we are willing to wait for the connection to complete (seconds), default is 30. */
         pClient->setConnectTimeout(5);
         
@@ -333,8 +337,8 @@ void setup (){
     //NimBLEDevice::setSecurityAuth(false, false, true); 
     NimBLEDevice::setSecurityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
   
-    /** Optional: set the transmit power, default is -3db */
-    NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** 12db */
+    /** Optional: set the transmit power, default is 3db */
+    NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** +9db */
     
     /** Optional: set any devices you don't want to get advertisments from */
     // NimBLEDevice::addIgnored(NimBLEAddress ("aa:bb:cc:dd:ee:ff")); 
@@ -346,8 +350,8 @@ void setup (){
     pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
     
     /** Set scan interval (how often) and window (how long) in milliseconds */
-    pScan->setInterval(400);
-    pScan->setWindow(100);
+    pScan->setInterval(45);
+    pScan->setWindow(15);
     
     /** Active scan will gather scan response data from advertisers
      *  but will use more energy from both devices

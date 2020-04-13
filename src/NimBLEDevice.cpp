@@ -351,11 +351,11 @@ void NimBLEDevice::stopAdvertising() {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         (*it)->onHostReset();
     }
-    
+*/    
     if(m_bleAdvertising != nullptr) {
         m_bleAdvertising->onHostReset();
     }
-*/    
+    
     NIMBLE_LOGC(LOG_TAG, "Resetting state; reason=%d, %s", reason, 
                         NimBLEUtils::returnCodeToString(reason));
 } // onReset

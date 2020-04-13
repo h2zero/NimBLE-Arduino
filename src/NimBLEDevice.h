@@ -86,7 +86,7 @@ public:
 	static NimBLEServer*    createServer();
     static bool             deleteClient(NimBLEClient* pClient);
     static void             setPower(esp_power_level_t powerLevel);
-	static int              getPower(esp_ble_power_type_t powerType);
+	static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
     static void             setCustomGapHandler(gap_event_handler handler);
     static void             setSecurityAuth(bool bonding, bool mitm, bool sc);
     static void             setSecurityAuth(uint8_t auth_req);
