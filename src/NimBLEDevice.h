@@ -59,7 +59,11 @@
 #define BLEEddystoneTLM                 NimBLEEddystoneTLM
 #define BLEEddystoneURL                 NimBLEEddystoneURL
 
+#ifdef CONFIG_BT_NIMBLE_MAX_CONNECTIONS
 #define NIMBLE_MAX_CONNECTIONS          CONFIG_BT_NIMBLE_MAX_CONNECTIONS
+#else 
+#define NIMBLE_MAX_CONNECTIONS          CONFIG_NIMBLE_MAX_CONNECTIONS
+#endif
     
 /**
  * @brief BLE functions.

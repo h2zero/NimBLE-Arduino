@@ -52,10 +52,9 @@ public:
     void                                       setConnectTimeout(uint8_t timeout);
 	void 									   setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
 															uint16_t latency, uint16_t timeout,
-                                                            uint16_t minConnTime=16, uint16_t maxConnTime=768);
+                                                            uint16_t scanInterval=16, uint16_t scanWindow=16); // NimBLE default scan settings
 	void 									   updateConnParams(uint16_t minInterval, uint16_t maxInterval, 
-															uint16_t latency, uint16_t timeout,
-                                                            uint16_t minConnTime=16, uint16_t maxConnTime=768);
+															uint16_t latency, uint16_t timeout);
  
                                               
 private:
@@ -89,7 +88,7 @@ private:
     
 private:
     friend class NimBLEClientCallbacks;
-    ble_gap_conn_params* m_pConnParams;
+    ble_gap_conn_params m_pConnParams;
 
 }; // class NimBLEClient 
 
