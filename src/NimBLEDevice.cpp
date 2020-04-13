@@ -239,12 +239,12 @@ void NimBLEDevice::stopAdvertising() {
  * *   ESP_PWR_LVL_P9  = 7,                !< Corresponding to  +9dbm 
  * @param [in] powerLevel.
  */
-/* STATIC */ void NimBLEDevice::setPower(esp_power_level_t powerLevel) {
-    NIMBLE_LOGD(LOG_TAG, ">> setPower: %d", powerLevel);
-    esp_err_t errRc = esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, powerLevel);
+/* STATIC */ void NimBLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
+    NIMBLE_LOGD(LOG_TAG, ">> setPower: %d (type: %d)", powerLevel, powerType);
+    esp_err_t errRc = esp_ble_tx_power_set(powerType, powerLevel);
     if (errRc != ESP_OK) {
         NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_set: rc=%d", errRc);
-    };
+    }
     NIMBLE_LOGD(LOG_TAG, "<< setPower");
 } // setPower
 
