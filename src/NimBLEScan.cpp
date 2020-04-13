@@ -231,14 +231,18 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
         return false;
     }
     
+    if(ble_gap_conn_active()) {
+        NIMBLE_LOGE(LOG_TAG, "Connection in progress - must wait.");
+        return false;
+    }
+
     // If we are already scanning don't start again or we will get stuck on the semaphore.
     if(!m_stopped || ble_gap_disc_active()) { // double check - can cause host reset.
         NIMBLE_LOGE(LOG_TAG, "Scan already in progress");
         return false;
     }
 
-	m_stopped = false;
-	
+    m_stopped = false;
     m_semaphoreScanEnd.take("start");
         
     // Save the callback to be invoked when the scan completes.
@@ -261,16 +265,15 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     }
     
     int rc = 0;
-    
     do{    
         rc = ble_gap_disc(m_own_addr_type, duration, &m_scan_params, 
                                     NimBLEScan::handleGapEvent, this);
         if(rc == BLE_HS_EBUSY) {
-            vTaskDelay(5);
+            vTaskDelay(2);
         }
     } while(rc == BLE_HS_EBUSY);
     
-    if (rc != 0) {
+    if (rc != 0 && rc != BLE_HS_EDONE) {
         NIMBLE_LOGE(LOG_TAG, "Error initiating GAP discovery procedure; rc=%d, %s",
                                         rc, NimBLEUtils::returnCodeToString(rc));
         m_stopped = true;

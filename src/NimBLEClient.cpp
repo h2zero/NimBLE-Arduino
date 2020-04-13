@@ -127,7 +127,7 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
         NIMBLE_LOGE(LOG_TAG, "Connection in progress - must wait.");
         return false;
     }
-    
+
     int rc = 0;
     m_peerAddress = address;
     
@@ -149,12 +149,12 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
         }
     }while(rc == BLE_HS_EBUSY);
                          
-    if (rc != 0) {
+    if (rc != 0 && rc != BLE_HS_EDONE) {
         NIMBLE_LOGE(LOG_TAG, "Error: Failed to connect to device; addr_type=%d "
                     "addr=%s, rc=%d; %s",
                     type, 
                     m_peerAddress.toString().c_str(),
-                    rc, NimBLEUtils::returnCodeToString(BLE_HS_ATT_ERR(rc)));
+                    rc, NimBLEUtils::returnCodeToString(rc));
                     
         m_semaphoreOpenEvt.give();
         m_waitingToConnect = false;
@@ -169,7 +169,6 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
         return false;
     }
     
-
     m_semaphoreOpenEvt.take("exg-mtu");
     
     rc = ble_gattc_exchange_mtu(m_conn_id, NULL,NULL);
@@ -180,13 +179,8 @@ bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServ
         m_semaphoreOpenEvt.give();
         return false;
     }
-    
-    rc = m_semaphoreOpenEvt.wait("exg-mtu");
-    if(rc != 0){
-        disconnect();
-        return false;
-    }
-    
+
+    m_semaphoreOpenEvt.wait("exg-mtu");
 
     if(refreshServices) {
         NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
@@ -353,7 +347,7 @@ NimBLEAddress NimBLEClient::getPeerAddress() {
 int NimBLEClient::getRssi() {
     NIMBLE_LOGD(LOG_TAG, ">> getRssi()");
     if (!isConnected()) {
-        NIMBLE_LOGD(LOG_TAG, "<< getRssi(): Not connected");
+        NIMBLE_LOGE(LOG_TAG, "<< getRssi(): Not connected");
         return 0;
     }
     
@@ -488,13 +482,12 @@ int NimBLEClient::serviceDiscoveredCB(
             // Found a service - add it to the map
             NimBLERemoteService* pRemoteService = new NimBLERemoteService(peer, service);
             peer->m_servicesMap.insert(std::pair<std::string, NimBLERemoteService*>(pRemoteService->getUUID().toString(), pRemoteService));
-
             break;
         }
         case BLE_HS_EDONE:{
             // All services discovered; start discovering characteristics. 
 
-            NIMBLE_LOGD(LOG_TAG,"Giving search semaphore - completed");
+            //NIMBLE_LOGD(LOG_TAG,"Giving search semaphore - completed");
             peer->m_semaphoreSearchCmplEvt.give(0);
             rc = 0;
             break;
