@@ -226,7 +226,8 @@ uint32_t NimBLEServer::getConnectedCount() {
 	NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent: %s",
 		NimBLEUtils::gapEventToString(event->type));
     int rc = 0;
-
+    struct ble_gap_conn_desc desc;
+    
 	switch(event->type) {
         
 		case BLE_GAP_EVENT_CONNECT: {
@@ -311,9 +312,25 @@ uint32_t NimBLEServer::getConnectedCount() {
             return 0;
         } // BLE_GAP_EVENT_CONN_UPDATE
         
+        case BLE_GAP_EVENT_REPEAT_PAIRING: {
+            /* We already have a bond with the peer, but it is attempting to
+             * establish a new secure link.  This app sacrifices security for
+             * convenience: just throw away the old bond and accept the new link.
+             */
+
+            /* Delete the old bond. */
+            rc = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
+            assert(rc == 0);
+            ble_store_util_delete_peer(&desc.peer_id_addr);
+
+            /* Return BLE_GAP_REPEAT_PAIRING_RETRY to indicate that the host should
+             * continue with the pairing operation.
+             */
+            return BLE_GAP_REPEAT_PAIRING_RETRY;
+        } // BLE_GAP_EVENT_REPEAT_PAIRING
+        
         case BLE_GAP_EVENT_ENC_CHANGE: {            
-            struct ble_gap_conn_desc desc;
-            int rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
+            rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
             if(rc != 0) {
                 return BLE_ATT_ERR_INVALID_HANDLE;
             }

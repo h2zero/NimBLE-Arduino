@@ -443,7 +443,7 @@ void NimBLEDevice::stopAdvertising() {
         ble_hs_cfg.sm_mitm = 0;
         ble_hs_cfg.sm_sc = 1;
         ble_hs_cfg.sm_our_key_dist = 1;
-        ble_hs_cfg.sm_their_key_dist = 1;
+        ble_hs_cfg.sm_their_key_dist = 3;
         
         ble_hs_cfg.store_status_cb = ble_store_util_status_rr; /*TODO: Implement handler for this*/
         

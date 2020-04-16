@@ -415,17 +415,16 @@ ble_hs_conn_addrs(const struct ble_hs_conn *conn,
     ble_addr_t bhc_peer_addr;
     bhc_peer_addr.type = conn->bhc_peer_addr.type;
     memcpy(bhc_peer_addr.val, conn->bhc_peer_addr.val, BLE_DEV_ADDR_LEN);
-    if (ble_host_rpa_enabled()) {
-
-        uint8_t *local_id = NULL;
-        ble_hs_id_addr(BLE_ADDR_PUBLIC, (const uint8_t **) &local_id, NULL);
-
-        rl = ble_hs_resolv_list_find(bhc_peer_addr.val);
-        if (rl != NULL) {
-            memcpy(addrs->peer_ota_addr.val, addrs->peer_id_addr.val, BLE_DEV_ADDR_LEN);
-            memcpy(addrs->peer_id_addr.val, rl->rl_identity_addr, BLE_DEV_ADDR_LEN);
-
-            addrs->peer_id_addr.type = rl->rl_addr_type;
+    
+    rl = ble_hs_resolv_list_find(bhc_peer_addr.val);
+    if (rl != NULL) {
+        addrs->peer_ota_addr = conn->bhc_peer_rpa_addr;
+        memcpy(addrs->peer_id_addr.val, rl->rl_identity_addr, BLE_DEV_ADDR_LEN);
+        addrs->peer_id_addr.type = rl->rl_addr_type;
+    
+        if (ble_host_rpa_enabled()) {
+            uint8_t *local_id = NULL;
+            ble_hs_id_addr(BLE_ADDR_PUBLIC, (const uint8_t **) &local_id, NULL);
 
             /* RL is present: populate our id addr with public ID */
             memcpy(addrs->our_id_addr.val, local_id, BLE_DEV_ADDR_LEN);
