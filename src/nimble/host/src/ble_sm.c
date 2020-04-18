@@ -2029,7 +2029,10 @@ ble_sm_key_exch_success(struct ble_sm_proc *proc, struct ble_sm_result *res)
     /* The procedure is now complete.  Update connection bonded state and
      * terminate procedure.
      */
-    ble_sm_update_sec_state(proc->conn_handle, 1, 0, 1, proc->key_size);
+    ble_sm_update_sec_state(proc->conn_handle, 1,
+                            !!(proc->flags & BLE_SM_PROC_F_AUTHENTICATED),
+                            !!(proc->flags & BLE_SM_PROC_F_BONDING),
+                            proc->key_size);
     proc->state = BLE_SM_PROC_STATE_NONE;
 
     res->app_status = 0;
