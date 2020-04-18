@@ -1887,20 +1887,6 @@ struct ble_gap_event_listener {
 };
 
 /**
- * Similar to `ble_gap_unpair_oldest_peer()`, except it makes sure that current
- * peer is not deleted.
- *
- * @param peer_addr             Address of the current peer (not to be deleted)
- *
- * @return                      0 on success;
- *                              A BLE host HCI return code if the controller
- *                                  rejected the request;
- *                              A BLE host core return code on unexpected
- *                                  error.
- */
-int ble_gap_unpair_oldest_except_curr(const ble_addr_t *curr_peer);
-
-/**
  * Registers listener for GAP events
  *
  * On success listener structure will be initialized automatically and does not

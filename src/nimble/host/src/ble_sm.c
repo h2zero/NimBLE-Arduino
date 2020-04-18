@@ -548,23 +548,26 @@ ble_sm_persist_keys(struct ble_sm_proc *proc)
 
             identity_ev = 1;
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
-            struct ble_hs_dev_records *p_dev_rec =
-                                      ble_rpa_find_peer_dev_rec(conn->bhc_peer_rpa_addr.val);
-            if (p_dev_rec == NULL) {
-                if (!ble_rpa_resolv_add_peer_rec(conn->bhc_peer_rpa_addr.val)) {
-                    p_dev_rec = ble_rpa_find_peer_dev_rec(conn->bhc_peer_rpa_addr.val);
+            if (ble_host_rpa_enabled())
+            {
+                struct ble_hs_dev_records *p_dev_rec =
+                                          ble_rpa_find_peer_dev_rec(conn->bhc_peer_rpa_addr.val);
+                if (p_dev_rec == NULL) {
+                    if (!ble_rpa_resolv_add_peer_rec(conn->bhc_peer_rpa_addr.val)) {
+                        p_dev_rec = ble_rpa_find_peer_dev_rec(conn->bhc_peer_rpa_addr.val);
+                    }
                 }
-            }
 
-            if (p_dev_rec != NULL) {
-                /* Once bonded, copy the peer device records */
-                swap_buf(p_dev_rec->peer_sec.irk, proc->peer_keys.irk, 16);
-                p_dev_rec->peer_sec.irk_present = proc->peer_keys.irk_valid;
-                memcpy(p_dev_rec->peer_sec.peer_addr.val,
-                       proc->peer_keys.addr, 6);
-                p_dev_rec->peer_sec.peer_addr.type = proc->peer_keys.addr_type;
+                if (p_dev_rec != NULL) {
+                    /* Once bonded, copy the peer device records */
+                    swap_buf(p_dev_rec->peer_sec.irk, proc->peer_keys.irk, 16);
+                    p_dev_rec->peer_sec.irk_present = proc->peer_keys.irk_valid;
+                    memcpy(p_dev_rec->peer_sec.peer_addr.val,
+                           proc->peer_keys.addr, 6);
+                    p_dev_rec->peer_sec.peer_addr.type = proc->peer_keys.addr_type;
 
-                ble_store_persist_peer_records();
+                    ble_store_persist_peer_records();
+                }
             }
 #endif
         }
@@ -2029,10 +2032,7 @@ ble_sm_key_exch_success(struct ble_sm_proc *proc, struct ble_sm_result *res)
     /* The procedure is now complete.  Update connection bonded state and
      * terminate procedure.
      */
-    ble_sm_update_sec_state(proc->conn_handle, 1,
-                            !!(proc->flags & BLE_SM_PROC_F_AUTHENTICATED),
-                            !!(proc->flags & BLE_SM_PROC_F_BONDING),
-                            proc->key_size);
+    ble_sm_update_sec_state(proc->conn_handle, 1, 0, 1, proc->key_size);
     proc->state = BLE_SM_PROC_STATE_NONE;
 
     res->app_status = 0;
