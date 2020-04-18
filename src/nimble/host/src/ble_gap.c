@@ -5301,7 +5301,7 @@ ble_gap_unpair_oldest_peer(void)
     }
 
     if (num_peers == 0) {
-        return 0;
+        return BLE_HS_ENOENT;
     }
 
     rc = ble_gap_unpair(&oldest_peer_id_addr);
@@ -5310,6 +5310,36 @@ ble_gap_unpair_oldest_peer(void)
     }
 
     return 0;
+}
+
+int
+ble_gap_unpair_oldest_except(const ble_addr_t *peer_addr)
+{
+    ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+    int num_peers;
+    int rc, i;
+
+    rc = ble_store_util_bonded_peers(
+            &peer_id_addrs[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
+    if (rc != 0) {
+        return rc;
+    }
+
+    if (num_peers == 0) {
+        return BLE_HS_ENOENT;
+    }
+
+    for (i = 0; i < num_peers; i++) {
+        if (ble_addr_cmp(peer_addr, &peer_id_addrs[i]) != 0) {
+            break;
+        }
+    }
+
+    if (i >= num_peers) {
+        return BLE_HS_ENOMEM;
+    }
+
+    return ble_gap_unpair(&peer_id_addrs[i]);
 }
 
 void
