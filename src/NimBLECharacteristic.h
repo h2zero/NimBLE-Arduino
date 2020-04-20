@@ -97,6 +97,7 @@ public:
 	NimBLEUUID        getUUID();
 	std::string       getValue();
 	uint8_t*          getData();
+	size_t            getDataLength() { return m_value.getLength(); }
 
 	void indicate();
 	void notify(bool is_notification = true);
