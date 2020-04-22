@@ -198,6 +198,15 @@ uint8_t* NimBLECharacteristic::getData() {
 } // getData
 
 
+/**
+ * @brief Retrieve the the current data length of the characteristic.
+ * @return The length of the current characteristic data.
+ */
+size_t NimBLECharacteristic:: getDataLength() {
+	return m_value.getLength();
+}
+
+
 int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                              struct ble_gatt_access_ctxt *ctxt,
                              void *arg)
