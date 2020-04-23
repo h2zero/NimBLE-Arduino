@@ -1,0 +1,135 @@
+From b68bf07b4bf15aea1c1e9440abd4d7d72987d1b8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C5=81ukasz=20Rymanowski?= <lukasz.rymanowski@codecoup.pl>
+Date: Tue, 21 Apr 2020 09:48:02 +0200
+Subject: [PATCH] nimble/gap: Fix storing CCC for bonded devices.
+
+This PR make sure that ble_gatts_bonding_established is called only when
+bonded.
+
+Note: renamed not used "persist_keys" to "bonded" and make use of it
+
+Bug can be easly reproduced when
+BLE_SM_BONDING: 0
+BLE_HS_DEBUG: 1
+
+Program received signal SIGTRAP, Trace/breakpoint trap.
+ble_gatts_bonding_established (conn_handle=conn_handle@entry=1) at repos/apache-mynewt-nimble/nimble/host/src/ble_gatts.c:1681
+1681	    BLE_HS_DBG_ASSERT(conn->bhc_sec_state.bonded);
+(gdb)
+---
+ nimble/host/src/ble_gap.c      | 27 ++++++++++++++++++++-------
+ nimble/host/src/ble_gap_priv.h |  2 +-
+ nimble/host/src/ble_sm.c       |  5 +++--
+ nimble/host/src/ble_sm_priv.h  |  8 ++++----
+ 4 files changed, 28 insertions(+), 14 deletions(-)
+
+diff --git a/src/nimble/host/src/ble_gap.c b/src/nimble/host/src/ble_gap.c
+index 53c6bf308..4df3b7b93 100644
+--- a/src/nimble/host/src/ble_gap.c
++++ b/src/nimble/host/src/ble_gap.c
+@@ -5363,10 +5363,11 @@ ble_gap_passkey_event(uint16_t conn_handle,
+ }
+
+ void
+-ble_gap_enc_event(uint16_t conn_handle, int status, int security_restored)
++ble_gap_enc_event(uint16_t conn_handle, int status,
++                  int security_restored, int bonded)
+ {
+ #if !NIMBLE_BLE_SM
+     return;
+ #endif
+
+     struct ble_gap_event event;
+@@ -5379,12 +5379,24 @@ ble_gap_enc_event(uint16_t conn_handle, int status, int security_restored)
+     ble_gap_event_listener_call(&event);
+     ble_gap_call_conn_event_cb(&event, conn_handle);
+
+-    if (status == 0) {
+-        if (security_restored) {
+-            ble_gatts_bonding_restored(conn_handle);
+-        } else {
+-            ble_gatts_bonding_established(conn_handle);
+-        }
++    if (status != 0) {
++        return;
++    }
++
++    /* If encryption succeded and encryption has been restored for bonded device,
++     * notify gatt server so it has chance to send notification/indication if needed.
++     */
++    if (security_restored) {
++        ble_gatts_bonding_restored(conn_handle);
++        return;
++    }
++
++    /* If this is fresh pairing and bonding has been established,
++     * notify gatt server about that so previous subscriptions (before bonding)
++     * can be stored.
++     */
++    if (bonded) {
++        ble_gatts_bonding_established(conn_handle);
+     }
+ }
+
+diff --git a/src/nimble/host/src/ble_gap_priv.h b/src/nimble/host/src/ble_gap_priv.h
+index c050435f4..499823bc5 100644
+--- a/src/nimble/host/src/ble_gap_priv.h
++++ b/src/nimble/host/src/ble_gap_priv.h
+@@ -99,7 +99,7 @@ int ble_gap_rx_l2cap_update_req(uint16_t conn_handle,
+                                 struct ble_gap_upd_params *params);
+ void ble_gap_rx_phy_update_complete(struct hci_le_phy_upd_complete *evt);
+ void ble_gap_enc_event(uint16_t conn_handle, int status,
+-                       int security_restored);
++                       int security_restored, int bonded);
+ void ble_gap_passkey_event(uint16_t conn_handle,
+                            struct ble_gap_passkey_params *passkey_params);
+ void ble_gap_notify_rx_event(uint16_t conn_handle, uint16_t attr_handle,
+diff --git a/src/nimble/host/src/ble_sm.c b/src/nimble/host/src/ble_sm.c
+index cfd80fcbd..91afb75c2 100644
+--- a/src/nimble/host/src/ble_sm.c
++++ b/src/nimble/host/src/ble_sm.c
+@@ -938,7 +938,7 @@ ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res)
+
+         if (res->enc_cb) {
+             BLE_HS_DBG_ASSERT(proc == NULL || rm);
+-            ble_gap_enc_event(conn_handle, res->app_status, res->restore);
++            ble_gap_enc_event(conn_handle, res->app_status, res->restore, res->bonded);
+         }
+
+         if (res->app_status == 0 &&
+@@ -1190,6 +1190,7 @@ ble_sm_enc_event_rx(uint16_t conn_handle, uint8_t evt_status, int encrypted)
+
+     ble_hs_unlock();
+
++    res.bonded = bonded;
+     ble_sm_process_result(conn_handle, &res);
+ }
+
+@@ -2425,7 +2426,7 @@ ble_sm_timer(void)
+      * procedures without reconnect.
+      */
+     while ((proc = STAILQ_FIRST(&exp_list)) != NULL) {
+-        ble_gap_enc_event(proc->conn_handle, BLE_HS_ETIMEOUT, 0);
++        ble_gap_enc_event(proc->conn_handle, BLE_HS_ETIMEOUT, 0, 0);
+
+         STAILQ_REMOVE_HEAD(&exp_list, next);
+         ble_sm_proc_free(proc);
+diff --git a/src/nimble/host/src/ble_sm_priv.h b/src/nimble/host/src/ble_sm_priv.h
+index 6d5601bf6..27e75aa1d 100644
+--- a/src/nimble/host/src/ble_sm_priv.h
++++ b/src/nimble/host/src/ble_sm_priv.h
+@@ -279,10 +279,10 @@ struct ble_sm_result {
+     uint8_t sm_err;
+     struct ble_gap_passkey_params passkey_params;
+     void *state_arg;
+-    unsigned execute:1;
+-    unsigned enc_cb:1;
+-    unsigned persist_keys:1;
+-    unsigned restore:1;
++    unsigned execute : 1;
++    unsigned enc_cb : 1;
++    unsigned bonded : 1;
++    unsigned restore : 1;
+ };
+
+ #if MYNEWT_VAL(BLE_HS_DEBUG)
