@@ -98,8 +98,8 @@ struct hci_conn_update;
 
 #define BLE_GAP_INITIAL_CONN_LATENCY        0
 #define BLE_GAP_INITIAL_SUPERVISION_TIMEOUT 0x0100
-#define BLE_GAP_INITIAL_CONN_MIN_CE_LEN     0x0010
-#define BLE_GAP_INITIAL_CONN_MAX_CE_LEN     0x0300
+#define BLE_GAP_INITIAL_CONN_MIN_CE_LEN     0x0000
+#define BLE_GAP_INITIAL_CONN_MAX_CE_LEN     0x0000
 
 #define BLE_GAP_ROLE_MASTER                 0
 #define BLE_GAP_ROLE_SLAVE                  1
