@@ -66,6 +66,9 @@ ble_hs_misc_conn_chan_find_reqd(uint16_t conn_handle, uint16_t cid,
     int rc;
 
     rc = ble_hs_misc_conn_chan_find(conn_handle, cid, &conn, &chan);
+    if (rc != 0) {
+        return rc;
+    }
 
     if (out_conn != NULL) {
         *out_conn = conn;
@@ -74,7 +77,7 @@ ble_hs_misc_conn_chan_find_reqd(uint16_t conn_handle, uint16_t cid,
         *out_chan = chan;
     }
 
-    return rc;
+    return 0;
 }
 
 uint8_t

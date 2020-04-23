@@ -5363,7 +5363,8 @@ ble_gap_passkey_event(uint16_t conn_handle,
 }
 
 void
-ble_gap_enc_event(uint16_t conn_handle, int status, int security_restored)
+ble_gap_enc_event(uint16_t conn_handle, int status,
+                  int security_restored, int bonded)
 {
 #if !NIMBLE_BLE_SM
     return;
@@ -5379,12 +5380,24 @@ ble_gap_enc_event(uint16_t conn_handle, int status, int security_restored)
     ble_gap_event_listener_call(&event);
     ble_gap_call_conn_event_cb(&event, conn_handle);
 
-    if (status == 0) {
-        if (security_restored) {
-            ble_gatts_bonding_restored(conn_handle);
-        } else {
-            ble_gatts_bonding_established(conn_handle);
-        }
+    if (status != 0) {
+        return;
+    }
+
+    /* If encryption succeded and encryption has been restored for bonded device,
+     * notify gatt server so it has chance to send notification/indication if needed.
+     */
+    if (security_restored) {
+        ble_gatts_bonding_restored(conn_handle);
+        return;
+    }
+
+    /* If this is fresh pairing and bonding has been established,
+     * notify gatt server about that so previous subscriptions (before bonding)
+     * can be stored.
+     */
+    if (bonded) {
+        ble_gatts_bonding_established(conn_handle);
     }
 }
 
