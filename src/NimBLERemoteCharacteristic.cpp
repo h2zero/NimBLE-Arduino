@@ -322,6 +322,12 @@ std::string NimBLERemoteCharacteristic::readValue() {
 
     NimBLEClient* pClient = getRemoteService()->getClient();
     
+    m_value = "";
+    if(m_rawData != nullptr) {
+        free(m_rawData);
+        m_rawData = nullptr;
+    }
+    
     // Check to see that we are connected.
     if (!pClient->isConnected()) {
         NIMBLE_LOGE(LOG_TAG, "Disconnected");
@@ -330,16 +336,33 @@ std::string NimBLERemoteCharacteristic::readValue() {
 
     do {
         m_semaphoreReadCharEvt.take("readValue");
-        
-        rc = ble_gattc_read(pClient->getConnId(), m_handle,
+    /*    if(rc == BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG)) {
+            NIMBLE_LOGE(LOG_TAG, "Attribute not long");
+            m_value = "";
+            rc = ble_gattc_read(pClient->getConnId(), m_handle,
+                    NimBLERemoteCharacteristic::onReadCB, this);
+        } else {
+            NIMBLE_LOGE(LOG_TAG, "reading long offset=%d", m_value.length());
+            rc = ble_gattc_read_long(pClient->getConnId(), m_handle, m_value.length(),
                             NimBLERemoteCharacteristic::onReadCB, this);
-  
+        }*/
+
+        if(rc == BLE_HS_EAGAIN) {
+            NIMBLE_LOGE(LOG_TAG, "reading long offset=%d", m_value.length());
+            rc = ble_gattc_read_long(pClient->getConnId(), m_handle, m_value.length(),
+                            NimBLERemoteCharacteristic::onReadCB, this);
+        } else {
+            rc = ble_gattc_read(pClient->getConnId(), m_handle,
+                            NimBLERemoteCharacteristic::onReadCB, this);
+        }
+
 //  long read experiment
 /*        rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
                         NimBLERemoteCharacteristic::onReadCB, this);
 */
         if (rc != 0) {
-            NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d", rc);
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d, %s", rc,
+                                                NimBLEUtils::returnCodeToString(rc));
             m_semaphoreReadCharEvt.give();
             return "";
         }
@@ -347,8 +370,21 @@ std::string NimBLERemoteCharacteristic::readValue() {
         rc = m_semaphoreReadCharEvt.wait("readValue");
         switch(rc){
             case 0:
+            case BLE_HS_EDONE:
+                if(m_value.length()) {
+                    m_rawData = (uint8_t*) calloc(m_value.length(), sizeof(uint8_t));
+                    memcpy(m_rawData, m_value.data(), m_value.length());
+                }
+                rc = 0;
                 break;
-                
+            case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
+                NIMBLE_LOGE(LOG_TAG, "Attribute not long");
+				rc=0;
+                break;
+			// signal for long read attempt if data length == mtu -1
+			case BLE_HS_EAGAIN:
+				retryCount++;
+                break;
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
@@ -379,15 +415,29 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     if(characteristic->getRemoteService()->getClient()->getConnId() != conn_handle){
         return 0;
     }
-    NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
+    NIMBLE_LOGE(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
+
 // long read experiment
-/*    if(attr && (attr->om->om_len >= (ble_att_mtu(characteristic->getRemoteService()->getClient()->getConnId()) - 1))){
-        
-        return 0;
+    if(attr){
+        NIMBLE_LOGE(LOG_TAG, "Got %d bytes", attr->om->om_len);
+        if(characteristic->m_value.length()) {
+            characteristic->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
+        } else {
+            characteristic->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
+        }
+        if(attr->om->om_len >= (ble_att_mtu(characteristic->getRemoteService()->getClient()->getConnId()) - 1)){
+            NIMBLE_LOGE(LOG_TAG, "Trying long read");
+			// If data length == mtu - 1 tell the read function to try a long read.
+			// Make sure this only happens once.
+			if(characteristic->m_semaphoreReadCharEvt.value() != BLE_HS_EAGAIN) {
+                characteristic->m_semaphoreReadCharEvt.give(BLE_HS_EAGAIN);
+			}
+            return 0;
+        }
     }
-*/   
+   
     
-    if(characteristic->m_rawData != nullptr) {
+/*    if(characteristic->m_rawData != nullptr) {
         free(characteristic->m_rawData);
     }
     
@@ -401,9 +451,9 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
         characteristic->m_value = "";
         characteristic->m_semaphoreReadCharEvt.give(error->status);
     }
-    
-//    characteristic->m_semaphoreReadCharEvt.give(error->status);
-    return 0; //1
+  */  
+    characteristic->m_semaphoreReadCharEvt.give(error->status);
+    return 0; 
 }
 
 
@@ -523,7 +573,7 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
     NimBLEClient* pClient = getRemoteService()->getClient();
     int rc = 0;
     int retryCount = 1;
-//    uint16_t mtu;
+    uint16_t mtu;
     
     // Check to see that we are connected.
     if (!pClient->isConnected()) {
@@ -531,9 +581,9 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
         return false;
     }
     
-//    mtu = ble_att_mtu(pClient->getConnId()) - 3;
+    mtu = ble_att_mtu(pClient->getConnId()) - 3;
 
-    if(/*!length > mtu &&*/ !response) {
+    if(length <= mtu && !response) {
         rc =  ble_gattc_write_no_rsp_flat(pClient->getConnId(), m_handle, data, length);
         return (rc==0);
     }
@@ -541,19 +591,16 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
     do {
         m_semaphoreWriteCharEvt.take("writeValue");
 // long write experiment        
-/*        if(length > mtu) {
-            NIMBLE_LOGD(LOG_TAG,"long write");
+        if(length > mtu) {
+            NIMBLE_LOGE(LOG_TAG,"long write %d bytes", length);
             os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
             rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om,
-                                      NimBLERemoteCharacteristic::onWriteCB, 
-                                      this);
+                                NimBLERemoteCharacteristic::onWriteCB, this);
         } else {
-*/       
-        rc = ble_gattc_write_flat(pClient->getConnId(), m_handle,
-                                  data, length, 
-                                  NimBLERemoteCharacteristic::onWriteCB, 
-                                  this);
-//        }
+            rc = ble_gattc_write_flat(pClient->getConnId(), m_handle,
+                                data, length, 
+                                NimBLERemoteCharacteristic::onWriteCB, this);
+        }
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to write characteristic; rc=%d", rc);
             m_semaphoreWriteCharEvt.give();
@@ -564,6 +611,13 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
 
         switch(rc){
             case 0:
+            case BLE_HS_EDONE:
+				rc = 0;
+                break;
+            case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
+                NIMBLE_LOGE(LOG_TAG, "Long write not supported by peer; Truncating length to %d", mtu);
+                retryCount++;
+                length = mtu;
                 break;
    
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
@@ -599,6 +653,8 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
     
     NIMBLE_LOGI(LOG_TAG, "Write complete; status=%d conn_handle=%d", error->status, conn_handle);
     
+    characteristic->m_semaphoreWriteCharEvt.give(error->status);
+/*    
     if (error->status == 0) {       
 
         characteristic->m_semaphoreWriteCharEvt.give(0);
@@ -606,7 +662,7 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
 
         characteristic->m_semaphoreWriteCharEvt.give(error->status);
     }
-    
+*/   
     return 0;
 }
 
