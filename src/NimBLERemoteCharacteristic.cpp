@@ -53,6 +53,8 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_charProp       = chr->properties;
     m_pRemoteService = pRemoteService;
     m_notifyCallback = nullptr;
+    m_rawData        = nullptr;
+    m_rawDataLen     = 0;
  } // NimBLERemoteCharacteristic
 
 
@@ -61,7 +63,9 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  */
 NimBLERemoteCharacteristic::~NimBLERemoteCharacteristic() {
     removeDescriptors();   // Release resources for any descriptor information we may have allocated.
-    if(m_rawData != nullptr) free(m_rawData); 
+    if(m_rawData != nullptr) {
+        free(m_rawData);
+    }
 } // ~NimBLERemoteCharacteristic
 
 /*
@@ -321,34 +325,21 @@ std::string NimBLERemoteCharacteristic::readValue() {
     int retryCount = 1;
 
     NimBLEClient* pClient = getRemoteService()->getClient();
-    
-    m_value = "";
-    if(m_rawData != nullptr) {
-        free(m_rawData);
-        m_rawData = nullptr;
-    }
-    
+
     // Check to see that we are connected.
     if (!pClient->isConnected()) {
         NIMBLE_LOGE(LOG_TAG, "Disconnected");
         return "";
     }
 
+    // Clear the value before reading.
+    m_value = "";
+
     do {
         m_semaphoreReadCharEvt.take("readValue");
-    /*    if(rc == BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG)) {
-            NIMBLE_LOGE(LOG_TAG, "Attribute not long");
-            m_value = "";
-            rc = ble_gattc_read(pClient->getConnId(), m_handle,
-                    NimBLERemoteCharacteristic::onReadCB, this);
-        } else {
-            NIMBLE_LOGE(LOG_TAG, "reading long offset=%d", m_value.length());
-            rc = ble_gattc_read_long(pClient->getConnId(), m_handle, m_value.length(),
-                            NimBLERemoteCharacteristic::onReadCB, this);
-        }*/
 
         if(rc == BLE_HS_EAGAIN) {
-            NIMBLE_LOGE(LOG_TAG, "reading long offset=%d", m_value.length());
+            NIMBLE_LOGD(LOG_TAG, "reading long offset=%d", m_value.length());
             rc = ble_gattc_read_long(pClient->getConnId(), m_handle, m_value.length(),
                             NimBLERemoteCharacteristic::onReadCB, this);
         } else {
@@ -356,14 +347,10 @@ std::string NimBLERemoteCharacteristic::readValue() {
                             NimBLERemoteCharacteristic::onReadCB, this);
         }
 
-//  long read experiment
-/*        rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
-                        NimBLERemoteCharacteristic::onReadCB, this);
-*/
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d, %s", rc,
                                                 NimBLEUtils::returnCodeToString(rc));
-            m_semaphoreReadCharEvt.give();
+            m_semaphoreReadCharEvt.give(0);
             return "";
         }
         
@@ -371,18 +358,16 @@ std::string NimBLERemoteCharacteristic::readValue() {
         switch(rc){
             case 0:
             case BLE_HS_EDONE:
-                if(m_value.length()) {
-                    m_rawData = (uint8_t*) calloc(m_value.length(), sizeof(uint8_t));
-                    memcpy(m_rawData, m_value.data(), m_value.length());
-                }
                 rc = 0;
                 break;
+            // Characteristic is not long-readable, return with what we have.
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
-                NIMBLE_LOGE(LOG_TAG, "Attribute not long");
+                NIMBLE_LOGI(LOG_TAG, "Attribute not long");
 				rc=0;
                 break;
-			// signal for long read attempt if data length == mtu -1
+			// If we get this signal, restart loop and attempt long read.
 			case BLE_HS_EAGAIN:
+                // increment so loop continues.
 				retryCount++;
                 break;
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
@@ -411,47 +396,29 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
 {
     NimBLERemoteCharacteristic* characteristic = (NimBLERemoteCharacteristic*)arg;
     
-        // Make sure the discovery is for this device
+    // Make sure the read is for this client
     if(characteristic->getRemoteService()->getClient()->getConnId() != conn_handle){
         return 0;
     }
-    NIMBLE_LOGE(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
+    NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
 
-// long read experiment
     if(attr){
-        NIMBLE_LOGE(LOG_TAG, "Got %d bytes", attr->om->om_len);
-        if(characteristic->m_value.length()) {
-            characteristic->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
-        } else {
-            characteristic->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
-        }
+        NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
+
+        characteristic->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
+
+        // If data length == mtu-1 tell the read function to try a long read.
         if(attr->om->om_len >= (ble_att_mtu(characteristic->getRemoteService()->getClient()->getConnId()) - 1)){
-            NIMBLE_LOGE(LOG_TAG, "Trying long read");
-			// If data length == mtu - 1 tell the read function to try a long read.
+            NIMBLE_LOGD(LOG_TAG, "Trying long read");
 			// Make sure this only happens once.
 			if(characteristic->m_semaphoreReadCharEvt.value() != BLE_HS_EAGAIN) {
                 characteristic->m_semaphoreReadCharEvt.give(BLE_HS_EAGAIN);
 			}
+            // exit here until all the data has been read: i.e when data length < mtu-1
             return 0;
         }
     }
-   
-    
-/*    if(characteristic->m_rawData != nullptr) {
-        free(characteristic->m_rawData);
-    }
-    
-    if (error->status == 0) {       
-        characteristic->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
-        characteristic->m_rawData = (uint8_t*) calloc(attr->om->om_len, sizeof(uint8_t));
-        memcpy(characteristic->m_rawData, attr->om->om_data, attr->om->om_len);
-        characteristic->m_semaphoreReadCharEvt.give(0);
-    } else {
-        characteristic->m_rawData = nullptr;
-        characteristic->m_value = "";
-        characteristic->m_semaphoreReadCharEvt.give(error->status);
-    }
-  */  
+    // Read complete release semaphore and let the app can continue.
     characteristic->m_semaphoreReadCharEvt.give(error->status);
     return 0; 
 }
@@ -583,6 +550,8 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
     
     mtu = ble_att_mtu(pClient->getConnId()) - 3;
 
+    // Check if the data length is longer than we can write in 1 connection event.
+    // If so we must do a long write which requires a response.
     if(length <= mtu && !response) {
         rc =  ble_gattc_write_no_rsp_flat(pClient->getConnId(), m_handle, data, length);
         return (rc==0);
@@ -590,9 +559,9 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
     
     do {
         m_semaphoreWriteCharEvt.take("writeValue");
-// long write experiment        
+
         if(length > mtu) {
-            NIMBLE_LOGE(LOG_TAG,"long write %d bytes", length);
+            NIMBLE_LOGI(LOG_TAG,"long write %d bytes", length);
             os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
             rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om,
                                 NimBLERemoteCharacteristic::onWriteCB, this);
@@ -654,25 +623,40 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
     NIMBLE_LOGI(LOG_TAG, "Write complete; status=%d conn_handle=%d", error->status, conn_handle);
     
     characteristic->m_semaphoreWriteCharEvt.give(error->status);
-/*    
-    if (error->status == 0) {       
 
-        characteristic->m_semaphoreWriteCharEvt.give(0);
-    } else {
-
-        characteristic->m_semaphoreWriteCharEvt.give(error->status);
-    }
-*/   
     return 0;
 }
 
 
 /**
  * @brief Read raw data from remote characteristic as hex bytes
- * @return return pointer data read
+ * @return uint8_t pointer to the data read.
  */
 uint8_t* NimBLERemoteCharacteristic::readRawData() {
+    readValue();
+
+    if(m_rawData != nullptr) {
+        free(m_rawData);
+        m_rawData = nullptr;
+    }
+
+    m_rawDataLen = m_value.length();
+    // If we have data copy it to rawData
+    if(m_rawDataLen) {
+        m_rawData = (uint8_t*) calloc(m_rawDataLen, sizeof(uint8_t));
+        memcpy(m_rawData, m_value.data(), m_rawDataLen);
+    }
+
     return m_rawData;
+}
+
+
+/**
+ * @brief Get the length of the raw data read from the remote characteristic.
+ * @return uint16_t length of the raw data in bytes.
+ */
+uint16_t NimBLERemoteCharacteristic::rawDataLen() {
+    return m_rawDataLen;
 }
 
 

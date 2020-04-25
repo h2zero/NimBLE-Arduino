@@ -60,6 +60,7 @@ public:
     bool        writeValue(uint8_t newValue, bool response = false);
     std::string toString();
     uint8_t*    readRawData();
+    uint16_t    rawDataLen();
     NimBLERemoteService* getRemoteService();
 
 private:
@@ -90,7 +91,8 @@ private:
     FreeRTOS::Semaphore     m_semaphoreReadCharEvt      = FreeRTOS::Semaphore("ReadCharEvt");
     FreeRTOS::Semaphore     m_semaphoreWriteCharEvt     = FreeRTOS::Semaphore("WriteCharEvt");
     std::string             m_value;
-    uint8_t*                m_rawData = nullptr;
+    uint8_t*                m_rawData;
+    uint32_t                m_rawDataLen;
     notify_callback         m_notifyCallback;
 
     // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
