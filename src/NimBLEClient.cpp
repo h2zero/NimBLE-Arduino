@@ -74,7 +74,7 @@ NimBLEClient::~NimBLEClient() {
     // Before we are finished with the client, we must release resources.
     clearServices();
     
-    if(m_deleteCallbacks) {
+    if(m_deleteCallbacks && m_pClientCallbacks != &defaultCallbacks) {
         delete m_pClientCallbacks;
     }
 
