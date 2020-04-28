@@ -34,7 +34,7 @@ class NimBLEAdvertisedDevice;
 class NimBLEClient {
 public:
     bool                                       connect(NimBLEAdvertisedDevice* device, bool refreshServices = true);
-    bool                                       connect(NimBLEAddress address, uint8_t type = BLE_ADDR_TYPE_PUBLIC, bool refreshServices = true);   // Connect to the remote BLE Server
+    bool                                       connect(NimBLEAddress address, uint8_t type = BLE_ADDR_PUBLIC, bool refreshServices = true);   // Connect to the remote BLE Server
     int                                        disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);                  // Disconnect from the remote BLE Server
     NimBLEAddress                              getPeerAddress();              // Get the address of the remote BLE Server
     int                                        getRssi();                     // Get the RSSI of the remote BLE Server

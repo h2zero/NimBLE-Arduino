@@ -59,9 +59,9 @@ NimBLEAddress::NimBLEAddress(std::string stringAddress) {
 
 /**
  * @brief Constructor for compatibility with bluedrioid esp library.
- * @param [in] esp_bd_addr_t struct containing the address.
+ * @param [in] uint8_t[6] or esp_bd_addr_t struct containing the address.
  */
-NimBLEAddress::NimBLEAddress(esp_bd_addr_t address) {
+NimBLEAddress::NimBLEAddress(uint8_t address[6]) {
     NimBLEUtils::memrcpy(m_address, address, 6);
 } // NimBLEAddress
 
