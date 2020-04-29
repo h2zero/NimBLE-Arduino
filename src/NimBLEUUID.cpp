@@ -156,6 +156,26 @@ NimBLEUUID::NimBLEUUID(ble_uuid128_t* uuid) {
 } // NimBLEUUID
 
 
+/**
+ * @brief Create a UUID from the 128bit value using hex parts instead of string, 
+ * instead of BLEUUID("ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6"), it becomes 
+ * BLEUUID(0xebe0ccb0, 0x7a0a, 0x4b0c, 0x8a1a6ff2997da3a6)
+ *
+ * @param [in] first  The first 32bit of the UUID.
+ * @param [in] second The next 16bit of the UUID.
+ * @param [in] third  The next 16bit of the UUID.
+ * @param [in] fourth The last 64bit of the UUID, combining the last 2 parts of the string equivalent
+ */
+NimBLEUUID::NimBLEUUID(uint32_t first, uint16_t second, uint16_t third, uint64_t fourth) {
+    m_uuid.u.type        = BLE_UUID_TYPE_128;
+    memcpy(m_uuid.u128.value + 12, &first,  4);
+    memcpy(m_uuid.u128.value + 10, &second, 2);
+    memcpy(m_uuid.u128.value + 8,  &third,  2);
+    memcpy(m_uuid.u128.value,      &fourth, 8);
+    m_valueSet = true;
+}
+
+
 NimBLEUUID::NimBLEUUID() {
     m_valueSet = false;
 } // NimBLEUUID
