@@ -141,7 +141,7 @@ NimBLEScan::NimBLEScan() {
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
                 // If not active scanning report the result to the listener.
-                if(pScan->m_scan_params.passive) {
+                if(pScan->m_scan_params.passive || event->disc.event_type == BLE_HCI_ADV_TYPE_ADV_NONCONN_IND) {
                     pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
                 // Otherwise wait for the scan response so we can report all of the data at once.
                 } else if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
