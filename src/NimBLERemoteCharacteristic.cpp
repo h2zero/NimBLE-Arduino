@@ -319,6 +319,7 @@ std::string NimBLERemoteCharacteristic::readValue() {
 
     int rc = 0;
     int retryCount = 1;
+    m_value= "";
 
     NimBLEClient* pClient = getRemoteService()->getClient();
     
@@ -391,8 +392,10 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
         free(characteristic->m_rawData);
     }
     
-    if (error->status == 0) {       
-        characteristic->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
+    if (error->status == 0) {   
+        if(characteristic->m_value.length() == 0) {
+            characteristic->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
+        }
         characteristic->m_rawData = (uint8_t*) calloc(attr->om->om_len, sizeof(uint8_t));
         memcpy(characteristic->m_rawData, attr->om->om_data, attr->om->om_len);
         characteristic->m_semaphoreReadCharEvt.give(0);
