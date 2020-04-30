@@ -61,7 +61,6 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  */
 NimBLERemoteCharacteristic::~NimBLERemoteCharacteristic() {
     removeDescriptors();   // Release resources for any descriptor information we may have allocated.
-    if(m_rawData != nullptr) free(m_rawData); 
 } // ~NimBLERemoteCharacteristic
 
 /*
@@ -314,18 +313,19 @@ uint8_t NimBLERemoteCharacteristic::readUInt8() {
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
  */
-std::string NimBLERemoteCharacteristic::readValue() {
+std::string &NimBLERemoteCharacteristic::readValue() {
     NIMBLE_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
 
     int rc = 0;
     int retryCount = 1;
+    m_value = "";
 
     NimBLEClient* pClient = getRemoteService()->getClient();
     
     // Check to see that we are connected.
     if (!pClient->isConnected()) {
         NIMBLE_LOGE(LOG_TAG, "Disconnected");
-        return "";
+        return m_value;
     }
 
     do {
@@ -341,7 +341,7 @@ std::string NimBLERemoteCharacteristic::readValue() {
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d", rc);
             m_semaphoreReadCharEvt.give();
-            return "";
+            return m_value;
         }
         
         rc = m_semaphoreReadCharEvt.wait("readValue");
@@ -356,12 +356,12 @@ std::string NimBLERemoteCharacteristic::readValue() {
                     break;
             /* Else falls through. */                 
             default:
-                return "";
+                return m_value;
         }
     } while(rc != 0 && retryCount--);
     
     NIMBLE_LOGD(LOG_TAG, "<< readValue(): length: %d", m_value.length());
-    return (rc == 0) ? m_value : "";
+    return m_value;
 } // readValue
 
 
@@ -387,17 +387,10 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     }
 */   
     
-    if(characteristic->m_rawData != nullptr) {
-        free(characteristic->m_rawData);
-    }
-    
     if (error->status == 0) {       
         characteristic->m_value = std::string((char*) attr->om->om_data, attr->om->om_len);
-        characteristic->m_rawData = (uint8_t*) calloc(attr->om->om_len, sizeof(uint8_t));
-        memcpy(characteristic->m_rawData, attr->om->om_data, attr->om->om_len);
         characteristic->m_semaphoreReadCharEvt.give(0);
     } else {
-        characteristic->m_rawData = nullptr;
         characteristic->m_value = "";
         characteristic->m_semaphoreReadCharEvt.give(error->status);
     }
@@ -615,8 +608,8 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
  * @brief Read raw data from remote characteristic as hex bytes
  * @return return pointer data read
  */
-uint8_t* NimBLERemoteCharacteristic::readRawData() {
-    return m_rawData;
+const uint8_t* NimBLERemoteCharacteristic::readRawData() {
+    return reinterpret_cast<const uint8_t*>(readValue().c_str());
 }
 
 

@@ -50,7 +50,7 @@ public:
     uint16_t    getHandle();
     uint16_t    getDefHandle();
     NimBLEUUID  getUUID();
-    std::string readValue();
+    std::string &readValue();
     uint8_t     readUInt8();
     uint16_t    readUInt16();
     uint32_t    readUInt32();
@@ -59,7 +59,7 @@ public:
     bool        writeValue(std::string newValue, bool response = false);
     bool        writeValue(uint8_t newValue, bool response = false);
     std::string toString();
-    uint8_t*    readRawData();
+    const uint8_t*    readRawData();
     NimBLERemoteService* getRemoteService();
 
 private:
@@ -90,7 +90,6 @@ private:
     FreeRTOS::Semaphore     m_semaphoreReadCharEvt      = FreeRTOS::Semaphore("ReadCharEvt");
     FreeRTOS::Semaphore     m_semaphoreWriteCharEvt     = FreeRTOS::Semaphore("WriteCharEvt");
     std::string             m_value;
-    uint8_t*                m_rawData = nullptr;
     notify_callback         m_notifyCallback;
 
     // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
