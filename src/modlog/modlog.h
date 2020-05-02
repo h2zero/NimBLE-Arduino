@@ -42,7 +42,7 @@ modlog_dummy(const char *msg, ...)
 
 #ifdef ESP_PLATFORM
 /// Uncomment these and comment out the 3 defines below to see NimBLE messages in Arduino.
-
+/*
 #define MODLOG_DEBUG(ml_mod_, ml_msg_, ...) \
     esp_log_write(ESP_LOG_ERROR, "NimBLE",ml_msg_, ##__VA_ARGS__)
 
@@ -51,7 +51,7 @@ modlog_dummy(const char *msg, ...)
 
 #define MODLOG_WARN(ml_mod_, ml_msg_, ...) \
     esp_log_write(ESP_LOG_ERROR, "NimBLE",ml_msg_, ##__VA_ARGS__)
-/*
+*/
 #define MODLOG_DEBUG(ml_mod_, ml_msg_, ...) \
     esp_log_write(ESP_LOG_DEBUG, "NimBLE",ml_msg_, ##__VA_ARGS__)
 
@@ -60,7 +60,7 @@ modlog_dummy(const char *msg, ...)
 
 #define MODLOG_WARN(ml_mod_, ml_msg_, ...) \
     esp_log_write(ESP_LOG_WARN, "NimBLE",ml_msg_, ##__VA_ARGS__)
-*/
+
 #define MODLOG_ERROR(ml_mod_, ml_msg_, ...) \
     esp_log_write(ESP_LOG_ERROR, "NimBLE",ml_msg_, ##__VA_ARGS__)
 

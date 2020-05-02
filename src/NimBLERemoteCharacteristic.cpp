@@ -323,6 +323,8 @@ std::string NimBLERemoteCharacteristic::readValue() {
 
     int rc = 0;
     int retryCount = 1;
+    // Clear the value before reading.
+    m_value = "";
 
     NimBLEClient* pClient = getRemoteService()->getClient();
 
@@ -331,9 +333,6 @@ std::string NimBLERemoteCharacteristic::readValue() {
         NIMBLE_LOGE(LOG_TAG, "Disconnected");
         return "";
     }
-
-    // Clear the value before reading.
-    m_value = "";
 
     do {
         m_semaphoreReadCharEvt.take("readValue");
@@ -382,7 +381,7 @@ std::string NimBLERemoteCharacteristic::readValue() {
     } while(rc != 0 && retryCount--);
     
     NIMBLE_LOGD(LOG_TAG, "<< readValue(): length: %d", m_value.length());
-    return (rc == 0) ? m_value : "";
+    return m_value;
 } // readValue
 
 
@@ -395,9 +394,10 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
                 struct ble_gatt_attr *attr, void *arg) 
 {
     NimBLERemoteCharacteristic* characteristic = (NimBLERemoteCharacteristic*)arg;
+    uint16_t conn_id = characteristic->getRemoteService()->getClient()->getConnId();
     
     // Make sure the read is for this client
-    if(characteristic->getRemoteService()->getClient()->getConnId() != conn_handle){
+    if(conn_id != conn_handle){
         return 0;
     }
     NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
@@ -408,7 +408,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
         characteristic->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
 
         // If data length == mtu-1 tell the read function to try a long read.
-        if(attr->om->om_len >= (ble_att_mtu(characteristic->getRemoteService()->getClient()->getConnId()) - 1)){
+        if(attr->om->om_len >= (ble_att_mtu(conn_id) - 1)){
             NIMBLE_LOGD(LOG_TAG, "Trying long read");
 			// Make sure this only happens once.
 			if(characteristic->m_semaphoreReadCharEvt.value() != BLE_HS_EAGAIN) {
@@ -633,7 +633,9 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
  * @return uint8_t pointer to the data read.
  */
 uint8_t* NimBLERemoteCharacteristic::readRawData() {
-    readValue();
+    if(!m_value.length()){
+        readValue();
+    }
 
     if(m_rawData != nullptr) {
         free(m_rawData);
