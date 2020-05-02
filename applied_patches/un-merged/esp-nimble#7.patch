@@ -1,19 +1,24 @@
-From 97485b084c9d38160553101bd68eedb5f47f9fc3 Mon Sep 17 00:00:00 2001
+From 42fef9c3556ecd7a9b6c4d489a4a198696381599 Mon Sep 17 00:00:00 2001
 From: h2zero <powellperalta@gmail.com>
 Date: Thu, 16 Apr 2020 10:30:50 -0600
-Subject: [PATCH] Allow host to resolve peer RPA without using local RPA.
+Subject: [PATCH 1/2] Allow host to resolve peer RPA without using local RPA.
 
 ---
- nimble/host/src/ble_hs_conn.c    | 22 +++++++++++-----------
- nimble/host/src/ble_hs_hci_evt.c | 19 +++++++++++--------
+ nimble/host/src/ble_hs_conn.c    | 21 +++++++++------------
+ nimble/host/src/ble_hs_hci_evt.c | 13 ++++---------
  nimble/host/src/ble_sm.c         | 31 ++++++++++++++-----------------
- 3 files changed, 36 insertions(+), 36 deletions(-)
+ 3 files changed, 27 insertions(+), 38 deletions(-)
 
 diff --git a/src/nimble/host/src/ble_hs_conn.c b/src/nimble/host/src/ble_hs_conn.c
-index 035150b98..c3294e9c1 100644
+index 035150b98..eb65e3288 100644
 --- a/src/nimble/host/src/ble_hs_conn.c
 +++ b/src/nimble/host/src/ble_hs_conn.c
-@@ -415,17 +415,17 @@ ble_hs_conn_addrs(const struct ble_hs_conn *conn,
+@@ -410,22 +410,19 @@ ble_hs_conn_addrs(const struct ble_hs_conn *conn,
+
+ #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+     /* RPA: Override peer address information. */
+-    struct ble_hs_resolv_entry *rl = NULL;
+-
      ble_addr_t bhc_peer_addr;
      bhc_peer_addr.type = conn->bhc_peer_addr.type;
      memcpy(bhc_peer_addr.val, conn->bhc_peer_addr.val, BLE_DEV_ADDR_LEN);
@@ -21,18 +26,16 @@ index 035150b98..c3294e9c1 100644
 -
 -        uint8_t *local_id = NULL;
 -        ble_hs_id_addr(BLE_ADDR_PUBLIC, (const uint8_t **) &local_id, NULL);
--
+
 -        rl = ble_hs_resolv_list_find(bhc_peer_addr.val);
 -        if (rl != NULL) {
 -            memcpy(addrs->peer_ota_addr.val, addrs->peer_id_addr.val, BLE_DEV_ADDR_LEN);
 -            memcpy(addrs->peer_id_addr.val, rl->rl_identity_addr, BLE_DEV_ADDR_LEN);
 -
 -            addrs->peer_id_addr.type = rl->rl_addr_type;
-+
++    struct ble_hs_resolv_entry *rl = NULL;
 +    rl = ble_hs_resolv_list_find(bhc_peer_addr.val);
 +    if (rl != NULL) {
-+        addrs->peer_ota_addr = conn->bhc_peer_rpa_addr;
-+        //memcpy(addrs->peer_ota_addr.val, addrs->peer_id_addr.val, BLE_DEV_ADDR_LEN);
 +        memcpy(addrs->peer_id_addr.val, rl->rl_identity_addr, BLE_DEV_ADDR_LEN);
 +        addrs->peer_id_addr.type = rl->rl_addr_type;
 +
@@ -43,10 +46,10 @@ index 035150b98..c3294e9c1 100644
              /* RL is present: populate our id addr with public ID */
              memcpy(addrs->our_id_addr.val, local_id, BLE_DEV_ADDR_LEN);
 diff --git a/src/nimble/host/src/ble_hs_hci_evt.c b/src/nimble/host/src/ble_hs_hci_evt.c
-index 43cb5b580..3f7c5d791 100644
+index 43cb5b580..78383dff0 100644
 --- a/src/nimble/host/src/ble_hs_hci_evt.c
 +++ b/src/nimble/host/src/ble_hs_hci_evt.c
-@@ -332,16 +332,19 @@ ble_hs_hci_evt_le_conn_complete(uint8_t subevent, uint8_t *data, int len)
+@@ -332,16 +332,11 @@ ble_hs_hci_evt_le_conn_complete(uint8_t subevent, uint8_t *data, int len)
              if (ble_host_rpa_enabled()) {
                  uint8_t *local_id_rpa = ble_hs_get_rpa_local();
                  memcpy(evt.local_rpa, local_id_rpa, 6);
@@ -58,19 +61,12 @@ index 43cb5b580..3f7c5d791 100644
 -                    if (ble_rpa_resolv_add_peer_rec(evt.peer_addr) != 0) {
 -                        BLE_HS_LOG(DEBUG, "Memory unavailable for new peer record\n");
 -                    }
-+            }
+-                }
+             }
 +
 +            struct ble_hs_resolv_entry *rl = NULL;
 +            ble_rpa_replace_peer_params_with_rl(evt.peer_addr,
 +                                                &evt.peer_addr_type, &rl);
-+            if (rl == NULL) {
-+                if (ble_rpa_resolv_add_peer_rec(evt.peer_addr) != 0) {
-+                    BLE_HS_LOG(DEBUG, "Memory unavailable for new peer record\n");
-                 }
-             }
-+            /* Set the correct RPA for logging */
-+            memcpy(evt.peer_rpa, data + 6, BLE_DEV_ADDR_LEN);
-+
  #endif
          } else {
              memset(evt.local_rpa, 0, BLE_DEV_ADDR_LEN);
@@ -119,3 +115,32 @@ index e57562519..dc96c76c7 100644
              }
  #endif
          }
+
+From 70ea4ccc017d8b729123289bf74112d187830fd4 Mon Sep 17 00:00:00 2001
+From: h2zero <powellperalta@gmail.com>
+Date: Fri, 1 May 2020 21:54:46 -0600
+Subject: [PATCH 2/2] Remove resolving RPA in advertisement report.
+
+---
+ nimble/host/src/ble_hs_hci_evt.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/src/nimble/host/src/ble_hs_hci_evt.c b/src/nimble/host/src/ble_hs_hci_evt.c
+index 78383dff0..30dc92f28 100644
+--- a/src/nimble/host/src/ble_hs_hci_evt.c
++++ b/src/nimble/host/src/ble_hs_hci_evt.c
+@@ -433,14 +433,6 @@ ble_hs_hci_evt_le_adv_rpt(uint8_t subevent, uint8_t *data, int len)
+         memcpy(desc.addr.val, data + off, 6);
+         off += 6;
+
+-#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+-        if (ble_host_rpa_enabled()) {
+-            /* Now RPA to be resolved here, since controller is unaware of the
+-             * address is RPA  */
+-            ble_rpa_replace_peer_params_with_rl(desc.addr.val,
+-                                                &desc.addr.type, NULL);
+-        }
+-#endif
+         desc.length_data = data[off];
+         ++off;
+
