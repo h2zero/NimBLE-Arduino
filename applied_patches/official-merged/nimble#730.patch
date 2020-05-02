@@ -1,0 +1,25 @@
+From 3cbef1a615a4d739c5bface245f827be2026a7b3 Mon Sep 17 00:00:00 2001
+From: Andrzej Kaczmarek <andrzej.kaczmarek@codecoup.pl>
+Date: Mon, 13 Jan 2020 22:59:17 +0100
+Subject: [PATCH] nimble/host: Fix setting connection flags after pairing
+
+---
+ nimble/host/src/ble_sm.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/nimble/host/src/ble_sm.c b/src/nimble/host/src/ble_sm.c
+index e2315fb0f..cfd80fcbd 100644
+--- a/src/nimble/host/src/ble_sm.c
++++ b/src/nimble/host/src/ble_sm.c
+@@ -2015,7 +2015,10 @@ ble_sm_key_exch_success(struct ble_sm_proc *proc, struct ble_sm_result *res)
+     /* The procedure is now complete.  Update connection bonded state and
+      * terminate procedure.
+      */
+-    ble_sm_update_sec_state(proc->conn_handle, 1, 0, 1, proc->key_size);
++    ble_sm_update_sec_state(proc->conn_handle, 1,
++                            !!(proc->flags & BLE_SM_PROC_F_AUTHENTICATED),
++                            !!(proc->flags & BLE_SM_PROC_F_BONDING),
++                            proc->key_size);
+     proc->state = BLE_SM_PROC_STATE_NONE;
+ 
+     res->app_status = 0;
