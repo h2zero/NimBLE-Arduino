@@ -54,7 +54,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_pRemoteService = pRemoteService;
     m_notifyCallback = nullptr;
     m_rawData        = nullptr;
-    m_rawDataLen     = 0;
+    m_dataLen        = 0;
  } // NimBLERemoteCharacteristic
 
 
@@ -633,20 +633,16 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
  * @return uint8_t pointer to the data read.
  */
 uint8_t* NimBLERemoteCharacteristic::readRawData() {
-    if(!m_value.length()){
-        readValue();
-    }
-
     if(m_rawData != nullptr) {
         free(m_rawData);
         m_rawData = nullptr;
     }
 
-    m_rawDataLen = m_value.length();
+    m_dataLen = m_value.length();
     // If we have data copy it to rawData
-    if(m_rawDataLen) {
-        m_rawData = (uint8_t*) calloc(m_rawDataLen, sizeof(uint8_t));
-        memcpy(m_rawData, m_value.data(), m_rawDataLen);
+    if(m_dataLen) {
+        m_rawData = (uint8_t*) calloc(m_dataLen, sizeof(uint8_t));
+        memcpy(m_rawData, m_value.data(), m_dataLen);
     }
 
     return m_rawData;
@@ -654,11 +650,11 @@ uint8_t* NimBLERemoteCharacteristic::readRawData() {
 
 
 /**
- * @brief Get the length of the raw data read from the remote characteristic.
- * @return uint16_t length of the raw data in bytes.
+ * @brief Get the length of the data read from the remote characteristic.
+ * @return size_t length of the data in bytes.
  */
-uint16_t NimBLERemoteCharacteristic::rawDataLen() {
-    return m_rawDataLen;
+size_t NimBLERemoteCharacteristic::getDataLength() {
+    return m_value.length();
 }
 
 
