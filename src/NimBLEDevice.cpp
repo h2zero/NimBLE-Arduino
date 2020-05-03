@@ -379,14 +379,16 @@ void NimBLEDevice::stopAdvertising() {
     
     m_synced = true;
     
-    if(m_pScan != nullptr) {
-        // Restart scanning with the last values sent, allow to clear results.
-        m_pScan->start(m_pScan->m_duration, m_pScan->m_scanCompleteCB);
-    }
-    
-    if(m_bleAdvertising != nullptr) {
-        // Restart advertisng, parameters should already be set.
-        m_bleAdvertising->start();
+    if(initialized) {
+        if(m_pScan != nullptr) {
+            // Restart scanning with the last values sent, allow to clear results.
+            m_pScan->start(m_pScan->m_duration, m_pScan->m_scanCompleteCB);
+        }
+
+        if(m_bleAdvertising != nullptr) {
+            // Restart advertisng, parameters should already be set.
+            m_bleAdvertising->start();
+        }
     }
 } // onSync
 
@@ -410,8 +412,6 @@ void NimBLEDevice::stopAdvertising() {
  */
 /* STATIC */ void NimBLEDevice::init(std::string deviceName) {
     if(!initialized){
-        initialized = true; // Set the initialization flag to ensure we are only initialized once.
-        
         int rc=0;
         esp_err_t errRc = ESP_OK;
         
@@ -421,7 +421,7 @@ void NimBLEDevice::stopAdvertising() {
 #endif
 
         errRc = nvs_flash_init();
-    
+
         if (errRc == ESP_ERR_NVS_NO_FREE_PAGES || errRc == ESP_ERR_NVS_NEW_VERSION_FOUND) {
             ESP_ERROR_CHECK(nvs_flash_erase());
             errRc = nvs_flash_init();
@@ -452,14 +452,15 @@ void NimBLEDevice::stopAdvertising() {
         assert(rc == 0);
 
         ble_store_config_init();
-        
+
         nimble_port_freertos_init(NimBLEDevice::host_task);
     }
     // Wait for host and controller to sync before returning and accepting new tasks
     while(!m_synced){
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
-    //vTaskDelay(200 / portTICK_PERIOD_MS); // Delay for 200 msecs as a workaround to an apparent Arduino environment issue.
+
+    initialized = true; // Set the initialization flag to ensure we are only initialized once.
 } // init
 
 
@@ -477,6 +478,7 @@ void NimBLEDevice::stopAdvertising() {
         }
         
         initialized = false;
+        m_synced = false;
     }
 } // deinit
 
