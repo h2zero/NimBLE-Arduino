@@ -198,12 +198,12 @@ uint8_t NimBLEUUID::bitSize() {
  * @return True if the UUIDs are equal and false otherwise.
  */
 bool NimBLEUUID::equals(NimBLEUUID uuid) {
-    if(m_valueSet && rhs.m_valueSet) {
+    if(m_valueSet && uuid.m_valueSet) {
         if(ble_uuid_cmp(&m_uuid.u, &uuid.getNative()->u) == 0){
             return true;
         }
     }
-    return m_valueSet == rhs.m_valueSet;
+    return m_valueSet == uuid.m_valueSet;
 }
 
 
