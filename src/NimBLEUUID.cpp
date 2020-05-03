@@ -198,10 +198,12 @@ uint8_t NimBLEUUID::bitSize() {
  * @return True if the UUIDs are equal and false otherwise.
  */
 bool NimBLEUUID::equals(NimBLEUUID uuid) {
-    if(ble_uuid_cmp(&m_uuid.u, &uuid.getNative()->u) == 0){
-        return true;
+    if(m_valueSet && rhs.m_valueSet) {
+        if(ble_uuid_cmp(&m_uuid.u, &uuid.getNative()->u) == 0){
+            return true;
+        }
     }
-    return false;
+    return m_valueSet == rhs.m_valueSet;
 }
 
 
@@ -317,5 +319,35 @@ std::string NimBLEUUID::toString() {
 
     return ble_uuid_to_str(&m_uuid.u, buf);
 } // toString
+
+
+NimBLEUUID & NimBLEUUID::operator=(const NimBLEUUID & other) {
+    m_uuid.u.type = other.m_uuid.u.type;
+    if(other.m_valueSet) {
+        memcpy(m_uuid.u128.value, other.m_uuid.u128.value, 16);
+    }
+    m_valueSet = other.m_valueSet;
+}
+
+bool NimBLEUUID::operator ==(const NimBLEUUID & rhs) {
+    if(m_valueSet && rhs.m_valueSet) {
+        return ble_uuid_cmp(&m_uuid.u, &rhs.m_uuid.u) == 0;
+    }
+
+    return m_valueSet == rhs.m_valueSet;
+}
+
+bool NimBLEUUID::operator !=(const NimBLEUUID & rhs) {
+    return !this->operator==(rhs);
+}
+
+NimBLEUUID::operator std::string() const {
+    if (!m_valueSet) return std::string();   // If we have no value, nothing to format.
+
+    char buf[BLE_UUID_STR_LEN];
+
+    return ble_uuid_to_str(&m_uuid.u, buf);
+}
+
 
 #endif /* CONFIG_BT_ENABLED */
