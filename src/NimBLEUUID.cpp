@@ -229,47 +229,21 @@ ble_uuid_any_t* NimBLEUUID::getNative() {
  * A UUID can be internally represented as 16bit, 32bit or the full 128bit.  This method
  * will convert 16 or 32 bit representations to the full 128bit.
  */
-NimBLEUUID NimBLEUUID::to128() {
+NimBLEUUID &NimBLEUUID::to128() {
     // If we either don't have a value or are already a 128 bit UUID, nothing further to do.
     if (!m_valueSet || m_uuid.u.type == BLE_UUID_TYPE_128) {
         return *this;
     }
 
-    // If we are 16 bit or 32 bit, then set the 4 bytes of the variable part of the UUID.
+    // If we are 16 bit or 32 bit, then set the other bytes of the UUID.
     if (m_uuid.u.type == BLE_UUID_TYPE_16) {
-        uint16_t temp = m_uuid.u16.value;
-        m_uuid.u128.value[15] = 0;
-        m_uuid.u128.value[14] = 0;
-        m_uuid.u128.value[13] = (temp >> 8) & 0xff;
-        m_uuid.u128.value[12] = temp & 0xff;
-
+        *this = NimBLEUUID(m_uuid.u16.value, 0x0000, 0x1000, 0x800000805f9b34fb);
     }
     else if (m_uuid.u.type == BLE_UUID_TYPE_32) {
-        uint32_t temp = m_uuid.u32.value;
-        m_uuid.u128.value[15] = (temp >> 24) & 0xff;
-        m_uuid.u128.value[14] = (temp >> 16) & 0xff;
-        m_uuid.u128.value[13] = (temp >> 8) & 0xff;
-        m_uuid.u128.value[12] = temp & 0xff;
+        *this = NimBLEUUID(m_uuid.u32.value, 0x0000, 0x1000, 0x800000805f9b34fb);
     }
 
-    // Set the fixed parts of the UUID.
-    m_uuid.u128.value[11] = 0x00;
-    m_uuid.u128.value[10] = 0x00;
-
-    m_uuid.u128.value[9]  = 0x10;
-    m_uuid.u128.value[8]  = 0x00;
-
-    m_uuid.u128.value[7]  = 0x80;
-    m_uuid.u128.value[6]  = 0x00;
-
-    m_uuid.u128.value[5]  = 0x00;
-    m_uuid.u128.value[4]  = 0x80;
-    m_uuid.u128.value[3]  = 0x5f;
-    m_uuid.u128.value[2]  = 0x9b;
-    m_uuid.u128.value[1]  = 0x34;
-    m_uuid.u128.value[0]  = 0xfb;
-
-    m_uuid.u.type = BLE_UUID_TYPE_128;
+    m_uuid.u.type == BLE_UUID_TYPE_128;
     return *this;
 } // to128
 

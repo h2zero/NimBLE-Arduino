@@ -40,7 +40,7 @@ public:
     uint8_t        bitSize();   // Get the number of bits in this uuid.
     bool           equals(NimBLEUUID uuid);
     ble_uuid_any_t* getNative();
-    NimBLEUUID        to128();
+    NimBLEUUID &     to128();
     std::string    toString();
     static NimBLEUUID fromString(std::string uuid);  // Create a NimBLEUUID from a string
 
