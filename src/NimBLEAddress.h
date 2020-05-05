@@ -35,9 +35,14 @@ public:
     NimBLEAddress(ble_addr_t address);
     NimBLEAddress(uint8_t address[6]);
     NimBLEAddress(std::string stringAddress);
+    NimBLEAddress(uint64_t address);
     bool           equals(NimBLEAddress otherAddress);
     uint8_t*       getNative();
     std::string    toString();
+
+    bool operator 	==(const NimBLEAddress & rhs);
+    bool operator 	!=(const NimBLEAddress & rhs);
+    operator 		std::string() const;
 
 private:
     uint8_t        m_address[6];
