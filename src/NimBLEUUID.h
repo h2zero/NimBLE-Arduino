@@ -44,7 +44,6 @@ public:
     std::string    toString();
     static NimBLEUUID fromString(std::string uuid);  // Create a NimBLEUUID from a string
 
-    NimBLEUUID & operator=(const NimBLEUUID & other);
     bool operator ==(const NimBLEUUID & rhs);
     bool operator !=(const NimBLEUUID & rhs);
     operator std::string() const;

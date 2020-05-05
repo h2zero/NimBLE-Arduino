@@ -18,6 +18,8 @@
 #include "NimBLEUUID.h"
 #include "NimBLELog.h"
 
+#include <algorithm>
+
 static const char* LOG_TAG = "NimBLEUUID";
 
 
@@ -42,50 +44,25 @@ static const char* LOG_TAG = "NimBLEUUID";
     m_valueSet = true;
     if (value.length() == 4) {
         m_uuid.u.type         = BLE_UUID_TYPE_16;
-        m_uuid.u16.value      = 0;
-        for(int i=0;i<value.length();){
-            uint8_t MSB = value.c_str()[i];
-            uint8_t LSB = value.c_str()[i+1];
-            
-            if(MSB > '9') MSB -= 7;
-            if(LSB > '9') LSB -= 7;
-            m_uuid.u16.value += (((MSB&0x0F) <<4) | (LSB & 0x0F))<<(2-i)*4;
-            i+=2;   
-        }
+        m_uuid.u16.value = strtoul(value.c_str(), NULL, 16);
     }
     else if (value.length() == 8) {
         m_uuid.u.type         = BLE_UUID_TYPE_32;
-        m_uuid.u32.value      = 0;
-        for(int i=0;i<value.length();){
-            uint8_t MSB = value.c_str()[i];
-            uint8_t LSB = value.c_str()[i+1];
-            
-            if(MSB > '9') MSB -= 7; 
-            if(LSB > '9') LSB -= 7;
-            m_uuid.u32.value += (((MSB&0x0F) <<4) | (LSB & 0x0F))<<(6-i)*4;
-            i+=2;
-        }       
+        m_uuid.u32.value = strtoul(value.c_str(), NULL, 16);
     }
-    else if (value.length() == 16) {  // how we can have 16 byte length string reprezenting 128 bit uuid??? needs to be investigated (lack of time)
-        m_uuid.u.type = BLE_UUID_TYPE_128;
-        NimBLEUtils::memrcpy(m_uuid.u128.value, (uint8_t*)value.data(), 16);
+    else if (value.length() == 16) {
+        *this = NimBLEUUID((uint8_t*)value.data(), 16, true);
     }
     else if (value.length() == 36) {
         // If the length of the string is 36 bytes then we will assume it is a long hex string in
         // UUID format.
-        m_uuid.u.type = BLE_UUID_TYPE_128;
-        int n = 0;
-        for(int i=0;i<value.length();){
-            if(value.c_str()[i] == '-')
-                i++;
-            uint8_t MSB = value.c_str()[i];
-            uint8_t LSB = value.c_str()[i+1];
-            
-            if(MSB > '9') MSB -= 7; 
-            if(LSB > '9') LSB -= 7;
-            m_uuid.u128.value[15-n++] = ((MSB&0x0F) <<4) | (LSB & 0x0F);
-            i+=2;   
-        }
+        char * position = const_cast<char *>(value.c_str());
+        uint32_t first = 	strtoul(position, &position, 16);
+        uint16_t second = 	strtoul(position + 1, &position, 16);
+        uint16_t third = 	strtoul(position + 1, &position, 16);
+        uint16_t fourth = 	strtoul(position + 1, &position, 16);
+        uint64_t fifth = 	strtoull(position + 1, NULL, 16);
+        *this = NimBLEUUID(first, second, third, (uint64_t(fourth) << 48) + fifth);
     }
     else {
         NIMBLE_LOGE(LOG_TAG,"ERROR: UUID value not 2, 4, 16 or 36 bytes");
@@ -110,10 +87,10 @@ NimBLEUUID::NimBLEUUID(uint8_t* pData, size_t size, bool msbFirst) {
         return;
     }
     m_uuid.u.type = BLE_UUID_TYPE_128;
+
+    memcpy(m_uuid.u128.value, pData, 16);
     if (msbFirst) {
-        NimBLEUtils::memrcpy(m_uuid.u128.value, pData, 16);
-    } else {
-        memcpy(m_uuid.u128.value, pData, 16);
+        std::reverse(m_uuid.u128.value, m_uuid.u128.value + 16);
     }
     m_valueSet = true;
 } // NimBLEUUID
@@ -198,12 +175,7 @@ uint8_t NimBLEUUID::bitSize() {
  * @return True if the UUIDs are equal and false otherwise.
  */
 bool NimBLEUUID::equals(NimBLEUUID uuid) {
-    if(m_valueSet && uuid.m_valueSet) {
-        if(ble_uuid_cmp(&m_uuid.u, &uuid.getNative()->u) == 0){
-            return true;
-        }
-    }
-    return m_valueSet == uuid.m_valueSet;
+    return *this == uuid;
 }
 
 
@@ -313,21 +285,8 @@ NimBLEUUID NimBLEUUID::to128() {
  * @return A string representation of the UUID.
  */
 std::string NimBLEUUID::toString() {
-    if (!m_valueSet) return "<NULL>";   // If we have no value, nothing to format.
-
-    char buf[BLE_UUID_STR_LEN];
-
-    return ble_uuid_to_str(&m_uuid.u, buf);
+    return std::string(*this);
 } // toString
-
-
-NimBLEUUID & NimBLEUUID::operator=(const NimBLEUUID & other) {
-    m_uuid.u.type = other.m_uuid.u.type;
-    if(other.m_valueSet) {
-        memcpy(m_uuid.u128.value, other.m_uuid.u128.value, 16);
-    }
-    m_valueSet = other.m_valueSet;
-}
 
 bool NimBLEUUID::operator ==(const NimBLEUUID & rhs) {
     if(m_valueSet && rhs.m_valueSet) {
