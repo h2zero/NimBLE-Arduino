@@ -244,7 +244,6 @@ NimBLEUUID &NimBLEUUID::to128() {
         *this = NimBLEUUID(m_uuid.u32.value, 0x0000, 0x1000, 0x800000805f9b34fb);
     }
 
-    m_uuid.u.type == BLE_UUID_TYPE_128;
     return *this;
 } // to128
 
