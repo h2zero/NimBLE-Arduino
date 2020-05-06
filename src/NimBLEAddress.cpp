@@ -70,8 +70,7 @@ NimBLEAddress::NimBLEAddress(std::string stringAddress) {
  * @param [in] uint8_t[6] or esp_bd_addr_t struct containing the address.
  */
 NimBLEAddress::NimBLEAddress(uint8_t address[6]) {
-    memcpy(m_address, address, sizeof m_address);
-    std::reverse(m_address, m_address + sizeof m_address);
+    std::reverse_copy(address, address + sizeof m_address, m_address);
 } // NimBLEAddress
 
 
