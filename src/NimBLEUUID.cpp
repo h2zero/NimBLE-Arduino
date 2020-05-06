@@ -89,7 +89,6 @@ NimBLEUUID::NimBLEUUID(uint8_t* pData, size_t size, bool msbFirst) {
     m_uuid.u.type = BLE_UUID_TYPE_128;
 
     if (msbFirst) {
-//        std::reverse(m_uuid.u128.value, m_uuid.u128.value + 16);
         std::reverse_copy(pData, pData + 16, m_uuid.u128.value);
     } else {
         memcpy(m_uuid.u128.value, pData, 16);
