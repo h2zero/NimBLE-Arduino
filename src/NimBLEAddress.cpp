@@ -47,7 +47,7 @@ NimBLEAddress::NimBLEAddress(ble_addr_t address) {
  *
  * @param [in] stringAddress The hex representation of the address.
  */
-NimBLEAddress::NimBLEAddress(std::string stringAddress) {
+NimBLEAddress::NimBLEAddress(const std::string &stringAddress) {
     if (stringAddress.length() != 17) {
         memset(m_address, 0, sizeof m_address); // "00:00:00:00:00:00" represents an invalid address
         NIMBLE_LOGD(LOG_TAG, "Invalid address '%s'", stringAddress.c_str());
@@ -78,7 +78,7 @@ NimBLEAddress::NimBLEAddress(uint8_t address[6]) {
  * @brief Constructor for address using a hex value. Use the same byte order, so use 0xa4c1385def16 for "a4:c1:38:5d:ef:16"
  * @param [in] uint64_t containing the address.
  */
-NimBLEAddress::NimBLEAddress(uint64_t address) {
+NimBLEAddress::NimBLEAddress(const uint64_t &address) {
     memcpy(m_address, &address, sizeof m_address);
 } // NimBLEAddress
 
@@ -88,7 +88,7 @@ NimBLEAddress::NimBLEAddress(uint64_t address) {
  * @param [in] otherAddress The other address to compare against.
  * @return True if the addresses are equal.
  */
-bool NimBLEAddress::equals(NimBLEAddress otherAddress) {
+bool NimBLEAddress::equals(const NimBLEAddress &otherAddress) const {
     return *this == otherAddress;
 } // equals
 
@@ -97,7 +97,7 @@ bool NimBLEAddress::equals(NimBLEAddress otherAddress) {
  * @brief Return the native representation of the address.
  * @return The native representation of the address.
  */
-uint8_t *NimBLEAddress::getNative() {
+const uint8_t *NimBLEAddress::getNative() const {
     return m_address;
 } // getNative
 
@@ -113,16 +113,16 @@ uint8_t *NimBLEAddress::getNative() {
  *
  * @return The string representation of the address.
  */
-std::string NimBLEAddress::toString() {
+std::string NimBLEAddress::toString() const {
     return std::string(*this);
 } // toString
 
 
-bool NimBLEAddress::operator ==(const NimBLEAddress & rhs) {
+bool NimBLEAddress::operator ==(const NimBLEAddress & rhs) const {
     return memcmp(rhs.m_address, m_address, sizeof m_address) == 0;
 }
 
-bool NimBLEAddress::operator !=(const NimBLEAddress & rhs) {
+bool NimBLEAddress::operator !=(const NimBLEAddress & rhs) const {
     return !this->operator==(rhs);
 }
 
