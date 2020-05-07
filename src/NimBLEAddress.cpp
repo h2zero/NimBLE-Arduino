@@ -43,7 +43,7 @@ NimBLEAddress::NimBLEAddress(ble_addr_t address) {
  *
  * @param [in] stringAddress The hex representation of the address.
  */
-NimBLEAddress::NimBLEAddress(std::string stringAddress) {
+NimBLEAddress::NimBLEAddress(const std::string &stringAddress) {
     if (stringAddress.length() != 17) return;
 
     int data[6];
@@ -71,7 +71,7 @@ NimBLEAddress::NimBLEAddress(uint8_t address[6]) {
  * @param [in] otherAddress The other address to compare against.
  * @return True if the addresses are equal.
  */
-bool NimBLEAddress::equals(NimBLEAddress otherAddress) {
+bool NimBLEAddress::equals(const NimBLEAddress &otherAddress) const {
     return memcmp(otherAddress.getNative(), m_address, 6) == 0;
 } // equals
 
@@ -80,7 +80,7 @@ bool NimBLEAddress::equals(NimBLEAddress otherAddress) {
  * @brief Return the native representation of the address.
  * @return The native representation of the address.
  */
-uint8_t *NimBLEAddress::getNative() {
+const uint8_t *NimBLEAddress::getNative() const {
     return m_address;
 } // getNative
 
@@ -96,7 +96,7 @@ uint8_t *NimBLEAddress::getNative() {
  *
  * @return The string representation of the address.
  */
-std::string NimBLEAddress::toString() {
+std::string NimBLEAddress::toString() const {
     auto size = 18;
     char *res = (char*)malloc(size);
     snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[5], m_address[4], m_address[3], m_address[2], m_address[1], m_address[0]);

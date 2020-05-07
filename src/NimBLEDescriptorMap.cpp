@@ -32,7 +32,7 @@ NimBLEDescriptor* NimBLEDescriptorMap::getByUUID(const char* uuid) {
  * @param [in] UUID The UUID to look up the descriptor.
  * @return The descriptor.  If not present, then nullptr is returned.
  */
-NimBLEDescriptor* NimBLEDescriptorMap::getByUUID(NimBLEUUID uuid) {
+NimBLEDescriptor* NimBLEDescriptorMap::getByUUID(const NimBLEUUID &uuid) {
 	for (auto &myPair : m_uuidMap) {
 		if (myPair.first->getUUID().equals(uuid)) {
 			return myPair.first;
@@ -71,7 +71,7 @@ void NimBLEDescriptorMap::setByUUID(const char* uuid, NimBLEDescriptor* pDescrip
  * @param [in] characteristic The descriptor to cache.
  * @return N/A.
  */
-void NimBLEDescriptorMap::setByUUID(NimBLEUUID uuid, NimBLEDescriptor* pDescriptor) {
+void NimBLEDescriptorMap::setByUUID(const NimBLEUUID &uuid, NimBLEDescriptor* pDescriptor) {
 	m_uuidMap.insert(std::pair<NimBLEDescriptor*, std::string>(pDescriptor, uuid.toString()));
 } // setByUUID
 

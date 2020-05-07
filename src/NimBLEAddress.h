@@ -34,10 +34,10 @@ class NimBLEAddress {
 public:
     NimBLEAddress(ble_addr_t address);
     NimBLEAddress(uint8_t address[6]);
-    NimBLEAddress(std::string stringAddress);
-    bool           equals(NimBLEAddress otherAddress);
-    uint8_t*       getNative();
-    std::string    toString();
+    NimBLEAddress(const std::string &stringAddress);
+    bool           equals(const NimBLEAddress &otherAddress) const;
+    const uint8_t* getNative() const;
+    std::string    toString() const;
 
 private:
     uint8_t        m_address[6];

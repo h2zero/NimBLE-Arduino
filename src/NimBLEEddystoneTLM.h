@@ -36,8 +36,8 @@ public:
 	uint32_t	getCount();
 	uint32_t	getTime();
 	std::string toString();
-	void		setData(std::string data);
-	void		setUUID(NimBLEUUID l_uuid);
+	void		setData(const std::string &data);
+	void		setUUID(const NimBLEUUID &l_uuid);
 	void		setVersion(uint8_t version);
 	void		setVolt(uint16_t volt);
 	void		setTemp(float temp);

@@ -39,11 +39,11 @@ public:
 	uint16_t    getManufacturerId();
 	NimBLEUUID     getProximityUUID();
 	int8_t      getSignalPower();
-	void        setData(std::string data);
+	void        setData(const std::string &data);
 	void        setMajor(uint16_t major);
 	void        setMinor(uint16_t minor);
 	void        setManufacturerId(uint16_t manufacturerId);
-	void        setProximityUUID(NimBLEUUID uuid);
+	void        setProximityUUID(const NimBLEUUID &uuid);
 	void        setSignalPower(int8_t signalPower);
 }; // NimBLEBeacon
 

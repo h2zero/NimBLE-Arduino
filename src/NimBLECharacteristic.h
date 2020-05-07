@@ -58,10 +58,10 @@ class NimBLECharacteristicCallbacks;
 class NimBLEDescriptorMap {
 public:
 	void setByUUID(const char* uuid, NimBLEDescriptor* pDescriptor);
-	void setByUUID(NimBLEUUID uuid, NimBLEDescriptor* pDescriptor);
+	void setByUUID(const NimBLEUUID &uuid, NimBLEDescriptor* pDescriptor);
 //	void setByHandle(uint16_t handle, NimBLEDescriptor* pDescriptor);
 	NimBLEDescriptor* getByUUID(const char* uuid);
-	NimBLEDescriptor* getByUUID(NimBLEUUID uuid);
+	NimBLEDescriptor* getByUUID(const NimBLEUUID &uuid);
 //	NimBLEDescriptor* getByHandle(uint16_t handle);
 	std::string	toString();
 	NimBLEDescriptor* getFirst();
@@ -87,13 +87,13 @@ public:
 						uint32_t properties = NIMBLE_PROPERTY::READ | 
 											  NIMBLE_PROPERTY::WRITE,
                                      uint16_t max_len = 100);
-	NimBLEDescriptor* createDescriptor(NimBLEUUID uuid,
+	NimBLEDescriptor* createDescriptor(const NimBLEUUID &uuid,
 						uint32_t properties = NIMBLE_PROPERTY::READ | 
 											  NIMBLE_PROPERTY::WRITE,
                                      uint16_t max_len = 100);
 											  
 	NimBLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
-	NimBLEDescriptor* getDescriptorByUUID(NimBLEUUID descriptorUUID);
+	NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &descriptorUUID);
 	NimBLEUUID        getUUID();
 	std::string       getValue();
 	uint8_t*          getData();
@@ -110,8 +110,8 @@ public:
     void setWriteProperty(bool value);
 	void setWriteNoResponseProperty(bool value);
 //////////////////////////////////////////////////////    
-	void setValue(uint8_t* data, size_t size);
-	void setValue(std::string value);
+	void setValue(const uint8_t* data, size_t size);
+	void setValue(const std::string &value);
 	void setValue(uint16_t& data16);
 	void setValue(uint32_t& data32);
 	void setValue(int& data32);
@@ -141,7 +141,7 @@ private:
 
 	NimBLECharacteristic(const char* uuid, uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
 														NimBLEService* pService = nullptr);
-	NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
+	NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
 														NimBLEService* pService = nullptr);
 	virtual ~NimBLECharacteristic();
 

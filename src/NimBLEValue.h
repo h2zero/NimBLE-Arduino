@@ -24,8 +24,8 @@
 class NimBLEValue {
 public:
 	NimBLEValue();
-	void		addPart(std::string part);
-	void		addPart(uint8_t* pData, size_t length);
+	void		addPart(const std::string &part);
+	void		addPart(const uint8_t* pData, size_t length);
 	void		cancel();
 	void		commit();
 	uint8_t*	getData();
@@ -33,8 +33,8 @@ public:
 	uint16_t	getReadOffset();
 	std::string getValue();
 	void        setReadOffset(uint16_t readOffset);
-	void        setValue(std::string value);
-	void        setValue(uint8_t* pData, size_t length);
+	void        setValue(const std::string &value);
+	void        setValue(const uint8_t* pData, size_t length);
 
 private:
 	std::string m_accumulation;

@@ -37,7 +37,7 @@ public:
 
     // Public methods
     NimBLERemoteCharacteristic* getCharacteristic(const char* uuid);      // Get the specified characteristic reference.
-    NimBLERemoteCharacteristic* getCharacteristic(NimBLEUUID uuid);       // Get the specified characteristic reference.
+    NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID &uuid);       // Get the specified characteristic reference.
 //  BLERemoteCharacteristic* getCharacteristic(uint16_t uuid);      // Get the specified characteristic reference.
     std::map<std::string, NimBLERemoteCharacteristic*>* getCharacteristics();
     std::map<uint16_t, NimBLERemoteCharacteristic*>* getCharacteristicsByHandle();  // Get the characteristics map.
@@ -46,8 +46,8 @@ public:
     NimBLEClient*            getClient(void);                                           // Get a reference to the client associated with this service.
     uint16_t                 getHandle();                                               // Get the handle of this service.
     NimBLEUUID               getUUID(void);                                             // Get the UUID of this service.
-    std::string              getValue(NimBLEUUID characteristicUuid);                      // Get the value of a characteristic.
-    bool                     setValue(NimBLEUUID characteristicUuid, std::string value);   // Set the value of a characteristic.
+    std::string              getValue(const NimBLEUUID &characteristicUuid);                      // Get the value of a characteristic.
+    bool                     setValue(const NimBLEUUID &characteristicUuid, const std::string &value);   // Set the value of a characteristic.
     std::string              toString(void);
 
 private:

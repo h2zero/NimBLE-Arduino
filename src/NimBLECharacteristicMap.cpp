@@ -41,7 +41,7 @@ NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const char* uuid) {
  * @param [in] UUID The UUID to look up the characteristic.
  * @return The characteristic.
  */
-NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(NimBLEUUID uuid) {
+NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const NimBLEUUID &uuid) {
 	for (auto &myPair : m_uuidMap) {
 		if (myPair.first->getUUID().equals(uuid)) {
 			return myPair.first;
@@ -100,7 +100,7 @@ void NimBLECharacteristicMap::setByHandle(uint16_t handle, NimBLECharacteristic*
  * @param [in] characteristic The characteristic to cache.
  * @return N/A.
  */
-void NimBLECharacteristicMap::setByUUID(NimBLECharacteristic* pCharacteristic, NimBLEUUID uuid) {
+void NimBLECharacteristicMap::setByUUID(NimBLECharacteristic* pCharacteristic, const NimBLEUUID &uuid) {
 	m_uuidMap.insert(std::pair<NimBLECharacteristic*, std::string>(pCharacteristic, uuid.toString()));
 } // setByUUID
 

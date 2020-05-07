@@ -227,7 +227,7 @@ int NimBLERemoteDescriptor::onWriteCB(uint16_t conn_handle,
  * @param [in] length The length of the data to send.
  * @param [in] response True if we expect a response.
  */
-bool NimBLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool response) {
+bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool response) {
 
     NIMBLE_LOGD(LOG_TAG, ">> Descriptor writeValue: %s", toString().c_str());
     
@@ -287,7 +287,7 @@ bool NimBLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool respo
  * @param [in] newValue The data to send to the remote descriptor.
  * @param [in] response True if we expect a response.
  */
-bool NimBLERemoteDescriptor::writeValue(std::string newValue, bool response) {
+bool NimBLERemoteDescriptor::writeValue(const std::string &newValue, bool response) {
     return writeValue((uint8_t*) newValue.data(), newValue.length(), response);
 } // writeValue
 

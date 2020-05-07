@@ -62,7 +62,7 @@ public:
     void                stop();
     void                clearResults();
     NimBLEScanResults   getResults();
-    void                erase(NimBLEAddress address);
+    void                erase(const NimBLEAddress &address);
     
     
 private:
