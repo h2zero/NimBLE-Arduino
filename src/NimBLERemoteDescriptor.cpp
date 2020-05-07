@@ -15,6 +15,7 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLERemoteDescriptor.h"
+#include "NimBLEUtils.h"
 #include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLERemoteDescriptor";
@@ -92,22 +93,15 @@ int NimBLERemoteDescriptor::onReadCB(uint16_t conn_handle,
     
     NIMBLE_LOGD(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
     
-    if(attr){
-        NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
+    if(error->status == 0){
+        if(attr){
+            NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
 
-        desc->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
-
-        // If data length == mtu-1 tell the read function to try a long read.
-        if(attr->om->om_len >= (ble_att_mtu(conn_id) - 1)){
-            NIMBLE_LOGD(LOG_TAG, "Trying long read");
-			// Make sure this only happens once.
-			if(desc->m_semaphoreReadDescrEvt.value() != BLE_HS_EAGAIN) {
-                desc->m_semaphoreReadDescrEvt.give(BLE_HS_EAGAIN);
-			}
-            // exit here until all the data has been read: i.e when data length < mtu-1
+            desc->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
             return 0;
         }
     }
+
     // Read complete release semaphore and let the app can continue.
     desc->m_semaphoreReadDescrEvt.give(error->status);
     return 0;
@@ -133,17 +127,12 @@ std::string NimBLERemoteDescriptor::readValue() {
     do {
         m_semaphoreReadDescrEvt.take("ReadDescriptor");
         
-        if(rc == BLE_HS_EAGAIN) {
-            NIMBLE_LOGD(LOG_TAG, "reading long offset=%d", m_value.length());
-            rc = ble_gattc_read_long(pClient->getConnId(), m_handle, m_value.length(),
-                            NimBLERemoteDescriptor::onReadCB, this);
-        } else {
-            rc = ble_gattc_read(pClient->getConnId(), m_handle,
-                            NimBLERemoteDescriptor::onReadCB, this);
-        }
-                        
+        rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
+                                 NimBLERemoteDescriptor::onReadCB,
+                                 this);
         if (rc != 0) {
-            NIMBLE_LOGE(LOG_TAG, "Descriptor read failed, code: %d", rc);
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to read descriptor; rc=%d, %s",
+                                  rc, NimBLEUtils::returnCodeToString(rc));
             m_semaphoreReadDescrEvt.give(0);
             return "";
         }
@@ -158,12 +147,7 @@ std::string NimBLERemoteDescriptor::readValue() {
             // Descriptor is not long-readable, return with what we have.
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
                 NIMBLE_LOGI(LOG_TAG, "Attribute not long");
-				rc=0;
-                break;
-			// If we get this signal, restart loop and attempt long read.
-			case BLE_HS_EAGAIN:
-                // increment so loop continues.
-				retryCount++;
+				rc = 0;
                 break;
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
@@ -176,8 +160,7 @@ std::string NimBLERemoteDescriptor::readValue() {
         }
     } while(rc != 0 && retryCount--);
 
-    NIMBLE_LOGD(LOG_TAG, "<< Descriptor readValue(): length: %d, rc: %d", m_value.length(), rc);
-    
+    NIMBLE_LOGD(LOG_TAG, "<< Descriptor readValue(): length: %d", m_value.length());
     return m_value;
 } // readValue
 
@@ -275,7 +258,7 @@ bool NimBLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool respo
     // If so we must do a long write which requires a response.
     if(length <= mtu && !response) {
         rc =  ble_gattc_write_no_rsp_flat(pClient->getConnId(), m_handle, data, length);
-        return (rc==0);
+        return (rc == 0);
     }
     
     do {
@@ -285,11 +268,13 @@ bool NimBLERemoteDescriptor::writeValue(uint8_t* data, size_t length, bool respo
             NIMBLE_LOGI(LOG_TAG,"long write %d bytes", length);
             os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
             rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om,
-                                NimBLERemoteDescriptor::onWriteCB, this);
+                                      NimBLERemoteDescriptor::onWriteCB,
+                                      this);
         } else {
             rc = ble_gattc_write_flat(pClient->getConnId(), m_handle,
-                                data, length,
-                                NimBLERemoteDescriptor::onWriteCB, this);
+                                      data, length,
+                                      NimBLERemoteDescriptor::onWriteCB,
+                                      this);
         }
 
         if (rc != 0) {

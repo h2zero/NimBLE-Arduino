@@ -337,18 +337,12 @@ std::string NimBLERemoteCharacteristic::readValue() {
     do {
         m_semaphoreReadCharEvt.take("readValue");
 
-        if(rc == BLE_HS_EAGAIN) {
-            NIMBLE_LOGD(LOG_TAG, "reading long offset=%d", m_value.length());
-            rc = ble_gattc_read_long(pClient->getConnId(), m_handle, m_value.length(),
-                            NimBLERemoteCharacteristic::onReadCB, this);
-        } else {
-            rc = ble_gattc_read(pClient->getConnId(), m_handle,
-                            NimBLERemoteCharacteristic::onReadCB, this);
-        }
-
+        rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
+                                 NimBLERemoteCharacteristic::onReadCB,
+                                 this);
         if (rc != 0) {
-            NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d, %s", rc,
-                                                NimBLEUtils::returnCodeToString(rc));
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d, %s",
+                                  rc, NimBLEUtils::returnCodeToString(rc));
             m_semaphoreReadCharEvt.give(0);
             return "";
         }
@@ -362,12 +356,7 @@ std::string NimBLERemoteCharacteristic::readValue() {
             // Characteristic is not long-readable, return with what we have.
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
                 NIMBLE_LOGI(LOG_TAG, "Attribute not long");
-				rc=0;
-                break;
-			// If we get this signal, restart loop and attempt long read.
-			case BLE_HS_EAGAIN:
-                // increment so loop continues.
-				retryCount++;
+				rc = 0;
                 break;
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
@@ -397,24 +386,16 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     uint16_t conn_id = characteristic->getRemoteService()->getClient()->getConnId();
     
     // Make sure the read is for this client
-    if(conn_id != conn_handle){
+    if(conn_id != conn_handle) {
         return 0;
     }
     NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
 
-    if(attr){
-        NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
+    if(error->status == 0) {
+        if(attr) {
+            NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
 
-        characteristic->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
-
-        // If data length == mtu-1 tell the read function to try a long read.
-        if(attr->om->om_len >= (ble_att_mtu(conn_id) - 1)){
-            NIMBLE_LOGD(LOG_TAG, "Trying long read");
-			// Make sure this only happens once.
-			if(characteristic->m_semaphoreReadCharEvt.value() != BLE_HS_EAGAIN) {
-                characteristic->m_semaphoreReadCharEvt.give(BLE_HS_EAGAIN);
-			}
-            // exit here until all the data has been read: i.e when data length < mtu-1
+            characteristic->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
             return 0;
         }
     }
@@ -564,11 +545,13 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool r
             NIMBLE_LOGI(LOG_TAG,"long write %d bytes", length);
             os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
             rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om,
-                                NimBLERemoteCharacteristic::onWriteCB, this);
+                                      NimBLERemoteCharacteristic::onWriteCB,
+                                      this);
         } else {
             rc = ble_gattc_write_flat(pClient->getConnId(), m_handle,
-                                data, length, 
-                                NimBLERemoteCharacteristic::onWriteCB, this);
+                                      data, length,
+                                      NimBLERemoteCharacteristic::onWriteCB,
+                                      this);
         }
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to write characteristic; rc=%d", rc);
@@ -615,7 +598,7 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
 {
     NimBLERemoteCharacteristic* characteristic = (NimBLERemoteCharacteristic*)arg;
     
-        // Make sure the discovery is for this device
+    // Make sure the discovery is for this device
     if(characteristic->getRemoteService()->getClient()->getConnId() != conn_handle){
         return 0;
     }
