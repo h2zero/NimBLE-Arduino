@@ -52,10 +52,7 @@ private:
     NimBLEUUID                  m_uuid;                    // UUID of this descriptor.
     std::string                 m_value;                   // Last received value of the descriptor.
     NimBLERemoteCharacteristic* m_pRemoteCharacteristic;   // Reference to the Remote characteristic of which this descriptor is associated.
-    FreeRTOS::Semaphore         m_semaphoreReadDescrEvt  = FreeRTOS::Semaphore("ReadDescrEvt");
-    FreeRTOS::Semaphore         m_semaphoreDescWrite     = FreeRTOS::Semaphore("WriteDescEvt");
-
-
+    NimBLESemaphore*            m_pSemaphore;
 };
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)

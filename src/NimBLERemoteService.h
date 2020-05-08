@@ -22,7 +22,7 @@
 
 #include "NimBLEClient.h"
 #include "NimBLEUUID.h"
-#include "FreeRTOS.h"
+#include "NimBLESemaphore.h"
 #include "NimBLERemoteCharacteristic.h"
 
 #include <vector>
@@ -39,11 +39,9 @@ public:
     virtual ~NimBLERemoteService();
 
     // Public methods
-    NimBLERemoteCharacteristic* getCharacteristic(const char* uuid);      // Get the specified characteristic reference.
-    NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID &uuid);       // Get the specified characteristic reference.
-//  BLERemoteCharacteristic* getCharacteristic(uint16_t uuid);      // Get the specified characteristic reference.
-    std::vector<NimBLERemoteCharacteristic*>* getCharacteristics();
-//  void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap);
+    NimBLERemoteCharacteristic*                 getCharacteristic(const char* uuid);       // Get the specified characteristic reference.
+    NimBLERemoteCharacteristic*                 getCharacteristic(const NimBLEUUID &uuid); // Get the specified characteristic reference.
+    std::vector<NimBLERemoteCharacteristic*>*   getCharacteristics();
 
     NimBLEClient*            getClient(void);                                           // Get a reference to the client associated with this service.
     uint16_t                 getHandle();                                               // Get the handle of this service.
@@ -68,7 +66,6 @@ private:
 
     uint16_t            getStartHandle();                // Get the start handle for this service.
     uint16_t            getEndHandle();                  // Get the end handle for this service.
-    void                releaseSemaphores();
     void                removeCharacteristics();
 
     // Properties
@@ -78,10 +75,10 @@ private:
 
     bool                m_haveCharacteristics; // Have we previously obtained the characteristics.
     NimBLEClient*       m_pClient;
-    FreeRTOS::Semaphore m_semaphoreGetCharEvt = FreeRTOS::Semaphore("GetCharEvt");
     NimBLEUUID          m_uuid;             // The UUID of this service.
     uint16_t            m_startHandle;      // The starting handle of this service.
     uint16_t            m_endHandle;        // The ending handle of this service.
+    NimBLESemaphore*    m_pSemaphore;
 }; // BLERemoteService
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)

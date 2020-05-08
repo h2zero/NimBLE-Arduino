@@ -20,7 +20,7 @@
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
 #include "NimBLEAdvertisedDevice.h"
-#include "FreeRTOS.h"
+#include "NimBLESemaphore.h"
 
 #include "host/ble_gap.h"
 
@@ -83,7 +83,7 @@ private:
     bool                                m_stopped;
     bool                                m_wantDuplicates;
     NimBLEScanResults                   m_scanResults;
-    FreeRTOS::Semaphore                 m_semaphoreScanEnd = FreeRTOS::Semaphore("ScanEnd");
+    NimBLESemaphore                     m_semaphoreScanEnd = NimBLESemaphore("ScanEnd");
     uint32_t                            m_duration;
 };
 

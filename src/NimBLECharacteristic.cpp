@@ -391,7 +391,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
         om = ble_hs_mbuf_from_flat(data, length);
 
         if(!is_notification) {
-            m_semaphoreConfEvt.take("indicate");
+            m_semaphoreConfEvt.take();
             rc = ble_gattc_indicate_custom((*it).first, m_handle, om);
             if(rc != 0){
                 m_semaphoreConfEvt.give();

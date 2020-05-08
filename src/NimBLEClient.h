@@ -60,12 +60,13 @@ public:
     void                                       updateConnParams(uint16_t minInterval, uint16_t maxInterval,
                                                             uint16_t latency, uint16_t timeout);
 
-
 private:
     NimBLEClient();
     ~NimBLEClient();
     friend class NimBLEDevice;
     friend class NimBLERemoteService;
+    friend class NimBLERemoteCharacteristic;
+    friend class NimBLERemoteDescriptor;
 
     static int          handleGapEvent(struct ble_gap_event *event, void *arg);
     static int          serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
@@ -73,20 +74,15 @@ private:
     bool                retrieveServices();  //Retrieve services from the server
 //    void                onHostReset();
 
-    NimBLEAddress    m_peerAddress = NimBLEAddress("");   // The BD address of the remote server.
-    uint16_t         m_conn_id;
-    bool             m_haveServices = false;    // Have we previously obtain the set of services from the remote server.
-    bool             m_isConnected = false;     // Are we currently connected.
-    bool             m_waitingToConnect =false;
-    bool             m_deleteCallbacks = true;
-    int32_t          m_connectTimeout;
-    //uint16_t         m_mtu = 23;
-
-    NimBLEClientCallbacks*  m_pClientCallbacks = nullptr;
-
-    FreeRTOS::Semaphore     m_semaphoreOpenEvt       = FreeRTOS::Semaphore("OpenEvt");
-    FreeRTOS::Semaphore     m_semaphoreSearchCmplEvt = FreeRTOS::Semaphore("SearchCmplEvt");
-    FreeRTOS::Semaphore     m_semeaphoreSecEvt       = FreeRTOS::Semaphore("Security");
+    NimBLEAddress           m_peerAddress = NimBLEAddress("\0\0\0\0\0\0");   // The BD address of the remote server.
+    uint16_t                m_conn_id;
+    bool                    m_haveServices;    // Have we previously obtain the set of services from the remote server.
+    bool                    m_isConnected;     // Are we currently connected.
+    bool                    m_waitingToConnect;
+    bool                    m_deleteCallbacks;
+    int32_t                 m_connectTimeout;
+    NimBLESemaphore*        m_pSemaphore;
+    NimBLEClientCallbacks*  m_pClientCallbacks;
 
     std::vector<NimBLERemoteService*> m_servicesVector;
 

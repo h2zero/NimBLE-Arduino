@@ -248,7 +248,8 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     }
 
     m_stopped = false;
-    m_semaphoreScanEnd.take("start");
+
+    m_semaphoreScanEnd.take();
 
     // Save the callback to be invoked when the scan completes.
     m_scanCompleteCB = scanCompleteCB;
@@ -298,7 +299,7 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
  */
 NimBLEScanResults NimBLEScan::start(uint32_t duration, bool is_continue) {
     if(start(duration, nullptr, is_continue)) {
-        m_semaphoreScanEnd.wait("start");   // Wait for the semaphore to release.
+        m_semaphoreScanEnd.wait();   // Wait for the semaphore to release.
     }
     return m_scanResults;
 } // start

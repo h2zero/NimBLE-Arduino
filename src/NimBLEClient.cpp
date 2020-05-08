@@ -55,6 +55,9 @@ NimBLEClient::NimBLEClient()
     m_conn_id          = BLE_HS_CONN_HANDLE_NONE;
     m_haveServices     = false;
     m_isConnected      = false;
+    m_waitingToConnect = false;
+    m_deleteCallbacks  = true;
+    m_pSemaphore       = nullptr;
     m_connectTimeout   = 30000;
 
     m_pConnParams.scan_itvl = 16;          // Scan interval in 0.625ms units (NimBLE Default)
@@ -144,7 +147,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
     memcpy(&peerAddrt.val, address.getNative(),6);
     peerAddrt.type = type;
 
-    m_semaphoreOpenEvt.take("connect");
+    NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Connect")
 
     /** Try to connect the the advertiser.  Allow 30 seconds (30000 ms) for
      *  timeout (default value of m_connectTimeout).
@@ -165,15 +168,15 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
                     m_peerAddress.toString().c_str(),
                     rc, NimBLEUtils::returnCodeToString(rc));
 
-        m_semaphoreOpenEvt.give();
+        NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
         m_waitingToConnect = false;
         return false;
     }
 
     m_waitingToConnect = true;
 
-    rc = m_semaphoreOpenEvt.wait("connect");   // Wait for the connection to complete.
-
+    rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore)  //m_pSemaphore->wait();   // Wait for the connection to complete.
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
     if(rc != 0){
         return false;
     }
@@ -208,16 +211,16 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
  * @return True on success.
  */
 bool NimBLEClient::secureConnection() {
-
-    m_semeaphoreSecEvt.take("secureConnection");
+    NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Secure connection")
 
     int rc = NimBLEDevice::startSecurity(m_conn_id);
     if(rc != 0){
-        m_semeaphoreSecEvt.give();
+        NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
         return false;
     }
 
-    rc = m_semeaphoreSecEvt.wait("secureConnection");
+    rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore)
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
     if(rc != 0){
         return false;
     }
@@ -412,21 +415,24 @@ bool NimBLEClient::retrieveServices() {
         return false;
     }
 
-    m_semaphoreSearchCmplEvt.take("retrieveServices");
+    NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Retrieve Services")
 
     int rc = ble_gattc_disc_all_svcs(m_conn_id, NimBLEClient::serviceDiscoveredCB, this);
 
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_svcs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         m_haveServices = false;
-        m_semaphoreSearchCmplEvt.give();
+        NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
         return false;
     }
 
     // wait until we have all the services
     // If sucessful, remember that we now have services.
-    m_haveServices = (m_semaphoreSearchCmplEvt.wait("retrieveServices") == 0);
-    if(m_haveServices){
+    rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore);
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
+
+    if(rc == 0) {
+        m_haveServices = true;
         for (auto &it: m_servicesVector) {
             if(!m_isConnected || !it->retrieveCharacteristics()) {
                 NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve characteristics -aborting");
@@ -472,9 +478,7 @@ int NimBLEClient::serviceDiscoveredCB(
         }
         case BLE_HS_EDONE:{
             // All services discovered; start discovering characteristics.
-
-            //NIMBLE_LOGD(LOG_TAG,"Giving search semaphore - completed");
-            peer->m_semaphoreSearchCmplEvt.give(0);
+            NIMBLE_SEMAPHORE_GIVE(peer->m_pSemaphore, 0)
             rc = 0;
             break;
         }
@@ -486,7 +490,7 @@ int NimBLEClient::serviceDiscoveredCB(
 
     if (rc != 0) {
         // pass non-zero to semaphore on error to indicate an error finding services
-        peer->m_semaphoreSearchCmplEvt.give(1);
+        NIMBLE_SEMAPHORE_GIVE(peer->m_pSemaphore, 1)
     }
     NIMBLE_LOGD(LOG_TAG,"<< Service Discovered. status: %d", rc);
     return rc;
@@ -603,9 +607,7 @@ uint16_t NimBLEClient::getMTU() {
             //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
 
             // Indicate a non-success return value to any semaphores waiting
-            client->m_semaphoreOpenEvt.give(1);
-            client->m_semaphoreSearchCmplEvt.give(1);
-            client->m_semeaphoreSecEvt.give(1);
+            NIMBLE_SEMAPHORE_GIVE(client->m_pSemaphore, 1)
 
             client->m_pClientCallbacks->onDisconnect(client);
 
@@ -644,15 +646,16 @@ uint16_t NimBLEClient::getMTU() {
                     NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",rc,
                                             NimBLEUtils::returnCodeToString(rc));
                     // if error getting mtu indicate a connection error.
-                    client->m_semaphoreOpenEvt.give(rc);
+                    NIMBLE_SEMAPHORE_GIVE(client->m_pSemaphore, rc)
                 }
             } else {
                 // Connection attempt failed
                 NIMBLE_LOGE(LOG_TAG, "Error: Connection failed; status=%d %s",
                             event->connect.status,
                             NimBLEUtils::returnCodeToString(event->connect.status));
+                NIMBLE_SEMAPHORE_GIVE(client->m_pSemaphore, event->connect.status)
             }
-            client->m_semaphoreOpenEvt.give(event->connect.status);
+
             return 0;
         } // BLE_GAP_EVENT_CONNECT
 
@@ -748,19 +751,19 @@ uint16_t NimBLEClient::getMTU() {
                 }
             }
 
-            client->m_semeaphoreSecEvt.give(event->enc_change.status);
+            NIMBLE_SEMAPHORE_GIVE(client->m_pSemaphore, event->enc_change.status)
             return 0;
         } //BLE_GAP_EVENT_ENC_CHANGE
 
         case BLE_GAP_EVENT_MTU: {
             if(client->m_conn_id != event->mtu.conn_handle){
-                return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
+                return 0;
             }
             NIMBLE_LOGI(LOG_TAG, "mtu update event; conn_handle=%d mtu=%d",
                         event->mtu.conn_handle,
                         event->mtu.value);
-            client->m_semaphoreOpenEvt.give(0);
-            //client->m_mtu = event->mtu.value;
+
+            NIMBLE_SEMAPHORE_GIVE(client->m_pSemaphore, 0)
             return 0;
         } // BLE_GAP_EVENT_MTU
 

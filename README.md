@@ -15,11 +15,29 @@ A fork of the NimBLE stack restructured for compilation in the Ardruino IDE with
 
 Why? Because the Bluedroid library is too bulky. 
 
-Initial client code testing has resulted in code size reduction of ~115k and reduced ram consumption of ~37k.
+Initial testing has resulted in code size reduction of ~50% and reduced ram consumption of ~100k.
 
-Server code testing results from @beegee-toyo [from the project here](https://github.com/beegee-tokyo/ESP32WiFiBLE-NimBLE):
+## BLE_client example comparison (Debug):
+#### Arduino BLE Library   
+Sketch uses 1214909 bytes (57%) of program storage space.   
+Memory after connection: Free Heap: 171308   
 
+#### NimBLE-Arduino library
+Sketch uses 622076 bytes (29%) of program storage space.   
+Memory after connection: Free Heap: 270408   
+  
+## BLE_notify (server) example comparison (Debug):   
+#### Arduino BLE Library
+Sketch uses 1208409 bytes (57%) of program storage space.   
+Memory after connection: Free Heap: 173300   
 
+#### NimBLE-Arduino library   
+Sketch uses 609044 bytes (29%) of program storage space.   
+Memory after connection: Free Heap: 269448  
+   
+   
+## Server code testing results from @beegee-toyo [from the project here](https://github.com/beegee-tokyo/ESP32WiFiBLE-NimBLE):
+   
 ### Memory usage (compilation output)
 #### Arduino BLE library
 ```log
@@ -35,9 +53,8 @@ Flash: [=======   ]  69.5% (used 911378 bytes from 1310720 bytes)
 #### Arduino BLE library
 **`Internal Total heap 259104, internal Free Heap 91660`**    
 #### NimBLE-Arduino library
-**`Internal Total heap 290288, internal Free Heap 182344`** 
-  
-  
+**`Internal Total heap 290288, internal Free Heap 182344`**   
+
 # Installation:
 
 Download as .zip and extract to Arduino/libraries folder, or in Arduino IDE from Sketch menu -> Include library -> Add .Zip library.

@@ -58,6 +58,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_notifyCallback = nullptr;
     m_rawData        = nullptr;
     m_dataLen        = 0;
+    m_pSemaphore     = nullptr;
  } // NimBLERemoteCharacteristic
 
 
@@ -164,7 +165,7 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
         }
         case BLE_HS_EDONE:{
             /* All descriptors in this characteristic discovered; */
-            characteristic->m_semaphoreGetDescEvt.give(0);
+            NIMBLE_SEMAPHORE_GIVE(characteristic->m_pSemaphore, 0)
             rc = 0;
             break;
         }
@@ -175,7 +176,7 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
     if (rc != 0) {
         /* Error; abort discovery. */
         // pass non-zero to semaphore on error to indicate an error finding descriptors
-        characteristic->m_semaphoreGetDescEvt.give(1);
+        NIMBLE_SEMAPHORE_GIVE(characteristic->m_pSemaphore, 1)
     }
     NIMBLE_LOGD(LOG_TAG,"<< Descriptor Discovered. status: %d", rc);
     return rc;
@@ -189,9 +190,8 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
     int rc = 0;
-    //removeDescriptors();   // Remove any existing descriptors.
 
-    m_semaphoreGetDescEvt.take("retrieveDescriptors");
+    NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Retrieve Descs")
 
     rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(),
                                  m_handle,
@@ -200,13 +200,14 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
                                  this);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_chrs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-        m_semaphoreGetDescEvt.give();
+        NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
         return false;
     }
 
-    if(m_semaphoreGetDescEvt.wait("retrieveCharacteristics") != 0) {
-        // if there was an error release the resources
-        //removeDescriptors();
+    rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore)
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
+
+    if(rc != 0) {
         return false;
     }
 
@@ -217,7 +218,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
 
 /**
  * @brief Retrieve the vector of descriptors.
- */ 
+ */
 std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors() {
     return &m_descriptorVector;
 } // getDescriptors
@@ -337,7 +338,7 @@ std::string NimBLERemoteCharacteristic::readValue() {
     }
 
     do {
-        m_semaphoreReadCharEvt.take("readValue");
+        NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Read value")
 
         rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
                                  NimBLERemoteCharacteristic::onReadCB,
@@ -345,11 +346,11 @@ std::string NimBLERemoteCharacteristic::readValue() {
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d, %s",
                                   rc, NimBLEUtils::returnCodeToString(rc));
-            m_semaphoreReadCharEvt.give(0);
+            NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
             return "";
         }
 
-        rc = m_semaphoreReadCharEvt.wait("readValue");
+        rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore)
         switch(rc){
             case 0:
             case BLE_HS_EDONE:
@@ -367,10 +368,12 @@ std::string NimBLERemoteCharacteristic::readValue() {
                     break;
             /* Else falls through. */
             default:
+                NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
                 return "";
         }
     } while(rc != 0 && retryCount--);
 
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
     NIMBLE_LOGD(LOG_TAG, "<< readValue(): length: %d", m_value.length());
     return m_value;
 } // readValue
@@ -402,7 +405,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
         }
     }
     // Read complete release semaphore and let the app can continue.
-    characteristic->m_semaphoreReadCharEvt.give(error->status);
+    NIMBLE_SEMAPHORE_GIVE(characteristic->m_pSemaphore, error->status)
     return 0;
 }
 
@@ -540,7 +543,7 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
     }
 
     do {
-        m_semaphoreWriteCharEvt.take("writeValue");
+        NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Write Value")
 
         if(length > mtu) {
             NIMBLE_LOGI(LOG_TAG,"long write %d bytes", length);
@@ -556,11 +559,11 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
         }
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to write characteristic; rc=%d", rc);
-            m_semaphoreWriteCharEvt.give();
+            NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
             return false;
         }
 
-        rc = m_semaphoreWriteCharEvt.wait("writeValue");
+        rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore)
 
         switch(rc){
             case 0:
@@ -580,10 +583,12 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
                     break;
             /* Else falls through. */
             default:
+                NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
                 return false;
         }
     } while(rc != 0 && retryCount--);
 
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
     NIMBLE_LOGD(LOG_TAG, "<< writeValue, rc: %d",rc);
     return (rc == 0);
 } // writeValue
@@ -605,8 +610,7 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
     }
 
     NIMBLE_LOGI(LOG_TAG, "Write complete; status=%d conn_handle=%d", error->status, conn_handle);
-
-    characteristic->m_semaphoreWriteCharEvt.give(error->status);
+    NIMBLE_SEMAPHORE_GIVE(characteristic->m_pSemaphore, error->status)
 
     return 0;
 }
@@ -641,15 +645,6 @@ size_t NimBLERemoteCharacteristic::getDataLength() {
     return m_value.length();
 }
 
-
-void NimBLERemoteCharacteristic::releaseSemaphores() {
-    for (auto &it: m_descriptorVector) {
-        it->releaseSemaphores();
-    }
-    m_semaphoreWriteCharEvt.give(1);
-    m_semaphoreGetDescEvt.give(1);
-    m_semaphoreReadCharEvt.give(1);
-}
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

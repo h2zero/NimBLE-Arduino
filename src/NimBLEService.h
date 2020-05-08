@@ -23,8 +23,6 @@
 #include "NimBLECharacteristic.h"
 #include "NimBLEServer.h"
 #include "NimBLEUUID.h"
-#include "FreeRTOS.h"
-
 
 class NimBLEServer;
 class NimBLECharacteristic;

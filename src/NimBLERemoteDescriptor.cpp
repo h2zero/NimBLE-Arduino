@@ -47,7 +47,7 @@ NimBLERemoteDescriptor::NimBLERemoteDescriptor(NimBLERemoteCharacteristic* pRemo
     }
     m_handle                = dsc->handle;
     m_pRemoteCharacteristic = pRemoteCharacteristic;
-
+    m_pSemaphore            = nullptr;
 }
 
 
@@ -106,7 +106,7 @@ int NimBLERemoteDescriptor::onReadCB(uint16_t conn_handle,
     }
 
     // Read complete release semaphore and let the app can continue.
-    desc->m_semaphoreReadDescrEvt.give(error->status);
+    NIMBLE_SEMAPHORE_GIVE(desc->m_pSemaphore, error->status)
     return 0;
 }
 
@@ -128,7 +128,7 @@ std::string NimBLERemoteDescriptor::readValue() {
     }
 
     do {
-        m_semaphoreReadDescrEvt.take("ReadDescriptor");
+        NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Descriptor Read")
 
         rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
                                  NimBLERemoteDescriptor::onReadCB,
@@ -136,11 +136,11 @@ std::string NimBLERemoteDescriptor::readValue() {
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to read descriptor; rc=%d, %s",
                                   rc, NimBLEUtils::returnCodeToString(rc));
-            m_semaphoreReadDescrEvt.give(0);
+            NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
             return "";
         }
 
-        rc = m_semaphoreReadDescrEvt.wait("ReadDescriptor");
+        rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore)
 
         switch(rc){
             case 0:
@@ -159,10 +159,12 @@ std::string NimBLERemoteDescriptor::readValue() {
                     break;
             /* Else falls through. */
             default:
+                NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
                 return "";
         }
     } while(rc != 0 && retryCount--);
 
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
     NIMBLE_LOGD(LOG_TAG, "<< Descriptor readValue(): length: %d", m_value.length());
     return m_value;
 } // readValue
@@ -227,7 +229,7 @@ int NimBLERemoteDescriptor::onWriteCB(uint16_t conn_handle,
 
     NIMBLE_LOGD(LOG_TAG, "Write complete; status=%d conn_handle=%d", error->status, conn_handle);
 
-    descriptor->m_semaphoreDescWrite.give(error->status);
+    NIMBLE_SEMAPHORE_GIVE(descriptor->m_pSemaphore, error->status)
 
     return 0;
 }
@@ -265,7 +267,7 @@ bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool
     }
 
     do {
-        m_semaphoreDescWrite.take("WriteDescriptor");
+        NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Descriptor Write")
 
         if(length > mtu) {
             NIMBLE_LOGI(LOG_TAG,"long write %d bytes", length);
@@ -282,12 +284,11 @@ bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool
 
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to write descriptor; rc=%d", rc);
-            m_semaphoreDescWrite.give();
+            NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
             return false;
         }
 
-        rc = m_semaphoreDescWrite.wait("WriteDescriptor");
-
+        rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore)
         switch(rc){
             case 0:
             case BLE_HS_EDONE:
@@ -306,10 +307,12 @@ bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool
                     break;
             /* Else falls through. */
             default:
+                NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
                 return false;
         }
     } while(rc != 0 && retryCount--);
 
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
     NIMBLE_LOGD(LOG_TAG, "<< Descriptor writeValue, rc: %d",rc);
     return (rc == 0);
 } // writeValue
@@ -334,14 +337,6 @@ bool NimBLERemoteDescriptor::writeValue(uint8_t newValue, bool response) {
     return writeValue(&newValue, 1, response);
 } // writeValue
 
-
-/**
- * @brief In the event of an error this is called to make sure we don't block.
- */
-void NimBLERemoteDescriptor::releaseSemaphores() {
-    m_semaphoreDescWrite.give(1);
-    m_semaphoreReadDescrEvt.give(1);
-}
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

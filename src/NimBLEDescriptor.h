@@ -22,7 +22,6 @@
 
 #include "NimBLECharacteristic.h"
 #include "NimBLEUUID.h"
-#include "FreeRTOS.h"
 
 #include <string>
 

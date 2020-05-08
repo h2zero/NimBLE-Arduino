@@ -25,7 +25,6 @@
 #include "NimBLEAdvertising.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"
-#include "FreeRTOS.h"
 
 #include <map>
 

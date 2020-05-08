@@ -27,7 +27,6 @@
 /**************************/
 
 #include "NimBLEUUID.h"
-#include "FreeRTOS.h"
 
 #include <vector>
 

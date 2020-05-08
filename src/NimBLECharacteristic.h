@@ -44,7 +44,7 @@ typedef enum {
 #include "NimBLEDescriptor.h"
 #include "NimBLEUUID.h"
 #include "NimBLEValue.h"
-#include "FreeRTOS.h"
+#include "NimBLESemaphore.h"
 
 #include <string>
 #include <map>
@@ -136,7 +136,6 @@ public:
 //////////////////////////////////////////////////////
 
 private:
-
     friend class NimBLEServer;
     friend class NimBLEService;
 //  friend class NimBLEDescriptor;
@@ -155,6 +154,7 @@ private:
     NimBLECharacteristicCallbacks* m_pCallbacks;
     NimBLEService*                 m_pService;
     NimBLEValue                    m_value;
+    NimBLESemaphore                m_semaphoreConfEvt = NimBLESemaphore("ConfEvt");
 //  uint16_t                       m_permissions;
 
     void            addDescriptor(NimBLEDescriptor* pDescriptor);
@@ -163,8 +163,6 @@ private:
     void            setSubscribe(struct ble_gap_event *event);
     static int      handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                                 struct ble_gatt_access_ctxt *ctxt, void *arg);
-
-    FreeRTOS::Semaphore m_semaphoreConfEvt   = FreeRTOS::Semaphore("ConfEvt");
 }; // NimBLECharacteristic
 
 

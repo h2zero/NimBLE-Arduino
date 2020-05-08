@@ -31,7 +31,7 @@ static const char* LOG_TAG = "NimBLERemoteService";
  */
 NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const struct ble_gatt_svc* service) {
 
-    NIMBLE_LOGD(LOG_TAG, ">> BLERemoteService()");
+    NIMBLE_LOGD(LOG_TAG, ">> NimBLERemoteService()");
     m_pClient = pClient;
     switch (service->uuid.u.type) {
         case BLE_UUID_TYPE_16:
@@ -47,11 +47,12 @@ NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const struct ble
             m_uuid = nullptr;
             break;
     }
-    m_startHandle = service->start_handle;
-    m_endHandle = service->end_handle;
+    m_startHandle         = service->start_handle;
+    m_endHandle           = service->end_handle;
     m_haveCharacteristics = false;
+    m_pSemaphore          = nullptr;
 
-    NIMBLE_LOGD(LOG_TAG, "<< BLERemoteService()");
+    NIMBLE_LOGD(LOG_TAG, "<< NimBLERemoteService()");
 }
 
 
@@ -120,7 +121,7 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
             /** All characteristics in this service discovered; start discovering
              *  characteristics in the next service.
              */
-            service->m_semaphoreGetCharEvt.give(0);
+            NIMBLE_SEMAPHORE_GIVE(service->m_pSemaphore, 0)
             rc = 0;
             break;
         }
@@ -131,10 +132,8 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
     if (rc != 0) {
         /* Error; abort discovery. */
         // pass non-zero to semaphore on error to indicate an error finding characteristics
-        // release memory from any characteristics we created
-        //service->removeCharacteristics(); --this will now be done when we clear services on returning with error
         NIMBLE_LOGE(LOG_TAG, "characteristicDiscCB() rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-        service->m_semaphoreGetCharEvt.give(1);
+        NIMBLE_SEMAPHORE_GIVE(service->m_pSemaphore, 1)
     }
     NIMBLE_LOGD(LOG_TAG,"<< Characteristic Discovered. status: %d", rc);
     return rc;
@@ -150,9 +149,8 @@ bool NimBLERemoteService::retrieveCharacteristics() {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveCharacteristics() for service: %s", getUUID().toString().c_str());
 
     int rc = 0;
-    //removeCharacteristics(); // Forget any previous characteristics.
 
-    m_semaphoreGetCharEvt.take("retrieveCharacteristics");
+    NIMBLE_SEMAPHORE_TAKE(m_pSemaphore, "Retrieve Chars")
 
     rc = ble_gattc_disc_all_chrs(m_pClient->getConnId(),
                                  m_startHandle,
@@ -162,12 +160,15 @@ bool NimBLERemoteService::retrieveCharacteristics() {
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_chrs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         m_haveCharacteristics = false;
-        m_semaphoreGetCharEvt.give();
+        NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
         return false;
     }
 
-    m_haveCharacteristics = (m_semaphoreGetCharEvt.wait("retrieveCharacteristics") == 0);
-    if(m_haveCharacteristics){
+    rc = NIMBLE_SEMAPHORE_WAIT(m_pSemaphore)
+    NIMBLE_SEMAPHORE_DELETE(m_pSemaphore)
+
+    if(rc == 0){
+        m_haveCharacteristics = true;
         uint16_t endHdl = 0xFFFF;
 
         NIMBLE_LOGD(LOG_TAG, "Found %d Characteristics", m_characteristicVector.size());
@@ -332,17 +333,6 @@ std::string NimBLERemoteService::toString() {
     return res;
 } // toString
 
-
-/**
- * @brief called when an error occurrs and we need to release the semaphores to resume operations.
- * Will release all characteristic and subsequently all descriptor semaphores for this service.
- */
-void NimBLERemoteService::releaseSemaphores() {
-    for(auto &it: m_characteristicVector) {
-       it->releaseSemaphores();
-    }
-    m_semaphoreGetCharEvt.give(1);
-}
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

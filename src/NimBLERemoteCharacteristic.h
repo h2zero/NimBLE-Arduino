@@ -20,8 +20,6 @@
 #include "nimconfig.h"
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
-//#include "NimBLEUUID.h"
-//#include "FreeRTOS.h"
 #include "NimBLERemoteService.h"
 #include "NimBLERemoteDescriptor.h"
 
@@ -79,10 +77,8 @@ private:
     bool              retrieveDescriptors(uint16_t endHdl);
     static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
     static int        onWriteCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
-    void              releaseSemaphores();
     static int        descriptorDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error,
-                                uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc,
-                                void *arg);
+                                       uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc, void *arg);
 
     // Private properties
     NimBLEUUID              m_uuid;
@@ -90,13 +86,11 @@ private:
     uint16_t                m_handle;
     uint16_t                m_defHandle;
     NimBLERemoteService*    m_pRemoteService;
-    FreeRTOS::Semaphore     m_semaphoreGetDescEvt       = FreeRTOS::Semaphore("GetDescEvt");
-    FreeRTOS::Semaphore     m_semaphoreReadCharEvt      = FreeRTOS::Semaphore("ReadCharEvt");
-    FreeRTOS::Semaphore     m_semaphoreWriteCharEvt     = FreeRTOS::Semaphore("WriteCharEvt");
     std::string             m_value;
     uint8_t*                m_rawData;
     size_t                  m_dataLen;
     notify_callback         m_notifyCallback;
+    NimBLESemaphore*        m_pSemaphore;
 
     // We maintain a vector of descriptors owned by this characteristic.
     std::vector<NimBLERemoteDescriptor*> m_descriptorVector;
