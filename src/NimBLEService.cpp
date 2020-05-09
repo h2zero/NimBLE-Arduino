@@ -17,6 +17,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLEService.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -290,4 +294,5 @@ NimBLEServer* NimBLEService::getServer() {
 	return m_pServer;
 } // getServer
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif // CONFIG_BT_ENABLED

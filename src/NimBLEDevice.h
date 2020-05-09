@@ -17,11 +17,22 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
 #include "NimBLEScan.h"
+#endif
+
 #include "NimBLEUtils.h"
-#include "NimBLEClient.h"
-#include "NimBLEServer.h"
 #include "NimBLESecurity.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+#include "NimBLEClient.h"
+#endif
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+#include "NimBLEServer.h"
+#endif
 
 #include "esp_bt.h"
 
@@ -50,11 +61,11 @@
 #define BLEAdvertising                  NimBLEAdvertising
 #define BLEServerCallbacks              NimBLEServerCallbacks
 #define BLECharacteristicCallbacks      NimBLECharacteristicCallbacks
-#define BLEAdvertisementData			NimBLEAdvertisementData
-#define BLEDescriptor					NimBLEDescriptor
-#define BLE2902							NimBLE2902
-#define BLE2904							NimBLE2904
-#define BLEDescriptorCallbacks			NimBLEDescriptorCallbacks
+#define BLEAdvertisementData		NimBLEAdvertisementData
+#define BLEDescriptor			NimBLEDescriptor
+#define BLE2902				NimBLE2902
+#define BLE2904				NimBLE2904
+#define BLEDescriptorCallbacks		NimBLEDescriptorCallbacks
 #define BLEBeacon                       NimBLEBeacon
 #define BLEEddystoneTLM                 NimBLEEddystoneTLM
 #define BLEEddystoneURL                 NimBLEEddystoneURL
@@ -81,12 +92,18 @@ public:
     static bool             getInitialized();
     static NimBLEAddress    getAddress();
     static std::string      toString();
+#if defined(NIMBLE_INCLUDE_CLIENT)
     static NimBLEScan*      getScan();                     // Get the scan object
     static NimBLEClient*    createClient();
-	static NimBLEServer*    createServer();
+#endif
+#if defined(NIMBLE_INCLUDE_SERVER)
+    static NimBLEServer*    createServer();
+#endif
+#if defined(NIMBLE_INCLUDE_CLIENT)
     static bool             deleteClient(NimBLEClient* pClient);
+#endif
     static void             setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
-	static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
+    static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
     static void             setCustomGapHandler(gap_event_handler handler);
     static void             setSecurityAuth(bool bonding, bool mitm, bool sc);
     static void             setSecurityAuth(uint8_t auth_req);
@@ -101,21 +118,31 @@ public:
     static bool             isIgnored(NimBLEAddress address);
     static void             addIgnored(NimBLEAddress address);
     static void             removeIgnored(NimBLEAddress address);
+
+#if defined(NIMBLE_INCLUDE_SERVER)
     static NimBLEAdvertising* getAdvertising();
-	static void		   		startAdvertising();
-	static void		   		stopAdvertising();
+    static void		    startAdvertising();
+    static void		    stopAdvertising();
+#endif
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
     static NimBLEClient*    getClientByID(uint16_t conn_id);
     static NimBLEClient*    getClientByPeerAddress(NimBLEAddress peer_addr);
     static NimBLEClient*    getDisconnectedClient();
     static size_t           getClientListSize(); 
     static std::list<NimBLEClient*>* getClientList(); 
+#endif
         
 private:
-    friend class NimBLEServer;
+#if defined(NIMBLE_INCLUDE_CLIENT)
     friend class NimBLEClient;
     friend class NimBLEScan;
+#endif
+#if defined(NIMBLE_INCLUDE_SERVER)
+    friend class NimBLEServer;
     friend class NimBLEAdvertising;
     friend class NimBLECharacteristic;
+#endif
     
     static void        onReset(int reason);
     static void        onSync(void);
@@ -123,12 +150,20 @@ private:
     static int         startSecurity(   uint16_t conn_id);
     
     static bool                       m_synced;
+#if defined(NIMBLE_INCLUDE_CLIENT)
     static NimBLEScan*                m_pScan;
+#endif
+
+#if defined(NIMBLE_INCLUDE_SERVER)
     static NimBLEServer*              m_pServer;
     static NimBLEAdvertising*         m_bleAdvertising;
+#endif
+
     static ble_gap_event_listener     m_listener;
     static uint32_t                   m_passkey;
+#if defined(NIMBLE_INCLUDE_CLIENT)
     static std::list <NimBLEClient*>  m_cList;
+#endif
     static std::list <NimBLEAddress>  m_ignoreList;
     static NimBLESecurityCallbacks*   m_securityCallbacks;
 

@@ -17,6 +17,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+
 #include "NimBLEAddress.h"
 #include "NimBLEScan.h"
 #include "NimBLEUUID.h"
@@ -129,5 +133,6 @@ public:
     virtual void onResult(NimBLEAdvertisedDevice* advertisedDevice) = 0;
 };
 
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLEADVERTISEDDEVICE_H_ */

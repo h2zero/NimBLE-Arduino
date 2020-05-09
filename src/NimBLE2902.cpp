@@ -20,6 +20,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLE2902.h"
 
 NimBLE2902::NimBLE2902(NimBLECharacteristic* pCharacterisitic) 
@@ -72,4 +76,5 @@ void NimBLE2902::setNotifications(bool flag) {
 	else pValue[0] &= ~(1 << 0);
 } // setNotifications
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif

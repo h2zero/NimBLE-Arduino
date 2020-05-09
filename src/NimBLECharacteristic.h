@@ -16,6 +16,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "host/ble_hs.h"
 /****  FIX COMPILATION ****/
 #undef min
@@ -191,5 +195,7 @@ public:
     virtual void onNotify(NimBLECharacteristic* pCharacteristic);
 	virtual void onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code);
 };
+
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */
 #endif /*MAIN_NIMBLECHARACTERISTIC_H_*/

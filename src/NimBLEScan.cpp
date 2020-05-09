@@ -14,6 +14,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+
 #include "NimBLEScan.h"
 #include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
@@ -400,4 +404,5 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
     return dev;
 }
 
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
 #endif /* CONFIG_BT_ENABLED */

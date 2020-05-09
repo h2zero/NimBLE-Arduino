@@ -14,8 +14,12 @@
 #ifndef MAIN_NIMBLECLIENT_H_
 #define MAIN_NIMBLECLIENT_H_
 
-#if defined(CONFIG_BT_ENABLED)
 #include "sdkconfig.h"
+#if defined(CONFIG_BT_ENABLED)
+
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
 
 #include "NimBLEAddress.h"
 #include "NimBLEAdvertisedDevice.h"
@@ -109,5 +113,6 @@ public:
     virtual bool onConfirmPIN(uint32_t pin);
 };
 
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT
 #endif // CONFIG_BT_ENABLED
 #endif /* MAIN_NIMBLECLIENT_H_ */

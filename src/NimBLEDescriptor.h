@@ -17,6 +17,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLECharacteristic.h"
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
@@ -97,5 +101,7 @@ public:
 	virtual void onRead(NimBLEDescriptor* pDescriptor);
 	virtual void onWrite(NimBLEDescriptor* pDescriptor);
 };
+
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_NIMBLEDESCRIPTOR_H_ */

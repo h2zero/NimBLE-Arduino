@@ -14,6 +14,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+
 #include "NimBLEClient.h"
 #include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
@@ -890,4 +894,5 @@ bool NimBLEClientCallbacks::onConfirmPIN(uint32_t pin){
     return true;
 }
 
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
 #endif // CONFIG_BT_ENABLED

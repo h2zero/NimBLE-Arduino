@@ -17,6 +17,8 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLEDescriptor.h"
 
 struct BLE2904_Data {
@@ -78,5 +80,6 @@ private:
 	BLE2904_Data m_data;
 }; // BLE2904
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_NIMBLE2904_H_ */

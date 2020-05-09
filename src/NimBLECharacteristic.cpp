@@ -12,6 +12,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLECharacteristic.h"
 #include "NimBLE2902.h"
 #include "NimBLE2904.h"
@@ -646,4 +650,5 @@ void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacterist
 	NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onStatus: default");
 } // onStatus
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */

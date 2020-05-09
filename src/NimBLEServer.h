@@ -17,13 +17,16 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLEAddress.h"
 #include "NimBLEUUID.h"
 #include "NimBLEAdvertising.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"
 #include "FreeRTOS.h"
-
 
 #include <map>
 
@@ -150,5 +153,6 @@ public:
 }; // BLEServerCallbacks
 
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_NIMBLESERVER_H_ */

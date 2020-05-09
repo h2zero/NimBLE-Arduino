@@ -14,6 +14,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
 #include "NimBLELog.h"
@@ -244,5 +248,5 @@ void NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor) {
 	NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onWrite: default");
 } // onWrite
 
-
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */

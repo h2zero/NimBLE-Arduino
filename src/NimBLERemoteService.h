@@ -17,6 +17,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+
 #include "NimBLEClient.h"
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
@@ -85,5 +89,6 @@ private:
     uint16_t            m_endHandle;        // The ending handle of this service.
 }; // BLERemoteService
 
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLEREMOTESERVICE_H_ */

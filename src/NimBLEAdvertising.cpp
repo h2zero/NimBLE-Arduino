@@ -15,6 +15,11 @@
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "services/gap/ble_svc_gap.h"
 #include "NimBLEAdvertising.h"
 #include "NimBLEDevice.h"
@@ -603,4 +608,5 @@ std::string NimBLEAdvertisementData::getPayload() {
 	return m_payload;
 } // getPayload
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */

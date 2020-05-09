@@ -17,6 +17,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLECharacteristic.h"
 #include "NimBLEServer.h"
 #include "NimBLEUUID.h"
@@ -92,5 +96,6 @@ private:
 }; // BLEService
 
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif // CONFIG_BT_ENABLED
 #endif /* MAIN_NIMBLESERVICE_H_ */

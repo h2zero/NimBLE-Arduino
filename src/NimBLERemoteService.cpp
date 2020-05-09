@@ -14,6 +14,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+
 #include "NimBLERemoteService.h"
 #include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
@@ -354,4 +358,5 @@ void NimBLERemoteService::releaseSemaphores() {
     m_semaphoreGetCharEvt.give(1);
 }
 
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
 #endif /* CONFIG_BT_ENABLED */

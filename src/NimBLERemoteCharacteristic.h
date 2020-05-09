@@ -17,6 +17,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+
 //#include "NimBLEUUID.h"
 //#include "FreeRTOS.h"
 #include "NimBLERemoteService.h"
@@ -98,5 +102,7 @@ private:
     // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
     std::map<std::string, NimBLERemoteDescriptor*> m_descriptorMap;
 }; // BLERemoteCharacteristic
+
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLEREMOTECHARACTERISTIC_H_ */

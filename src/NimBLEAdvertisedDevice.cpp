@@ -14,6 +14,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -548,5 +552,6 @@ void NimBLEAdvertisedDevice::setAdvertisementResult(uint8_t* payload, uint8_t le
     m_payloadLength = length;
 }
 
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
 #endif /* CONFIG_BT_ENABLED */
 

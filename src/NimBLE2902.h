@@ -17,6 +17,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLEDescriptor.h"
 
 #include <map>
@@ -46,5 +50,6 @@ private:
 
 }; // NimBLE2902
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_NIMBLE2902_H_ */

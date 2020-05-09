@@ -13,6 +13,11 @@
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLECharacteristic.h"
 #include "NimBLEDescriptor.h"
 
@@ -140,4 +145,6 @@ NimBLEDescriptor* NimBLEDescriptorMap::getNext() {
 	m_iterator++;
 	return pRet;
 } // getNext
+
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif /* CONFIG_BT_ENABLED */

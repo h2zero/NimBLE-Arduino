@@ -15,6 +15,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLEServer.h"
 #include "NimBLE2902.h"
 #include "NimBLEUtils.h"
@@ -605,4 +609,6 @@ void NimBLEServer::onHostReset() {
   
 }
 */
+
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif // CONFIG_BT_ENABLED

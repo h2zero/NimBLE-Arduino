@@ -19,6 +19,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_SERVER)
+
 #include "NimBLE2904.h"
 
 
@@ -83,4 +87,5 @@ void NimBLE2904::setUnit(uint16_t unit) {
 	setValue((uint8_t*) &m_data, sizeof(m_data));
 } // setUnit
 
+#endif // #if defined(NIMBLE_INCLUDE_SERVER)
 #endif

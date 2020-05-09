@@ -16,6 +16,10 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "NimBLEConfig.h"
+
+#if defined(NIMBLE_INCLUDE_CLIENT)
+
 #include "NimBLEAdvertisedDevice.h"
 #include "FreeRTOS.h"
 
@@ -82,6 +86,6 @@ private:
     uint32_t                            m_duration;
 };
 
-
+#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLE_SCAN_H_ */
