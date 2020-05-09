@@ -87,10 +87,17 @@ NimBLEClient::~NimBLEClient() {
 void NimBLEClient::clearServices() {
     NIMBLE_LOGD(LOG_TAG, ">> clearServices");
     // Delete all the services.
+/*
     for (auto &myPair : m_servicesMap) {
        delete myPair.second;
     }
     m_servicesMap.clear();
+*/
+    for(auto &it: m_servicesVector) {
+        delete it;
+    }
+    m_servicesVector.clear();
+
     m_haveServices = false;
     NIMBLE_LOGD(LOG_TAG, "<< clearServices");
 } // clearServices
@@ -365,11 +372,19 @@ NimBLERemoteService* NimBLEClient::getService(NimBLEUUID uuid) {
     if (!m_haveServices) {
         return nullptr;
     }
+/*
     std::string uuidStr = uuid.toString();
     for (auto &myPair : m_servicesMap) {
         if (myPair.first == uuidStr) {
             NIMBLE_LOGD(LOG_TAG, "<< getService: found the service with uuid: %s", uuid.toString().c_str());
             return myPair.second;
+        }
+    } 
+*/
+    for(auto &it: m_servicesVector) {
+        if(it->getUUID() == uuid) {
+            NIMBLE_LOGD(LOG_TAG, "<< getService: found the service with uuid: %s", uuid.toString().c_str());
+            return it;
         }
     } 
     NIMBLE_LOGD(LOG_TAG, "<< getService: not found");
@@ -378,10 +393,15 @@ NimBLERemoteService* NimBLEClient::getService(NimBLEUUID uuid) {
 
 
 /**
- * @Get a pointer to the map of found services.
+ * @Get a pointer to the vector of found services.
  */ 
+/*
 std::map<std::string, NimBLERemoteService*>* NimBLEClient::getServices() {
     return &m_servicesMap;
+}
+*/
+std::vector<NimBLERemoteService*>* NimBLEClient::getServices() {
+    return &m_servicesVector;
 }
 
 
@@ -422,8 +442,16 @@ bool NimBLEClient::retrieveServices() {
     // If sucessful, remember that we now have services.
     m_haveServices = (m_semaphoreSearchCmplEvt.wait("retrieveServices") == 0);
     if(m_haveServices){
+/*
         for (auto &myPair : m_servicesMap) {
             if(!m_isConnected || !myPair.second->retrieveCharacteristics()) {
+                NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve characteristics -aborting");
+                return false;
+            }
+        }
+*/
+        for (auto &it: m_servicesVector) {
+            if(!m_isConnected || !it->retrieveCharacteristics()) {
                 NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve characteristics -aborting");
                 return false;
             }
@@ -460,9 +488,12 @@ int NimBLEClient::serviceDiscoveredCB(
 
     switch (error->status) {
         case 0: {
-            // Found a service - add it to the map
+            // Found a service - add it to the vector
             NimBLERemoteService* pRemoteService = new NimBLERemoteService(peer, service);
+/*
             peer->m_servicesMap.insert(std::pair<std::string, NimBLERemoteService*>(pRemoteService->getUUID().toString(), pRemoteService));
+*/
+            peer->m_servicesVector.push_back(pRemoteService);
             break;
         }
         case BLE_HS_EDONE:{
@@ -658,7 +689,8 @@ uint16_t NimBLEClient::getMTU() {
             NIMBLE_LOGD(LOG_TAG, "Notify Recieved for handle: %d",event->notify_rx.attr_handle);
             if(!client->m_haveServices)
                 return 0;
-            
+
+/*
             for(auto &sPair : client->m_servicesMap){
                 // Dont waste cycles searching services without this handle in their range
                 if(sPair.second->getEndHandle() < event->notify_rx.attr_handle) {
@@ -666,6 +698,26 @@ uint16_t NimBLEClient::getMTU() {
                 }
                 auto cMap = sPair.second->getCharacteristicsByHandle();
                 NIMBLE_LOGD(LOG_TAG, "checking service %s for handle: %d", sPair.second->getUUID().toString().c_str(),event->notify_rx.attr_handle);
+                auto characteristic = cMap->find(event->notify_rx.attr_handle);
+                if(characteristic != cMap->end()) {
+                    NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", characteristic->second->toString().c_str());
+                    
+                    if (characteristic->second->m_notifyCallback != nullptr) {
+                        NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", characteristic->second->toString().c_str());
+                        characteristic->second->m_notifyCallback(characteristic->second, event->notify_rx.om->om_data, event->notify_rx.om->om_len, !event->notify_rx.indication);
+                    }
+                    
+                    break;
+                }
+            }
+*/
+            for(auto &it: client->m_servicesVector) {
+                // Dont waste cycles searching services without this handle in their range
+                if(it->getEndHandle() < event->notify_rx.attr_handle) {
+                    continue;
+                }
+                auto cMap = it->getCharacteristicsByHandle();
+                NIMBLE_LOGD(LOG_TAG, "checking service %s for handle: %d", it->getUUID().toString().c_str(),event->notify_rx.attr_handle);
                 auto characteristic = cMap->find(event->notify_rx.attr_handle);
                 if(characteristic != cMap->end()) {
                     NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", characteristic->second->toString().c_str());
@@ -848,8 +900,13 @@ void NimBLEClient::setClientCallbacks(NimBLEClientCallbacks* pClientCallbacks, b
 std::string NimBLEClient::toString() {
     std::string res = "peer address: " + m_peerAddress.toString();
     res += "\nServices:\n";
+/*
     for (auto &myPair : m_servicesMap) {
         res += myPair.second->toString() + "\n";
+    }
+*/
+    for(auto &it: m_servicesVector) {
+        res += it->toString() + "\n";
     }
 
     return res;

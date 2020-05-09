@@ -21,7 +21,8 @@
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
 
-#include <map>
+//#include <map>
+#include <vector>
 #include <string>
 
 class NimBLERemoteService;
@@ -38,7 +39,10 @@ public:
     int                                        disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);                  // Disconnect from the remote BLE Server
     NimBLEAddress                              getPeerAddress();              // Get the address of the remote BLE Server
     int                                        getRssi();                     // Get the RSSI of the remote BLE Server
+/*
     std::map<std::string, NimBLERemoteService*>*  getServices();                 // Get a map of the services offered by the remote BLE Server
+*/
+    std::vector<NimBLERemoteService*>*  	getServices();                 // Get a vector of the services offered by the remote BLE Server
     NimBLERemoteService*                          getService(const char* uuid);  // Get a reference to a specified service offered by the remote BLE server.
     NimBLERemoteService*                          getService(NimBLEUUID uuid);   // Get a reference to a specified service offered by the remote BLE server.
     std::string                                getValue(NimBLEUUID serviceUUID, NimBLEUUID characteristicUUID);   // Get the value of a given characteristic at a given service.
@@ -84,7 +88,10 @@ private:
     FreeRTOS::Semaphore     m_semaphoreSearchCmplEvt = FreeRTOS::Semaphore("SearchCmplEvt");
     FreeRTOS::Semaphore     m_semeaphoreSecEvt       = FreeRTOS::Semaphore("Security");
 
+/*
     std::map<std::string, NimBLERemoteService*> m_servicesMap;
+*/
+    std::vector<NimBLERemoteService*> m_servicesVector;
     
 private:
     friend class NimBLEClientCallbacks;

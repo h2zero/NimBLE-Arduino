@@ -78,10 +78,17 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* u
  */
 NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(NimBLEUUID uuid) {
     if (m_haveCharacteristics) {
+/*
         std::string v = uuid.toString();
         for (auto &myPair : m_characteristicMap) {
             if (myPair.first == v) {
                 return myPair.second;
+            }
+        }
+*/
+        for(auto &it: m_characteristicVector) {
+            if(it->getUUID() == uuid) {
+                return it;
             }
         }
     }
@@ -111,7 +118,10 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
         case 0: {
             // Found a service - add it to the map
             NimBLERemoteCharacteristic* pRemoteCharacteristic = new NimBLERemoteCharacteristic(service, chr);
+/*
             service->m_characteristicMap.insert(std::pair<std::string, NimBLERemoteCharacteristic*>(pRemoteCharacteristic->getUUID().toString(), pRemoteCharacteristic));
+*/
+            service->m_characteristicVector.push_back(pRemoteCharacteristic);
             service->m_characteristicMapByHandle.insert(std::pair<uint16_t, NimBLERemoteCharacteristic*>(chr->val_handle, pRemoteCharacteristic));
             break;
         }
@@ -206,11 +216,16 @@ bool NimBLERemoteService::retrieveCharacteristics() {
 
 
 /**
- * @brief Retrieve a map of all the characteristics of this service.
- * @return A map of all the characteristics of this service.
+ * @brief Retrieve a vector of all the characteristics of this service.
+ * @return A vector of all the characteristics of this service.
  */
+/*
 std::map<std::string, NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics() {
     return &m_characteristicMap;
+} // getCharacteristics
+*/
+std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics() {
+    return &m_characteristicVector;
 } // getCharacteristics
 
 
@@ -305,8 +320,14 @@ bool NimBLERemoteService::setValue(NimBLEUUID characteristicUuid, std::string va
  * @return N/A.
  */
 void NimBLERemoteService::removeCharacteristics() {
+/*
     m_characteristicMap.clear();   // Clear the map
-    
+*/
+    for(auto &it: m_characteristicVector) {
+        delete it;
+    }
+    m_characteristicVector.clear();   // Clear the vector
+
     for (auto &myPair : m_characteristicMapByHandle) {
        delete myPair.second;
     }
@@ -334,9 +355,14 @@ std::string NimBLERemoteService::toString() {
     snprintf(val, sizeof(val), "%04x", m_endHandle);
     res += " 0x";
     res += val;
-    
+
+/*
     for (auto &myPair : m_characteristicMap) {
         res += "\n" + myPair.second->toString();
+    }
+*/
+    for (auto &it: m_characteristicVector) {
+        res += "\n" + it->toString();
     }
 
     return res;

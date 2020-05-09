@@ -152,7 +152,8 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
         case 0: {
             // Found a descriptor - add it to the map
             NimBLERemoteDescriptor* pNewRemoteDescriptor = new NimBLERemoteDescriptor(characteristic, dsc);
-            characteristic->m_descriptorMap.insert(std::pair<std::string, NimBLERemoteDescriptor*>(pNewRemoteDescriptor->getUUID().toString(), pNewRemoteDescriptor));
+//            characteristic->m_descriptorMap.insert(std::pair<std::string, NimBLERemoteDescriptor*>(pNewRemoteDescriptor->getUUID().toString(), pNewRemoteDescriptor));
+            characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
             
             break;
         }
@@ -205,15 +206,16 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
     }
     
     return true;
-    NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): Found %d descriptors.", m_descriptorMap.size());
+//    NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): Found %d descriptors.", m_descriptorMap.size());
+    NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): Found %d descriptors.", m_descriptorVector.size());
 } // getDescriptors
 
 
 /**
  * @brief Retrieve the map of descriptors keyed by UUID.
  */ 
-std::map<std::string, NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors() {
-    return &m_descriptorMap;
+std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors() {
+    return &m_descriptorVector;
 } // getDescriptors
 
 
@@ -241,12 +243,20 @@ uint16_t NimBLERemoteCharacteristic::getDefHandle() {
  */
 NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(NimBLEUUID uuid) {
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
+/*
     std::string v = uuid.toString();
     for (auto &myPair : m_descriptorMap) {
         if (myPair.first == v) {
             NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found");
             return myPair.second;
         }
+    }
+*/
+    for(auto &it: m_descriptorVector) {
+          if(it->getUUID() == uuid) {
+              NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found");
+              return it;
+          }
     }
     NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
     return nullptr;
@@ -450,12 +460,19 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
  * @return N/A.
  */
 void NimBLERemoteCharacteristic::removeDescriptors() {
+/*
     // Iterate through all the descriptors releasing their storage and erasing them from the map.
     for (auto &myPair : m_descriptorMap) {
        m_descriptorMap.erase(myPair.first);
        delete myPair.second;
     }
     m_descriptorMap.clear();   // Technically not neeeded, but just to be sure.
+*/
+    // Iterate through all the descriptors releasing their storage and erasing them from the vector.
+    for(auto &it: m_descriptorVector) {
+        delete it;
+    }
+    m_descriptorVector.clear();
 } // removeCharacteristics
 
 
@@ -476,11 +493,15 @@ std::string NimBLERemoteCharacteristic::toString() {
     res += " 0x";
     snprintf(val, sizeof(val), "%02x", m_charProp);
     res += val;
-    
+/*    
     for (auto &myPair : m_descriptorMap) {
         res += "\n" + myPair.second->toString();
     }
-    
+*/
+    for(auto &it: m_descriptorVector) {
+        res += "\n" + it->toString();
+    }
+
     return res;
 } // toString
 
@@ -621,8 +642,13 @@ uint8_t* NimBLERemoteCharacteristic::readRawData() {
 
 
 void NimBLERemoteCharacteristic::releaseSemaphores() {
+/*
     for (auto &dPair : m_descriptorMap) {
         dPair.second->releaseSemaphores();
+    }
+*/
+    for (auto &it: m_descriptorVector) {
+        it->releaseSemaphores();
     }
     m_semaphoreWriteCharEvt.give(1);
     m_semaphoreGetDescEvt.give(1);
