@@ -78,10 +78,10 @@ int NimBLEUtils::checkConnParams(ble_gap_conn_params* params) {
 
 
 const char* NimBLEUtils::returnCodeToString(int rc) {
+#ifdef NIMBLE_ENABLE_DEBUG_TEXT
     switch(rc) {
         case 0:
             return "SUCCESS";
-#ifndef NIMBLEUTILS_NO_STRINGS
         case BLE_HS_EAGAIN:
             return "Temporary failure; try again.";
         case BLE_HS_EALREADY:
@@ -358,12 +358,10 @@ const char* NimBLEUtils::returnCodeToString(int rc) {
             return "BR/EDR Link Key generated on the BR/EDR transport cannot be used to derive and distribute keys for the LE transport.";
         default:
             return "Unknown";
-#else // #endif // #ifndef NIMBLEUTILS_NO_STRINGS
-        default:
-            return "No error texts";
-#endif // #ifndef NIMBLEUTILS_NO_STRINGS
-
     }
+#else // #ifdef NIMBLE_ENABLE_DEBUG_TEXT
+    return "";
+#endif // #ifdef NIMBLE_ENABLE_DEBUG_TEXT
 }   
 
 /**
@@ -373,8 +371,8 @@ const char* NimBLEUtils::returnCodeToString(int rc) {
  */
  
 const char* NimBLEUtils::advTypeToString(uint8_t advType) {
+#ifdef NIMBLE_ENABLE_DEBUG_TEXT
     switch(advType) {
-#ifndef NIMBLEUTILS_NO_STRINGS
         case BLE_HCI_ADV_TYPE_ADV_IND :                     //0
             return "Undirected - Connectable / Scannable";
         case BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_HD:            //1
@@ -387,12 +385,10 @@ const char* NimBLEUtils::advTypeToString(uint8_t advType) {
             return "Directed Low Duty - Connectable";
         default:
             return "Unknown flag";
-#else // #endif // #ifndef NIMBLEUTILS_NO_STRINGS
-        default:
-            return "No flag texts";
-#endif // #ifndef NIMBLEUTILS_NO_STRINGS
     }
-    
+#else // #ifdef NIMBLE_ENABLE_DEBUG_TEXT
+    return "";
+#endif // #ifdef NIMBLE_ENABLE_DEBUG_TEXT    
 } // adFlagsToString
 
 
@@ -443,8 +439,8 @@ void NimBLEUtils::dumpGapEvent(ble_gap_event *event, void *arg){
  * @return A string representation of the event type.
  */
 const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
+#ifdef NIMBLE_ENABLE_DEBUG_TEXT
     switch (eventType) {
-#ifndef NIMBLEUTILS_NO_STRINGS
         case BLE_GAP_EVENT_CONNECT :                    //0
             return "BLE_GAP_EVENT_CONNECT ";
             
@@ -517,12 +513,10 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
         default:
             NIMBLE_LOGD(LOG_TAG, "gapEventToString: Unknown event type %d 0x%.2x", eventType, eventType);
             return "Unknown event type";
-#else // #endif // #ifndef NIMBLEUTILS_NO_STRINGS
-        default:
-            return "No event texts";
-
-#endif // #ifndef NIMBLEUTILS_NO_STRINGS
     }
+#else // #ifdef NIMBLE_ENABLE_DEBUG_TEXT
+    return "";
+#endif // #ifdef NIMBLE_ENABLE_DEBUG_TEXT
 } // gapEventToString
 
 
