@@ -126,7 +126,6 @@ NimBLEUUID::NimBLEUUID(uint32_t uuid) {
  *
  * @param [in] uuid The native UUID.
  */
- 
 NimBLEUUID::NimBLEUUID(const ble_uuid128_t* uuid) {
     m_uuid.u.type        = BLE_UUID_TYPE_128;
     memcpy(m_uuid.u128.value, uuid->value, 16);
@@ -189,7 +188,6 @@ bool NimBLEUUID::equals(const NimBLEUUID &uuid) const {
  * NNNNNNNN
  * <UUID>
  */
- 
 NimBLEUUID NimBLEUUID::fromString(const std::string &_uuid) {
     uint8_t start = 0;
     if (strstr(_uuid.c_str(), "0x") != nullptr) { // If the string starts with 0x, skip those characters.
@@ -262,6 +260,7 @@ std::string NimBLEUUID::toString() const {
     return std::string(*this);
 } // toString
 
+
 bool NimBLEUUID::operator ==(const NimBLEUUID & rhs) const {
     if(m_valueSet && rhs.m_valueSet) {
         return ble_uuid_cmp(&m_uuid.u, &rhs.m_uuid.u) == 0;
@@ -270,9 +269,11 @@ bool NimBLEUUID::operator ==(const NimBLEUUID & rhs) const {
     return m_valueSet == rhs.m_valueSet;
 }
 
+
 bool NimBLEUUID::operator !=(const NimBLEUUID & rhs) const {
     return !this->operator==(rhs);
 }
+
 
 NimBLEUUID::operator std::string() const {
     if (!m_valueSet) return std::string();   // If we have no value, nothing to format.

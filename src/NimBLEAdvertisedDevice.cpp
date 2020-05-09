@@ -441,6 +441,12 @@ void NimBLEAdvertisedDevice::setServiceUUID(const char* serviceUUID) {
  * @param [in] serviceUUID The discovered serviceUUID
  */
 void NimBLEAdvertisedDevice::setServiceUUID(NimBLEUUID serviceUUID) {
+    // Don't add duplicates
+    for (int i = 0; i < m_serviceUUIDs.size(); i++) {
+        if (m_serviceUUIDs[i].equals(serviceUUID)) {
+            return;
+        }
+    }
     m_serviceUUIDs.push_back(serviceUUID);
     m_haveServiceUUID = true;
     NIMBLE_LOGD(LOG_TAG,"- addServiceUUID(): serviceUUID: %s", serviceUUID.toString().c_str());
