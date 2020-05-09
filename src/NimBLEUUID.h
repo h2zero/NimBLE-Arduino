@@ -37,6 +37,7 @@ public:
     NimBLEUUID(const uint8_t* pData, size_t size, bool msbFirst);
     NimBLEUUID(uint32_t first, uint16_t second, uint16_t third, uint64_t fourth);
     NimBLEUUID();
+
     uint8_t        bitSize() const;   // Get the number of bits in this uuid.
     bool           equals(const NimBLEUUID &uuid) const;
     const ble_uuid_any_t* getNative() const;
