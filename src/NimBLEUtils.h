@@ -8,6 +8,9 @@
 
 #ifndef COMPONENTS_NIMBLEUTILS_H_
 #define COMPONENTS_NIMBLEUTILS_H_
+
+//#define NIMBLEUTILS_NO_STRINGS
+
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
