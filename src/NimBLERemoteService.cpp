@@ -122,7 +122,9 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
             service->m_characteristicMap.insert(std::pair<std::string, NimBLERemoteCharacteristic*>(pRemoteCharacteristic->getUUID().toString(), pRemoteCharacteristic));
 */
             service->m_characteristicVector.push_back(pRemoteCharacteristic);
+/*
             service->m_characteristicMapByHandle.insert(std::pair<uint16_t, NimBLERemoteCharacteristic*>(chr->val_handle, pRemoteCharacteristic));
+*/
             break;
         }
         case BLE_HS_EDONE:{
@@ -178,6 +180,7 @@ bool NimBLERemoteService::retrieveCharacteristics() {
     m_haveCharacteristics = (m_semaphoreGetCharEvt.wait("retrieveCharacteristics") == 0);
     if(m_haveCharacteristics){
         uint16_t endHdl = 0xFFFF;
+/*
         NIMBLE_LOGD(LOG_TAG, "Found %d Characteristics", m_characteristicMapByHandle.size());
         for (auto it = m_characteristicMapByHandle.cbegin(); it != m_characteristicMapByHandle.cend(); ++it) {
             NIMBLE_LOGD(LOG_TAG, "Found UUID: %s Handle: %d Def Handle: %d", (*it).second->getUUID().toString().c_str(), (*it).second->getHandle(), (*it).second->getDefHandle());
@@ -199,6 +202,33 @@ bool NimBLERemoteService::retrieveCharacteristics() {
             //If there is no handles between this characteristic and the next there is no descriptor so skip to the next
             if((*it).second->getHandle() != endHdl){
                 if(!m_pClient->m_isConnected || !(*it).second->retrieveDescriptors(endHdl)) {
+                    return false;
+                }
+            }
+            //NIMBLE_LOGD(LOG_TAG, "Found %d Characteristics in service UUID: %s", chars->size(), myPair.first.c_str());
+        }
+*/
+        NIMBLE_LOGD(LOG_TAG, "Found %d Characteristics", m_characteristicVector.size());
+        for(auto it = m_characteristicVector.cbegin(); it != m_characteristicVector.cend(); ++it) {
+            NIMBLE_LOGD(LOG_TAG, "Found UUID: %s Handle: %d Def Handle: %d", (*it)->getUUID().toString().c_str(), (*it)->getHandle(), (*it)->getDefHandle());
+            // The descriptor handle is between this characteristic val_handle and the next ones def_handle
+            // so make the end of the scan at the handle before the next characteristic def_handle
+            
+            // Make sure we don't go past the service end handle
+            if(++it != m_characteristicVector.cend()){
+                NIMBLE_LOGD(LOG_TAG, "Next UUID: %s Handle: %d Def Handle: %d", (*it)->getUUID().toString().c_str(), (*it)->getHandle(),(*it)->getDefHandle());
+                
+                endHdl = (*it)->getDefHandle()-1;
+            }
+            else{ 
+                NIMBLE_LOGD(LOG_TAG, "END CHARS");
+                endHdl = m_endHandle;
+            }
+            --it;
+            
+            //If there is no handles between this characteristic and the next there is no descriptor so skip to the next
+            if((*it)->getHandle() != endHdl){
+                if(!m_pClient->m_isConnected || !(*it)->retrieveDescriptors(endHdl)) {
                     return false;
                 }
             }
@@ -233,9 +263,11 @@ std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristic
  * @brief Retrieve a map of all the characteristics of this service.
  * @return A map of all the characteristics of this service.
  */
+/*
 std::map<uint16_t, NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristicsByHandle() {
     return &m_characteristicMapByHandle;
 } // getCharacteristicsByHandle
+*/
 
 
 /**
@@ -328,11 +360,12 @@ void NimBLERemoteService::removeCharacteristics() {
     }
     m_characteristicVector.clear();   // Clear the vector
 
+/*
     for (auto &myPair : m_characteristicMapByHandle) {
        delete myPair.second;
     }
     m_characteristicMapByHandle.clear();   // Clear the map
-    
+*/
 } // removeCharacteristics
 
 
@@ -374,8 +407,13 @@ std::string NimBLERemoteService::toString() {
  * Will release all characteristic and subsequently all descriptor semaphores for this service. 
  */
 void NimBLERemoteService::releaseSemaphores() {
+/*
     for (auto &cPair : m_characteristicMapByHandle) {
        cPair.second->releaseSemaphores();
+    }
+*/
+    for(auto &it: m_characteristicVector) {
+       it->releaseSemaphores();
     }
     m_semaphoreGetCharEvt.give(1);
 }

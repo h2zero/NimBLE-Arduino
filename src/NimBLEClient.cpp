@@ -716,15 +716,26 @@ uint16_t NimBLEClient::getMTU() {
                 if(it->getEndHandle() < event->notify_rx.attr_handle) {
                     continue;
                 }
-                auto cMap = it->getCharacteristicsByHandle();
+//                auto cMap = it->getCharacteristicsByHandle();
+                auto cVector = it->getCharacteristics();
                 NIMBLE_LOGD(LOG_TAG, "checking service %s for handle: %d", it->getUUID().toString().c_str(),event->notify_rx.attr_handle);
-                auto characteristic = cMap->find(event->notify_rx.attr_handle);
-                if(characteristic != cMap->end()) {
-                    NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", characteristic->second->toString().c_str());
+//                auto characteristic = cMap->find(event->notify_rx.attr_handle);
+                auto characteristic = cVector->cbegin();
+//                for(auto &characteristic: *cVector) {
+                for(; characteristic != cVector->cend(); ++characteristic) {
+                    if((*characteristic)->m_handle == event->notify_rx.attr_handle) break;
+                }
+//                if(characteristic != cMap->end()) {
+                if(characteristic != cVector->cend()) {
+//                    NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", characteristic->second->toString().c_str());
+                    NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", (*characteristic)->toString().c_str());
                     
-                    if (characteristic->second->m_notifyCallback != nullptr) {
-                        NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", characteristic->second->toString().c_str());
-                        characteristic->second->m_notifyCallback(characteristic->second, event->notify_rx.om->om_data, event->notify_rx.om->om_len, !event->notify_rx.indication);
+//                    if (characteristic->second->m_notifyCallback != nullptr) {
+                    if ((*characteristic)->m_notifyCallback != nullptr) {
+//                        NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", characteristic->second->toString().c_str());
+                        NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", (*characteristic)->toString().c_str());
+//                        characteristic->second->m_notifyCallback(characteristic->second, event->notify_rx.om->om_data, event->notify_rx.om->om_len, !event->notify_rx.indication);
+                        (*characteristic)->m_notifyCallback(*characteristic, event->notify_rx.om->om_data, event->notify_rx.om->om_len, !event->notify_rx.indication);
                     }
                     
                     break;
