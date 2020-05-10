@@ -141,7 +141,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID() {  //TODO Remove it eventual
  * @brief Check advertised serviced for existence required UUID
  * @return Return true if service is advertised
  */
-bool NimBLEAdvertisedDevice::isAdvertisingService(NimBLEUUID uuid){
+bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid){
     for (int i = 0; i < m_serviceUUIDs.size(); i++) {
         NIMBLE_LOGI(LOG_TAG, "Comparing UUIDS: %s %s", m_serviceUUIDs[i].toString().c_str(), uuid.toString().c_str());
         if (m_serviceUUIDs[i].equals(uuid)) return true;

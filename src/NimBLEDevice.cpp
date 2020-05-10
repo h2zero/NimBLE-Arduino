@@ -202,7 +202,7 @@ void NimBLEDevice::stopAdvertising() {
  * @param [in] a NimBLEAddress of the peer to search for.
  * @return A reference pointer to the client with the peer address.
  */
-/* STATIC */NimBLEClient* NimBLEDevice::getClientByPeerAddress(NimBLEAddress peer_addr) {
+/* STATIC */NimBLEClient* NimBLEDevice::getClientByPeerAddress(const NimBLEAddress &peer_addr) {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         if((*it)->getPeerAddress().equals(peer_addr)) {
             return (*it);
@@ -410,7 +410,7 @@ void NimBLEDevice::stopAdvertising() {
  * @brief Initialize the %BLE environment.
  * @param deviceName The device name of the device.
  */
-/* STATIC */ void NimBLEDevice::init(std::string deviceName) {
+/* STATIC */ void NimBLEDevice::init(const std::string &deviceName) {
     if(!initialized){
         int rc=0;
         esp_err_t errRc = ESP_OK;
@@ -612,7 +612,7 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @brief Check if the device address is on our ignore list.
  * @return True if ignoring.
  */
-/*STATIC*/ bool NimBLEDevice::isIgnored(NimBLEAddress address) {
+/*STATIC*/ bool NimBLEDevice::isIgnored(const NimBLEAddress &address) {
     for(auto &it : m_ignoreList) {
         if(it.equals(address)){
             return true;
@@ -627,7 +627,7 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @brief Add a device to the ignore list.
  * @param Address of the device we want to ignore.
  */
-/*STATIC*/ void NimBLEDevice::addIgnored(NimBLEAddress address) {
+/*STATIC*/ void NimBLEDevice::addIgnored(const NimBLEAddress &address) {
     m_ignoreList.push_back(address);
 }
 
@@ -636,7 +636,7 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @brief Remove a device from the ignore list.
  * @param Address of the device we want to remove from the list.
  */
-/*STATIC*/void  NimBLEDevice::removeIgnored(NimBLEAddress address) {
+/*STATIC*/void  NimBLEDevice::removeIgnored(const NimBLEAddress &address) {
     for(auto it = m_ignoreList.begin(); it != m_ignoreList.end(); ++it) {
         if((*it).equals(address)){
             m_ignoreList.erase(it);

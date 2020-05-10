@@ -31,7 +31,7 @@ NimBLEValue::NimBLEValue() {
  * The accumulation is a growing set of data that is added to until a commit or cancel.
  * @param [in] part A message part being added.
  */
-void NimBLEValue::addPart(std::string part) {
+void NimBLEValue::addPart(const std::string &part) {
 	NIMBLE_LOGD(LOG_TAG, ">> addPart: length=%d", part.length());
 	m_accumulation += part;
 } // addPart
@@ -43,7 +43,7 @@ void NimBLEValue::addPart(std::string part) {
  * @param [in] pData A message part being added.
  * @param [in] length The number of bytes being added.
  */
-void NimBLEValue::addPart(uint8_t* pData, size_t length) {
+void NimBLEValue::addPart(const uint8_t* pData, size_t length) {
 	NIMBLE_LOGD(LOG_TAG, ">> addPart: length=%d", length);
 	m_accumulation += std::string((char*) pData, length);
 } // addPart
@@ -122,7 +122,7 @@ void NimBLEValue::setReadOffset(uint16_t readOffset) {
 /**
  * @brief Set the current value.
  */
-void NimBLEValue::setValue(std::string value) {
+void NimBLEValue::setValue(const std::string &value) {
 	m_value = value;
 } // setValue
 
@@ -132,7 +132,7 @@ void NimBLEValue::setValue(std::string value) {
  * @param [in] pData The data for the current value.
  * @param [in] The length of the new current value.
  */
-void NimBLEValue::setValue(uint8_t* pData, size_t length) {
+void NimBLEValue::setValue(const uint8_t* pData, size_t length) {
 	m_value = std::string((char*) pData, length);
 } // setValue
 

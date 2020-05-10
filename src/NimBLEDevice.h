@@ -76,7 +76,7 @@ extern "C" void ble_store_config_init(void);
 
 class NimBLEDevice {
 public:
-    static void             init(std::string deviceName);   // Initialize the local BLE environment.
+    static void             init(const std::string &deviceName);   // Initialize the local BLE environment.
     static void             deinit();
     static bool             getInitialized();
     static NimBLEAddress    getAddress();
@@ -98,14 +98,14 @@ public:
     static void             setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);
     static int              setMTU(uint16_t mtu);
     static uint16_t         getMTU();
-    static bool             isIgnored(NimBLEAddress address);
-    static void             addIgnored(NimBLEAddress address);
-    static void             removeIgnored(NimBLEAddress address);
+    static bool             isIgnored(const NimBLEAddress &address);
+    static void             addIgnored(const NimBLEAddress &address);
+    static void             removeIgnored(const NimBLEAddress &address);
     static NimBLEAdvertising* getAdvertising();
 	static void		   		startAdvertising();
 	static void		   		stopAdvertising();
     static NimBLEClient*    getClientByID(uint16_t conn_id);
-    static NimBLEClient*    getClientByPeerAddress(NimBLEAddress peer_addr);
+    static NimBLEClient*    getClientByPeerAddress(const NimBLEAddress &peer_addr);
     static NimBLEClient*    getDisconnectedClient();
     static size_t           getClientListSize(); 
     static std::list<NimBLEClient*>* getClientList(); 

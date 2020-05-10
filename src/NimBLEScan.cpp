@@ -325,7 +325,7 @@ void NimBLEScan::stop() {
 
 
 // delete peer device from cache after disconnecting, it is required in case we are connecting to devices with not public address
-void NimBLEScan::erase(NimBLEAddress address) {
+void NimBLEScan::erase(const NimBLEAddress &address) {
     NIMBLE_LOGI(LOG_TAG, "erase device: %s", address.toString().c_str());
     NimBLEAdvertisedDevice *advertisedDevice = m_scanResults.m_advertisedDevicesMap.find(address.toString())->second;
     m_scanResults.m_advertisedDevicesMap.erase(address.toString());

@@ -243,7 +243,7 @@ uint16_t NimBLERemoteCharacteristic::getDefHandle() {
  * @param [in] uuid The UUID of the descriptor to find.
  * @return The Remote descriptor (if present) or null if not present.
  */
-NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(NimBLEUUID uuid) {
+NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID &uuid) {
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
     std::string v = uuid.toString();
     for (auto &myPair : m_descriptorMap) {
@@ -489,7 +489,7 @@ std::string NimBLERemoteCharacteristic::toString() {
  * @param [in] response Do we expect a response?
  * @return false if not connected or cant perform write for some reason.
  */
-bool NimBLERemoteCharacteristic::writeValue(std::string newValue, bool response) {
+bool NimBLERemoteCharacteristic::writeValue(const std::string &newValue, bool response) {
     return writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
 } // writeValue
 
@@ -514,7 +514,7 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
  * @param [in] response Whether we require a response from the write.
  * @return false if not connected or cant perform write for some reason.
  */
-bool NimBLERemoteCharacteristic::writeValue(uint8_t* data, size_t length, bool response) {
+bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, bool response) {
     
     NIMBLE_LOGD(LOG_TAG, ">> writeValue(), length: %d", length);
     

@@ -33,11 +33,10 @@ public:
     NimBLEUUID(const std::string &uuid);
     NimBLEUUID(uint16_t uuid);
     NimBLEUUID(uint32_t uuid);
-    NimBLEUUID(ble_uuid128_t* uuid);
+    NimBLEUUID(const ble_uuid128_t* uuid);
     NimBLEUUID(const uint8_t* pData, size_t size, bool msbFirst);
     NimBLEUUID(uint32_t first, uint16_t second, uint16_t third, uint64_t fourth);
     NimBLEUUID();
-
     uint8_t        bitSize() const;   // Get the number of bits in this uuid.
     bool           equals(const NimBLEUUID &uuid) const;
     const ble_uuid_any_t* getNative() const;

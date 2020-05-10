@@ -126,7 +126,7 @@ NimBLEUUID::NimBLEUUID(uint32_t uuid) {
  *
  * @param [in] uuid The native UUID.
  */
-NimBLEUUID::NimBLEUUID(ble_uuid128_t* uuid) {
+NimBLEUUID::NimBLEUUID(const ble_uuid128_t* uuid) {
     m_uuid.u.type        = BLE_UUID_TYPE_128;
     memcpy(m_uuid.u128.value, uuid->value, 16);
     m_valueSet = true;

@@ -41,7 +41,7 @@ NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties
  * @param [in] uuid - UUID for the characteristic.
  * @param [in] properties - Properties for the characteristic.
  */
-NimBLECharacteristic::NimBLECharacteristic(NimBLEUUID uuid, uint16_t properties, NimBLEService* pService) {
+NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t properties, NimBLEService* pService) {
 	m_uuid       = uuid;
 	m_handle     = NULL_HANDLE;
 	m_properties = properties;
@@ -99,7 +99,7 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint3
  * @param [in] properties - The properties of the descriptor.
  * @return The new BLE descriptor.
  */
-NimBLEDescriptor* NimBLECharacteristic::createDescriptor(NimBLEUUID uuid, uint32_t properties, uint16_t max_len) {
+NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid, uint32_t properties, uint16_t max_len) {
 	NimBLEDescriptor* pDescriptor = nullptr;
 	if(uuid.equals(NimBLEUUID((uint16_t)0x2902))) {
         if(!(m_properties & BLE_GATT_CHR_F_NOTIFY) && !(m_properties & BLE_GATT_CHR_F_INDICATE)) {
@@ -139,7 +139,7 @@ NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* descript
  * @param [in] descriptorUUID The UUID of the descriptor that we wish to retrieve.
  * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
  */
-NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(NimBLEUUID descriptorUUID) {
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID &descriptorUUID) {
 	return m_descriptorMap.getByUUID(descriptorUUID);
 } // getDescriptorByUUID
 
@@ -518,7 +518,7 @@ void NimBLECharacteristic::setWriteProperty(bool value) {
  * @param [in] data The data to set for the characteristic.
  * @param [in] length The length of the data in bytes.
  */
-void NimBLECharacteristic::setValue(uint8_t* data, size_t length) {
+void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
 	char* pHex = NimBLEUtils::buildHexData(nullptr, data, length);
 	NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
 	free(pHex);
@@ -546,7 +546,7 @@ void NimBLECharacteristic::setValue(uint8_t* data, size_t length) {
  * @param [in] Set the value of the characteristic.
  * @return N/A.
  */
-void NimBLECharacteristic::setValue(std::string value) {
+void NimBLECharacteristic::setValue(const std::string &value) {
 	setValue((uint8_t*)(value.data()), value.length());
 } // setValue
 
