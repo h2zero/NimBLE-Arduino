@@ -45,7 +45,7 @@ public:
     bool        canRead();
     bool        canWrite();
     bool        canWriteNoResponse();
-    NimBLERemoteDescriptor* getDescriptor(NimBLEUUID uuid);
+    NimBLERemoteDescriptor* getDescriptor(const NimBLEUUID &uuid);
     std::map<std::string, NimBLERemoteDescriptor*>* getDescriptors();
     uint16_t    getHandle();
     uint16_t    getDefHandle();
@@ -55,11 +55,12 @@ public:
     uint16_t    readUInt16();
     uint32_t    readUInt32();
     bool        registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
-    bool        writeValue(uint8_t* data, size_t length, bool response = false);
-    bool        writeValue(std::string newValue, bool response = false);
+    bool        writeValue(const uint8_t* data, size_t length, bool response = false);
+    bool        writeValue(const std::string &newValue, bool response = false);
     bool        writeValue(uint8_t newValue, bool response = false);
     std::string toString();
     const uint8_t*    readRawData();
+    size_t      getDataLength();
     NimBLERemoteService* getRemoteService();
 
 private:

@@ -202,7 +202,7 @@ void NimBLEDevice::stopAdvertising() {
  * @param [in] a NimBLEAddress of the peer to search for.
  * @return A reference pointer to the client with the peer address.
  */
-/* STATIC */NimBLEClient* NimBLEDevice::getClientByPeerAddress(NimBLEAddress peer_addr) {
+/* STATIC */NimBLEClient* NimBLEDevice::getClientByPeerAddress(const NimBLEAddress &peer_addr) {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         if((*it)->getPeerAddress().equals(peer_addr)) {
             return (*it);
@@ -379,14 +379,16 @@ void NimBLEDevice::stopAdvertising() {
     
     m_synced = true;
     
-    if(m_pScan != nullptr) {
-        // Restart scanning with the last values sent, allow to clear results.
-        m_pScan->start(m_pScan->m_duration, m_pScan->m_scanCompleteCB);
-    }
-    
-    if(m_bleAdvertising != nullptr) {
-        // Restart advertisng, parameters should already be set.
-        m_bleAdvertising->start();
+    if(initialized) {
+        if(m_pScan != nullptr) {
+            // Restart scanning with the last values sent, allow to clear results.
+            m_pScan->start(m_pScan->m_duration, m_pScan->m_scanCompleteCB);
+        }
+
+        if(m_bleAdvertising != nullptr) {
+            // Restart advertisng, parameters should already be set.
+            m_bleAdvertising->start();
+        }
     }
 } // onSync
 
@@ -408,10 +410,8 @@ void NimBLEDevice::stopAdvertising() {
  * @brief Initialize the %BLE environment.
  * @param deviceName The device name of the device.
  */
-/* STATIC */ void NimBLEDevice::init(std::string deviceName) {
+/* STATIC */ void NimBLEDevice::init(const std::string &deviceName) {
     if(!initialized){
-        initialized = true; // Set the initialization flag to ensure we are only initialized once.
-        
         int rc=0;
         esp_err_t errRc = ESP_OK;
         
@@ -421,7 +421,7 @@ void NimBLEDevice::stopAdvertising() {
 #endif
 
         errRc = nvs_flash_init();
-    
+
         if (errRc == ESP_ERR_NVS_NO_FREE_PAGES || errRc == ESP_ERR_NVS_NEW_VERSION_FOUND) {
             ESP_ERROR_CHECK(nvs_flash_erase());
             errRc = nvs_flash_init();
@@ -452,14 +452,15 @@ void NimBLEDevice::stopAdvertising() {
         assert(rc == 0);
 
         ble_store_config_init();
-        
+
         nimble_port_freertos_init(NimBLEDevice::host_task);
     }
     // Wait for host and controller to sync before returning and accepting new tasks
     while(!m_synced){
         vTaskDelay(1 / portTICK_PERIOD_MS);
     }
-    //vTaskDelay(200 / portTICK_PERIOD_MS); // Delay for 200 msecs as a workaround to an apparent Arduino environment issue.
+
+    initialized = true; // Set the initialization flag to ensure we are only initialized once.
 } // init
 
 
@@ -477,6 +478,7 @@ void NimBLEDevice::stopAdvertising() {
         }
         
         initialized = false;
+        m_synced = false;
     }
 } // deinit
 
@@ -610,7 +612,7 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @brief Check if the device address is on our ignore list.
  * @return True if ignoring.
  */
-/*STATIC*/ bool NimBLEDevice::isIgnored(NimBLEAddress address) {
+/*STATIC*/ bool NimBLEDevice::isIgnored(const NimBLEAddress &address) {
     for(auto &it : m_ignoreList) {
         if(it.equals(address)){
             return true;
@@ -625,7 +627,7 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @brief Add a device to the ignore list.
  * @param Address of the device we want to ignore.
  */
-/*STATIC*/ void NimBLEDevice::addIgnored(NimBLEAddress address) {
+/*STATIC*/ void NimBLEDevice::addIgnored(const NimBLEAddress &address) {
     m_ignoreList.push_back(address);
 }
 
@@ -634,7 +636,7 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @brief Remove a device from the ignore list.
  * @param Address of the device we want to remove from the list.
  */
-/*STATIC*/void  NimBLEDevice::removeIgnored(NimBLEAddress address) {
+/*STATIC*/void  NimBLEDevice::removeIgnored(const NimBLEAddress &address) {
     for(auto it = m_ignoreList.begin(); it != m_ignoreList.end(); ++it) {
         if((*it).equals(address)){
             m_ignoreList.erase(it);

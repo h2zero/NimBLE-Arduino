@@ -1,0 +1,153 @@
+From 87b23db462ac4ad6932b0c2d621bcb99cf4f1dfd Mon Sep 17 00:00:00 2001
+From: h2zero <powellperalta@gmail.com>
+Date: Sat, 18 Apr 2020 20:42:41 -0600
+Subject: [PATCH] nimble/host: Add return parameter to the
+ ble_hs_misc_conn_chan_find_reqd()
+
+ble_hs_misc_conn_chan_find_reqd() did not return an error code if
+the connection and or the channel were not found, i.e in a disconnected state.
+When debug is not enabled and `ble_hs_misc_conn_chan_find_reqd()` is called and
+the device has disconnected from the peer various functions may attempt to access
+memory that is not valid causing an null pointer exception.
+---
+ nimble/host/src/ble_att_cmd.c       |  7 +++----
+ nimble/host/src/ble_hs_misc.c       |  8 ++++++--
+ nimble/host/src/ble_hs_priv.h       |  6 +++---
+ nimble/host/src/ble_l2cap_sig.c     |  9 +++++++--
+ nimble/host/src/ble_l2cap_sig_cmd.c |  8 +++++---
+ nimble/host/src/ble_sm_cmd.c        | 11 ++++++++---
+ 6 files changed, 32 insertions(+), 17 deletions(-)
+
+diff --git a/src/nimble/host/src/ble_att_cmd.c b/src/nimble/host/src/ble_att_cmd.c
+index a123c857c..81b070f9c 100644
+--- a/src/nimble/host/src/ble_att_cmd.c
++++ b/src/nimble/host/src/ble_att_cmd.c
+@@ -66,11 +66,10 @@ ble_att_tx(uint16_t conn_handle, struct os_mbuf *txom)
+ 
+     ble_hs_lock();
+ 
+-    ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_ATT, &conn,
+-                                    &chan);
+-    if (chan == NULL) {
++    rc = ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_ATT, &conn,
++                                         &chan);
++    if (rc != 0) {
+         os_mbuf_free_chain(txom);
+-        rc = BLE_HS_ENOTCONN;
+     } else {
+         ble_att_truncate_to_mtu(chan, txom);
+         rc = ble_l2cap_tx(conn, chan, txom);
+diff --git a/src/nimble/host/src/ble_hs_misc.c b/src/nimble/host/src/ble_hs_misc.c
+index 6c6da4675..dfb46b741 100644
+--- a/src/nimble/host/src/ble_hs_misc.c
++++ b/src/nimble/host/src/ble_hs_misc.c
+@@ -56,7 +56,7 @@ ble_hs_misc_conn_chan_find(uint16_t conn_handle, uint16_t cid,
+     return rc;
+ }
+ 
+-void
++int
+ ble_hs_misc_conn_chan_find_reqd(uint16_t conn_handle, uint16_t cid,
+                                 struct ble_hs_conn **out_conn,
+                                 struct ble_l2cap_chan **out_chan)
+@@ -66,7 +66,9 @@ ble_hs_misc_conn_chan_find_reqd(uint16_t conn_handle, uint16_t cid,
+     int rc;
+ 
+     rc = ble_hs_misc_conn_chan_find(conn_handle, cid, &conn, &chan);
+-    BLE_HS_DBG_ASSERT_EVAL(rc == 0);
++    if (rc != 0) {
++        return rc;
++    }
+ 
+     if (out_conn != NULL) {
+         *out_conn = conn;
+@@ -74,6 +76,8 @@ ble_hs_misc_conn_chan_find_reqd(uint16_t conn_handle, uint16_t cid,
+     if (out_chan != NULL) {
+         *out_chan = chan;
+     }
++
++    return 0;
+ }
+ 
+ uint8_t
+diff --git a/src/nimble/host/src/ble_hs_priv.h b/src/nimble/host/src/ble_hs_priv.h
+index 2cad6ef1d..538d07a97 100644
+--- a/src/nimble/host/src/ble_hs_priv.h
++++ b/src/nimble/host/src/ble_hs_priv.h
+@@ -114,9 +114,9 @@ int ble_hs_hci_evt_acl_process(struct os_mbuf *om);
+ int ble_hs_misc_conn_chan_find(uint16_t conn_handle, uint16_t cid,
+                                struct ble_hs_conn **out_conn,
+                                struct ble_l2cap_chan **out_chan);
+-void ble_hs_misc_conn_chan_find_reqd(uint16_t conn_handle, uint16_t cid,
+-                                     struct ble_hs_conn **out_conn,
+-                                     struct ble_l2cap_chan **out_chan);
++int ble_hs_misc_conn_chan_find_reqd(uint16_t conn_handle, uint16_t cid,
++                                    struct ble_hs_conn **out_conn,
++                                    struct ble_l2cap_chan **out_chan);
+ uint8_t ble_hs_misc_addr_type_to_id(uint8_t addr_type);
+ int ble_hs_misc_restore_irks(void);
+
+diff --git a/src/nimble/host/src/ble_l2cap_sig.c b/src/nimble/host/src/ble_l2cap_sig.c
+index bb4d8a5ac..58f96b0f3 100644
+--- a/src/nimble/host/src/ble_l2cap_sig.c
++++ b/src/nimble/host/src/ble_l2cap_sig.c
+@@ -508,8 +508,13 @@ ble_l2cap_sig_update(uint16_t conn_handle,
+     STATS_INC(ble_l2cap_stats, update_init);
+ 
+     ble_hs_lock();
+-    ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_SIG,
+-                                    &conn, &chan);
++    rc = ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_SIG,
++                                         &conn, &chan);
++    if (rc != 0) {
++        ble_hs_unlock();
++        goto done;
++    }
++
+     master = conn->bhc_flags & BLE_HS_CONN_F_MASTER;
+     ble_hs_unlock();
+ 
+diff --git a/src/nimble/host/src/ble_l2cap_sig_cmd.c b/src/nimble/host/src/ble_l2cap_sig_cmd.c
+index 366dde625..510420f09 100644
+--- a/src/nimble/host/src/ble_l2cap_sig_cmd.c
++++ b/src/nimble/host/src/ble_l2cap_sig_cmd.c
+@@ -28,9 +28,11 @@ ble_l2cap_sig_tx(uint16_t conn_handle, struct os_mbuf *txom)
+     int rc;
+ 
+     ble_hs_lock();
+-    ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_SIG,
+-                                    &conn, &chan);
+-    rc = ble_l2cap_tx(conn, chan, txom);
++    rc = ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_SIG,
++                                         &conn, &chan);
++    if (rc == 0) {
++        rc = ble_l2cap_tx(conn, chan, txom);
++    }
+     ble_hs_unlock();
+ 
+     return rc;
+diff --git a/src/nimble/host/src/ble_sm_cmd.c b/src/nimble/host/src/ble_sm_cmd.c
+index 5eef798d6..01651f1df 100644
+--- a/src/nimble/host/src/ble_sm_cmd.c
++++ b/src/nimble/host/src/ble_sm_cmd.c
+@@ -52,12 +52,17 @@ ble_sm_tx(uint16_t conn_handle, struct os_mbuf *txom)
+ {
+     struct ble_l2cap_chan *chan;
+     struct ble_hs_conn *conn;
++    int rc;
+ 
+     BLE_HS_DBG_ASSERT(ble_hs_locked_by_cur_task());
+ 
+     STATS_INC(ble_l2cap_stats, sm_tx);
+ 
+-    ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_SM,
+-                                    &conn, &chan);
+-    return ble_l2cap_tx(conn, chan, txom);
++    rc = ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_SM,
++                                         &conn, &chan);
++    if (rc == 0) {
++        rc = ble_l2cap_tx(conn, chan, txom);
++    }
++
++    return rc;
+ }
