@@ -33,7 +33,7 @@ static const char* LOG_TAG = "NimBLEUtils";
  * @param [in] source The source of the copy
  * @param [in] size The number of bytes to copy
  */
-void NimBLEUtils::memrcpy(uint8_t* target, uint8_t* source, uint32_t size) {
+void NimBLEUtils::memrcpy(uint8_t* target, const uint8_t* source, uint32_t size) {
     assert(size > 0);
     target += (size - 1); // Point target to the last byte of the target data
     while (size > 0) {
@@ -394,7 +394,7 @@ const char* NimBLEUtils::advTypeToString(uint8_t advType) {
  * @param [in] length The length of the data to convert.
  * @return A pointer to the formatted buffer.
  */
-char* NimBLEUtils::buildHexData(uint8_t* target, uint8_t* source, uint8_t length) {
+char* NimBLEUtils::buildHexData(uint8_t* target, const uint8_t* source, uint8_t length) {
     // Guard against too much data.
     if (length > 100) length = 100;
 

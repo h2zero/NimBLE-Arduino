@@ -58,7 +58,7 @@ int8_t NimBLEBeacon::getSignalPower() {
 /**
  * Set the raw data for the beacon record.
  */
-void NimBLEBeacon::setData(std::string data) {
+void NimBLEBeacon::setData(const std::string &data) {
 	if (data.length() != sizeof(m_beaconData)) {
 		NIMBLE_LOGE(LOG_TAG, "Unable to set the data ... length passed in was %d and expected %d", 
                                                         data.length(), sizeof(m_beaconData));
@@ -79,9 +79,10 @@ void NimBLEBeacon::setMinor(uint16_t minor) {
 	m_beaconData.minor = ENDIAN_CHANGE_U16(minor);
 } // setMinior
 
-void NimBLEBeacon::setProximityUUID(NimBLEUUID uuid) {
-	uuid = uuid.to128();
-	memcpy(m_beaconData.proximityUUID, uuid.getNative()->u128.value, 16);
+void NimBLEBeacon::setProximityUUID(const NimBLEUUID &uuid) {
+	NimBLEUUID temp_uuid = uuid;
+	temp_uuid.to128();
+	memcpy(m_beaconData.proximityUUID, temp_uuid.getNative()->u128.value, 16);
 } // setProximityUUID
 
 void NimBLEBeacon::setSignalPower(int8_t signalPower) {

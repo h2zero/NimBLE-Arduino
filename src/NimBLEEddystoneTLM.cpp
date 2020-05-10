@@ -116,7 +116,7 @@ std::string NimBLEEddystoneTLM::toString() {
 /**
  * Set the raw data for the beacon record.
  */
-void NimBLEEddystoneTLM::setData(std::string data) {
+void NimBLEEddystoneTLM::setData(const std::string &data) {
 	if (data.length() != sizeof(m_eddystoneData)) {
 		NIMBLE_LOGE(LOG_TAG, "Unable to set the data ... length passed in was %d and expected %d", 
                                                 data.length(), sizeof(m_eddystoneData));
@@ -125,7 +125,7 @@ void NimBLEEddystoneTLM::setData(std::string data) {
   memcpy(&m_eddystoneData, data.data(), data.length());
 } // setData
 
-void NimBLEEddystoneTLM::setUUID(NimBLEUUID l_uuid) {
+void NimBLEEddystoneTLM::setUUID(const NimBLEUUID &l_uuid) {
 	beaconUUID = l_uuid.getNative()->u16.value;
 } // setUUID
 

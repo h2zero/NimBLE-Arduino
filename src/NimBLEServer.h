@@ -46,10 +46,10 @@ class NimBLEServiceMap {
 public:
 //    NimBLEService* getByHandle(uint16_t handle);
     NimBLEService* getByUUID(const char* uuid);    
-    NimBLEService* getByUUID(NimBLEUUID uuid, uint8_t inst_id = 0);
+    NimBLEService* getByUUID(const NimBLEUUID &uuid, uint8_t inst_id = 0);
 //    void           setByHandle(uint16_t handle, NimBLEService* service);
     void           setByUUID(const char* uuid, NimBLEService* service);
-    void           setByUUID(NimBLEUUID uuid, NimBLEService* service);
+    void           setByUUID(const NimBLEUUID &uuid, NimBLEService* service);
     std::string    toString();
     NimBLEService* getFirst();
     NimBLEService* getNext();
@@ -70,7 +70,7 @@ class NimBLEServer {
 public:
     uint32_t              getConnectedCount();
     NimBLEService*        createService(const char* uuid);    
-    NimBLEService*        createService(NimBLEUUID uuid, uint32_t numHandles=15, uint8_t inst_id=0);
+    NimBLEService*        createService(const NimBLEUUID &uuid, uint32_t numHandles=15, uint8_t inst_id=0);
     NimBLEAdvertising*    getAdvertising();
     void                  setCallbacks(NimBLEServerCallbacks* pCallbacks);
     void                  startAdvertising();
@@ -78,7 +78,7 @@ public:
     void                  start();
 //    void                  removeService(BLEService* service);
     NimBLEService*        getServiceByUUID(const char* uuid);
-    NimBLEService*        getServiceByUUID(NimBLEUUID uuid);
+    NimBLEService*        getServiceByUUID(const NimBLEUUID &uuid);
     int                   disconnect(uint16_t connID, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
 //    bool                connect(BLEAddress address);
     void                  updateConnParams(uint16_t conn_handle, 

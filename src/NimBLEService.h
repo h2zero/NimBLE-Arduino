@@ -32,10 +32,10 @@ class NimBLECharacteristic;
 class NimBLECharacteristicMap {
 public:
 	void setByUUID(NimBLECharacteristic* pCharacteristic, const char* uuid);
-	void setByUUID(NimBLECharacteristic* pCharacteristic, NimBLEUUID uuid);
+	void setByUUID(NimBLECharacteristic* pCharacteristic, const NimBLEUUID &uuid);
 	void setByHandle(uint16_t handle, NimBLECharacteristic* pCharacteristic);
 	NimBLECharacteristic* getByUUID(const char* uuid);	
-	NimBLECharacteristic* getByUUID(NimBLEUUID uuid);
+	NimBLECharacteristic* getByUUID(const NimBLEUUID &uuid);
 	NimBLECharacteristic* getByHandle(uint16_t handle);
 	NimBLECharacteristic* getFirst();
 	NimBLECharacteristic* getNext();
@@ -59,13 +59,13 @@ public:
 					    uint32_t properties = NIMBLE_PROPERTY::READ | 
 											  NIMBLE_PROPERTY::WRITE);
 											  
-	NimBLECharacteristic* createCharacteristic(NimBLEUUID uuid,
+	NimBLECharacteristic* createCharacteristic(const NimBLEUUID &uuid,
 					    uint32_t properties = NIMBLE_PROPERTY::READ | 
 											  NIMBLE_PROPERTY::WRITE);
 											  
 	void               dump();
 	NimBLECharacteristic* getCharacteristic(const char* uuid);
-	NimBLECharacteristic* getCharacteristic(NimBLEUUID uuid);
+	NimBLECharacteristic* getCharacteristic(const NimBLEUUID &uuid);
 	NimBLEUUID            getUUID();
 	NimBLEServer*         getServer();
 	bool               start();
@@ -76,7 +76,7 @@ public:
 
 private:
 	NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer);
-	NimBLEService(NimBLEUUID uuid, uint16_t numHandles, NimBLEServer* pServer);
+	NimBLEService(const NimBLEUUID &uuid, uint16_t numHandles, NimBLEServer* pServer);
 	friend class NimBLEServer;
 	friend class NimBLEDevice;
 	

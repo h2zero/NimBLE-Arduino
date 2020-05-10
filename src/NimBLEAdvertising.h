@@ -47,14 +47,14 @@ class NimBLEAdvertisementData {
 	//
 public:
 	void setAppearance(uint16_t appearance);
-	void setCompleteServices(NimBLEUUID uuid);
+	void setCompleteServices(const NimBLEUUID &uuid);
 	void setFlags(uint8_t);
-	void setManufacturerData(std::string data);
-	void setName(std::string name);
-	void setPartialServices(NimBLEUUID uuid);
-	void setServiceData(NimBLEUUID uuid, std::string data);
-	void setShortName(std::string name);
-	void addData(std::string data);  // Add data to the payload.
+	void setManufacturerData(const std::string &data);
+	void setName(const std::string &name);
+	void setPartialServices(const NimBLEUUID &uuid);
+	void setServiceData(const NimBLEUUID &uuid, const std::string &data);
+	void setShortName(const std::string &name);
+	void addData(const std::string &data);  // Add data to the payload.
 	std::string getPayload();               // Retrieve the current advert payload.
 
 private:
@@ -71,7 +71,7 @@ private:
 class NimBLEAdvertising {
 public:
 	NimBLEAdvertising();
-	void addServiceUUID(NimBLEUUID serviceUUID);
+	void addServiceUUID(const NimBLEUUID &serviceUUID);
 	void addServiceUUID(const char* serviceUUID);
 	void start();
 	void stop();

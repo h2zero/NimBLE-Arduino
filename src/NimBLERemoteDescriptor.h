@@ -33,8 +33,8 @@ public:
     uint16_t    readUInt16(void);
     uint32_t    readUInt32(void);
     std::string toString(void);
-    bool        writeValue(uint8_t* data, size_t length, bool response = false);
-    bool        writeValue(std::string newValue, bool response = false);
+    bool        writeValue(const uint8_t* data, size_t length, bool response = false);
+    bool        writeValue(const std::string &newValue, bool response = false);
     bool        writeValue(uint8_t newValue, bool response = false);
 
 
