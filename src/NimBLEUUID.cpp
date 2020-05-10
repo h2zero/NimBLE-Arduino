@@ -40,7 +40,7 @@ static const char* LOG_TAG = "NimBLEUUID";
  *
  * @param [in] value The string to build a UUID from.
  */
- NimBLEUUID::NimBLEUUID(std::string value) {
+ NimBLEUUID::NimBLEUUID(const std::string &value) {
     m_valueSet = true;
     if (value.length() == 4) {
         m_uuid.u.type         = BLE_UUID_TYPE_16;
@@ -78,7 +78,7 @@ static const char* LOG_TAG = "NimBLEUUID";
  * @param [in] size The size of the data.
  * @param [in] msbFirst Is the MSB first in pData memory?
  */
-NimBLEUUID::NimBLEUUID(uint8_t* pData, size_t size, bool msbFirst) {
+NimBLEUUID::NimBLEUUID(const uint8_t* pData, size_t size, bool msbFirst) {
 /*** TODO: change this to use the Nimble function for various lenght UUIDs:
     int ble_uuid_init_from_buf(ble_uuid_any_t *uuid, const void *buf, size_t len);
 ***/
@@ -126,8 +126,7 @@ NimBLEUUID::NimBLEUUID(uint32_t uuid) {
  *
  * @param [in] uuid The native UUID.
  */
- 
-NimBLEUUID::NimBLEUUID(ble_uuid128_t* uuid) {
+NimBLEUUID::NimBLEUUID(const ble_uuid128_t* uuid) {
     m_uuid.u.type        = BLE_UUID_TYPE_128;
     memcpy(m_uuid.u128.value, uuid->value, 16);
     m_valueSet = true;
@@ -163,7 +162,7 @@ NimBLEUUID::NimBLEUUID() {
  * @brief Get the number of bits in this uuid.
  * @return The number of bits in the UUID.  One of 16, 32 or 128.
  */
-uint8_t NimBLEUUID::bitSize() {
+uint8_t NimBLEUUID::bitSize() const {
     if (!m_valueSet) return 0;
     return m_uuid.u.type;
 } // bitSize
@@ -175,7 +174,7 @@ uint8_t NimBLEUUID::bitSize() {
  * @param [in] uuid The UUID to compare against.
  * @return True if the UUIDs are equal and false otherwise.
  */
-bool NimBLEUUID::equals(NimBLEUUID uuid) {
+bool NimBLEUUID::equals(const NimBLEUUID &uuid) const {
     return *this == uuid;
 }
 
@@ -189,8 +188,7 @@ bool NimBLEUUID::equals(NimBLEUUID uuid) {
  * NNNNNNNN
  * <UUID>
  */
- 
-NimBLEUUID NimBLEUUID::fromString(std::string _uuid) {
+NimBLEUUID NimBLEUUID::fromString(const std::string &_uuid) {
     uint8_t start = 0;
     if (strstr(_uuid.c_str(), "0x") != nullptr) { // If the string starts with 0x, skip those characters.
         start = 2;
@@ -215,7 +213,7 @@ NimBLEUUID NimBLEUUID::fromString(std::string _uuid) {
  *
  * @return The native UUID value or NULL if not set.
  */
-ble_uuid_any_t* NimBLEUUID::getNative() {
+const ble_uuid_any_t* NimBLEUUID::getNative() const {
     if (m_valueSet == false) {
         NIMBLE_LOGD(LOG_TAG,"<< Return of un-initialized UUID!");
         return nullptr;
@@ -230,7 +228,7 @@ ble_uuid_any_t* NimBLEUUID::getNative() {
  * A UUID can be internally represented as 16bit, 32bit or the full 128bit.  This method
  * will convert 16 or 32 bit representations to the full 128bit.
  */
-NimBLEUUID &NimBLEUUID::to128() {
+const NimBLEUUID &NimBLEUUID::to128() {
     // If we either don't have a value or are already a 128 bit UUID, nothing further to do.
     if (!m_valueSet || m_uuid.u.type == BLE_UUID_TYPE_128) {
         return *this;
@@ -258,11 +256,12 @@ NimBLEUUID &NimBLEUUID::to128() {
  *
  * @return A string representation of the UUID.
  */
-std::string NimBLEUUID::toString() {
+std::string NimBLEUUID::toString() const {
     return std::string(*this);
 } // toString
 
-bool NimBLEUUID::operator ==(const NimBLEUUID & rhs) {
+
+bool NimBLEUUID::operator ==(const NimBLEUUID & rhs) const {
     if(m_valueSet && rhs.m_valueSet) {
         return ble_uuid_cmp(&m_uuid.u, &rhs.m_uuid.u) == 0;
     }
@@ -270,9 +269,11 @@ bool NimBLEUUID::operator ==(const NimBLEUUID & rhs) {
     return m_valueSet == rhs.m_valueSet;
 }
 
-bool NimBLEUUID::operator !=(const NimBLEUUID & rhs) {
+
+bool NimBLEUUID::operator !=(const NimBLEUUID & rhs) const {
     return !this->operator==(rhs);
 }
+
 
 NimBLEUUID::operator std::string() const {
     if (!m_valueSet) return std::string();   // If we have no value, nothing to format.

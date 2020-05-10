@@ -50,8 +50,8 @@ public:
 	uint8_t* getValue();                                    // Get a pointer to the value of the descriptor.
 //	void setAccessPermissions(uint8_t perm);	      // Set the permissions of the descriptor.
 	void setCallbacks(NimBLEDescriptorCallbacks* pCallbacks);  // Set callbacks to be invoked for the descriptor.
-	void setValue(uint8_t* data, size_t size);              // Set the value of the descriptor as a pointer to data.
-	void setValue(std::string value);                       // Set the value of the descriptor as a data buffer.
+	void setValue(const uint8_t* data, size_t size);              // Set the value of the descriptor as a pointer to data.
+	void setValue(const std::string &value);                       // Set the value of the descriptor as a data buffer.
 
 	std::string toString();                                 // Convert the descriptor to a string representation.
 

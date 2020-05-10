@@ -58,7 +58,7 @@ NimBLEAdvertising::NimBLEAdvertising() {
  * @brief Add a service uuid to exposed list of services.
  * @param [in] serviceUUID The UUID of the service to expose.
  */
-void NimBLEAdvertising::addServiceUUID(NimBLEUUID serviceUUID) {
+void NimBLEAdvertising::addServiceUUID(const NimBLEUUID &serviceUUID) {
 	m_serviceUUIDs.push_back(serviceUUID);
 } // addServiceUUID
 
@@ -393,7 +393,7 @@ void NimBLEAdvertising::onHostReset() {
  * @brief Add data to the payload to be advertised.
  * @param [in] data The data to be added to the payload.
  */
-void NimBLEAdvertisementData::addData(std::string data) {
+void NimBLEAdvertisementData::addData(const std::string &data) {
 	if ((m_payload.length() + data.length()) > BLE_HS_ADV_MAX_SZ) {
 		return;
 	}
@@ -420,7 +420,7 @@ void NimBLEAdvertisementData::setAppearance(uint16_t appearance) {
  * @brief Set the complete services.
  * @param [in] uuid The single service to advertise.
  */
-void NimBLEAdvertisementData::setCompleteServices(NimBLEUUID uuid) {
+void NimBLEAdvertisementData::setCompleteServices(const NimBLEUUID &uuid) {
 	char cdata[2];
 	switch (uuid.bitSize()) {
 		case 16: {
@@ -482,7 +482,7 @@ void NimBLEAdvertisementData::setFlags(uint8_t flag) {
  * @brief Set manufacturer specific data.
  * @param [in] data Manufacturer data.
  */
-void NimBLEAdvertisementData::setManufacturerData(std::string data) {
+void NimBLEAdvertisementData::setManufacturerData(const std::string &data) {
 	NIMBLE_LOGD("NimBLEAdvertisementData", ">> setManufacturerData");
 	char cdata[2];
 	cdata[0] = data.length() + 1;
@@ -496,7 +496,7 @@ void NimBLEAdvertisementData::setManufacturerData(std::string data) {
  * @brief Set the name.
  * @param [in] The complete name of the device.
  */
-void NimBLEAdvertisementData::setName(std::string name) {
+void NimBLEAdvertisementData::setName(const std::string &name) {
 	NIMBLE_LOGD("NimBLEAdvertisementData", ">> setName: %s", name.c_str());
 	char cdata[2];
 	cdata[0] = name.length() + 1;
@@ -510,7 +510,7 @@ void NimBLEAdvertisementData::setName(std::string name) {
  * @brief Set the partial services.
  * @param [in] uuid The single service to advertise.
  */
-void NimBLEAdvertisementData::setPartialServices(NimBLEUUID uuid) {
+void NimBLEAdvertisementData::setPartialServices(const NimBLEUUID &uuid) {
 	char cdata[2];
 	switch (uuid.bitSize()) {
 		case 16: {
@@ -548,7 +548,7 @@ void NimBLEAdvertisementData::setPartialServices(NimBLEUUID uuid) {
  * @param [in] uuid The UUID to set with the service data.  Size of UUID will be used.
  * @param [in] data The data to be associated with the service data advert.
  */
-void NimBLEAdvertisementData::setServiceData(NimBLEUUID uuid, std::string data) {
+void NimBLEAdvertisementData::setServiceData(const NimBLEUUID &uuid, const std::string &data) {
 	char cdata[2];
 	switch (uuid.bitSize()) {
 		case 16: {
@@ -585,7 +585,7 @@ void NimBLEAdvertisementData::setServiceData(NimBLEUUID uuid, std::string data) 
  * @brief Set the short name.
  * @param [in] The short name of the device.
  */
-void NimBLEAdvertisementData::setShortName(std::string name) {
+void NimBLEAdvertisementData::setShortName(const std::string &name) {
 	NIMBLE_LOGD("NimBLEAdvertisementData", ">> setShortName: %s", name.c_str());
 	char cdata[2];
 	cdata[0] = name.length() + 1;

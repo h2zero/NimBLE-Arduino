@@ -55,11 +55,12 @@ public:
     uint16_t    readUInt16();
     uint32_t    readUInt32();
     bool        registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
-    bool        writeValue(uint8_t* data, size_t length, bool response = false);
-    bool        writeValue(std::string newValue, bool response = false);
+    bool        writeValue(const uint8_t* data, size_t length, bool response = false);
+    bool        writeValue(const std::string &newValue, bool response = false);
     bool        writeValue(uint8_t newValue, bool response = false);
     std::string toString();
     uint8_t*    readRawData();
+    size_t      getDataLength();
     NimBLERemoteService* getRemoteService();
 
 private:
@@ -90,7 +91,8 @@ private:
     FreeRTOS::Semaphore     m_semaphoreReadCharEvt      = FreeRTOS::Semaphore("ReadCharEvt");
     FreeRTOS::Semaphore     m_semaphoreWriteCharEvt     = FreeRTOS::Semaphore("WriteCharEvt");
     std::string             m_value;
-    uint8_t*                m_rawData = nullptr;
+    uint8_t*                m_rawData;
+    size_t                  m_dataLen;
     notify_callback         m_notifyCallback;
 
     // We maintain a vector of descriptors owned by this characteristic.

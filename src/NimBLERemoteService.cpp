@@ -76,7 +76,7 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* u
  * @param [in] uuid Characteristic uuid.
  * @return Reference to the characteristic object, or nullptr if not found.
  */
-NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(NimBLEUUID uuid) {
+NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID &uuid) {
     if (m_haveCharacteristics) {
 /*
         std::string v = uuid.toString();
@@ -361,7 +361,7 @@ NimBLEUUID NimBLERemoteService::getUUID() {
  * @param [in] characteristicUuid The characteristic to read.
  * @returns a string containing the value or an empty string if not found or error.
  */
-std::string NimBLERemoteService::getValue(NimBLEUUID characteristicUuid) {
+std::string NimBLERemoteService::getValue(const NimBLEUUID &characteristicUuid) {
     NIMBLE_LOGD(LOG_TAG, ">> readValue: uuid: %s", characteristicUuid.toString().c_str());
     
     std::string ret = "";
@@ -382,7 +382,7 @@ std::string NimBLERemoteService::getValue(NimBLEUUID characteristicUuid) {
  * @param [in] value The value to set.
  * @returns true on success, false if not found or error
  */
-bool NimBLERemoteService::setValue(NimBLEUUID characteristicUuid, std::string value) {
+bool NimBLERemoteService::setValue(const NimBLEUUID &characteristicUuid, const std::string &value) {
     NIMBLE_LOGD(LOG_TAG, ">> setValue: uuid: %s", characteristicUuid.toString().c_str());
     
     bool ret = false;

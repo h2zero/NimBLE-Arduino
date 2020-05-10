@@ -54,7 +54,7 @@ public:
     void setAddressType(uint8_t type);
 
 
-    bool        isAdvertisingService(NimBLEUUID uuid);
+    bool        isAdvertisingService(const NimBLEUUID &uuid);
     bool        haveAppearance();
     bool        haveManufacturerData();
     bool        haveName();

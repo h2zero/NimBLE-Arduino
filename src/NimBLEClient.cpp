@@ -129,7 +129,7 @@ bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices)
  * @param [in] address The address of the partner.
  * @return True on success.
  */
-bool NimBLEClient::connect(NimBLEAddress address, uint8_t type, bool refreshServices) {
+bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refreshServices) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
     
     if(!NimBLEDevice::m_synced) {
@@ -368,7 +368,7 @@ NimBLERemoteService* NimBLEClient::getService(const char* uuid) {
  * @param [in] uuid The UUID of the service being sought.
  * @return A reference to the Service or nullptr if don't know about it.
  */
-NimBLERemoteService* NimBLEClient::getService(NimBLEUUID uuid) {
+NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
     NIMBLE_LOGD(LOG_TAG, ">> getService: uuid: %s", uuid.toString().c_str());
 
     if (!m_haveServices) {
@@ -529,7 +529,7 @@ int NimBLEClient::serviceDiscoveredCB(
  * @param [in] characteristicUUID The characteristic whose value we wish to read.
  * @returns characteristic value or an empty string if not found
  */
-std::string NimBLEClient::getValue(NimBLEUUID serviceUUID, NimBLEUUID characteristicUUID) {
+std::string NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID) {
     NIMBLE_LOGD(LOG_TAG, ">> getValue: serviceUUID: %s, characteristicUUID: %s", serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
     
     std::string ret = "";
@@ -553,7 +553,7 @@ std::string NimBLEClient::getValue(NimBLEUUID serviceUUID, NimBLEUUID characteri
  * @param [in] characteristicUUID The characteristic whose value we wish to write.
  * @returns true if successful otherwise false
  */
-bool NimBLEClient::setValue(NimBLEUUID serviceUUID, NimBLEUUID characteristicUUID, std::string value) {
+bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID, const std::string &value) {
     NIMBLE_LOGD(LOG_TAG, ">> setValue: serviceUUID: %s, characteristicUUID: %s", serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
     
     bool ret = false;
