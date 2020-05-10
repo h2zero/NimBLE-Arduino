@@ -14,9 +14,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEScan.h"
 #include "NimBLEUtils.h"
@@ -329,7 +331,7 @@ void NimBLEScan::stop() {
 
 
 // delete peer device from cache after disconnecting, it is required in case we are connecting to devices with not public address
-void NimBLEScan::erase(NimBLEAddress address) {
+void NimBLEScan::erase(const NimBLEAddress &address) {
     NIMBLE_LOGI(LOG_TAG, "erase device: %s", address.toString().c_str());
     NimBLEAdvertisedDevice *advertisedDevice = m_scanResults.m_advertisedDevicesMap.find(address.toString())->second;
     m_scanResults.m_advertisedDevicesMap.erase(address.toString());
@@ -404,5 +406,5 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
     return dev;
 }
 
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

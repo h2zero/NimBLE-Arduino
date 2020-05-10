@@ -14,9 +14,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEService.h"
 
@@ -35,7 +37,7 @@ NimBLEService* NimBLEServiceMap::getByUUID(const char* uuid) {
  * @param [in] UUID The UUID to look up the service.
  * @return The characteristic.
  */
-NimBLEService* NimBLEServiceMap::getByUUID(NimBLEUUID uuid, uint8_t inst_id) {
+NimBLEService* NimBLEServiceMap::getByUUID(const NimBLEUUID &uuid, uint8_t inst_id) {
 	for (auto &myPair : m_uuidMap) {
 		if (myPair.first->getUUID().equals(uuid)) {
 			return myPair.first;
@@ -63,7 +65,7 @@ NimBLEService* NimBLEServiceMap::getByHandle(uint16_t handle) {
  * @param [in] characteristic The service to cache.
  * @return N/A.
  */
-void NimBLEServiceMap::setByUUID(NimBLEUUID uuid, NimBLEService* service) {
+void NimBLEServiceMap::setByUUID(const NimBLEUUID &uuid, NimBLEService* service) {
 	m_uuidMap.insert(std::pair<NimBLEService*, std::string>(service, uuid.toString()));
 } // setByUUID
 
@@ -138,5 +140,5 @@ int NimBLEServiceMap::getRegisteredServiceCount(){
     return m_uuidMap.size();
 }
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

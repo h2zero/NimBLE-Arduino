@@ -17,9 +17,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEAddress.h"
 #include "NimBLEAdvertisedDevice.h"
@@ -38,15 +40,15 @@ class NimBLEAdvertisedDevice;
 class NimBLEClient {
 public:
     bool                                       connect(NimBLEAdvertisedDevice* device, bool refreshServices = true);
-    bool                                       connect(NimBLEAddress address, uint8_t type = BLE_ADDR_PUBLIC, bool refreshServices = true);   // Connect to the remote BLE Server
+    bool                                       connect(const NimBLEAddress &address, uint8_t type = BLE_ADDR_PUBLIC, bool refreshServices = true);   // Connect to the remote BLE Server
     int                                        disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);                  // Disconnect from the remote BLE Server
     NimBLEAddress                              getPeerAddress();              // Get the address of the remote BLE Server
     int                                        getRssi();                     // Get the RSSI of the remote BLE Server
     std::map<std::string, NimBLERemoteService*>*  getServices();                 // Get a map of the services offered by the remote BLE Server
     NimBLERemoteService*                          getService(const char* uuid);  // Get a reference to a specified service offered by the remote BLE server.
-    NimBLERemoteService*                          getService(NimBLEUUID uuid);   // Get a reference to a specified service offered by the remote BLE server.
-    std::string                                getValue(NimBLEUUID serviceUUID, NimBLEUUID characteristicUUID);   // Get the value of a given characteristic at a given service.
-    bool                                       setValue(NimBLEUUID serviceUUID, NimBLEUUID characteristicUUID, std::string value);   // Set the value of a given characteristic at a given service.
+    NimBLERemoteService*                          getService(const NimBLEUUID &uuid);   // Get a reference to a specified service offered by the remote BLE server.
+    std::string                                getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);   // Get the value of a given characteristic at a given service.
+    bool                                       setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID, const std::string &value);   // Set the value of a given characteristic at a given service.
     bool                                       isConnected();                 // Return true if we are connected.
     void                                       setClientCallbacks(NimBLEClientCallbacks *pClientCallbacks, bool deleteCallbacks = true);
     std::string                                toString();                    // Return a string representation of this client.
@@ -113,6 +115,6 @@ public:
     virtual bool onConfirmPIN(uint32_t pin);
 };
 
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL
 #endif // CONFIG_BT_ENABLED
 #endif /* MAIN_NIMBLECLIENT_H_ */

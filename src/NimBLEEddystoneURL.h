@@ -33,10 +33,10 @@ public:
 	int8_t	  getPower();
 	std::string getURL();
 	std::string getDecodedURL();
-	void		setData(std::string data);
-	void		setUUID(NimBLEUUID l_uuid);
+	void		setData(const std::string &data);
+	void		setUUID(const NimBLEUUID &l_uuid);
 	void		setPower(int8_t advertisedTxPower);
-	void		setURL(std::string url);
+	void		setURL(const std::string &url);
 
 private:
 	uint16_t beaconUUID;

@@ -16,9 +16,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEAdvertisedDevice.h"
 #include "FreeRTOS.h"
@@ -66,7 +68,7 @@ public:
     void                stop();
     void                clearResults();
     NimBLEScanResults   getResults();
-    void                erase(NimBLEAddress address);
+    void                erase(const NimBLEAddress &address);
     
     
 private:
@@ -86,6 +88,6 @@ private:
     uint32_t                            m_duration;
 };
 
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLE_SCAN_H_ */

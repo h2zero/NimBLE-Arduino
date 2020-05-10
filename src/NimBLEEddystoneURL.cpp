@@ -125,7 +125,7 @@ std::string NimBLEEddystoneURL::getDecodedURL() {
 /**
  * Set the raw data for the beacon record.
  */
-void NimBLEEddystoneURL::setData(std::string data) {
+void NimBLEEddystoneURL::setData(const std::string &data) {
 	if (data.length() > sizeof(m_eddystoneData)) {
 		NIMBLE_LOGE(LOG_TAG, "Unable to set the data ... length passed in was %d and max expected %d",
                                                     data.length(), sizeof(m_eddystoneData));
@@ -136,7 +136,7 @@ void NimBLEEddystoneURL::setData(std::string data) {
 	lengthURL = data.length() - (sizeof(m_eddystoneData) - sizeof(m_eddystoneData.url));
 } // setData
 
-void NimBLEEddystoneURL::setUUID(NimBLEUUID l_uuid) {
+void NimBLEEddystoneURL::setUUID(const NimBLEUUID &l_uuid) {
 	beaconUUID = l_uuid.getNative()->u16.value;
 } // setUUID
 
@@ -144,7 +144,7 @@ void NimBLEEddystoneURL::setPower(int8_t advertisedTxPower) {
 	m_eddystoneData.advertisedTxPower = advertisedTxPower;
 } // setPower
 
-void NimBLEEddystoneURL::setURL(std::string url) {
+void NimBLEEddystoneURL::setURL(const std::string &url) {
   if (url.length() > sizeof(m_eddystoneData.url)) {
 	NIMBLE_LOGE(LOG_TAG, "Unable to set the url ... length passed in was %d and max expected %d", 
                                                     url.length(), sizeof(m_eddystoneData.url));

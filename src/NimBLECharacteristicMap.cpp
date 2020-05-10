@@ -12,9 +12,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEService.h"
 #include "NimBLELog.h"
@@ -45,7 +47,7 @@ NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const char* uuid) {
  * @param [in] UUID The UUID to look up the characteristic.
  * @return The characteristic.
  */
-NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(NimBLEUUID uuid) {
+NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const NimBLEUUID &uuid) {
 	for (auto &myPair : m_uuidMap) {
 		if (myPair.first->getUUID().equals(uuid)) {
 			return myPair.first;
@@ -104,7 +106,7 @@ void NimBLECharacteristicMap::setByHandle(uint16_t handle, NimBLECharacteristic*
  * @param [in] characteristic The characteristic to cache.
  * @return N/A.
  */
-void NimBLECharacteristicMap::setByUUID(NimBLECharacteristic* pCharacteristic, NimBLEUUID uuid) {
+void NimBLECharacteristicMap::setByUUID(NimBLECharacteristic* pCharacteristic, const NimBLEUUID &uuid) {
 	m_uuidMap.insert(std::pair<NimBLECharacteristic*, std::string>(pCharacteristic, uuid.toString()));
 } // setByUUID
 
@@ -129,5 +131,5 @@ std::string NimBLECharacteristicMap::toString() {
 } // toString
 
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

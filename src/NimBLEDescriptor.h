@@ -17,9 +17,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLECharacteristic.h"
 #include "NimBLEUUID.h"
@@ -54,8 +56,8 @@ public:
 	uint8_t* getValue();                                    // Get a pointer to the value of the descriptor.
 //	void setAccessPermissions(uint8_t perm);	      // Set the permissions of the descriptor.
 	void setCallbacks(NimBLEDescriptorCallbacks* pCallbacks);  // Set callbacks to be invoked for the descriptor.
-	void setValue(uint8_t* data, size_t size);              // Set the value of the descriptor as a pointer to data.
-	void setValue(std::string value);                       // Set the value of the descriptor as a data buffer.
+	void setValue(const uint8_t* data, size_t size);              // Set the value of the descriptor as a pointer to data.
+	void setValue(const std::string &value);                       // Set the value of the descriptor as a data buffer.
 
 	std::string toString();                                 // Convert the descriptor to a string representation.
 
@@ -102,6 +104,6 @@ public:
 	virtual void onWrite(NimBLEDescriptor* pDescriptor);
 };
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_NIMBLEDESCRIPTOR_H_ */

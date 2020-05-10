@@ -19,9 +19,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLE2904.h"
 
@@ -87,5 +89,5 @@ void NimBLE2904::setUnit(uint16_t unit) {
 	setValue((uint8_t*) &m_data, sizeof(m_data));
 } // setUnit
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif

@@ -15,9 +15,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEServer.h"
 #include "NimBLE2902.h"
@@ -66,7 +68,7 @@ NimBLEService* NimBLEServer::createService(const char* uuid) {
  * @param [in] inst_id With multiple services with the same UUID we need to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
-NimBLEService* NimBLEServer::createService(NimBLEUUID uuid, uint32_t numHandles, uint8_t inst_id) {
+NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numHandles, uint8_t inst_id) {
 	NIMBLE_LOGD(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
 
 	// Check that a service with the supplied UUID does not already exist.
@@ -99,7 +101,7 @@ NimBLEService* NimBLEServer::getServiceByUUID(const char* uuid) {
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the service object.
  */
-NimBLEService* NimBLEServer::getServiceByUUID(NimBLEUUID uuid) {
+NimBLEService* NimBLEServer::getServiceByUUID(const NimBLEUUID &uuid) {
 	return m_serviceMap.getByUUID(uuid);
 }
 
@@ -610,5 +612,5 @@ void NimBLEServer::onHostReset() {
 }
 */
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif // CONFIG_BT_ENABLED

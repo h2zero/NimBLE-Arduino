@@ -17,9 +17,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "host/ble_gap.h"
 /****  FIX COMPILATION ****/
@@ -51,14 +53,14 @@ class NimBLEAdvertisementData {
 	//
 public:
 	void setAppearance(uint16_t appearance);
-	void setCompleteServices(NimBLEUUID uuid);
+	void setCompleteServices(const NimBLEUUID &uuid);
 	void setFlags(uint8_t);
-	void setManufacturerData(std::string data);
-	void setName(std::string name);
-	void setPartialServices(NimBLEUUID uuid);
-	void setServiceData(NimBLEUUID uuid, std::string data);
-	void setShortName(std::string name);
-	void addData(std::string data);  // Add data to the payload.
+	void setManufacturerData(const std::string &data);
+	void setName(const std::string &name);
+	void setPartialServices(const NimBLEUUID &uuid);
+	void setServiceData(const NimBLEUUID &uuid, const std::string &data);
+	void setShortName(const std::string &name);
+	void addData(const std::string &data);  // Add data to the payload.
 	std::string getPayload();               // Retrieve the current advert payload.
 
 private:
@@ -75,7 +77,7 @@ private:
 class NimBLEAdvertising {
 public:
 	NimBLEAdvertising();
-	void addServiceUUID(NimBLEUUID serviceUUID);
+	void addServiceUUID(const NimBLEUUID &serviceUUID);
 	void addServiceUUID(const char* serviceUUID);
 	void start();
 	void stop();
@@ -108,6 +110,6 @@ private:
 
 };
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_BLEADVERTISING_H_ */

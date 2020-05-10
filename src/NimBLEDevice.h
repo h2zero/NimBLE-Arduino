@@ -17,20 +17,22 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #include "NimBLEScan.h"
 #endif
 
 #include "NimBLEUtils.h"
 #include "NimBLESecurity.h"
 
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #include "NimBLEClient.h"
 #endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #include "NimBLEServer.h"
 #endif
 
@@ -87,19 +89,19 @@ extern "C" void ble_store_config_init(void);
 
 class NimBLEDevice {
 public:
-    static void             init(std::string deviceName);   // Initialize the local BLE environment.
+    static void             init(const std::string &deviceName);   // Initialize the local BLE environment.
     static void             deinit();
     static bool             getInitialized();
     static NimBLEAddress    getAddress();
     static std::string      toString();
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     static NimBLEScan*      getScan();                     // Get the scan object
     static NimBLEClient*    createClient();
 #endif
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     static NimBLEServer*    createServer();
 #endif
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     static bool             deleteClient(NimBLEClient* pClient);
 #endif
     static void             setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
@@ -115,30 +117,31 @@ public:
     static void             setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);
     static int              setMTU(uint16_t mtu);
     static uint16_t         getMTU();
-    static bool             isIgnored(NimBLEAddress address);
-    static void             addIgnored(NimBLEAddress address);
-    static void             removeIgnored(NimBLEAddress address);
-
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+    static bool             isIgnored(const NimBLEAddress &address);
+    static void             addIgnored(const NimBLEAddress &address);
+    static void             removeIgnored(const NimBLEAddress &address);
+#endif
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     static NimBLEAdvertising* getAdvertising();
     static void		    startAdvertising();
     static void		    stopAdvertising();
 #endif
 
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     static NimBLEClient*    getClientByID(uint16_t conn_id);
-    static NimBLEClient*    getClientByPeerAddress(NimBLEAddress peer_addr);
+    static NimBLEClient*    getClientByPeerAddress(const NimBLEAddress &peer_addr);
     static NimBLEClient*    getDisconnectedClient();
     static size_t           getClientListSize(); 
     static std::list<NimBLEClient*>* getClientList(); 
 #endif
         
 private:
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     friend class NimBLEClient;
     friend class NimBLEScan;
 #endif
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     friend class NimBLEServer;
     friend class NimBLEAdvertising;
     friend class NimBLECharacteristic;
@@ -150,18 +153,18 @@ private:
     static int         startSecurity(   uint16_t conn_id);
     
     static bool                       m_synced;
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     static NimBLEScan*                m_pScan;
 #endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     static NimBLEServer*              m_pServer;
     static NimBLEAdvertising*         m_bleAdvertising;
 #endif
 
     static ble_gap_event_listener     m_listener;
     static uint32_t                   m_passkey;
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     static std::list <NimBLEClient*>  m_cList;
 #endif
     static std::list <NimBLEAddress>  m_ignoreList;

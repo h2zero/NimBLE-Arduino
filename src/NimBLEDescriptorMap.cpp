@@ -14,9 +14,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLECharacteristic.h"
 #include "NimBLEDescriptor.h"
@@ -37,7 +39,7 @@ NimBLEDescriptor* NimBLEDescriptorMap::getByUUID(const char* uuid) {
  * @param [in] UUID The UUID to look up the descriptor.
  * @return The descriptor.  If not present, then nullptr is returned.
  */
-NimBLEDescriptor* NimBLEDescriptorMap::getByUUID(NimBLEUUID uuid) {
+NimBLEDescriptor* NimBLEDescriptorMap::getByUUID(const NimBLEUUID &uuid) {
 	for (auto &myPair : m_uuidMap) {
 		if (myPair.first->getUUID().equals(uuid)) {
 			return myPair.first;
@@ -76,7 +78,7 @@ void NimBLEDescriptorMap::setByUUID(const char* uuid, NimBLEDescriptor* pDescrip
  * @param [in] characteristic The descriptor to cache.
  * @return N/A.
  */
-void NimBLEDescriptorMap::setByUUID(NimBLEUUID uuid, NimBLEDescriptor* pDescriptor) {
+void NimBLEDescriptorMap::setByUUID(const NimBLEUUID &uuid, NimBLEDescriptor* pDescriptor) {
 	m_uuidMap.insert(std::pair<NimBLEDescriptor*, std::string>(pDescriptor, uuid.toString()));
 } // setByUUID
 
@@ -146,5 +148,5 @@ NimBLEDescriptor* NimBLEDescriptorMap::getNext() {
 	return pRet;
 } // getNext
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

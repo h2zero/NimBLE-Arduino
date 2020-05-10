@@ -14,7 +14,9 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
 #include "NimBLEDevice.h"
 #include "NimBLEUtils.h"
@@ -42,21 +44,21 @@ static const char* LOG_TAG = "NimBLEDevice";
  * Singletons for the NimBLEDevice.
  */
 bool            initialized = false;
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 NimBLEScan*     NimBLEDevice::m_pScan = nullptr;
 #endif
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 NimBLEServer*   NimBLEDevice::m_pServer = nullptr;
 #endif
 uint32_t        NimBLEDevice::m_passkey = 123456;
 bool            NimBLEDevice::m_synced = false;
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 NimBLEAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
 #endif
 
 gap_event_handler           NimBLEDevice::m_customGapHandler = nullptr;
 ble_gap_event_listener      NimBLEDevice::m_listener;
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 std::list <NimBLEClient*>   NimBLEDevice::m_cList;
 #endif
 std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
@@ -72,7 +74,7 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
  * @brief Create a new instance of a server.
  * @return A new instance of the server.
  */
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 /* STATIC */ NimBLEServer* NimBLEDevice::createServer() {
 /*#ifndef CONFIG_GATTS_ENABLE  // Check that BLE GATTS is enabled in make menuconfig
     NIMBLE_LOGE(LOG_TAG, "BLE GATTS is not enabled - CONFIG_GATTS_ENABLE not defined");
@@ -88,27 +90,27 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 
     return m_pServer;
 } // createServer
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 NimBLEAdvertising* NimBLEDevice::getAdvertising() {
 	if(m_bleAdvertising == nullptr) {
 		m_bleAdvertising = new NimBLEAdvertising();
 	}
 	return m_bleAdvertising; 
 }
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 void NimBLEDevice::startAdvertising() {
 	getAdvertising()->start();
 } // startAdvertising
 #endif
 
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 void NimBLEDevice::stopAdvertising() {
     getAdvertising()->stop();
 } // stopAdvertising
@@ -120,21 +122,21 @@ void NimBLEDevice::stopAdvertising() {
  * @return The scanning object reference.  This is a singleton object.  The caller should not
  * try and release/delete it.
  */
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */ NimBLEScan* NimBLEDevice::getScan() {
     if (m_pScan == nullptr) {
         m_pScan = new NimBLEScan();
     }
     return m_pScan;
 } // getScan
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 /**
  * @brief Creates a new client object and maintains a list of all client objects
  * each client can connect to 1 peripheral device. 
  * @return A reference to the new client object.
  */
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */ NimBLEClient* NimBLEDevice::createClient() {
     if(m_cList.size() >= NIMBLE_MAX_CONNECTIONS) {
         NIMBLE_LOGW("Number of clients exceeds Max connections. Max=(%d)", 
@@ -146,7 +148,7 @@ void NimBLEDevice::stopAdvertising() {
 
     return pClient;
 } // createClient
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
@@ -154,7 +156,7 @@ void NimBLEDevice::stopAdvertising() {
  * Check if it is connected or trying to connect and close/stop it first.
  * @param [in] Pointer to the client object.
  */
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */ bool NimBLEDevice::deleteClient(NimBLEClient* pClient) {
     if(pClient == nullptr) {
         return false;
@@ -183,29 +185,29 @@ void NimBLEDevice::stopAdvertising() {
     
     return true;
 } // deleteClient
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
  * @brief get the list of clients.
  * @return a pointer to the list of clients.
  */
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */std::list<NimBLEClient*>* NimBLEDevice::getClientList() {
     return &m_cList;
 } // getClientList
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
  * @brief get the size of the list of clients.
  * @return a pointer to the list of clients.
  */
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */size_t NimBLEDevice::getClientListSize() {
     return m_cList.size();
 } // getClientList
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
@@ -213,7 +215,7 @@ void NimBLEDevice::stopAdvertising() {
  * @param [in] The client connection ID to search for.
  * @return A reference pointer to the client with the spcified connection ID.
  */
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */NimBLEClient* NimBLEDevice::getClientByID(uint16_t conn_id) {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         if((*it)->getConnId() == conn_id) {
@@ -223,7 +225,7 @@ void NimBLEDevice::stopAdvertising() {
     assert(0);
     return nullptr;
 } // getClientByID
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
@@ -231,8 +233,8 @@ void NimBLEDevice::stopAdvertising() {
  * @param [in] a NimBLEAddress of the peer to search for.
  * @return A reference pointer to the client with the peer address.
  */
-#if defined(NIMBLE_INCLUDE_CLIENT)
-/* STATIC */NimBLEClient* NimBLEDevice::getClientByPeerAddress(NimBLEAddress peer_addr) {
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+/* STATIC */NimBLEClient* NimBLEDevice::getClientByPeerAddress(const NimBLEAddress &peer_addr) {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         if((*it)->getPeerAddress().equals(peer_addr)) {
             return (*it);
@@ -240,14 +242,14 @@ void NimBLEDevice::stopAdvertising() {
     }
     return nullptr;
 } // getClientPeerAddress
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
  * @brief Finds the first disconnected client in the list.
  * @return A reference pointer to the first client that is not connected to a peer.
  */
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */NimBLEClient* NimBLEDevice::getDisconnectedClient() {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         if(!(*it)->isConnected()) {
@@ -256,7 +258,7 @@ void NimBLEDevice::stopAdvertising() {
     }
     return nullptr;
 } // getDisconnectedClient
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
@@ -373,7 +375,7 @@ void NimBLEDevice::stopAdvertising() {
     
     m_synced = false;
 
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     if(m_pScan != nullptr) {
         m_pScan->onHostReset();
     }
@@ -389,7 +391,7 @@ void NimBLEDevice::stopAdvertising() {
     }
 */
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     if(m_bleAdvertising != nullptr) {
         m_bleAdvertising->onHostReset();
     }
@@ -419,14 +421,14 @@ void NimBLEDevice::stopAdvertising() {
     m_synced = true;
     
     if(initialized) {
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
         if(m_pScan != nullptr) {
             // Restart scanning with the last values sent, allow to clear results.
             m_pScan->start(m_pScan->m_duration, m_pScan->m_scanCompleteCB);
         }
 #endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
         if(m_bleAdvertising != nullptr) {
             // Restart advertisng, parameters should already be set.
             m_bleAdvertising->start();
@@ -453,7 +455,7 @@ void NimBLEDevice::stopAdvertising() {
  * @brief Initialize the %BLE environment.
  * @param deviceName The device name of the device.
  */
-/* STATIC */ void NimBLEDevice::init(std::string deviceName) {
+/* STATIC */ void NimBLEDevice::init(const std::string &deviceName) {
     if(!initialized){
         int rc=0;
         esp_err_t errRc = ESP_OK;
@@ -655,7 +657,8 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @brief Check if the device address is on our ignore list.
  * @return True if ignoring.
  */
-/*STATIC*/ bool NimBLEDevice::isIgnored(NimBLEAddress address) {
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+/*STATIC*/ bool NimBLEDevice::isIgnored(const NimBLEAddress &address) {
     for(auto &it : m_ignoreList) {
         if(it.equals(address)){
             return true;
@@ -664,22 +667,26 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
 
     return false;
 }
+#endif
 
 
 /**
  * @brief Add a device to the ignore list.
  * @param Address of the device we want to ignore.
  */
-/*STATIC*/ void NimBLEDevice::addIgnored(NimBLEAddress address) {
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+/*STATIC*/ void NimBLEDevice::addIgnored(const NimBLEAddress &address) {
     m_ignoreList.push_back(address);
 }
+#endif
 
 
 /**
  * @brief Remove a device from the ignore list.
  * @param Address of the device we want to remove from the list.
  */
-/*STATIC*/void  NimBLEDevice::removeIgnored(NimBLEAddress address) {
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+/*STATIC*/void  NimBLEDevice::removeIgnored(const NimBLEAddress &address) {
     for(auto it = m_ignoreList.begin(); it != m_ignoreList.end(); ++it) {
         if((*it).equals(address)){
             m_ignoreList.erase(it);
@@ -687,6 +694,7 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
         }
     }
 }
+#endif
 
 
 /**

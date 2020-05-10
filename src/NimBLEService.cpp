@@ -17,9 +17,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEService.h"
 #include "NimBLEUtils.h"
@@ -47,7 +49,7 @@ NimBLEService::NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer
  * @param [in] uuid The UUID of the service.
  * @param [in] numHandles The maximum number of handles associated with the service.
  */
-NimBLEService::NimBLEService(NimBLEUUID uuid, uint16_t numHandles, NimBLEServer* pServer) {
+NimBLEService::NimBLEService(const NimBLEUUID &uuid, uint16_t numHandles, NimBLEServer* pServer) {
 	m_uuid      = uuid;
 	m_handle    = NULL_HANDLE;
 	m_pServer   = pServer;
@@ -251,7 +253,7 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint
  * @param [in] properties - The properties of the characteristic.
  * @return The new BLE characteristic.
  */
-NimBLECharacteristic* NimBLEService::createCharacteristic(NimBLEUUID uuid, uint32_t properties) {
+NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid, uint32_t properties) {
 	NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, this);
 	addCharacteristic(pCharacteristic);
     //pCharacteristic->executeCreate(this);
@@ -264,7 +266,7 @@ NimBLECharacteristic* NimBLEService::getCharacteristic(const char* uuid) {
 }
 
 
-NimBLECharacteristic* NimBLEService::getCharacteristic(NimBLEUUID uuid) {
+NimBLECharacteristic* NimBLEService::getCharacteristic(const NimBLEUUID &uuid) {
 	return m_characteristicMap.getByUUID(uuid);
 }
 
@@ -294,5 +296,5 @@ NimBLEServer* NimBLEService::getServer() {
 	return m_pServer;
 } // getServer
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif // CONFIG_BT_ENABLED

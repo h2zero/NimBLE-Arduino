@@ -14,9 +14,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_SERVER)
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
@@ -191,7 +193,7 @@ void NimBLEDescriptor::setHandle(uint16_t handle) {
  * @param [in] data The data to set for the descriptor.
  * @param [in] length The length of the data in bytes.
  */
-void NimBLEDescriptor::setValue(uint8_t* data, size_t length) {
+void NimBLEDescriptor::setValue(const uint8_t* data, size_t length) {
 	if (length > BLE_ATT_ATTR_MAX_LEN) {
 		NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, BLE_ATT_ATTR_MAX_LEN);
 		return;
@@ -205,7 +207,7 @@ void NimBLEDescriptor::setValue(uint8_t* data, size_t length) {
  * @brief Set the value of the descriptor.
  * @param [in] value The value of the descriptor in string form.
  */
-void NimBLEDescriptor::setValue(std::string value) {
+void NimBLEDescriptor::setValue(const std::string &value) {
 	setValue((uint8_t*) value.data(), value.length());
 } // setValue
 
@@ -248,5 +250,5 @@ void NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor) {
 	NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onWrite: default");
 } // onWrite
 
-#endif // #if defined(NIMBLE_INCLUDE_SERVER)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

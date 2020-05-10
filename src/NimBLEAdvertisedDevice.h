@@ -17,9 +17,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "NimBLEConfig.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
 
-#if defined(NIMBLE_INCLUDE_CLIENT)
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEAddress.h"
 #include "NimBLEScan.h"
@@ -58,7 +60,7 @@ public:
     void setAddressType(uint8_t type);
 
 
-    bool        isAdvertisingService(NimBLEUUID uuid);
+    bool        isAdvertisingService(const NimBLEUUID &uuid);
     bool        haveAppearance();
     bool        haveManufacturerData();
     bool        haveName();
@@ -133,6 +135,6 @@ public:
     virtual void onResult(NimBLEAdvertisedDevice* advertisedDevice) = 0;
 };
 
-#endif // #if defined(NIMBLE_INCLUDE_CLIENT)
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLEADVERTISEDDEVICE_H_ */
