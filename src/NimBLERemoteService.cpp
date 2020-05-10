@@ -77,6 +77,13 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* u
  * @return Reference to the characteristic object, or nullptr if not found.
  */
 NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID &uuid) {
+    if(!m_haveCharacteristics) { // No characteristics yet, so retrieve the one for uuid
+        if(retrieveCharacteristic(uuid)) { // Found, so the wanted characteristic is the first in the vector
+            return m_characteristicVector[0];
+        } else {
+            return nullptr;
+        }
+    }
     if (m_haveCharacteristics) {
 /*
         std::string v = uuid.toString();
@@ -91,6 +98,13 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEU
                 return it;
             }
         }
+        // At this point the characteristic is not found in the vector, so try to retrieve it
+        if(retrieveCharacteristic(uuid)) { // Found, so the wanted characteristic is the last in the vector
+            return m_characteristicVector[m_characteristicVector.size()- 1];
+        } else {
+            return nullptr;
+        }
+
     }
 
     return nullptr;
@@ -124,9 +138,10 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
             auto it = service->m_characteristicVector.begin();
             for(; it != service->m_characteristicVector.end(); ++it) {
                 if((*it)->getUUID() == pRemoteCharacteristic->getUUID()) { // This characteristic was found earlier, so delete it
-                    NIMBLE_LOGD(LOG_TAG,"Characteristic %s found earlier, replacing", std::string(it->uuid).c_str());
-                    delete *it;
-                    *it = pRemoteCharacteristic;
+                    NIMBLE_LOGD(LOG_TAG,"Characteristic %s already found", std::string((*it)->getUUID()).c_str());
+//                    delete *it;
+//                    *it = pRemoteCharacteristic;
+                    delete pRemoteCharacteristic;
                     break;
                 }
             }
@@ -273,7 +288,7 @@ bool NimBLERemoteService::retrieveCharacteristic(const NimBLEUUID &uuid) {
     rc = ble_gattc_disc_chrs_by_uuid(m_pClient->getConnId(),
                                      m_startHandle,
                                      m_endHandle,
-                                     uuid.getNative()->u,
+                                     &uuid.getNative()->u,
                                      NimBLERemoteService::characteristicDiscCB,
                                      this);
     if (rc != 0) {
@@ -288,11 +303,11 @@ bool NimBLERemoteService::retrieveCharacteristic(const NimBLEUUID &uuid) {
     if(success){
         NIMBLE_LOGD(LOG_TAG, "Found UUID: %s", std::string(uuid).c_str());
         
-        NIMBLE_LOGD(LOG_TAG, "<< retrieveCharacteristics()");
+        NIMBLE_LOGD(LOG_TAG, "<< retrieveCharacteristic(%s)", std::string(uuid).c_str());
         return true;
     }
     
-    NIMBLE_LOGE(LOG_TAG, "Could not retrieve characteristics");
+    NIMBLE_LOGE(LOG_TAG, "Could not retrieve characteristic(%s)", std::string(uuid).c_str());
     return false;
     
 } // retrieveCharacteristics

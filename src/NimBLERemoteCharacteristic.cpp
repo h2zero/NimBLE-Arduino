@@ -110,7 +110,8 @@ bool NimBLERemoteCharacteristic::canNotify() {
  * @brief Does the characteristic support reading?
  * @return True if the characteristic supports reading.
  */
-bool NimBLERemoteCharacteristic::canRead() {
+//bool NimBLERemoteCharacteristic::canRead() {
+bool NimBLERemoteCharacteristic::canRead() const {
     return (m_charProp & BLE_GATT_CHR_PROP_READ) != 0;
 } // canRead
 
@@ -216,7 +217,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
 
 
 /**
- * @brief Retrieve the map of descriptors keyed by UUID.
+ * @brief Retrieve the vector of descriptors keyed by UUID.
  */ 
 std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors() {
     return &m_descriptorVector;
