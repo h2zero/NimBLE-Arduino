@@ -612,7 +612,6 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
  * @return uint8_t pointer to the data read.
  */
 const uint8_t* NimBLERemoteCharacteristic::readRawData() {
-//    return reinterpret_cast<const uint8_t*>(readValue().c_str());
     return (const uint8_t *)readValue().data();
 }
 
