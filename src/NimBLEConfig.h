@@ -1,4 +1,0 @@
-#pragma once
-
-#define NIMBLE_INCLUDE_SERVER
-#define NIMBLE_INCLUDE_CLIENT
