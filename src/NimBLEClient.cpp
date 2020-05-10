@@ -46,22 +46,24 @@ static NimBLEClientCallbacks defaultCallbacks;
  *
  */
 
-NimBLEClient::NimBLEClient()
+NimBLEClient::NimBLEClient(bool preDiscover)
 {
     m_pClientCallbacks = &defaultCallbacks;
     m_conn_id          = BLE_HS_CONN_HANDLE_NONE;
     m_haveServices     = false;
     m_isConnected      = false;
-	m_connectTimeout   = 30000;
+    m_connectTimeout   = 30000;
     
-	m_pConnParams.scan_itvl = 16;          // Scan interval in 0.625ms units (NimBLE Default)
+    m_pConnParams.scan_itvl = 16;          // Scan interval in 0.625ms units (NimBLE Default)
     m_pConnParams.scan_window = 16;        // Scan window in 0.625ms units (NimBLE Default)
-	m_pConnParams.itvl_min = BLE_GAP_INITIAL_CONN_ITVL_MIN;  // min_int = 0x10*1.25ms = 20ms
-	m_pConnParams.itvl_max = BLE_GAP_INITIAL_CONN_ITVL_MAX;  // max_int = 0x20*1.25ms = 40ms
-	m_pConnParams.latency  = BLE_GAP_INITIAL_CONN_LATENCY;      // number of packets allowed to skip (extends max interval)
-	m_pConnParams.supervision_timeout = BLE_GAP_INITIAL_SUPERVISION_TIMEOUT; // timeout = 400*10ms = 4000ms
+    m_pConnParams.itvl_min = BLE_GAP_INITIAL_CONN_ITVL_MIN;  // min_int = 0x10*1.25ms = 20ms
+    m_pConnParams.itvl_max = BLE_GAP_INITIAL_CONN_ITVL_MAX;  // max_int = 0x20*1.25ms = 40ms
+    m_pConnParams.latency  = BLE_GAP_INITIAL_CONN_LATENCY;      // number of packets allowed to skip (extends max interval)
+    m_pConnParams.supervision_timeout = BLE_GAP_INITIAL_SUPERVISION_TIMEOUT; // timeout = 400*10ms = 4000ms
     m_pConnParams.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN; // Minimum length of connection event in 0.625ms units
-	m_pConnParams.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN; // Maximum length of connection event in 0.625ms units
+    m_pConnParams.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN; // Maximum length of connection event in 0.625ms units
+
+    m_preDiscover = preDiscover;
 } // NimBLEClient
 
 
@@ -450,10 +452,12 @@ bool NimBLEClient::retrieveServices() {
             }
         }
 */
-        for (auto &it: m_servicesVector) {
-            if(!m_isConnected || !it->retrieveCharacteristics()) {
-                NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve characteristics -aborting");
-                return false;
+        if(m_preDiscover) {
+            for (auto &it: m_servicesVector) {
+                if(!m_isConnected || !it->retrieveCharacteristics()) {
+                    NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve characteristics -aborting");
+                    return false;
+                }
             }
         }
         

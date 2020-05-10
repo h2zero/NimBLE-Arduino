@@ -115,13 +115,13 @@ void NimBLEDevice::stopAdvertising() {
  * each client can connect to 1 peripheral device. 
  * @return A reference to the new client object.
  */
-/* STATIC */ NimBLEClient* NimBLEDevice::createClient() {
+/* STATIC */ NimBLEClient* NimBLEDevice::createClient(bool preDiscover) {
     if(m_cList.size() >= NIMBLE_MAX_CONNECTIONS) {
         NIMBLE_LOGW("Number of clients exceeds Max connections. Max=(%d)", 
                                             NIMBLE_MAX_CONNECTIONS);
     }
     
-    NimBLEClient* pClient = new NimBLEClient();
+    NimBLEClient* pClient = new NimBLEClient(preDiscover);
     m_cList.push_back(pClient);
 
     return pClient;

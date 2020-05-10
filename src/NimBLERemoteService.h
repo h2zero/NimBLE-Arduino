@@ -61,6 +61,7 @@ private:
 
     // Private methods
     bool                retrieveCharacteristics(void);   // Retrieve the characteristics from the BLE Server.
+    bool                retrieveCharacteristic(const NimBLEUUID &uuid);   // Retrieve only one characteristic from the BLE Server.
     static int          characteristicDiscCB(uint16_t conn_handle, 
                                 const struct ble_gatt_error *error,
                                 const struct ble_gatt_chr *chr, void *arg);

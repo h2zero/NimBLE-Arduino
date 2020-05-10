@@ -62,7 +62,7 @@ public:
  
                                               
 private:
-    NimBLEClient();
+    NimBLEClient(bool preDiscover);
     ~NimBLEClient();
     friend class NimBLEDevice;
     friend class NimBLERemoteService;
@@ -77,10 +77,11 @@ private:
     uint16_t         m_conn_id;
     bool             m_haveServices = false;    // Have we previously obtain the set of services from the remote server.
     bool             m_isConnected = false;     // Are we currently connected.
-    bool             m_waitingToConnect =false;
+    bool             m_waitingToConnect = false;
     bool             m_deleteCallbacks = true;
-	int32_t			 m_connectTimeout;
+    int32_t          m_connectTimeout;
     //uint16_t         m_mtu = 23;
+    bool             m_preDiscover;
 
     NimBLEClientCallbacks*  m_pClientCallbacks = nullptr;
 

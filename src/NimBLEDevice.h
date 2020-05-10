@@ -82,11 +82,11 @@ public:
     static NimBLEAddress    getAddress();
     static std::string      toString();
     static NimBLEScan*      getScan();                     // Get the scan object
-    static NimBLEClient*    createClient();
-	static NimBLEServer*    createServer();
+    static NimBLEClient*    createClient(bool preDiscover = true);
+    static NimBLEServer*    createServer();
     static bool             deleteClient(NimBLEClient* pClient);
     static void             setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
-	static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
+    static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
     static void             setCustomGapHandler(gap_event_handler handler);
     static void             setSecurityAuth(bool bonding, bool mitm, bool sc);
     static void             setSecurityAuth(uint8_t auth_req);
@@ -102,8 +102,8 @@ public:
     static void             addIgnored(NimBLEAddress address);
     static void             removeIgnored(NimBLEAddress address);
     static NimBLEAdvertising* getAdvertising();
-	static void		   		startAdvertising();
-	static void		   		stopAdvertising();
+    static void		    startAdvertising();
+    static void		    stopAdvertising();
     static NimBLEClient*    getClientByID(uint16_t conn_id);
     static NimBLEClient*    getClientByPeerAddress(NimBLEAddress peer_addr);
     static NimBLEClient*    getDisconnectedClient();
