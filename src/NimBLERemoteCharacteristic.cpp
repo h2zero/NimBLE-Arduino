@@ -15,6 +15,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+
 #include "NimBLERemoteCharacteristic.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -649,4 +655,6 @@ void NimBLERemoteCharacteristic::releaseSemaphores() {
     m_semaphoreGetDescEvt.give(1);
     m_semaphoreReadCharEvt.give(1);
 }
+
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

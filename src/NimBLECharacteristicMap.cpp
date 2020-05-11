@@ -12,6 +12,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "NimBLEService.h"
 #include "NimBLELog.h"
 
@@ -125,4 +131,5 @@ std::string NimBLECharacteristicMap::toString() {
 } // toString
 
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

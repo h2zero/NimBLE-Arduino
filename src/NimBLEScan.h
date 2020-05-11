@@ -16,6 +16,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+
 #include "NimBLEAdvertisedDevice.h"
 #include "FreeRTOS.h"
 
@@ -82,6 +88,6 @@ private:
     uint32_t                            m_duration;
 };
 
-
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLE_SCAN_H_ */

@@ -14,6 +14,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
 #include "NimBLELog.h"
@@ -244,5 +250,5 @@ void NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor) {
 	NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onWrite: default");
 } // onWrite
 
-
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

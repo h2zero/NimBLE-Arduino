@@ -16,6 +16,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "host/ble_hs.h"
 /****  FIX COMPILATION ****/
 #undef min
@@ -191,5 +197,7 @@ public:
     virtual void onNotify(NimBLECharacteristic* pCharacteristic);
 	virtual void onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code);
 };
+
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /*MAIN_NIMBLECHARACTERISTIC_H_*/

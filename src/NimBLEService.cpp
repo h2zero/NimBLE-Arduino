@@ -17,6 +17,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "NimBLEService.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -291,4 +297,5 @@ NimBLEServer* NimBLEService::getServer() {
 	return m_pServer;
 } // getServer
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif // CONFIG_BT_ENABLED

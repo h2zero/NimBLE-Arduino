@@ -14,8 +14,14 @@
 #ifndef MAIN_NIMBLECLIENT_H_
 #define MAIN_NIMBLECLIENT_H_
 
-#if defined(CONFIG_BT_ENABLED)
 #include "sdkconfig.h"
+#if defined(CONFIG_BT_ENABLED)
+
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEAddress.h"
 #include "NimBLEAdvertisedDevice.h"
@@ -109,5 +115,6 @@ public:
     virtual bool onConfirmPIN(uint32_t pin);
 };
 
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL
 #endif // CONFIG_BT_ENABLED
 #endif /* MAIN_NIMBLECLIENT_H_ */

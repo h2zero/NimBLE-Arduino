@@ -17,6 +17,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "NimBLECharacteristic.h"
 #include "NimBLEUUID.h"
 #include "FreeRTOS.h"
@@ -97,5 +103,7 @@ public:
 	virtual void onRead(NimBLEDescriptor* pDescriptor);
 	virtual void onWrite(NimBLEDescriptor* pDescriptor);
 };
+
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_NIMBLEDESCRIPTOR_H_ */

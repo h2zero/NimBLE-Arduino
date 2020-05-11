@@ -14,6 +14,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+
 #include "NimBLEScan.h"
 #include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
@@ -400,4 +406,5 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
     return dev;
 }
 
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

@@ -15,6 +15,13 @@
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "services/gap/ble_svc_gap.h"
 #include "NimBLEAdvertising.h"
 #include "NimBLEDevice.h"
@@ -603,4 +610,5 @@ std::string NimBLEAdvertisementData::getPayload() {
 	return m_payload;
 } // getPayload
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

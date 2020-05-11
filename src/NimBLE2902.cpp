@@ -20,6 +20,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "NimBLE2902.h"
 
 NimBLE2902::NimBLE2902(NimBLECharacteristic* pCharacterisitic) 
@@ -72,4 +78,5 @@ void NimBLE2902::setNotifications(bool flag) {
 	else pValue[0] &= ~(1 << 0);
 } // setNotifications
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif

@@ -14,6 +14,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -548,5 +554,6 @@ void NimBLEAdvertisedDevice::setAdvertisementResult(uint8_t* payload, uint8_t le
     m_payloadLength = length;
 }
 
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */
 

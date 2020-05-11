@@ -17,6 +17,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "host/ble_gap.h"
 /****  FIX COMPILATION ****/
 #undef min
@@ -90,7 +96,9 @@ public:
 
 private:
     friend class NimBLEDevice;
+
     void                 onHostReset();
+
 	ble_hs_adv_fields    m_advData;
 	ble_hs_adv_fields    m_scanData;
 	ble_gap_adv_params   m_advParams;
@@ -101,5 +109,7 @@ private:
     bool                 m_advSvcsSet = false;
 
 };
+
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_BLEADVERTISING_H_ */

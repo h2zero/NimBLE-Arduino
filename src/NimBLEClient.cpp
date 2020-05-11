@@ -14,6 +14,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+
 #include "NimBLEClient.h"
 #include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
@@ -890,4 +896,5 @@ bool NimBLEClientCallbacks::onConfirmPIN(uint32_t pin){
     return true;
 }
 
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif // CONFIG_BT_ENABLED

@@ -17,6 +17,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+
 #include "NimBLERemoteCharacteristic.h"
 
 class NimBLERemoteCharacteristic;
@@ -54,5 +60,7 @@ private:
 
 
 };
+
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLEREMOTEDESCRIPTOR_H_ */

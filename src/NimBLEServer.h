@@ -17,13 +17,18 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "NimBLEAddress.h"
 #include "NimBLEUUID.h"
 #include "NimBLEAdvertising.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"
 #include "FreeRTOS.h"
-
 
 #include <map>
 
@@ -150,5 +155,6 @@ public:
 }; // BLEServerCallbacks
 
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* MAIN_NIMBLESERVER_H_ */

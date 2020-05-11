@@ -17,6 +17,12 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#ifdef ARDUINO_ARCH_ESP32
+#include "nimconfig.h"
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
 #include "NimBLECharacteristic.h"
 #include "NimBLEServer.h"
 #include "NimBLEUUID.h"
@@ -92,5 +98,6 @@ private:
 }; // BLEService
 
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif // CONFIG_BT_ENABLED
 #endif /* MAIN_NIMBLESERVICE_H_ */
