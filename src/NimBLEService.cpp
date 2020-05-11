@@ -111,8 +111,9 @@ bool NimBLEService::start() {
             if(numDscs) {
                 // skip 2902 as it's automatically created by NimBLE
                 // if Indicate or Notify flags are set
-                if((pCharacteristic->m_properties & BLE_GATT_CHR_F_INDICATE) || 
-                    (pCharacteristic->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
+                if(((pCharacteristic->m_properties & BLE_GATT_CHR_F_INDICATE) || 
+                    (pCharacteristic->m_properties & BLE_GATT_CHR_F_NOTIFY))  &&
+                     pCharacteristic->getDescriptorByUUID("2902") != nullptr) {
                     numDscs--;
                 }
             }

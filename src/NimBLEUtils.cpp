@@ -12,6 +12,10 @@
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
 
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
+#include "nimconfig.h"
+#endif
+
 static const char* LOG_TAG = "NimBLEUtils"; 
 
 /**
@@ -78,6 +82,7 @@ int NimBLEUtils::checkConnParams(ble_gap_conn_params* params) {
 
 
 const char* NimBLEUtils::returnCodeToString(int rc) {
+#if CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT > 0
     switch(rc) {
         case 0:
             return "SUCCESS";
@@ -355,10 +360,12 @@ const char* NimBLEUtils::returnCodeToString(int rc) {
             return "Pairing over the LE transport failed - Pairing Request sent over the BR/EDR transport in process.";
         case  (0x0500+BLE_SM_ERR_CROSS_TRANS ):
             return "BR/EDR Link Key generated on the BR/EDR transport cannot be used to derive and distribute keys for the LE transport.";
-            
         default:
             return "Unknown";
     }
+#else // #if CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT
+    return "";
+#endif // #if CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT
 }   
 
 /**
@@ -368,6 +375,7 @@ const char* NimBLEUtils::returnCodeToString(int rc) {
  */
  
 const char* NimBLEUtils::advTypeToString(uint8_t advType) {
+#if CONFIG_NIMBLE_CPP_ENABLE_ADVERTISMENT_TYPE_TEXT > 0
     switch(advType) {
         case BLE_HCI_ADV_TYPE_ADV_IND :                     //0
             return "Undirected - Connectable / Scannable";
@@ -382,7 +390,9 @@ const char* NimBLEUtils::advTypeToString(uint8_t advType) {
         default:
             return "Unknown flag";
     }
-    
+#else // #if CONFIG_NIMBLE_CPP_ENABLE_ADVERTISMENT_TYPE_TEXT
+    return "";
+#endif // #if CONFIG_NIMBLE_CPP_ENABLE_ADVERTISMENT_TYPE_TEXT   
 } // adFlagsToString
 
 
@@ -433,6 +443,7 @@ void NimBLEUtils::dumpGapEvent(ble_gap_event *event, void *arg){
  * @return A string representation of the event type.
  */
 const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
+#if CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT > 0
     switch (eventType) {
         case BLE_GAP_EVENT_CONNECT :                    //0
             return "BLE_GAP_EVENT_CONNECT ";
@@ -502,11 +513,14 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             
         case BLE_GAP_EVENT_SCAN_REQ_RCVD:               //23
             return "BLE_GAP_EVENT_SCAN_REQ_RCVD";
-#endif            
+#endif
         default:
             NIMBLE_LOGD(LOG_TAG, "gapEventToString: Unknown event type %d 0x%.2x", eventType, eventType);
             return "Unknown event type";
     }
+#else // #if CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT
+    return "";
+#endif // #if CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT
 } // gapEventToString
 
 
