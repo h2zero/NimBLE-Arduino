@@ -115,9 +115,17 @@ NimBLEScan::NimBLEScan() {
 			NimBLEAdvertisedDevice* advertisedDevice = nullptr;
 						
             // If we've seen this device before get a pointer to it from the map
+/*
             auto it = pScan->m_scanResults.m_advertisedDevicesMap.find(advertisedAddress.toString());
             if(it != pScan->m_scanResults.m_advertisedDevicesMap.cend()) {
                 advertisedDevice = (*it).second;
+            }
+*/
+            for(auto &it: pScan->m_scanResults.m_advertisedDevicesVector) {
+                if(it->getAddress() == advertisedAddress) {
+                    advertisedDevice = it;
+                    break;
+                }
             }
 
             // If we haven't seen this device before; create a new instance and insert it in the map.
@@ -128,7 +136,10 @@ NimBLEScan::NimBLEScan() {
                 advertisedDevice->setAddress(advertisedAddress);
                 //NIMBLE_LOGE(LOG_TAG, "advertisement type: %d, %s",event->disc.event_type, NimBLEUtils::advTypeToString(event->disc.event_type));
                 advertisedDevice->setAdvType(event->disc.event_type);
+/*
                 pScan->m_scanResults.m_advertisedDevicesMap.insert(std::pair<std::string, NimBLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
+*/
+                pScan->m_scanResults.m_advertisedDevicesVector.push_back(advertisedDevice);
                 NIMBLE_LOGI(LOG_TAG, "NEW DEVICE FOUND: %s", advertisedAddress.toString().c_str());
             }
             else{
@@ -327,9 +338,18 @@ void NimBLEScan::stop() {
 // delete peer device from cache after disconnecting, it is required in case we are connecting to devices with not public address
 void NimBLEScan::erase(const NimBLEAddress &address) {
     NIMBLE_LOGI(LOG_TAG, "erase device: %s", address.toString().c_str());
+/*
     NimBLEAdvertisedDevice *advertisedDevice = m_scanResults.m_advertisedDevicesMap.find(address.toString())->second;
     m_scanResults.m_advertisedDevicesMap.erase(address.toString());
     delete advertisedDevice;
+*/
+    for(auto it = m_scanResults.m_advertisedDevicesVector.begin(); it != m_scanResults.m_advertisedDevicesVector.begin(); ++it) {
+        if((*it)->getAddress() == address) {
+            delete *it;
+            m_scanResults.m_advertisedDevicesVector.erase(it);
+            break;
+        }
+    }
 }
 
 
@@ -356,10 +376,16 @@ NimBLEScanResults NimBLEScan::getResults() {
  * @brief Clear the results of the scan.
  */
 void NimBLEScan::clearResults() {
+/*
     for(auto _dev : m_scanResults.m_advertisedDevicesMap){
         delete _dev.second;
     }
     m_scanResults.m_advertisedDevicesMap.clear();
+*/
+    for(auto &it: m_scanResults.m_advertisedDevicesVector) {
+        delete it;
+    }
+    m_scanResults.m_advertisedDevicesVector.clear();
 }
 
 
@@ -379,7 +405,10 @@ void NimBLEScanResults::dump() {
  * @return The number of devices found in the last scan.
  */
 int NimBLEScanResults::getCount() {
+/*
     return m_advertisedDevicesMap.size();
+*/
+    return m_advertisedDevicesVector.size();
 } // getCount
 
 
@@ -390,6 +419,7 @@ int NimBLEScanResults::getCount() {
  * @return The device at the specified index.
  */
 NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
+/*
     uint32_t x = 0;
     NimBLEAdvertisedDevice dev = *m_advertisedDevicesMap.begin()->second;
     for (auto it = m_advertisedDevicesMap.begin(); it != m_advertisedDevicesMap.end(); it++) {
@@ -398,6 +428,8 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
         x++;
     }
     return dev;
+*/
+    return *m_advertisedDevicesVector[i];
 }
 
 #endif /* CONFIG_BT_ENABLED */

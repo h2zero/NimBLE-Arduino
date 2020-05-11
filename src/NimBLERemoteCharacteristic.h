@@ -45,7 +45,7 @@ public:
     bool        canRead();
     bool        canWrite();
     bool        canWriteNoResponse();
-    NimBLERemoteDescriptor* getDescriptor(NimBLEUUID uuid);
+    NimBLERemoteDescriptor* getDescriptor(const NimBLEUUID &uuid);
     std::vector<NimBLERemoteDescriptor*>* getDescriptors();
     uint16_t    getHandle();
     uint16_t    getDefHandle();

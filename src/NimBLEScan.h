@@ -21,7 +21,8 @@
 
 #include "host/ble_gap.h"
 
-#include <map>
+//#include <map>
+#include <vector>
 
 class NimBLEDevice;
 class NimBLEScan;
@@ -43,7 +44,8 @@ public:
 
 private:
     friend NimBLEScan;
-    std::map<std::string, NimBLEAdvertisedDevice*> m_advertisedDevicesMap;
+//    std::map<std::string, NimBLEAdvertisedDevice*> m_advertisedDevicesMap;
+    std::vector<NimBLEAdvertisedDevice*> m_advertisedDevicesVector;
 };
 
 /**
