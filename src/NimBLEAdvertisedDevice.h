@@ -38,50 +38,50 @@ class NimBLEAdvertisedDevice {
 public:
     NimBLEAdvertisedDevice();
 
-    NimBLEAddress   getAddress();
-    uint16_t        getAppearance();
-    std::string     getManufacturerData();
-    std::string     getName();
-    int             getRSSI();
-    NimBLEScan*     getScan();
-    std::string     getServiceData();
-    NimBLEUUID      getServiceDataUUID();
-    NimBLEUUID      getServiceUUID();
-    int8_t          getTXPower();
-    uint8_t*        getPayload();
-    size_t          getPayloadLength();
-    uint8_t         getAddressType();
-    void setAddressType(uint8_t type);
+    const NimBLEAddress   &getAddress() const;
+    uint16_t              getAppearance() const;
+    const std::string     &getManufacturerData() const;
+    const std::string     &getName() const;
+    int                   getRSSI() const;
+    const NimBLEScan*     getScan() const;
+    const std::string     &getServiceData() const;
+    const NimBLEUUID      &getServiceDataUUID() const;
+    const NimBLEUUID      &getServiceUUID() const;
+    int8_t                getTXPower() const;
+    const uint8_t*        getPayload() const;
+    size_t                getPayloadLength() const;
+    uint8_t               getAddressType() const;	// What is the purpose of this function?
+    void                  setAddressType(uint8_t type);	// What is the purpose of this function?
 
 
-    bool        isAdvertisingService(const NimBLEUUID &uuid);
-    bool        haveAppearance();
-    bool        haveManufacturerData();
-    bool        haveName();
-    bool        haveRSSI();
-    bool        haveServiceData();
-    bool        haveServiceUUID();
-    bool        haveTXPower();
+    bool                  isAdvertisingService(const NimBLEUUID &uuid) const;
+    bool                  haveAppearance() const;
+    bool                  haveManufacturerData() const;
+    bool                  haveName() const;
+    bool                  haveRSSI() const;
+    bool                  haveServiceData() const;
+    bool                  haveServiceUUID() const;
+    bool                  haveTXPower() const;
 
-    std::string toString();
+    const std::string     &toString() const;
 
 private:
     friend class NimBLEScan;
 
-    void parseAdvertisement(ble_hs_adv_fields *fields);
-    void setAddress(NimBLEAddress address);
-    void setAdvType(uint8_t advType);
+    void parseAdvertisement(const ble_hs_adv_fields *fields);
+    void setAddress(const NimBLEAddress &address);
+    void setAdvType(const uint8_t advType);
     void setAdvertisementResult(uint8_t* payload, uint8_t length);
-    void setAppearance(uint16_t appearance);
-    void setManufacturerData(std::string manufacturerData);
-    void setName(std::string name);
-    void setRSSI(int rssi);
+    void setAppearance(const uint16_t appearance);
+    void setManufacturerData(const std::string &manufacturerData);
+    void setName(const std::string &name);
+    void setRSSI(const int rssi);
     void setScan(NimBLEScan* pScan);
-    void setServiceData(std::string data);
-    void setServiceDataUUID(NimBLEUUID uuid);
+    void setServiceData(const std::string &data);
+    void setServiceDataUUID(const NimBLEUUID &uuid);
     void setServiceUUID(const char* serviceUUID);
-    void setServiceUUID(NimBLEUUID serviceUUID);
-    void setTXPower(int8_t txPower);
+    void setServiceUUID(const NimBLEUUID &serviceUUID);
+    void setTXPower(const int8_t txPower);
 
     bool m_haveAppearance;
     bool m_haveManufacturerData;

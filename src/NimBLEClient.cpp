@@ -108,7 +108,7 @@ void NimBLEClient::onHostReset() {
 /**
  * Add overloaded function to ease connect to peer device with not public address
  */
-bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices) {
+bool NimBLEClient::connect(const NimBLEAdvertisedDevice* device, bool refreshServices) {
     NimBLEAddress address(device->getAddress());
     uint8_t type = device->getAddressType();
     return connect(address, type, refreshServices);
@@ -203,17 +203,16 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
  * This will pair with the device and bond if enabled.
  * @return True on success.
  */
-bool NimBLEClient::secureConnection() {
-    
-    m_semeaphoreSecEvt.take("secureConnection");
+bool NimBLEClient::secureConnection() const {
+    const_cast<NimBLEClient *>(this)->m_semeaphoreSecEvt.take("secureConnection");
     
     int rc = NimBLEDevice::startSecurity(m_conn_id);
     if(rc != 0){
-        m_semeaphoreSecEvt.give();
+        const_cast<NimBLEClient *>(this)->m_semeaphoreSecEvt.give();
         return false;
     }
     
-    rc = m_semeaphoreSecEvt.wait("secureConnection");
+    rc = const_cast<NimBLEClient *>(this)->m_semeaphoreSecEvt.wait("secureConnection");
     if(rc != 0){
         return false;
     }
@@ -250,23 +249,23 @@ int NimBLEClient::disconnect(uint8_t reason) {
  * @brief Set the connection paramaters to use when connecting to a server.
  */
 void NimBLEClient::setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
-								uint16_t latency, uint16_t timeout,
+                                uint16_t latency, uint16_t timeout,
                                 uint16_t scanInterval, uint16_t scanWindow)/*,
                                 uint16_t minConnTime, uint16_t maxConnTime)*/
 {
 
-	m_pConnParams.scan_itvl = scanInterval;      // Scan interval in 0.625ms units
+    m_pConnParams.scan_itvl = scanInterval;      // Scan interval in 0.625ms units
     m_pConnParams.scan_window = scanWindow;      // Scan window in 0.625ms units
-	m_pConnParams.itvl_min = minInterval;        // min_int = 0x10*1.25ms = 20ms
-	m_pConnParams.itvl_max = maxInterval;        // max_int = 0x20*1.25ms = 40ms
-	m_pConnParams.latency  = latency;            // number of packets allowed to skip (extends max interval)
-	m_pConnParams.supervision_timeout = timeout; // timeout = 400*10ms = 4000ms
+    m_pConnParams.itvl_min = minInterval;        // min_int = 0x10*1.25ms = 20ms
+    m_pConnParams.itvl_max = maxInterval;        // max_int = 0x20*1.25ms = 40ms
+    m_pConnParams.latency  = latency;            // number of packets allowed to skip (extends max interval)
+    m_pConnParams.supervision_timeout = timeout; // timeout = 400*10ms = 4000ms
     
     // These are not used by NimBLE at this time - Must leave at defaults 
     //m_pConnParams->min_ce_len = minConnTime;     // Minimum length of connection event in 0.625ms units
 	//m_pConnParams->max_ce_len = maxConnTime;     // Maximum length of connection event in 0.625ms units
     
-	int rc = NimBLEUtils::checkConnParams(&m_pConnParams);
+    int rc = NimBLEUtils::checkConnParams(&m_pConnParams);
     assert(rc == 0 && "Invalid Connection parameters");
 }
 
@@ -277,12 +276,12 @@ void NimBLEClient::setConnectionParams(uint16_t minInterval, uint16_t maxInterva
 void NimBLEClient::updateConnParams(uint16_t minInterval, uint16_t maxInterval, 
                             uint16_t latency, uint16_t timeout)
 {     
-	ble_gap_upd_params params;
+    ble_gap_upd_params params;
 
-	params.latency  = latency;
-	params.itvl_max = maxInterval;   
-	params.itvl_min = minInterval; 
-	params.supervision_timeout = timeout;
+    params.latency  = latency;
+    params.itvl_max = maxInterval;   
+    params.itvl_min = minInterval; 
+    params.supervision_timeout = timeout;
     // These are not used by NimBLE at this time - Must leave at defaults 
     params.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN;
     params.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN;
@@ -308,7 +307,7 @@ void NimBLEClient::setConnectTimeout(uint8_t time) {
  * @brief Get the connection id for this client.
  * @return The connection id.
  */
-uint16_t NimBLEClient::getConnId() {
+uint16_t NimBLEClient::getConnId() const {
     return m_conn_id;
 } // getConnId
 
@@ -316,7 +315,7 @@ uint16_t NimBLEClient::getConnId() {
 /**
  * @brief Retrieve the address of the peer.
  */
-NimBLEAddress NimBLEClient::getPeerAddress() {
+const NimBLEAddress &NimBLEClient::getPeerAddress() const {
     return m_peerAddress;
 } // getAddress
 
@@ -325,7 +324,7 @@ NimBLEAddress NimBLEClient::getPeerAddress() {
  * @brief Ask the BLE server for the RSSI value.
  * @return The RSSI value.
  */
-int NimBLEClient::getRssi() {
+int NimBLEClient::getRssi() const {
     NIMBLE_LOGD(LOG_TAG, ">> getRssi()");
     if (!isConnected()) {
         NIMBLE_LOGE(LOG_TAG, "<< getRssi(): Not connected");
@@ -349,7 +348,7 @@ int NimBLEClient::getRssi() {
  * @param [in] uuid The UUID of the service being sought.
  * @return A reference to the Service or nullptr if don't know about it.
  */
-NimBLERemoteService* NimBLEClient::getService(const char* uuid) {
+const NimBLERemoteService* NimBLEClient::getService(const char* uuid) const {
     return getService(NimBLEUUID(uuid));
 } // getService
 
@@ -359,7 +358,7 @@ NimBLERemoteService* NimBLEClient::getService(const char* uuid) {
  * @param [in] uuid The UUID of the service being sought.
  * @return A reference to the Service or nullptr if don't know about it.
  */
-NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
+const NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) const {
     NIMBLE_LOGD(LOG_TAG, ">> getService: uuid: %s", uuid.toString().c_str());
 
     if (!m_haveServices) {
@@ -498,10 +497,10 @@ std::string NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUU
     NIMBLE_LOGD(LOG_TAG, ">> getValue: serviceUUID: %s, characteristicUUID: %s", serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
     
     std::string ret = "";
-    NimBLERemoteService* pService = getService(serviceUUID);
+    const NimBLERemoteService* pService = getService(serviceUUID);
     
     if(pService != nullptr) {
-        NimBLERemoteCharacteristic* pChar = pService->getCharacteristic(characteristicUUID);
+        const NimBLERemoteCharacteristic* pChar = pService->getCharacteristic(characteristicUUID);
         if(pChar != nullptr) {
             ret = pChar->readValue();
         }
@@ -522,10 +521,10 @@ bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &cha
     NIMBLE_LOGD(LOG_TAG, ">> setValue: serviceUUID: %s, characteristicUUID: %s", serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
     
     bool ret = false;
-    NimBLERemoteService* pService = getService(serviceUUID);
+    const NimBLERemoteService* pService = getService(serviceUUID);
     
     if(pService != nullptr) {
-        NimBLERemoteCharacteristic* pChar = pService->getCharacteristic(characteristicUUID);
+        const NimBLERemoteCharacteristic* pChar = pService->getCharacteristic(characteristicUUID);
         if(pChar != nullptr) {
             ret = pChar->writeValue(value);
         }
@@ -540,7 +539,7 @@ bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &cha
 /**
  * @brief Get the current mtu of this connection.
  */
-uint16_t NimBLEClient::getMTU() {
+uint16_t NimBLEClient::getMTU() const {
     return ble_att_mtu(m_conn_id);
 }
 
@@ -823,7 +822,7 @@ uint16_t NimBLEClient::getMTU() {
  * @brief Are we connected to a server?
  * @return True if we are connected and false if we are not connected.
  */
-bool NimBLEClient::isConnected() {
+bool NimBLEClient::isConnected() const {
     return m_isConnected;
 } // isConnected
 
@@ -845,7 +844,7 @@ void NimBLEClient::setClientCallbacks(NimBLEClientCallbacks* pClientCallbacks, b
  * @brief Return a string representation of this client.
  * @return A string representation of this client.
  */
-std::string NimBLEClient::toString() {
+std::string NimBLEClient::toString() const {
     std::string res = "peer address: " + m_peerAddress.toString();
     res += "\nServices:\n";
     for (auto &myPair : m_servicesMap) {

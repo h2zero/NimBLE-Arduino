@@ -66,7 +66,7 @@ NimBLERemoteService::~NimBLERemoteService() {
  * @param [in] uuid Remote characteristic uuid.
  * @return Reference to the remote characteristic object.
  */ 
-NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* uuid) {
+const NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* uuid) const {
     return getCharacteristic(NimBLEUUID(uuid));
 } // getCharacteristic
 
@@ -76,7 +76,7 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* u
  * @param [in] uuid Characteristic uuid.
  * @return Reference to the characteristic object, or nullptr if not found.
  */
-NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID &uuid) {
+const NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID &uuid) const {
     if (m_haveCharacteristics) {
         std::string v = uuid.toString();
         for (auto &myPair : m_characteristicMap) {
@@ -227,7 +227,7 @@ std::map<uint16_t, NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharact
  * @brief Get the client associated with this service.
  * @return A reference to the client associated with this service.
  */
-NimBLEClient* NimBLERemoteService::getClient() {
+const NimBLEClient* NimBLERemoteService::getClient() const {
     return m_pClient;
 } // getClient
 
@@ -235,7 +235,7 @@ NimBLEClient* NimBLERemoteService::getClient() {
 /**
  * @brief Get the service end handle.
  */
-uint16_t NimBLERemoteService::getEndHandle() {
+uint16_t NimBLERemoteService::getEndHandle() const {
     return m_endHandle;
 } // getEndHandle
 
@@ -243,7 +243,7 @@ uint16_t NimBLERemoteService::getEndHandle() {
 /**
  * @brief Get the service start handle.
  */
-uint16_t NimBLERemoteService::getStartHandle() {
+uint16_t NimBLERemoteService::getStartHandle() const {
     return m_startHandle;
 } // getStartHandle
 
@@ -251,7 +251,7 @@ uint16_t NimBLERemoteService::getStartHandle() {
 /**
  * @brief Get the service UUID.
  */
-NimBLEUUID NimBLERemoteService::getUUID() {
+const NimBLEUUID &NimBLERemoteService::getUUID() const {
     return m_uuid;
 }
 
@@ -261,11 +261,11 @@ NimBLEUUID NimBLERemoteService::getUUID() {
  * @param [in] characteristicUuid The characteristic to read.
  * @returns a string containing the value or an empty string if not found or error.
  */
-std::string NimBLERemoteService::getValue(const NimBLEUUID &characteristicUuid) {
+std::string NimBLERemoteService::getValue(const NimBLEUUID &characteristicUuid) const {
     NIMBLE_LOGD(LOG_TAG, ">> readValue: uuid: %s", characteristicUuid.toString().c_str());
     
     std::string ret = "";
-    NimBLERemoteCharacteristic* pChar = getCharacteristic(characteristicUuid);
+    const NimBLERemoteCharacteristic* pChar = getCharacteristic(characteristicUuid);
     
     if(pChar != nullptr) {
         ret =  pChar->readValue();
@@ -282,11 +282,11 @@ std::string NimBLERemoteService::getValue(const NimBLEUUID &characteristicUuid) 
  * @param [in] value The value to set.
  * @returns true on success, false if not found or error
  */
-bool NimBLERemoteService::setValue(const NimBLEUUID &characteristicUuid, const std::string &value) {
+bool NimBLERemoteService::setValue(const NimBLEUUID &characteristicUuid, const std::string &value) const {
     NIMBLE_LOGD(LOG_TAG, ">> setValue: uuid: %s", characteristicUuid.toString().c_str());
     
     bool ret = false;
-    NimBLERemoteCharacteristic* pChar = getCharacteristic(characteristicUuid);
+    const NimBLERemoteCharacteristic* pChar = getCharacteristic(characteristicUuid);
     
     if(pChar != nullptr) {
          ret =  pChar->writeValue(value);
@@ -319,7 +319,7 @@ void NimBLERemoteService::removeCharacteristics() {
  * @brief Create a string representation of this remote service.
  * @return A string representation of this remote service.
  */
-std::string NimBLERemoteService::toString() {
+std::string NimBLERemoteService::toString() const {
     std::string res = "Service: uuid: " + m_uuid.toString();
     char val[6];
     res += ", start_handle: ";

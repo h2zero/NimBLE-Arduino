@@ -39,29 +39,29 @@ public:
     ~NimBLERemoteCharacteristic();
 
     // Public member functions
-    bool        canBroadcast();
-    bool        canIndicate();
-    bool        canNotify();
-    bool        canRead();
-    bool        canWrite();
-    bool        canWriteNoResponse();
-    NimBLERemoteDescriptor* getDescriptor(const NimBLEUUID &uuid);
+    bool                       canBroadcast() const;
+    bool                       canIndicate() const;
+    bool                       canNotify() const;
+    bool                       canRead() const;
+    bool                       canWrite() const;
+    bool                       canWriteNoResponse() const;
+    const NimBLERemoteDescriptor* getDescriptor(const NimBLEUUID &uuid) const;
     std::map<std::string, NimBLERemoteDescriptor*>* getDescriptors();
-    uint16_t    getHandle();
-    uint16_t    getDefHandle();
-    NimBLEUUID  getUUID();
-    std::string readValue();
-    uint8_t     readUInt8();
-    uint16_t    readUInt16();
-    uint32_t    readUInt32();
-    bool        registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
-    bool        writeValue(const uint8_t* data, size_t length, bool response = false);
-    bool        writeValue(const std::string &newValue, bool response = false);
-    bool        writeValue(uint8_t newValue, bool response = false);
-    std::string toString();
-    uint8_t*    readRawData();
-    size_t      getDataLength();
-    NimBLERemoteService* getRemoteService();
+    uint16_t                   getHandle() const;
+    uint16_t                   getDefHandle() const;
+    const NimBLEUUID           &getUUID() const;
+    std::string                readValue() const;
+    uint8_t                    readUInt8() const;
+    uint16_t                   readUInt16() const;
+    uint32_t                   readUInt32() const;
+    bool                       registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
+    bool                       writeValue(const uint8_t* data, size_t length, bool response = false) const;
+    bool                       writeValue(const std::string &newValue, bool response = false) const;
+    bool                       writeValue(uint8_t newValue, bool response = false) const;
+    std::string                toString() const;
+    uint8_t*                   readRawData();
+    size_t                     getDataLength() const;
+    const NimBLERemoteService* getRemoteService() const;
 
 private:
 

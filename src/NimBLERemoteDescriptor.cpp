@@ -52,7 +52,7 @@ NimBLERemoteDescriptor::NimBLERemoteDescriptor(NimBLERemoteCharacteristic* pRemo
  * @brief Retrieve the handle associated with this remote descriptor.
  * @return The handle associated with this remote descriptor.
  */
-uint16_t NimBLERemoteDescriptor::getHandle() {
+uint16_t NimBLERemoteDescriptor::getHandle() const {
     return m_handle;
 } // getHandle
 
@@ -61,7 +61,7 @@ uint16_t NimBLERemoteDescriptor::getHandle() {
  * @brief Get the characteristic that owns this descriptor.
  * @return The characteristic that owns this descriptor.
  */
-NimBLERemoteCharacteristic* NimBLERemoteDescriptor::getRemoteCharacteristic() {
+const NimBLERemoteCharacteristic* NimBLERemoteDescriptor::getRemoteCharacteristic() const {
     return m_pRemoteCharacteristic;
 } // getRemoteCharacteristic
 
@@ -70,7 +70,7 @@ NimBLERemoteCharacteristic* NimBLERemoteDescriptor::getRemoteCharacteristic() {
  * @brief Retrieve the UUID associated this remote descriptor.
  * @return The UUID associated this remote descriptor.
  */
-NimBLEUUID NimBLERemoteDescriptor::getUUID() {
+const NimBLEUUID &NimBLERemoteDescriptor::getUUID() const {
     return m_uuid;
 } // getUUID
 
@@ -116,7 +116,7 @@ std::string NimBLERemoteDescriptor::readValue() {
     // Clear the value before reading.
     m_value = "";
 
-    NimBLEClient* pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
+    const NimBLEClient* pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
     
     // Check to see that we are connected.
     if (!pClient->isConnected()) {
@@ -196,7 +196,7 @@ uint32_t NimBLERemoteDescriptor::readUInt32() {
  * @brief Return a string representation of this BLE Remote Descriptor.
  * @retun A string representation of this BLE Remote Descriptor.
  */
-std::string NimBLERemoteDescriptor::toString() {
+std::string NimBLERemoteDescriptor::toString() const {
     std::string res = "Descriptor: uuid: " + getUUID().toString();
     char val[6];
     res += ", handle: ";
@@ -236,11 +236,11 @@ int NimBLERemoteDescriptor::onWriteCB(uint16_t conn_handle,
  * @param [in] length The length of the data to send.
  * @param [in] response True if we expect a response.
  */
-bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool response) {
+bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool response) const {
 
     NIMBLE_LOGD(LOG_TAG, ">> Descriptor writeValue: %s", toString().c_str());
     
-    NimBLEClient* pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
+    const NimBLEClient* pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
     
     int rc = 0;
     int retryCount = 1;
@@ -260,30 +260,30 @@ bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool
         rc =  ble_gattc_write_no_rsp_flat(pClient->getConnId(), m_handle, data, length);
         return (rc == 0);
     }
-    
+
     do {
-        m_semaphoreDescWrite.take("WriteDescriptor");
+        const_cast<NimBLERemoteDescriptor *>(this)->m_semaphoreDescWrite.take("WriteDescriptor");
         
         if(length > mtu) {
             NIMBLE_LOGI(LOG_TAG,"long write %d bytes", length);
             os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
             rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om,
                                       NimBLERemoteDescriptor::onWriteCB,
-                                      this);
+                                      const_cast<NimBLERemoteDescriptor *>(this));
         } else {
             rc = ble_gattc_write_flat(pClient->getConnId(), m_handle,
                                       data, length,
                                       NimBLERemoteDescriptor::onWriteCB,
-                                      this);
+                                      const_cast<NimBLERemoteDescriptor *>(this));
         }
 
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to write descriptor; rc=%d", rc);
-            m_semaphoreDescWrite.give();
+            const_cast<NimBLERemoteDescriptor *>(this)->m_semaphoreDescWrite.give();
             return false;
         }
         
-        rc = m_semaphoreDescWrite.wait("WriteDescriptor");
+        rc = const_cast<NimBLERemoteDescriptor *>(this)->m_semaphoreDescWrite.wait("WriteDescriptor");
 
         switch(rc){
             case 0:
@@ -317,7 +317,7 @@ bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool
  * @param [in] newValue The data to send to the remote descriptor.
  * @param [in] response True if we expect a response.
  */
-bool NimBLERemoteDescriptor::writeValue(const std::string &newValue, bool response) {
+bool NimBLERemoteDescriptor::writeValue(const std::string &newValue, bool response) const {
     return writeValue((uint8_t*) newValue.data(), newValue.length(), response);
 } // writeValue
 
@@ -327,7 +327,7 @@ bool NimBLERemoteDescriptor::writeValue(const std::string &newValue, bool respon
  * @param [in] The single byte to write.
  * @param [in] True if we expect a response.
  */
-bool NimBLERemoteDescriptor::writeValue(uint8_t newValue, bool response) {
+bool NimBLERemoteDescriptor::writeValue(uint8_t newValue, bool response) const {
     return writeValue(&newValue, 1, response);
 } // writeValue
 

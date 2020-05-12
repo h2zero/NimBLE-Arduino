@@ -25,17 +25,17 @@ class NimBLERemoteCharacteristic;
  */
 class NimBLERemoteDescriptor {
 public:
-    uint16_t    getHandle();
-    NimBLERemoteCharacteristic* getRemoteCharacteristic();
-    NimBLEUUID     getUUID();
-    std::string readValue(void);
-    uint8_t     readUInt8(void);
-    uint16_t    readUInt16(void);
-    uint32_t    readUInt32(void);
-    std::string toString(void);
-    bool        writeValue(const uint8_t* data, size_t length, bool response = false);
-    bool        writeValue(const std::string &newValue, bool response = false);
-    bool        writeValue(uint8_t newValue, bool response = false);
+    uint16_t                          getHandle() const;
+    const NimBLERemoteCharacteristic* getRemoteCharacteristic() const;
+    const NimBLEUUID                  &getUUID() const;
+    std::string                       readValue(void);
+    uint8_t                           readUInt8(void);
+    uint16_t                          readUInt16(void);
+    uint32_t                          readUInt32(void);
+    std::string                       toString(void) const;
+    bool                              writeValue(const uint8_t* data, size_t length, bool response = false) const;
+    bool                              writeValue(const std::string &newValue, bool response = false) const;
+    bool                              writeValue(uint8_t newValue, bool response = false) const;
 
 
 private:

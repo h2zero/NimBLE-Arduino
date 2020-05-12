@@ -33,28 +33,28 @@ class NimBLEAdvertisedDevice;
  */
 class NimBLEClient {
 public:
-    bool                                       connect(NimBLEAdvertisedDevice* device, bool refreshServices = true);
+    bool                                       connect(const NimBLEAdvertisedDevice* device, bool refreshServices = true);
     bool                                       connect(const NimBLEAddress &address, uint8_t type = BLE_ADDR_PUBLIC, bool refreshServices = true);   // Connect to the remote BLE Server
-    int                                        disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);                  // Disconnect from the remote BLE Server
-    NimBLEAddress                              getPeerAddress();              // Get the address of the remote BLE Server
-    int                                        getRssi();                     // Get the RSSI of the remote BLE Server
-    std::map<std::string, NimBLERemoteService*>*  getServices();                 // Get a map of the services offered by the remote BLE Server
-    NimBLERemoteService*                          getService(const char* uuid);  // Get a reference to a specified service offered by the remote BLE server.
-    NimBLERemoteService*                          getService(const NimBLEUUID &uuid);   // Get a reference to a specified service offered by the remote BLE server.
+    int                                        disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM); // Disconnect from the remote BLE Server
+    const NimBLEAddress                        &getPeerAddress() const;             // Get the address of the remote BLE Server
+    int                                        getRssi() const;                     // Get the RSSI of the remote BLE Server
+    std::map<std::string, NimBLERemoteService*>*  getServices();                    // Get a map of the services offered by the remote BLE Server
+    const NimBLERemoteService*                 getService(const char* uuid) const;  // Get a reference to a specified service offered by the remote BLE server.
+    const NimBLERemoteService*                 getService(const NimBLEUUID &uuid) const; // Get a reference to a specified service offered by the remote BLE server.
     std::string                                getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);   // Get the value of a given characteristic at a given service.
     bool                                       setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID, const std::string &value);   // Set the value of a given characteristic at a given service.
-    bool                                       isConnected();                 // Return true if we are connected.
+    bool                                       isConnected() const;                 // Return true if we are connected.
     void                                       setClientCallbacks(NimBLEClientCallbacks *pClientCallbacks, bool deleteCallbacks = true);
-    std::string                                toString();                    // Return a string representation of this client.
-    uint16_t                                   getConnId();
-    uint16_t                                   getMTU();
-    bool                                       secureConnection();
+    std::string                                toString() const;              // Return a string representation of this client.
+    uint16_t                                   getConnId() const;
+    uint16_t                                   getMTU() const;
+    bool                                       secureConnection() const;
     void                                       setConnectTimeout(uint8_t timeout);
-	void 									   setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
-															uint16_t latency, uint16_t timeout,
-                                                            uint16_t scanInterval=16, uint16_t scanWindow=16); // NimBLE default scan settings
-	void 									   updateConnParams(uint16_t minInterval, uint16_t maxInterval, 
-															uint16_t latency, uint16_t timeout);
+    void                                       setConnectionParams(uint16_t minInterval, uint16_t maxInterval, 
+                                               uint16_t latency, uint16_t timeout, uint16_t scanInterval=16, 
+                                               uint16_t scanWindow=16); // NimBLE default scan settings
+    void                                       updateConnParams(uint16_t minInterval, uint16_t maxInterval,
+                                               uint16_t latency, uint16_t timeout);
  
                                               
 private:

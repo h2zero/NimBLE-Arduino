@@ -54,7 +54,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
  *
  * @return The address of the advertised device.
  */
-NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
+const NimBLEAddress &NimBLEAdvertisedDevice::getAddress() const {
     return m_address;
 } // getAddress
 
@@ -67,7 +67,7 @@ NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
  *
  * @return The appearance of the advertised device.
  */
-uint16_t NimBLEAdvertisedDevice::getAppearance() {
+uint16_t NimBLEAdvertisedDevice::getAppearance() const {
     return m_appearance;
 } // getAppearance
 
@@ -76,7 +76,7 @@ uint16_t NimBLEAdvertisedDevice::getAppearance() {
  * @brief Get the manufacturer data.
  * @return The manufacturer data of the advertised device.
  */
-std::string NimBLEAdvertisedDevice::getManufacturerData() {
+const std::string &NimBLEAdvertisedDevice::getManufacturerData() const {
     return m_manufacturerData;
 } // getManufacturerData
 
@@ -85,7 +85,7 @@ std::string NimBLEAdvertisedDevice::getManufacturerData() {
  * @brief Get the name.
  * @return The name of the advertised device.
  */
-std::string NimBLEAdvertisedDevice::getName() {
+const std::string &NimBLEAdvertisedDevice::getName() const {
     return m_name;
 } // getName
 
@@ -94,7 +94,7 @@ std::string NimBLEAdvertisedDevice::getName() {
  * @brief Get the RSSI.
  * @return The RSSI of the advertised device.
  */
-int NimBLEAdvertisedDevice::getRSSI() {
+int NimBLEAdvertisedDevice::getRSSI() const {
     return m_rssi;
 } // getRSSI
 
@@ -103,7 +103,7 @@ int NimBLEAdvertisedDevice::getRSSI() {
  * @brief Get the scan object that created this advertisement.
  * @return The scan object.
  */
-NimBLEScan* NimBLEAdvertisedDevice::getScan() {
+const NimBLEScan* NimBLEAdvertisedDevice::getScan() const {
     return m_pScan;
 } // getScan
 
@@ -112,7 +112,7 @@ NimBLEScan* NimBLEAdvertisedDevice::getScan() {
  * @brief Get the service data.
  * @return The ServiceData of the advertised device.
  */
-std::string NimBLEAdvertisedDevice::getServiceData() {
+const std::string &NimBLEAdvertisedDevice::getServiceData() const {
     return m_serviceData;
 } //getServiceData
 
@@ -122,7 +122,7 @@ std::string NimBLEAdvertisedDevice::getServiceData() {
  * @return The service data UUID.
  */
  
-NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID() {
+const NimBLEUUID &NimBLEAdvertisedDevice::getServiceDataUUID() const {
     return m_serviceDataUUID;
 } // getServiceDataUUID
 
@@ -132,7 +132,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID() {
  * @return The Service UUID of the advertised device.
  */
  
-NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID() {  //TODO Remove it eventually, is no longer useful
+const NimBLEUUID &NimBLEAdvertisedDevice::getServiceUUID() const {  //TODO Remove it eventually, is no longer useful
     return m_serviceUUIDs[0];
 } // getServiceUUID
 
@@ -141,10 +141,10 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID() {  //TODO Remove it eventual
  * @brief Check advertised serviced for existence required UUID
  * @return Return true if service is advertised
  */
-bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid){
+bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid) const {
     for (int i = 0; i < m_serviceUUIDs.size(); i++) {
         NIMBLE_LOGI(LOG_TAG, "Comparing UUIDS: %s %s", m_serviceUUIDs[i].toString().c_str(), uuid.toString().c_str());
-        if (m_serviceUUIDs[i].equals(uuid)) return true;
+        if (m_serviceUUIDs[i] == uuid) return true;
     }
     return false;
 }
@@ -154,7 +154,7 @@ bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid){
  * @brief Get the TX Power.
  * @return The TX Power of the advertised device.
  */
-int8_t NimBLEAdvertisedDevice::getTXPower() {
+int8_t NimBLEAdvertisedDevice::getTXPower() const {
     return m_txPower;
 } // getTXPower
 
@@ -163,7 +163,7 @@ int8_t NimBLEAdvertisedDevice::getTXPower() {
  * @brief Does this advertisement have an appearance value?
  * @return True if there is an appearance value present.
  */
-bool NimBLEAdvertisedDevice::haveAppearance() {
+bool NimBLEAdvertisedDevice::haveAppearance() const {
     return m_haveAppearance;
 } // haveAppearance
 
@@ -172,7 +172,7 @@ bool NimBLEAdvertisedDevice::haveAppearance() {
  * @brief Does this advertisement have manufacturer data?
  * @return True if there is manufacturer data present.
  */
-bool NimBLEAdvertisedDevice::haveManufacturerData() {
+bool NimBLEAdvertisedDevice::haveManufacturerData() const {
     return m_haveManufacturerData;
 } // haveManufacturerData
 
@@ -181,7 +181,7 @@ bool NimBLEAdvertisedDevice::haveManufacturerData() {
  * @brief Does this advertisement have a name value?
  * @return True if there is a name value present.
  */
-bool NimBLEAdvertisedDevice::haveName() {
+bool NimBLEAdvertisedDevice::haveName() const {
     return m_haveName;
 } // haveName
 
@@ -190,7 +190,7 @@ bool NimBLEAdvertisedDevice::haveName() {
  * @brief Does this advertisement have a signal strength value?
  * @return True if there is a signal strength value present.
  */
-bool NimBLEAdvertisedDevice::haveRSSI() {
+bool NimBLEAdvertisedDevice::haveRSSI() const {
     return m_haveRSSI;
 } // haveRSSI
 
@@ -199,7 +199,7 @@ bool NimBLEAdvertisedDevice::haveRSSI() {
  * @brief Does this advertisement have a service data value?
  * @return True if there is a service data value present.
  */
-bool NimBLEAdvertisedDevice::haveServiceData() {
+bool NimBLEAdvertisedDevice::haveServiceData() const {
     return m_haveServiceData;
 } // haveServiceData
 
@@ -208,7 +208,7 @@ bool NimBLEAdvertisedDevice::haveServiceData() {
  * @brief Does this advertisement have a service UUID value?
  * @return True if there is a service UUID value present.
  */
-bool NimBLEAdvertisedDevice::haveServiceUUID() {
+bool NimBLEAdvertisedDevice::haveServiceUUID() const {
     return m_haveServiceUUID;
 } // haveServiceUUID
 
@@ -217,7 +217,7 @@ bool NimBLEAdvertisedDevice::haveServiceUUID() {
  * @brief Does this advertisement have a transmission power value?
  * @return True if there is a transmission power value present.
  */
-bool NimBLEAdvertisedDevice::haveTXPower() {
+bool NimBLEAdvertisedDevice::haveTXPower() const {
     return m_haveTXPower;
 } // haveTXPower
 
@@ -234,7 +234,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
  *
  * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
  */
- void NimBLEAdvertisedDevice::parseAdvertisement(ble_hs_adv_fields *fields) {
+ void NimBLEAdvertisedDevice::parseAdvertisement(const ble_hs_adv_fields *fields) {
     //char s[BLE_HS_ADV_MAX_SZ];
     uint8_t *u8p;
     uint8_t length;
@@ -356,7 +356,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
  * @brief Set the address of the advertised device.
  * @param [in] address The address of the advertised device.
  */
-void NimBLEAdvertisedDevice::setAddress(NimBLEAddress address) {
+void NimBLEAdvertisedDevice::setAddress(const NimBLEAddress &address) {
     m_address = address;
 } // setAddress
 
@@ -385,7 +385,7 @@ void NimBLEAdvertisedDevice::setAppearance(uint16_t appearance) {
  * @brief Set the manufacturer data for this device.
  * @param [in] The discovered manufacturer data.
  */
-void NimBLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
+void NimBLEAdvertisedDevice::setManufacturerData(const std::string &manufacturerData) {
     m_manufacturerData     = manufacturerData;
     m_haveManufacturerData = true;
 
@@ -399,7 +399,7 @@ void NimBLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
  * @brief Set the name for this device.
  * @param [in] name The discovered name.
  */
-void NimBLEAdvertisedDevice::setName(std::string name) {
+void NimBLEAdvertisedDevice::setName(const std::string &name) {
     m_name     = name;
     m_haveName = true;
     NIMBLE_LOGD(LOG_TAG,"- setName(): name: %s", m_name.c_str());
@@ -440,10 +440,10 @@ void NimBLEAdvertisedDevice::setServiceUUID(const char* serviceUUID) {
  * @brief Set the Service UUID for this device.
  * @param [in] serviceUUID The discovered serviceUUID
  */
-void NimBLEAdvertisedDevice::setServiceUUID(NimBLEUUID serviceUUID) {
+void NimBLEAdvertisedDevice::setServiceUUID(const NimBLEUUID &serviceUUID) {
     // Don't add duplicates
     for (int i = 0; i < m_serviceUUIDs.size(); i++) {
-        if (m_serviceUUIDs[i].equals(serviceUUID)) {
+        if (m_serviceUUIDs[i] == serviceUUID) {
             return;
         }
     }
@@ -457,7 +457,7 @@ void NimBLEAdvertisedDevice::setServiceUUID(NimBLEUUID serviceUUID) {
  * @brief Set the ServiceData value.
  * @param [in] data ServiceData value.
  */
-void NimBLEAdvertisedDevice::setServiceData(std::string serviceData) {
+void NimBLEAdvertisedDevice::setServiceData(const std::string &serviceData) {
     m_haveServiceData = true;         // Set the flag that indicates we have service data.
     m_serviceData     = serviceData;  // Save the service data that we received.
 } //setServiceData
@@ -467,7 +467,7 @@ void NimBLEAdvertisedDevice::setServiceData(std::string serviceData) {
  * @brief Set the ServiceDataUUID value.
  * @param [in] data ServiceDataUUID value.
  */
-void NimBLEAdvertisedDevice::setServiceDataUUID(NimBLEUUID uuid) {
+void NimBLEAdvertisedDevice::setServiceDataUUID(const NimBLEUUID &uuid) {
     m_haveServiceData = true;         // Set the flag that indicates we have service data.
     m_serviceDataUUID = uuid;
 } // setServiceDataUUID
@@ -488,7 +488,7 @@ void NimBLEAdvertisedDevice::setTXPower(int8_t txPower) {
  * @brief Create a string representation of this device.
  * @return A string representation of this device.
  */
-std::string NimBLEAdvertisedDevice::toString() {    
+const std::string &NimBLEAdvertisedDevice::toString() const {    
     std::string res = "Name: " + getName() + ", Address: " + getAddress().toString();
     
     if (haveAppearance()) {
@@ -523,12 +523,12 @@ std::string NimBLEAdvertisedDevice::toString() {
 } // toString
 
 
-uint8_t* NimBLEAdvertisedDevice::getPayload() {
+const uint8_t* NimBLEAdvertisedDevice::getPayload() const {
     return m_payload;
 }
 
 
-uint8_t NimBLEAdvertisedDevice::getAddressType() {
+uint8_t NimBLEAdvertisedDevice::getAddressType() const {
     return m_addressType;
 }
 
@@ -538,7 +538,7 @@ void NimBLEAdvertisedDevice::setAddressType(uint8_t type) {
 }
 
 
-size_t NimBLEAdvertisedDevice::getPayloadLength() {
+size_t NimBLEAdvertisedDevice::getPayloadLength() const {
     return m_payloadLength;
 }
 
