@@ -76,38 +76,38 @@ extern "C" void ble_store_config_init(void);
 
 class NimBLEDevice {
 public:
-    static void             init(const std::string &deviceName);   // Initialize the local BLE environment.
-    static void             deinit();
-    static bool             getInitialized();
-    static NimBLEAddress    getAddress();
-    static std::string      toString();
-    static NimBLEScan*      getScan();                     // Get the scan object
-    static NimBLEClient*    createClient();
-	static NimBLEServer*    createServer();
-    static bool             deleteClient(NimBLEClient* pClient);
-    static void             setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
-	static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
-    static void             setCustomGapHandler(gap_event_handler handler);
-    static void             setSecurityAuth(bool bonding, bool mitm, bool sc);
-    static void             setSecurityAuth(uint8_t auth_req);
-    static void             setSecurityIOCap(uint8_t iocap);
-    static void             setSecurityInitKey(uint8_t init_key);
-    static void             setSecurityRespKey(uint8_t init_key);
-    static void             setSecurityPasskey(uint32_t pin);
-    static uint32_t         getSecurityPasskey();
-    static void             setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);
-    static int              setMTU(uint16_t mtu);
-    static uint16_t         getMTU();
-    static bool             isIgnored(const NimBLEAddress &address);
-    static void             addIgnored(const NimBLEAddress &address);
-    static void             removeIgnored(const NimBLEAddress &address);
-    static NimBLEAdvertising* getAdvertising();
-	static void		   		startAdvertising();
-	static void		   		stopAdvertising();
-    static NimBLEClient*    getClientByID(uint16_t conn_id);
-    static NimBLEClient*    getClientByPeerAddress(const NimBLEAddress &peer_addr);
-    static NimBLEClient*    getDisconnectedClient();
-    static size_t           getClientListSize(); 
+    static void                 init(const std::string &deviceName);   // Initialize the local BLE environment.
+    static void                 deinit();
+    static bool                 getInitialized();
+    static NimBLEAddress        getAddress();
+    static std::string          toString();
+    static NimBLEScan*          getScan();                     // Get the scan object
+    static NimBLEClient*        createClient();
+    static NimBLEServer*        createServer();
+    static bool                 deleteClient(NimBLEClient* pClient);
+    static void                 setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
+    static int                  getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
+    static void                 setCustomGapHandler(gap_event_handler handler);
+    static void                 setSecurityAuth(bool bonding, bool mitm, bool sc);
+    static void                 setSecurityAuth(uint8_t auth_req);
+    static void                 setSecurityIOCap(uint8_t iocap);
+    static void                 setSecurityInitKey(uint8_t init_key);
+    static void                 setSecurityRespKey(uint8_t init_key);
+    static void                 setSecurityPasskey(uint32_t pin);
+    static uint32_t             getSecurityPasskey();
+    static void                 setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);
+    static int                  setMTU(uint16_t mtu);
+    static uint16_t             getMTU();
+    static bool                 isIgnored(const NimBLEAddress &address);
+    static void                 addIgnored(const NimBLEAddress &address);
+    static void                 removeIgnored(const NimBLEAddress &address);
+    static NimBLEAdvertising*   getAdvertising();
+    static void                 startAdvertising();
+    static void	                stopAdvertising();
+    static NimBLEClient*        getClientByID(uint16_t conn_id);
+    static NimBLEClient*        getClientByPeerAddress(const NimBLEAddress &peer_addr);
+    static NimBLEClient*        getDisconnectedClient();
+    static size_t               getClientListSize(); 
     static std::list<NimBLEClient*>* getClientList(); 
         
 private:

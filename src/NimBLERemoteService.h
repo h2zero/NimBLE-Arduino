@@ -36,19 +36,19 @@ public:
     virtual ~NimBLERemoteService();
 
     // Public methods
-    NimBLERemoteCharacteristic* getCharacteristic(const char* uuid);      // Get the specified characteristic reference.
-    NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID &uuid);       // Get the specified characteristic reference.
+    const NimBLERemoteCharacteristic* getCharacteristic(const char* uuid) const; // Get the specified characteristic reference.
+    const NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID &uuid) const; // Get the specified characteristic reference.
 //  BLERemoteCharacteristic* getCharacteristic(uint16_t uuid);      // Get the specified characteristic reference.
     std::map<std::string, NimBLERemoteCharacteristic*>* getCharacteristics();
     std::map<uint16_t, NimBLERemoteCharacteristic*>* getCharacteristicsByHandle();  // Get the characteristics map.
 //  void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap);
 
-    NimBLEClient*            getClient(void);                                           // Get a reference to the client associated with this service.
-    uint16_t                 getHandle();                                               // Get the handle of this service.
-    NimBLEUUID               getUUID(void);                                             // Get the UUID of this service.
-    std::string              getValue(const NimBLEUUID &characteristicUuid);                      // Get the value of a characteristic.
-    bool                     setValue(const NimBLEUUID &characteristicUuid, const std::string &value);   // Set the value of a characteristic.
-    std::string              toString(void);
+    const NimBLEClient*               getClient(void) const;                    // Get a reference to the client associated with this service.
+    uint16_t                          getHandle() const;                        // Get the handle of this service.
+    const NimBLEUUID                  &getUUID(void) const;                     // Get the UUID of this service.
+    std::string                       getValue(const NimBLEUUID &characteristicUuid) const; // Get the value of a characteristic.
+    bool                              setValue(const NimBLEUUID &characteristicUuid, const std::string &value) const; // Set the value of a characteristic.
+    std::string                       toString(void) const;
 
 private:
     // Private constructor ... never meant to be created by a user application.
@@ -64,8 +64,8 @@ private:
                                 const struct ble_gatt_error *error,
                                 const struct ble_gatt_chr *chr, void *arg);
 
-    uint16_t            getStartHandle();                // Get the start handle for this service.
-    uint16_t            getEndHandle();                  // Get the end handle for this service.
+    uint16_t            getStartHandle() const;          // Get the start handle for this service.
+    uint16_t            getEndHandle() const;            // Get the end handle for this service.
     void                releaseSemaphores();
     void                removeCharacteristics();
 

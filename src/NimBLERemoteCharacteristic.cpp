@@ -83,7 +83,7 @@ NimBLERemoteCharacteristic::~NimBLERemoteCharacteristic() {
  * @brief Does the characteristic support broadcasting?
  * @return True if the characteristic supports broadcasting.
  */
-bool NimBLERemoteCharacteristic::canBroadcast() {
+bool NimBLERemoteCharacteristic::canBroadcast() const {
     return (m_charProp & BLE_GATT_CHR_PROP_BROADCAST) != 0;
 } // canBroadcast
 
@@ -92,7 +92,7 @@ bool NimBLERemoteCharacteristic::canBroadcast() {
  * @brief Does the characteristic support indications?
  * @return True if the characteristic supports indications.
  */
-bool NimBLERemoteCharacteristic::canIndicate() {
+bool NimBLERemoteCharacteristic::canIndicate() const {
     return (m_charProp & BLE_GATT_CHR_PROP_INDICATE) != 0;
 } // canIndicate
 
@@ -101,7 +101,7 @@ bool NimBLERemoteCharacteristic::canIndicate() {
  * @brief Does the characteristic support notifications?
  * @return True if the characteristic supports notifications.
  */
-bool NimBLERemoteCharacteristic::canNotify() {
+bool NimBLERemoteCharacteristic::canNotify() const {
     return (m_charProp & BLE_GATT_CHR_PROP_NOTIFY) != 0;
 } // canNotify
 
@@ -110,7 +110,7 @@ bool NimBLERemoteCharacteristic::canNotify() {
  * @brief Does the characteristic support reading?
  * @return True if the characteristic supports reading.
  */
-bool NimBLERemoteCharacteristic::canRead() {
+bool NimBLERemoteCharacteristic::canRead() const {
     return (m_charProp & BLE_GATT_CHR_PROP_READ) != 0;
 } // canRead
 
@@ -119,7 +119,7 @@ bool NimBLERemoteCharacteristic::canRead() {
  * @brief Does the characteristic support writing?
  * @return True if the characteristic supports writing.
  */
-bool NimBLERemoteCharacteristic::canWrite() {
+bool NimBLERemoteCharacteristic::canWrite() const {
     return (m_charProp & BLE_GATT_CHR_PROP_WRITE) != 0;
 } // canWrite
 
@@ -128,7 +128,7 @@ bool NimBLERemoteCharacteristic::canWrite() {
  * @brief Does the characteristic support writing with no response?
  * @return True if the characteristic supports writing with no response.
  */
-bool NimBLERemoteCharacteristic::canWriteNoResponse() {
+bool NimBLERemoteCharacteristic::canWriteNoResponse() const {
     return (m_charProp & BLE_GATT_CHR_PROP_WRITE_NO_RSP) != 0;
 } // canWriteNoResponse
 
@@ -225,7 +225,7 @@ std::map<std::string, NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getD
  * @brief Get the handle for this characteristic.
  * @return The handle for this characteristic.
  */
-uint16_t NimBLERemoteCharacteristic::getHandle() {
+uint16_t NimBLERemoteCharacteristic::getHandle() const {
     return m_handle;
 } // getHandle
 
@@ -233,7 +233,7 @@ uint16_t NimBLERemoteCharacteristic::getHandle() {
  * @brief Get the handle for this characteristics definition.
  * @return The handle for this characteristic definition.
  */
-uint16_t NimBLERemoteCharacteristic::getDefHandle() {
+uint16_t NimBLERemoteCharacteristic::getDefHandle() const {
     return m_defHandle;
 } // getDefHandle
 
@@ -243,7 +243,7 @@ uint16_t NimBLERemoteCharacteristic::getDefHandle() {
  * @param [in] uuid The UUID of the descriptor to find.
  * @return The Remote descriptor (if present) or null if not present.
  */
-NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID &uuid) {
+const NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID &uuid) const {
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
     std::string v = uuid.toString();
     for (auto &myPair : m_descriptorMap) {
@@ -261,7 +261,7 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
  * @brief Get the remote service associated with this characteristic.
  * @return The remote service associated with this characteristic.
  */
-NimBLERemoteService* NimBLERemoteCharacteristic::getRemoteService() {
+const NimBLERemoteService* NimBLERemoteCharacteristic::getRemoteService() const {
     return m_pRemoteService;
 } // getRemoteService
 
@@ -270,7 +270,7 @@ NimBLERemoteService* NimBLERemoteCharacteristic::getRemoteService() {
  * @brief Get the UUID for this characteristic.
  * @return The UUID for this characteristic.
  */
-NimBLEUUID NimBLERemoteCharacteristic::getUUID() {
+const NimBLEUUID &NimBLERemoteCharacteristic::getUUID() const {
     return m_uuid;
 } // getUUID
 
@@ -279,7 +279,7 @@ NimBLEUUID NimBLERemoteCharacteristic::getUUID() {
  * @brief Read an unsigned 16 bit value
  * @return The unsigned 16 bit value.
  */
-uint16_t NimBLERemoteCharacteristic::readUInt16() {
+uint16_t NimBLERemoteCharacteristic::readUInt16() const {
     std::string value = readValue();
     if (value.length() >= 2) {
         return *(uint16_t*)(value.data());
@@ -292,7 +292,7 @@ uint16_t NimBLERemoteCharacteristic::readUInt16() {
  * @brief Read an unsigned 32 bit value.
  * @return the unsigned 32 bit value.
  */
-uint32_t NimBLERemoteCharacteristic::readUInt32() {
+uint32_t NimBLERemoteCharacteristic::readUInt32() const {
     std::string value = readValue();
     if (value.length() >= 4) {
         return *(uint32_t*)(value.data());
@@ -305,7 +305,7 @@ uint32_t NimBLERemoteCharacteristic::readUInt32() {
  * @brief Read a byte value
  * @return The value as a byte
  */
-uint8_t NimBLERemoteCharacteristic::readUInt8() {
+uint8_t NimBLERemoteCharacteristic::readUInt8() const {
     std::string value = readValue();
     if (value.length() >= 1) {
         return (uint8_t)value[0];
@@ -318,15 +318,16 @@ uint8_t NimBLERemoteCharacteristic::readUInt8() {
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
  */
-std::string NimBLERemoteCharacteristic::readValue() {
+std::string NimBLERemoteCharacteristic::readValue() const {
     NIMBLE_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
 
     int rc = 0;
     int retryCount = 1;
     // Clear the value before reading.
-    m_value = "";
+//    m_value = "";
+    const_cast<NimBLERemoteCharacteristic *>(this)->m_value = ""; // Override const this pointer
 
-    NimBLEClient* pClient = getRemoteService()->getClient();
+    const NimBLEClient* pClient = getRemoteService()->getClient();
 
     // Check to see that we are connected.
     if (!pClient->isConnected()) {
@@ -335,19 +336,19 @@ std::string NimBLERemoteCharacteristic::readValue() {
     }
 
     do {
-        m_semaphoreReadCharEvt.take("readValue");
+        const_cast<NimBLERemoteCharacteristic *>(this)->m_semaphoreReadCharEvt.take("readValue");
 
         rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
                                  NimBLERemoteCharacteristic::onReadCB,
-                                 this);
+                                 const_cast<NimBLERemoteCharacteristic *>(this));
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to read characteristic; rc=%d, %s",
                                   rc, NimBLEUtils::returnCodeToString(rc));
-            m_semaphoreReadCharEvt.give(0);
+            const_cast<NimBLERemoteCharacteristic *>(this)->m_semaphoreReadCharEvt.give(0);
             return "";
         }
         
-        rc = m_semaphoreReadCharEvt.wait("readValue");
+        rc = const_cast<NimBLERemoteCharacteristic *>(this)->m_semaphoreReadCharEvt.wait("readValue");
         switch(rc){
             case 0:
             case BLE_HS_EDONE:
@@ -420,7 +421,7 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
 
     uint8_t val[] = {0x01, 0x00};
 
-    NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
+    const NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
     if(desc == nullptr) 
         return false;
 
@@ -461,7 +462,7 @@ void NimBLERemoteCharacteristic::removeDescriptors() {
  * @brief Convert a BLERemoteCharacteristic to a string representation;
  * @return a String representation.
  */
-std::string NimBLERemoteCharacteristic::toString() {
+std::string NimBLERemoteCharacteristic::toString() const {
     std::string res = "Characteristic: uuid: " + m_uuid.toString();
     char val[6];
     res += ", handle: ";
@@ -489,7 +490,7 @@ std::string NimBLERemoteCharacteristic::toString() {
  * @param [in] response Do we expect a response?
  * @return false if not connected or cant perform write for some reason.
  */
-bool NimBLERemoteCharacteristic::writeValue(const std::string &newValue, bool response) {
+bool NimBLERemoteCharacteristic::writeValue(const std::string &newValue, bool response) const {
     return writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
 } // writeValue
 
@@ -502,7 +503,7 @@ bool NimBLERemoteCharacteristic::writeValue(const std::string &newValue, bool re
  * @param [in] response Whether we require a response from the write.
  * @return false if not connected or cant perform write for some reason.
  */
-bool NimBLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
+bool NimBLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) const {
     return writeValue(&newValue, 1, response);
 } // writeValue
 
@@ -514,11 +515,11 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
  * @param [in] response Whether we require a response from the write.
  * @return false if not connected or cant perform write for some reason.
  */
-bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, bool response) {
+bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, bool response) const {
     
     NIMBLE_LOGD(LOG_TAG, ">> writeValue(), length: %d", length);
     
-    NimBLEClient* pClient = getRemoteService()->getClient();
+    const NimBLEClient* pClient = getRemoteService()->getClient();
     int rc = 0;
     int retryCount = 1;
     uint16_t mtu;
@@ -537,29 +538,29 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
         rc =  ble_gattc_write_no_rsp_flat(pClient->getConnId(), m_handle, data, length);
         return (rc==0);
     }
-    
+
     do {
-        m_semaphoreWriteCharEvt.take("writeValue");
+        const_cast<NimBLERemoteCharacteristic *>(this)->m_semaphoreWriteCharEvt.take("writeValue");
 
         if(length > mtu) {
             NIMBLE_LOGI(LOG_TAG,"long write %d bytes", length);
             os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
             rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om,
                                       NimBLERemoteCharacteristic::onWriteCB,
-                                      this);
+                                      const_cast<NimBLERemoteCharacteristic *>(this));
         } else {
             rc = ble_gattc_write_flat(pClient->getConnId(), m_handle,
                                       data, length,
                                       NimBLERemoteCharacteristic::onWriteCB,
-                                      this);
+                                      const_cast<NimBLERemoteCharacteristic *>(this));
         }
         if (rc != 0) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to write characteristic; rc=%d", rc);
-            m_semaphoreWriteCharEvt.give();
+            const_cast<NimBLERemoteCharacteristic *>(this)->m_semaphoreWriteCharEvt.give();
             return false;
         }
         
-        rc = m_semaphoreWriteCharEvt.wait("writeValue");
+        rc = const_cast<NimBLERemoteCharacteristic *>(this)->m_semaphoreWriteCharEvt.wait("writeValue");
 
         switch(rc){
             case 0:
@@ -636,7 +637,7 @@ uint8_t* NimBLERemoteCharacteristic::readRawData() {
  * @brief Get the length of the data read from the remote characteristic.
  * @return size_t length of the data in bytes.
  */
-size_t NimBLERemoteCharacteristic::getDataLength() {
+size_t NimBLERemoteCharacteristic::getDataLength() const {
     return m_value.length();
 }
 
