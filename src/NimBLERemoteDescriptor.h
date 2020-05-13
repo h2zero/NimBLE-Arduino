@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 27 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLERemoteDescriptor.h
@@ -17,7 +17,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
 #endif
 

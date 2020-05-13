@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 27 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLERemoteService.h
@@ -17,7 +17,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
 #endif
 
@@ -58,7 +58,7 @@ public:
 
 private:
     // Private constructor ... never meant to be created by a user application.
-    NimBLERemoteService(NimBLEClient* pClient, const struct ble_gatt_svc *service); 
+    NimBLERemoteService(NimBLEClient* pClient, const struct ble_gatt_svc *service);
 
     // Friends
     friend class NimBLEClient;
@@ -66,7 +66,7 @@ private:
 
     // Private methods
     bool                retrieveCharacteristics(void);   // Retrieve the characteristics from the BLE Server.
-    static int          characteristicDiscCB(uint16_t conn_handle, 
+    static int          characteristicDiscCB(uint16_t conn_handle,
                                 const struct ble_gatt_error *error,
                                 const struct ble_gatt_chr *chr, void *arg);
 

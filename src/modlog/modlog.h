@@ -49,7 +49,7 @@ modlog_dummy(const char *msg, ...)
 #include "nimconfig.h"
 #endif
 
-#if defined(ARDUINO_ARCH_ESP32) && CONFIG_BT_NIMBLE_DEBUG > 0
+#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_BT_NIMBLE_DEBUG)
 
 #define MODLOG_DEBUG(ml_mod_, ml_msg_, ...) \
     MODLOG_ESP_LOCAL(ESP_LOG_ERROR, ml_msg_, ##__VA_ARGS__)

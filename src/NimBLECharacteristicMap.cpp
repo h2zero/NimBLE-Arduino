@@ -12,7 +12,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
 #endif
 
@@ -26,9 +26,9 @@
  * @brief Return the characteristic by handle.
  * @param [in] handle The handle to look up the characteristic.
  * @return The characteristic.
- */ 
+ */
 NimBLECharacteristic* NimBLECharacteristicMap::getByHandle(uint16_t handle) {
-	return m_handleMap.at(handle);
+    return m_handleMap.at(handle);
 } // getByHandle
 
 
@@ -48,20 +48,20 @@ NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const char* uuid) {
  * @return The characteristic.
  */
 NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const NimBLEUUID &uuid) {
-	for (auto &myPair : m_uuidMap) {
-		if (myPair.first->getUUID().equals(uuid)) {
-			return myPair.first;
-		}
-	}
+    for (auto &myPair : m_uuidMap) {
+        if (myPair.first->getUUID().equals(uuid)) {
+            return myPair.first;
+        }
+    }
 
-	return nullptr;
+    return nullptr;
 } // getByUUID
 
 /**
  * @brief Get the number of characteristics in the map.
  */
 uint8_t NimBLECharacteristicMap::getSize() {
-	return (uint8_t)m_uuidMap.size();
+    return (uint8_t)m_uuidMap.size();
 } // getSize
 
 /**
@@ -69,11 +69,11 @@ uint8_t NimBLECharacteristicMap::getSize() {
  * @return The first characteristic in the map.
  */
 NimBLECharacteristic* NimBLECharacteristicMap::getFirst() {
-	m_iterator = m_uuidMap.begin();
-	if (m_iterator == m_uuidMap.end()) return nullptr;
-	NimBLECharacteristic* pRet = m_iterator->first;
-	m_iterator++;
-	return pRet;
+    m_iterator = m_uuidMap.begin();
+    if (m_iterator == m_uuidMap.end()) return nullptr;
+    NimBLECharacteristic* pRet = m_iterator->first;
+    m_iterator++;
+    return pRet;
 } // getFirst
 
 
@@ -82,10 +82,10 @@ NimBLECharacteristic* NimBLECharacteristicMap::getFirst() {
  * @return The next characteristic in the map.
  */
 NimBLECharacteristic* NimBLECharacteristicMap::getNext() {
-	if (m_iterator == m_uuidMap.end()) return nullptr;
-	NimBLECharacteristic* pRet = m_iterator->first;
-	m_iterator++;
-	return pRet;
+    if (m_iterator == m_uuidMap.end()) return nullptr;
+    NimBLECharacteristic* pRet = m_iterator->first;
+    m_iterator++;
+    return pRet;
 } // getNext
 
 
@@ -96,7 +96,7 @@ NimBLECharacteristic* NimBLECharacteristicMap::getNext() {
  * @return N/A.
  */
 void NimBLECharacteristicMap::setByHandle(uint16_t handle, NimBLECharacteristic* characteristic) {
-	m_handleMap.insert(std::pair<uint16_t, NimBLECharacteristic*>(handle, characteristic));
+    m_handleMap.insert(std::pair<uint16_t, NimBLECharacteristic*>(handle, characteristic));
 } // setByHandle
 
 
@@ -107,7 +107,7 @@ void NimBLECharacteristicMap::setByHandle(uint16_t handle, NimBLECharacteristic*
  * @return N/A.
  */
 void NimBLECharacteristicMap::setByUUID(NimBLECharacteristic* pCharacteristic, const NimBLEUUID &uuid) {
-	m_uuidMap.insert(std::pair<NimBLECharacteristic*, std::string>(pCharacteristic, uuid.toString()));
+    m_uuidMap.insert(std::pair<NimBLECharacteristic*, std::string>(pCharacteristic, uuid.toString()));
 } // setByUUID
 
 
@@ -116,18 +116,18 @@ void NimBLECharacteristicMap::setByUUID(NimBLECharacteristic* pCharacteristic, c
  * @return A string representation of the characteristic map.
  */
 std::string NimBLECharacteristicMap::toString() {
-	std::string res;
-	int count = 0;
-	char hex[5];
-	for (auto &myPair: m_uuidMap) {
-		if (count > 0) {res += "\n";}
-		snprintf(hex, sizeof(hex), "%04x", myPair.first->getHandle());
-		count++;
-		res += "handle: 0x";
-		res += hex;
-		res += ", uuid: " + myPair.first->getUUID().toString();
-	}
-	return res;
+    std::string res;
+    int count = 0;
+    char hex[5];
+    for (auto &myPair: m_uuidMap) {
+        if (count > 0) {res += "\n";}
+        snprintf(hex, sizeof(hex), "%04x", myPair.first->getHandle());
+        count++;
+        res += "handle: 0x";
+        res += hex;
+        res += ", uuid: " + myPair.first->getUUID().toString();
+    }
+    return res;
 } // toString
 
 

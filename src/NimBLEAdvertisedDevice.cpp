@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 24 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  *  BLEAdvertisedDevice.cpp
@@ -14,11 +14,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
 #endif
 
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLEUtils.h"
@@ -127,7 +127,7 @@ std::string NimBLEAdvertisedDevice::getServiceData() {
  * @brief Get the service data UUID.
  * @return The service data UUID.
  */
- 
+
 NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID() {
     return m_serviceDataUUID;
 } // getServiceDataUUID
@@ -137,7 +137,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID() {
  * @brief Get the Service UUID.
  * @return The Service UUID of the advertised device.
  */
- 
+
 NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID() {  //TODO Remove it eventually, is no longer useful
     return m_serviceUUIDs[0];
 } // getServiceUUID
@@ -276,7 +276,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
 
         u8p = fields->svc_data_uuid16;
         length = fields->svc_data_uuid16_len;
-        
+
         if (length < 2) {
             NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_SERVICE_DATA");
         }
@@ -293,23 +293,23 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
 
         u8p = fields->svc_data_uuid16;
         length = fields->svc_data_uuid16_len;
-        
+
         if (length < 4) {
             NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_32SERVICE_DATA");
         }
-        
+
         uint32_t uuid = *(uint32_t*) u8p;
         setServiceDataUUID(NimBLEUUID(uuid));
         if (length > 4) {
             setServiceData(std::string(reinterpret_cast<char*>(u8p + 4), length - 4));
         }
     }
-    
+
     if (fields->svc_data_uuid128 != NULL) {
 
         u8p = fields->svc_data_uuid16;
         length = fields->svc_data_uuid16_len;
-        
+
         if (length < 16) {
             NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_128SERVICE_DATA");
         }
@@ -324,7 +324,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
         NIMBLE_LOGD(LOG_TAG, "    appearance=0x%04x", fields->appearance);
         setAppearance(fields->appearance);
     }
-    
+
 /**** TODO: create storage and fucntions for these parameters
     if (fields->public_tgt_addr != NULL) {
         NIMBLE_LOGD(LOG_TAG, "    public_tgt_addr=");
@@ -335,7 +335,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
         }
         NIMBLE_LOGD(LOG_TAG, "\n");
     }
-    
+
     if (fields->slave_itvl_range != NULL) {
         NIMBLE_LOGD(LOG_TAG, "    slave_itvl_range=");
         print_bytes(fields->slave_itvl_range, BLE_HS_ADV_SLAVE_ITVL_RANGE_LEN);
@@ -356,7 +356,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
         setManufacturerData(std::string(reinterpret_cast<char*>(fields->mfg_data), fields->mfg_data_len));
     }
  } //parseAdvertisement
- 
+
 
 /**
  * @brief Set the address of the advertised device.
@@ -436,7 +436,7 @@ void NimBLEAdvertisedDevice::setScan(NimBLEScan* pScan) {
  * @brief Set the Service UUID for this device.
  * @param [in] serviceUUID The discovered serviceUUID
  */
- 
+
 void NimBLEAdvertisedDevice::setServiceUUID(const char* serviceUUID) {
     return setServiceUUID(NimBLEUUID(serviceUUID));
 } // setServiceUUID
@@ -494,9 +494,9 @@ void NimBLEAdvertisedDevice::setTXPower(int8_t txPower) {
  * @brief Create a string representation of this device.
  * @return A string representation of this device.
  */
-std::string NimBLEAdvertisedDevice::toString() {    
+std::string NimBLEAdvertisedDevice::toString() {
     std::string res = "Name: " + getName() + ", Address: " + getAddress().toString();
-    
+
     if (haveAppearance()) {
         char val[6];
         snprintf(val, sizeof(val), "%d", getAppearance());
@@ -514,16 +514,16 @@ std::string NimBLEAdvertisedDevice::toString() {
     if (haveServiceUUID()) {
         res += ", serviceUUID: " + getServiceUUID().toString();
     }
-    
+
     if (haveTXPower()) {
         char val[5];
         snprintf(val, sizeof(val), "%d", getTXPower());
         res += ", txPower: ";
         res += val;
     }
-    
+
     res += ", advType: " + std::string(NimBLEUtils::advTypeToString(m_advType));
-    
+
     return res;
 
 } // toString

@@ -3,7 +3,7 @@
  *
  *  Created: on March 2, 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLEServer.h
@@ -17,7 +17,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
 #endif
 
@@ -36,7 +36,7 @@ class NimBLEService;
 class NimBLECharacteristic;
 class NimBLEServerCallbacks;
 
-/* TODO possibly refactor this struct */ 
+/* TODO possibly refactor this struct */
 typedef struct {
     void *peer_device;      // peer device BLEClient or BLEServer - maybe its better to have 2 structures or union here
     bool connected;         // do we need it?
@@ -50,7 +50,7 @@ typedef struct {
 class NimBLEServiceMap {
 public:
 //    NimBLEService* getByHandle(uint16_t handle);
-    NimBLEService* getByUUID(const char* uuid);    
+    NimBLEService* getByUUID(const char* uuid);
     NimBLEService* getByUUID(const NimBLEUUID &uuid, uint8_t inst_id = 0);
 //    void           setByHandle(uint16_t handle, NimBLEService* service);
     void           setByUUID(const char* uuid, NimBLEService* service);
@@ -74,7 +74,7 @@ private:
 class NimBLEServer {
 public:
     uint32_t              getConnectedCount();
-    NimBLEService*        createService(const char* uuid);    
+    NimBLEService*        createService(const char* uuid);
     NimBLEService*        createService(const NimBLEUUID &uuid, uint32_t numHandles=15, uint8_t inst_id=0);
     NimBLEAdvertising*    getAdvertising();
     void                  setCallbacks(NimBLEServerCallbacks* pCallbacks);
@@ -86,8 +86,8 @@ public:
     NimBLEService*        getServiceByUUID(const NimBLEUUID &uuid);
     int                   disconnect(uint16_t connID, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
 //    bool                connect(BLEAddress address);
-    void                  updateConnParams(uint16_t conn_handle, 
-                                    uint16_t minInterval, uint16_t maxInterval, 
+    void                  updateConnParams(uint16_t conn_handle,
+                                    uint16_t minInterval, uint16_t maxInterval,
                                     uint16_t latency, uint16_t timeout,
                                     uint16_t minConnTime=0, uint16_t maxConnTime=0);
 
@@ -111,15 +111,15 @@ private:
     // BLEAdvertising      m_bleAdvertising;
     uint16_t               m_connId;
     uint16_t               m_svcChgChrHdl;
-	bool				   m_gattsStarted;
-    
+    bool                   m_gattsStarted;
+
     std::map<uint16_t, conn_status_t> m_connectedServersMap;
     std::map<uint16_t, NimBLECharacteristic*> m_notifyChrMap;
 
     NimBLEServiceMap       m_serviceMap;
     NimBLEServerCallbacks* m_pServerCallbacks;
 
-	static int 		handleGapEvent(struct ble_gap_event *event, void *arg);
+    static int      handleGapEvent(struct ble_gap_event *event, void *arg);
 }; // NimBLEServer
 
 
@@ -146,7 +146,7 @@ public:
      * @param [in] pServer A reference to the %BLE server that received the existing client disconnection.
      */
     virtual void onDisconnect(NimBLEServer* pServer);
-    
+
     virtual uint32_t onPassKeyRequest(); //{return 0;}
     virtual void onPassKeyNotify(uint32_t pass_key); //{}
     virtual bool onSecurityRequest(); //{return true;}

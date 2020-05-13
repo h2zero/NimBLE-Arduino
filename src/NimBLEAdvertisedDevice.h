@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 24 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLEAdvertisedDevice.h
@@ -17,11 +17,11 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
 #endif
 
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
 #include "NimBLEAddress.h"
 #include "NimBLEScan.h"
@@ -30,7 +30,7 @@
 #include "host/ble_hs_adv.h"
 
 #include <map>
-#include <vector> 
+#include <vector>
 
 
 class NimBLEScan;

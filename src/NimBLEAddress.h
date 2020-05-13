@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 24 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLEAddress.h
@@ -40,9 +40,9 @@ public:
     const uint8_t*       getNative() const;
     std::string    toString() const;
 
-    bool operator 	==(const NimBLEAddress & rhs) const;
-    bool operator 	!=(const NimBLEAddress & rhs) const;
-    operator 		std::string() const;
+    bool operator   ==(const NimBLEAddress & rhs) const;
+    bool operator   !=(const NimBLEAddress & rhs) const;
+    operator        std::string() const;
 
 private:
     uint8_t        m_address[6];

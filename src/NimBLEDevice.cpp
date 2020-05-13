@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 24 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLEDevice.cpp
@@ -14,7 +14,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
 #endif
 
@@ -44,7 +44,7 @@ static const char* LOG_TAG = "NimBLEDevice";
  * Singletons for the NimBLEDevice.
  */
 bool            initialized = false;
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 NimBLEScan*     NimBLEDevice::m_pScan = nullptr;
 #endif
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
@@ -52,7 +52,7 @@ NimBLEServer*   NimBLEDevice::m_pServer = nullptr;
 #endif
 uint32_t        NimBLEDevice::m_passkey = 123456;
 bool            NimBLEDevice::m_synced = false;
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
 NimBLEAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
 #endif
 
@@ -63,11 +63,6 @@ std::list <NimBLEClient*>   NimBLEDevice::m_cList;
 #endif
 std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
 NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
-  
-//std::map<uint16_t, conn_status_t> BLEDevice::m_connectedClientsMap;
-
-//gattc_event_handler BLEDevice::m_customGattcHandler = nullptr;
-//gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 
 
 /**
@@ -76,14 +71,9 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
  */
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 /* STATIC */ NimBLEServer* NimBLEDevice::createServer() {
-/*#ifndef CONFIG_GATTS_ENABLE  // Check that BLE GATTS is enabled in make menuconfig
-    NIMBLE_LOGE(LOG_TAG, "BLE GATTS is not enabled - CONFIG_GATTS_ENABLE not defined");
-    abort();
-#endif // CONFIG_GATTS_ENABLE
-*/
     if(NimBLEDevice::m_pServer == nullptr) {
         NimBLEDevice::m_pServer = new NimBLEServer();
-		ble_gatts_reset();
+        ble_gatts_reset();
         ble_svc_gap_init();
         ble_svc_gatt_init();
     }
@@ -93,28 +83,24 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
 NimBLEAdvertising* NimBLEDevice::getAdvertising() {
-	if(m_bleAdvertising == nullptr) {
-		m_bleAdvertising = new NimBLEAdvertising();
-	}
-	return m_bleAdvertising; 
+    if(m_bleAdvertising == nullptr) {
+        m_bleAdvertising = new NimBLEAdvertising();
+    }
+    return m_bleAdvertising;
 }
-#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 void NimBLEDevice::startAdvertising() {
-	getAdvertising()->start();
+    getAdvertising()->start();
 } // startAdvertising
-#endif
 
 
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 void NimBLEDevice::stopAdvertising() {
     getAdvertising()->stop();
 } // stopAdvertising
-#endif
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
 
 
 /**
@@ -122,33 +108,32 @@ void NimBLEDevice::stopAdvertising() {
  * @return The scanning object reference.  This is a singleton object.  The caller should not
  * try and release/delete it.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 /* STATIC */ NimBLEScan* NimBLEDevice::getScan() {
     if (m_pScan == nullptr) {
         m_pScan = new NimBLEScan();
     }
     return m_pScan;
 } // getScan
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
 /**
  * @brief Creates a new client object and maintains a list of all client objects
- * each client can connect to 1 peripheral device. 
+ * each client can connect to 1 peripheral device.
  * @return A reference to the new client object.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */ NimBLEClient* NimBLEDevice::createClient() {
     if(m_cList.size() >= NIMBLE_MAX_CONNECTIONS) {
-        NIMBLE_LOGW("Number of clients exceeds Max connections. Max=(%d)", 
+        NIMBLE_LOGW("Number of clients exceeds Max connections. Max=(%d)",
                                             NIMBLE_MAX_CONNECTIONS);
     }
-    
+
     NimBLEClient* pClient = new NimBLEClient();
     m_cList.push_back(pClient);
 
     return pClient;
 } // createClient
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
@@ -156,12 +141,11 @@ void NimBLEDevice::stopAdvertising() {
  * Check if it is connected or trying to connect and close/stop it first.
  * @param [in] Pointer to the client object.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */ bool NimBLEDevice::deleteClient(NimBLEClient* pClient) {
     if(pClient == nullptr) {
         return false;
     }
-    
+
     if(pClient->m_isConnected) {
         if (pClient->disconnect() != 0) {
             return false;
@@ -170,7 +154,7 @@ void NimBLEDevice::stopAdvertising() {
             vTaskDelay(1);
         }
     }
-    
+
     if(pClient->m_waitingToConnect) {
         if(ble_gap_conn_cancel() != 0){
             return false;
@@ -179,35 +163,30 @@ void NimBLEDevice::stopAdvertising() {
             vTaskDelay(1);
         }
     }
-    
+
     m_cList.remove(pClient);
     delete pClient;
-    
+
     return true;
 } // deleteClient
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
  * @brief get the list of clients.
  * @return a pointer to the list of clients.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */std::list<NimBLEClient*>* NimBLEDevice::getClientList() {
     return &m_cList;
 } // getClientList
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
  * @brief get the size of the list of clients.
  * @return a pointer to the list of clients.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */size_t NimBLEDevice::getClientListSize() {
     return m_cList.size();
 } // getClientList
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
@@ -215,7 +194,6 @@ void NimBLEDevice::stopAdvertising() {
  * @param [in] The client connection ID to search for.
  * @return A reference pointer to the client with the spcified connection ID.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */NimBLEClient* NimBLEDevice::getClientByID(uint16_t conn_id) {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         if((*it)->getConnId() == conn_id) {
@@ -225,7 +203,6 @@ void NimBLEDevice::stopAdvertising() {
     assert(0);
     return nullptr;
 } // getClientByID
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
@@ -233,7 +210,6 @@ void NimBLEDevice::stopAdvertising() {
  * @param [in] a NimBLEAddress of the peer to search for.
  * @return A reference pointer to the client with the peer address.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */NimBLEClient* NimBLEDevice::getClientByPeerAddress(const NimBLEAddress &peer_addr) {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         if((*it)->getPeerAddress().equals(peer_addr)) {
@@ -242,14 +218,12 @@ void NimBLEDevice::stopAdvertising() {
     }
     return nullptr;
 } // getClientPeerAddress
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
  * @brief Finds the first disconnected client in the list.
  * @return A reference pointer to the first client that is not connected to a peer.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */NimBLEClient* NimBLEDevice::getDisconnectedClient() {
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         if(!(*it)->isConnected()) {
@@ -258,20 +232,21 @@ void NimBLEDevice::stopAdvertising() {
     }
     return nullptr;
 } // getDisconnectedClient
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 
 /**
  * @brief Set the transmission power.
  * The power level can be one of:
- * *   ESP_PWR_LVL_N12 = 0,                !< Corresponding to -12dbm 
- * *   ESP_PWR_LVL_N9  = 1,                !< Corresponding to  -9dbm 
- * *   ESP_PWR_LVL_N6  = 2,                !< Corresponding to  -6dbm 
- * *   ESP_PWR_LVL_N3  = 3,                !< Corresponding to  -3dbm 
- * *   ESP_PWR_LVL_N0  = 4,                !< Corresponding to   0dbm 
- * *   ESP_PWR_LVL_P3  = 5,                !< Corresponding to  +3dbm 
- * *   ESP_PWR_LVL_P6  = 6,                !< Corresponding to  +6dbm 
- * *   ESP_PWR_LVL_P9  = 7,                !< Corresponding to  +9dbm 
+ * *   ESP_PWR_LVL_N12 = 0,                !< Corresponding to -12dbm
+ * *   ESP_PWR_LVL_N9  = 1,                !< Corresponding to  -9dbm
+ * *   ESP_PWR_LVL_N6  = 2,                !< Corresponding to  -6dbm
+ * *   ESP_PWR_LVL_N3  = 3,                !< Corresponding to  -3dbm
+ * *   ESP_PWR_LVL_N0  = 4,                !< Corresponding to   0dbm
+ * *   ESP_PWR_LVL_P3  = 5,                !< Corresponding to  +3dbm
+ * *   ESP_PWR_LVL_P6  = 6,                !< Corresponding to  +6dbm
+ * *   ESP_PWR_LVL_P9  = 7,                !< Corresponding to  +9dbm
  * @param [in] powerLevel.
  */
 /* STATIC */ void NimBLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
@@ -286,26 +261,26 @@ void NimBLEDevice::stopAdvertising() {
 
 /* STATIC */ int NimBLEDevice::getPower(esp_ble_power_type_t powerType) {
 
-	switch(esp_ble_tx_power_get(powerType)) {
-		case ESP_PWR_LVL_N12:
-			return -12;
-		case ESP_PWR_LVL_N9:
-			return -9;
-		case ESP_PWR_LVL_N6:
-			return -6;
-		case ESP_PWR_LVL_N3:
-			return -6;
-		case ESP_PWR_LVL_N0:
-			return 0;
-		case ESP_PWR_LVL_P3:
-			return 3;
-		case ESP_PWR_LVL_P6:
-			return 6;
-		case ESP_PWR_LVL_P9:
-			return 9;
-		default:
-			return BLE_HS_ADV_TX_PWR_LVL_AUTO;
-	}
+    switch(esp_ble_tx_power_get(powerType)) {
+        case ESP_PWR_LVL_N12:
+            return -12;
+        case ESP_PWR_LVL_N9:
+            return -9;
+        case ESP_PWR_LVL_N6:
+            return -6;
+        case ESP_PWR_LVL_N3:
+            return -6;
+        case ESP_PWR_LVL_N0:
+            return 0;
+        case ESP_PWR_LVL_P3:
+            return 3;
+        case ESP_PWR_LVL_P6:
+            return 6;
+        case ESP_PWR_LVL_P9:
+            return 9;
+        default:
+            return BLE_HS_ADV_TX_PWR_LVL_AUTO;
+    }
 } // setPower
 
 
@@ -317,13 +292,13 @@ void NimBLEDevice::stopAdvertising() {
 /* STATIC*/ NimBLEAddress NimBLEDevice::getAddress() {
     ble_addr_t addr = {BLE_ADDR_PUBLIC, 0};
     //ble_hs_id_copy_addr(BLE_ADDR_PUBLIC, addr.val, NULL)
-    
+
     if(BLE_HS_ENOADDR == ble_hs_id_copy_addr(BLE_ADDR_PUBLIC, addr.val, NULL)) {
         NIMBLE_LOGD(LOG_TAG, "Public address not found, checking random");
         addr.type = BLE_ADDR_RANDOM;
         ble_hs_id_copy_addr(BLE_ADDR_RANDOM, addr.val, NULL);
     }
-    
+
     return NimBLEAddress(addr);
 } // getAddress
 
@@ -344,13 +319,13 @@ void NimBLEDevice::stopAdvertising() {
  */
 /* STATIC */int NimBLEDevice::setMTU(uint16_t mtu) {
     NIMBLE_LOGD(LOG_TAG, ">> setLocalMTU: %d", mtu);
-    
+
     int rc =  ble_att_set_preferred_mtu(mtu);
 
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Could not set local mtu value to: %d", mtu);
     }
-    
+
     NIMBLE_LOGD(LOG_TAG, "<< setLocalMTU");
     return rc;
 } // setMTU
@@ -372,32 +347,32 @@ void NimBLEDevice::stopAdvertising() {
     if(!m_synced) {
         return;
     }
-    
+
     m_synced = false;
 
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
     if(m_pScan != nullptr) {
         m_pScan->onHostReset();
     }
 #endif
 
-/*  Not needed    
+/*  Not needed
     if(m_pServer != nullptr) {
         m_pServer->onHostReset();
     }
-    
+
     for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
         (*it)->onHostReset();
     }
 */
 
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
     if(m_bleAdvertising != nullptr) {
         m_bleAdvertising->onHostReset();
     }
 #endif
-    
-    NIMBLE_LOGC(LOG_TAG, "Resetting state; reason=%d, %s", reason, 
+
+    NIMBLE_LOGC(LOG_TAG, "Resetting state; reason=%d, %s", reason,
                         NimBLEUtils::returnCodeToString(reason));
 } // onReset
 
@@ -413,22 +388,22 @@ void NimBLEDevice::stopAdvertising() {
     if(m_synced) {
         return;
     }
-    
+
     /* Make sure we have proper identity address set (public preferred) */
     int rc = ble_hs_util_ensure_addr(0);
     assert(rc == 0);
-    
+
     m_synced = true;
-    
+
     if(initialized) {
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
         if(m_pScan != nullptr) {
             // Restart scanning with the last values sent, allow to clear results.
             m_pScan->start(m_pScan->m_duration, m_pScan->m_scanCompleteCB);
         }
 #endif
 
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
         if(m_bleAdvertising != nullptr) {
             // Restart advertisng, parameters should already be set.
             m_bleAdvertising->start();
@@ -459,7 +434,7 @@ void NimBLEDevice::stopAdvertising() {
     if(!initialized){
         int rc=0;
         esp_err_t errRc = ESP_OK;
-        
+
 #ifdef ARDUINO_ARCH_ESP32
         // make sure the linker includes esp32-hal-bt.c so ardruino init doesn't release BLE memory.
         btStarted();
@@ -473,25 +448,25 @@ void NimBLEDevice::stopAdvertising() {
         }
 
         ESP_ERROR_CHECK(errRc);
-        
+
         ESP_ERROR_CHECK(esp_nimble_hci_and_controller_init());
-        
+
         nimble_port_init();
-        
-        // Setup callbacks for host events 
+
+        // Setup callbacks for host events
         ble_hs_cfg.reset_cb = NimBLEDevice::onReset;
         ble_hs_cfg.sync_cb = NimBLEDevice::onSync;
-        
+
         // Set initial security capabilities
-        ble_hs_cfg.sm_io_cap = BLE_HS_IO_NO_INPUT_OUTPUT; 
+        ble_hs_cfg.sm_io_cap = BLE_HS_IO_NO_INPUT_OUTPUT;
         ble_hs_cfg.sm_bonding = 0;
         ble_hs_cfg.sm_mitm = 0;
         ble_hs_cfg.sm_sc = 1;
         ble_hs_cfg.sm_our_key_dist = 1;
         ble_hs_cfg.sm_their_key_dist = 3;
-        
+
         ble_hs_cfg.store_status_cb = ble_store_util_status_rr; /*TODO: Implement handler for this*/
-        
+
         // Set the device name.
         rc = ble_svc_gap_device_name_set(deviceName.c_str());
         assert(rc == 0);
@@ -516,12 +491,12 @@ void NimBLEDevice::stopAdvertising() {
     int ret = nimble_port_stop();
     if (ret == 0) {
         nimble_port_deinit();
-    
+
         ret = esp_nimble_hci_and_controller_deinit();
         if (ret != ESP_OK) {
             NIMBLE_LOGE(LOG_TAG, "esp_nimble_hci_and_controller_deinit() failed with error: %d", ret);
         }
-        
+
         initialized = false;
         m_synced = false;
     }
@@ -554,12 +529,12 @@ bool NimBLEDevice::getInitialized() {
  * @brief Set the authorization mode for this device.
  * @param A bitmap indicating what modes are supported.
  * The bits are defined as follows:
- ** 0x01 BLE_SM_PAIR_AUTHREQ_BOND                
- ** 0x04 BLE_SM_PAIR_AUTHREQ_MITM                
- ** 0x08 BLE_SM_PAIR_AUTHREQ_SC                  
- ** 0x10 BLE_SM_PAIR_AUTHREQ_KEYPRESS  - not yet supported.         
+ ** 0x01 BLE_SM_PAIR_AUTHREQ_BOND
+ ** 0x04 BLE_SM_PAIR_AUTHREQ_MITM
+ ** 0x08 BLE_SM_PAIR_AUTHREQ_SC
+ ** 0x10 BLE_SM_PAIR_AUTHREQ_KEYPRESS  - not yet supported.
  ** 0xe2 BLE_SM_PAIR_AUTHREQ_RESERVED  - for reference only.
- */ 
+ */
 /*STATIC*/void NimBLEDevice::setSecurityAuth(uint8_t auth_req) {
     NimBLEDevice::setSecurityAuth((auth_req & BLE_SM_PAIR_AUTHREQ_BOND)>0,
                                 (auth_req & BLE_SM_PAIR_AUTHREQ_MITM)>0,
@@ -572,8 +547,8 @@ bool NimBLEDevice::getInitialized() {
  * @param One of the following:
  ** 0x00 BLE_HS_IO_DISPLAY_ONLY         DisplayOnly IO capability
  ** 0x01 BLE_HS_IO_DISPLAY_YESNO        DisplayYesNo IO capability
- ** 0x02 BLE_HS_IO_KEYBOARD_ONLY        KeyboardOnly IO capability 
- ** 0x03 BLE_HS_IO_NO_INPUT_OUTPUT      NoInputNoOutput IO capability 
+ ** 0x02 BLE_HS_IO_KEYBOARD_ONLY        KeyboardOnly IO capability
+ ** 0x03 BLE_HS_IO_NO_INPUT_OUTPUT      NoInputNoOutput IO capability
  ** 0x04 BLE_HS_IO_KEYBOARD_DISPLAY     KeyboardDisplay Only IO capability
  */
 /*STATIC*/ void NimBLEDevice::setSecurityIOCap(uint8_t iocap) {
@@ -584,7 +559,7 @@ bool NimBLEDevice::getInitialized() {
 /**
  * @brief If we are the initiator of the security procedure this sets the keys we will distribute.
  * @param A bitmap indicating which keys to distribute during pairing.
- * The bits are defined as follows:           
+ * The bits are defined as follows:
  ** 0x01: BLE_SM_PAIR_KEY_DIST_ENC  - Distribute the encryption key.
  ** 0x02: BLE_SM_PAIR_KEY_DIST_ID   - Distribute the ID key (IRK).
  ** 0x04: BLE_SM_PAIR_KEY_DIST_SIGN
@@ -598,7 +573,7 @@ bool NimBLEDevice::getInitialized() {
 /**
  * @brief Set the keys we are willing to accept during pairing.
  * @param A bitmap indicating which keys to accept during pairing.
- * The bits are defined as follows:           
+ * The bits are defined as follows:
  ** 0x01: BLE_SM_PAIR_KEY_DIST_ENC  -  Accept the encryption key.
  ** 0x02: BLE_SM_PAIR_KEY_DIST_ID   -  Accept the ID key (IRK).
  ** 0x04: BLE_SM_PAIR_KEY_DIST_SIGN
@@ -641,14 +616,14 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  */
 /* STATIC */int NimBLEDevice::startSecurity(uint16_t conn_id) {
   /*  if(m_securityCallbacks != nullptr) {
-        m_securityCallbacks->onSecurityRequest(); 
+        m_securityCallbacks->onSecurityRequest();
     }
-  */  
+  */
     int rc = ble_gap_security_initiate(conn_id);
     if(rc != 0){
         NIMBLE_LOGE(LOG_TAG, "ble_gap_security_initiate: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
-    
+
     return rc;
 } // startSecurity
 
@@ -657,7 +632,6 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * @brief Check if the device address is on our ignore list.
  * @return True if ignoring.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /*STATIC*/ bool NimBLEDevice::isIgnored(const NimBLEAddress &address) {
     for(auto &it : m_ignoreList) {
         if(it.equals(address)){
@@ -667,25 +641,21 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
 
     return false;
 }
-#endif
 
 
 /**
  * @brief Add a device to the ignore list.
  * @param Address of the device we want to ignore.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /*STATIC*/ void NimBLEDevice::addIgnored(const NimBLEAddress &address) {
     m_ignoreList.push_back(address);
 }
-#endif
 
 
 /**
  * @brief Remove a device from the ignore list.
  * @param Address of the device we want to remove from the list.
  */
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /*STATIC*/void  NimBLEDevice::removeIgnored(const NimBLEAddress &address) {
     for(auto it = m_ignoreList.begin(); it != m_ignoreList.end(); ++it) {
         if((*it).equals(address)){
@@ -694,7 +664,6 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
         }
     }
 }
-#endif
 
 
 /**
@@ -710,22 +679,6 @@ void NimBLEDevice::setCustomGapHandler(gap_event_handler handler) {
         assert(rc == 0);
     }
 } // setCustomGapHandler
-
-
-/**
- * @brief Backward compatibility for bluedroid gatt events.
- * NimBLe does not send GATT events
- */
- /*
-void BLEDevice::setCustomGattcHandler(gattc_event_handler handler) {
-    setCustomGapHandler(handler);
-}
-
-void BLEDevice::setCustomGattsHandler(gatts_event_handler handler) {
-    setCustomGapHandler(handler);
-}
-*/
-/**********************************************************/
 
 
 #endif // CONFIG_BT_ENABLED

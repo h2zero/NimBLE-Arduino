@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 27 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLERemoteCharacteristic.h
@@ -17,7 +17,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
 #endif
 
@@ -72,7 +72,7 @@ public:
 private:
 
     NimBLERemoteCharacteristic(NimBLERemoteService *pRemoteservice, const struct ble_gatt_chr *chr);
-    
+
     friend class NimBLEClient;
     friend class NimBLERemoteService;
     friend class NimBLERemoteDescriptor;
@@ -86,7 +86,7 @@ private:
     static int        descriptorDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error,
                                 uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc,
                                 void *arg);
-    
+
     // Private properties
     NimBLEUUID              m_uuid;
     uint8_t                 m_charProp;
