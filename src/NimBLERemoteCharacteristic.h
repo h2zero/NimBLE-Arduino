@@ -33,6 +33,7 @@ class NimBLERemoteDescriptor;
 
 
 typedef void (*notify_callback)(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
+typedef void (*notify_callback_plain)(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, bool isNotify);
 
 /**
  * @brief A model of a remote %BLE characteristic.
@@ -57,7 +58,9 @@ public:
     uint8_t     readUInt8();
     uint16_t    readUInt16();
     uint32_t    readUInt32();
+    std::string getValue(time_t *timestamp = nullptr);
     bool        registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
+    bool        registerForNotify(notify_callback_plain _callback, bool notifications = true, bool response = true);
     bool        writeValue(const uint8_t* data, size_t length, bool response = false);
     bool        writeValue(const std::string &newValue, bool response = false);
     bool        writeValue(uint8_t newValue, bool response = false);
@@ -97,6 +100,8 @@ private:
     uint8_t*                m_rawData;
     size_t                  m_dataLen;
     notify_callback         m_notifyCallback;
+    notify_callback_plain   m_notifyCallbackPlain;
+    time_t                  m_timestamp;
 
     // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
     std::map<std::string, NimBLERemoteDescriptor*> m_descriptorMap;
