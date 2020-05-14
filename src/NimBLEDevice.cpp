@@ -77,6 +77,15 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 
     return m_pServer;
 } // createServer
+
+
+/**
+ * @brief Get the instance of the server.
+ * @return A pointer to the server instance.
+ */
+/* STATIC */ NimBLEServer* NimBLEDevice::getServer() {
+    return m_pServer;
+} // getServer
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 
