@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 24 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLEScan.cpp
@@ -13,6 +13,9 @@
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+
+#include "nimconfig.h"
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
 #include "NimBLEScan.h"
 #include "NimBLEUtils.h"
@@ -40,7 +43,7 @@ static const char* LOG_TAG = "NimBLEScan";
  *      directed advertisement shall not be ignored if the InitA is a
  *      resolvable private address.
  */
- 
+
 //#define BLE_HCI_SCAN_FILT_NO_WL             (0)
 //#define BLE_HCI_SCAN_FILT_USE_WL            (1)
 //#define BLE_HCI_SCAN_FILT_NO_WL_INITA       (2)
@@ -76,33 +79,33 @@ NimBLEScan::NimBLEScan() {
  * @param [in] param Parameter data for this event.
  */
 /*STATIC*/int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
-    
+
     NimBLEScan* pScan = (NimBLEScan*)arg;
     struct ble_hs_adv_fields fields;
     int rc = 0;
-    
+
     switch(event->type) {
 
         case BLE_GAP_EVENT_DISC: {
-			if(pScan->m_stopped) {
-				NIMBLE_LOGE(LOG_TAG, "Scan stop called, ignoring results.");
-				return 0;
-			}
-            
+            if(pScan->m_stopped) {
+                NIMBLE_LOGE(LOG_TAG, "Scan stop called, ignoring results.");
+                return 0;
+            }
+
             rc = ble_hs_adv_parse_fields(&fields, event->disc.data,
                                      event->disc.length_data);
             if (rc != 0) {
                 NIMBLE_LOGE(LOG_TAG, "Gap Event Parse ERROR.");
                 return 0;
             }
-            
+
             NimBLEAddress advertisedAddress(event->disc.addr);
 
             // Print advertisement data
     //        print_adv_fields(&fields);
 
             // If we are not scanning, nothing to do with the extra results.
-            if (pScan->m_stopped) { 
+            if (pScan->m_stopped) {
                 return 0;
             }
 
@@ -111,9 +114,9 @@ NimBLEScan::NimBLEScan() {
                 NIMBLE_LOGI(LOG_TAG, "Ignoring device: address: %s", advertisedAddress.toString().c_str());
                 return 0;
             }
-            
-			NimBLEAdvertisedDevice* advertisedDevice = nullptr;
-						
+
+            NimBLEAdvertisedDevice* advertisedDevice = nullptr;
+
             // If we've seen this device before get a pointer to it from the map
             auto it = pScan->m_scanResults.m_advertisedDevicesMap.find(advertisedAddress.toString());
             if(it != pScan->m_scanResults.m_advertisedDevicesMap.cend()) {
@@ -134,7 +137,7 @@ NimBLEScan::NimBLEScan() {
             else{
                 NIMBLE_LOGI(LOG_TAG, "UPDATING PREVIOUSLY FOUND DEVICE: %s", advertisedAddress.toString().c_str());
             }
-            advertisedDevice->setRSSI(event->disc.rssi); 
+            advertisedDevice->setRSSI(event->disc.rssi);
             advertisedDevice->parseAdvertisement(&fields);
             advertisedDevice->setScan(pScan);
             advertisedDevice->setAdvertisementResult(event->disc.data, event->disc.length_data);
@@ -155,13 +158,13 @@ NimBLEScan::NimBLEScan() {
         case BLE_GAP_EVENT_DISC_COMPLETE: {
             NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d",
                     event->disc_complete.reason);
-                    
+
             if (pScan->m_scanCompleteCB != nullptr) {
                 pScan->m_scanCompleteCB(pScan->m_scanResults);
             }
-            
+
             pScan->m_stopped = true;
-            pScan->m_semaphoreScanEnd.give();   
+            pScan->m_semaphoreScanEnd.give();
             return 0;
         }
 
@@ -224,13 +227,13 @@ void NimBLEScan::setWindow(uint16_t windowMSecs) {
  */
 bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue) {
     NIMBLE_LOGD(LOG_TAG, ">> start(duration=%d)", duration);
-    
+
     // If Host is not synced we cannot start scanning.
     if(!NimBLEDevice::m_synced) {
         NIMBLE_LOGC(LOG_TAG, "Host reset, wait for sync.");
         return false;
     }
-    
+
     if(ble_gap_conn_active()) {
         NIMBLE_LOGE(LOG_TAG, "Connection in progress - must wait.");
         return false;
@@ -244,12 +247,12 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
 
     m_stopped = false;
     m_semaphoreScanEnd.take("start");
-        
+
     // Save the callback to be invoked when the scan completes.
-    m_scanCompleteCB = scanCompleteCB;                  
+    m_scanCompleteCB = scanCompleteCB;
     // Save the duration in the case that the host is reset so we can reuse it.
     m_duration = duration;
-    
+
     // If 0 duration specified then we assume a continuous scan is desired.
     if(duration == 0){
         duration = BLE_HS_FOREVER;
@@ -257,22 +260,22 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     else{
         duration = duration*1000; // convert duration to milliseconds
     }
-    
+
     //  if we are connecting to devices that are advertising even after being connected, multiconnecting peripherals
     //  then we should not clear map or we will connect the same device few times
     if(!is_continue) {
         clearResults();
     }
-    
+
     int rc = 0;
-    do{    
-        rc = ble_gap_disc(m_own_addr_type, duration, &m_scan_params, 
+    do{
+        rc = ble_gap_disc(m_own_addr_type, duration, &m_scan_params,
                                     NimBLEScan::handleGapEvent, this);
         if(rc == BLE_HS_EBUSY) {
             vTaskDelay(2);
         }
     } while(rc == BLE_HS_EBUSY);
-    
+
     if (rc != 0 && rc != BLE_HS_EDONE) {
         NIMBLE_LOGE(LOG_TAG, "Error initiating GAP discovery procedure; rc=%d, %s",
                                         rc, NimBLEUtils::returnCodeToString(rc));
@@ -305,7 +308,7 @@ NimBLEScanResults NimBLEScan::start(uint32_t duration, bool is_continue) {
  */
 void NimBLEScan::stop() {
     NIMBLE_LOGD(LOG_TAG, ">> stop()");
-	
+
     int rc = ble_gap_disc_cancel();
     if (rc != 0 && rc != BLE_HS_EALREADY) {
         NIMBLE_LOGE(LOG_TAG, "Failed to cancel scan; rc=%d\n", rc);
@@ -313,13 +316,13 @@ void NimBLEScan::stop() {
     }
 
     m_stopped = true;
-    
+
     if (m_scanCompleteCB != nullptr) {
         m_scanCompleteCB(m_scanResults);
     }
-    
+
     m_semaphoreScanEnd.give();
-    
+
     NIMBLE_LOGD(LOG_TAG, "<< stop()");
 } // stop
 
@@ -400,4 +403,5 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
     return dev;
 }
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 #endif /* CONFIG_BT_ENABLED */
