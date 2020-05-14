@@ -17,10 +17,7 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
-#endif
-
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEClient.h"

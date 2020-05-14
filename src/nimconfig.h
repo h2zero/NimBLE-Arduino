@@ -1,5 +1,44 @@
 #pragma once
 
+#include "sdkconfig.h"
+/** For ESP-IDF compatibility
+ *
+ *  Some versions of ESP-IDF used the config name format "CONFIG_NIMBLE_".
+ *  This converts them to "CONFIG_BT_NIMBLE_" format used in the latest IDF.
+ */
+/* Detect if using ESP-IDF or Arduino (Arduino won't have these defines in sdkconfig)*/
+#if defined(CONFIG_BT_NIMBLE_TASK_STACK_SIZE) || defined(CONFIG_NIMBLE_TASK_STACK_SIZE)
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+#define CONFIG_BT_NIMBLE_ENABLED
+#endif
+
+#if defined(CONFIG_NIMBLE_ROLE_OBSERVER)
+#define CONFIG_BT_NIMBLE_ROLE_OBSERVER
+#endif
+
+#if defined(CONFIG_NIMBLE_ROLE_BROADCASTER)
+#define CONFIG_BT_NIMBLE_ROLE_BROADCASTER
+#endif
+
+#if defined(CONFIG_NIMBLE_ROLE_CENTRAL)
+#define CONFIG_BT_NIMBLE_ROLE_CENTRAL
+#endif
+
+#if defined(CONFIG_NIMBLE_ROLE_PERIPHERAL)
+#define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#endif
+
+#if defined(CONFIG_NIMBLE_DEBUG)
+#define CONFIG_BT_NIMBLE_DEBUG
+#endif
+
+#else // Using Arduino
+
+/***********************************************
+ * Arduino config options
+ **********************************************/
+
 /** Comment out if not using NimBLE Client functions
  *  Reduces flash size by approx. 7kB.
  */
@@ -80,6 +119,7 @@
 #define CONFIG_BTDM_CONTROLLER_MODE_BLE_ONLY
 #define CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_INTERNAL
 
+#endif // #if defined(CONFIG_BT_NIMBLE_TASK_STACK_SIZE) || defined(CONFIG_NIMBLE_TASK_STACK_SIZE)
 
 /** Cannot use client without scan */
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) && !defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)

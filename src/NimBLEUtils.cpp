@@ -11,10 +11,7 @@
 
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
-
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
 #include "nimconfig.h"
-#endif
 
 static const char* LOG_TAG = "NimBLEUtils";
 
