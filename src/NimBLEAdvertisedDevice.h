@@ -41,6 +41,8 @@ class NimBLEAdvertisedDevice {
 public:
     NimBLEAdvertisedDevice();
 
+    NimBLEAdvertisedDevice(const NimBLEAdvertisedDevice &);
+
     NimBLEAddress   getAddress();
     uint16_t        getAppearance();
     std::string     getManufacturerData();
@@ -54,7 +56,8 @@ public:
     uint8_t*        getPayload();
     size_t          getPayloadLength();
     uint8_t         getAddressType();
-    void setAddressType(uint8_t type);
+    time_t          getTimestamp();
+    void            setAddressType(uint8_t type);
 
 
     bool        isAdvertisingService(const NimBLEUUID &uuid);
@@ -95,7 +98,7 @@ private:
     bool m_haveTXPower;
 
 
-    NimBLEAddress  m_address = NimBLEAddress("\0\0\0\0\0\0");
+    NimBLEAddress   m_address = NimBLEAddress("\0\0\0\0\0\0");
     uint8_t         m_advType;
     uint16_t        m_appearance;
     int             m_deviceType;
@@ -110,6 +113,7 @@ private:
     uint8_t*        m_payload;
     size_t          m_payloadLength = 0;
     uint8_t         m_addressType;
+    time_t          m_timestamp;
 };
 
 /**

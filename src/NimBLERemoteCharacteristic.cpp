@@ -56,6 +56,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_charProp       = chr->properties;
     m_pRemoteService = pRemoteService;
     m_notifyCallback = nullptr;
+    m_notifyCallbackPlain = nullptr;
     m_rawData        = nullptr;
     m_dataLen        = 0;
     m_timestamp      = 0;

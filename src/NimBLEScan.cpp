@@ -141,6 +141,7 @@ NimBLEScan::NimBLEScan() {
             advertisedDevice->parseAdvertisement(&fields);
             advertisedDevice->setScan(pScan);
             advertisedDevice->setAdvertisementResult(event->disc.data, event->disc.length_data);
+            advertisedDevice->m_timestamp = time(nullptr);
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
                 // If not active scanning report the result to the listener.
@@ -400,7 +401,8 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
         if (x==i)   break;
         x++;
     }
-    return dev;
+    return NimBLEAdvertisedDevice(dev);
+//    return dev;
 }
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)

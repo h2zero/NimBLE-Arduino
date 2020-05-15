@@ -40,6 +40,7 @@ class NimBLEAdvertisedDeviceCallbacks;
  */
 class NimBLEScanResults {
 public:
+//                        NimBLEScanResults(const NimBLEScanResults &);
     void                dump();
     int                 getCount();
     NimBLEAdvertisedDevice getDevice(uint32_t i);
