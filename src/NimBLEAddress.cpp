@@ -53,7 +53,7 @@ NimBLEAddress::NimBLEAddress(const std::string &stringAddress) {
         return;
     }
 
-    if (stringAddress.length() -= 6) {
+    if (stringAddress.length() == 6) {
         std::reverse_copy(stringAddress.data(), stringAddress.data() + 6, m_address);
         return;
     }
