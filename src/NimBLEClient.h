@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 26 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  * BLEClient.h
  *
@@ -14,8 +14,11 @@
 #ifndef MAIN_NIMBLECLIENT_H_
 #define MAIN_NIMBLECLIENT_H_
 
-#if defined(CONFIG_BT_ENABLED)
 #include "sdkconfig.h"
+#if defined(CONFIG_BT_ENABLED)
+
+#include "nimconfig.h"
+#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEAddress.h"
 #include "NimBLEAdvertisedDevice.h"
@@ -54,13 +57,13 @@ public:
     uint16_t                                   getMTU();
     bool                                       secureConnection();
     void                                       setConnectTimeout(uint8_t timeout);
-	void 									   setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
-															uint16_t latency, uint16_t timeout,
+    void                                       setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
+                                                            uint16_t latency, uint16_t timeout,
                                                             uint16_t scanInterval=16, uint16_t scanWindow=16); // NimBLE default scan settings
-	void 									   updateConnParams(uint16_t minInterval, uint16_t maxInterval, 
-															uint16_t latency, uint16_t timeout);
- 
-                                              
+    void                                       updateConnParams(uint16_t minInterval, uint16_t maxInterval,
+                                                            uint16_t latency, uint16_t timeout);
+
+
 private:
     NimBLEClient();
     ~NimBLEClient();
@@ -79,7 +82,7 @@ private:
     bool             m_isConnected = false;     // Are we currently connected.
     bool             m_waitingToConnect =false;
     bool             m_deleteCallbacks = true;
-	int32_t			 m_connectTimeout;
+    int32_t          m_connectTimeout;
     //uint16_t         m_mtu = 23;
 
     NimBLEClientCallbacks*  m_pClientCallbacks = nullptr;
@@ -92,12 +95,12 @@ private:
     std::map<std::string, NimBLERemoteService*> m_servicesMap;
 */
     std::vector<NimBLERemoteService*> m_servicesVector;
-    
+
 private:
     friend class NimBLEClientCallbacks;
     ble_gap_conn_params m_pConnParams;
 
-}; // class NimBLEClient 
+}; // class NimBLEClient
 
 
 /**
@@ -116,5 +119,6 @@ public:
     virtual bool onConfirmPIN(uint32_t pin);
 };
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif // CONFIG_BT_ENABLED
 #endif /* MAIN_NIMBLECLIENT_H_ */
