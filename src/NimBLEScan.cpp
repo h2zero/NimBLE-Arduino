@@ -412,9 +412,9 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
  * @return A pointer to the device at the specified address.
  */
 NimBLEAdvertisedDevice *NimBLEScanResults::getDevice(const NimBLEAddress &address) {
-    for(size_t index = 0; index < m_advertisedDevicesVector.size(); index++) {
-        if(m_advertisedDevicesVector[index]->getAddress() == address) {
-            return m_advertisedDevicesVector[index];
+    for (auto it = m_advertisedDevicesMap.begin(); it != m_advertisedDevicesMap.end(); it++) {
+        if(it->second->getAddress() == address) {
+            return it->second;
         }
     }
 
