@@ -44,6 +44,7 @@ public:
     void                dump();
     int                 getCount();
     NimBLEAdvertisedDevice getDevice(uint32_t i);
+    NimBLEAdvertisedDevice *getDevice(const NimBLEAddress &address);
 
 private:
     friend NimBLEScan;
