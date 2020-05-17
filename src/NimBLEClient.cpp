@@ -43,8 +43,8 @@ static NimBLEClientCallbacks defaultCallbacks;
  * Since there is a hierarchical relationship here, we will have the idea that from a NimBLERemoteService will own
  * zero or more remote characteristics and a NimBLERemoteCharacteristic will own zero or more remote NimBLEDescriptors.
  *
- * We will assume that a NimBLERemoteService contains a map that maps NimBLEUUIDs to the set of owned characteristics
- * and that a NimBLECharacteristic contains a map that maps NimBLEUUIDs to the set of owned descriptors.
+ * We will assume that a NimBLERemoteService contains a vector of owned characteristics
+ * and that a NimBLECharacteristic contains a vector of owned descriptors.
  *
  *
  */

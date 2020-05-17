@@ -117,7 +117,7 @@ NimBLEScan::NimBLEScan() {
 
             NimBLEAdvertisedDevice* advertisedDevice = nullptr;
 
-            // If we've seen this device before get a pointer to it from the map
+            // If we've seen this device before get a pointer to it from the vector
 /*
             auto it = pScan->m_scanResults.m_advertisedDevicesMap.find(advertisedAddress.toString());
             if(it != pScan->m_scanResults.m_advertisedDevicesMap.cend()) {
@@ -131,7 +131,7 @@ NimBLEScan::NimBLEScan() {
                 }
             }
 
-            // If we haven't seen this device before; create a new instance and insert it in the map.
+            // If we haven't seen this device before; create a new instance and insert it in the vector.
             // Otherwise just update the relevant parameters of the already known device.
             if(advertisedDevice == nullptr){
                 advertisedDevice = new NimBLEAdvertisedDevice();
@@ -273,7 +273,7 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     }
 
     //  if we are connecting to devices that are advertising even after being connected, multiconnecting peripherals
-    //  then we should not clear map or we will connect the same device few times
+    //  then we should not clear vector or we will connect the same device few times
     if(!is_continue) {
         clearResults();
     }

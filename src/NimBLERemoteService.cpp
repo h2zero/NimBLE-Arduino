@@ -119,7 +119,7 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
 
     switch (error->status) {
         case 0: {
-            // Found a service - add it to the map
+            // Found a service - add it to the vector
             NimBLERemoteCharacteristic* pRemoteCharacteristic = new NimBLERemoteCharacteristic(service, chr);
 /*
             service->m_characteristicMap.insert(std::pair<std::string, NimBLERemoteCharacteristic*>(pRemoteCharacteristic->getUUID().toString(), pRemoteCharacteristic));
@@ -348,10 +348,10 @@ bool NimBLERemoteService::setValue(const NimBLEUUID &characteristicUuid, const s
 
 
 /**
- * @brief Delete the characteristics in the characteristics map.
- * We maintain a map called m_characteristicsMap that contains pointers to BLERemoteCharacteristic
- * object references.  Since we allocated these in this class, we are also responsible for deleteing
- * them.  This method does just that.
+ * @brief Delete the characteristics in the characteristics vector.
+ * We maintain a vector called m_characteristicsVector that contains pointers to BLERemoteCharacteristic
+ * object references. Since we allocated these in this class, we are also responsible for deleting
+ * them. This method does just that.
  * @return N/A.
  */
 void NimBLERemoteService::removeCharacteristics() {
