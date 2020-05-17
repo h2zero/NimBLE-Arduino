@@ -69,6 +69,7 @@ NimBLEScan::NimBLEScan() {
     m_scan_params.filter_duplicates  = 1; // If set, the controller ignores all but the first advertisement from each device.
     m_pAdvertisedDeviceCallbacks     = nullptr;
     m_stopped                        = true;
+    m_duration = 0;
     m_wantDuplicates                 = false;
 }
 
@@ -164,6 +165,7 @@ NimBLEScan::NimBLEScan() {
             }
 
             pScan->m_stopped = true;
+            pScan->m_duration = 0;
             pScan->m_semaphoreScanEnd.give();
             return 0;
         }
@@ -246,7 +248,9 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     }
 
     m_stopped = false;
-    m_semaphoreScanEnd.take("start");
+    if(duration != 0) {
+        m_semaphoreScanEnd.take("start");
+    }
 
     // Save the callback to be invoked when the scan completes.
     m_scanCompleteCB = scanCompleteCB;
@@ -280,7 +284,10 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
         NIMBLE_LOGE(LOG_TAG, "Error initiating GAP discovery procedure; rc=%d, %s",
                                         rc, NimBLEUtils::returnCodeToString(rc));
         m_stopped = true;
-        m_semaphoreScanEnd.give();
+        if(m_duration != 0) {
+            m_duration = 0;
+            m_semaphoreScanEnd.give();
+        }
         return false;
     }
 
@@ -296,7 +303,9 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
  */
 NimBLEScanResults NimBLEScan::start(uint32_t duration, bool is_continue) {
     if(start(duration, nullptr, is_continue)) {
-        m_semaphoreScanEnd.wait("start");   // Wait for the semaphore to release.
+        if(duration != 0) {
+            m_semaphoreScanEnd.wait("start");   // Wait for the semaphore to release.
+        }
     }
     return m_scanResults;
 } // start
@@ -321,7 +330,10 @@ void NimBLEScan::stop() {
         m_scanCompleteCB(m_scanResults);
     }
 
-    m_semaphoreScanEnd.give();
+    if(m_duration != 0) {
+        m_duration = 0;
+        m_semaphoreScanEnd.give();
+    }
 
     NIMBLE_LOGD(LOG_TAG, "<< stop()");
 } // stop
@@ -342,7 +354,10 @@ void NimBLEScan::erase(const NimBLEAddress &address) {
  */
 void NimBLEScan::onHostReset() {
     m_stopped = true;
-    m_semaphoreScanEnd.give();
+    if(m_duration != 0) {
+        m_duration = 0;
+        m_semaphoreScanEnd.give();
+    }
 }
 
 
