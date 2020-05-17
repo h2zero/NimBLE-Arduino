@@ -401,8 +401,7 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
         if (x==i)   break;
         x++;
     }
-    return NimBLEAdvertisedDevice(dev);
-//    return dev;
+    return dev;
 }
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)

@@ -50,38 +50,6 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
 
 
 /**
- * @brief Copy constructor
- */
-NimBLEAdvertisedDevice::NimBLEAdvertisedDevice(const NimBLEAdvertisedDevice &rhs) {
-    m_address          = rhs.m_address;
-    m_advType          = rhs.m_advType;
-    m_appearance       = rhs.m_appearance;
-    m_deviceType       = rhs.m_deviceType;
-    m_manufacturerData = rhs.m_manufacturerData;
-    m_name             = rhs.m_name;
-    m_pScan            = rhs.m_pScan;
-    m_rssi             = rhs.m_rssi;
-    m_serviceUUIDs     = rhs.m_serviceUUIDs;
-    m_txPower          = rhs.m_txPower;
-    m_serviceData      = rhs.m_serviceData;
-    m_serviceDataUUID  = rhs.m_serviceDataUUID;
-    m_payload          = rhs.m_payload;
-    m_payloadLength    = rhs.m_payloadLength;
-    m_addressType      = rhs.m_addressType;
-    m_timestamp        = rhs.m_timestamp;
-
-    m_haveAppearance       = rhs.m_haveAppearance;
-    m_haveManufacturerData = rhs.m_haveManufacturerData;
-    m_haveName             = rhs.m_haveName;
-    m_haveRSSI             = rhs.m_haveRSSI;
-    m_haveServiceData      = rhs.m_haveServiceData;
-    m_haveServiceUUID      = rhs.m_haveServiceUUID;
-    m_haveTXPower          = rhs.m_haveTXPower;
-
-} // NimBLEAdvertisedDevice
-
-
-/**
  * @brief Get the address.
  *
  * Every %BLE device exposes an address that is used to identify it and subsequently connect to it.

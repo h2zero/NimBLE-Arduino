@@ -41,8 +41,6 @@ class NimBLEAdvertisedDevice {
 public:
     NimBLEAdvertisedDevice();
 
-    NimBLEAdvertisedDevice(const NimBLEAdvertisedDevice &);
-
     NimBLEAddress   getAddress();
     uint16_t        getAppearance();
     std::string     getManufacturerData();
