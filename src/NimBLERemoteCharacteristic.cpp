@@ -418,6 +418,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
             NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
 
             characteristic->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
+            characteristic->m_timestamp = time(nullptr);
             return 0;
         }
     }
