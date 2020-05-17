@@ -435,5 +435,22 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
     return *m_advertisedDevicesVector[i];
 }
 
+
+/**
+ * @brief Return a pointer to the specified device at the given address.
+ * If the address is not found a nullptr is returned.
+ * @param [in] address The address of the device.
+ * @return A pointer to the device at the specified address.
+ */
+NimBLEAdvertisedDevice *NimBLEScanResults::getDevice(const NimBLEAddress &address) {
+    for(size_t index = 0; index < m_advertisedDevicesVector.size(); index++) {
+        if(m_advertisedDevicesVector[index]->getAddress() == address) {
+            return m_advertisedDevicesVector[index];
+        }
+    }
+
+    return nullptr;
+}
+
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 #endif /* CONFIG_BT_ENABLED */

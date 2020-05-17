@@ -31,6 +31,7 @@ class NimBLEDevice;
 class NimBLEScan;
 class NimBLEAdvertisedDevice;
 class NimBLEAdvertisedDeviceCallbacks;
+class NimBLEAddress;
 
 /**
  * @brief The result of having performed a scan.
@@ -41,9 +42,10 @@ class NimBLEAdvertisedDeviceCallbacks;
  */
 class NimBLEScanResults {
 public:
-    void                dump();
-    int                 getCount();
+    void                   dump();
+    int                    getCount();
     NimBLEAdvertisedDevice getDevice(uint32_t i);
+    NimBLEAdvertisedDevice *getDevice(const NimBLEAddress &address);
 
 private:
     friend NimBLEScan;
