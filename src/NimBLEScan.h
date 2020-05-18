@@ -24,12 +24,13 @@
 
 #include "host/ble_gap.h"
 
-#include <map>
+#include <vector>
 
 class NimBLEDevice;
 class NimBLEScan;
 class NimBLEAdvertisedDevice;
 class NimBLEAdvertisedDeviceCallbacks;
+class NimBLEAddress;
 
 /**
  * @brief The result of having performed a scan.
@@ -40,13 +41,14 @@ class NimBLEAdvertisedDeviceCallbacks;
  */
 class NimBLEScanResults {
 public:
-    void                dump();
-    int                 getCount();
+    void                   dump();
+    int                    getCount();
     NimBLEAdvertisedDevice getDevice(uint32_t i);
+    NimBLEAdvertisedDevice *getDevice(const NimBLEAddress &address);
 
 private:
     friend NimBLEScan;
-    std::map<std::string, NimBLEAdvertisedDevice*> m_advertisedDevicesMap;
+    std::vector<NimBLEAdvertisedDevice*> m_advertisedDevicesVector;
 };
 
 /**
