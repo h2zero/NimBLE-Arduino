@@ -24,6 +24,7 @@
 /**************************/
 
 #include <string>
+#include <algorithm>
 
 /**
  * @brief A %BLE device address.
