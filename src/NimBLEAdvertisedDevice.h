@@ -96,7 +96,7 @@ private:
     bool m_haveTXPower;
 
 
-    NimBLEAddress   m_address = NimBLEAddress("\0\0\0\0\0\0");
+    NimBLEAddress  m_address = NimBLEAddress("");
     uint8_t         m_advType;
     uint16_t        m_appearance;
     int             m_deviceType;

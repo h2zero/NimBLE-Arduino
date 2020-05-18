@@ -48,6 +48,16 @@ NimBLEAddress::NimBLEAddress(ble_addr_t address) {
  * @param [in] stringAddress The hex representation of the address.
  */
 NimBLEAddress::NimBLEAddress(const std::string &stringAddress) {
+    if (stringAddress.length() == 0) {
+        memset(m_address, 0, 6);
+        return;
+    }
+
+    if (stringAddress.length() == 6) {
+        std::reverse_copy(stringAddress.data(), stringAddress.data() + 6, m_address);
+        return;
+    }
+
     if (stringAddress.length() != 17) {
         memset(m_address, 0, sizeof m_address); // "00:00:00:00:00:00" represents an invalid address
         NIMBLE_LOGD(LOG_TAG, "Invalid address '%s'", stringAddress.c_str());
