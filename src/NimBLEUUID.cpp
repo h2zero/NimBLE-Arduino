@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 24 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLEUUID.cpp
@@ -57,11 +57,11 @@ static const char* LOG_TAG = "NimBLEUUID";
         // If the length of the string is 36 bytes then we will assume it is a long hex string in
         // UUID format.
         char * position = const_cast<char *>(value.c_str());
-        uint32_t first = 	strtoul(position, &position, 16);
-        uint16_t second = 	strtoul(position + 1, &position, 16);
-        uint16_t third = 	strtoul(position + 1, &position, 16);
-        uint16_t fourth = 	strtoul(position + 1, &position, 16);
-        uint64_t fifth = 	strtoull(position + 1, NULL, 16);
+        uint32_t first =    strtoul(position, &position, 16);
+        uint16_t second =   strtoul(position + 1, &position, 16);
+        uint16_t third =    strtoul(position + 1, &position, 16);
+        uint16_t fourth =   strtoul(position + 1, &position, 16);
+        uint64_t fifth =    strtoull(position + 1, NULL, 16);
         *this = NimBLEUUID(first, second, third, (uint64_t(fourth) << 48) + fifth);
     }
     else {
@@ -134,8 +134,8 @@ NimBLEUUID::NimBLEUUID(const ble_uuid128_t* uuid) {
 
 
 /**
- * @brief Create a UUID from the 128bit value using hex parts instead of string, 
- * instead of BLEUUID("ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6"), it becomes 
+ * @brief Create a UUID from the 128bit value using hex parts instead of string,
+ * instead of BLEUUID("ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6"), it becomes
  * BLEUUID(0xebe0ccb0, 0x7a0a, 0x4b0c, 0x8a1a6ff2997da3a6)
  *
  * @param [in] first  The first 32bit of the UUID.

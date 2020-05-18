@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 27 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLERemoteService.h
@@ -16,6 +16,9 @@
 #define COMPONENTS_NIMBLEREMOTESERVICE_H_
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+
+#include "nimconfig.h"
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEClient.h"
 #include "NimBLEUUID.h"
@@ -38,11 +41,7 @@ public:
     // Public methods
     NimBLERemoteCharacteristic* getCharacteristic(const char* uuid);      // Get the specified characteristic reference.
     NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID &uuid);       // Get the specified characteristic reference.
-//  BLERemoteCharacteristic* getCharacteristic(uint16_t uuid);      // Get the specified characteristic reference.
-//    std::map<std::string, NimBLERemoteCharacteristic*>* getCharacteristics();
     std::vector<NimBLERemoteCharacteristic*>* getCharacteristics();
-//    std::map<uint16_t, NimBLERemoteCharacteristic*>* getCharacteristicsByHandle();  // Get the characteristics map.
-//  void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap);
 
     NimBLEClient*            getClient(void);                                           // Get a reference to the client associated with this service.
     uint16_t                 getHandle();                                               // Get the handle of this service.
@@ -53,7 +52,7 @@ public:
 
 private:
     // Private constructor ... never meant to be created by a user application.
-    NimBLERemoteService(NimBLEClient* pClient, const struct ble_gatt_svc *service); 
+    NimBLERemoteService(NimBLEClient* pClient, const struct ble_gatt_svc *service);
 
     // Friends
     friend class NimBLEClient;
@@ -73,17 +72,8 @@ private:
 
     // Properties
 
-/*
-    // We maintain a map of characteristics owned by this service keyed by a string representation of the UUID.
-    std::map<std::string, NimBLERemoteCharacteristic*> m_characteristicMap;
-*/
     // We maintain a vector of characteristics owned by this service.
     std::vector<NimBLERemoteCharacteristic*> m_characteristicVector;
-
-/*
-    // We maintain a map of characteristics owned by this service keyed by a handle.
-    std::map<uint16_t, NimBLERemoteCharacteristic*> m_characteristicMapByHandle;
-*/
 
     bool                m_haveCharacteristics; // Have we previously obtained the characteristics.
     NimBLEClient*       m_pClient;
@@ -93,5 +83,6 @@ private:
     uint16_t            m_endHandle;        // The ending handle of this service.
 }; // BLERemoteService
 
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLEREMOTESERVICE_H_ */

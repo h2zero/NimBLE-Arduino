@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 26 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  * BLEClient.h
  *
@@ -14,14 +14,16 @@
 #ifndef MAIN_NIMBLECLIENT_H_
 #define MAIN_NIMBLECLIENT_H_
 
-#if defined(CONFIG_BT_ENABLED)
 #include "sdkconfig.h"
+#if defined(CONFIG_BT_ENABLED)
+
+#include "nimconfig.h"
+#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEAddress.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
 
-//#include <map>
 #include <vector>
 #include <string>
 
@@ -39,12 +41,10 @@ public:
     int                                        disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);                  // Disconnect from the remote BLE Server
     NimBLEAddress                              getPeerAddress();              // Get the address of the remote BLE Server
     int                                        getRssi();                     // Get the RSSI of the remote BLE Server
-/*
-    std::map<std::string, NimBLERemoteService*>*  getServices();                 // Get a map of the services offered by the remote BLE Server
-*/
-    std::vector<NimBLERemoteService*>*  	getServices();                 // Get a vector of the services offered by the remote BLE Server
-    NimBLERemoteService*                          getService(const char* uuid);  // Get a reference to a specified service offered by the remote BLE server.
-    NimBLERemoteService*                          getService(const NimBLEUUID &uuid);   // Get a reference to a specified service offered by the remote BLE server.
+
+    std::vector<NimBLERemoteService*>*         getServices();                 // Get a vector of the services offered by the remote BLE Server
+    NimBLERemoteService*                       getService(const char* uuid);  // Get a reference to a specified service offered by the remote BLE server.
+    NimBLERemoteService*                       getService(const NimBLEUUID &uuid);   // Get a reference to a specified service offered by the remote BLE server.
     std::string                                getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);   // Get the value of a given characteristic at a given service.
     bool                                       setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID, const std::string &value);   // Set the value of a given characteristic at a given service.
     bool                                       isConnected();                 // Return true if we are connected.
@@ -54,13 +54,13 @@ public:
     uint16_t                                   getMTU();
     bool                                       secureConnection();
     void                                       setConnectTimeout(uint8_t timeout);
-	void 									   setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
-															uint16_t latency, uint16_t timeout,
+    void                                       setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
+                                                            uint16_t latency, uint16_t timeout,
                                                             uint16_t scanInterval=16, uint16_t scanWindow=16); // NimBLE default scan settings
-	void 									   updateConnParams(uint16_t minInterval, uint16_t maxInterval, 
-															uint16_t latency, uint16_t timeout);
- 
-                                              
+    void                                       updateConnParams(uint16_t minInterval, uint16_t maxInterval,
+                                                            uint16_t latency, uint16_t timeout);
+
+
 private:
     NimBLEClient(bool preDiscover);
     ~NimBLEClient();
@@ -89,16 +89,13 @@ private:
     FreeRTOS::Semaphore     m_semaphoreSearchCmplEvt = FreeRTOS::Semaphore("SearchCmplEvt");
     FreeRTOS::Semaphore     m_semeaphoreSecEvt       = FreeRTOS::Semaphore("Security");
 
-/*
-    std::map<std::string, NimBLERemoteService*> m_servicesMap;
-*/
     std::vector<NimBLERemoteService*> m_servicesVector;
-    
+
 private:
     friend class NimBLEClientCallbacks;
     ble_gap_conn_params m_pConnParams;
 
-}; // class NimBLEClient 
+}; // class NimBLEClient
 
 
 /**
@@ -117,5 +114,6 @@ public:
     virtual bool onConfirmPIN(uint32_t pin);
 };
 
+#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif // CONFIG_BT_ENABLED
 #endif /* MAIN_NIMBLECLIENT_H_ */
