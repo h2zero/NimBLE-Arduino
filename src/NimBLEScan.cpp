@@ -333,7 +333,7 @@ void NimBLEScan::stop() {
 void NimBLEScan::erase(const NimBLEAddress &address) {
     NIMBLE_LOGI(LOG_TAG, "erase device: %s", address.toString().c_str());
 
-    for(auto it = m_scanResults.m_advertisedDevicesVector.begin(); it != m_scanResults.m_advertisedDevicesVector.begin(); ++it) {
+    for(auto it = m_scanResults.m_advertisedDevicesVector.begin(); it != m_scanResults.m_advertisedDevicesVector.end(); ++it) {
         if((*it)->getAddress() == address) {
             delete *it;
             m_scanResults.m_advertisedDevicesVector.erase(it);
