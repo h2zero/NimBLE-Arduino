@@ -26,7 +26,7 @@
 #include "NimBLERemoteDescriptor.h"
 
 //#include <string>
-#include <map>
+#include <vector>
 
 class NimBLERemoteService;
 class NimBLERemoteDescriptor;
@@ -49,7 +49,7 @@ public:
     bool        canWrite();
     bool        canWriteNoResponse();
     NimBLERemoteDescriptor* getDescriptor(const NimBLEUUID &uuid);
-    std::map<std::string, NimBLERemoteDescriptor*>* getDescriptors();
+    std::vector<NimBLERemoteDescriptor*>* getDescriptors();
     uint16_t    getHandle();
     uint16_t    getDefHandle();
     NimBLEUUID  getUUID();
@@ -98,8 +98,8 @@ private:
     size_t                  m_dataLen;
     notify_callback         m_notifyCallback;
 
-    // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
-    std::map<std::string, NimBLERemoteDescriptor*> m_descriptorMap;
+    // We maintain a vector of descriptors owned by this characteristic.
+    std::vector<NimBLERemoteDescriptor*> m_descriptorVector;
 }; // BLERemoteCharacteristic
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)

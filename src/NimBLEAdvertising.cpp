@@ -193,12 +193,14 @@ void NimBLEAdvertising::start() {
     }
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-    NimBLEServer* pServer = NimBLEDevice::createServer();
-    if(!pServer->m_gattsStarted){
-        pServer->start();
-    } else if(pServer->getConnectedCount() >= NIMBLE_MAX_CONNECTIONS) {
-        NIMBLE_LOGW(LOG_TAG, "Max connections reached - not advertising");
-        return;
+    NimBLEServer* pServer = NimBLEDevice::getServer();
+    if(pServer != nullptr) {
+        if(!pServer->m_gattsStarted){
+            pServer->start();
+        } else if(pServer->getConnectedCount() >= NIMBLE_MAX_CONNECTIONS) {
+            NIMBLE_LOGW(LOG_TAG, "Max connections reached - not advertising");
+            return;
+        }
     }
 #endif
 
@@ -358,10 +360,12 @@ void NimBLEAdvertising::start() {
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     rc = ble_gap_adv_start(addressType, NULL, BLE_HS_FOREVER,
-                &m_advParams, NimBLEServer::handleGapEvent, NimBLEDevice::createServer()); //get a reference to the server (does not create a new one)
+                           &m_advParams,
+                           (pServer != nullptr) ? NimBLEServer::handleGapEvent : NULL,
+                           pServer);
 #else
     rc = ble_gap_adv_start(addressType, NULL, BLE_HS_FOREVER,
-                &m_advParams, NULL,NULL);
+                           &m_advParams, NULL,NULL);
 #endif
     if (rc != 0) {
         NIMBLE_LOGC(LOG_TAG, "Error enabling advertising; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));

@@ -102,6 +102,7 @@ public:
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     static NimBLEServer*    createServer();
+    static NimBLEServer*    getServer();
 #endif
 
     static void             setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
