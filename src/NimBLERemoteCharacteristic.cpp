@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 27 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLERemoteCharacteristic.cpp
@@ -14,6 +14,9 @@
 
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+
+#include "nimconfig.h"
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLERemoteCharacteristic.h"
 #include "NimBLEUtils.h"
@@ -35,13 +38,13 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  NimBLERemoteCharacteristic::NimBLERemoteCharacteristic(NimBLERemoteService *pRemoteService, const struct ble_gatt_chr *chr) {
 
      switch (chr->uuid.u.type) {
-        case BLE_UUID_TYPE_16: 
+        case BLE_UUID_TYPE_16:
             m_uuid = NimBLEUUID(chr->uuid.u16.value);
             break;
-        case BLE_UUID_TYPE_32: 
+        case BLE_UUID_TYPE_32:
             m_uuid = NimBLEUUID(chr->uuid.u32.value);
             break;
-        case BLE_UUID_TYPE_128: 
+        case BLE_UUID_TYPE_128:
             m_uuid = NimBLEUUID(const_cast<ble_uuid128_t*>(&chr->uuid.u128));
             break;
         default:
@@ -131,14 +134,14 @@ bool NimBLERemoteCharacteristic::canWriteNoResponse() {
 /**
  * @brief Callback used by the API when a descriptor is discovered or search complete.
  */
-int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle, 
+int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
                                     const struct ble_gatt_error *error,
-                                    uint16_t chr_val_handle, 
+                                    uint16_t chr_val_handle,
                                     const struct ble_gatt_dsc *dsc,
-                                    void *arg) 
+                                    void *arg)
 {
     NIMBLE_LOGD(LOG_TAG,"Descriptor Discovered >> status: %d handle: %d", error->status, conn_handle);
-    
+
     NimBLERemoteCharacteristic *characteristic = (NimBLERemoteCharacteristic*)arg;
     int rc=0;
 
@@ -146,13 +149,12 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
     if(characteristic->getRemoteService()->getClient()->getConnId() != conn_handle){
         return 0;
     }
-    
+
     switch (error->status) {
         case 0: {
-            // Found a descriptor - add it to the map
+            // Found a descriptor - add it to the vector
             NimBLERemoteDescriptor* pNewRemoteDescriptor = new NimBLERemoteDescriptor(characteristic, dsc);
-            characteristic->m_descriptorMap.insert(std::pair<std::string, NimBLERemoteDescriptor*>(pNewRemoteDescriptor->getUUID().toString(), pNewRemoteDescriptor));
-            
+            characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
             break;
         }
         case BLE_HS_EDONE:{
@@ -183,9 +185,9 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
 
     int rc = 0;
     //removeDescriptors();   // Remove any existing descriptors.
-    
+
     m_semaphoreGetDescEvt.take("retrieveDescriptors");
-    
+
     rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(),
                                  m_handle,
                                  endHdl,
@@ -196,23 +198,23 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
         m_semaphoreGetDescEvt.give();
         return false;
     }
-    
+
     if(m_semaphoreGetDescEvt.wait("retrieveCharacteristics") != 0) {
         // if there was an error release the resources
         //removeDescriptors();
         return false;
     }
-    
+
     return true;
-    NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): Found %d descriptors.", m_descriptorMap.size());
+    NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): Found %d descriptors.", m_descriptorVector.size());
 } // getDescriptors
 
 
 /**
- * @brief Retrieve the map of descriptors keyed by UUID.
+ * @brief Retrieve the vector of descriptors.
  */ 
-std::map<std::string, NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors() {
-    return &m_descriptorMap;
+std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors() {
+    return &m_descriptorVector;
 } // getDescriptors
 
 
@@ -240,12 +242,12 @@ uint16_t NimBLERemoteCharacteristic::getDefHandle() {
  */
 NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID &uuid) {
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
-    std::string v = uuid.toString();
-    for (auto &myPair : m_descriptorMap) {
-        if (myPair.first == v) {
-            NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found");
-            return myPair.second;
-        }
+
+    for(auto &it: m_descriptorVector) {
+          if(it->getUUID() == uuid) {
+              NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found");
+              return it;
+          }
     }
     NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
     return nullptr;
@@ -308,7 +310,7 @@ uint8_t NimBLERemoteCharacteristic::readUInt8() {
     return 0;
 } // readUInt8
 
-    
+
 /**
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
@@ -342,7 +344,7 @@ std::string &NimBLERemoteCharacteristic::readValue() {
             m_semaphoreReadCharEvt.give(0);
             return m_value;
         }
-        
+
         rc = m_semaphoreReadCharEvt.wait("readValue");
         switch(rc){
             case 0:
@@ -352,19 +354,19 @@ std::string &NimBLERemoteCharacteristic::readValue() {
             // Characteristic is not long-readable, return with what we have.
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
                 NIMBLE_LOGI(LOG_TAG, "Attribute not long");
-				rc = 0;
+                rc = 0;
                 break;
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
                 if (retryCount && pClient->secureConnection())
                     break;
-            /* Else falls through. */                 
+            /* Else falls through. */
             default:
                 return m_value;
         }
     } while(rc != 0 && retryCount--);
-    
+
     NIMBLE_LOGD(LOG_TAG, "<< readValue(): length: %d", m_value.length());
     return m_value;
 } // readValue
@@ -376,11 +378,11 @@ std::string &NimBLERemoteCharacteristic::readValue() {
  */
 int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
                 const struct ble_gatt_error *error,
-                struct ble_gatt_attr *attr, void *arg) 
+                struct ble_gatt_attr *attr, void *arg)
 {
     NimBLERemoteCharacteristic* characteristic = (NimBLERemoteCharacteristic*)arg;
     uint16_t conn_id = characteristic->getRemoteService()->getClient()->getConnId();
-    
+
     // Make sure the read is for this client
     if(conn_id != conn_handle) {
         return 0;
@@ -397,7 +399,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     }
     // Read complete release semaphore and let the app can continue.
     characteristic->m_semaphoreReadCharEvt.give(error->status);
-    return 0; 
+    return 0;
 }
 
 
@@ -417,7 +419,7 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
     uint8_t val[] = {0x01, 0x00};
 
     NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
-    if(desc == nullptr) 
+    if(desc == nullptr)
         return false;
 
     if(notifyCallback != nullptr){
@@ -431,25 +433,24 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< registerForNotify()");
-    
+
     return desc->writeValue(val, 2, response);
 } // registerForNotify
 
 
 /**
- * @brief Delete the descriptors in the descriptor map.
- * We maintain a map called m_descriptorMap that contains pointers to BLERemoteDescriptors
- * object references.  Since we allocated these in this class, we are also responsible for deleteing
- * them.  This method does just that.
+ * @brief Delete the descriptors in the descriptor vector.
+ * We maintain a vector called m_descriptorVector that contains pointers to BLERemoteDescriptors
+ * object references. Since we allocated these in this class, we are also responsible for deleteing
+ * them. This method does just that.
  * @return N/A.
  */
 void NimBLERemoteCharacteristic::removeDescriptors() {
-    // Iterate through all the descriptors releasing their storage and erasing them from the map.
-    for (auto &myPair : m_descriptorMap) {
-       m_descriptorMap.erase(myPair.first);
-       delete myPair.second;
+    // Iterate through all the descriptors releasing their storage and erasing them from the vector.
+    for(auto &it: m_descriptorVector) {
+        delete it;
     }
-    m_descriptorMap.clear();   // Technically not neeeded, but just to be sure.
+    m_descriptorVector.clear();
 } // removeCharacteristics
 
 
@@ -470,11 +471,11 @@ std::string NimBLERemoteCharacteristic::toString() {
     res += " 0x";
     snprintf(val, sizeof(val), "%02x", m_charProp);
     res += val;
-    
-    for (auto &myPair : m_descriptorMap) {
-        res += "\n" + myPair.second->toString();
+
+    for(auto &it: m_descriptorVector) {
+        res += "\n" + it->toString();
     }
-    
+
     return res;
 } // toString
 
@@ -511,20 +512,20 @@ bool NimBLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
  * @return false if not connected or cant perform write for some reason.
  */
 bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, bool response) {
-    
+
     NIMBLE_LOGD(LOG_TAG, ">> writeValue(), length: %d", length);
-    
+
     NimBLEClient* pClient = getRemoteService()->getClient();
     int rc = 0;
     int retryCount = 1;
     uint16_t mtu;
-    
+
     // Check to see that we are connected.
     if (!pClient->isConnected()) {
         NIMBLE_LOGE(LOG_TAG, "Disconnected");
         return false;
     }
-    
+
     mtu = ble_att_mtu(pClient->getConnId()) - 3;
 
     // Check if the data length is longer than we can write in 1 connection event.
@@ -533,7 +534,7 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
         rc =  ble_gattc_write_no_rsp_flat(pClient->getConnId(), m_handle, data, length);
         return (rc==0);
     }
-    
+
     do {
         m_semaphoreWriteCharEvt.take("writeValue");
 
@@ -554,26 +555,26 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
             m_semaphoreWriteCharEvt.give();
             return false;
         }
-        
+
         rc = m_semaphoreWriteCharEvt.wait("writeValue");
 
         switch(rc){
             case 0:
             case BLE_HS_EDONE:
-				rc = 0;
+                rc = 0;
                 break;
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
                 NIMBLE_LOGE(LOG_TAG, "Long write not supported by peer; Truncating length to %d", mtu);
                 retryCount++;
                 length = mtu;
                 break;
-   
+
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
                 if (retryCount && pClient->secureConnection())
                     break;
-            /* Else falls through. */                 
+            /* Else falls through. */
             default:
                 return false;
         }
@@ -590,17 +591,17 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
  */
 int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
                 const struct ble_gatt_error *error,
-                struct ble_gatt_attr *attr, void *arg) 
+                struct ble_gatt_attr *attr, void *arg)
 {
     NimBLERemoteCharacteristic* characteristic = (NimBLERemoteCharacteristic*)arg;
-    
+
     // Make sure the discovery is for this device
     if(characteristic->getRemoteService()->getClient()->getConnId() != conn_handle){
         return 0;
     }
-    
+
     NIMBLE_LOGI(LOG_TAG, "Write complete; status=%d conn_handle=%d", error->status, conn_handle);
-    
+
     characteristic->m_semaphoreWriteCharEvt.give(error->status);
 
     return 0;
@@ -626,11 +627,13 @@ size_t NimBLERemoteCharacteristic::getDataLength() {
 
 
 void NimBLERemoteCharacteristic::releaseSemaphores() {
-    for (auto &dPair : m_descriptorMap) {
-        dPair.second->releaseSemaphores();
+    for (auto &it: m_descriptorVector) {
+        it->releaseSemaphores();
     }
     m_semaphoreWriteCharEvt.give(1);
     m_semaphoreGetDescEvt.give(1);
     m_semaphoreReadCharEvt.give(1);
 }
+
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

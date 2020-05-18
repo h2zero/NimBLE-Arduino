@@ -3,7 +3,7 @@
  *
  *  Created: on Jan 27 2020
  *      Author H2zero
- * 
+ *
  * Originally:
  *
  * BLERemoteCharacteristic.h
@@ -17,13 +17,16 @@
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
+#include "nimconfig.h"
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+
 //#include "NimBLEUUID.h"
 //#include "FreeRTOS.h"
 #include "NimBLERemoteService.h"
 #include "NimBLERemoteDescriptor.h"
 
 //#include <string>
-#include <map>
+#include <vector>
 
 class NimBLERemoteService;
 class NimBLERemoteDescriptor;
@@ -46,7 +49,7 @@ public:
     bool        canWrite();
     bool        canWriteNoResponse();
     NimBLERemoteDescriptor* getDescriptor(const NimBLEUUID &uuid);
-    std::map<std::string, NimBLERemoteDescriptor*>* getDescriptors();
+    std::vector<NimBLERemoteDescriptor*>* getDescriptors();
     uint16_t    getHandle();
     uint16_t    getDefHandle();
     NimBLEUUID  getUUID();
@@ -66,7 +69,7 @@ public:
 private:
 
     NimBLERemoteCharacteristic(NimBLERemoteService *pRemoteservice, const struct ble_gatt_chr *chr);
-    
+
     friend class NimBLEClient;
     friend class NimBLERemoteService;
     friend class NimBLERemoteDescriptor;
@@ -80,7 +83,7 @@ private:
     static int        descriptorDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error,
                                 uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc,
                                 void *arg);
-    
+
     // Private properties
     NimBLEUUID              m_uuid;
     uint8_t                 m_charProp;
@@ -93,8 +96,10 @@ private:
     std::string             m_value;
     notify_callback         m_notifyCallback;
 
-    // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
-    std::map<std::string, NimBLERemoteDescriptor*> m_descriptorMap;
+    // We maintain a vector of descriptors owned by this characteristic.
+    std::vector<NimBLERemoteDescriptor*> m_descriptorVector;
 }; // BLERemoteCharacteristic
+
+#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */
 #endif /* COMPONENTS_NIMBLEREMOTECHARACTERISTIC_H_ */

@@ -1853,7 +1853,6 @@ ble_gap_update_timer(void)
         ble_hs_unlock();
 
         if (entry != NULL) {
-            ble_gap_update_notify(conn_handle, BLE_HS_ETIMEOUT);
             ble_gap_update_entry_free(entry);
         }
     } while (entry != NULL);
@@ -5301,7 +5300,7 @@ ble_gap_unpair_oldest_peer(void)
     }
 
     if (num_peers == 0) {
-        return BLE_HS_ENOENT;
+        return 0;
     }
 
     rc = ble_gap_unpair(&oldest_peer_id_addr);
