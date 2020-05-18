@@ -1,6 +1,14 @@
 # *** UPDATE ***
- Client long read/write characteristics/descriptors now working.   
- We are now nearing 100% replacement of the original esp32-arduino BLE library :smile:
+**Breaking change:** Client and scan now use `std::vector` instead of `std::map` for storing the remote attribute database.   
+   
+This change will affect your application code if you use `NimBLEClient::getServices()` or `NimBLERemoteService::getCharacteristics()`   
+in your application as they now return a pointer to `std::vector` of the respective attributes.   
+
+In addition `NimBLERemoteService::getCharacteristicsByHandle()` has been removed as it is no longer maintained in the library.
+
+These changes were necessary due to the amount of resources required to use `std::map`, it was not justifed by any benfit it provided.   
+   
+It is expected that there will be minimal impact on most applications, if you need help adjusting your code please create an issue.   
 
 # NimBLE-Arduino
 A fork of the NimBLE stack restructured for compilation in the Ardruino IDE with a CPP library for use with ESP32.

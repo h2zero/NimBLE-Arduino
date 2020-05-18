@@ -117,13 +117,15 @@ NimBLEScan::NimBLEScan() {
 
             NimBLEAdvertisedDevice* advertisedDevice = nullptr;
 
-            // If we've seen this device before get a pointer to it from the map
-            auto it = pScan->m_scanResults.m_advertisedDevicesMap.find(advertisedAddress.toString());
-            if(it != pScan->m_scanResults.m_advertisedDevicesMap.cend()) {
-                advertisedDevice = (*it).second;
+            // If we've seen this device before get a pointer to it from the vector
+            for(auto &it: pScan->m_scanResults.m_advertisedDevicesVector) {
+                if(it->getAddress() == advertisedAddress) {
+                    advertisedDevice = it;
+                    break;
+                }
             }
 
-            // If we haven't seen this device before; create a new instance and insert it in the map.
+            // If we haven't seen this device before; create a new instance and insert it in the vector.
             // Otherwise just update the relevant parameters of the already known device.
             if(advertisedDevice == nullptr){
                 advertisedDevice = new NimBLEAdvertisedDevice();
@@ -131,7 +133,7 @@ NimBLEScan::NimBLEScan() {
                 advertisedDevice->setAddress(advertisedAddress);
                 //NIMBLE_LOGE(LOG_TAG, "advertisement type: %d, %s",event->disc.event_type, NimBLEUtils::advTypeToString(event->disc.event_type));
                 advertisedDevice->setAdvType(event->disc.event_type);
-                pScan->m_scanResults.m_advertisedDevicesMap.insert(std::pair<std::string, NimBLEAdvertisedDevice*>(advertisedAddress.toString(), advertisedDevice));
+                pScan->m_scanResults.m_advertisedDevicesVector.push_back(advertisedDevice);
                 NIMBLE_LOGI(LOG_TAG, "NEW DEVICE FOUND: %s", advertisedAddress.toString().c_str());
             }
             else{
@@ -263,7 +265,7 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     }
 
     //  if we are connecting to devices that are advertising even after being connected, multiconnecting peripherals
-    //  then we should not clear map or we will connect the same device few times
+    //  then we should not clear vector or we will connect the same device few times
     if(!is_continue) {
         clearResults();
     }
@@ -331,9 +333,14 @@ void NimBLEScan::stop() {
 // delete peer device from cache after disconnecting, it is required in case we are connecting to devices with not public address
 void NimBLEScan::erase(const NimBLEAddress &address) {
     NIMBLE_LOGI(LOG_TAG, "erase device: %s", address.toString().c_str());
-    NimBLEAdvertisedDevice *advertisedDevice = m_scanResults.m_advertisedDevicesMap.find(address.toString())->second;
-    m_scanResults.m_advertisedDevicesMap.erase(address.toString());
-    delete advertisedDevice;
+
+    for(auto it = m_scanResults.m_advertisedDevicesVector.begin(); it != m_scanResults.m_advertisedDevicesVector.begin(); ++it) {
+        if((*it)->getAddress() == address) {
+            delete *it;
+            m_scanResults.m_advertisedDevicesVector.erase(it);
+            break;
+        }
+    }
 }
 
 
@@ -360,10 +367,10 @@ NimBLEScanResults NimBLEScan::getResults() {
  * @brief Clear the results of the scan.
  */
 void NimBLEScan::clearResults() {
-    for(auto _dev : m_scanResults.m_advertisedDevicesMap){
-        delete _dev.second;
+    for(auto &it: m_scanResults.m_advertisedDevicesVector) {
+        delete it;
     }
-    m_scanResults.m_advertisedDevicesMap.clear();
+    m_scanResults.m_advertisedDevicesVector.clear();
 }
 
 
@@ -383,7 +390,7 @@ void NimBLEScanResults::dump() {
  * @return The number of devices found in the last scan.
  */
 int NimBLEScanResults::getCount() {
-    return m_advertisedDevicesMap.size();
+    return m_advertisedDevicesVector.size();
 } // getCount
 
 
@@ -394,14 +401,24 @@ int NimBLEScanResults::getCount() {
  * @return The device at the specified index.
  */
 NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
-    uint32_t x = 0;
-    NimBLEAdvertisedDevice dev = *m_advertisedDevicesMap.begin()->second;
-    for (auto it = m_advertisedDevicesMap.begin(); it != m_advertisedDevicesMap.end(); it++) {
-        dev = *it->second;
-        if (x==i)   break;
-        x++;
+    return *m_advertisedDevicesVector[i];
+}
+
+
+/**
+ * @brief Return a pointer to the specified device at the given address.
+ * If the address is not found a nullptr is returned.
+ * @param [in] address The address of the device.
+ * @return A pointer to the device at the specified address.
+ */
+NimBLEAdvertisedDevice *NimBLEScanResults::getDevice(const NimBLEAddress &address) {
+    for(size_t index = 0; index < m_advertisedDevicesVector.size(); index++) {
+        if(m_advertisedDevicesVector[index]->getAddress() == address) {
+            return m_advertisedDevicesVector[index];
+        }
     }
-    return dev;
+
+    return nullptr;
 }
 
 
