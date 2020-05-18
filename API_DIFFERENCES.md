@@ -111,6 +111,17 @@ NimBLERemoteCharacteristic::registerForNotify();
 ```
 Now return true or false to indicate success or failure so you can choose to disconnect or try again.
 
+```
+NimBLEClient::getServices()   
+NimBLERemoteService::getCharacteristics()
+```
+Now return a pointer to a `std::vector` of the respective object database instead of `std::map`.
+
+`NimBLERemoteService::getCharacteristicsByHandle()`
+Has been removed from the API as it is no longer maintained in the library.   
+
+The last two above changes reduce the heap usage significantly with minimal application code adjustments.   
+
 #### Client Security:
 The client will automatically initiate security when the peripheral responds that it's required.    
 The default configuration will use "just-works" pairing with no bonding, if you wish to enable bonding see below.
