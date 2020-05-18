@@ -73,7 +73,7 @@ private:
     bool                retrieveServices();  //Retrieve services from the server
 //    void                onHostReset();
 
-    NimBLEAddress    m_peerAddress = NimBLEAddress("\0\0\0\0\0\0", 6);   // The BD address of the remote server.
+    NimBLEAddress    m_peerAddress = NimBLEAddress("");   // The BD address of the remote server.
     uint16_t         m_conn_id;
     bool             m_haveServices = false;    // Have we previously obtain the set of services from the remote server.
     bool             m_isConnected = false;     // Are we currently connected.
