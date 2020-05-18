@@ -23,7 +23,7 @@
     if(pSemaphore == nullptr) { \
         pSemaphore = new NimBLESemaphore(); \
     } \
-    pSemaphore->take(owner);
+    pSemaphore->take(owner); \
     
 #define NIMBLE_SEMAPHORE_GIVE(pSemaphore, value) \
     if(pSemaphore != nullptr) { \
@@ -32,12 +32,17 @@
     
 #define NIMBLE_SEMAPHORE_WAIT(pSemaphore) \
     pSemaphore->wait();
-    
+
+/* A little hack here for thread safety, we save the semaphore in nimble_temp 
+ * then set the semapore pointer to NULL so that any thread calling take at 
+ * nearly the same time will create a new object, because (pSemaphore == nullptr),
+ * before this is deleted. If you know a better way, please let me know!
+ */
 #define NIMBLE_SEMAPHORE_DELETE(pSemaphore) \
-    if(pSemaphore != nullptr) { \
-        pSemaphore->give(); \
-        delete(pSemaphore); \
+    if(pSemaphore != nullptr && !pSemaphore->getRefCount()) { \
+        NimBLESemaphore* nimble_temp = pSemaphore; \
         pSemaphore = nullptr; \
+        delete(nimble_temp); \
     }
 
 /**
@@ -58,12 +63,14 @@ public:
     bool		timedWait(uint32_t timeoutMs = portMAX_DELAY);
     uint32_t    wait();
     uint32_t	value(){ return m_value; };
+    size_t      getRefCount();
 
 private:
     SemaphoreHandle_t m_semaphore;
     const char        *m_name;
     const char        *m_owner;
     uint32_t          m_value;
+    size_t            m_refCount;
 };
 
 #endif /* MAIN_NIMBLE_SEMAPHORE_H_ */

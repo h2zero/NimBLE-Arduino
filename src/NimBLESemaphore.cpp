@@ -24,10 +24,11 @@ static const char* LOG_TAG = "NimBLESemaphore";
  * @return The value associated with the semaphore.
  */
 uint32_t NimBLESemaphore::wait() {
+    m_refCount++;
     NIMBLE_LOGD(LOG_TAG, ">> wait: Semaphore waiting: %s", toString().c_str());
-
     xSemaphoreTake(m_semaphore, portMAX_DELAY);
 
+    m_refCount--;
     xSemaphoreGive(m_semaphore);
 
     NIMBLE_LOGD(LOG_TAG, "<< wait: Semaphore released: %s", toString().c_str());
@@ -57,20 +58,23 @@ bool NimBLESemaphore::timedWait(uint32_t timeoutMs) {
 NimBLESemaphore::NimBLESemaphore(const char *name) {
     m_semaphore = xSemaphoreCreateBinary();
     xSemaphoreGive(m_semaphore);
-    m_name      = name;
-    m_owner     = "";
-    m_value     = 0;
+    m_name       = name;
+    m_owner      = "";
+    m_value      = 0;
+    m_refCount   = 0;
 }
 
 NimBLESemaphore::NimBLESemaphore() {
     m_semaphore = xSemaphoreCreateBinary();
     xSemaphoreGive(m_semaphore);
-    m_owner     = "";
-    m_value     = 0;
+    m_owner      = "";
+    m_value      = 0;
+    m_refCount   = 0;
 }
 
 
 NimBLESemaphore::~NimBLESemaphore() {
+    //NIMBLE_LOGD(LOG_TAG, "Semaphore delete: %s", toString().c_str());
     vSemaphoreDelete(m_semaphore);
 }
 
@@ -80,6 +84,7 @@ NimBLESemaphore::~NimBLESemaphore() {
  * The Semaphore is given.
  */
 void NimBLESemaphore::give() {
+    m_refCount--;
     NIMBLE_LOGD(LOG_TAG, "Semaphore giving: %s", toString().c_str());
     xSemaphoreGive(m_semaphore);
 } // Semaphore::give
@@ -115,10 +120,11 @@ bool NimBLESemaphore::take() {
  * @return True if we took the semaphore.
  */
 bool NimBLESemaphore::take(const char* owner) {
-    m_owner = owner;
+    m_refCount++;
     NIMBLE_LOGD(LOG_TAG, "Semaphore taking: %s", toString().c_str());
     bool rc = xSemaphoreTake(m_semaphore, portMAX_DELAY) == pdTRUE;
     if (rc) {
+        m_owner = owner;
         NIMBLE_LOGD(LOG_TAG, "Semaphore taken:  %s", toString().c_str());
     } else {
         NIMBLE_LOGE(LOG_TAG, "Semaphore NOT taken:  %s", toString().c_str());
@@ -146,6 +152,10 @@ bool NimBLESemaphore::take(uint32_t timeoutMs) {
 } // Semaphore::take
 
 
+size_t NimBLESemaphore::getRefCount() {
+    return m_refCount;
+}
+
 /**
  * @brief Create a string representation of the semaphore.
  * @return A string representation of the semaphore.
@@ -156,6 +166,9 @@ std::string NimBLESemaphore::toString() {
     res += m_owner;
     snprintf(hex, sizeof(hex), " (0x%08x)", (uint32_t)m_semaphore);
     res += hex;
+    snprintf(hex, sizeof(hex), " RefCnt: %d", m_refCount);
+    res += hex;
+
     return res;
 } // toString
 
