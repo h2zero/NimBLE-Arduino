@@ -421,22 +421,5 @@ NimBLEAdvertisedDevice *NimBLEScanResults::getDevice(const NimBLEAddress &addres
     return nullptr;
 }
 
-
-/**
- * @brief Return a pointer to the specified device at the given address.
- * If the address is not found a nullptr is returned.
- * @param [in] address The address of the device.
- * @return A pointer to the device at the specified address.
- */
-NimBLEAdvertisedDevice *NimBLEScanResults::getDevice(const NimBLEAddress &address) {
-    for (auto it = m_advertisedDevicesMap.begin(); it != m_advertisedDevicesMap.end(); it++) {
-        if(it->second->getAddress() == address) {
-            return it->second;
-        }
-    }
-
-    return nullptr;
-}
-
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 #endif /* CONFIG_BT_ENABLED */

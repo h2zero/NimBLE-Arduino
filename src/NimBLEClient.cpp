@@ -680,13 +680,15 @@ uint16_t NimBLEClient::getMTU() {
                 if(characteristic != cVector->cend()) {
                     NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", (*characteristic)->toString().c_str());
 
+                    (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data, event->notify_rx.om->om_len);
+                    (*characteristic)->m_timestamp = time(nullptr);
                     if ((*characteristic)->m_notifyCallback != nullptr) {
                         NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", (*characteristic)->toString().c_str());
                         (*characteristic)->m_notifyCallback(*characteristic, event->notify_rx.om->om_data, event->notify_rx.om->om_len, !event->notify_rx.indication);
                     }
-                    if (characteristic->second->m_notifyCallbackPlain != nullptr) {
-                        NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", characteristic->second->toString().c_str());
-                        characteristic->second->m_notifyCallbackPlain(characteristic->second, !event->notify_rx.indication);
+                    if ((*characteristic)->m_notifyCallbackPlain != nullptr) {
+                        NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", (*characteristic)->toString().c_str());
+                        (*characteristic)->m_notifyCallbackPlain(*characteristic, !event->notify_rx.indication);
                     }
                     break;
                 }
