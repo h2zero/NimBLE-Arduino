@@ -59,6 +59,15 @@ public:
     uint16_t    readUInt16();
     uint32_t    readUInt32();
     std::string getValue(time_t *timestamp = nullptr);
+
+    template<typename T>
+    T           getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+        std::string value = getValue(timestamp);
+        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
+        const char *pData = value.data();
+        return *((T *)pData);
+    }
+
     bool        registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
     bool        registerForNotify(notify_callback_plain _callback, bool notifications = true, bool response = true);
     bool        writeValue(const uint8_t* data, size_t length, bool response = false);

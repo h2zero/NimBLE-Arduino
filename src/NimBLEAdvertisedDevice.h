@@ -44,10 +44,28 @@ public:
     NimBLEAddress   getAddress();
     uint16_t        getAppearance();
     std::string     getManufacturerData();
+
+    template<typename T>
+    T               getManufacturerData(bool skipSizeCheck = false) {
+        std::string data = getManufacturerData();
+        if(!skipSizeCheck && data.size() < sizeof(T)) return T();
+        const char *pData = data.data();
+        return *((T *)pData);
+    }
+
     std::string     getName();
     int             getRSSI();
     NimBLEScan*     getScan();
     std::string     getServiceData();
+
+    template<typename T>
+    T               getServiceData(bool skipSizeCheck = false) {
+        std::string data = getServiceData();
+        if(!skipSizeCheck && data.size() < sizeof(T)) return T();
+        const char *pData = data.data();
+        return *((T *)pData);
+    }
+
     NimBLEUUID      getServiceDataUUID();
     NimBLEUUID      getServiceUUID();
     int8_t          getTXPower();
