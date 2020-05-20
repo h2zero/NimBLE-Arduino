@@ -30,6 +30,7 @@
 class NimBLERemoteService;
 class NimBLEClientCallbacks;
 class NimBLEAdvertisedDevice;
+class NimBLEUUID;
 
 /**
  * @brief A model of a %BLE client.
@@ -71,6 +72,7 @@ private:
     static int          serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
     void                clearServices();   // Clear any existing services.
     bool                retrieveServices();  //Retrieve services from the server
+    bool                retrieveService(const NimBLEUUID &uuid);  //Retrieve only one service from the server
 //    void                onHostReset();
 
     NimBLEAddress    m_peerAddress = NimBLEAddress("");   // The BD address of the remote server.

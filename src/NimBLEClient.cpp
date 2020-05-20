@@ -185,7 +185,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
         clearServices();
     }
 
-    if (!m_haveServices) {
+    if (!m_haveServices && m_preDiscover) {
         if (!retrieveServices()) {
             // error getting services, make sure we disconnect and release any resources before returning
             disconnect();
@@ -368,8 +368,12 @@ NimBLERemoteService* NimBLEClient::getService(const char* uuid) {
 NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
     NIMBLE_LOGD(LOG_TAG, ">> getService: uuid: %s", uuid.toString().c_str());
 
-    if (!m_haveServices) {
-        return nullptr;
+    if (!m_haveServices) { // No services yet, so retrieve the one for uuid
+        if(retrieveService(uuid)) { // Found, so the wanted service is the first in the vector
+            return m_servicesVector[0];
+        } else {
+            return nullptr;
+        }
     }
 
     for(auto &it: m_servicesVector) {
@@ -378,6 +382,12 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
             return it;
         }
     } 
+
+    // At this point the service is not found in the vector, so try to retrieve it
+    if(retrieveService(uuid)) { // Found, so the wanted service is the last in the vector
+        NIMBLE_LOGD(LOG_TAG, "<< getService: retrieved one service with uuid: %s", uuid.toString().c_str());
+        return m_servicesVector[m_servicesVector.size()- 1];
+    }
 
     NIMBLE_LOGD(LOG_TAG, "<< getService: not found");
     return nullptr;
@@ -446,6 +456,53 @@ bool NimBLEClient::retrieveServices() {
         return false;
     }
 } // getServices
+
+
+/**
+ * @brief Ask the remote %BLE server for one service by uuid.
+ * A %BLE Server exposes a set of services for its partners.  Here we ask the server for one of its
+ * services and wait until we have received it.
+ * @return true on success otherwise false if an error occurred
+ */
+bool NimBLEClient::retrieveService(const NimBLEUUID &uuid) {
+/**
+ * Design
+ * ------
+ * We invoke ble_gattc_disc_svc_by_uuid.  This will request one of the services (by uuid) exposed by the
+ * peer BLE partner to be returned in the callback function provided.
+ */
+
+    NIMBLE_LOGD(LOG_TAG, ">> retrieveService");
+
+    if(!m_isConnected){
+        NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve service -aborting");
+        return false;
+    }
+
+    m_semaphoreSearchCmplEvt.take("retrieveServices");
+
+    int rc = ble_gattc_disc_svc_by_uuid(m_conn_id, &uuid.getNative()->u, NimBLEClient::serviceDiscoveredCB, this);
+
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_svc_by_uuid: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+//        m_haveServices = false;
+        m_semaphoreSearchCmplEvt.give();
+        return false;
+    }
+
+    // wait until we have the service requested
+    // If sucessful, remember that we now have services.
+    bool success = (m_semaphoreSearchCmplEvt.wait("retrieveServices") == 0);
+    m_haveServices |= success;
+    if(success) {
+        NIMBLE_LOGD(LOG_TAG, "Found UUID: %s", std::string(uuid).c_str());
+    } else {
+        NIMBLE_LOGE(LOG_TAG, "Could not retrieve services");
+    }
+        
+    NIMBLE_LOGD(LOG_TAG, "<< retrieveServices");
+    return success;
+} // retrieveService
 
 
 /**
