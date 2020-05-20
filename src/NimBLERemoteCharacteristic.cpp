@@ -241,6 +241,24 @@ uint16_t NimBLERemoteCharacteristic::getDefHandle() {
 
 
 /**
+ * @brief Get iterator to the beginning of the vector of remote descriptor pointers.
+ * @return An iterator to the beginning of the vector of remote descriptor pointers.
+ */
+std::vector<NimBLERemoteDescriptor*>::iterator NimBLERemoteCharacteristic::begin() {
+    return m_descriptorVector.begin();
+}
+
+
+/**
+ * @brief Get iterator to the end of the vector of remote descriptor pointers.
+ * @return An iterator to the end of the vector of remote descriptor pointers.
+ */
+std::vector<NimBLERemoteDescriptor*>::iterator NimBLERemoteCharacteristic::end() {
+    return m_descriptorVector.end();
+}
+
+
+/**
  * @brief Get the descriptor instance with the given UUID that belongs to this characteristic.
  * @param [in] uuid The UUID of the descriptor to find.
  * @return The Remote descriptor (if present) or null if not present.

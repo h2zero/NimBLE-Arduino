@@ -349,6 +349,24 @@ int NimBLEClient::getRssi() {
 
 
 /**
+ * @brief Get iterator to the beginning of the vector of remote service pointers.
+ * @return An iterator to the beginning of the vector of remote service pointers.
+ */
+std::vector<NimBLERemoteService*>::iterator NimBLEClient::begin() {
+    return m_servicesVector.begin();
+}
+
+
+/**
+ * @brief Get iterator to the end of the vector of remote service pointers.
+ * @return An iterator to the end of the vector of remote service pointers.
+ */
+std::vector<NimBLERemoteService*>::iterator NimBLEClient::end() {
+    return m_servicesVector.end();
+}
+
+
+/**
  * @brief Get the service BLE Remote Service instance corresponding to the uuid.
  * @param [in] uuid The UUID of the service being sought.
  * @return A reference to the Service or nullptr if don't know about it.
