@@ -260,7 +260,7 @@ bool NimBLERemoteService::retrieveCharacteristic(const NimBLEUUID &uuid) {
     NIMBLE_LOGE(LOG_TAG, "Could not retrieve characteristic(%s)", std::string(uuid).c_str());
     return false;
     
-} // retrieveCharacteristics
+} // retrieveCharacteristic
 
 
 /**

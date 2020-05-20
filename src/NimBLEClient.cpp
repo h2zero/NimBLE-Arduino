@@ -370,6 +370,7 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
 
     if (!m_haveServices) { // No services yet, so retrieve the one for uuid
         if(retrieveService(uuid)) { // Found, so the wanted service is the first in the vector
+            NIMBLE_LOGD(LOG_TAG, "<< getService: retrieved one service with uuid: %s", uuid.toString().c_str());
             return m_servicesVector[0];
         } else {
             return nullptr;
