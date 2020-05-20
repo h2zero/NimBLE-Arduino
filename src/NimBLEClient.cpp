@@ -440,12 +440,10 @@ bool NimBLEClient::retrieveServices() {
     // If sucessful, remember that we now have services.
     m_haveServices = (m_semaphoreSearchCmplEvt.wait("retrieveServices") == 0);
     if(m_haveServices){
-        if(m_preDiscover) {
-            for (auto &it: m_servicesVector) {
-                if(!m_isConnected || !it->retrieveCharacteristics()) {
-                    NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve characteristics -aborting");
-                    return false;
-                }
+        for (auto &it: m_servicesVector) {
+            if(!m_isConnected || !it->retrieveCharacteristics()) {
+                NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve characteristics -aborting");
+                return false;
             }
         }
         
