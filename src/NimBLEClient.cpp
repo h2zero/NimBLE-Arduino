@@ -366,28 +366,19 @@ NimBLERemoteService* NimBLEClient::getService(const char* uuid) {
  * @return A reference to the Service or nullptr if don't know about it.
  */
 NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
-    NIMBLE_LOGD(LOG_TAG, ">> getService: uuid: %s", uuid.toString().c_str());
-
-    if (!m_haveServices) { // No services yet, so retrieve the one for uuid
-        if(retrieveService(uuid)) { // Found, so the wanted service is the first in the vector
-            NIMBLE_LOGD(LOG_TAG, "<< getService: retrieved one service with uuid: %s", uuid.toString().c_str());
-            return m_servicesVector[0];
-        } else {
-            return nullptr;
-        }
-    }
+    NIMBLE_LOGD(LOG_TAG, ">> getService: uuid: %s", std::string(uuid).c_str());
 
     for(auto &it: m_servicesVector) {
         if(it->getUUID() == uuid) {
-            NIMBLE_LOGD(LOG_TAG, "<< getService: found the service with uuid: %s", uuid.toString().c_str());
+            NIMBLE_LOGD(LOG_TAG, "<< getService: found the service with uuid: %s", std::string(uuid).c_str());
             return it;
         }
     } 
 
     // At this point the service is not found in the vector, so try to retrieve it
     if(retrieveService(uuid)) { // Found, so the wanted service is the last in the vector
-        NIMBLE_LOGD(LOG_TAG, "<< getService: retrieved one service with uuid: %s", uuid.toString().c_str());
-        return m_servicesVector[m_servicesVector.size()- 1];
+        NIMBLE_LOGD(LOG_TAG, "<< getService: retrieved one service with uuid: %s", std::string(uuid).c_str());
+        return m_servicesVector.back();
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< getService: not found");

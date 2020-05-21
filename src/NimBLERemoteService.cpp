@@ -80,28 +80,21 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* u
  * @return Reference to the characteristic object, or nullptr if not found.
  */
 NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID &uuid) {
-    if(!m_haveCharacteristics) { // No characteristics yet, so retrieve the one for uuid
-        if(retrieveCharacteristic(uuid)) { // Found, so the wanted characteristic is the first in the vector
-            return m_characteristicVector[0];
-        } else {
-            return nullptr;
+    NIMBLE_LOGD(LOG_TAG, ">> getCharacteristic: uuid: %s", std::string(uuid).c_str());
+
+    for(auto &it: m_characteristicVector) {
+        if(it->getUUID() == uuid) {
+            NIMBLE_LOGD(LOG_TAG, "<< getCharacteristic: found the characteristic with uuid: %s", std::string(uuid).c_str());
+            return it;
         }
     }
-    if (m_haveCharacteristics) {
-        for(auto &it: m_characteristicVector) {
-            if(it->getUUID() == uuid) {
-                return it;
-            }
-        }
-        // At this point the characteristic is not found in the vector, so try to retrieve it
-        if(retrieveCharacteristic(uuid)) { // Found, so the wanted characteristic is the last in the vector
-            return m_characteristicVector[m_characteristicVector.size()- 1];
-        } else {
-            return nullptr;
-        }
-
+    // At this point the characteristic is not found in the vector, so try to retrieve it
+    if(retrieveCharacteristic(uuid)) { // Found, so the wanted characteristic is the last in the vector
+        NIMBLE_LOGD(LOG_TAG, "<< getCharacteristic: retrieved one characteristic with uuid: %s", std::string(uuid).c_str());
+        return m_characteristicVector.back();
     }
 
+    NIMBLE_LOGD(LOG_TAG, "<< getCharacteristic: not found");
     return nullptr;
 } // getCharacteristic
 

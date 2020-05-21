@@ -247,13 +247,22 @@ uint16_t NimBLERemoteCharacteristic::getDefHandle() {
  * @return The Remote descriptor (if present) or null if not present.
  */
 NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID &uuid) {
-    NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
+    NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", std::string(uuid).c_str());
+
     for(auto &it: m_descriptorVector) {
-          if(it->getUUID() == uuid) {
-              NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found");
-              return it;
-          }
+        if(it->getUUID() == uuid) {
+            NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found the descriptor with uuid: %s", std::string(uuid).c_str());
+            return it;
+        }
     }
+/*
+    // At this point the descriptor is not found in the vector, so try to retrieve it
+    if(retrieveDescriptor(uuid)) { // Found, so the wanted descriptor is the last in the vector
+        NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: retrieved one descriptor with uuid: %s", std::string(uuid).c_str());
+        return m_descriptorVector.back();
+    }
+*/
+
     NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
     return nullptr;
 } // getDescriptor
