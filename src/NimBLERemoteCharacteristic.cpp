@@ -160,15 +160,13 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
         case 0: {
             // Found a descriptor - add it to the vector
             NimBLERemoteDescriptor* pNewRemoteDescriptor = new NimBLERemoteDescriptor(characteristic, dsc);
-/*
-            if(pNewRemoteDescriptor->getUUID() == characteristic->m_searchDescriptorUUID) {
+
+            if(pNewRemoteDescriptor->getUUID() == NimBLEUUID(uint16_t(0x2803))) { // 
+                delete pNewRemoteDescriptor;
+                rc = 1;
+            } else {
                 characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
-                characteristic->m_semaphoreGetDescEvt.give(0); // Abort discovery without error
-                rc = 0;
-                break;
             }
-*/
-            characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
             break;
         }
         case BLE_HS_EDONE:{
