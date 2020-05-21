@@ -77,7 +77,7 @@ private:
 
     // Private member functions
     void              removeDescriptors();
-    bool              retrieveDescriptors(uint16_t endHdl);
+    bool              retrieveDescriptors(uint16_t endHdl, uint16_t startHdl = 0xffff);
     static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
     static int        onWriteCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
     void              releaseSemaphores();

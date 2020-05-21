@@ -160,6 +160,14 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
         case 0: {
             // Found a descriptor - add it to the vector
             NimBLERemoteDescriptor* pNewRemoteDescriptor = new NimBLERemoteDescriptor(characteristic, dsc);
+/*
+            if(pNewRemoteDescriptor->getUUID() == characteristic->m_searchDescriptorUUID) {
+                characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
+                characteristic->m_semaphoreGetDescEvt.give(0); // Abort discovery without error
+                rc = 0;
+                break;
+            }
+*/
             characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
             break;
         }
@@ -185,8 +193,9 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
 /**
  * @brief Populate the descriptors (if any) for this characteristic.
  * @param [in] the end handle of the characteristic, or the service, whichever comes first.
+ * @param [in] the (optional) start handle to start or resume searching from.
  */
-bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
+bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl, uint16_t startHdl) {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
     int rc = 0;
@@ -194,8 +203,12 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
 
     m_semaphoreGetDescEvt.take("retrieveDescriptors");
 
+    if(startHdl == 0xffff) { // If no explicit start handle is given, start at the handle of the characteristic
+        startHdl = m_handle;
+    }
+
     rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(),
-                                 m_handle,
+                                 startHdl,
                                  endHdl,
                                  NimBLERemoteCharacteristic::descriptorDiscCB,
                                  this);
@@ -255,16 +268,33 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
             return it;
         }
     }
-/*
-    // At this point the descriptor is not found in the vector, so try to retrieve it
-    if(retrieveDescriptor(uuid)) { // Found, so the wanted descriptor is the last in the vector
-        NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: retrieved one descriptor with uuid: %s", std::string(uuid).c_str());
-        return m_descriptorVector.back();
-    }
-*/
 
-    NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
-    return nullptr;
+    // At this point the descriptor is not found in the vector. The stack has no function for discovering a descriptor by uuid.
+    // So try to retrieve the not yet retrieved descriptors one by one until the one we are looking for is found
+    uint16_t searchFromHandle;
+    if(m_descriptorVector.size() == 0) { // No descriptors found yet, so start at the handle of the characteristic itself   
+        searchFromHandle = m_handle;
+    } else { // Start at the handle of the latest found descriptor
+        searchFromHandle = m_descriptorVector.back()->m_handle;
+    }
+
+    for(;;) {
+        if(retrieveDescriptors(searchFromHandle + 1, searchFromHandle)) { // Did we find a (one) descriptor?
+            if(m_descriptorVector.back()->getUUID() == uuid) { // The one we're looking for?
+                NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: retrieved (unitl) descriptor with uuid: %s", std::string(uuid).c_str());
+                return m_descriptorVector.back();
+            }
+            // The descriptor we're looking for is not found, so try the next handle
+            searchFromHandle++;
+            if(searchFromHandle > m_pRemoteService->m_endHandle) { // Reached last handle of the service, so stop looking
+                NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Reached last handle, not found");
+                return nullptr;
+            }
+        } else { // No descriptor found
+            NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
+            return nullptr;
+        }
+    }
 } // getDescriptor
 
 
