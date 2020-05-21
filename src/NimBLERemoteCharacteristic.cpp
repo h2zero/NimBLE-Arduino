@@ -51,13 +51,14 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
             m_uuid = nullptr;
             break;
     }
-    m_handle         = chr->val_handle;
-    m_defHandle      = chr->def_handle;
-    m_charProp       = chr->properties;
-    m_pRemoteService = pRemoteService;
-    m_notifyCallback = nullptr;
-    m_rawData        = nullptr;
-    m_dataLen        = 0;
+    m_handle             = chr->val_handle;
+    m_defHandle          = chr->def_handle;
+    m_charProp           = chr->properties;
+    m_pRemoteService     = pRemoteService;
+    m_notifyCallback     = nullptr;
+    m_rawData            = nullptr;
+    m_dataLen            = 0;
+    m_haveAllDescriptors = false;
  } // NimBLERemoteCharacteristic
 
 
@@ -147,7 +148,9 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
 {
     NIMBLE_LOGD(LOG_TAG,"Descriptor Discovered >> status: %d handle: %d", error->status, conn_handle);
 
-    NimBLERemoteCharacteristic *characteristic = (NimBLERemoteCharacteristic*)arg;
+    disc_filter_t *filter = (disc_filter_t*)arg;
+    NimBLEUUID *uuid_filter = (NimBLEUUID*)filter->uuid;
+    NimBLERemoteCharacteristic *characteristic = (NimBLERemoteCharacteristic*)filter->attribute;
     int rc=0;
 
     // Make sure the discovery is for this device
@@ -157,6 +160,18 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
 
     switch (error->status) {
         case 0: {
+            if(dsc->uuid.u.type == BLE_UUID_TYPE_16 && dsc->uuid.u16.value == uint16_t(0x2803)) {
+                return 1;
+            }
+            if(uuid_filter != nullptr) {
+                if(ble_uuid_cmp(&uuid_filter->getNative()->u, &dsc->uuid.u) != 0) {
+                    return 0;
+                } else {
+                    NimBLERemoteDescriptor* pNewRemoteDescriptor = new NimBLERemoteDescriptor(characteristic, dsc);
+                    characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
+                    return 1;
+                }
+            }
             // Found a descriptor - add it to the vector
             NimBLERemoteDescriptor* pNewRemoteDescriptor = new NimBLERemoteDescriptor(characteristic, dsc);
             characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
@@ -185,19 +200,21 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
  * @brief Populate the descriptors (if any) for this characteristic.
  * @param [in] the end handle of the characteristic, or the service, whichever comes first.
  */
-bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
+bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filter) {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
     int rc = 0;
-    //removeDescriptors();   // Remove any existing descriptors.
+    disc_filter_t filter;
+    filter.uuid = uuid_filter;
+    filter.attribute = this;
 
     m_semaphoreGetDescEvt.take("retrieveDescriptors");
 
     rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(),
                                  m_handle,
-                                 endHdl,
+                                 getRemoteService()->getEndHandle(),
                                  NimBLERemoteCharacteristic::descriptorDiscCB,
-                                 this);
+                                 &filter);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_chrs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         m_semaphoreGetDescEvt.give();
@@ -205,8 +222,6 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
     }
 
     if(m_semaphoreGetDescEvt.wait("retrieveCharacteristics") != 0) {
-        // if there was an error release the resources
-        //removeDescriptors();
         return false;
     }
 
@@ -217,8 +232,21 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
 
 /**
  * @brief Retrieve the vector of descriptors.
- */ 
-std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors() {
+ */
+std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors(bool refresh) {
+    if(refresh) {
+        removeDescriptors();
+    }
+
+    if(!m_haveAllDescriptors && m_descriptorVector.empty()) {
+        if (!retrieveDescriptors()) {
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get services");
+        }
+        else{
+            m_haveAllDescriptors = true;
+            NIMBLE_LOGD(LOG_TAG, "Found %d services", m_descriptorVector.size());
+        }
+    }
     return &m_descriptorVector;
 } // getDescriptors
 
@@ -267,10 +295,17 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
 
     for(auto &it: m_descriptorVector) {
-          if(it->getUUID() == uuid) {
-              NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found");
-              return it;
-          }
+        if(it->getUUID() == uuid) {
+            NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found");
+            return it;
+        }
+    }
+
+    size_t prev_size = m_descriptorVector.size();
+    if(retrieveDescriptors(&uuid)) {
+        if(m_descriptorVector.size() > prev_size) {
+            return m_descriptorVector.back();
+        }
     }
     NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
     return nullptr;
@@ -473,6 +508,7 @@ void NimBLERemoteCharacteristic::removeDescriptors() {
         delete it;
     }
     m_descriptorVector.clear();
+    m_haveAllDescriptors = false;
 } // removeCharacteristics
 
 

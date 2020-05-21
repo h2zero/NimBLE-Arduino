@@ -27,6 +27,11 @@
 #include <vector>
 #include <string>
 
+typedef struct {
+    const NimBLEUUID *uuid;
+    const void *attribute;
+} disc_filter_t;
+
 class NimBLERemoteService;
 class NimBLEClientCallbacks;
 class NimBLEAdvertisedDevice;
@@ -42,7 +47,7 @@ public:
     NimBLEAddress                               getPeerAddress();              // Get the address of the remote BLE Server
     int                                         getRssi();                     // Get the RSSI of the remote BLE Server
 
-    std::vector<NimBLERemoteService*>*          getServices();                 // Get a vector of the services offered by the remote BLE Server
+    std::vector<NimBLERemoteService*>*          getServices(bool refresh = false);                 // Get a vector of the services offered by the remote BLE Server
     std::vector<NimBLERemoteService*>::iterator begin();
     std::vector<NimBLERemoteService*>::iterator end();
     NimBLERemoteService*                        getService(const char* uuid);  // Get a reference to a specified service offered by the remote BLE server.
@@ -62,7 +67,6 @@ public:
     void                                        updateConnParams(uint16_t minInterval, uint16_t maxInterval,
                                                             uint16_t latency, uint16_t timeout);
 
-
 private:
     NimBLEClient();
     ~NimBLEClient();
@@ -72,12 +76,12 @@ private:
     static int          handleGapEvent(struct ble_gap_event *event, void *arg);
     static int          serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
     void                clearServices();   // Clear any existing services.
-    bool                retrieveServices();  //Retrieve services from the server
+    bool                retrieveServices(const NimBLEUUID *uuid_filter = nullptr);
 //    void                onHostReset();
 
     NimBLEAddress    m_peerAddress = NimBLEAddress("");   // The BD address of the remote server.
     uint16_t         m_conn_id;
-    bool             m_haveServices = false;    // Have we previously obtain the set of services from the remote server.
+    bool             m_haveAllServices = false;    // Have we previously obtain the set of services from the remote server.
     bool             m_isConnected = false;     // Are we currently connected.
     bool             m_waitingToConnect =false;
     bool             m_deleteCallbacks = true;

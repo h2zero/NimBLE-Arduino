@@ -51,7 +51,7 @@ public:
     std::vector<NimBLERemoteDescriptor*>::iterator begin();
     std::vector<NimBLERemoteDescriptor*>::iterator end();
     NimBLERemoteDescriptor*                        getDescriptor(const NimBLEUUID &uuid);
-    std::vector<NimBLERemoteDescriptor*>*          getDescriptors();
+    std::vector<NimBLERemoteDescriptor*>*          getDescriptors(bool refresh = false);
     uint16_t                                       getHandle();
     uint16_t                                       getDefHandle();
     NimBLEUUID                                     getUUID();
@@ -78,7 +78,7 @@ private:
 
     // Private member functions
     void              removeDescriptors();
-    bool              retrieveDescriptors(uint16_t endHdl);
+    bool              retrieveDescriptors(const NimBLEUUID *uuid_filter = nullptr);
     static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
     static int        onWriteCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
     void              releaseSemaphores();
@@ -99,6 +99,7 @@ private:
     uint8_t*                m_rawData;
     size_t                  m_dataLen;
     notify_callback         m_notifyCallback;
+    bool                    m_haveAllDescriptors;
 
     // We maintain a vector of descriptors owned by this characteristic.
     std::vector<NimBLERemoteDescriptor*> m_descriptorVector;

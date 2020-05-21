@@ -44,7 +44,7 @@ public:
     NimBLERemoteCharacteristic*               getCharacteristic(const char* uuid);            // Get the specified characteristic reference.
     NimBLERemoteCharacteristic*               getCharacteristic(const NimBLEUUID &uuid);      // Get the specified characteristic reference.
 //  BLERemoteCharacteristic* getCharacteristic(uint16_t uuid);      // Get the specified characteristic reference.
-    std::vector<NimBLERemoteCharacteristic*>* getCharacteristics();
+    std::vector<NimBLERemoteCharacteristic*>* getCharacteristics(bool refresh = false);
 //  void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap);
 
     NimBLEClient*                             getClient(void);                                // Get a reference to the client associated with this service.
@@ -63,7 +63,7 @@ private:
     friend class NimBLERemoteCharacteristic;
 
     // Private methods
-    bool                retrieveCharacteristics(void);   // Retrieve the characteristics from the BLE Server.
+    bool                retrieveCharacteristics(const NimBLEUUID *uuid_filter = nullptr);   // Retrieve the characteristics from the BLE Server.
     static int          characteristicDiscCB(uint16_t conn_handle,
                                 const struct ble_gatt_error *error,
                                 const struct ble_gatt_chr *chr, void *arg);
@@ -78,7 +78,7 @@ private:
     // We maintain a vector of characteristics owned by this service.
     std::vector<NimBLERemoteCharacteristic*> m_characteristicVector;
 
-    bool                m_haveCharacteristics; // Have we previously obtained the characteristics.
+    bool                m_haveAllCharacteristics; // Have we previously obtained the characteristics.
     NimBLEClient*       m_pClient;
     FreeRTOS::Semaphore m_semaphoreGetCharEvt = FreeRTOS::Semaphore("GetCharEvt");
     NimBLEUUID          m_uuid;             // The UUID of this service.

@@ -49,7 +49,7 @@ NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const struct ble
     }
     m_startHandle = service->start_handle;
     m_endHandle = service->end_handle;
-    m_haveCharacteristics = false;
+    m_haveAllCharacteristics = false;
 
     NIMBLE_LOGD(LOG_TAG, "<< BLERemoteService()");
 }
@@ -98,11 +98,16 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* u
  * @return Reference to the characteristic object, or nullptr if not found.
  */
 NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID &uuid) {
-    if (m_haveCharacteristics) {
-        for(auto &it: m_characteristicVector) {
-            if(it->getUUID() == uuid) {
-                return it;
-            }
+    for(auto &it: m_characteristicVector) {
+        if(it->getUUID() == uuid) {
+            return it;
+        }
+    }
+
+    size_t prev_size = m_characteristicVector.size();
+    if(retrieveCharacteristics(&uuid)) {
+        if(m_characteristicVector.size() > prev_size) {
+            return m_characteristicVector.back();
         }
     }
 
@@ -164,7 +169,7 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
  * This function will not return until we have all the characteristics.
  * @return N/A
  */
-bool NimBLERemoteService::retrieveCharacteristics() {
+bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID *uuid_filter) {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveCharacteristics() for service: %s", getUUID().toString().c_str());
 
     int rc = 0;
@@ -172,49 +177,28 @@ bool NimBLERemoteService::retrieveCharacteristics() {
 
     m_semaphoreGetCharEvt.take("retrieveCharacteristics");
 
-    rc = ble_gattc_disc_all_chrs(m_pClient->getConnId(),
-                                 m_startHandle,
-                                 m_endHandle,
-                                 NimBLERemoteService::characteristicDiscCB,
-                                 this);
+    if(uuid_filter == nullptr) {
+        rc = ble_gattc_disc_all_chrs(m_pClient->getConnId(),
+                             m_startHandle,
+                             m_endHandle,
+                             NimBLERemoteService::characteristicDiscCB,
+                             this);
+    } else {
+        rc = ble_gattc_disc_chrs_by_uuid(m_pClient->getConnId(),
+                             m_startHandle,
+                             m_endHandle,
+                             &uuid_filter->getNative()->u,
+                             NimBLERemoteService::characteristicDiscCB,
+                             this);
+    }
+
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_chrs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-        m_haveCharacteristics = false;
         m_semaphoreGetCharEvt.give();
         return false;
     }
 
-    m_haveCharacteristics = (m_semaphoreGetCharEvt.wait("retrieveCharacteristics") == 0);
-    if(m_haveCharacteristics){
-        uint16_t endHdl = 0xFFFF;
-
-        NIMBLE_LOGD(LOG_TAG, "Found %d Characteristics", m_characteristicVector.size());
-        for(auto it = m_characteristicVector.cbegin(); it != m_characteristicVector.cend(); ++it) {
-            NIMBLE_LOGD(LOG_TAG, "Found UUID: %s Handle: %d Def Handle: %d", (*it)->getUUID().toString().c_str(), (*it)->getHandle(), (*it)->getDefHandle());
-            // The descriptor handle is between this characteristic val_handle and the next ones def_handle
-            // so make the end of the scan at the handle before the next characteristic def_handle
-
-            // Make sure we don't go past the service end handle
-            if(++it != m_characteristicVector.cend()){
-                NIMBLE_LOGD(LOG_TAG, "Next UUID: %s Handle: %d Def Handle: %d", (*it)->getUUID().toString().c_str(), (*it)->getHandle(),(*it)->getDefHandle());
-
-                endHdl = (*it)->getDefHandle()-1;
-            }
-            else{
-                NIMBLE_LOGD(LOG_TAG, "END CHARS");
-                endHdl = m_endHandle;
-            }
-            --it;
-
-            //If there is no handles between this characteristic and the next there is no descriptor so skip to the next
-            if((*it)->getHandle() != endHdl){
-                if(!m_pClient->m_isConnected || !(*it)->retrieveDescriptors(endHdl)) {
-                    return false;
-                }
-            }
-            //NIMBLE_LOGD(LOG_TAG, "Found %d Characteristics in service UUID: %s", chars->size(), myPair.first.c_str());
-        }
-
+    if(m_semaphoreGetCharEvt.wait("retrieveCharacteristics") == 0){
         NIMBLE_LOGD(LOG_TAG, "<< retrieveCharacteristics()");
         return true;
     }
@@ -229,7 +213,20 @@ bool NimBLERemoteService::retrieveCharacteristics() {
  * @brief Retrieve a vector of all the characteristics of this service.
  * @return A vector of all the characteristics of this service.
  */
-std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics() {
+std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics(bool refresh) {
+    if(refresh) {
+        removeCharacteristics();
+    }
+
+    if(!m_haveAllCharacteristics && m_characteristicVector.empty()) {
+        if (!retrieveCharacteristics()) {
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get services");
+        }
+        else{
+            m_haveAllCharacteristics = true;
+            NIMBLE_LOGD(LOG_TAG, "Found %d services", m_characteristicVector.size());
+        }
+    }
     return &m_characteristicVector;
 } // getCharacteristics
 
@@ -320,6 +317,7 @@ void NimBLERemoteService::removeCharacteristics() {
         delete it;
     }
     m_characteristicVector.clear();   // Clear the vector
+    m_haveAllCharacteristics = false;
 } // removeCharacteristics
 
 
