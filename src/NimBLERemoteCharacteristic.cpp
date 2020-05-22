@@ -65,7 +65,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  *@brief Destructor.
  */
 NimBLERemoteCharacteristic::~NimBLERemoteCharacteristic() {
-    removeDescriptors();   // Release resources for any descriptor information we may have allocated.
+    clear();   // Release resources for any descriptor information we may have allocated.
     if(m_rawData != nullptr) {
         free(m_rawData);
     }
@@ -189,7 +189,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
     int rc = 0;
-    //removeDescriptors();   // Remove any existing descriptors.
+    //clear();   // Remove any existing descriptors.
 
     m_semaphoreGetDescEvt.take("retrieveDescriptors");
 
@@ -206,7 +206,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(uint16_t endHdl) {
 
     if(m_semaphoreGetDescEvt.wait("retrieveCharacteristics") != 0) {
         // if there was an error release the resources
-        //removeDescriptors();
+        //clear();
         return false;
     }
 
@@ -449,13 +449,37 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
  * them. This method does just that.
  * @return N/A.
  */
-void NimBLERemoteCharacteristic::removeDescriptors() {
+void NimBLERemoteCharacteristic::clear() {
+    NIMBLE_LOGD(LOG_TAG, ">> clear");
     // Iterate through all the descriptors releasing their storage and erasing them from the vector.
     for(auto &it: m_descriptorVector) {
         delete it;
     }
     m_descriptorVector.clear();
-} // removeCharacteristics
+    NIMBLE_LOGD(LOG_TAG, "<< clear");
+} // clear
+
+
+/**
+ * @brief Clear descriptor by UUID
+ * @param [in] uuid The UUID of the descriptor to be cleared.
+ * @return Number of services left.
+ */
+size_t NimBLERemoteCharacteristic::clear(const NimBLEUUID &uuid) {
+    NIMBLE_LOGD(LOG_TAG, ">> clear");
+    // Delete the requested descriptor.
+    for(auto it = m_descriptorVector.begin(); it != m_descriptorVector.end(); ++it) {
+        if((*it)->getUUID() == uuid) {
+            delete *it;
+            m_descriptorVector.erase(it);
+            break;
+        }
+    }
+
+    NIMBLE_LOGD(LOG_TAG, "<< clear");
+
+    return m_descriptorVector.size();
+} // clear
 
 
 /**

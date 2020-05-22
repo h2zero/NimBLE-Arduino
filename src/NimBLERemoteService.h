@@ -41,6 +41,8 @@ public:
     // Public methods
     NimBLERemoteCharacteristic* getCharacteristic(const char* uuid);      // Get the specified characteristic reference.
     NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID &uuid);       // Get the specified characteristic reference.
+    void                        clear(); // Clear any existing characteristics.
+    size_t                      clear(const NimBLEUUID &uuid); // Clear characteristic by UUID
 //  BLERemoteCharacteristic* getCharacteristic(uint16_t uuid);      // Get the specified characteristic reference.
     std::vector<NimBLERemoteCharacteristic*>* getCharacteristics();
 //  void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic*>* pCharacteristicMap);
@@ -69,7 +71,6 @@ private:
     uint16_t            getStartHandle();                // Get the start handle for this service.
     uint16_t            getEndHandle();                  // Get the end handle for this service.
     void                releaseSemaphores();
-    void                removeCharacteristics();
 
     // Properties
 

@@ -21,6 +21,7 @@
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEAddress.h"
+#include "NimBLEUUID.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
 
@@ -45,6 +46,8 @@ public:
     std::vector<NimBLERemoteService*>*         getServices();                 // Get a vector of the services offered by the remote BLE Server
     NimBLERemoteService*                       getService(const char* uuid);  // Get a reference to a specified service offered by the remote BLE server.
     NimBLERemoteService*                       getService(const NimBLEUUID &uuid);   // Get a reference to a specified service offered by the remote BLE server.
+    void                                       clear();                       // Clear any existing services.
+    size_t                                     clear(const NimBLEUUID &uuid); // Clear service by UUID
     std::string                                getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);   // Get the value of a given characteristic at a given service.
     bool                                       setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID, const std::string &value);   // Set the value of a given characteristic at a given service.
     bool                                       isConnected();                 // Return true if we are connected.
@@ -69,7 +72,6 @@ private:
 
     static int          handleGapEvent(struct ble_gap_event *event, void *arg);
     static int          serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
-    void                clearServices();   // Clear any existing services.
     bool                retrieveServices();  //Retrieve services from the server
 //    void                onHostReset();
 

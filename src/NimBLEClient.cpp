@@ -75,7 +75,7 @@ NimBLEClient::NimBLEClient()
 NimBLEClient::~NimBLEClient() {
     // We may have allocated service references associated with this client.
     // Before we are finished with the client, we must release resources.
-    clearServices();
+    clear();
 
     if(m_deleteCallbacks && m_pClientCallbacks != &defaultCallbacks) {
         delete m_pClientCallbacks;
@@ -87,8 +87,8 @@ NimBLEClient::~NimBLEClient() {
 /**
  * @brief Clear any existing services.
  */
-void NimBLEClient::clearServices() {
-    NIMBLE_LOGD(LOG_TAG, ">> clearServices");
+void NimBLEClient::clear() {
+    NIMBLE_LOGD(LOG_TAG, ">> clear");
     // Delete all the services.
     for(auto &it: m_servicesVector) {
         delete it;
@@ -96,8 +96,31 @@ void NimBLEClient::clearServices() {
     m_servicesVector.clear();
 
     m_haveServices = false;
-    NIMBLE_LOGD(LOG_TAG, "<< clearServices");
-} // clearServices
+    NIMBLE_LOGD(LOG_TAG, "<< clear");
+} // clear
+
+
+/**
+ * @brief Clear service by UUID
+ * @param [in] uuid The UUID of the service to be cleared.
+ * @return Number of services left.
+ */
+size_t NimBLEClient::clear(const NimBLEUUID &uuid) {
+    NIMBLE_LOGD(LOG_TAG, ">> clear");
+    // Delete the requested service.
+    for(auto it = m_servicesVector.begin(); it != m_servicesVector.end(); ++it) {
+        if((*it)->getUUID() == uuid) {
+            delete *it;
+            m_servicesVector.erase(it);
+            break;
+        }
+    }
+
+    m_haveServices = (m_servicesVector.size() != 0);
+    NIMBLE_LOGD(LOG_TAG, "<< clear");
+
+    return m_servicesVector.size();
+} // clear
 
 
 /**
@@ -180,14 +203,14 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
 
     if(refreshServices) {
         NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
-        clearServices();
+        clear();
     }
 
     if (!m_haveServices) {
         if (!retrieveServices()) {
             // error getting services, make sure we disconnect and release any resources before returning
             disconnect();
-            clearServices();
+            clear();
             return false;
         }
         else{

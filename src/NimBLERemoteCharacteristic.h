@@ -22,6 +22,7 @@
 
 //#include "NimBLEUUID.h"
 //#include "FreeRTOS.h"
+#include "NimBLEUUID.h"
 #include "NimBLERemoteService.h"
 #include "NimBLERemoteDescriptor.h"
 
@@ -49,6 +50,8 @@ public:
     bool        canWrite();
     bool        canWriteNoResponse();
     NimBLERemoteDescriptor* getDescriptor(const NimBLEUUID &uuid);
+    void        clear(); // Clear any existing descriptors.
+    size_t      clear(const NimBLEUUID &uuid); // Clear descriptor by UUID
     std::vector<NimBLERemoteDescriptor*>* getDescriptors();
     uint16_t    getHandle();
     uint16_t    getDefHandle();
@@ -75,7 +78,6 @@ private:
     friend class NimBLERemoteDescriptor;
 
     // Private member functions
-    void              removeDescriptors();
     bool              retrieveDescriptors(uint16_t endHdl);
     static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
     static int        onWriteCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
