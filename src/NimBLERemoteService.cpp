@@ -31,7 +31,7 @@ static const char* LOG_TAG = "NimBLERemoteService";
  */
 NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const struct ble_gatt_svc* service) {
 
-    NIMBLE_LOGD(LOG_TAG, ">> BLERemoteService()");
+    NIMBLE_LOGD(LOG_TAG, ">> NimBLERemoteService()");
     m_pClient = pClient;
     switch (service->uuid.u.type) {
         case BLE_UUID_TYPE_16:
@@ -51,7 +51,7 @@ NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const struct ble
     m_endHandle = service->end_handle;
     m_haveAllCharacteristics = false;
 
-    NIMBLE_LOGD(LOG_TAG, "<< BLERemoteService()");
+    NIMBLE_LOGD(LOG_TAG, "<< NimBLERemoteService()");
 }
 
 
@@ -122,7 +122,8 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
                                 const struct ble_gatt_error *error,
                                 const struct ble_gatt_chr *chr, void *arg)
 {
-    NIMBLE_LOGD(LOG_TAG,"Characteristic Discovered >> status: %d handle: %d", error->status, conn_handle);
+    NIMBLE_LOGD(LOG_TAG,"Characteristic Discovered >> status: %d handle: %d",
+                        error->status, (error->status == 0) ? chr->val_handle : -1);
 
     NimBLERemoteService *service = (NimBLERemoteService*)arg;
     int rc=0;
@@ -220,11 +221,11 @@ std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristic
 
     if(!m_haveAllCharacteristics && m_characteristicVector.empty()) {
         if (!retrieveCharacteristics()) {
-            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get services");
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get characteristics");
         }
         else{
             m_haveAllCharacteristics = true;
-            NIMBLE_LOGD(LOG_TAG, "Found %d services", m_characteristicVector.size());
+            NIMBLE_LOGD(LOG_TAG, "Found %d characteristics", m_characteristicVector.size());
         }
     }
     return &m_characteristicVector;

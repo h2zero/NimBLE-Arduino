@@ -146,7 +146,8 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
                                     const struct ble_gatt_dsc *dsc,
                                     void *arg)
 {
-    NIMBLE_LOGD(LOG_TAG,"Descriptor Discovered >> status: %d handle: %d", error->status, conn_handle);
+    NIMBLE_LOGD(LOG_TAG,"Descriptor Discovered >> status: %d handle: %d",
+                        error->status, (error->status == 0) ? dsc->handle : -1);
 
     disc_filter_t *filter = (disc_filter_t*)arg;
     NimBLEUUID *uuid_filter = (NimBLEUUID*)filter->uuid;
@@ -161,15 +162,16 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
     switch (error->status) {
         case 0: {
             if(dsc->uuid.u.type == BLE_UUID_TYPE_16 && dsc->uuid.u16.value == uint16_t(0x2803)) {
-                return 1;
+                NIMBLE_LOGD(LOG_TAG,"Descriptor NOT found - end of Characteristic definintion");
+                rc = BLE_HS_EDONE;
+                break;
             }
             if(uuid_filter != nullptr) {
                 if(ble_uuid_cmp(&uuid_filter->getNative()->u, &dsc->uuid.u) != 0) {
                     return 0;
                 } else {
-                    NimBLERemoteDescriptor* pNewRemoteDescriptor = new NimBLERemoteDescriptor(characteristic, dsc);
-                    characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
-                    return 1;
+                    NIMBLE_LOGD(LOG_TAG,"Descriptor Found");
+                    rc = BLE_HS_EDONE;
                 }
             }
             // Found a descriptor - add it to the vector
@@ -177,20 +179,21 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
             characteristic->m_descriptorVector.push_back(pNewRemoteDescriptor);
             break;
         }
-        case BLE_HS_EDONE:{
-            /* All descriptors in this characteristic discovered; */
-            characteristic->m_semaphoreGetDescEvt.give(0);
-            rc = 0;
-            break;
-        }
         default:
             rc = error->status;
             break;
     }
-    if (rc != 0) {
+
+    /** If rc == BLE_HS_EDONE, release the semaphore with a success error code and stop the discovery process.
+     *  Else if rc == 0, just return 0 to continue the discovery until we get BLE_HS_EDONE.
+     *  If we get any other error code tell the application to abort by returning non-zero in the semaphore rc.
+     */
+    if (rc == BLE_HS_EDONE) {
+        characteristic->m_semaphoreGetDescEvt.give(0);
+    } else if(rc != 0) {
         /* Error; abort discovery. */
-        // pass non-zero to semaphore on error to indicate an error finding descriptors
-        characteristic->m_semaphoreGetDescEvt.give(1);
+        // pass error code to semaphore waiting
+        characteristic->m_semaphoreGetDescEvt.give(rc);
     }
     NIMBLE_LOGD(LOG_TAG,"<< Descriptor Discovered. status: %d", rc);
     return rc;
@@ -221,7 +224,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
         return false;
     }
 
-    if(m_semaphoreGetDescEvt.wait("retrieveCharacteristics") != 0) {
+    if(m_semaphoreGetDescEvt.wait("retrieveDescriptors") != 0) {
         return false;
     }
 
@@ -240,11 +243,11 @@ std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors
 
     if(!m_haveAllDescriptors && m_descriptorVector.empty()) {
         if (!retrieveDescriptors()) {
-            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get services");
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get descriptors");
         }
         else{
             m_haveAllDescriptors = true;
-            NIMBLE_LOGD(LOG_TAG, "Found %d services", m_descriptorVector.size());
+            NIMBLE_LOGD(LOG_TAG, "Found %d descriptor(s)", m_descriptorVector.size());
         }
     }
     return &m_descriptorVector;

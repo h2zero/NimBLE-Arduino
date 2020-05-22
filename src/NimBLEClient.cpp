@@ -413,6 +413,18 @@ std::vector<NimBLERemoteService*>* NimBLEClient::getServices(bool refresh) {
 
 
 /**
+ * @ Retrieves the full database of attributes that the peripheral device has available.
+ */
+void NimBLEClient::discoverAttributes() {
+    for(auto svc: *getServices(true)) {
+        for(auto chr: *svc->getCharacteristics(true)) {
+            chr->getDescriptors(true);
+        }
+    }
+}
+
+
+/**
  * @brief Ask the remote %BLE server for its services.
  * A %BLE Server exposes a set of services for its partners.  Here we ask the server for its set of
  * services and wait until we have received them all.
@@ -472,7 +484,8 @@ int NimBLEClient::serviceDiscoveredCB(
                 const struct ble_gatt_error *error,
                 const struct ble_gatt_svc *service, void *arg)
 {
-    NIMBLE_LOGD(LOG_TAG,"Service Discovered >> status: %d handle: %d", error->status, conn_handle);
+    NIMBLE_LOGD(LOG_TAG,"Service Discovered >> status: %d handle: %d",
+                        error->status, (error->status == 0) ? service->start_handle : -1);
 
     NimBLEClient *peer = (NimBLEClient*)arg;
     int rc=0;
