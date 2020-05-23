@@ -65,9 +65,9 @@ public:
         return *((T *)pData);
     }
 
-    uint8_t                                        readUInt8();
-    uint16_t                                       readUInt16();
-    uint32_t                                       readUInt32();
+    uint8_t                                        readUInt8()                            __attribute__ ((deprecated));
+    uint16_t                                       readUInt16()                           __attribute__ ((deprecated));
+    uint32_t                                       readUInt32()                           __attribute__ ((deprecated));
     std::string                                    getValue(time_t *timestamp = nullptr);
 
     template<typename T>
