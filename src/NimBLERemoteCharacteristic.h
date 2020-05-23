@@ -56,6 +56,15 @@ public:
     uint16_t                                       getDefHandle();
     NimBLEUUID                                     getUUID();
     std::string                                    readValue(time_t *timestamp = nullptr);
+
+    template<typename T>
+    T                                              readValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+        std::string value = readValue(timestamp);
+        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
+        const char *pData = value.data();
+        return *((T *)pData);
+    }
+
     uint8_t                                        readUInt8();
     uint16_t                                       readUInt16();
     uint32_t                                       readUInt32();
