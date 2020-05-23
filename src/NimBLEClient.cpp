@@ -723,16 +723,11 @@ uint16_t NimBLEClient::getMTU() {
                     (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data, event->notify_rx.om->om_len);
                     (*characteristic)->m_timestamp = time(nullptr);
                     if ((*characteristic)->m_notifyCallback != nullptr) {
-<<<<<<< HEAD
-                        NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s", (*characteristic)->toString().c_str());
-                        (*characteristic)->m_notifyCallback(*characteristic, event->notify_rx.om->om_data, event->notify_rx.om->om_len, !event->notify_rx.indication);
-=======
                         NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s",
                                              (*characteristic)->toString().c_str());
                         (*characteristic)->m_notifyCallback(*characteristic, event->notify_rx.om->om_data,
                                                             event->notify_rx.om->om_len,
                                                             !event->notify_rx.indication);
->>>>>>> update-objects
                     }
                     break;
                 }
