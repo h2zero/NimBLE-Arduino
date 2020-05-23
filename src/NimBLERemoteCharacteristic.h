@@ -53,7 +53,7 @@ public:
     uint16_t    getHandle();
     uint16_t    getDefHandle();
     NimBLEUUID  getUUID();
-    std::string &readValue();
+    std::string readValue();
     uint8_t     readUInt8();
     uint16_t    readUInt16();
     uint32_t    readUInt32();
@@ -62,7 +62,6 @@ public:
     bool        writeValue(const std::string &newValue, bool response = false);
     bool        writeValue(uint8_t newValue, bool response = false);
     std::string toString();
-    const uint8_t*    readRawData();
     size_t      getDataLength();
     NimBLERemoteService* getRemoteService();
 

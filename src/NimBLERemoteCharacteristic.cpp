@@ -315,7 +315,7 @@ uint8_t NimBLERemoteCharacteristic::readUInt8() {
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
  */
-std::string &NimBLERemoteCharacteristic::readValue() {
+std::string NimBLERemoteCharacteristic::readValue() {
     NIMBLE_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
 
     int rc = 0;
@@ -605,15 +605,6 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
     characteristic->m_semaphoreWriteCharEvt.give(error->status);
 
     return 0;
-}
-
-
-/**
- * @brief Read raw data from remote characteristic as hex bytes
- * @return uint8_t pointer to the data read.
- */
-const uint8_t* NimBLERemoteCharacteristic::readRawData() {
-    return (const uint8_t *)readValue().data();
 }
 
 
