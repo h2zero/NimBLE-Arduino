@@ -65,6 +65,24 @@ NimBLERemoteService::~NimBLERemoteService() {
 
 
 /**
+ * @brief Get iterator to the beginning of the vector of remote characteristic pointers.
+ * @return An iterator to the beginning of the vector of remote characteristic pointers.
+ */
+std::vector<NimBLERemoteCharacteristic*>::iterator NimBLERemoteService::begin() {
+    return m_characteristicVector.begin();
+}
+
+
+/**
+ * @brief Get iterator to the end of the vector of remote characteristic pointers.
+ * @return An iterator to the end of the vector of remote characteristic pointers.
+ */
+std::vector<NimBLERemoteCharacteristic*>::iterator NimBLERemoteService::end() {
+    return m_characteristicVector.end();
+}
+
+
+/**
  * @brief Get the remote characteristic object for the characteristic UUID.
  * @param [in] uuid Remote characteristic uuid.
  * @return Reference to the remote characteristic object.
