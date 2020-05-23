@@ -480,10 +480,10 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
 
 
 /**
- * @brief Delete the descriptors in the descriptor map.
- * We maintain a map called m_descriptorMap that contains pointers to BLERemoteDescriptors
- * object references.  Since we allocated these in this class, we are also responsible for deleteing
- * them.  This method does just that.
+ * @brief Delete the descriptors in the descriptor vector.
+ * We maintain a map called m_descriptorVector that contains pointers to BLERemoteDescriptors
+ * object references. Since we allocated these in this class, we are also responsible for deleting
+ * them. This method does just that.
  * @return N/A.
  */
 void NimBLERemoteCharacteristic::removeDescriptors() {
