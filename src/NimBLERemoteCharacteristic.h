@@ -33,7 +33,6 @@ class NimBLERemoteDescriptor;
 
 
 typedef void (*notify_callback)(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
-typedef void (*notify_callback_plain)(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, bool isNotify);
 
 /**
  * @brief A model of a remote %BLE characteristic.
@@ -43,40 +42,41 @@ public:
     ~NimBLERemoteCharacteristic();
 
     // Public member functions
-    bool        canBroadcast();
-    bool        canIndicate();
-    bool        canNotify();
-    bool        canRead();
-    bool        canWrite();
-    bool        canWriteNoResponse();
-    NimBLERemoteDescriptor* getDescriptor(const NimBLEUUID &uuid);
-    std::vector<NimBLERemoteDescriptor*>* getDescriptors();
-    uint16_t    getHandle();
-    uint16_t    getDefHandle();
-    NimBLEUUID  getUUID();
-    std::string readValue();
-    uint8_t     readUInt8();
-    uint16_t    readUInt16();
-    uint32_t    readUInt32();
-    std::string getValue(time_t *timestamp = nullptr);
+    bool                                           canBroadcast();
+    bool                                           canIndicate();
+    bool                                           canNotify();
+    bool                                           canRead();
+    bool                                           canWrite();
+    bool                                           canWriteNoResponse();
+    std::vector<NimBLERemoteDescriptor*>::iterator begin();
+    std::vector<NimBLERemoteDescriptor*>::iterator end();
+    NimBLERemoteDescriptor*                        getDescriptor(const NimBLEUUID &uuid);
+    std::vector<NimBLERemoteDescriptor*>*          getDescriptors();
+    uint16_t                                       getHandle();
+    uint16_t                                       getDefHandle();
+    NimBLEUUID                                     getUUID();
+    std::string                                    readValue(time_t *timestamp = nullptr);
+    uint8_t                                        readUInt8();
+    uint16_t                                       readUInt16();
+    uint32_t                                       readUInt32();
+    std::string                                    getValue(time_t *timestamp = nullptr);
 
     template<typename T>
-    T           getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+    T                                              getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
         std::string value = getValue(timestamp);
         if(!skipSizeCheck && value.size() < sizeof(T)) return T();
         const char *pData = value.data();
         return *((T *)pData);
     }
 
-    bool        registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
-    bool        registerForNotify(notify_callback_plain _callback, bool notifications = true, bool response = true);
-    bool        writeValue(const uint8_t* data, size_t length, bool response = false);
-    bool        writeValue(const std::string &newValue, bool response = false);
-    bool        writeValue(uint8_t newValue, bool response = false);
-    std::string toString();
-    uint8_t*    readRawData();
-    size_t      getDataLength();
-    NimBLERemoteService* getRemoteService();
+    bool                                           registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
+    bool                                           writeValue(const uint8_t* data, size_t length, bool response = false);
+    bool                                           writeValue(const std::string &newValue, bool response = false);
+    bool                                           writeValue(uint8_t newValue, bool response = false);
+    std::string                                    toString();
+    uint8_t*                                       readRawData();
+    size_t                                         getDataLength();
+    NimBLERemoteService*                           getRemoteService();
 
 private:
 
@@ -109,7 +109,6 @@ private:
     uint8_t*                m_rawData;
     size_t                  m_dataLen;
     notify_callback         m_notifyCallback;
-    notify_callback_plain   m_notifyCallbackPlain;
     time_t                  m_timestamp;
 
     // We maintain a vector of descriptors owned by this characteristic.
