@@ -20,19 +20,17 @@
 #include "nimconfig.h"
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
-//#include "NimBLEUUID.h"
-//#include "FreeRTOS.h"
 #include "NimBLERemoteService.h"
 #include "NimBLERemoteDescriptor.h"
 
-//#include <string>
 #include <vector>
 
 class NimBLERemoteService;
 class NimBLERemoteDescriptor;
 
 
-typedef void (*notify_callback)(NimBLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
+typedef void (*notify_callback)(NimBLERemoteCharacteristic* pBLERemoteCharacteristic,
+                                uint8_t* pData, size_t length, bool isNotify);
 
 /**
  * @brief A model of a remote %BLE characteristic.
@@ -51,7 +49,7 @@ public:
     std::vector<NimBLERemoteDescriptor*>::iterator begin();
     std::vector<NimBLERemoteDescriptor*>::iterator end();
     NimBLERemoteDescriptor*                        getDescriptor(const NimBLEUUID &uuid);
-    std::vector<NimBLERemoteDescriptor*>*          getDescriptors();
+    std::vector<NimBLERemoteDescriptor*>*          getDescriptors(bool refresh = false);
     uint16_t                                       getHandle();
     uint16_t                                       getDefHandle();
     NimBLEUUID                                     getUUID();
@@ -78,10 +76,16 @@ public:
         return *((T *)pData);
     }
 
-    bool                                           registerForNotify(notify_callback _callback, bool notifications = true, bool response = true);
-    bool                                           writeValue(const uint8_t* data, size_t length, bool response = false);
-    bool                                           writeValue(const std::string &newValue, bool response = false);
-    bool                                           writeValue(uint8_t newValue, bool response = false);
+    bool                                           registerForNotify(notify_callback _callback,
+                                                                     bool notifications = true,
+                                                                     bool response = true);
+    bool                                           writeValue(const uint8_t* data,
+                                                              size_t length,
+                                                              bool response = false);
+    bool                                           writeValue(const std::string &newValue,
+                                                              bool response = false);
+    bool                                           writeValue(uint8_t newValue,
+                                                              bool response = false);
     std::string                                    toString();
     uint8_t*                                       readRawData();
     size_t                                         getDataLength();
@@ -91,19 +95,21 @@ private:
 
     NimBLERemoteCharacteristic(NimBLERemoteService *pRemoteservice, const struct ble_gatt_chr *chr);
 
-    friend class NimBLEClient;
-    friend class NimBLERemoteService;
-    friend class NimBLERemoteDescriptor;
+    friend class      NimBLEClient;
+    friend class      NimBLERemoteService;
+    friend class      NimBLERemoteDescriptor;
 
     // Private member functions
     void              removeDescriptors();
-    bool              retrieveDescriptors(uint16_t endHdl);
-    static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
-    static int        onWriteCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
+    bool              retrieveDescriptors(const NimBLEUUID *uuid_filter = nullptr);
+    static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error,
+                               struct ble_gatt_attr *attr, void *arg);
+    static int        onWriteCB(uint16_t conn_handle, const struct ble_gatt_error *error,
+                                struct ble_gatt_attr *attr, void *arg);
     void              releaseSemaphores();
     static int        descriptorDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error,
-                                uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc,
-                                void *arg);
+                                       uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc,
+                                       void *arg);
 
     // Private properties
     NimBLEUUID              m_uuid;
@@ -122,7 +128,7 @@ private:
 
     // We maintain a vector of descriptors owned by this characteristic.
     std::vector<NimBLERemoteDescriptor*> m_descriptorVector;
-}; // BLERemoteCharacteristic
+}; // NimBLERemoteCharacteristic
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

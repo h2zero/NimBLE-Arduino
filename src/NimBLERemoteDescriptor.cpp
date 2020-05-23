@@ -29,7 +29,7 @@ static const char* LOG_TAG = "NimBLERemoteDescriptor";
  * @param [in] Reference to the struct that contains the descriptor information.
  */
 NimBLERemoteDescriptor::NimBLERemoteDescriptor(NimBLERemoteCharacteristic* pRemoteCharacteristic,
-                                                const struct ble_gatt_dsc *dsc)
+                                               const struct ble_gatt_dsc *dsc)
 {
     switch (dsc->uuid.u.type) {
         case BLE_UUID_TYPE_16:
