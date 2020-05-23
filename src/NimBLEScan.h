@@ -41,10 +41,12 @@ class NimBLEAddress;
  */
 class NimBLEScanResults {
 public:
-    void                   dump();
-    int                    getCount();
-    NimBLEAdvertisedDevice getDevice(uint32_t i);
-    NimBLEAdvertisedDevice *getDevice(const NimBLEAddress &address);
+    void                                           dump();
+    int                                            getCount();
+    NimBLEAdvertisedDevice                         getDevice(uint32_t i);
+    std::vector<NimBLEAdvertisedDevice*>::iterator begin();
+    std::vector<NimBLEAdvertisedDevice*>::iterator end();
+    NimBLEAdvertisedDevice                         *getDevice(const NimBLEAddress &address);
 
 private:
     friend NimBLEScan;
