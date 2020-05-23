@@ -672,15 +672,6 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
 }
 
 
-/**
- * @brief Get the length of the data read from the remote characteristic.
- * @return size_t length of the data in bytes.
- */
-size_t NimBLERemoteCharacteristic::getDataLength() {
-    return m_value.length();
-}
-
-
 void NimBLERemoteCharacteristic::releaseSemaphores() {
     for (auto &it: m_descriptorVector) {
         it->releaseSemaphores();

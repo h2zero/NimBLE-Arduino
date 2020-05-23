@@ -68,7 +68,6 @@ public:
     bool                                           writeValue(uint8_t newValue,
                                                               bool response = false);
     std::string                                    toString();
-    size_t                                         getDataLength();
     NimBLERemoteService*                           getRemoteService();
 
 private:
