@@ -406,6 +406,24 @@ NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
 
 
 /**
+ * @brief Get iterator to the beginning of the vector of advertised device pointers.
+ * @return An iterator to the beginning of the vector of advertised device pointers.
+ */
+std::vector<NimBLEAdvertisedDevice*>::iterator NimBLEScanResults::begin() {
+    return m_advertisedDevicesVector.begin();
+}
+
+
+/**
+ * @brief Get iterator to the end of the vector of advertised device pointers.
+ * @return An iterator to the end of the vector of advertised device pointers.
+ */
+std::vector<NimBLEAdvertisedDevice*>::iterator NimBLEScanResults::end() {
+    return m_advertisedDevicesVector.end();
+}
+
+
+/**
  * @brief Return a pointer to the specified device at the given address.
  * If the address is not found a nullptr is returned.
  * @param [in] address The address of the device.

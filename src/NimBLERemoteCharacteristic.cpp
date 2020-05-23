@@ -56,7 +56,6 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_charProp       = chr->properties;
     m_pRemoteService = pRemoteService;
     m_notifyCallback = nullptr;
-    m_notifyCallbackPlain = nullptr;
     m_rawData        = nullptr;
     m_dataLen        = 0;
     m_timestamp      = 0;
@@ -240,6 +239,24 @@ uint16_t NimBLERemoteCharacteristic::getHandle() {
 uint16_t NimBLERemoteCharacteristic::getDefHandle() {
     return m_defHandle;
 } // getDefHandle
+
+
+/**
+ * @brief Get iterator to the beginning of the vector of remote descriptor pointers.
+ * @return An iterator to the beginning of the vector of remote descriptor pointers.
+ */
+std::vector<NimBLERemoteDescriptor*>::iterator NimBLERemoteCharacteristic::begin() {
+    return m_descriptorVector.begin();
+}
+
+
+/**
+ * @brief Get iterator to the end of the vector of remote descriptor pointers.
+ * @return An iterator to the end of the vector of remote descriptor pointers.
+ */
+std::vector<NimBLERemoteDescriptor*>::iterator NimBLERemoteCharacteristic::end() {
+    return m_descriptorVector.end();
+}
 
 
 /**
@@ -439,41 +456,6 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
     NIMBLE_LOGD(LOG_TAG, ">> registerForNotify(): %s", toString().c_str());
 
     m_notifyCallback = notifyCallback;   // Save the notification callback.
-
-    uint8_t val[] = {0x01, 0x00};
-
-    NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
-    if(desc == nullptr)
-        return false;
-
-    if(notifyCallback != nullptr){
-        if(!notifications){
-            val[0] = 0x02;
-        }
-    }
-
-    else if (notifyCallback == nullptr){
-        val[0] = 0x00;
-    }
-
-    NIMBLE_LOGD(LOG_TAG, "<< registerForNotify()");
-
-    return desc->writeValue(val, 2, response);
-} // registerForNotify
-
-
-/**
- * @brief Register for notifications.
- * @param [in] notifyCallback A callback to be invoked for a notification.  If NULL is provided then we are
- * unregistering for notifications.
- * @param [in] bool if true, register for notifications, false register for indications.
- * @param [in] bool if true, require a write response from the descriptor write operation.
- * @return true if successful.
- */
-bool NimBLERemoteCharacteristic::registerForNotify(notify_callback_plain notifyCallback, bool notifications, bool response) {
-    NIMBLE_LOGD(LOG_TAG, ">> registerForNotify(): %s", toString().c_str());
-
-    m_notifyCallbackPlain = notifyCallback;   // Save the notification callback.
 
     uint8_t val[] = {0x01, 0x00};
 
