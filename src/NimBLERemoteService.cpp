@@ -49,8 +49,6 @@ NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const struct ble
     }
     m_startHandle = service->start_handle;
     m_endHandle = service->end_handle;
-    m_haveAllCharacteristics = false;
-
     NIMBLE_LOGD(LOG_TAG, "<< NimBLERemoteService()");
 }
 
@@ -113,6 +111,33 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEU
 
     return nullptr;
 } // getCharacteristic
+
+
+/**
+ * @Get a pointer to the vector of found characteristics.
+ * @param [in] bool value to indicate if the current vector should be cleared and
+ * subsequently all characteristics for this service retrieved from the peripheral.
+ * If false the vector will be returned with the currently stored characteristics,
+ * if the vector is empty it will retrieve all characteristics of this service
+ * from the peripheral.
+ * @return a pointer to the vector of descriptors for this characteristic.
+ */
+
+std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics(bool refresh) {
+    if(refresh) {
+        removeCharacteristics();
+    }
+
+    if(m_characteristicVector.empty()) {
+        if (!retrieveCharacteristics()) {
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get characteristics");
+        }
+        else{
+            NIMBLE_LOGI(LOG_TAG, "Found %d characteristics", m_characteristicVector.size());
+        }
+    }
+    return &m_characteristicVector;
+} // getCharacteristics
 
 
 /**
@@ -211,28 +236,6 @@ bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID *uuid_filter)
 
 
 /**
- * @brief Retrieve a vector of all the characteristics of this service.
- * @return A vector of all the characteristics of this service.
- */
-std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics(bool refresh) {
-    if(refresh) {
-        removeCharacteristics();
-    }
-
-    if(!m_haveAllCharacteristics && m_characteristicVector.empty()) {
-        if (!retrieveCharacteristics()) {
-            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get characteristics");
-        }
-        else{
-            m_haveAllCharacteristics = true;
-            NIMBLE_LOGD(LOG_TAG, "Found %d characteristics", m_characteristicVector.size());
-        }
-    }
-    return &m_characteristicVector;
-} // getCharacteristics
-
-
-/**
  * @brief Get the client associated with this service.
  * @return A reference to the client associated with this service.
  */
@@ -318,7 +321,6 @@ void NimBLERemoteService::removeCharacteristics() {
         delete it;
     }
     m_characteristicVector.clear();   // Clear the vector
-    m_haveAllCharacteristics = false;
 } // removeCharacteristics
 
 

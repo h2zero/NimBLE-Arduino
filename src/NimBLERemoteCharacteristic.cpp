@@ -35,7 +35,9 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  *      ble_uuid_any_t uuid;
  *  };
  */
- NimBLERemoteCharacteristic::NimBLERemoteCharacteristic(NimBLERemoteService *pRemoteService, const struct ble_gatt_chr *chr) {
+ NimBLERemoteCharacteristic::NimBLERemoteCharacteristic(NimBLERemoteService *pRemoteService,
+                                                        const struct ble_gatt_chr *chr)
+{
 
      switch (chr->uuid.u.type) {
         case BLE_UUID_TYPE_16:
@@ -58,7 +60,6 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_notifyCallback     = nullptr;
     m_rawData            = nullptr;
     m_dataLen            = 0;
-    m_haveAllDescriptors = false;
  } // NimBLERemoteCharacteristic
 
 
@@ -199,6 +200,7 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
     return rc;
 }
 
+
 /**
  * @brief Populate the descriptors (if any) for this characteristic.
  * @param [in] the end handle of the characteristic, or the service, whichever comes first.
@@ -234,62 +236,6 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
 
 
 /**
- * @brief Retrieve the vector of descriptors.
- */
-std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors(bool refresh) {
-    if(refresh) {
-        removeDescriptors();
-    }
-
-    if(!m_haveAllDescriptors && m_descriptorVector.empty()) {
-        if (!retrieveDescriptors()) {
-            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get descriptors");
-        }
-        else{
-            m_haveAllDescriptors = true;
-            NIMBLE_LOGD(LOG_TAG, "Found %d descriptor(s)", m_descriptorVector.size());
-        }
-    }
-    return &m_descriptorVector;
-} // getDescriptors
-
-
-/**
- * @brief Get the handle for this characteristic.
- * @return The handle for this characteristic.
- */
-uint16_t NimBLERemoteCharacteristic::getHandle() {
-    return m_handle;
-} // getHandle
-
-/**
- * @brief Get the handle for this characteristics definition.
- * @return The handle for this characteristic definition.
- */
-uint16_t NimBLERemoteCharacteristic::getDefHandle() {
-    return m_defHandle;
-} // getDefHandle
-
-
-/**
- * @brief Get iterator to the beginning of the vector of remote descriptor pointers.
- * @return An iterator to the beginning of the vector of remote descriptor pointers.
- */
-std::vector<NimBLERemoteDescriptor*>::iterator NimBLERemoteCharacteristic::begin() {
-    return m_descriptorVector.begin();
-}
-
-
-/**
- * @brief Get iterator to the end of the vector of remote descriptor pointers.
- * @return An iterator to the end of the vector of remote descriptor pointers.
- */
-std::vector<NimBLERemoteDescriptor*>::iterator NimBLERemoteCharacteristic::end() {
-    return m_descriptorVector.end();
-}
-
-
-/**
  * @brief Get the descriptor instance with the given UUID that belongs to this characteristic.
  * @param [in] uuid The UUID of the descriptor to find.
  * @return The Remote descriptor (if present) or null if not present.
@@ -313,6 +259,67 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
     NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
     return nullptr;
 } // getDescriptor
+
+
+/**
+ * @Get a pointer to the vector of found descriptors.
+ * @param [in] bool value to indicate if the current vector should be cleared and
+ * subsequently all descriptors for this characteristic retrieved from the peripheral.
+ * If false the vector will be returned with the currently stored descriptors,
+ * if the vector is empty it will retrieve all descriptors for this characteristic
+ * from the peripheral.
+ * @return a pointer to the vector of descriptors for this characteristic.
+ */
+std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors(bool refresh) {
+    if(refresh) {
+        removeDescriptors();
+    }
+
+    if(m_descriptorVector.empty()) {
+        if (!retrieveDescriptors()) {
+            NIMBLE_LOGE(LOG_TAG, "Error: Failed to get descriptors");
+        }
+        else{
+            NIMBLE_LOGI(LOG_TAG, "Found %d descriptor(s)", m_descriptorVector.size());
+        }
+    }
+    return &m_descriptorVector;
+} // getDescriptors
+
+
+/**
+ * @brief Get iterator to the beginning of the vector of remote descriptor pointers.
+ * @return An iterator to the beginning of the vector of remote descriptor pointers.
+ */
+std::vector<NimBLERemoteDescriptor*>::iterator NimBLERemoteCharacteristic::begin() {
+    return m_descriptorVector.begin();
+}
+
+
+/**
+ * @brief Get iterator to the end of the vector of remote descriptor pointers.
+ * @return An iterator to the end of the vector of remote descriptor pointers.
+ */
+std::vector<NimBLERemoteDescriptor*>::iterator NimBLERemoteCharacteristic::end() {
+    return m_descriptorVector.end();
+}
+
+
+/**
+ * @brief Get the handle for this characteristic.
+ * @return The handle for this characteristic.
+ */
+uint16_t NimBLERemoteCharacteristic::getHandle() {
+    return m_handle;
+} // getHandle
+
+/**
+ * @brief Get the handle for this characteristics definition.
+ * @return The handle for this characteristic definition.
+ */
+uint16_t NimBLERemoteCharacteristic::getDefHandle() {
+    return m_defHandle;
+} // getDefHandle
 
 
 /**
@@ -377,7 +384,8 @@ uint8_t NimBLERemoteCharacteristic::readUInt8() {
  * @return The value of the remote characteristic.
  */
 std::string NimBLERemoteCharacteristic::readValue() {
-    NIMBLE_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
+    NIMBLE_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x",
+                         getUUID().toString().c_str(), getHandle(), getHandle());
 
     int rc = 0;
     int retryCount = 1;
@@ -511,7 +519,6 @@ void NimBLERemoteCharacteristic::removeDescriptors() {
         delete it;
     }
     m_descriptorVector.clear();
-    m_haveAllDescriptors = false;
 } // removeCharacteristics
 
 

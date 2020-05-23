@@ -54,7 +54,6 @@ NimBLEClient::NimBLEClient()
     m_pClientCallbacks = &defaultCallbacks;
     m_conn_id          = BLE_HS_CONN_HANDLE_NONE;
     m_isConnected      = false;
-    m_haveAllServices  = false;
     m_connectTimeout   = 30000;
 
     m_pConnParams.scan_itvl = 16;          // Scan interval in 0.625ms units (NimBLE Default)
@@ -94,7 +93,6 @@ void NimBLEClient::clearServices() {
         delete it;
     }
     m_servicesVector.clear();
-    m_haveAllServices = false;
 
     NIMBLE_LOGD(LOG_TAG, "<< clearServices");
 } // clearServices
@@ -393,19 +391,23 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
 
 /**
  * @Get a pointer to the vector of found services.
+ * @param [in] bool value to indicate if the current vector should be cleared and
+ * subsequently all services retrieved from the peripheral.
+ * If false the vector will be returned with the currently stored services,
+ * if vector is empty it will retrieve all services from the peripheral.
+ * @return a pointer to the vector of available services.
  */
 std::vector<NimBLERemoteService*>* NimBLEClient::getServices(bool refresh) {
     if(refresh) {
         clearServices();
     }
 
-    if(!m_haveAllServices && m_servicesVector.empty()) {
+    if(m_servicesVector.empty()) {
         if (!retrieveServices()) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to get services");
         }
         else{
-            m_haveAllServices = true;
-            NIMBLE_LOGD(LOG_TAG, "Found %d services", m_servicesVector.size());
+            NIMBLE_LOGI(LOG_TAG, "Found %d services", m_servicesVector.size());
         }
     }
     return &m_servicesVector;
@@ -413,7 +415,7 @@ std::vector<NimBLERemoteService*>* NimBLEClient::getServices(bool refresh) {
 
 
 /**
- * @ Retrieves the full database of attributes that the peripheral device has available.
+ * @ Retrieves the full database of attributes that the peripheral has available.
  */
 void NimBLEClient::discoverAttributes() {
     for(auto svc: *getServices(true)) {
@@ -532,7 +534,8 @@ int NimBLEClient::serviceDiscoveredCB(
  * @returns characteristic value or an empty string if not found
  */
 std::string NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID) {
-    NIMBLE_LOGD(LOG_TAG, ">> getValue: serviceUUID: %s, characteristicUUID: %s", serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
+    NIMBLE_LOGD(LOG_TAG, ">> getValue: serviceUUID: %s, characteristicUUID: %s",
+                         serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
 
     std::string ret = "";
     NimBLERemoteService* pService = getService(serviceUUID);
@@ -555,8 +558,11 @@ std::string NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUU
  * @param [in] characteristicUUID The characteristic whose value we wish to write.
  * @returns true if successful otherwise false
  */
-bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID, const std::string &value) {
-    NIMBLE_LOGD(LOG_TAG, ">> setValue: serviceUUID: %s, characteristicUUID: %s", serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
+bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
+                            const std::string &value)
+{
+    NIMBLE_LOGD(LOG_TAG, ">> setValue: serviceUUID: %s, characteristicUUID: %s",
+                         serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
 
     bool ret = false;
     NimBLERemoteService* pService = getService(serviceUUID);
@@ -797,7 +803,6 @@ uint16_t NimBLEClient::getMTU() {
                         event->mtu.conn_handle,
                         event->mtu.value);
             client->m_semaphoreOpenEvt.give(0);
-            //client->m_mtu = event->mtu.value;
             return 0;
         } // BLE_GAP_EVENT_MTU
 
