@@ -43,8 +43,8 @@ public:
     std::vector<NimBLERemoteCharacteristic*>::iterator end();
     NimBLERemoteCharacteristic*               getCharacteristic(const char* uuid);
     NimBLERemoteCharacteristic*               getCharacteristic(const NimBLEUUID &uuid);
-    void                                      clear();
-    size_t                                    clear(const NimBLEUUID &uuid);
+    void                                      deleteCharacteristics();
+    size_t                                    deleteCharacteristic(const NimBLEUUID &uuid);
     NimBLEClient*                             getClient(void);
     uint16_t                                  getHandle();
     NimBLEUUID                                getUUID(void);

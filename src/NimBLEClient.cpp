@@ -74,7 +74,7 @@ NimBLEClient::NimBLEClient()
 NimBLEClient::~NimBLEClient() {
     // We may have allocated service references associated with this client.
     // Before we are finished with the client, we must release resources.
-    clear();
+    deleteServices();
 
     if(m_deleteCallbacks && m_pClientCallbacks != &defaultCallbacks) {
         delete m_pClientCallbacks;
@@ -84,27 +84,27 @@ NimBLEClient::~NimBLEClient() {
 
 
 /**
- * @brief Clear any existing services.
+ * @brief Delete any existing services.
  */
-void NimBLEClient::clear() {
-    NIMBLE_LOGD(LOG_TAG, ">> clear");
+void NimBLEClient::deleteServices() {
+    NIMBLE_LOGD(LOG_TAG, ">> deleteServices");
     // Delete all the services.
     for(auto &it: m_servicesVector) {
         delete it;
     }
     m_servicesVector.clear();
 
-    NIMBLE_LOGD(LOG_TAG, "<< clear");
-} // clear
+    NIMBLE_LOGD(LOG_TAG, "<< deleteServices");
+} // deleteServices
 
 
 /**
- * @brief Clear service by UUID
- * @param [in] uuid The UUID of the service to be cleared.
+ * @brief Delete service by UUID
+ * @param [in] uuid The UUID of the service to be deleteServicesed.
  * @return Number of services left.
  */
-size_t NimBLEClient::clear(const NimBLEUUID &uuid) {
-    NIMBLE_LOGD(LOG_TAG, ">> clear");
+size_t NimBLEClient::deleteService(const NimBLEUUID &uuid) {
+    NIMBLE_LOGD(LOG_TAG, ">> deleteService");
     // Delete the requested service.
     for(auto it = m_servicesVector.begin(); it != m_servicesVector.end(); ++it) {
         if((*it)->getUUID() == uuid) {
@@ -114,10 +114,10 @@ size_t NimBLEClient::clear(const NimBLEUUID &uuid) {
         }
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<< clear");
+    NIMBLE_LOGD(LOG_TAG, "<< deleteService");
 
     return m_servicesVector.size();
-} // clear
+} // deleteServices
 
 
 /**
@@ -200,7 +200,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
 
     if(refreshServices) {
         NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
-        clear();
+        deleteServices();
     }
 
     m_pClientCallbacks->onConnect(this);
@@ -413,7 +413,7 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
 
 /**
  * @Get a pointer to the vector of found services.
- * @param [in] bool value to indicate if the current vector should be cleared and
+ * @param [in] bool value to indicate if the current vector should be deleteServicesed and
  * subsequently all services retrieved from the peripheral.
  * If false the vector will be returned with the currently stored services,
  * if vector is empty it will retrieve all services from the peripheral.
@@ -421,7 +421,7 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
  */
 std::vector<NimBLERemoteService*>* NimBLEClient::getServices(bool refresh) {
     if(refresh) {
-        clear();
+        deleteServices();
     }
 
     if(m_servicesVector.empty()) {

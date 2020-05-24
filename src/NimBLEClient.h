@@ -53,8 +53,8 @@ public:
     std::vector<NimBLERemoteService*>::iterator end();
     NimBLERemoteService*                        getService(const char* uuid);
     NimBLERemoteService*                        getService(const NimBLEUUID &uuid);
-    void                                        clear();
-    size_t                                      clear(const NimBLEUUID &uuid);
+    void                                        deleteServices();
+    size_t                                      deleteService(const NimBLEUUID &uuid);
     std::string                                 getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
     bool                                        setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
                                                          const std::string &value);

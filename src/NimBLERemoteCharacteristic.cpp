@@ -67,7 +67,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  *@brief Destructor.
  */
 NimBLERemoteCharacteristic::~NimBLERemoteCharacteristic() {
-    clear();   // Release resources for any descriptor information we may have allocated.
+    deleteDescriptors();   // Release resources for any descriptor information we may have allocated.
     if(m_rawData != nullptr) {
         free(m_rawData);
     }
@@ -263,7 +263,7 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
 
 /**
  * @Get a pointer to the vector of found descriptors.
- * @param [in] bool value to indicate if the current vector should be cleared and
+ * @param [in] bool value to indicate if the current vector should be deleteDescriptorsed and
  * subsequently all descriptors for this characteristic retrieved from the peripheral.
  * If false the vector will be returned with the currently stored descriptors,
  * if the vector is empty it will retrieve all descriptors for this characteristic
@@ -272,7 +272,7 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
  */
 std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors(bool refresh) {
     if(refresh) {
-        clear();
+        deleteDescriptors();
     }
 
     if(m_descriptorVector.empty()) {
@@ -509,28 +509,28 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
 /**
  * @brief Delete the descriptors in the descriptor vector.
  * We maintain a vector called m_descriptorVector that contains pointers to BLERemoteDescriptors
- * object references. Since we allocated these in this class, we are also responsible for deleteing
+ * object references. Since we allocated these in this class, we are also responsible for deleting
  * them. This method does just that.
  * @return N/A.
  */
-void NimBLERemoteCharacteristic::clear() {
-    NIMBLE_LOGD(LOG_TAG, ">> clear");
+void NimBLERemoteCharacteristic::deleteDescriptors() {
+    NIMBLE_LOGD(LOG_TAG, ">> deleteDescriptors");
     // Iterate through all the descriptors releasing their storage and erasing them from the vector.
     for(auto &it: m_descriptorVector) {
         delete it;
     }
     m_descriptorVector.clear();
-    NIMBLE_LOGD(LOG_TAG, "<< clear");
-} // clear
+    NIMBLE_LOGD(LOG_TAG, "<< deleteDescriptors");
+} // deleteDescriptors
 
 
 /**
- * @brief Clear descriptor by UUID
- * @param [in] uuid The UUID of the descriptor to be cleared.
+ * @brief Delete descriptor by UUID
+ * @param [in] uuid The UUID of the descriptor to be deleted.
  * @return Number of services left.
  */
-size_t NimBLERemoteCharacteristic::clear(const NimBLEUUID &uuid) {
-    NIMBLE_LOGD(LOG_TAG, ">> clear");
+size_t NimBLERemoteCharacteristic::deleteDescriptor(const NimBLEUUID &uuid) {
+    NIMBLE_LOGD(LOG_TAG, ">> deleteDescriptor");
     // Delete the requested descriptor.
     for(auto it = m_descriptorVector.begin(); it != m_descriptorVector.end(); ++it) {
         if((*it)->getUUID() == uuid) {
@@ -540,10 +540,10 @@ size_t NimBLERemoteCharacteristic::clear(const NimBLEUUID &uuid) {
         }
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<< clear");
+    NIMBLE_LOGD(LOG_TAG, "<< deleteDescriptor");
 
     return m_descriptorVector.size();
-} // clear
+} // deleteDescriptor
 
 
 /**
