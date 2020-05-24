@@ -443,7 +443,7 @@ std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
     m_semaphoreReadCharEvt.take("readValue");
     std::string value = m_value;
     *timestamp = m_timestamp;
-    m_semaphoreReadCharEvt.give(1);
+    m_semaphoreReadCharEvt.give();
     return value;
 } // readValue
 
@@ -460,7 +460,7 @@ std::string NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
     m_semaphoreReadCharEvt.take("readValue");
     std::string value = m_value;
     *timestamp = m_timestamp;
-    m_semaphoreReadCharEvt.give(1);
+    m_semaphoreReadCharEvt.give();
     return value;
 }
 
