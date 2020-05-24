@@ -73,6 +73,7 @@ public:
     size_t          getPayloadLength();
     uint8_t         getAddressType();
     time_t          getTimestamp();
+    uint8_t         getAdvType();
     void            setAddressType(uint8_t type);
 
 

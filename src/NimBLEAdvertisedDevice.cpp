@@ -551,6 +551,10 @@ size_t NimBLEAdvertisedDevice::getPayloadLength() {
 }
 
 
+uint8_t NimBLEAdvertisedDevice::getAdvType() {
+    return m_advType;
+}
+
 void NimBLEAdvertisedDevice::setAdvertisementResult(uint8_t* payload, uint8_t length){
     m_payload = payload;
     m_payloadLength = length;
