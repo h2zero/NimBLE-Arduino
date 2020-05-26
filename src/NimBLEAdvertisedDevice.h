@@ -42,6 +42,7 @@ public:
     NimBLEAdvertisedDevice();
 
     NimBLEAddress   getAddress();
+    uint8_t         getAdvType();
     uint16_t        getAppearance();
     std::string     getManufacturerData();
     std::string     getName();
