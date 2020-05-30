@@ -242,15 +242,11 @@ int NimBLEClient::disconnect(uint8_t reason) {
     NIMBLE_LOGD(LOG_TAG, ">> disconnect()");
     int rc = 0;
     if(m_isConnected){
-        m_isConnected = false; // flag the disconnect now so no calls are performed after
         rc = ble_gap_terminate(m_conn_id, reason);
         if(rc != 0){
             NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc,
                                     NimBLEUtils::returnCodeToString(rc));
         }
-        // Sometimes a disconnect event is not sent so we need to make sure
-        // the device can be found again.
-        NimBLEDevice::removeIgnored(m_peerAddress);
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< disconnect()");
@@ -711,8 +707,10 @@ uint16_t NimBLEClient::getMTU() {
                 NIMBLE_LOGE(LOG_TAG, "Error: Connection failed; status=%d %s",
                             event->connect.status,
                             NimBLEUtils::returnCodeToString(event->connect.status));
+
+                client->m_isConnected = false;
+                client->m_semaphoreOpenEvt.give(event->connect.status);
             }
-            client->m_semaphoreOpenEvt.give(event->connect.status);
             return 0;
         } // BLE_GAP_EVENT_CONNECT
 
