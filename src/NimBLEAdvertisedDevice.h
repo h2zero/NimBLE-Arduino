@@ -55,7 +55,8 @@ public:
     uint8_t*        getPayload();
     size_t          getPayloadLength();
     uint8_t         getAddressType();
-    void setAddressType(uint8_t type);
+    time_t          getTimestamp();
+    void            setAddressType(uint8_t type);
 
 
     bool        isAdvertisingService(const NimBLEUUID &uuid);
@@ -111,6 +112,7 @@ private:
     uint8_t*        m_payload;
     size_t          m_payloadLength = 0;
     uint8_t         m_addressType;
+    time_t          m_timestamp;
 };
 
 /**

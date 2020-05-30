@@ -57,6 +57,7 @@ public:
     uint8_t                                        readUInt8();
     uint16_t                                       readUInt16();
     uint32_t                                       readUInt32();
+    std::string                                    getValue(time_t *timestamp = nullptr);
     bool                                           registerForNotify(notify_callback _callback,
                                                                      bool notifications = true,
                                                                      bool response = true);
@@ -105,6 +106,7 @@ private:
     uint8_t*                m_rawData;
     size_t                  m_dataLen;
     notify_callback         m_notifyCallback;
+    time_t                  m_timestamp;
 
     // We maintain a vector of descriptors owned by this characteristic.
     std::vector<NimBLERemoteDescriptor*> m_descriptorVector;

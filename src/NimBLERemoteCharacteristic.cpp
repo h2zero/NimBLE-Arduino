@@ -60,6 +60,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_notifyCallback     = nullptr;
     m_rawData            = nullptr;
     m_dataLen            = 0;
+    m_timestamp          = 0;
  } // NimBLERemoteCharacteristic
 
 
@@ -389,8 +390,6 @@ std::string NimBLERemoteCharacteristic::readValue() {
 
     int rc = 0;
     int retryCount = 1;
-    // Clear the value before reading.
-    m_value = "";
 
     NimBLEClient* pClient = getRemoteService()->getClient();
 
@@ -402,6 +401,8 @@ std::string NimBLERemoteCharacteristic::readValue() {
 
     do {
         m_semaphoreReadCharEvt.take("readValue");
+        // Clear the value before reading.
+        m_value = "";
 
         rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
                                  NimBLERemoteCharacteristic::onReadCB,
@@ -441,6 +442,21 @@ std::string NimBLERemoteCharacteristic::readValue() {
 
 
 /**
+ * @brief Get the value of the remote characteristic.
+ * @return The value of the remote characteristic.
+ */
+std::string NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
+    m_semaphoreReadCharEvt.take("getValue");
+    std::string value = m_value;
+    if(timestamp != nullptr) {
+        *timestamp = m_timestamp;
+    }
+    m_semaphoreReadCharEvt.give();
+    return value;
+}
+
+
+/**
  * @brief Callback for characteristic read operation.
  * @return 0 or error code.
  */
@@ -462,6 +478,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
             NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
 
             characteristic->m_value += std::string((char*) attr->om->om_data, attr->om->om_len);
+            characteristic->m_timestamp = time(nullptr);
             return 0;
         }
     }
@@ -509,7 +526,7 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
 /**
  * @brief Delete the descriptors in the descriptor vector.
  * We maintain a vector called m_descriptorVector that contains pointers to BLERemoteDescriptors
- * object references. Since we allocated these in this class, we are also responsible for deleteing
+ * object references. Since we allocated these in this class, we are also responsible for deleting
  * them. This method does just that.
  * @return N/A.
  */

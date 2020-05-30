@@ -546,6 +546,11 @@ uint8_t NimBLEAdvertisedDevice::getAddressType() {
 }
 
 
+time_t NimBLEAdvertisedDevice::getTimestamp() {
+    return m_timestamp;
+}
+
+
 void NimBLEAdvertisedDevice::setAddressType(uint8_t type) {
     m_addressType = type;
 }
