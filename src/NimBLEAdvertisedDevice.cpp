@@ -63,6 +63,16 @@ NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
 
 
 /**
+ * @brief Get the advertised type.
+ *
+ * @return The advertised type of the advertised device.
+ */
+uint8_t NimBLEAdvertisedDevice::getAdvType() {
+    return m_advType;
+} // getAddress
+
+
+/**
  * @brief Get the appearance.
  *
  * A %BLE device can declare its own appearance.  The appearance is how it would like to be shown to an end user
@@ -533,6 +543,11 @@ uint8_t* NimBLEAdvertisedDevice::getPayload() {
 
 uint8_t NimBLEAdvertisedDevice::getAddressType() {
     return m_addressType;
+}
+
+
+time_t NimBLEAdvertisedDevice::getTimestamp() {
+    return m_timestamp;
 }
 
 
