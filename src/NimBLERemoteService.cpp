@@ -58,7 +58,7 @@ NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const struct ble
  * Also release any semaphores they may be holding.
  */
 NimBLERemoteService::~NimBLERemoteService() {
-    removeCharacteristics();
+    deleteCharacteristics();
 }
 
 
@@ -125,7 +125,7 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEU
 
 std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics(bool refresh) {
     if(refresh) {
-        removeCharacteristics();
+        deleteCharacteristics();
     }
 
     if(m_characteristicVector.empty()) {
@@ -181,7 +181,7 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,
         /* Error; abort discovery. */
         // pass non-zero to semaphore on error to indicate an error finding characteristics
         // release memory from any characteristics we created
-        //service->removeCharacteristics(); --this will now be done when we clear services on returning with error
+        //service->deleteCharacteristics(); --this will now be done when we clear services on returning with error
         NIMBLE_LOGE(LOG_TAG, "characteristicDiscCB() rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         service->m_semaphoreGetCharEvt.give(1);
     }
@@ -199,7 +199,7 @@ bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID *uuid_filter)
     NIMBLE_LOGD(LOG_TAG, ">> retrieveCharacteristics() for service: %s", getUUID().toString().c_str());
 
     int rc = 0;
-    //removeCharacteristics(); // Forget any previous characteristics.
+    //deleteCharacteristics(); // Forget any previous characteristics.
 
     m_semaphoreGetCharEvt.take("retrieveCharacteristics");
 
@@ -316,12 +316,36 @@ bool NimBLERemoteService::setValue(const NimBLEUUID &characteristicUuid, const s
  * them. This method does just that.
  * @return N/A.
  */
-void NimBLERemoteService::removeCharacteristics() {
+void NimBLERemoteService::deleteCharacteristics() {
+    NIMBLE_LOGD(LOG_TAG, ">> deleteCharacteristics");
     for(auto &it: m_characteristicVector) {
         delete it;
     }
     m_characteristicVector.clear();   // Clear the vector
-} // removeCharacteristics
+    NIMBLE_LOGD(LOG_TAG, "<< deleteCharacteristics");
+} // deleteCharacteristics
+
+
+/**
+ * @brief Delete characteristic by UUID
+ * @param [in] uuid The UUID of the characteristic to be cleared.
+ * @return Number of characteristics left.
+ */
+size_t NimBLERemoteService::deleteCharacteristic(const NimBLEUUID &uuid) {
+    NIMBLE_LOGD(LOG_TAG, ">> deleteCharacteristic");
+    // Delete the requested characteristic.
+    for(auto it = m_characteristicVector.begin(); it != m_characteristicVector.end(); ++it) {
+        if((*it)->getUUID() == uuid) {
+            delete *it;
+            m_characteristicVector.erase(it);
+            break;
+        }
+    }
+
+    NIMBLE_LOGD(LOG_TAG, "<< deleteCharacteristic");
+
+    return m_characteristicVector.size();
+} // deleteCharacteristic
 
 
 /**

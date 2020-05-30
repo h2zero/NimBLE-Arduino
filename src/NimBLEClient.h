@@ -21,6 +21,7 @@
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEAddress.h"
+#include "NimBLEUUID.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
 
@@ -52,6 +53,8 @@ public:
     std::vector<NimBLERemoteService*>::iterator end();
     NimBLERemoteService*                        getService(const char* uuid);
     NimBLERemoteService*                        getService(const NimBLEUUID &uuid);
+    void                                        deleteServices();
+    size_t                                      deleteService(const NimBLEUUID &uuid);
     std::string                                 getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
     bool                                        setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
                                                          const std::string &value);
@@ -82,7 +85,6 @@ private:
                                                 const struct ble_gatt_error *error,
                                                 const struct ble_gatt_svc *service,
                                                 void *arg);
-    void                    clearServices();
     bool                    retrieveServices(const NimBLEUUID *uuid_filter = nullptr);
 
     NimBLEAddress           m_peerAddress = NimBLEAddress("");

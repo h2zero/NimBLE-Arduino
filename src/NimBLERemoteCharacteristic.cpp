@@ -67,7 +67,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  *@brief Destructor.
  */
 NimBLERemoteCharacteristic::~NimBLERemoteCharacteristic() {
-    removeDescriptors();   // Release resources for any descriptor information we may have allocated.
+    deleteDescriptors();   // Release resources for any descriptor information we may have allocated.
 } // ~NimBLERemoteCharacteristic
 
 /*
@@ -269,7 +269,7 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
  */
 std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors(bool refresh) {
     if(refresh) {
-        removeDescriptors();
+        deleteDescriptors();
     }
 
     if(m_descriptorVector.empty()) {
@@ -535,13 +535,37 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
  * them. This method does just that.
  * @return N/A.
  */
-void NimBLERemoteCharacteristic::removeDescriptors() {
+void NimBLERemoteCharacteristic::deleteDescriptors() {
+    NIMBLE_LOGD(LOG_TAG, ">> deleteDescriptors");
     // Iterate through all the descriptors releasing their storage and erasing them from the vector.
     for(auto &it: m_descriptorVector) {
         delete it;
     }
     m_descriptorVector.clear();
-} // removeCharacteristics
+    NIMBLE_LOGD(LOG_TAG, "<< deleteDescriptors");
+} // deleteDescriptors
+
+
+/**
+ * @brief Delete descriptor by UUID
+ * @param [in] uuid The UUID of the descriptor to be deleted.
+ * @return Number of services left.
+ */
+size_t NimBLERemoteCharacteristic::deleteDescriptor(const NimBLEUUID &uuid) {
+    NIMBLE_LOGD(LOG_TAG, ">> deleteDescriptor");
+    // Delete the requested descriptor.
+    for(auto it = m_descriptorVector.begin(); it != m_descriptorVector.end(); ++it) {
+        if((*it)->getUUID() == uuid) {
+            delete *it;
+            m_descriptorVector.erase(it);
+            break;
+        }
+    }
+
+    NIMBLE_LOGD(LOG_TAG, "<< deleteDescriptor");
+
+    return m_descriptorVector.size();
+} // deleteDescriptor
 
 
 /**
