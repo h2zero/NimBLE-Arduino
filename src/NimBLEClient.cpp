@@ -100,7 +100,7 @@ void NimBLEClient::deleteServices() {
 
 /**
  * @brief Delete service by UUID
- * @param [in] uuid The UUID of the service to be deleteServicesed.
+ * @param [in] uuid The UUID of the service to be deleted from the local database.
  * @return Number of services left.
  */
 size_t NimBLEClient::deleteService(const NimBLEUUID &uuid) {
@@ -413,7 +413,7 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
 
 /**
  * @Get a pointer to the vector of found services.
- * @param [in] bool value to indicate if the current vector should be deleteServicesed and
+ * @param [in] bool value to indicate if the current vector should be cleared and
  * subsequently all services retrieved from the peripheral.
  * If false the vector will be returned with the currently stored services,
  * if vector is empty it will retrieve all services from the peripheral.

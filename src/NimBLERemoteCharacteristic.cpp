@@ -260,7 +260,7 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
 
 /**
  * @Get a pointer to the vector of found descriptors.
- * @param [in] bool value to indicate if the current vector should be deleteDescriptorsed and
+ * @param [in] bool value to indicate if the current vector should be cleared and
  * subsequently all descriptors for this characteristic retrieved from the peripheral.
  * If false the vector will be returned with the currently stored descriptors,
  * if the vector is empty it will retrieve all descriptors for this characteristic

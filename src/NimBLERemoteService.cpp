@@ -115,7 +115,7 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEU
 
 /**
  * @Get a pointer to the vector of found characteristics.
- * @param [in] bool value to indicate if the current vector should be deleteCharacteristicsed and
+ * @param [in] bool value to indicate if the current vector should be cleared and
  * subsequently all characteristics for this service retrieved from the peripheral.
  * If false the vector will be returned with the currently stored characteristics,
  * if the vector is empty it will retrieve all characteristics of this service
