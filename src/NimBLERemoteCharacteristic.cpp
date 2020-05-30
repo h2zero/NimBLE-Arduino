@@ -384,7 +384,7 @@ uint8_t NimBLERemoteCharacteristic::readUInt8() {
  * @brief Read the value of the remote characteristic.
  * @return The value of the remote characteristic.
  */
-std::string NimBLERemoteCharacteristic::readValue() {
+std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
     NIMBLE_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x",
                          getUUID().toString().c_str(), getHandle(), getHandle());
 
@@ -437,7 +437,15 @@ std::string NimBLERemoteCharacteristic::readValue() {
     } while(rc != 0 && retryCount--);
 
     NIMBLE_LOGD(LOG_TAG, "<< readValue(): length: %d", m_value.length());
-    return m_value;
+
+    m_semaphoreReadCharEvt.take("returnValue");
+    std::string value = m_value;
+    if(timestamp != nullptr) {
+        *timestamp = m_timestamp;
+    }
+    m_semaphoreReadCharEvt.give();
+
+    return value;
 } // readValue
 
 
@@ -451,6 +459,7 @@ std::string NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
     if(timestamp != nullptr) {
         *timestamp = m_timestamp;
     }
+
     m_semaphoreReadCharEvt.give();
     return value;
 }

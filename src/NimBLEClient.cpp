@@ -725,6 +725,7 @@ uint16_t NimBLEClient::getMTU() {
                         (*characteristic)->m_timestamp = time(nullptr);
                         (*characteristic)->m_semaphoreReadCharEvt.give();
                     }
+
                     if ((*characteristic)->m_notifyCallback != nullptr) {
                         NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s",
                                              (*characteristic)->toString().c_str());

@@ -53,11 +53,29 @@ public:
     uint16_t                                       getHandle();
     uint16_t                                       getDefHandle();
     NimBLEUUID                                     getUUID();
-    std::string                                    readValue();
-    uint8_t                                        readUInt8();
-    uint16_t                                       readUInt16();
-    uint32_t                                       readUInt32();
+    std::string                                    readValue(time_t *timestamp = nullptr);
+
+    template<typename T>
+    T                                              readValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+        std::string value = readValue(timestamp);
+        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
+        const char *pData = value.data();
+        return *((T *)pData);
+    }
+
+    uint8_t                                        readUInt8()  __attribute__ ((deprecated));
+    uint16_t                                       readUInt16() __attribute__ ((deprecated));
+    uint32_t                                       readUInt32() __attribute__ ((deprecated));
     std::string                                    getValue(time_t *timestamp = nullptr);
+
+    template<typename T>
+    T                                              getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+        std::string value = getValue(timestamp);
+        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
+        const char *pData = value.data();
+        return *((T *)pData);
+    }
+
     bool                                           registerForNotify(notify_callback _callback,
                                                                      bool notifications = true,
                                                                      bool response = true);
