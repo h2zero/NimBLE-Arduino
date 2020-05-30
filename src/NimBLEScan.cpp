@@ -143,6 +143,7 @@ NimBLEScan::NimBLEScan() {
             advertisedDevice->parseAdvertisement(&fields);
             advertisedDevice->setScan(pScan);
             advertisedDevice->setAdvertisementResult(event->disc.data, event->disc.length_data);
+            advertisedDevice->m_timestamp = time(nullptr);
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
                 // If not active scanning report the result to the listener.
