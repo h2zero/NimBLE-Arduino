@@ -87,8 +87,6 @@ public:
     bool                                           writeValue(uint8_t newValue,
                                                               bool response = false);
     std::string                                    toString();
-    uint8_t*                                       readRawData();
-    size_t                                         getDataLength();
     NimBLERemoteService*                           getRemoteService();
 
 private:
@@ -121,8 +119,6 @@ private:
     FreeRTOS::Semaphore     m_semaphoreReadCharEvt      = FreeRTOS::Semaphore("ReadCharEvt");
     FreeRTOS::Semaphore     m_semaphoreWriteCharEvt     = FreeRTOS::Semaphore("WriteCharEvt");
     std::string             m_value;
-    uint8_t*                m_rawData;
-    size_t                  m_dataLen;
     notify_callback         m_notifyCallback;
     time_t                  m_timestamp;
 

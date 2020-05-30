@@ -53,13 +53,12 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
             m_uuid = nullptr;
             break;
     }
+
     m_handle             = chr->val_handle;
     m_defHandle          = chr->def_handle;
     m_charProp           = chr->properties;
     m_pRemoteService     = pRemoteService;
     m_notifyCallback     = nullptr;
-    m_rawData            = nullptr;
-    m_dataLen            = 0;
     m_timestamp          = 0;
  } // NimBLERemoteCharacteristic
 
@@ -69,9 +68,6 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  */
 NimBLERemoteCharacteristic::~NimBLERemoteCharacteristic() {
     removeDescriptors();   // Release resources for any descriptor information we may have allocated.
-    if(m_rawData != nullptr) {
-        free(m_rawData);
-    }
 } // ~NimBLERemoteCharacteristic
 
 /*
@@ -699,36 +695,6 @@ int NimBLERemoteCharacteristic::onWriteCB(uint16_t conn_handle,
     characteristic->m_semaphoreWriteCharEvt.give(error->status);
 
     return 0;
-}
-
-
-/**
- * @brief Read raw data from remote characteristic as hex bytes
- * @return uint8_t pointer to the data read.
- */
-uint8_t* NimBLERemoteCharacteristic::readRawData() {
-    if(m_rawData != nullptr) {
-        free(m_rawData);
-        m_rawData = nullptr;
-    }
-
-    m_dataLen = m_value.length();
-    // If we have data copy it to rawData
-    if(m_dataLen) {
-        m_rawData = (uint8_t*) calloc(m_dataLen, sizeof(uint8_t));
-        memcpy(m_rawData, m_value.data(), m_dataLen);
-    }
-
-    return m_rawData;
-}
-
-
-/**
- * @brief Get the length of the data read from the remote characteristic.
- * @return size_t length of the data in bytes.
- */
-size_t NimBLERemoteCharacteristic::getDataLength() {
-    return m_value.length();
 }
 
 
