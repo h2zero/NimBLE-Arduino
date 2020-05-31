@@ -25,7 +25,12 @@
  * @return The characteristic.
  */
 NimBLECharacteristic* NimBLECharacteristicMap::getByHandle(uint16_t handle) {
-    return m_handleMap.at(handle);
+    for(auto &it : m_chrVec) {
+        if(it->getHandle() == handle) {
+            return it;
+        }
+    }
+    return nullptr;
 } // getByHandle
 
 
@@ -45,9 +50,9 @@ NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const char* uuid) {
  * @return The characteristic.
  */
 NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const NimBLEUUID &uuid) {
-    for (auto &myPair : m_uuidMap) {
-        if (myPair.first->getUUID().equals(uuid)) {
-            return myPair.first;
+    for (auto &it : m_chrVec) {
+        if (it->getUUID() == uuid) {
+            return it;
         }
     }
 
@@ -57,8 +62,8 @@ NimBLECharacteristic* NimBLECharacteristicMap::getByUUID(const NimBLEUUID &uuid)
 /**
  * @brief Get the number of characteristics in the map.
  */
-uint8_t NimBLECharacteristicMap::getSize() {
-    return (uint8_t)m_uuidMap.size();
+size_t NimBLECharacteristicMap::getSize() {
+    return m_chrVec.size();
 } // getSize
 
 /**
@@ -66,9 +71,9 @@ uint8_t NimBLECharacteristicMap::getSize() {
  * @return The first characteristic in the map.
  */
 NimBLECharacteristic* NimBLECharacteristicMap::getFirst() {
-    m_iterator = m_uuidMap.begin();
-    if (m_iterator == m_uuidMap.end()) return nullptr;
-    NimBLECharacteristic* pRet = m_iterator->first;
+    m_iterator = m_chrVec.begin();
+    if (m_iterator == m_chrVec.end()) return nullptr;
+    NimBLECharacteristic* pRet = *m_iterator;
     m_iterator++;
     return pRet;
 } // getFirst
@@ -79,8 +84,8 @@ NimBLECharacteristic* NimBLECharacteristicMap::getFirst() {
  * @return The next characteristic in the map.
  */
 NimBLECharacteristic* NimBLECharacteristicMap::getNext() {
-    if (m_iterator == m_uuidMap.end()) return nullptr;
-    NimBLECharacteristic* pRet = m_iterator->first;
+    if (m_iterator == m_chrVec.end()) return nullptr;
+    NimBLECharacteristic* pRet = *m_iterator;
     m_iterator++;
     return pRet;
 } // getNext
@@ -91,20 +96,20 @@ NimBLECharacteristic* NimBLECharacteristicMap::getNext() {
  * @param [in] handle The handle of the characteristic.
  * @param [in] characteristic The characteristic to cache.
  * @return N/A.
- */
+ *//*
 void NimBLECharacteristicMap::setByHandle(uint16_t handle, NimBLECharacteristic* characteristic) {
     m_handleMap.insert(std::pair<uint16_t, NimBLECharacteristic*>(handle, characteristic));
 } // setByHandle
 
-
+*/
 /**
  * @brief Set the characteristic by UUID.
  * @param [in] uuid The uuid of the characteristic.
  * @param [in] characteristic The characteristic to cache.
  * @return N/A.
  */
-void NimBLECharacteristicMap::setByUUID(NimBLECharacteristic* pCharacteristic, const NimBLEUUID &uuid) {
-    m_uuidMap.insert(std::pair<NimBLECharacteristic*, std::string>(pCharacteristic, uuid.toString()));
+void NimBLECharacteristicMap::addCharacteristic(NimBLECharacteristic* pCharacteristic) {
+    m_chrVec.push_back(pCharacteristic);
 } // setByUUID
 
 
@@ -116,13 +121,13 @@ std::string NimBLECharacteristicMap::toString() {
     std::string res;
     int count = 0;
     char hex[5];
-    for (auto &myPair: m_uuidMap) {
+    for (auto &it: m_chrVec) {
         if (count > 0) {res += "\n";}
-        snprintf(hex, sizeof(hex), "%04x", myPair.first->getHandle());
+        snprintf(hex, sizeof(hex), "%04x", it->getHandle());
         count++;
         res += "handle: 0x";
         res += hex;
-        res += ", uuid: " + myPair.first->getUUID().toString();
+        res += ", uuid: " + std::string(it->getUUID());
     }
     return res;
 } // toString

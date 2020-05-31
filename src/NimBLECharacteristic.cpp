@@ -76,11 +76,11 @@ NimBLECharacteristic::~NimBLECharacteristic() {
 void NimBLECharacteristic::addDescriptor(NimBLEDescriptor* pDescriptor) {
     NIMBLE_LOGD(LOG_TAG, ">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
     // Check that we don't add the same descriptor twice.
-    if (m_descriptorMap.getByUUID(pDescriptor->getUUID()) != nullptr) {
+    if (m_descriptorVec.getByUUID(pDescriptor->getUUID()) != nullptr) {
         NIMBLE_LOGW(LOG_TAG, "<< Adding a new descriptor with the same UUID as a previous one");
         //return;
     }
-    m_descriptorMap.setByUUID(pDescriptor->getUUID(), pDescriptor);
+    m_descriptorVec.addDescriptor(pDescriptor);
     NIMBLE_LOGD(LOG_TAG, "<< addDescriptor()");
 } // addDescriptor
 
@@ -109,7 +109,7 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid,
             assert(0 && "Cannot create 2902 descriptior without characteristic notification or indication property set");
         }
         // We cannot have more than one 2902 descriptor, if it's already been created just return a pointer to it.
-        pDescriptor = m_descriptorMap.getByUUID(uuid);
+        pDescriptor = m_descriptorVec.getByUUID(uuid);
         if(pDescriptor == nullptr) {
             pDescriptor = new NimBLE2902(this);
         } else {
@@ -133,7 +133,7 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid,
  * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
  */
 NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* descriptorUUID) {
-    return m_descriptorMap.getByUUID(NimBLEUUID(descriptorUUID));
+    return m_descriptorVec.getByUUID(NimBLEUUID(descriptorUUID));
 } // getDescriptorByUUID
 
 
@@ -143,7 +143,7 @@ NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* descript
  * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
  */
 NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID &descriptorUUID) {
-    return m_descriptorMap.getByUUID(descriptorUUID);
+    return m_descriptorVec.getByUUID(descriptorUUID);
 } // getDescriptorByUUID
 
 
@@ -294,21 +294,26 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     p2902->m_pCallbacks->onWrite(p2902);
 
 
-    auto it = p2902->m_subscribedMap.find(event->subscribe.conn_handle);
-    if(subVal > 0 && it == p2902->m_subscribedMap.cend()) {
-        p2902->m_subscribedMap.insert(std::pair<uint16_t, uint16_t>(event->subscribe.conn_handle, subVal));
+    auto it = p2902->m_subscribedVec.begin();
+    for(;it != p2902->m_subscribedVec.end(); ++it) {
+        if((*it).conn_id == event->subscribe.conn_handle) {
+            break;
+        }
+    }
+    
+    if(subVal > 0 && it == p2902->m_subscribedVec.end()) {
+        chr_sub_status_t client_sub;
+        client_sub.conn_id = event->subscribe.conn_handle;
+        client_sub.sub_val = subVal;
+        p2902->m_subscribedVec.push_back(client_sub);
         return;
-    } else if(it != p2902->m_subscribedMap.cend()) {
-        p2902->m_subscribedMap.erase(event->subscribe.conn_handle);
+    } else if(it != p2902->m_subscribedVec.end()) {
+        p2902->m_subscribedVec.erase(it);
+        p2902->m_subscribedVec.shrink_to_fit();
         return;
     }
-/*
-    if(event->subscribe.reason == BLE_GAP_SUBSCRIBE_REASON_TERM) {
-        p2902->m_subscribedMap.erase(event->subscribe.conn_handle);
-        return;
-    }
-*/
-    (*it).second = subVal;
+    
+    (*it).sub_val = subVal;
 }
 
 
@@ -347,41 +352,40 @@ void NimBLECharacteristic::notify(bool is_notification) {
     int rc = 0;
     NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID((uint16_t)0x2902);
 
-    for (auto it = p2902->m_subscribedMap.cbegin(); it != p2902->m_subscribedMap.cend(); ++it) {
-        uint16_t _mtu = getService()->getServer()->getPeerMTU((*it).first);
+    for (auto it = p2902->m_subscribedVec.begin(); it != p2902->m_subscribedVec.end();) {
+        uint16_t _mtu = getService()->getServer()->getPeerMTU((*it).conn_id);
         // Must rebuild the data on each loop iteration as NimBLE will release it.
         size_t length = m_value.getValue().length();
         uint8_t* data = (uint8_t*)m_value.getValue().data();
         os_mbuf *om;
 
         if(_mtu == 0) {
-            //NIMBLE_LOGD(LOG_TAG, "peer not connected, removing from map");
-            p2902->m_subscribedMap.erase((*it).first);
-            it = p2902->m_subscribedMap.cbegin();
-            if(it == p2902->m_subscribedMap.cend()) {
-                return;
-            }
+            //NIMBLE_LOGD(LOG_TAG, "peer not connected, removing from vector");
+            p2902->m_subscribedVec.erase(it);
+            p2902->m_subscribedVec.shrink_to_fit();
+            it = p2902->m_subscribedVec.begin();
             continue;
         }
 
+        if((*it).sub_val == 0) {
+            //NIMBLE_LOGI(LOG_TAG, "Skipping unsubscribed client");
+            ++it;
+            continue;
+        }
+        
         if (length > _mtu - 3) {
             NIMBLE_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
         }
 
-        if((*it).second == 0) {
-            //NIMBLE_LOGI(LOG_TAG, "Skipping unsubscribed client");
-            continue;
-        }
-
-        if(is_notification && (!((*it).second & NIMBLE_DESC_FLAG_NOTIFY))) {
+        if(is_notification && (!((*it).sub_val & NIMBLE_DESC_FLAG_NOTIFY))) {
             NIMBLE_LOGW(LOG_TAG,
             "Sending notification to client subscribed to indications, sending indication instead");
             is_notification = false;
         }
 
-        if(!is_notification && (!((*it).second & NIMBLE_DESC_FLAG_INDICATE))) {
+        if(!is_notification && (!((*it).sub_val & NIMBLE_DESC_FLAG_INDICATE))) {
             NIMBLE_LOGW(LOG_TAG,
-            "Sending indication to client subscribed to notifications, sending notifications instead");
+            "Sending indication to client subscribed to notification, sending notification instead");
             is_notification = true;
         }
 
@@ -392,7 +396,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
 
         if(!is_notification) {
             m_semaphoreConfEvt.take("indicate");
-            rc = ble_gattc_indicate_custom((*it).first, m_handle, om);
+            rc = ble_gattc_indicate_custom((*it).conn_id, m_handle, om);
             if(rc != 0){
                 m_semaphoreConfEvt.give();
                 m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_GATT, rc);
@@ -401,21 +405,24 @@ void NimBLECharacteristic::notify(bool is_notification) {
 
             rc = m_semaphoreConfEvt.wait();
 
-            if(rc == BLE_HS_ETIMEOUT) {
+            if(rc == 0 || rc == BLE_HS_EDONE) {
+                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE, 0);
+            } else if(rc == BLE_HS_ETIMEOUT) {
                 m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT, rc);
-            } else if(rc == BLE_HS_EDONE) {
-                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE, rc);
             } else {
                 m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE, rc);
             }
         } else {
-            rc = ble_gattc_notify_custom((*it).first, m_handle, om);
+            rc = ble_gattc_notify_custom((*it).conn_id, m_handle, om);
             if(rc == 0) {
                 m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::SUCCESS_NOTIFY, 0);
             } else {
                 m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_GATT, rc);
             }
         }
+
+    ++it;
+
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< notify");

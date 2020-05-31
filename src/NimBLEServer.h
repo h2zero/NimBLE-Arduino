@@ -27,18 +27,10 @@
 #include "NimBLESecurity.h"
 #include "FreeRTOS.h"
 
-#include <map>
 
 class NimBLEService;
 class NimBLECharacteristic;
 class NimBLEServerCallbacks;
-
-/* TODO possibly refactor this struct */
-typedef struct {
-    void *peer_device;      // peer device BLEClient or BLEServer - maybe its better to have 2 structures or union here
-    bool connected;         // do we need it?
-    uint16_t mtu;           // every peer device negotiate own mtu
-} conn_status_t;
 
 
 /**
@@ -48,10 +40,9 @@ class NimBLEServiceMap {
 public:
 //    NimBLEService* getByHandle(uint16_t handle);
     NimBLEService* getByUUID(const char* uuid);
-    NimBLEService* getByUUID(const NimBLEUUID &uuid, uint8_t inst_id = 0);
+    NimBLEService* getByUUID(const NimBLEUUID &uuid);
 //    void           setByHandle(uint16_t handle, NimBLEService* service);
-    void           setByUUID(const char* uuid, NimBLEService* service);
-    void           setByUUID(const NimBLEUUID &uuid, NimBLEService* service);
+    void           addService(NimBLEService* service);
     std::string    toString();
     NimBLEService* getFirst();
     NimBLEService* getNext();
@@ -59,9 +50,8 @@ public:
     int            getRegisteredServiceCount();
 
 private:
-//    std::map<uint16_t, NimBLEService*>    m_handleMap;
-    std::map<NimBLEService*, std::string> m_uuidMap;
-    std::map<NimBLEService*, std::string>::iterator m_iterator;
+    std::vector<NimBLEService*> m_svcVec;
+    std::vector<NimBLEService*>::iterator m_iterator;
 };
 
 
@@ -70,7 +60,7 @@ private:
  */
 class NimBLEServer {
 public:
-    uint32_t              getConnectedCount();
+    size_t                getConnectedCount();
     NimBLEService*        createService(const char* uuid);
     NimBLEService*        createService(const NimBLEUUID &uuid, uint32_t numHandles=15, uint8_t inst_id=0);
     NimBLEAdvertising*    getAdvertising();
@@ -82,41 +72,26 @@ public:
     NimBLEService*        getServiceByUUID(const char* uuid);
     NimBLEService*        getServiceByUUID(const NimBLEUUID &uuid);
     int                   disconnect(uint16_t connID, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
-//    bool                connect(BLEAddress address);
     void                  updateConnParams(uint16_t conn_handle,
-                                    uint16_t minInterval, uint16_t maxInterval,
-                                    uint16_t latency, uint16_t timeout,
-                                    uint16_t minConnTime=0, uint16_t maxConnTime=0);
-
-    /* multi connection support */
-    std::map<uint16_t, conn_status_t> getPeerDevices();
-    void          addPeerDevice(void* peer, bool is_client, uint16_t conn_id);
-    void          removePeerDevice(uint16_t conn_id, bool client);
-    NimBLEServer* getServerByConnId(uint16_t conn_id);
-    void          updatePeerMTU(uint16_t connId, uint16_t mtu);
-    uint16_t      getPeerMTU(uint16_t conn_id);
-    uint16_t      getConnId();
-
+                                           uint16_t minInterval, uint16_t maxInterval,
+                                           uint16_t latency, uint16_t timeout);
+    uint16_t              getPeerMTU(uint16_t conn_id);
+    std::vector<uint16_t> getPeerDevices();
 
 private:
     NimBLEServer();
-    //friend class BLEService;
-    friend class NimBLECharacteristic;
-    friend class NimBLEDevice;
-    friend class NimBLEAdvertising;
- //   void         onHostReset();
-    // BLEAdvertising      m_bleAdvertising;
-    uint16_t               m_connId;
+    friend class           NimBLECharacteristic;
+    friend class           NimBLEDevice;
+    friend class           NimBLEAdvertising;
+
     uint16_t               m_svcChgChrHdl;
     bool                   m_gattsStarted;
-
-    std::map<uint16_t, conn_status_t> m_connectedServersMap;
-    std::map<uint16_t, NimBLECharacteristic*> m_notifyChrMap;
-
-    NimBLEServiceMap       m_serviceMap;
+    NimBLEServiceMap       m_svcVec;
     NimBLEServerCallbacks* m_pServerCallbacks;
+    std::vector<uint16_t>  m_connectedPeersVec;
+    std::vector<NimBLECharacteristic*> m_notifyChrVec;
 
-    static int      handleGapEvent(struct ble_gap_event *event, void *arg);
+    static int             handleGapEvent(struct ble_gap_event *event, void *arg);
 }; // NimBLEServer
 
 
@@ -149,7 +124,7 @@ public:
     virtual bool onSecurityRequest(); //{return true;}
     virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);//{};
     virtual bool onConfirmPIN(uint32_t pin);//{return true;}
-}; // BLEServerCallbacks
+}; // NimBLEServerCallbacks
 
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)

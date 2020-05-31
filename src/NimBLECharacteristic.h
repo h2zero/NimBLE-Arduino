@@ -47,8 +47,7 @@ typedef enum {
 #include "FreeRTOS.h"
 
 #include <string>
-#include <map>
-
+#include <vector>
 
 class NimBLEService;
 class NimBLEDescriptor;
@@ -60,21 +59,18 @@ class NimBLECharacteristicCallbacks;
  */
 class NimBLEDescriptorMap {
 public:
-    void setByUUID(const char* uuid, NimBLEDescriptor* pDescriptor);
-    void setByUUID(const NimBLEUUID &uuid, NimBLEDescriptor* pDescriptor);
-//  void setByHandle(uint16_t handle, NimBLEDescriptor* pDescriptor);
+    void              addDescriptor(NimBLEDescriptor* pDescriptor);
     NimBLEDescriptor* getByUUID(const char* uuid);
     NimBLEDescriptor* getByUUID(const NimBLEUUID &uuid);
 //  NimBLEDescriptor* getByHandle(uint16_t handle);
-    std::string toString();
+    std::string       toString();
     NimBLEDescriptor* getFirst();
     NimBLEDescriptor* getNext();
-    uint8_t           getSize();
+    size_t            getSize();
 
 private:
-    std::map<NimBLEDescriptor*, std::string> m_uuidMap;
-//  std::map<uint16_t, BLEDescriptor*> m_handleMap;
-    std::map<NimBLEDescriptor*, std::string>::iterator m_iterator;
+    std::vector<NimBLEDescriptor*> m_dscVec;
+    std::vector<NimBLEDescriptor*>::iterator m_iterator;
 };
 
 
@@ -149,7 +145,7 @@ private:
     virtual ~NimBLECharacteristic();
 
     NimBLEUUID                     m_uuid;
-    NimBLEDescriptorMap            m_descriptorMap;
+    NimBLEDescriptorMap            m_descriptorVec;
     uint16_t                       m_handle;
     uint16_t                       m_properties;
     NimBLECharacteristicCallbacks* m_pCallbacks;
@@ -162,7 +158,7 @@ private:
     uint8_t         getProperties();
     void            setSubscribe(struct ble_gap_event *event);
     static int      handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
-                                struct ble_gatt_access_ctxt *ctxt, void *arg);
+                                   struct ble_gatt_access_ctxt *ctxt, void *arg);
 
     FreeRTOS::Semaphore m_semaphoreConfEvt   = FreeRTOS::Semaphore("ConfEvt");
 }; // NimBLECharacteristic

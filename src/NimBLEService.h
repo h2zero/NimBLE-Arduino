@@ -34,21 +34,18 @@ class NimBLECharacteristic;
  */
 class NimBLECharacteristicMap {
 public:
-    void setByUUID(NimBLECharacteristic* pCharacteristic, const char* uuid);
-    void setByUUID(NimBLECharacteristic* pCharacteristic, const NimBLEUUID &uuid);
-    void setByHandle(uint16_t handle, NimBLECharacteristic* pCharacteristic);
+    void                  addCharacteristic(NimBLECharacteristic* pCharacteristic);
     NimBLECharacteristic* getByUUID(const char* uuid);
     NimBLECharacteristic* getByUUID(const NimBLEUUID &uuid);
     NimBLECharacteristic* getByHandle(uint16_t handle);
     NimBLECharacteristic* getFirst();
     NimBLECharacteristic* getNext();
-    uint8_t getSize();
+    size_t getSize();
     std::string toString();
 
 private:
-    std::map<NimBLECharacteristic*, std::string> m_uuidMap;
-    std::map<uint16_t, NimBLECharacteristic*> m_handleMap;
-    std::map<NimBLECharacteristic*, std::string>::iterator m_iterator;
+    std::vector<NimBLECharacteristic*> m_chrVec;
+    std::vector<NimBLECharacteristic*>::iterator m_iterator;
 };
 
 
@@ -66,16 +63,14 @@ public:
                         uint32_t properties = NIMBLE_PROPERTY::READ |
                                               NIMBLE_PROPERTY::WRITE);
 
-    void               dump();
+    void                  dump();
     NimBLECharacteristic* getCharacteristic(const char* uuid);
     NimBLECharacteristic* getCharacteristic(const NimBLEUUID &uuid);
     NimBLEUUID            getUUID();
     NimBLEServer*         getServer();
-    bool               start();
-//  void               stop();
-    std::string        toString();
-    uint16_t           getHandle();
-    uint8_t            m_instId = 0;
+    bool                  start();
+    std::string           toString();
+    uint16_t              getHandle();
 
 private:
     NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer);
@@ -83,16 +78,15 @@ private:
     friend class NimBLEServer;
     friend class NimBLEDevice;
 
-    void               addCharacteristic(NimBLECharacteristic* pCharacteristic);
-
-    NimBLECharacteristicMap m_characteristicMap;
-    uint16_t             m_handle;
-    NimBLEServer*           m_pServer = nullptr;
+    void                    addCharacteristic(NimBLECharacteristic* pCharacteristic);
+    
+    NimBLECharacteristicMap m_characteristicVec;
+    uint16_t                m_handle;
+    NimBLEServer*           m_pServer;
     NimBLEUUID              m_uuid;
-
-    uint16_t             m_numHandles;
-    void               setHandle(uint16_t handle);
-}; // BLEService
+    uint16_t                m_numHandles;
+    
+}; // NimBLEService
 
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)

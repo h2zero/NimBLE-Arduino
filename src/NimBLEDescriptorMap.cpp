@@ -37,9 +37,9 @@ NimBLEDescriptor* NimBLEDescriptorMap::getByUUID(const char* uuid) {
  * @return The descriptor.  If not present, then nullptr is returned.
  */
 NimBLEDescriptor* NimBLEDescriptorMap::getByUUID(const NimBLEUUID &uuid) {
-    for (auto &myPair : m_uuidMap) {
-        if (myPair.first->getUUID().equals(uuid)) {
-            return myPair.first;
+    for (auto &it : m_dscVec) {
+        if (it->getUUID() == uuid) {
+            return it;
         }
     }
     return nullptr;
@@ -63,10 +63,11 @@ NimBLEDescriptor* NimBLEDescriptorMap::getByHandle(uint16_t handle) {
  * @param [in] characteristic The descriptor to cache.
  * @return N/A.
  */
+ /*
 void NimBLEDescriptorMap::setByUUID(const char* uuid, NimBLEDescriptor* pDescriptor){
     m_uuidMap.insert(std::pair<NimBLEDescriptor*, std::string>(pDescriptor, uuid));
 } // setByUUID
-
+*/
 
 
 /**
@@ -75,8 +76,8 @@ void NimBLEDescriptorMap::setByUUID(const char* uuid, NimBLEDescriptor* pDescrip
  * @param [in] characteristic The descriptor to cache.
  * @return N/A.
  */
-void NimBLEDescriptorMap::setByUUID(const NimBLEUUID &uuid, NimBLEDescriptor* pDescriptor) {
-    m_uuidMap.insert(std::pair<NimBLEDescriptor*, std::string>(pDescriptor, uuid.toString()));
+void NimBLEDescriptorMap::addDescriptor(NimBLEDescriptor* pDescriptor) {
+    m_dscVec.push_back(pDescriptor);
 } // setByUUID
 
 
@@ -96,8 +97,8 @@ void NimBLEDescriptorMap::setByHandle(uint16_t handle, NimBLEDescriptor* pDescri
 /**
  * @brief Get the number of descriptors in the map.
  */
-uint8_t NimBLEDescriptorMap::getSize() {
-    return (uint8_t)m_uuidMap.size();
+size_t NimBLEDescriptorMap::getSize() {
+    return m_dscVec.size();
 } // getSize
 
 
@@ -109,13 +110,13 @@ std::string NimBLEDescriptorMap::toString() {
     std::string res;
     char hex[5];
     int count = 0;
-    for (auto &myPair : m_uuidMap) {
+    for (auto &it : m_dscVec) {
         if (count > 0) {res += "\n";}
-        snprintf(hex, sizeof(hex), "%04x", myPair.first->getHandle());
+        snprintf(hex, sizeof(hex), "%04x", it->getHandle());
         count++;
         res += "handle: 0x";
         res += hex;
-        res += ", uuid: " + myPair.first->getUUID().toString();
+        res += ", uuid: " + std::string(it->getUUID());
     }
     return res;
 } // toString
@@ -126,9 +127,9 @@ std::string NimBLEDescriptorMap::toString() {
  * @return The first descriptor in the map.
  */
 NimBLEDescriptor* NimBLEDescriptorMap::getFirst() {
-    m_iterator = m_uuidMap.begin();
-    if (m_iterator == m_uuidMap.end()) return nullptr;
-    NimBLEDescriptor* pRet = m_iterator->first;
+    m_iterator = m_dscVec.begin();
+    if (m_iterator == m_dscVec.end()) return nullptr;
+    NimBLEDescriptor* pRet = *m_iterator;
     m_iterator++;
     return pRet;
 } // getFirst
@@ -139,8 +140,8 @@ NimBLEDescriptor* NimBLEDescriptorMap::getFirst() {
  * @return The next descriptor in the map.
  */
 NimBLEDescriptor* NimBLEDescriptorMap::getNext() {
-    if (m_iterator == m_uuidMap.end()) return nullptr;
-    NimBLEDescriptor* pRet = m_iterator->first;
+    if (m_iterator == m_dscVec.end()) return nullptr;
+    NimBLEDescriptor* pRet = *m_iterator;
     m_iterator++;
     return pRet;
 } // getNext

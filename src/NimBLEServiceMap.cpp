@@ -34,13 +34,13 @@ NimBLEService* NimBLEServiceMap::getByUUID(const char* uuid) {
  * @param [in] UUID The UUID to look up the service.
  * @return The characteristic.
  */
-NimBLEService* NimBLEServiceMap::getByUUID(const NimBLEUUID &uuid, uint8_t inst_id) {
-    for (auto &myPair : m_uuidMap) {
-        if (myPair.first->getUUID().equals(uuid)) {
-            return myPair.first;
+NimBLEService* NimBLEServiceMap::getByUUID(const NimBLEUUID &uuid) {
+    for (auto &it : m_svcVec) {
+        if (it->getUUID() == uuid) {
+            return it;
         }
     }
-    //return m_uuidMap.at(uuid.toString());
+
     return nullptr;
 } // getByUUID
 
@@ -62,8 +62,8 @@ NimBLEService* NimBLEServiceMap::getByHandle(uint16_t handle) {
  * @param [in] characteristic The service to cache.
  * @return N/A.
  */
-void NimBLEServiceMap::setByUUID(const NimBLEUUID &uuid, NimBLEService* service) {
-    m_uuidMap.insert(std::pair<NimBLEService*, std::string>(service, uuid.toString()));
+void NimBLEServiceMap::addService(NimBLEService* service) {
+    m_svcVec.push_back(service);
 } // setByUUID
 
 
@@ -85,12 +85,8 @@ void NimBLEServiceMap::setByHandle(uint16_t handle, NimBLEService* service) {
  */
 std::string NimBLEServiceMap::toString() {
     std::string res;
-    //char hex[5];
-    for (auto &myPair: m_uuidMap) {
-    //  res += "handle: 0x";
-    //  snprintf(hex, sizeof(hex), "%04x", myPair.first);
-    //  res += hex;
-        res += ", uuid: " + myPair.second + "\n";
+    for (auto &it : m_svcVec) {
+        res += ", uuid: " + std::string(it->getUUID()) + "\n";
     }
     return res;
 } // toString
@@ -101,9 +97,9 @@ std::string NimBLEServiceMap::toString() {
  * @return The first service in the map.
  */
 NimBLEService* NimBLEServiceMap::getFirst() {
-    m_iterator = m_uuidMap.begin();
-    if (m_iterator == m_uuidMap.end()) return nullptr;
-    NimBLEService* pRet = m_iterator->first;
+    m_iterator = m_svcVec.begin();
+    if (m_iterator == m_svcVec.end()) return nullptr;
+    NimBLEService* pRet = *m_iterator;
     m_iterator++;
     return pRet;
 } // getFirst
@@ -114,8 +110,8 @@ NimBLEService* NimBLEServiceMap::getFirst() {
  * @return The next service in the map.
  */
 NimBLEService* NimBLEServiceMap::getNext() {
-    if (m_iterator == m_uuidMap.end()) return nullptr;
-    NimBLEService* pRet = m_iterator->first;
+    if (m_iterator == m_svcVec.end()) return nullptr;
+    NimBLEService* pRet = *m_iterator;
     m_iterator++;
     return pRet;
 } // getNext
@@ -126,8 +122,7 @@ NimBLEService* NimBLEServiceMap::getNext() {
  * @return N/A.
  */
 void NimBLEServiceMap::removeService(NimBLEService* service) {
-    //m_handleMap.erase(service->getHandle());
-    m_uuidMap.erase(service);
+    m_svcVec.erase(std::remove(m_svcVec.begin(), m_svcVec.end(), service), m_svcVec.end());
 } // removeService
 
 
@@ -137,7 +132,7 @@ void NimBLEServiceMap::removeService(NimBLEService* service) {
  */
 int NimBLEServiceMap::getRegisteredServiceCount(){
     //return m_handleMap.size();
-    return m_uuidMap.size();
+    return m_svcVec.size();
 }
 
 
