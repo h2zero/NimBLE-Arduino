@@ -495,6 +495,32 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
 
 /**
  * @brief Register for notifications.
+ * @param [in] bool if true, register for notifications, false register for indications.
+ * @param [in] bool if true, require a write response from the descriptor write operation.
+ * @return true if successful.
+ */
+bool NimBLERemoteCharacteristic::registerForNotify(bool notifications, bool response) {
+    NIMBLE_LOGD(LOG_TAG, ">> registerForNotify(): %s", toString().c_str());
+
+    m_notifyCallback = nullptr;   // register without notification callback.
+
+    uint8_t val[] = {0x01, 0x00};
+
+    NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
+    if(desc == nullptr)
+        return false;
+
+    if(!notifications){
+        val[0] = 0x02;
+    }
+    NIMBLE_LOGD(LOG_TAG, "<< registerForNotify()");
+
+    return desc->writeValue(val, 2, response);
+} // registerForNotify
+
+
+/**
+ * @brief Register for notifications.
  * @param [in] notifyCallback A callback to be invoked for a notification.  If NULL is provided then we are
  * unregistering for notifications.
  * @param [in] bool if true, register for notifications, false register for indications.
@@ -518,7 +544,7 @@ bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallbac
         }
     }
 
-    else if (notifyCallback == nullptr){
+    else {
         val[0] = 0x00;
     }
 

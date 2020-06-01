@@ -78,6 +78,8 @@ public:
         return *((T *)pData);
     }
 
+    bool                                           registerForNotify(bool notifications = true,
+                                                                     bool response = true);
     bool                                           registerForNotify(notify_callback _callback,
                                                                      bool notifications = true,
                                                                      bool response = true);
