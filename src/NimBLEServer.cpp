@@ -68,13 +68,14 @@ NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numH
     NIMBLE_LOGD(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
     (void)inst_id;
     // Check that a service with the supplied UUID does not already exist.
-    if (m_svcVec.getByUUID(uuid) != nullptr) {
+    //if (m_svcVec.getByUUID(uuid) != nullptr) {
+    if(getServiceByUUID(uuid) != nullptr) {
         NIMBLE_LOGW(LOG_TAG, "<< Attempt to create a new service with uuid %s but a service with that UUID already exists.",
             uuid.toString().c_str());
     }
 
     NimBLEService* pService = new NimBLEService(uuid, numHandles, this);
-    m_svcVec.addService(pService); // Save a reference to this service being on this server.
+    m_svcVec.push_back(pService); // Save a reference to this service being on this server.
 
     NIMBLE_LOGD(LOG_TAG, "<< createService");
     return pService;
@@ -87,7 +88,7 @@ NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numH
  * @return A reference to the service object.
  */
 NimBLEService* NimBLEServer::getServiceByUUID(const char* uuid) {
-    return m_svcVec.getByUUID(uuid);
+    return getServiceByUUID(NimBLEUUID(uuid));
 }
 
 
@@ -97,7 +98,12 @@ NimBLEService* NimBLEServer::getServiceByUUID(const char* uuid) {
  * @return A reference to the service object.
  */
 NimBLEService* NimBLEServer::getServiceByUUID(const NimBLEUUID &uuid) {
-    return m_svcVec.getByUUID(uuid);
+    for (auto &it : m_svcVec) {
+        if (it->getUUID() == uuid) {
+            return it;
+        }
+    }
+    return nullptr;
 }
 
 
@@ -145,29 +151,19 @@ void NimBLEServer::start() {
     NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
 
     // Build a map of characteristics with Notify / Indicate capabilities for event handling
-    uint8_t numSvcs = m_svcVec.getRegisteredServiceCount();
-    NimBLEService* pService = m_svcVec.getFirst();
+    for(auto svc : m_svcVec) {
+        for(auto chr : svc->m_chrVec) {
+            // if Notify / Indicate is enabled but we didn't create the descriptor
+            // we do it now.
+            if((chr->m_properties & BLE_GATT_CHR_F_INDICATE) ||
+                (chr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
 
-    for(int i = 0; i < numSvcs; i++) {
-        uint8_t numChrs = pService->m_characteristicVec.getSize();
-        NimBLECharacteristic* pChr = pService->m_characteristicVec.getFirst();
-
-        if(pChr != nullptr) {
-            for( int d = 0; d < numChrs; d++) {
-                // if Notify / Indicate is enabled but we didn't create the descriptor
-                // we do it now.
-                if((pChr->m_properties & BLE_GATT_CHR_F_INDICATE) ||
-                    (pChr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
-
-                    if(nullptr == pChr->getDescriptorByUUID("2902")) {
-                        pChr->createDescriptor("2902");
-                    }
-                    m_notifyChrVec.push_back(pChr);
+                if(nullptr == chr->getDescriptorByUUID(uint16_t(0x2902))) {
+                    chr->createDescriptor("2902");
                 }
-                pChr = pService->m_characteristicVec.getNext();
+                m_notifyChrVec.push_back(chr);
             }
         }
-        pService = m_svcVec.getNext();
     }
 
     m_gattsStarted = true;
@@ -199,7 +195,6 @@ int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
  * @return The number of connected clients.
  */
 size_t NimBLEServer::getConnectedCount() {
-    //return m_connectedServersMap.size();
     return m_connectedPeersVec.size();
 } // getConnectedCount
 

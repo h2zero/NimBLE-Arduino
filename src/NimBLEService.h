@@ -29,25 +29,6 @@
 class NimBLEServer;
 class NimBLECharacteristic;
 
-/**
- * @brief A data mapping used to manage the set of %BLE characteristics known to the server.
- */
-class NimBLECharacteristicMap {
-public:
-    void                  addCharacteristic(NimBLECharacteristic* pCharacteristic);
-    NimBLECharacteristic* getByUUID(const char* uuid);
-    NimBLECharacteristic* getByUUID(const NimBLEUUID &uuid);
-    NimBLECharacteristic* getByHandle(uint16_t handle);
-    NimBLECharacteristic* getFirst();
-    NimBLECharacteristic* getNext();
-    size_t getSize();
-    std::string toString();
-
-private:
-    std::vector<NimBLECharacteristic*> m_chrVec;
-    std::vector<NimBLECharacteristic*>::iterator m_iterator;
-};
-
 
 /**
  * @brief The model of a %BLE service.
@@ -78,14 +59,13 @@ private:
     friend class NimBLEServer;
     friend class NimBLEDevice;
 
-    void                    addCharacteristic(NimBLECharacteristic* pCharacteristic);
-    
-    NimBLECharacteristicMap m_characteristicVec;
     uint16_t                m_handle;
     NimBLEServer*           m_pServer;
     NimBLEUUID              m_uuid;
     uint16_t                m_numHandles;
-    
+
+    std::vector<NimBLECharacteristic*> m_chrVec;
+
 }; // NimBLEService
 
 

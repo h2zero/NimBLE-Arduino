@@ -55,26 +55,6 @@ class NimBLECharacteristicCallbacks;
 
 
 /**
- * @brief A management structure for %BLE descriptors.
- */
-class NimBLEDescriptorMap {
-public:
-    void              addDescriptor(NimBLEDescriptor* pDescriptor);
-    NimBLEDescriptor* getByUUID(const char* uuid);
-    NimBLEDescriptor* getByUUID(const NimBLEUUID &uuid);
-//  NimBLEDescriptor* getByHandle(uint16_t handle);
-    std::string       toString();
-    NimBLEDescriptor* getFirst();
-    NimBLEDescriptor* getNext();
-    size_t            getSize();
-
-private:
-    std::vector<NimBLEDescriptor*> m_dscVec;
-    std::vector<NimBLEDescriptor*>::iterator m_iterator;
-};
-
-
-/**
  * @brief The model of a %BLE Characteristic.
  *
  * A BLE Characteristic is an identified value container that manages a value. It is exposed by a BLE server and
@@ -83,16 +63,18 @@ private:
 class NimBLECharacteristic {
 public:
     NimBLEDescriptor* createDescriptor(const char* uuid,
-                        uint32_t properties = NIMBLE_PROPERTY::READ |
-                                              NIMBLE_PROPERTY::WRITE,
-                                     uint16_t max_len = 100);
+                                       uint32_t properties =
+                                       NIMBLE_PROPERTY::READ |
+                                       NIMBLE_PROPERTY::WRITE,
+                                       uint16_t max_len = 100);
     NimBLEDescriptor* createDescriptor(const NimBLEUUID &uuid,
-                        uint32_t properties = NIMBLE_PROPERTY::READ |
-                                              NIMBLE_PROPERTY::WRITE,
-                                     uint16_t max_len = 100);
+                                       uint32_t properties =
+                                       NIMBLE_PROPERTY::READ |
+                                       NIMBLE_PROPERTY::WRITE,
+                                       uint16_t max_len = 100);
 
-    NimBLEDescriptor* getDescriptorByUUID(const char* descriptorUUID);
-    NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &descriptorUUID);
+    NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
+    NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &uuid);
     NimBLEUUID        getUUID();
     std::string       getValue();
     uint8_t*          getData();
@@ -119,41 +101,33 @@ public:
 
     std::string toString();
     uint16_t getHandle();
-//  void setAccessPermissions(uint16_t perm);
-
-//  Backward Compatibility - to be removed
-/*  static const uint32_t PROPERTY_READ      = 1<<0;
-    static const uint32_t PROPERTY_WRITE     = 1<<1;
-    static const uint32_t PROPERTY_NOTIFY    = 1<<2;
-    static const uint32_t PROPERTY_BROADCAST = 1<<3;
-    static const uint32_t PROPERTY_INDICATE  = 1<<4;
-    static const uint32_t PROPERTY_WRITE_NR  = 1<<5;
-*/
-//////////////////////////////////////////////////////
 
 private:
 
     friend class NimBLEServer;
     friend class NimBLEService;
-//  friend class NimBLEDescriptor;
-//  friend class NimBLECharacteristicMap;
 
-    NimBLECharacteristic(const char* uuid, uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
-                                                        NimBLEService* pService = nullptr);
-    NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
-                                                        NimBLEService* pService = nullptr);
+    NimBLECharacteristic(const char* uuid,
+                         uint16_t properties =
+                         NIMBLE_PROPERTY::READ |
+                         NIMBLE_PROPERTY::WRITE,
+                         NimBLEService* pService = nullptr);
+    NimBLECharacteristic(const NimBLEUUID &uuid,
+                         uint16_t properties =
+                         NIMBLE_PROPERTY::READ |
+                         NIMBLE_PROPERTY::WRITE,
+                         NimBLEService* pService = nullptr);
+
     virtual ~NimBLECharacteristic();
 
     NimBLEUUID                     m_uuid;
-    NimBLEDescriptorMap            m_descriptorVec;
     uint16_t                       m_handle;
     uint16_t                       m_properties;
     NimBLECharacteristicCallbacks* m_pCallbacks;
     NimBLEService*                 m_pService;
     NimBLEValue                    m_value;
-//  uint16_t                       m_permissions;
+    std::vector<NimBLEDescriptor*> m_dscVec;
 
-    void            addDescriptor(NimBLEDescriptor* pDescriptor);
     NimBLEService*  getService();
     uint8_t         getProperties();
     void            setSubscribe(struct ble_gap_event *event);

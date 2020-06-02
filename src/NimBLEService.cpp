@@ -59,10 +59,22 @@ NimBLEService::NimBLEService(const NimBLEUUID &uuid, uint16_t numHandles, NimBLE
  * @return N/A.
  */
 void NimBLEService::dump() {
-    NIMBLE_LOGD(LOG_TAG, "Service: uuid:%s, handle: 0x%.2x",
+    NIMBLE_LOGD(LOG_TAG, "Service: uuid:%s, handle: 0x%2x",
         m_uuid.toString().c_str(),
         m_handle);
-    NIMBLE_LOGD(LOG_TAG, "Characteristics:\n%s", m_characteristicVec.toString().c_str());
+
+    std::string res;
+    int count = 0;
+    char hex[5];
+    for (auto &it: m_chrVec) {
+        if (count > 0) {res += "\n";}
+        snprintf(hex, sizeof(hex), "%04x", it->getHandle());
+        count++;
+        res += "handle: 0x";
+        res += hex;
+        res += ", uuid: " + std::string(it->getUUID());
+    }
+    NIMBLE_LOGD(LOG_TAG, "Characteristics:\n%s", res.c_str());
 } // dump
 
 
@@ -96,7 +108,7 @@ bool NimBLEService::start() {
     svc[0].uuid = &m_uuid.getNative()->u;
     svc[0].includes = NULL;
 
-    uint8_t numChrs = m_characteristicVec.getSize();
+    size_t numChrs = m_chrVec.size();
 
     NIMBLE_LOGD(LOG_TAG,"Adding %d characteristics for service %s", numChrs, toString().c_str());
 
@@ -107,10 +119,10 @@ bool NimBLEService::start() {
         // of the characteristics for the service. We create 1 extra and set it to null
         // for this purpose.
         pChr_a = new ble_gatt_chr_def[numChrs+1];
-        NimBLECharacteristic* pCharacteristic = m_characteristicVec.getFirst();
+        NimBLECharacteristic* pCharacteristic = *m_chrVec.begin();
 
-        for(uint8_t i=0; i < numChrs; i++) {
-            uint8_t numDscs = pCharacteristic->m_descriptorVec.getSize();
+        for(uint8_t i=0; i < numChrs;) {
+            uint8_t numDscs = pCharacteristic->m_dscVec.size();
             if(numDscs) {
                 // skip 2902 as it's automatically created by NimBLE
                 // if Indicate or Notify flags are set
@@ -127,12 +139,12 @@ bool NimBLEService::start() {
                 // Must have last descriptor uuid = 0 so we have to create 1 extra
                 //NIMBLE_LOGD(LOG_TAG, "Adding %d descriptors", numDscs);
                 pDsc_a = new ble_gatt_dsc_def[numDscs+1];
-                NimBLEDescriptor* pDescriptor = pCharacteristic->m_descriptorVec.getFirst();
+                NimBLEDescriptor* pDescriptor = *pCharacteristic->m_dscVec.begin();
                 for(uint8_t d=0; d < numDscs;) {
                     // skip 2902
-                    if(pDescriptor->m_uuid.equals(NimBLEUUID((uint16_t)0x2902))) {
+                    if(pDescriptor->m_uuid == NimBLEUUID(uint16_t(0x2902))) {
                         //NIMBLE_LOGD(LOG_TAG, "Skipped 0x2902");
-                        pDescriptor = pCharacteristic->m_descriptorVec.getNext();
+                        pDescriptor = *(pCharacteristic->m_dscVec.begin()+d+1);
                         continue;
                     }
                     pDsc_a[d].uuid = &pDescriptor->m_uuid.getNative()->u;
@@ -140,8 +152,8 @@ bool NimBLEService::start() {
                     pDsc_a[d].min_key_size = 0;
                     pDsc_a[d].access_cb = NimBLEDescriptor::handleGapEvent;
                     pDsc_a[d].arg = pDescriptor;
-                    pDescriptor = pCharacteristic->m_descriptorVec.getNext();
                     d++;
+                    pDescriptor = *(pCharacteristic->m_dscVec.begin()+d);
                 }
 
                 pDsc_a[numDscs].uuid = NULL;
@@ -154,7 +166,8 @@ bool NimBLEService::start() {
             pChr_a[i].flags = pCharacteristic->m_properties;
             pChr_a[i].min_key_size = 0;
             pChr_a[i].val_handle = &pCharacteristic->m_handle;
-            pCharacteristic = m_characteristicVec.getNext();
+            i++;
+            pCharacteristic = *(m_chrVec.begin() + i);
         }
 
         pChr_a[numChrs].uuid = NULL;
@@ -183,55 +196,12 @@ bool NimBLEService::start() {
 
 
 /**
- * @brief Set the handle associated with this service.
- * @param [in] handle The handle associated with the service.
- *//*
-void NimBLEService::setHandle(uint16_t handle) {
-    NIMBLE_LOGD(LOG_TAG, ">> setHandle - Handle=0x%.2x, service UUID=%s)", handle, getUUID().toString().c_str());
-    if (m_handle != NULL_HANDLE) {
-        NIMBLE_LOGE(LOG_TAG, "!!! Handle is already set %.2x", m_handle);
-        return;
-    }
-    m_handle = handle;
-    NIMBLE_LOGD(LOG_TAG, "<< setHandle");
-} // setHandle
-*/
-
-/**
  * @brief Get the handle associated with this service.
  * @return The handle associated with this service.
  */
 uint16_t NimBLEService::getHandle() {
     return m_handle;
 } // getHandle
-
-
-/**
- * @brief Add a characteristic to the service.
- * @param [in] pCharacteristic A pointer to the characteristic to be added.
- */
-void NimBLEService::addCharacteristic(NimBLECharacteristic* pCharacteristic) {
-    // We maintain a mapping of characteristics owned by this service.  These are managed by the
-    // BLECharacteristicMap class instance found in m_characteristicVec.  We add the characteristic
-    // to the map and then ask the service to add the characteristic at the BLE level (ESP-IDF).
-
-    NIMBLE_LOGD(LOG_TAG, ">> addCharacteristic()");
-    NIMBLE_LOGD(LOG_TAG, "Adding characteristic: uuid=%s to service: %s",
-        pCharacteristic->getUUID().toString().c_str(),
-        toString().c_str());
-
-    // Check that we don't add the same characteristic twice.
-    if (m_characteristicVec.getByUUID(pCharacteristic->getUUID()) != nullptr) {
-        NIMBLE_LOGW(LOG_TAG, "<< Adding a new characteristic with the same UUID as a previous one");
-        //return;
-    }
-
-    // Remember this characteristic in our map of characteristics.  At this point, we can lookup by UUID
-    // but not by handle.  The handle is allocated to us on the ESP_GATTS_ADD_CHAR_EVT.
-    m_characteristicVec.addCharacteristic(pCharacteristic);
-
-    NIMBLE_LOGD(LOG_TAG, "<< addCharacteristic()");
-} // addCharacteristic
 
 
 /**
@@ -253,8 +223,14 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint
  */
 NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid, uint32_t properties) {
     NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, this);
-    addCharacteristic(pCharacteristic);
-    //pCharacteristic->executeCreate(this);
+    // Check that we don't add the same characteristic twice.
+    if (getCharacteristic(uuid) != nullptr) {
+        NIMBLE_LOGW(LOG_TAG, "<< Adding a new characteristic with the same UUID as a previous one");
+    }
+
+    // Remember this characteristic in our vector of characteristics.
+    m_chrVec.push_back(pCharacteristic);
+
     return pCharacteristic;
 } // createCharacteristic
 
@@ -265,7 +241,13 @@ NimBLECharacteristic* NimBLEService::getCharacteristic(const char* uuid) {
 
 
 NimBLECharacteristic* NimBLEService::getCharacteristic(const NimBLEUUID &uuid) {
-    return m_characteristicVec.getByUUID(uuid);
+    for (auto &it : m_chrVec) {
+        if (it->getUUID() == uuid) {
+            return it;
+        }
+    }
+
+    return nullptr;
 }
 
 

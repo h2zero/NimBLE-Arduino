@@ -50,15 +50,6 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
     m_properties = properties;
     m_pCallbacks = &defaultCallback;
     m_pService   = pService;
-//  Backward Compatibility - to be removed
-/*  setBroadcastProperty((properties & PROPERTY_BROADCAST) != 0);
-    setReadProperty((properties & PROPERTY_READ) != 0);
-    setWriteProperty((properties & PROPERTY_WRITE) != 0);
-    setNotifyProperty((properties & PROPERTY_NOTIFY) != 0);
-    setIndicateProperty((properties & PROPERTY_INDICATE) != 0);
-    setWriteNoResponseProperty((properties & PROPERTY_WRITE_NR) != 0);
-*/
-///////////////////////////////////////////
 } // NimBLECharacteristic
 
 /**
@@ -66,23 +57,6 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
  */
 NimBLECharacteristic::~NimBLECharacteristic() {
 } // ~NimBLECharacteristic
-
-
-/**
- * @brief Associate a descriptor with this characteristic.
- * @param [in] pDescriptor
- * @return N/A.
- */
-void NimBLECharacteristic::addDescriptor(NimBLEDescriptor* pDescriptor) {
-    NIMBLE_LOGD(LOG_TAG, ">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
-    // Check that we don't add the same descriptor twice.
-    if (m_descriptorVec.getByUUID(pDescriptor->getUUID()) != nullptr) {
-        NIMBLE_LOGW(LOG_TAG, "<< Adding a new descriptor with the same UUID as a previous one");
-        //return;
-    }
-    m_descriptorVec.addDescriptor(pDescriptor);
-    NIMBLE_LOGD(LOG_TAG, "<< addDescriptor()");
-} // addDescriptor
 
 
 /**
@@ -104,25 +78,26 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint3
  */
 NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid, uint32_t properties, uint16_t max_len) {
     NimBLEDescriptor* pDescriptor = nullptr;
-    if(uuid.equals(NimBLEUUID((uint16_t)0x2902))) {
+    if(uuid == NimBLEUUID(uint16_t(0x2902))) {
         if(!(m_properties & BLE_GATT_CHR_F_NOTIFY) && !(m_properties & BLE_GATT_CHR_F_INDICATE)) {
             assert(0 && "Cannot create 2902 descriptior without characteristic notification or indication property set");
         }
         // We cannot have more than one 2902 descriptor, if it's already been created just return a pointer to it.
-        pDescriptor = m_descriptorVec.getByUUID(uuid);
+        pDescriptor = getDescriptorByUUID(uuid);
         if(pDescriptor == nullptr) {
             pDescriptor = new NimBLE2902(this);
         } else {
             return pDescriptor;
         }
 
-    } else if (uuid.equals(NimBLEUUID((uint16_t)0x2904))) {
+    } else if (uuid == NimBLEUUID(uint16_t(0x2904))) {
         pDescriptor = new NimBLE2904(this);
 
     } else {
         pDescriptor = new NimBLEDescriptor(uuid, properties, max_len, this);
     }
-    addDescriptor(pDescriptor);
+
+    m_dscVec.push_back(pDescriptor);
     return pDescriptor;
 } // createCharacteristic
 
@@ -132,8 +107,8 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid,
  * @param [in] descriptorUUID The UUID of the descriptor that we wish to retrieve.
  * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
  */
-NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* descriptorUUID) {
-    return m_descriptorVec.getByUUID(NimBLEUUID(descriptorUUID));
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* uuid) {
+    return getDescriptorByUUID(NimBLEUUID(uuid));
 } // getDescriptorByUUID
 
 
@@ -142,8 +117,13 @@ NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* descript
  * @param [in] descriptorUUID The UUID of the descriptor that we wish to retrieve.
  * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
  */
-NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID &descriptorUUID) {
-    return m_descriptorVec.getByUUID(descriptorUUID);
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID &uuid) {
+    for (auto &it : m_dscVec) {
+        if (it->getUUID() == uuid) {
+            return it;
+        }
+    }
+    return nullptr;
 } // getDescriptorByUUID
 
 
@@ -155,11 +135,6 @@ uint16_t NimBLECharacteristic::getHandle() {
     return m_handle;
 } // getHandle
 
-/*
-void NimBLECharacteristic::setAccessPermissions(uint16_t perm) {
-    m_permissions = perm;
-}
-*/
 
 uint8_t NimBLECharacteristic::getProperties() {
     return m_properties;
@@ -283,7 +258,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
 
     NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d", event->subscribe.conn_handle, subVal);
 
-    NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID((uint16_t)0x2902);
+    NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID(uint16_t(0x2902));
     if(p2902 == nullptr){
         ESP_LOGE(LOG_TAG, "No 2902 descriptor found for %s", getUUID().toString().c_str());
         return;
@@ -300,7 +275,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
             break;
         }
     }
-    
+
     if(subVal > 0 && it == p2902->m_subscribedVec.end()) {
         chr_sub_status_t client_sub;
         client_sub.conn_id = event->subscribe.conn_handle;
@@ -312,7 +287,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         p2902->m_subscribedVec.shrink_to_fit();
         return;
     }
-    
+
     (*it).sub_val = subVal;
 }
 
@@ -350,7 +325,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
     m_pCallbacks->onNotify(this);
 
     int rc = 0;
-    NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID((uint16_t)0x2902);
+    NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID(uint16_t(0x2902));
 
     for (auto it = p2902->m_subscribedVec.begin(); it != p2902->m_subscribedVec.end();) {
         uint16_t _mtu = getService()->getServer()->getPeerMTU((*it).conn_id);
@@ -372,7 +347,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
             ++it;
             continue;
         }
-        
+
         if (length > _mtu - 3) {
             NIMBLE_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
         }

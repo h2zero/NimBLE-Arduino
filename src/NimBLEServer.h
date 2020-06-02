@@ -34,35 +34,14 @@ class NimBLEServerCallbacks;
 
 
 /**
- * @brief A data structure that manages the %BLE servers owned by a BLE server.
- */
-class NimBLEServiceMap {
-public:
-//    NimBLEService* getByHandle(uint16_t handle);
-    NimBLEService* getByUUID(const char* uuid);
-    NimBLEService* getByUUID(const NimBLEUUID &uuid);
-//    void           setByHandle(uint16_t handle, NimBLEService* service);
-    void           addService(NimBLEService* service);
-    std::string    toString();
-    NimBLEService* getFirst();
-    NimBLEService* getNext();
-    void           removeService(NimBLEService *service);
-    int            getRegisteredServiceCount();
-
-private:
-    std::vector<NimBLEService*> m_svcVec;
-    std::vector<NimBLEService*>::iterator m_iterator;
-};
-
-
-/**
  * @brief The model of a %BLE server.
  */
 class NimBLEServer {
 public:
     size_t                getConnectedCount();
     NimBLEService*        createService(const char* uuid);
-    NimBLEService*        createService(const NimBLEUUID &uuid, uint32_t numHandles=15, uint8_t inst_id=0);
+    NimBLEService*        createService(const NimBLEUUID &uuid, uint32_t numHandles=15,
+                                        uint8_t inst_id=0);
     NimBLEAdvertising*    getAdvertising();
     void                  setCallbacks(NimBLEServerCallbacks* pCallbacks);
     void                  startAdvertising();
@@ -71,7 +50,8 @@ public:
 //    void                  removeService(BLEService* service);
     NimBLEService*        getServiceByUUID(const char* uuid);
     NimBLEService*        getServiceByUUID(const NimBLEUUID &uuid);
-    int                   disconnect(uint16_t connID, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
+    int                   disconnect(uint16_t connID,
+                                     uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     void                  updateConnParams(uint16_t conn_handle,
                                            uint16_t minInterval, uint16_t maxInterval,
                                            uint16_t latency, uint16_t timeout);
@@ -86,9 +66,10 @@ private:
 
     uint16_t               m_svcChgChrHdl;
     bool                   m_gattsStarted;
-    NimBLEServiceMap       m_svcVec;
     NimBLEServerCallbacks* m_pServerCallbacks;
     std::vector<uint16_t>  m_connectedPeersVec;
+
+    std::vector<NimBLEService*> m_svcVec;
     std::vector<NimBLECharacteristic*> m_notifyChrVec;
 
     static int             handleGapEvent(struct ble_gap_event *event, void *arg);
