@@ -78,11 +78,10 @@ public:
         return *((T *)pData);
     }
 
-    bool                                           registerForNotify(bool notifications = true,
-                                                                     bool response = true);
-    bool                                           registerForNotify(notify_callback _callback,
-                                                                     bool notifications = true,
-                                                                     bool response = true);
+    bool                                           subscribeForNotify(bool notifications = true, 
+                                                                      bool response = true, 
+                                                                      notify_callback notifyCallback = nullptr);
+    bool                                           unsubscribeForNotify(bool response = true);
     bool                                           writeValue(const uint8_t* data,
                                                               size_t length,
                                                               bool response = false);
@@ -102,6 +101,7 @@ private:
     friend class      NimBLERemoteDescriptor;
 
     // Private member functions
+    bool              setNotify(uint16_t val, bool response = true, notify_callback notifyCallback = nullptr);
     bool              retrieveDescriptors(const NimBLEUUID *uuid_filter = nullptr);
     static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error,
                                struct ble_gatt_attr *attr, void *arg);
