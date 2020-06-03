@@ -32,6 +32,7 @@ typedef struct {
     uint16_t sub_val;
 } chr_sub_status_t;
 
+
 /**
  * @brief Descriptor for Client Characteristic Configuration.
  *

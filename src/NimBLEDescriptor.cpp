@@ -209,13 +209,6 @@ void NimBLEDescriptor::setValue(const std::string &value) {
 } // setValue
 
 
-/*
-void NimBLEDescriptor::setAccessPermissions(uint8_t perm) {
-    m_permissions = perm;
-}
-*/
-
-
 /**
  * @brief Return a string representation of the descriptor.
  * @return A string representation of the descriptor.

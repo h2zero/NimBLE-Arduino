@@ -21,12 +21,10 @@
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEAddress.h"
-#include "NimBLEUUID.h"
 #include "NimBLEAdvertising.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"
 #include "FreeRTOS.h"
-
 
 class NimBLEService;
 class NimBLECharacteristic;
@@ -38,25 +36,25 @@ class NimBLEServerCallbacks;
  */
 class NimBLEServer {
 public:
-    size_t                getConnectedCount();
-    NimBLEService*        createService(const char* uuid);
-    NimBLEService*        createService(const NimBLEUUID &uuid, uint32_t numHandles=15,
-                                        uint8_t inst_id=0);
-    NimBLEAdvertising*    getAdvertising();
-    void                  setCallbacks(NimBLEServerCallbacks* pCallbacks);
-    void                  startAdvertising();
-    void                  stopAdvertising();
-    void                  start();
-//    void                  removeService(BLEService* service);
-    NimBLEService*        getServiceByUUID(const char* uuid);
-    NimBLEService*        getServiceByUUID(const NimBLEUUID &uuid);
-    int                   disconnect(uint16_t connID,
-                                     uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
-    void                  updateConnParams(uint16_t conn_handle,
-                                           uint16_t minInterval, uint16_t maxInterval,
-                                           uint16_t latency, uint16_t timeout);
-    uint16_t              getPeerMTU(uint16_t conn_id);
-    std::vector<uint16_t> getPeerDevices();
+    size_t                 getConnectedCount();
+    NimBLEService*         createService(const char* uuid);
+    NimBLEService*         createService(const NimBLEUUID &uuid, uint32_t numHandles=15,
+                                         uint8_t inst_id=0);
+    NimBLEAdvertising*     getAdvertising();
+    void                   setCallbacks(NimBLEServerCallbacks* pCallbacks);
+    void                   startAdvertising();
+    void                   stopAdvertising();
+    void                   start();
+    NimBLEService*         getServiceByUUID(const char* uuid);
+    NimBLEService*         getServiceByUUID(const NimBLEUUID &uuid);
+    int                    disconnect(uint16_t connID,
+                                      uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
+    void                   updateConnParams(uint16_t conn_handle,
+                                            uint16_t minInterval, uint16_t maxInterval,
+                                            uint16_t latency, uint16_t timeout);
+    uint16_t               getPeerMTU(uint16_t conn_id);
+    std::vector<uint16_t>  getPeerDevices();
+    void                   advertiseOnDisconnect(bool);
 
 private:
     NimBLEServer();
@@ -66,6 +64,7 @@ private:
 
     uint16_t               m_svcChgChrHdl;
     bool                   m_gattsStarted;
+    bool                   m_advertiseOnDisconnect;
     NimBLEServerCallbacks* m_pServerCallbacks;
     std::vector<uint16_t>  m_connectedPeersVec;
 

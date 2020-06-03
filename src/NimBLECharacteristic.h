@@ -42,7 +42,6 @@ typedef enum {
 
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
-#include "NimBLEUUID.h"
 #include "NimBLEValue.h"
 #include "FreeRTOS.h"
 
@@ -79,33 +78,23 @@ public:
     std::string       getValue();
     uint8_t*          getData();
     size_t            getDataLength();
-
-    void indicate();
-    void notify(bool is_notification = true);
-    void setCallbacks(NimBLECharacteristicCallbacks* pCallbacks);
-//  Backward Compatibility - to be removed
-    void setBroadcastProperty(bool value);
-    void setIndicateProperty(bool value);
-    void setNotifyProperty(bool value);
-    void setReadProperty(bool value);
-    void setWriteProperty(bool value);
-    void setWriteNoResponseProperty(bool value);
-//////////////////////////////////////////////////////
-    void setValue(const uint8_t* data, size_t size);
-    void setValue(const std::string &value);
-    void setValue(uint16_t& data16);
-    void setValue(uint32_t& data32);
-    void setValue(int& data32);
-    void setValue(float& data32);
-    void setValue(double& data64);
-
-    std::string toString();
-    uint16_t getHandle();
+    void              indicate();
+    void              notify(bool is_notification = true);
+    void              setCallbacks(NimBLECharacteristicCallbacks* pCallbacks);
+    void              setValue(const uint8_t* data, size_t size);
+    void              setValue(const std::string &value);
+    void              setValue(uint16_t& data16);
+    void              setValue(uint32_t& data32);
+    void              setValue(int& data32);
+    void              setValue(float& data32);
+    void              setValue(double& data64);
+    std::string       toString();
+    uint16_t          getHandle();
 
 private:
 
-    friend class NimBLEServer;
-    friend class NimBLEService;
+    friend class      NimBLEServer;
+    friend class      NimBLEService;
 
     NimBLECharacteristic(const char* uuid,
                          uint16_t properties =
@@ -118,7 +107,13 @@ private:
                          NIMBLE_PROPERTY::WRITE,
                          NimBLEService* pService = nullptr);
 
-    virtual ~NimBLECharacteristic();
+    ~NimBLECharacteristic();
+
+    NimBLEService*  getService();
+    uint8_t         getProperties();
+    void            setSubscribe(struct ble_gap_event *event);
+    static int      handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
+                                   struct ble_gatt_access_ctxt *ctxt, void *arg);
 
     NimBLEUUID                     m_uuid;
     uint16_t                       m_handle;
@@ -127,14 +122,7 @@ private:
     NimBLEService*                 m_pService;
     NimBLEValue                    m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
-
-    NimBLEService*  getService();
-    uint8_t         getProperties();
-    void            setSubscribe(struct ble_gap_event *event);
-    static int      handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
-                                   struct ble_gatt_access_ctxt *ctxt, void *arg);
-
-    FreeRTOS::Semaphore m_semaphoreConfEvt   = FreeRTOS::Semaphore("ConfEvt");
+    FreeRTOS::Semaphore            *m_pSemaphore;
 }; // NimBLECharacteristic
 
 

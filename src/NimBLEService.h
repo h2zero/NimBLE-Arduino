@@ -37,12 +37,14 @@ class NimBLECharacteristic;
 class NimBLEService {
 public:
     NimBLECharacteristic* createCharacteristic(const char* uuid,
-                        uint32_t properties = NIMBLE_PROPERTY::READ |
+                                              uint32_t properties =
+                                              NIMBLE_PROPERTY::READ |
                                               NIMBLE_PROPERTY::WRITE);
 
     NimBLECharacteristic* createCharacteristic(const NimBLEUUID &uuid,
-                        uint32_t properties = NIMBLE_PROPERTY::READ |
-                                              NIMBLE_PROPERTY::WRITE);
+                                               uint32_t properties =
+                                               NIMBLE_PROPERTY::READ |
+                                               NIMBLE_PROPERTY::WRITE);
 
     void                  dump();
     NimBLECharacteristic* getCharacteristic(const char* uuid);
@@ -56,13 +58,14 @@ public:
 private:
     NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer);
     NimBLEService(const NimBLEUUID &uuid, uint16_t numHandles, NimBLEServer* pServer);
-    friend class NimBLEServer;
-    friend class NimBLEDevice;
 
-    uint16_t                m_handle;
-    NimBLEServer*           m_pServer;
-    NimBLEUUID              m_uuid;
-    uint16_t                m_numHandles;
+    friend class          NimBLEServer;
+    friend class          NimBLEDevice;
+
+    uint16_t              m_handle;
+    NimBLEServer*         m_pServer;
+    NimBLEUUID            m_uuid;
+    uint16_t              m_numHandles;
 
     std::vector<NimBLECharacteristic*> m_chrVec;
 

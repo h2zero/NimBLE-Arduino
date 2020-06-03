@@ -32,9 +32,10 @@ static const char* LOG_TAG = "NimBLEService"; // Tag for logging.
 
 
 /**
- * @brief Construct an instance of the BLEService
+ * @brief Construct an instance of the NimBLEService
  * @param [in] uuid The UUID of the service.
  * @param [in] numHandles The maximum number of handles associated with the service.
+ * @param [in] a pointer to the server instance that this service belongs to.
  */
 NimBLEService::NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer)
 : NimBLEService(NimBLEUUID(uuid), numHandles, pServer) {
@@ -45,11 +46,12 @@ NimBLEService::NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer
  * @brief Construct an instance of the BLEService
  * @param [in] uuid The UUID of the service.
  * @param [in] numHandles The maximum number of handles associated with the service.
+ * @param [in] a pointer to the server instance that this service belongs to.
  */
 NimBLEService::NimBLEService(const NimBLEUUID &uuid, uint16_t numHandles, NimBLEServer* pServer) {
-    m_uuid      = uuid;
-    m_handle    = NULL_HANDLE;
-    m_pServer   = pServer;
+    m_uuid       = uuid;
+    m_handle     = NULL_HANDLE;
+    m_pServer    = pServer;
     m_numHandles = numHandles;
 } // NimBLEService
 
@@ -88,10 +90,9 @@ NimBLEUUID NimBLEService::getUUID() {
 
 
 /**
- * @brief Start the service.
- * Here we wish to start the service which means that we will respond to partner requests about it.
- * Starting a service also means that we can create the corresponding characteristics.
- * @return Start the service.
+ * @brief Builds the database of characteristics/descriptors for the service
+ * and registers it with the NimBLE stack.
+ * @return bool success/failure .
  */
 
 bool NimBLEService::start() {
@@ -128,7 +129,8 @@ bool NimBLEService::start() {
                 // if Indicate or Notify flags are set
                 if(((pCharacteristic->m_properties & BLE_GATT_CHR_F_INDICATE) ||
                     (pCharacteristic->m_properties & BLE_GATT_CHR_F_NOTIFY))  &&
-                     pCharacteristic->getDescriptorByUUID("2902") != nullptr) {
+                     pCharacteristic->getDescriptorByUUID("2902") != nullptr)
+                {
                     numDscs--;
                 }
             }
@@ -153,7 +155,7 @@ bool NimBLEService::start() {
                     pDsc_a[d].access_cb = NimBLEDescriptor::handleGapEvent;
                     pDsc_a[d].arg = pDescriptor;
                     d++;
-                    pDescriptor = *(pCharacteristic->m_dscVec.begin()+d);
+                    pDescriptor = *(pCharacteristic->m_dscVec.begin() + d);
                 }
 
                 pDsc_a[numDscs].uuid = NULL;
@@ -225,7 +227,8 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid
     NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, this);
     // Check that we don't add the same characteristic twice.
     if (getCharacteristic(uuid) != nullptr) {
-        NIMBLE_LOGW(LOG_TAG, "<< Adding a new characteristic with the same UUID as a previous one");
+        NIMBLE_LOGW(LOG_TAG, "<< Adding a duplicate characteristic with UUID: %s",
+                             std::string(uuid).c_str());
     }
 
     // Remember this characteristic in our vector of characteristics.

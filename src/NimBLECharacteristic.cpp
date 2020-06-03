@@ -22,18 +22,16 @@
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
 
-#include <string>
-
 #define NULL_HANDLE (0xffff)
 
 static NimBLECharacteristicCallbacks defaultCallback;
-
 static const char* LOG_TAG = "NimBLECharacteristic";
 
 /**
  * @brief Construct a characteristic
  * @param [in] uuid - UUID (const char*) for the characteristic.
  * @param [in] properties - Properties for the characteristic.
+ * @param [in] pService - pointer to the service instance this characteristic belongs to.
  */
 NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties, NimBLEService* pService)
 : NimBLECharacteristic(NimBLEUUID(uuid), properties, pService) {
@@ -43,6 +41,7 @@ NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties
  * @brief Construct a characteristic
  * @param [in] uuid - UUID for the characteristic.
  * @param [in] properties - Properties for the characteristic.
+ * @param [in] pService - pointer to the service instance this characteristic belongs to.
  */
 NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t properties, NimBLEService* pService) {
     m_uuid       = uuid;
@@ -50,12 +49,20 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
     m_properties = properties;
     m_pCallbacks = &defaultCallback;
     m_pService   = pService;
+    if(properties & NIMBLE_PROPERTY::INDICATE){
+        m_pSemaphore = new FreeRTOS::Semaphore("ConfEvt");
+    } else {
+        m_pSemaphore = nullptr;
+    }
 } // NimBLECharacteristic
 
 /**
  * @brief Destructor.
  */
 NimBLECharacteristic::~NimBLECharacteristic() {
+    if(m_pSemaphore != nullptr) {
+        delete(m_pSemaphore);
+    }
 } // ~NimBLECharacteristic
 
 
@@ -200,7 +207,6 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
     if(ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0){
         switch(ctxt->op) {
             case BLE_GATT_ACCESS_OP_READ_CHR: {
-                //NIMBLE_LOGD(LOG_TAG, "read char pkthdr len:%d flags:%d", ctxt->om->om_pkthdr_len, ctxt->om->om_flags);
                 // If the packet header is only 8 bytes this is a follow up of a long read
                 // so we don't want to call the onRead() callback again.
                 if(ctxt->om->om_pkthdr_len > 8) {
@@ -211,20 +217,19 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
             }
 
             case BLE_GATT_ACCESS_OP_WRITE_CHR: {
-                //NIMBLE_LOGD(LOG_TAG, "write char pkthdr len:%d datalen:%d", ctxt->om->om_pkthdr_len, ctxt->om->om_len);
                 if (ctxt->om->om_len > BLE_ATT_ATTR_MAX_LEN) {
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
 
-                //pCharacteristic->setValue(ctxt->om->om_data, ctxt->om->om_len);
                 pCharacteristic->m_value.addPart(ctxt->om->om_data, ctxt->om->om_len);
+
                 os_mbuf *next;
                 next = SLIST_NEXT(ctxt->om, om_next);
                 while(next != NULL){
-                    //NIMBLE_LOGD(LOG_TAG, "Found long write data, len:%d", next->om_len);
                     pCharacteristic->m_value.addPart(next->om_data, next->om_len);
                     next = SLIST_NEXT(next, om_next);
                 }
+
                 pCharacteristic->m_value.commit();
                 pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
 
@@ -253,14 +258,18 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         subVal |= NIMBLE_DESC_FLAG_INDICATE;
     }
 
-    m_semaphoreConfEvt.give((subVal | NIMBLE_DESC_FLAG_INDICATE) ? 0 :
-            NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
+    if(m_pSemaphore != nullptr) {
+        m_pSemaphore->give((subVal & NIMBLE_DESC_FLAG_INDICATE) ? 0 :
+                          NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
+    }
 
-    NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d", event->subscribe.conn_handle, subVal);
+    NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d",
+                         event->subscribe.conn_handle, subVal);
 
     NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID(uint16_t(0x2902));
     if(p2902 == nullptr){
-        ESP_LOGE(LOG_TAG, "No 2902 descriptor found for %s", getUUID().toString().c_str());
+        ESP_LOGE(LOG_TAG, "No 2902 descriptor found for %s",
+        std::string(getUUID()).c_str());
         return;
     }
 
@@ -276,19 +285,21 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         }
     }
 
-    if(subVal > 0 && it == p2902->m_subscribedVec.end()) {
-        chr_sub_status_t client_sub;
-        client_sub.conn_id = event->subscribe.conn_handle;
-        client_sub.sub_val = subVal;
-        p2902->m_subscribedVec.push_back(client_sub);
-        return;
+    if(subVal > 0) {
+        if(it == p2902->m_subscribedVec.end()) {
+            chr_sub_status_t client_sub;
+            client_sub.conn_id = event->subscribe.conn_handle;
+            client_sub.sub_val = subVal;
+            p2902->m_subscribedVec.push_back(client_sub);
+            return;
+        }
+
+        (*it).sub_val = subVal;
+
     } else if(it != p2902->m_subscribedVec.end()) {
         p2902->m_subscribedVec.erase(it);
         p2902->m_subscribedVec.shrink_to_fit();
-        return;
     }
-
-    (*it).sub_val = subVal;
 }
 
 
@@ -327,24 +338,20 @@ void NimBLECharacteristic::notify(bool is_notification) {
     int rc = 0;
     NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID(uint16_t(0x2902));
 
-    for (auto it = p2902->m_subscribedVec.begin(); it != p2902->m_subscribedVec.end();) {
-        uint16_t _mtu = getService()->getServer()->getPeerMTU((*it).conn_id);
+    for (auto &it : p2902->m_subscribedVec) {
+        uint16_t _mtu = getService()->getServer()->getPeerMTU(it.conn_id);
         // Must rebuild the data on each loop iteration as NimBLE will release it.
         size_t length = m_value.getValue().length();
         uint8_t* data = (uint8_t*)m_value.getValue().data();
         os_mbuf *om;
 
         if(_mtu == 0) {
-            //NIMBLE_LOGD(LOG_TAG, "peer not connected, removing from vector");
-            p2902->m_subscribedVec.erase(it);
-            p2902->m_subscribedVec.shrink_to_fit();
-            it = p2902->m_subscribedVec.begin();
+            //NIMBLE_LOGD(LOG_TAG, "peer not connected");
             continue;
         }
 
-        if((*it).sub_val == 0) {
-            //NIMBLE_LOGI(LOG_TAG, "Skipping unsubscribed client");
-            ++it;
+        if(it.sub_val == 0) {
+            //NIMBLE_LOGD(LOG_TAG, "Skipping unsubscribed client");
             continue;
         }
 
@@ -352,13 +359,13 @@ void NimBLECharacteristic::notify(bool is_notification) {
             NIMBLE_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
         }
 
-        if(is_notification && (!((*it).sub_val & NIMBLE_DESC_FLAG_NOTIFY))) {
+        if(is_notification && (!(it.sub_val & NIMBLE_DESC_FLAG_NOTIFY))) {
             NIMBLE_LOGW(LOG_TAG,
             "Sending notification to client subscribed to indications, sending indication instead");
             is_notification = false;
         }
 
-        if(!is_notification && (!((*it).sub_val & NIMBLE_DESC_FLAG_INDICATE))) {
+        if(!is_notification && (!(it.sub_val & NIMBLE_DESC_FLAG_INDICATE))) {
             NIMBLE_LOGW(LOG_TAG,
             "Sending indication to client subscribed to notification, sending notification instead");
             is_notification = true;
@@ -369,35 +376,35 @@ void NimBLECharacteristic::notify(bool is_notification) {
         // We also must create it in each loop iteration because it is consumed with each host call.
         om = ble_hs_mbuf_from_flat(data, length);
 
-        if(!is_notification) {
-            m_semaphoreConfEvt.take("indicate");
-            rc = ble_gattc_indicate_custom((*it).conn_id, m_handle, om);
+        NimBLECharacteristicCallbacks::Status statusRC;
+        if(m_pSemaphore != nullptr && !is_notification) {
+            m_pSemaphore->take("indicate");
+            rc = ble_gattc_indicate_custom(it.conn_id, m_handle, om);
             if(rc != 0){
-                m_semaphoreConfEvt.give();
-                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_GATT, rc);
-                return;
+                m_pSemaphore->give();
+                statusRC = NimBLECharacteristicCallbacks::Status::ERROR_GATT;
+            } else {
+                rc = m_pSemaphore->wait();
             }
-
-            rc = m_semaphoreConfEvt.wait();
 
             if(rc == 0 || rc == BLE_HS_EDONE) {
-                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE, 0);
+                rc = 0;
+                statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE;
             } else if(rc == BLE_HS_ETIMEOUT) {
-                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT, rc);
+                statusRC = NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT;
             } else {
-                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE, rc);
+                statusRC = NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE;
             }
         } else {
-            rc = ble_gattc_notify_custom((*it).conn_id, m_handle, om);
+            rc = ble_gattc_notify_custom(it.conn_id, m_handle, om);
             if(rc == 0) {
-                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::SUCCESS_NOTIFY, 0);
+                statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_NOTIFY;
             } else {
-                m_pCallbacks->onStatus(this, NimBLECharacteristicCallbacks::Status::ERROR_GATT, rc);
+                statusRC = NimBLECharacteristicCallbacks::Status::ERROR_GATT;
             }
         }
 
-    ++it;
-
+        m_pCallbacks->onStatus(this, statusRC, rc);
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< notify");
@@ -416,87 +423,6 @@ void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallback
     }
 } // setCallbacks
 
-// Backward compatibility - to be removed ////////////////////////////////
-/**
- * @brief Set the permission to broadcast.
- * A characteristics has properties associated with it which define what it is capable of doing.
- * One of these is the broadcast flag.
- * @param [in] value The flag value of the property.
- * @return N/A
- */
-void NimBLECharacteristic::setBroadcastProperty(bool value) {
-    if (value) {
-        m_properties = (m_properties | BLE_GATT_CHR_F_BROADCAST);
-    } else {
-        m_properties = (m_properties & ~BLE_GATT_CHR_F_BROADCAST);
-    }
-} // setBroadcastProperty
-
-
-/**
- * @brief Set the Indicate property value.
- * @param [in] value Set to true if we are to allow indicate messages.
- */
-void NimBLECharacteristic::setIndicateProperty(bool value) {
-    if (value) {
-        m_properties = (m_properties | BLE_GATT_CHR_F_INDICATE);
-    } else {
-        m_properties = (m_properties & ~BLE_GATT_CHR_F_INDICATE);
-    }
-} // setIndicateProperty
-
-
-/**
- * @brief Set the Notify property value.
- * @param [in] value Set to true if we are to allow notification messages.
- */
-void NimBLECharacteristic::setNotifyProperty(bool value) {
-    if (value) {
-        m_properties = (m_properties | BLE_GATT_CHR_F_NOTIFY);
-    } else {
-        m_properties = (m_properties & ~BLE_GATT_CHR_F_NOTIFY);
-    }
-} // setNotifyProperty
-
-
-/**
- * @brief Set the Read property value.
- * @param [in] value Set to true if we are to allow reads.
- */
-void NimBLECharacteristic::setReadProperty(bool value) {
-    if (value) {
-        m_properties = (m_properties | BLE_GATT_CHR_F_READ);
-    } else {
-        m_properties = (m_properties & ~BLE_GATT_CHR_F_READ);
-    }
-} // setReadProperty
-
-
-/**
- * @brief Set the Write No Response property value.
- * @param [in] value Set to true if we are to allow writes with no response.
- */
-void NimBLECharacteristic::setWriteNoResponseProperty(bool value) {
-    if (value) {
-        m_properties = (m_properties | BLE_GATT_CHR_F_WRITE_NO_RSP);
-    } else {
-        m_properties = (m_properties & ~BLE_GATT_CHR_F_WRITE_NO_RSP);
-    }
-} // setWriteNoResponseProperty
-
-
-/**
- * @brief Set the Write property value.
- * @param [in] value Set to true if we are to allow writes.
- */
-void NimBLECharacteristic::setWriteProperty(bool value) {
-    if (value) {
-        m_properties = (m_properties | BLE_GATT_CHR_F_WRITE );
-    } else {
-        m_properties = (m_properties & ~BLE_GATT_CHR_F_WRITE );
-    }
-} // setWriteProperty
-//////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief Set the value of the characteristic.
@@ -514,11 +440,6 @@ void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
     }
 
     m_value.setValue(data, length);
-
-  //  if(m_handle != NULL_HANDLE) {
-        //ble_gatts_chr_updated(m_handle);
-       // ble_gattc_notify(getService()->getServer()->m_connId, m_handle);
-  //  }
 
     NIMBLE_LOGD(LOG_TAG, "<< setValue");
 } // setValue

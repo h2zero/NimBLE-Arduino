@@ -19,7 +19,6 @@
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEServer.h"
-#include "NimBLE2902.h"
 #include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
 #include "NimBLELog.h"
@@ -32,46 +31,42 @@ static NimBLEServerCallbacks defaultCallbacks;
  * @brief Construct a %BLE Server
  *
  * This class is not designed to be individually instantiated.  Instead one should create a server by asking
- * the BLEDevice class.
+ * the NimBLEDevice class.
  */
 NimBLEServer::NimBLEServer() {
-    m_svcChgChrHdl     = 0xffff;
-    m_pServerCallbacks = &defaultCallbacks;
-    m_gattsStarted     = false;
-} // BLEServer
+    m_svcChgChrHdl          = 0xffff;
+    m_pServerCallbacks      = &defaultCallbacks;
+    m_gattsStarted          = false;
+    m_advertiseOnDisconnect = true;
+} // NimBLEServer
 
 
 /**
  * @brief Create a %BLE Service.
- *
- * With a %BLE server, we can host one or more services.  Invoking this function causes the creation of a definition
- * of a new service.  Every service must have a unique UUID.
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the new service object.
  */
 NimBLEService* NimBLEServer::createService(const char* uuid) {
     return createService(NimBLEUUID(uuid));
-}
+} // createService
 
 
 /**
  * @brief Create a %BLE Service.
- *
- * With a %BLE server, we can host one or more services.  Invoking this function causes the creation of a definition
- * of a new service.  Every service must have a unique UUID.
  * @param [in] uuid The UUID of the new service.
  * @param [in] numHandles The maximum number of handles associated with this service.
- * @param [in] inst_id With multiple services with the same UUID we need to provide inst_id value different for each service.
+ * @param [in] inst_id if we have multiple services with the same UUID we need
+ *             to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
 NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numHandles, uint8_t inst_id) {
     NIMBLE_LOGD(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
+    // TODO: add functionality to use inst_id for multiple services with same uuid
     (void)inst_id;
     // Check that a service with the supplied UUID does not already exist.
-    //if (m_svcVec.getByUUID(uuid) != nullptr) {
     if(getServiceByUUID(uuid) != nullptr) {
-        NIMBLE_LOGW(LOG_TAG, "<< Attempt to create a new service with uuid %s but a service with that UUID already exists.",
-            uuid.toString().c_str());
+        NIMBLE_LOGW(LOG_TAG, "Warning creating a duplicate service UUID: %s",
+                             std::string(uuid).c_str());
     }
 
     NimBLEService* pService = new NimBLEService(uuid, numHandles, this);
@@ -89,7 +84,7 @@ NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numH
  */
 NimBLEService* NimBLEServer::getServiceByUUID(const char* uuid) {
     return getServiceByUUID(NimBLEUUID(uuid));
-}
+} // getServiceByUUID
 
 
 /**
@@ -104,7 +99,7 @@ NimBLEService* NimBLEServer::getServiceByUUID(const NimBLEUUID &uuid) {
         }
     }
     return nullptr;
-}
+} // getServiceByUUID
 
 
 /**
@@ -113,8 +108,8 @@ NimBLEService* NimBLEServer::getServiceByUUID(const NimBLEUUID &uuid) {
  * @return An advertising object.
  */
 NimBLEAdvertising* NimBLEServer::getAdvertising() {
-    return BLEDevice::getAdvertising();
-}
+    return NimBLEDevice::getAdvertising();
+} // getAdvertising
 
 
 /**
@@ -150,7 +145,7 @@ void NimBLEServer::start() {
 
     NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
 
-    // Build a map of characteristics with Notify / Indicate capabilities for event handling
+    // Build a vector of characteristics with Notify / Indicate capabilities for event handling
     for(auto svc : m_svcVec) {
         for(auto chr : svc->m_chrVec) {
             // if Notify / Indicate is enabled but we didn't create the descriptor
@@ -167,7 +162,7 @@ void NimBLEServer::start() {
     }
 
     m_gattsStarted = true;
-}
+} // start
 
 
 /**
@@ -187,7 +182,16 @@ int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
 
     return rc;
     NIMBLE_LOGD(LOG_TAG, "<< disconnect()");
-}
+} // disconnect
+
+
+/**
+ * @brief Set the server to automatically start advertising when a client disconnects.
+ * @param [in] bool true == advertise, false == don't advertise.
+ */
+void NimBLEServer::advertiseOnDisconnect(bool aod) {
+    m_advertiseOnDisconnect = aod;
+} // advertiseOnDisconnect
 
 
 /**
@@ -210,7 +214,7 @@ size_t NimBLEServer::getConnectedCount() {
 /*STATIC*/int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
     NimBLEServer* server = (NimBLEServer*)arg;
     NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent: %s",
-        NimBLEUtils::gapEventToString(event->type));
+                         NimBLEUtils::gapEventToString(event->type));
     int rc = 0;
     struct ble_gap_conn_desc desc;
 
@@ -219,7 +223,7 @@ size_t NimBLEServer::getConnectedCount() {
         case BLE_GAP_EVENT_CONNECT: {
             if (event->connect.status != 0) {
                 /* Connection failed; resume advertising */
-                NIMBLE_LOGC(LOG_TAG, "Connection failed");
+                NIMBLE_LOGE(LOG_TAG, "Connection failed");
                 NimBLEDevice::startAdvertising();
             }
             else {
@@ -257,6 +261,10 @@ size_t NimBLEServer::getConnectedCount() {
                                                           event->disconnect.conn.conn_handle),
                                                           server->m_connectedPeersVec.end());
             server->m_pServerCallbacks->onDisconnect(server);
+
+            if(server->m_advertiseOnDisconnect) {
+                server->startAdvertising();
+            }
             return 0;
         } // BLE_GAP_EVENT_DISCONNECT
 
@@ -286,7 +294,9 @@ size_t NimBLEServer::getConnectedCount() {
             if(event->notify_tx.indication && event->notify_tx.status != 0) {
                 for(auto &it : server->m_notifyChrVec) {
                     if(it->getHandle() == event->notify_tx.attr_handle) {
-                        it->m_semaphoreConfEvt.give(event->notify_tx.status);
+                        if(it->m_pSemaphore != nullptr) {
+                            it->m_pSemaphore->give(event->notify_tx.status);
+                        }
                         break;
                     }
                 }
@@ -334,7 +344,7 @@ size_t NimBLEServer::getConnectedCount() {
         } // BLE_GAP_EVENT_ENC_CHANGE
 
         case BLE_GAP_EVENT_PASSKEY_ACTION: {
-            struct ble_sm_io pkey = {0};
+            struct ble_sm_io pkey = {0,0};
 
             if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
                 pkey.action = event->passkey.params.action;
@@ -401,7 +411,7 @@ size_t NimBLEServer::getConnectedCount() {
 
     NIMBLE_LOGD(LOG_TAG, "<< handleGATTServerEvent");
     return 0;
-} // handleGATTServerEvent
+} // handleGapEvent
 
 
 /**
@@ -420,18 +430,6 @@ void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks) {
         m_pServerCallbacks = &defaultCallbacks;
     }
 } // setCallbacks
-
-
-/*
- * Remove service
- */
-/*
-void BLEServer::removeService(BLEService* service) {
-    service->stop();
-    service->executeDelete();
-    m_serviceMap.removeService(service);
-}
-*/
 
 
 /**
@@ -456,6 +454,40 @@ void NimBLEServer::stopAdvertising() {
     NIMBLE_LOGD(LOG_TAG, "<< stopAdvertising");
 } // startAdvertising
 
+
+/**
+ * @brief Get the MTU of the client.
+ * @returns The client MTU or 0 if not found/connected.
+ */
+uint16_t NimBLEServer::getPeerMTU(uint16_t conn_id) {
+    return ble_att_mtu(conn_id);
+} //getPeerMTU
+
+
+/**
+ * Update connection parameters can be called only after connection has been established
+ */
+void NimBLEServer::updateConnParams(uint16_t conn_handle,
+                            uint16_t minInterval, uint16_t maxInterval,
+                            uint16_t latency, uint16_t timeout)
+{
+    ble_gap_upd_params params;
+
+    params.latency  = latency;
+    params.itvl_max = maxInterval;    // max_int = 0x20*1.25ms = 40ms
+    params.itvl_min = minInterval;    // min_int = 0x10*1.25ms = 20ms
+    params.supervision_timeout = timeout;    // timeout = 400*10ms = 4000ms
+    params.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN;  // Minimum length of connection event in 0.625ms units
+    params.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN;  // Maximum length of connection event in 0.625ms units
+
+    int rc = ble_gap_update_params(conn_handle, &params);
+    if(rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+} // updateConnParams
+
+
+/** Default callback handlers */
 
 void NimBLEServerCallbacks::onConnect(NimBLEServer* pServer) {
     NIMBLE_LOGD("NimBLEServerCallbacks", "onConnect(): Default");
@@ -490,38 +522,6 @@ void NimBLEServerCallbacks::onAuthenticationComplete(ble_gap_conn_desc*){
 bool NimBLEServerCallbacks::onConfirmPIN(uint32_t pin){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onConfirmPIN: default: true");
     return true;
-}
-
-
-/**
- * @brief Get the MTU of the client.
- * @returns The client MTU or 0 if not found/connected.
- */
-uint16_t NimBLEServer::getPeerMTU(uint16_t conn_id) {
-    return ble_att_mtu(conn_id);
-}
-
-
-/**
- * Update connection parameters can be called only after connection has been established
- */
-void NimBLEServer::updateConnParams(uint16_t conn_handle,
-                            uint16_t minInterval, uint16_t maxInterval,
-                            uint16_t latency, uint16_t timeout)
-{
-    ble_gap_upd_params params;
-
-    params.latency  = latency;
-    params.itvl_max = maxInterval;    // max_int = 0x20*1.25ms = 40ms
-    params.itvl_min = minInterval;    // min_int = 0x10*1.25ms = 20ms
-    params.supervision_timeout = timeout;    // timeout = 400*10ms = 4000ms
-    params.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN;  // Minimum length of connection event in 0.625ms units
-    params.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN;  // Maximum length of connection event in 0.625ms units
-
-    int rc = ble_gap_update_params(conn_handle, &params);
-    if(rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
-    }
 }
 
 

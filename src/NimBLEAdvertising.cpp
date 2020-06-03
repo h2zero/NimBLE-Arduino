@@ -100,7 +100,8 @@ void NimBLEAdvertising::setMaxInterval(uint16_t maxinterval) {
     m_advParams.itvl_max = maxinterval;
 } // setMaxInterval
 
-// These are dummy functions for now for compatibility
+
+/* These are dummy functions for now for compatibility */
 void NimBLEAdvertising::setMinPreferred(uint16_t mininterval) {
     //m_advData.min_interval = mininterval;
 } //
@@ -108,7 +109,8 @@ void NimBLEAdvertising::setMinPreferred(uint16_t mininterval) {
 void NimBLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
     //m_advData.max_interval = maxinterval;
 } //
-//////////////////////////////////////////////////////////
+/*******************************************************/
+
 
 void NimBLEAdvertising::setScanResponse(bool set) {
     m_scanResp = set;
@@ -206,7 +208,6 @@ void NimBLEAdvertising::start() {
 
     int numServices = m_serviceUUIDs.size();
     int rc = 0;
-    uint8_t addressType;
     uint8_t payloadLen = 3; //start with 3 bytes for the flags data
 
     // If already advertising just return
@@ -327,7 +328,7 @@ void NimBLEAdvertising::start() {
 
         rc = ble_gap_adv_set_fields(&m_advData);
         if (rc != 0) {
-            NIMBLE_LOGE(LOG_TAG, "error setting advertisement data; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+            NIMBLE_LOGC(LOG_TAG, "error setting advertisement data; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
             abort();
         }
 
@@ -352,19 +353,13 @@ void NimBLEAdvertising::start() {
         m_advSvcsSet = true;
     }
 
-    rc = ble_hs_id_infer_auto(0, &addressType);
-    if (rc != 0) {
-        NIMBLE_LOGC(LOG_TAG, "Error determining address type; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
-        abort();
-    }
-
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-    rc = ble_gap_adv_start(addressType, NULL, BLE_HS_FOREVER,
+    rc = ble_gap_adv_start(0, NULL, BLE_HS_FOREVER,
                            &m_advParams,
                            (pServer != nullptr) ? NimBLEServer::handleGapEvent : NULL,
                            pServer);
 #else
-    rc = ble_gap_adv_start(addressType, NULL, BLE_HS_FOREVER,
+    rc = ble_gap_adv_start(0, NULL, BLE_HS_FOREVER,
                            &m_advParams, NULL,NULL);
 #endif
     if (rc != 0) {
