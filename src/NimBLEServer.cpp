@@ -34,7 +34,7 @@ static NimBLEServerCallbacks defaultCallbacks;
  * the NimBLEDevice class.
  */
 NimBLEServer::NimBLEServer() {
-    m_svcChgChrHdl          = 0xffff;
+//    m_svcChgChrHdl          = 0xffff; // Future Use
     m_pServerCallbacks      = &defaultCallbacks;
     m_gattsStarted          = false;
     m_advertiseOnDisconnect = true;
@@ -132,6 +132,8 @@ void NimBLEServer::start() {
 #if CONFIG_LOG_DEFAULT_LEVEL > 3 || (ARDUINO_ARCH_ESP32 && CORE_DEBUG_LEVEL >= 4)
     ble_gatts_show_local();
 #endif
+/*** Future use ***
+  * TODO: implement service changed handling
 
     ble_uuid16_t svc = {BLE_UUID_TYPE_16, 0x1801};
     ble_uuid16_t chr = {BLE_UUID_TYPE_16, 0x2a05};
@@ -144,7 +146,7 @@ void NimBLEServer::start() {
     }
 
     NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
-
+*/
     // Build a vector of characteristics with Notify / Indicate capabilities for event handling
     for(auto svc : m_svcVec) {
         for(auto chr : svc->m_chrVec) {
@@ -154,7 +156,7 @@ void NimBLEServer::start() {
                 (chr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
 
                 if(nullptr == chr->getDescriptorByUUID(uint16_t(0x2902))) {
-                    chr->createDescriptor("2902");
+                    chr->createDescriptor(uint16_t(0x2902));
                 }
                 m_notifyChrVec.push_back(chr);
             }
@@ -439,9 +441,7 @@ void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks) {
  * retrieving the advertising object and invoking start upon it.
  */
 void NimBLEServer::startAdvertising() {
-    NIMBLE_LOGD(LOG_TAG, ">> startAdvertising");
     NimBLEDevice::startAdvertising();
-    NIMBLE_LOGD(LOG_TAG, "<< startAdvertising");
 } // startAdvertising
 
 
@@ -449,9 +449,7 @@ void NimBLEServer::startAdvertising() {
  * @brief Stop advertising.
  */
 void NimBLEServer::stopAdvertising() {
-    NIMBLE_LOGD(LOG_TAG, ">> stopAdvertising");
     NimBLEDevice::stopAdvertising();
-    NIMBLE_LOGD(LOG_TAG, "<< stopAdvertising");
 } // startAdvertising
 
 

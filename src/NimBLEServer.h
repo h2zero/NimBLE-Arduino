@@ -62,11 +62,12 @@ private:
     friend class           NimBLEDevice;
     friend class           NimBLEAdvertising;
 
-    uint16_t               m_svcChgChrHdl;
     bool                   m_gattsStarted;
     bool                   m_advertiseOnDisconnect;
     NimBLEServerCallbacks* m_pServerCallbacks;
     std::vector<uint16_t>  m_connectedPeersVec;
+
+//    uint16_t               m_svcChgChrHdl; // Future use
 
     std::vector<NimBLEService*> m_svcVec;
     std::vector<NimBLECharacteristic*> m_notifyChrVec;
