@@ -118,17 +118,15 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEU
  * @param [in] bool value to indicate if the current vector should be cleared and
  * subsequently all characteristics for this service retrieved from the peripheral.
  * If false the vector will be returned with the currently stored characteristics,
- * if the vector is empty it will retrieve all characteristics of this service
- * from the peripheral.
+ * If true it will retrieve all characteristics of this service from the peripheral 
+ * and return the vector with all characteristics for this service.
  * @return a pointer to the vector of descriptors for this characteristic.
  */
 
 std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristics(bool refresh) {
     if(refresh) {
         deleteCharacteristics();
-    }
 
-    if(m_characteristicVector.empty()) {
         if (!retrieveCharacteristics()) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to get characteristics");
         }

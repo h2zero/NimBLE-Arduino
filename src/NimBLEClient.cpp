@@ -412,15 +412,13 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
  * @param [in] bool value to indicate if the current vector should be cleared and
  * subsequently all services retrieved from the peripheral.
  * If false the vector will be returned with the currently stored services,
- * if vector is empty it will retrieve all services from the peripheral.
+ * If true it will retrieve all services from the peripheral and return the vector with all services
  * @return a pointer to the vector of available services.
  */
 std::vector<NimBLERemoteService*>* NimBLEClient::getServices(bool refresh) {
     if(refresh) {
         deleteServices();
-    }
 
-    if(m_servicesVector.empty()) {
         if (!retrieveServices()) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to get services");
         }
