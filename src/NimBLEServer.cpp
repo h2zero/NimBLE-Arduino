@@ -148,8 +148,8 @@ void NimBLEServer::start() {
     NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
 */
     // Build a vector of characteristics with Notify / Indicate capabilities for event handling
-    for(auto svc : m_svcVec) {
-        for(auto chr : svc->m_chrVec) {
+    for(auto &svc : m_svcVec) {
+        for(auto &chr : svc->m_chrVec) {
             // if Notify / Indicate is enabled but we didn't create the descriptor
             // we do it now.
             if((chr->m_properties & BLE_GATT_CHR_F_INDICATE) ||

@@ -42,7 +42,6 @@ typedef enum {
 
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
-#include "NimBLEValue.h"
 #include "FreeRTOS.h"
 
 #include <string>
@@ -76,7 +75,6 @@ public:
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &uuid);
     NimBLEUUID        getUUID();
     std::string       getValue();
-    uint8_t*          getData();
     size_t            getDataLength();
     void              indicate();
     void              notify(bool is_notification = true);
@@ -120,7 +118,7 @@ private:
     uint16_t                       m_properties;
     NimBLECharacteristicCallbacks* m_pCallbacks;
     NimBLEService*                 m_pService;
-    NimBLEValue                    m_value;
+    std::string                    m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
     FreeRTOS::Semaphore            *m_pSemaphore;
 }; // NimBLECharacteristic

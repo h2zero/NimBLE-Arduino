@@ -49,6 +49,7 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
     m_properties = properties;
     m_pCallbacks = &defaultCallback;
     m_pService   = pService;
+    m_value      = "";
     if(properties & NIMBLE_PROPERTY::INDICATE){
         m_pSemaphore = new FreeRTOS::Semaphore("ConfEvt");
     } else {
@@ -170,25 +171,16 @@ NimBLEUUID NimBLECharacteristic::getUUID() {
  * @return A pointer to storage containing the current characteristic value.
  */
 std::string NimBLECharacteristic::getValue() {
-    return m_value.getValue();
+    return m_value;
 } // getValue
-
-
-/**
- * @brief Retrieve the current raw data of the characteristic.
- * @return A pointer to storage containing the current characteristic data.
- */
-uint8_t* NimBLECharacteristic::getData() {
-    return m_value.getData();
-} // getData
 
 
 /**
  * @brief Retrieve the the current data length of the characteristic.
  * @return The length of the current characteristic data.
  */
-size_t NimBLECharacteristic:: getDataLength() {
-    return m_value.getLength();
+size_t NimBLECharacteristic::getDataLength() {
+    return m_value.length();
 }
 
 
@@ -212,7 +204,8 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                 if(ctxt->om->om_pkthdr_len > 8) {
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
                 }
-                rc = os_mbuf_append(ctxt->om, pCharacteristic->getData(), pCharacteristic->m_value.getLength());
+                rc = os_mbuf_append(ctxt->om, (uint8_t*)pCharacteristic->m_value.data(),
+                                    pCharacteristic->m_value.length());
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 
@@ -221,16 +214,15 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
 
-                pCharacteristic->m_value.addPart(ctxt->om->om_data, ctxt->om->om_len);
+                pCharacteristic->m_value = std::string((char*)ctxt->om->om_data, ctxt->om->om_len);
 
                 os_mbuf *next;
                 next = SLIST_NEXT(ctxt->om, om_next);
                 while(next != NULL){
-                    pCharacteristic->m_value.addPart(next->om_data, next->om_len);
+                    pCharacteristic->m_value += std::string((char*)next->om_data, next->om_len);
                     next = SLIST_NEXT(next, om_next);
                 }
 
-                pCharacteristic->m_value.commit();
                 pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
 
                 return 0;
@@ -341,8 +333,8 @@ void NimBLECharacteristic::notify(bool is_notification) {
     for (auto &it : p2902->m_subscribedVec) {
         uint16_t _mtu = getService()->getServer()->getPeerMTU(it.conn_id);
         // Must rebuild the data on each loop iteration as NimBLE will release it.
-        size_t length = m_value.getValue().length();
-        uint8_t* data = (uint8_t*)m_value.getValue().data();
+        size_t length = m_value.length();
+        uint8_t* data = (uint8_t*)m_value.data();
         os_mbuf *om;
 
         if(_mtu == 0) {
@@ -430,16 +422,18 @@ void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallback
  * @param [in] length The length of the data in bytes.
  */
 void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
+#if CONFIG_LOG_DEFAULT_LEVEL > 3 || (ARDUINO_ARCH_ESP32 && CORE_DEBUG_LEVEL >= 4)
     char* pHex = NimBLEUtils::buildHexData(nullptr, data, length);
     NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
     free(pHex);
+#endif
 
     if (length > BLE_ATT_ATTR_MAX_LEN) {
         NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, BLE_ATT_ATTR_MAX_LEN);
         return;
     }
 
-    m_value.setValue(data, length);
+    m_value = std::string((char*)data, length);
 
     NIMBLE_LOGD(LOG_TAG, "<< setValue");
 } // setValue
