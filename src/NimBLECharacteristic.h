@@ -120,7 +120,8 @@ private:
     NimBLEService*                 m_pService;
     std::string                    m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
-    FreeRTOS::Semaphore            *m_pSemaphore;
+    FreeRTOS::Semaphore            *m_pIndSemaphore;
+    portMUX_TYPE                   m_valMux;
 }; // NimBLECharacteristic
 
 

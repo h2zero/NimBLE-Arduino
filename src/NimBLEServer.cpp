@@ -296,8 +296,8 @@ size_t NimBLEServer::getConnectedCount() {
             if(event->notify_tx.indication && event->notify_tx.status != 0) {
                 for(auto &it : server->m_notifyChrVec) {
                     if(it->getHandle() == event->notify_tx.attr_handle) {
-                        if(it->m_pSemaphore != nullptr) {
-                            it->m_pSemaphore->give(event->notify_tx.status);
+                        if(it->m_pIndSemaphore != nullptr) {
+                            it->m_pIndSemaphore->give(event->notify_tx.status);
                         }
                         break;
                     }

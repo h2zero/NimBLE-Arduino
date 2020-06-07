@@ -50,10 +50,12 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
     m_pCallbacks = &defaultCallback;
     m_pService   = pService;
     m_value      = "";
+    m_valMux     = portMUX_INITIALIZER_UNLOCKED;
+
     if(properties & NIMBLE_PROPERTY::INDICATE){
-        m_pSemaphore = new FreeRTOS::Semaphore("ConfEvt");
+        m_pIndSemaphore = new FreeRTOS::Semaphore("ConfEvt");
     } else {
-        m_pSemaphore = nullptr;
+        m_pIndSemaphore = nullptr;
     }
 } // NimBLECharacteristic
 
@@ -61,8 +63,8 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
  * @brief Destructor.
  */
 NimBLECharacteristic::~NimBLECharacteristic() {
-    if(m_pSemaphore != nullptr) {
-        delete(m_pSemaphore);
+    if(m_pIndSemaphore != nullptr) {
+        delete(m_pIndSemaphore);
     }
 } // ~NimBLECharacteristic
 
@@ -171,7 +173,11 @@ NimBLEUUID NimBLECharacteristic::getUUID() {
  * @return A pointer to storage containing the current characteristic value.
  */
 std::string NimBLECharacteristic::getValue() {
-    return m_value;
+    portENTER_CRITICAL(&m_valMux);
+    std::string retVal = m_value;
+    portEXIT_CRITICAL(&m_valMux);
+
+    return retVal;
 } // getValue
 
 
@@ -180,7 +186,11 @@ std::string NimBLECharacteristic::getValue() {
  * @return The length of the current characteristic data.
  */
 size_t NimBLECharacteristic::getDataLength() {
-    return m_value.length();
+    portENTER_CRITICAL(&m_valMux);
+    size_t len = m_value.length();
+    portEXIT_CRITICAL(&m_valMux);
+
+    return len;
 }
 
 
@@ -204,8 +214,12 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                 if(ctxt->om->om_pkthdr_len > 8) {
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
                 }
+
+                portENTER_CRITICAL(&pCharacteristic->m_valMux);
                 rc = os_mbuf_append(ctxt->om, (uint8_t*)pCharacteristic->m_value.data(),
                                     pCharacteristic->m_value.length());
+                portEXIT_CRITICAL(&pCharacteristic->m_valMux);
+
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 
@@ -214,15 +228,22 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
 
-                pCharacteristic->m_value = std::string((char*)ctxt->om->om_data, ctxt->om->om_len);
+                uint8_t buf[BLE_ATT_ATTR_MAX_LEN];
+                size_t len = ctxt->om->om_len;
+                memcpy(buf, ctxt->om->om_data,len);
 
                 os_mbuf *next;
                 next = SLIST_NEXT(ctxt->om, om_next);
                 while(next != NULL){
-                    pCharacteristic->m_value += std::string((char*)next->om_data, next->om_len);
+                    if((len + next->om_len) > BLE_ATT_ATTR_MAX_LEN) {
+                        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+                    }
+                    memcpy(&buf[len-1], next->om_data, next->om_len);
+                    len += next->om_len;
                     next = SLIST_NEXT(next, om_next);
                 }
 
+                pCharacteristic->setValue(buf, len);
                 pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
 
                 return 0;
@@ -250,8 +271,8 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         subVal |= NIMBLE_DESC_FLAG_INDICATE;
     }
 
-    if(m_pSemaphore != nullptr) {
-        m_pSemaphore->give((subVal & NIMBLE_DESC_FLAG_INDICATE) ? 0 :
+    if(m_pIndSemaphore != nullptr) {
+        m_pIndSemaphore->give((subVal & NIMBLE_DESC_FLAG_INDICATE) ? 0 :
                           NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
     }
 
@@ -302,7 +323,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
  * @return N/A
  */
 void NimBLECharacteristic::indicate() {
-    NIMBLE_LOGD(LOG_TAG, ">> indicate: length: %d", m_value.getValue().length());
+    NIMBLE_LOGD(LOG_TAG, ">> indicate: length: %d", getDataLength());
     notify(false);
     NIMBLE_LOGD(LOG_TAG, "<< indicate");
 } // indicate
@@ -314,27 +335,29 @@ void NimBLECharacteristic::indicate() {
  * @return N/A.
  */
 void NimBLECharacteristic::notify(bool is_notification) {
-    NIMBLE_LOGD(LOG_TAG, ">> notify: length: %d", m_value.getValue().length());
+    NIMBLE_LOGD(LOG_TAG, ">> notify: length: %d", getDataLength());
 
-    assert(getService() != nullptr);
-    assert(getService()->getServer() != nullptr);
+    NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID(uint16_t(0x2902));
 
+    if(p2902 == nullptr) {
+        NIMBLE_LOGE(LOG_TAG,
+                    "<< notify-Error; Notify/indicate not enabled for characterisitc: %s",
+                    std::string(getUUID()).c_str());
+    }
 
-    if (getService()->getServer()->getConnectedCount() == 0) {
-        NIMBLE_LOGD(LOG_TAG, "<< notify: No connected clients.");
+    if (p2902->m_subscribedVec.size() == 0) {
+        NIMBLE_LOGD(LOG_TAG, "<< notify: No clients subscribed.");
         return;
     }
 
     m_pCallbacks->onNotify(this);
 
+    std::string value = getValue();
+    size_t length = value.length();
     int rc = 0;
-    NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID(uint16_t(0x2902));
 
     for (auto &it : p2902->m_subscribedVec) {
         uint16_t _mtu = getService()->getServer()->getPeerMTU(it.conn_id);
-        // Must rebuild the data on each loop iteration as NimBLE will release it.
-        size_t length = m_value.length();
-        uint8_t* data = (uint8_t*)m_value.data();
         os_mbuf *om;
 
         if(_mtu == 0) {
@@ -366,17 +389,17 @@ void NimBLECharacteristic::notify(bool is_notification) {
         // don't create the m_buf until we are sure to send the data or else
         // we could be allocating a buffer that doesn't get released.
         // We also must create it in each loop iteration because it is consumed with each host call.
-        om = ble_hs_mbuf_from_flat(data, length);
+        om = ble_hs_mbuf_from_flat((uint8_t*)value.data(), length);
 
         NimBLECharacteristicCallbacks::Status statusRC;
-        if(m_pSemaphore != nullptr && !is_notification) {
-            m_pSemaphore->take("indicate");
+        if(m_pIndSemaphore != nullptr && !is_notification) {
+            m_pIndSemaphore->take("indicate");
             rc = ble_gattc_indicate_custom(it.conn_id, m_handle, om);
             if(rc != 0){
-                m_pSemaphore->give();
+                m_pIndSemaphore->give();
                 statusRC = NimBLECharacteristicCallbacks::Status::ERROR_GATT;
             } else {
-                rc = m_pSemaphore->wait();
+                rc = m_pIndSemaphore->wait();
             }
 
             if(rc == 0 || rc == BLE_HS_EDONE) {
@@ -433,7 +456,9 @@ void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
         return;
     }
 
+    portENTER_CRITICAL(&m_valMux);
     m_value = std::string((char*)data, length);
+    portEXIT_CRITICAL(&m_valMux);
 
     NIMBLE_LOGD(LOG_TAG, "<< setValue");
 } // setValue
