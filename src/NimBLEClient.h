@@ -29,9 +29,11 @@
 #include <string>
 
 typedef struct {
-    const NimBLEUUID *uuid;
-    const void *attribute;
-} disc_filter_t;
+    void *pATT;
+    TaskHandle_t task;
+    int rc;
+    std::string *buf;
+} ble_task_data_t;
 
 class NimBLERemoteService;
 class NimBLEClientCallbacks;
@@ -89,14 +91,12 @@ private:
 
     NimBLEAddress           m_peerAddress = NimBLEAddress("");
     uint16_t                m_conn_id;
-    bool                    m_isConnected = false;
-    bool                    m_waitingToConnect =false;
-    bool                    m_deleteCallbacks = true;
+    bool                    m_isConnected;
+    bool                    m_waitingToConnect;
+    bool                    m_deleteCallbacks;
     int32_t                 m_connectTimeout;
-    NimBLEClientCallbacks*  m_pClientCallbacks = nullptr;
-    FreeRTOS::Semaphore     m_semaphoreOpenEvt       = FreeRTOS::Semaphore("OpenEvt");
-    FreeRTOS::Semaphore     m_semaphoreSearchCmplEvt = FreeRTOS::Semaphore("SearchCmplEvt");
-    FreeRTOS::Semaphore     m_semeaphoreSecEvt       = FreeRTOS::Semaphore("Security");
+    NimBLEClientCallbacks*  m_pClientCallbacks;
+    ble_task_data_t         *m_pTaskData;
 
     std::vector<NimBLERemoteService*> m_servicesVector;
 

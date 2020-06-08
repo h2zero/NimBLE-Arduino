@@ -39,6 +39,7 @@ public:
     bool                        writeValue(const uint8_t* data, size_t length, bool response = false);
     bool                        writeValue(const std::string &newValue, bool response = false);
     bool                        writeValue(uint8_t newValue, bool response = false);
+    std::string                 getValue();
 
 
 private:
@@ -50,16 +51,12 @@ private:
                                           struct ble_gatt_attr *attr, void *arg);
     static int                  onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error,
                                          struct ble_gatt_attr *attr, void *arg);
-    void                        releaseSemaphores();
 
     uint16_t                    m_handle;
     NimBLEUUID                  m_uuid;
     std::string                 m_value;
     NimBLERemoteCharacteristic* m_pRemoteCharacteristic;
-    FreeRTOS::Semaphore         m_semaphoreReadDescrEvt  = FreeRTOS::Semaphore("ReadDescrEvt");
-    FreeRTOS::Semaphore         m_semaphoreDescWrite     = FreeRTOS::Semaphore("WriteDescEvt");
-
-
+    portMUX_TYPE                m_valMux;
 };
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)

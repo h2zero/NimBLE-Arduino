@@ -54,7 +54,10 @@ NimBLEClient::NimBLEClient()
     m_pClientCallbacks = &defaultCallbacks;
     m_conn_id          = BLE_HS_CONN_HANDLE_NONE;
     m_isConnected      = false;
+    m_waitingToConnect = false;
     m_connectTimeout   = 30000;
+    m_deleteCallbacks  = false;
+    m_pTaskData        = nullptr;
 
     m_pConnParams.scan_itvl = 16;          // Scan interval in 0.625ms units (NimBLE Default)
     m_pConnParams.scan_window = 16;        // Scan window in 0.625ms units (NimBLE Default)
@@ -164,7 +167,8 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
     memcpy(&peerAddrt.val, address.getNative(),6);
     peerAddrt.type = type;
 
-    m_semaphoreOpenEvt.take("connect");
+    ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
+    m_pTaskData = &taskData;
 
     /** Try to connect the the advertiser.  Allow 30 seconds (30000 ms) for
      *  timeout (default value of m_connectTimeout).
@@ -174,7 +178,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
         rc = ble_gap_connect(BLE_OWN_ADDR_PUBLIC, &peerAddrt, m_connectTimeout, &m_pConnParams,
                             NimBLEClient::handleGapEvent, this);
         if(rc == BLE_HS_EBUSY) {
-            vTaskDelay(1);
+            vTaskDelay(1 / portTICK_PERIOD_MS);
         }
     }while(rc == BLE_HS_EBUSY);
 
@@ -184,17 +188,17 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
                     type,
                     m_peerAddress.toString().c_str(),
                     rc, NimBLEUtils::returnCodeToString(rc));
-
-        m_semaphoreOpenEvt.give();
+        m_pTaskData = nullptr;
         m_waitingToConnect = false;
         return false;
     }
 
     m_waitingToConnect = true;
 
-    rc = m_semaphoreOpenEvt.wait("connect");   // Wait for the connection to complete.
+    // Wait for the connection to complete.
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
-    if(rc != 0){
+    if(taskData.rc != 0){
         return false;
     }
 
@@ -216,17 +220,18 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
  * @return True on success.
  */
 bool NimBLEClient::secureConnection() {
-
-    m_semeaphoreSecEvt.take("secureConnection");
+    ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
+    m_pTaskData = &taskData;
 
     int rc = NimBLEDevice::startSecurity(m_conn_id);
     if(rc != 0){
-        m_semeaphoreSecEvt.give();
+        m_pTaskData = nullptr;
         return false;
     }
 
-    rc = m_semeaphoreSecEvt.wait("secureConnection");
-    if(rc != 0){
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+    if(taskData.rc != 0){
         return false;
     }
 
@@ -460,30 +465,31 @@ bool NimBLEClient::retrieveServices(const NimBLEUUID *uuid_filter) {
  */
 
     NIMBLE_LOGD(LOG_TAG, ">> retrieveServices");
-    int rc = 0;
 
     if(!m_isConnected){
         NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve services -aborting");
         return false;
     }
 
-    m_semaphoreSearchCmplEvt.take("retrieveServices");
+    int rc = 0;
+    ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
 
     if(uuid_filter == nullptr) {
-        rc = ble_gattc_disc_all_svcs(m_conn_id, NimBLEClient::serviceDiscoveredCB, this);
+        rc = ble_gattc_disc_all_svcs(m_conn_id, NimBLEClient::serviceDiscoveredCB, &taskData);
     } else {
         rc = ble_gattc_disc_svc_by_uuid(m_conn_id, &uuid_filter->getNative()->u,
-                                        NimBLEClient::serviceDiscoveredCB, this);
+                                        NimBLEClient::serviceDiscoveredCB, &taskData);
     }
 
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_svcs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-        m_semaphoreSearchCmplEvt.give();
         return false;
     }
 
     // wait until we have all the services
-    if(m_semaphoreSearchCmplEvt.wait("retrieveServices") == 0){
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+    if(taskData.rc == 0){
         NIMBLE_LOGD(LOG_TAG, "<< retrieveServices");
         return true;
     }
@@ -507,41 +513,34 @@ int NimBLEClient::serviceDiscoveredCB(
     NIMBLE_LOGD(LOG_TAG,"Service Discovered >> status: %d handle: %d",
                         error->status, (error->status == 0) ? service->start_handle : -1);
 
-    NimBLEClient *peer = (NimBLEClient*)arg;
-    int rc=0;
+    ble_task_data_t *pTaskData = (ble_task_data_t*)arg;
+    NimBLEClient *client = (NimBLEClient*)pTaskData->pATT;
 
     // Make sure the service discovery is for this device
-    if(peer->getConnId() != conn_handle){
+    if(client->getConnId() != conn_handle){
         return 0;
     }
 
-    switch (error->status) {
-        case 0: {
-            // Found a service - add it to the vector
-            NimBLERemoteService* pRemoteService = new NimBLERemoteService(peer, service);
-            peer->m_servicesVector.push_back(pRemoteService);
-            break;
-        }
-        case BLE_HS_EDONE:{
-            // All services discovered; start discovering characteristics.
-
-            //NIMBLE_LOGD(LOG_TAG,"Giving search semaphore - completed");
-            peer->m_semaphoreSearchCmplEvt.give(0);
-            rc = 0;
-            break;
-        }
-        default:
-            // Error; abort discovery.
-            rc = error->status;
-            break;
+    if(error->status == 0) {
+        // Found a service - add it to the vector
+        NimBLERemoteService* pRemoteService = new NimBLERemoteService(client, service);
+        client->m_servicesVector.push_back(pRemoteService);
+        return 0;
     }
 
-    if (rc != 0) {
-        // pass non-zero to semaphore on error to indicate an error finding services
-        peer->m_semaphoreSearchCmplEvt.give(1);
+    if(error->status == BLE_HS_EDONE) {
+        pTaskData->rc = 0;
+    } else {
+        NIMBLE_LOGE(LOG_TAG, "characteristicDiscCB() rc=%d %s",
+                             error->status,
+                             NimBLEUtils::returnCodeToString(error->status));
+        pTaskData->rc = error->status;
     }
-    NIMBLE_LOGD(LOG_TAG,"<< Service Discovered. status: %d", rc);
-    return rc;
+
+    xTaskNotifyGive(pTaskData->task);
+
+    NIMBLE_LOGD(LOG_TAG,"<< << Service Discovered");
+    return error->status;
 }
 
 
@@ -613,15 +612,11 @@ uint16_t NimBLEClient::getMTU() {
  * @param [in] arg = pointer to the client instance
  */
  /*STATIC*/ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
-
     NimBLEClient* client = (NimBLEClient*)arg;
-    //struct ble_gap_conn_desc desc;
-    //struct ble_hs_adv_fields fields;
     int rc;
 
     NIMBLE_LOGD(LOG_TAG, "Got Client event %s", NimBLEUtils::gapEventToString(event->type));
 
-    // Execute handler code based on the type of event received.
     switch(event->type) {
 
         case BLE_GAP_EVENT_DISCONNECT: {
@@ -638,9 +633,6 @@ uint16_t NimBLEClient::getMTU() {
 
             NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d, %s", event->disconnect.reason,
                                     NimBLEUtils::returnCodeToString(event->disconnect.reason));
-            //print_conn_desc(&event->disconnect.conn);
-            //MODLOG_DFLT(INFO, "\n");
-
 
             // If Host reset tell the device now before returning to prevent
             // any errors caused by calling host functions before resyncing.
@@ -658,10 +650,13 @@ uint16_t NimBLEClient::getMTU() {
 
             //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
 
-            // Indicate a non-success return value to any semaphores waiting
-            client->m_semaphoreOpenEvt.give(1);
-            client->m_semaphoreSearchCmplEvt.give(1);
-            client->m_semeaphoreSecEvt.give(1);
+            // Indicate a non-success return value to any tasks waiting
+            if(client->m_pTaskData != nullptr) {
+                client->m_pTaskData->rc = 1;
+                xTaskNotifyGive(client->m_pTaskData->task);
+                client->m_pTaskData = nullptr;
+            }
+
 
             client->m_pClientCallbacks->onDisconnect(client);
 
@@ -685,12 +680,6 @@ uint16_t NimBLEClient::getMTU() {
 
                 client->m_conn_id = event->connect.conn_handle;
 
-            //  rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
-            //  assert(rc == 0);
-            //  print_conn_desc(&desc);
-            //  MODLOG_DFLT(INFO, "\n");
-
-
                 // In the case of a multiconnecting device we ignore this device when
                 // scanning since we are already connected to it
                 NimBLEDevice::addIgnored(client->m_peerAddress);
@@ -700,16 +689,25 @@ uint16_t NimBLEClient::getMTU() {
                     NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",rc,
                                             NimBLEUtils::returnCodeToString(rc));
                     // if error getting mtu indicate a connection error.
-                    client->m_semaphoreOpenEvt.give(rc);
+                    if(client->m_pTaskData != nullptr) {
+                        client->m_pTaskData->rc = rc;
+                        xTaskNotifyGive(client->m_pTaskData->task);
+                        client->m_pTaskData = nullptr;
+                    }
                 }
+
             } else {
-                // Connection attempt failed
                 NIMBLE_LOGE(LOG_TAG, "Error: Connection failed; status=%d %s",
                             event->connect.status,
                             NimBLEUtils::returnCodeToString(event->connect.status));
 
                 client->m_isConnected = false;
-                client->m_semaphoreOpenEvt.give(event->connect.status);
+
+                if(client->m_pTaskData != nullptr) {
+                    client->m_pTaskData->rc = event->connect.status;
+                    xTaskNotifyGive(client->m_pTaskData->task);
+                    client->m_pTaskData = nullptr;
+                }
             }
             return 0;
         } // BLE_GAP_EVENT_CONNECT
@@ -721,7 +719,7 @@ uint16_t NimBLEClient::getMTU() {
             NIMBLE_LOGD(LOG_TAG, "Notify Recieved for handle: %d",event->notify_rx.attr_handle);
 
             for(auto &it: client->m_servicesVector) {
-                // Dont waste cycles searching services without this handle in their range
+                // Dont waste cycles searching services without this handle in it's range
                 if(it->getEndHandle() < event->notify_rx.attr_handle) {
                     continue;
                 }
@@ -740,11 +738,10 @@ uint16_t NimBLEClient::getMTU() {
                 if(characteristic != cVector->cend()) {
                     NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", (*characteristic)->toString().c_str());
 
-                    if((*characteristic)->m_semaphoreReadCharEvt.take(0, "notifyValue")) { 
-                        (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data, event->notify_rx.om->om_len);
-                        (*characteristic)->m_timestamp = time(nullptr);
-                        (*characteristic)->m_semaphoreReadCharEvt.give();
-                    }
+                    portENTER_CRITICAL(&(*characteristic)->m_valMux);
+                    (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data, event->notify_rx.om->om_len);
+                    (*characteristic)->m_timestamp = time(nullptr);
+                    portEXIT_CRITICAL(&(*characteristic)->m_valMux);
 
                     if ((*characteristic)->m_notifyCallback != nullptr) {
                         NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s",
@@ -816,7 +813,12 @@ uint16_t NimBLEClient::getMTU() {
                 }
             }
 
-            client->m_semeaphoreSecEvt.give(event->enc_change.status);
+            if(client->m_pTaskData != nullptr) {
+                client->m_pTaskData->rc = event->enc_change.status;
+                xTaskNotifyGive(client->m_pTaskData->task);
+                client->m_pTaskData = nullptr;
+            }
+
             return 0;
         } //BLE_GAP_EVENT_ENC_CHANGE
 
@@ -827,12 +829,18 @@ uint16_t NimBLEClient::getMTU() {
             NIMBLE_LOGI(LOG_TAG, "mtu update event; conn_handle=%d mtu=%d",
                         event->mtu.conn_handle,
                         event->mtu.value);
-            client->m_semaphoreOpenEvt.give(0);
+
+            if(client->m_pTaskData != nullptr) {
+                client->m_pTaskData->rc = 0;
+                xTaskNotifyGive(client->m_pTaskData->task);
+                client->m_pTaskData = nullptr;
+            }
+
             return 0;
         } // BLE_GAP_EVENT_MTU
 
         case BLE_GAP_EVENT_PASSKEY_ACTION: {
-            struct ble_sm_io pkey = {0};
+            struct ble_sm_io pkey = {0,0};
 
             if(client->m_conn_id != event->passkey.conn_handle)
                 return 0;
