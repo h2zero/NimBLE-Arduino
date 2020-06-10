@@ -18,7 +18,6 @@
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEClient.h"
-#include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
 #include "NimBLELog.h"
 

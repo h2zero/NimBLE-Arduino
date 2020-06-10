@@ -22,18 +22,12 @@
 
 #include "NimBLEAddress.h"
 #include "NimBLEUUID.h"
+#include "NimBLEUtils.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
 
 #include <vector>
 #include <string>
-
-typedef struct {
-    void *pATT;
-    TaskHandle_t task;
-    int rc;
-    std::string *buf;
-} ble_task_data_t;
 
 class NimBLERemoteService;
 class NimBLEClientCallbacks;
