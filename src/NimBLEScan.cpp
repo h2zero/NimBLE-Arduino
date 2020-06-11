@@ -306,13 +306,13 @@ NimBLEScanResults NimBLEScan::start(uint32_t duration, bool is_continue) {
  * @brief Stop an in progress scan.
  * @return N/A.
  */
-void NimBLEScan::stop() {
+bool NimBLEScan::stop() {
     NIMBLE_LOGD(LOG_TAG, ">> stop()");
 
     int rc = ble_gap_disc_cancel();
     if (rc != 0 && rc != BLE_HS_EALREADY) {
         NIMBLE_LOGE(LOG_TAG, "Failed to cancel scan; rc=%d\n", rc);
-        return;
+        return false;
     }
 
     m_stopped = true;
@@ -326,6 +326,7 @@ void NimBLEScan::stop() {
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< stop()");
+    return true;
 } // stop
 
 

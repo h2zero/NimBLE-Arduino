@@ -21,7 +21,6 @@
 
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLEUtils.h"
-#include "FreeRTOS.h"
 
 #include "host/ble_gap.h"
 
@@ -67,7 +66,7 @@ public:
     void                setActiveScan(bool active);
     void                setInterval(uint16_t intervalMSecs);
     void                setWindow(uint16_t windowMSecs);
-    void                stop();
+    bool                stop();
     void                clearResults();
     NimBLEScanResults   getResults();
     void                erase(const NimBLEAddress &address);

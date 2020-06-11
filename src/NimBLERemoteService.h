@@ -22,7 +22,6 @@
 
 #include "NimBLEClient.h"
 #include "NimBLEUUID.h"
-#include "FreeRTOS.h"
 #include "NimBLERemoteCharacteristic.h"
 
 #include <vector>

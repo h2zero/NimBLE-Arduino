@@ -159,6 +159,10 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
         return false;
     }
 
+    if(!NimBLEDevice::getScan()->stop()) {
+        return false;
+    }
+
     int rc = 0;
     m_peerAddress = address;
 
@@ -651,7 +655,7 @@ uint16_t NimBLEClient::getMTU() {
 
             // Indicate a non-success return value to any tasks waiting
             if(client->m_pTaskData != nullptr) {
-                client->m_pTaskData->rc = 1;
+                client->m_pTaskData->rc = event->disconnect.reason;
                 xTaskNotifyGive(client->m_pTaskData->task);
                 client->m_pTaskData = nullptr;
             }
