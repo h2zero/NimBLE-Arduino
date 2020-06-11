@@ -20,10 +20,9 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
-#include "NimBLECharacteristic.h"
 #include "NimBLEServer.h"
+#include "NimBLECharacteristic.h"
 #include "NimBLEUUID.h"
-#include "FreeRTOS.h"
 
 
 class NimBLEServer;

@@ -20,11 +20,12 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
+#include "NimBLEUtils.h"
 #include "NimBLEAddress.h"
 #include "NimBLEAdvertising.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"
-#include "FreeRTOS.h"
+
 
 class NimBLEService;
 class NimBLECharacteristic;

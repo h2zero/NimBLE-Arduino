@@ -42,7 +42,6 @@ typedef enum {
 
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
-#include "FreeRTOS.h"
 
 #include <string>
 #include <vector>
@@ -120,7 +119,7 @@ private:
     NimBLEService*                 m_pService;
     std::string                    m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
-    FreeRTOS::Semaphore            *m_pIndSemaphore;
+    ble_task_data_t                *m_pTaskData;
     portMUX_TYPE                   m_valMux;
 }; // NimBLECharacteristic
 

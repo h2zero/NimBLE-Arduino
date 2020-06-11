@@ -19,7 +19,6 @@
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEServer.h"
-#include "NimBLEUtils.h"
 #include "NimBLEDevice.h"
 #include "NimBLELog.h"
 
@@ -296,8 +295,9 @@ size_t NimBLEServer::getConnectedCount() {
             if(event->notify_tx.indication && event->notify_tx.status != 0) {
                 for(auto &it : server->m_notifyChrVec) {
                     if(it->getHandle() == event->notify_tx.attr_handle) {
-                        if(it->m_pIndSemaphore != nullptr) {
-                            it->m_pIndSemaphore->give(event->notify_tx.status);
+                        if(it->m_pTaskData != nullptr) {
+                            it->m_pTaskData->rc = event->notify_tx.status;
+                            xTaskNotifyGive(it->m_pTaskData->task);
                         }
                         break;
                     }

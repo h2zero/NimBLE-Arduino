@@ -19,7 +19,6 @@
 #include "NimBLE2902.h"
 #include "NimBLE2904.h"
 #include "NimBLEDevice.h"
-#include "NimBLEUtils.h"
 #include "NimBLELog.h"
 
 #define NULL_HANDLE (0xffff)
@@ -51,21 +50,13 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
     m_pService   = pService;
     m_value      = "";
     m_valMux     = portMUX_INITIALIZER_UNLOCKED;
-
-    if(properties & NIMBLE_PROPERTY::INDICATE){
-        m_pIndSemaphore = new FreeRTOS::Semaphore("ConfEvt");
-    } else {
-        m_pIndSemaphore = nullptr;
-    }
+    m_pTaskData  = nullptr;
 } // NimBLECharacteristic
 
 /**
  * @brief Destructor.
  */
 NimBLECharacteristic::~NimBLECharacteristic() {
-    if(m_pIndSemaphore != nullptr) {
-        delete(m_pIndSemaphore);
-    }
 } // ~NimBLECharacteristic
 
 
@@ -271,9 +262,10 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         subVal |= NIMBLE_DESC_FLAG_INDICATE;
     }
 
-    if(m_pIndSemaphore != nullptr) {
-        m_pIndSemaphore->give((subVal & NIMBLE_DESC_FLAG_INDICATE) ? 0 :
-                          NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED);
+    if(m_pTaskData != nullptr) {
+        m_pTaskData->rc = (subVal & NIMBLE_DESC_FLAG_INDICATE) ? 0 :
+                          NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED;
+        xTaskNotifyGive(m_pTaskData->task);
     }
 
     NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d",
@@ -358,15 +350,10 @@ void NimBLECharacteristic::notify(bool is_notification) {
 
     for (auto &it : p2902->m_subscribedVec) {
         uint16_t _mtu = getService()->getServer()->getPeerMTU(it.conn_id);
-        os_mbuf *om;
 
-        if(_mtu == 0) {
+        // check if connected and subscribed
+        if(_mtu == 0 || it.sub_val == 0) {
             //NIMBLE_LOGD(LOG_TAG, "peer not connected");
-            continue;
-        }
-
-        if(it.sub_val == 0) {
-            //NIMBLE_LOGD(LOG_TAG, "Skipping unsubscribed client");
             continue;
         }
 
@@ -389,20 +376,25 @@ void NimBLECharacteristic::notify(bool is_notification) {
         // don't create the m_buf until we are sure to send the data or else
         // we could be allocating a buffer that doesn't get released.
         // We also must create it in each loop iteration because it is consumed with each host call.
-        om = ble_hs_mbuf_from_flat((uint8_t*)value.data(), length);
+        os_mbuf *om = ble_hs_mbuf_from_flat((uint8_t*)value.data(), length);
 
         NimBLECharacteristicCallbacks::Status statusRC;
-        if(m_pIndSemaphore != nullptr && !is_notification) {
-            m_pIndSemaphore->take("indicate");
+
+        if(!is_notification && (m_properties & NIMBLE_PROPERTY::INDICATE)) {
+            ble_task_data_t taskData = {nullptr, xTaskGetCurrentTaskHandle(),0, nullptr};
+            m_pTaskData = &taskData;
+
             rc = ble_gattc_indicate_custom(it.conn_id, m_handle, om);
             if(rc != 0){
-                m_pIndSemaphore->give();
                 statusRC = NimBLECharacteristicCallbacks::Status::ERROR_GATT;
             } else {
-                rc = m_pIndSemaphore->wait();
+                ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+                rc = m_pTaskData->rc;
             }
 
-            if(rc == 0 || rc == BLE_HS_EDONE) {
+            m_pTaskData = nullptr;
+
+            if(rc == BLE_HS_EDONE) {
                 rc = 0;
                 statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE;
             } else if(rc == BLE_HS_ETIMEOUT) {
