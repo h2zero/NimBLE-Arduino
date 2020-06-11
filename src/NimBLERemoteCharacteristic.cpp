@@ -525,13 +525,13 @@ bool NimBLERemoteCharacteristic::setNotify(uint16_t val, bool response, notify_c
  * is performed for notifications.
  * @return true if successful.
  */
-bool NimBLERemoteCharacteristic::subscribeForNotify(bool notifications, bool response, notify_callback notifyCallback) {
+bool NimBLERemoteCharacteristic::subscribe(bool notifications, bool response, notify_callback notifyCallback) {
     if(notifications) {
         return setNotify(0x01, response, notifyCallback);
     } else {
         return setNotify(0x02, response, notifyCallback);
     }
-} // subscribeForNotify
+} // subscribe
 
 
 /**
@@ -539,9 +539,28 @@ bool NimBLERemoteCharacteristic::subscribeForNotify(bool notifications, bool res
  * @param [in] bool if true, require a write response from the descriptor write operation.
  * @return true if successful.
  */
-bool NimBLERemoteCharacteristic::unsubscribeForNotify(bool response) {
+bool NimBLERemoteCharacteristic::unsubscribe(bool response) {
     return setNotify(0x00, response);
-} // unsubscribeForNotify
+} // unsubscribe
+
+
+ /**
+ * @brief backward-compatibility method for subscribe/unsubscribe notifications/indications
+ * @param [in] notifyCallback A callback to be invoked for a notification.  If NULL is provided then we are
+ * unregistering for notifications.
+ * @param [in] bool if true, register for notifications, false register for indications.
+ * @param [in] bool if true, require a write response from the descriptor write operation.
+ * @return true if successful.
+ */
+bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, bool notifications, bool response) {
+    bool success;
+    if(notifyCallback != nullptr) {
+        success = subscribe(notifications, response, notifyCallback);
+    } else {
+        success = unsubscribe(response);
+    }
+    return success;
+} // registerForNotify
 
 
 /**

@@ -78,10 +78,13 @@ public:
         return *((T *)pData);
     }
 
-    bool                                           subscribeForNotify(bool notifications = true, 
-                                                                      bool response = true, 
-                                                                      notify_callback notifyCallback = nullptr);
-    bool                                           unsubscribeForNotify(bool response = true);
+    bool                                           subscribe(bool notifications = true,
+                                                             bool response = true,
+                                                             notify_callback notifyCallback = nullptr);
+    bool                                           unsubscribe(bool response = true);
+    bool                                           registerForNotify(notify_callback notifyCallback,
+                                                                     bool notifications = true,
+                                                                     bool response = true) __attribute__ ((deprecated));
     bool                                           writeValue(const uint8_t* data,
                                                               size_t length,
                                                               bool response = false);
