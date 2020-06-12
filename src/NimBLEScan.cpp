@@ -290,6 +290,10 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
  * @return The BLEScanResults.
  */
 NimBLEScanResults NimBLEScan::start(uint32_t duration, bool is_continue) {
+    if(duration == 0) {
+        NIMBLE_LOGW(LOG_TAG, "Blocking scan called with duration = forever");
+    }
+
     ble_task_data_t taskData = {nullptr, xTaskGetCurrentTaskHandle(),0, nullptr};
     m_pTaskData = &taskData;
 
@@ -350,9 +354,6 @@ void NimBLEScan::erase(const NimBLEAddress &address) {
  */
 void NimBLEScan::onHostReset() {
     m_stopped = true;
-    if(m_pTaskData != nullptr) {
-        xTaskNotifyGive(m_pTaskData->task);
-    }
 }
 
 

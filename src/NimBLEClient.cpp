@@ -652,18 +652,9 @@ uint16_t NimBLEClient::getMTU() {
             }
 
             //client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
-
-            // Indicate a non-success return value to any tasks waiting
-            if(client->m_pTaskData != nullptr) {
-                client->m_pTaskData->rc = event->disconnect.reason;
-                xTaskNotifyGive(client->m_pTaskData->task);
-                client->m_pTaskData = nullptr;
-            }
-
-
             client->m_pClientCallbacks->onDisconnect(client);
-
-            return 0;
+            rc = event->disconnect.reason;
+            break;
         } // BLE_GAP_EVENT_DISCONNECT
 
         case BLE_GAP_EVENT_CONNECT: {
@@ -683,34 +674,24 @@ uint16_t NimBLEClient::getMTU() {
 
                 client->m_conn_id = event->connect.conn_handle;
 
-                // In the case of a multiconnecting device we ignore this device when
-                // scanning since we are already connected to it
-                NimBLEDevice::addIgnored(client->m_peerAddress);
-
                 rc = ble_gattc_exchange_mtu(client->m_conn_id, NULL,NULL);
                 if(rc != 0) {
                     NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",rc,
                                             NimBLEUtils::returnCodeToString(rc));
-                    // if error getting mtu indicate a connection error.
-                    if(client->m_pTaskData != nullptr) {
-                        client->m_pTaskData->rc = rc;
-                        xTaskNotifyGive(client->m_pTaskData->task);
-                        client->m_pTaskData = nullptr;
-                    }
+                    break;
                 }
 
+                // In the case of a multiconnecting device we ignore this device when
+                // scanning since we are already connected to it
+                NimBLEDevice::addIgnored(client->m_peerAddress);
             } else {
                 NIMBLE_LOGE(LOG_TAG, "Error: Connection failed; status=%d %s",
                             event->connect.status,
                             NimBLEUtils::returnCodeToString(event->connect.status));
 
                 client->m_isConnected = false;
-
-                if(client->m_pTaskData != nullptr) {
-                    client->m_pTaskData->rc = event->connect.status;
-                    xTaskNotifyGive(client->m_pTaskData->task);
-                    client->m_pTaskData = nullptr;
-                }
+                rc = event->connect.status;
+                break;
             }
             return 0;
         } // BLE_GAP_EVENT_CONNECT
@@ -763,7 +744,7 @@ uint16_t NimBLEClient::getMTU() {
         case BLE_GAP_EVENT_CONN_UPDATE_REQ:
         case BLE_GAP_EVENT_L2CAP_UPDATE_REQ: {
             if(client->m_conn_id != event->conn_update_req.conn_handle){
-                return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
+                return 0;
             }
             NIMBLE_LOGD(LOG_TAG, "Peer requesting to update connection parameters");
             NIMBLE_LOGD(LOG_TAG, "MinInterval: %d, MaxInterval: %d, Latency: %d, Timeout: %d",
@@ -789,7 +770,7 @@ uint16_t NimBLEClient::getMTU() {
 
         case BLE_GAP_EVENT_CONN_UPDATE: {
             if(client->m_conn_id != event->conn_update.conn_handle){
-                return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
+                return 0;
             }
             if(event->conn_update.status == 0) {
                 NIMBLE_LOGI(LOG_TAG, "Connection parameters updated.");
@@ -801,7 +782,7 @@ uint16_t NimBLEClient::getMTU() {
 
         case BLE_GAP_EVENT_ENC_CHANGE: {
             if(client->m_conn_id != event->enc_change.conn_handle){
-                return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
+                return 0;
             }
 
             if(event->enc_change.status == 0) {
@@ -816,30 +797,19 @@ uint16_t NimBLEClient::getMTU() {
                 }
             }
 
-            if(client->m_pTaskData != nullptr) {
-                client->m_pTaskData->rc = event->enc_change.status;
-                xTaskNotifyGive(client->m_pTaskData->task);
-                client->m_pTaskData = nullptr;
-            }
-
-            return 0;
+            rc = event->enc_change.status;
+            break;
         } //BLE_GAP_EVENT_ENC_CHANGE
 
         case BLE_GAP_EVENT_MTU: {
             if(client->m_conn_id != event->mtu.conn_handle){
-                return 0; //BLE_HS_ENOTCONN BLE_ATT_ERR_INVALID_HANDLE
+                return 0;
             }
             NIMBLE_LOGI(LOG_TAG, "mtu update event; conn_handle=%d mtu=%d",
                         event->mtu.conn_handle,
                         event->mtu.value);
-
-            if(client->m_pTaskData != nullptr) {
-                client->m_pTaskData->rc = 0;
-                xTaskNotifyGive(client->m_pTaskData->task);
-                client->m_pTaskData = nullptr;
-            }
-
-            return 0;
+            rc = 0;
+            break;
         } // BLE_GAP_EVENT_MTU
 
         case BLE_GAP_EVENT_PASSKEY_ACTION: {
@@ -904,6 +874,14 @@ uint16_t NimBLEClient::getMTU() {
             return 0;
         }
     } // Switch
+
+    if(client->m_pTaskData != nullptr) {
+        client->m_pTaskData->rc = rc;
+        xTaskNotifyGive(client->m_pTaskData->task);
+        client->m_pTaskData = nullptr;
+    }
+
+    return 0;
 } // handleGapEvent
 
 
