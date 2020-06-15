@@ -703,7 +703,7 @@ uint16_t NimBLEClient::getMTU() {
             NIMBLE_LOGD(LOG_TAG, "Notify Recieved for handle: %d",event->notify_rx.attr_handle);
 
             for(auto &it: client->m_servicesVector) {
-                // Dont waste cycles searching services without this handle in it's range
+                // Dont waste cycles searching services without this handle in its range
                 if(it->getEndHandle() < event->notify_rx.attr_handle) {
                     continue;
                 }

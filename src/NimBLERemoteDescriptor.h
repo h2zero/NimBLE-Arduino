@@ -31,16 +31,23 @@ public:
     uint16_t                    getHandle();
     NimBLERemoteCharacteristic* getRemoteCharacteristic();
     NimBLEUUID                  getUUID();
-    std::string                 readValue(void);
-    uint8_t                     readUInt8(void);
-    uint16_t                    readUInt16(void);
-    uint32_t                    readUInt32(void);
+    std::string                 readValue();
+
+    template<typename T>
+    T                           readValue(bool skipSizeCheck = false) {
+        std::string value = readValue();
+        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
+        const char *pData = value.data();
+        return *((T *)pData);
+    }
+
+    uint8_t                     readUInt8()  __attribute__ ((deprecated));
+    uint16_t                    readUInt16() __attribute__ ((deprecated));
+    uint32_t                    readUInt32() __attribute__ ((deprecated));
     std::string                 toString(void);
     bool                        writeValue(const uint8_t* data, size_t length, bool response = false);
     bool                        writeValue(const std::string &newValue, bool response = false);
     bool                        writeValue(uint8_t newValue, bool response = false);
-    std::string                 getValue();
-
 
 private:
     friend class                NimBLERemoteCharacteristic;
@@ -54,9 +61,7 @@ private:
 
     uint16_t                    m_handle;
     NimBLEUUID                  m_uuid;
-    std::string                 m_value;
     NimBLERemoteCharacteristic* m_pRemoteCharacteristic;
-    portMUX_TYPE                m_valMux;
 };
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)

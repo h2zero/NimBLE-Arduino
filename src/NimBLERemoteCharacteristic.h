@@ -35,7 +35,7 @@ typedef void (*notify_callback)(NimBLERemoteCharacteristic* pBLERemoteCharacteri
 typedef struct {
     const NimBLEUUID *uuid;
     void *task_data;
-} disc_filter_t;
+} desc_filter_t;
 
 
 /**

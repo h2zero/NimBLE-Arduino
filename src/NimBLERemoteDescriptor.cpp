@@ -48,7 +48,6 @@ NimBLERemoteDescriptor::NimBLERemoteDescriptor(NimBLERemoteCharacteristic* pRemo
 
     m_handle                = dsc->handle;
     m_pRemoteCharacteristic = pRemoteCharacteristic;
-    m_valMux                = portMUX_INITIALIZER_UNLOCKED;
 }
 
 
@@ -77,19 +76,6 @@ NimBLERemoteCharacteristic* NimBLERemoteDescriptor::getRemoteCharacteristic() {
 NimBLEUUID NimBLERemoteDescriptor::getUUID() {
     return m_uuid;
 } // getUUID
-
-
-/**
- * @brief Get the value of the remote descriptor.
- * @return The value of the remote descriptor.
- */
-std::string NimBLERemoteDescriptor::getValue() {
-    portENTER_CRITICAL(&m_valMux);
-    std::string value = m_value;
-    portEXIT_CRITICAL(&m_valMux);
-
-    return value;
-}
 
 
 uint8_t NimBLERemoteDescriptor::readUInt8() {
@@ -168,11 +154,7 @@ std::string NimBLERemoteDescriptor::readValue() {
         }
     } while(rc != 0 && retryCount--);
 
-    portENTER_CRITICAL(&m_valMux);
-    m_value = value;
-    portEXIT_CRITICAL(&m_valMux);
     NIMBLE_LOGD(LOG_TAG, "<< Descriptor readValue(): length: %d rc=%d", value.length(), rc);
-
     return value;
 } // readValue
 
