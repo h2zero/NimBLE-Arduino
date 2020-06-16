@@ -107,7 +107,7 @@ private:
     ~NimBLECharacteristic();
 
     NimBLEService*  getService();
-    uint8_t         getProperties();
+    uint16_t        getProperties();
     void            setSubscribe(struct ble_gap_event *event);
     static int      handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                                    struct ble_gatt_access_ctxt *ctxt, void *arg);
