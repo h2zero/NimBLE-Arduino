@@ -22,7 +22,6 @@
 
 #include "NimBLEClient.h"
 #include "NimBLEUUID.h"
-#include "FreeRTOS.h"
 #include "NimBLERemoteCharacteristic.h"
 
 #include <vector>
@@ -79,7 +78,6 @@ private:
     std::vector<NimBLERemoteCharacteristic*> m_characteristicVector;
 
     NimBLEClient*       m_pClient;
-    FreeRTOS::Semaphore m_semaphoreGetCharEvt = FreeRTOS::Semaphore("GetCharEvt");
     NimBLEUUID          m_uuid;
     uint16_t            m_startHandle;
     uint16_t            m_endHandle;
