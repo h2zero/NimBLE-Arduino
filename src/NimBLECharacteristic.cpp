@@ -478,6 +478,10 @@ void NimBLECharacteristic::setValue(const std::string &value) {
     setValue((uint8_t*)(value.data()), value.length());
 } // setValue
 
+void NimBLECharacteristic::setValue(uint8_t data8) {
+	setValue(&data8, 1);
+} // setValue
+
 void NimBLECharacteristic::setValue(uint16_t& data16) {
     uint8_t temp[2];
     temp[0] = data16;

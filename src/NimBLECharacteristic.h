@@ -80,6 +80,7 @@ public:
     void              setCallbacks(NimBLECharacteristicCallbacks* pCallbacks);
     void              setValue(const uint8_t* data, size_t size);
     void              setValue(const std::string &value);
+    void              setValue(uint8_t data8);
     void              setValue(uint16_t& data16);
     void              setValue(uint32_t& data32);
     void              setValue(int& data32);
