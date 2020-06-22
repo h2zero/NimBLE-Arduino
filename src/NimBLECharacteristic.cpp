@@ -137,7 +137,7 @@ uint16_t NimBLECharacteristic::getHandle() {
 } // getHandle
 
 
-uint8_t NimBLECharacteristic::getProperties() {
+uint16_t NimBLECharacteristic::getProperties() {
     return m_properties;
 } // getProperties
 
@@ -346,6 +346,9 @@ void NimBLECharacteristic::notify(bool is_notification) {
 
     std::string value = getValue();
     size_t length = value.length();
+    bool reqSec = (m_properties & BLE_GATT_CHR_F_READ_AUTHEN) ||
+                  (m_properties & BLE_GATT_CHR_F_READ_AUTHOR) ||
+                  (m_properties & BLE_GATT_CHR_F_READ_ENC);
     int rc = 0;
 
     for (auto &it : p2902->m_subscribedVec) {
@@ -353,8 +356,16 @@ void NimBLECharacteristic::notify(bool is_notification) {
 
         // check if connected and subscribed
         if(_mtu == 0 || it.sub_val == 0) {
-            //NIMBLE_LOGD(LOG_TAG, "peer not connected");
             continue;
+        }
+
+        // check if security requirements are satisfied
+        if(reqSec) {
+            struct ble_gap_conn_desc desc;
+            rc = ble_gap_conn_find(it.conn_id, &desc);
+            if(rc != 0 || !desc.sec_state.encrypted) {
+                continue;
+            }
         }
 
         if (length > _mtu - 3) {
