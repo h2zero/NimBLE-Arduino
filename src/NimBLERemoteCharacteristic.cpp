@@ -271,9 +271,7 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
 std::vector<NimBLERemoteDescriptor*>* NimBLERemoteCharacteristic::getDescriptors(bool refresh) {
     if(refresh) {
         deleteDescriptors();
-    }
 
-    if(m_descriptorVector.empty()) {
         if (!retrieveDescriptors()) {
             NIMBLE_LOGE(LOG_TAG, "Error: Failed to get descriptors");
         }
