@@ -65,7 +65,7 @@ NimBLEScan::NimBLEScan() {
     m_scan_params.itvl               = 0; // This is defined as the time interval from when the Controller started its last LE scan until it begins the subsequent LE scan. (units=0.625 msec)
     m_scan_params.window             = 0; // The duration of the LE scan. LE_Scan_Window shall be less than or equal to LE_Scan_Interval (units=0.625 msec)
     m_scan_params.limited            = 0; // If set, only discover devices in limited discoverable mode.
-    m_scan_params.filter_duplicates  = 1; // If set, the controller ignores all but the first advertisement from each device.
+    m_scan_params.filter_duplicates  = 0; // If set, the controller ignores all but the first advertisement from each device.
     m_pAdvertisedDeviceCallbacks     = nullptr;
     m_stopped                        = true;
     m_wantDuplicates                 = false;
