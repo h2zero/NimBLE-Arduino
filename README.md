@@ -77,9 +77,9 @@ Change the settings in the `nimconfig.h` file to customize NimBLE to your projec
 
 # Continuing development:
 
-This Library is tracking the esp-nimble repo, nimble-1.2.0-idf master branch, currently [@fead24e.](https://github.com/espressif/esp-nimble)
+This Library is tracking the esp-nimble repo, nimble-1.2.0-idf master branch, currently [@46c1d9f.](https://github.com/espressif/esp-nimble)
 
-Also tracking the NimBLE related changes in esp-idf, master branch, currently [@2bc28bb.](https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble)
+Also tracking the NimBLE related changes in esp-idf, master branch, currently [@2ef4890.](https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble)
 
 # Acknowledgments:
 
