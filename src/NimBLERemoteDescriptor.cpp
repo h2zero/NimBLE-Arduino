@@ -328,15 +328,5 @@ bool NimBLERemoteDescriptor::writeValue(const std::string &newValue, bool respon
 } // writeValue
 
 
-/**
- * @brief Write a byte value to the Descriptor.
- * @param [in] The single byte to write.
- * @param [in] True if we expect a response.
- */
-bool NimBLERemoteDescriptor::writeValue(uint8_t newValue, bool response) {
-    return writeValue(&newValue, 1, response);
-} // writeValue
-
-
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

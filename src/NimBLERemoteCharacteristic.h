@@ -74,6 +74,7 @@ public:
     uint8_t                                        readUInt8()  __attribute__ ((deprecated("Use template readValue<uint8_t>()")));
     uint16_t                                       readUInt16() __attribute__ ((deprecated("Use template readValue<uint16_t>()")));
     uint32_t                                       readUInt32() __attribute__ ((deprecated("Use template readValue<uint32_t>()")));
+    float                                          readFloat()  __attribute__ ((deprecated("Use template readValue<float>()")));
     std::string                                    getValue(time_t *timestamp = nullptr);
 
     template<typename T>
@@ -97,8 +98,11 @@ public:
                                                               bool response = false);
     bool                                           writeValue(const std::string &newValue,
                                                               bool response = false);
-    bool                                           writeValue(uint8_t newValue,
-                                                              bool response = false);
+    template<typename T>
+    bool writeValue(const T &s, bool response = false) {
+        return writeValue((uint8_t*)&s, sizeof(T), response);
+    }
+
     std::string                                    toString();
     NimBLERemoteService*                           getRemoteService();
 

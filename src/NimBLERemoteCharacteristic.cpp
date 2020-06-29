@@ -357,11 +357,7 @@ std::string NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
  * @return The unsigned 16 bit value.
  */
 uint16_t NimBLERemoteCharacteristic::readUInt16() {
-    std::string value = readValue();
-    if (value.length() >= 2) {
-        return *(uint16_t*)(value.data());
-    }
-    return 0;
+    return readValue<uint16_t>();
 } // readUInt16
 
 
@@ -370,11 +366,7 @@ uint16_t NimBLERemoteCharacteristic::readUInt16() {
  * @return the unsigned 32 bit value.
  */
 uint32_t NimBLERemoteCharacteristic::readUInt32() {
-    std::string value = readValue();
-    if (value.length() >= 4) {
-        return *(uint32_t*)(value.data());
-    }
-    return 0;
+    return readValue<uint32_t>();
 } // readUInt32
 
 
@@ -383,12 +375,17 @@ uint32_t NimBLERemoteCharacteristic::readUInt32() {
  * @return The value as a byte
  */
 uint8_t NimBLERemoteCharacteristic::readUInt8() {
-    std::string value = readValue();
-    if (value.length() >= 1) {
-        return (uint8_t)value[0];
-    }
-    return 0;
+    return readValue<uint8_t>();
 } // readUInt8
+
+
+/**
+ * @brief Read a float value.
+ * @return the float value.
+ */
+float NimBLERemoteCharacteristic::readFloat() {
+	return readValue<float>();
+} // readFloat
 
 
 /**
@@ -643,19 +640,6 @@ std::string NimBLERemoteCharacteristic::toString() {
  */
 bool NimBLERemoteCharacteristic::writeValue(const std::string &newValue, bool response) {
     return writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
-} // writeValue
-
-
-/**
- * @brief Write the new value for the characteristic.
- *
- * This is a convenience function.  Many BLE characteristics are a single byte of data.
- * @param [in] newValue The new byte value to write.
- * @param [in] response Whether we require a response from the write.
- * @return false if not connected or cant perform write for some reason.
- */
-bool NimBLERemoteCharacteristic::writeValue(uint8_t newValue, bool response) {
-    return writeValue(&newValue, 1, response);
 } // writeValue
 
 
