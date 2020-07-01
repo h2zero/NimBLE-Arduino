@@ -25,41 +25,12 @@
 
 static const char* LOG_TAG = "NimBLEScan";
 
-/*
- * Scanning filter policy
- *  NO_WL:
- *      Scanner processes all advertising packets (white list not used) except
- *      directed, connectable advertising packets not sent to the scanner.
- *  USE_WL:
- *      Scanner processes advertisements from white list only. A connectable,
- *      directed advertisment is ignored unless it contains scanners address.
- *  NO_WL_INITA:
- *      Scanner process all advertising packets (white list not used). A
- *      connectable, directed advertisement shall not be ignored if the InitA
- *      is a resolvable private address.
- *  USE_WL_INITA:
- *      Scanner process advertisements from white list only. A connectable,
- *      directed advertisement shall not be ignored if the InitA is a
- *      resolvable private address.
- */
-
-//#define BLE_HCI_SCAN_FILT_NO_WL             (0)
-//#define BLE_HCI_SCAN_FILT_USE_WL            (1)
-//#define BLE_HCI_SCAN_FILT_NO_WL_INITA       (2)
-//#define BLE_HCI_SCAN_FILT_USE_WL_INITA      (3)
-//#define BLE_HCI_SCAN_FILT_MAX               (3)
-
 
 /**
  * @brief Scan constuctor.
  */
 NimBLEScan::NimBLEScan() {
-    uint8_t own_addr_type;
-    if(ble_hs_id_infer_auto(0, &own_addr_type) !=0){
-        NIMBLE_LOGE(LOG_TAG, "error determining address type\n");
-        return;
-    }
-    m_own_addr_type                  = own_addr_type;
+    m_own_addr_type                  = 0;
     m_scan_params.filter_policy      = BLE_HCI_SCAN_FILT_NO_WL;
     m_scan_params.passive            = 1; // If set, don’t send scan requests to advertisers (i.e., don’t request additional advertising data).
     m_scan_params.itvl               = 0; // This is defined as the time interval from when the Controller started its last LE scan until it begins the subsequent LE scan. (units=0.625 msec)
@@ -137,12 +108,17 @@ NimBLEScan::NimBLEScan() {
             advertisedDevice->m_timestamp = time(nullptr);
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
-                // If not active scanning report the result to the listener.
-                if(pScan->m_scan_params.passive || event->disc.event_type == BLE_HCI_ADV_TYPE_ADV_NONCONN_IND) {
-                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
-                // Otherwise wait for the scan response so we can report all of the data at once.
-                } else if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
-                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                if(pScan->m_wantDuplicates || !advertisedDevice->m_callbackSent) {
+                    // If not active scanning report the result to the listener.
+                    if(pScan->m_scan_params.passive || event->disc.event_type == BLE_HCI_ADV_TYPE_ADV_NONCONN_IND) {
+                        advertisedDevice->m_callbackSent = true;
+                        pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+
+                    // Otherwise wait for the scan response so we can report all of the data at once.
+                    } else if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                        advertisedDevice->m_callbackSent = true;
+                        pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                    }
                 }
             }
 
@@ -187,12 +163,58 @@ void NimBLEScan::setActiveScan(bool active) {
 
 
 /**
+ * @brief Set whether or not the BLE controller should only report results
+ * from devices it has not already seen.
+ * @param [in] active If true, scanned devices will only be reported once.
+ * @details The controller has a limited buffer and will start reporting
+ * dupicate devices once the limit is reached.
+ */
+void NimBLEScan::setDuplicateFilter(bool active) {
+    m_scan_params.filter_duplicates = active;
+} // setDuplicateFilter
+
+
+/**
+ * @brief Set whether or not the BLE controller only report scan results
+ * from devices advertising in limited discovery mode, i.e. directed advertising.
+ * @param [in] active If true, only limited discovery devices will be in scan results.
+ */
+void NimBLEScan::setLimitedOnly(bool active) {
+    m_scan_params.limited = active;
+} // setLimited
+
+
+/**
+ * @brief Sets the scan filter policy.
+ * @param [in] filter Can be one of:
+ *  BLE_HCI_SCAN_FILT_NO_WL             (0)
+ *      Scanner processes all advertising packets (white list not used) except
+ *      directed, connectable advertising packets not sent to the scanner.
+ *  BLE_HCI_SCAN_FILT_USE_WL            (1)
+ *      Scanner processes advertisements from white list only. A connectable,
+ *      directed advertisment is ignored unless it contains scanners address.
+ *  BLE_HCI_SCAN_FILT_NO_WL_INITA       (2)
+ *      Scanner process all advertising packets (white list not used). A
+ *      connectable, directed advertisement shall not be ignored if the InitA
+ *      is a resolvable private address.
+ *  BLE_HCI_SCAN_FILT_USE_WL_INITA      (3)
+ *      Scanner process advertisements from white list only. A connectable,
+ *      directed advertisement shall not be ignored if the InitA is a
+ *      resolvable private address.
+ */
+void NimBLEScan::setFilterPolicy(uint8_t filter) {
+    m_scan_params.filter_policy = filter;
+} // setFilterPolicy
+
+
+/**
  * @brief Set the call backs to be invoked.
  * @param [in] pAdvertisedDeviceCallbacks Call backs to be invoked.
  * @param [in] wantDuplicates  True if we wish to be called back with duplicates.  Default is false.
  */
-void NimBLEScan::setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks/*, bool wantDuplicates*/) {
-    //m_wantDuplicates = wantDuplicates;
+void NimBLEScan::setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks,
+                                              bool wantDuplicates) {
+    m_wantDuplicates = wantDuplicates;
     m_pAdvertisedDeviceCallbacks = pAdvertisedDeviceCallbacks;
 } // setAdvertisedDeviceCallbacks
 

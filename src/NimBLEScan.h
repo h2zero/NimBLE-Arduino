@@ -62,10 +62,13 @@ class NimBLEScan {
 public:
     bool                start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue = false);
     NimBLEScanResults   start(uint32_t duration, bool is_continue = false);
-    void                setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks/*, bool wantDuplicates = false*/);
+    void                setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates = false);
     void                setActiveScan(bool active);
     void                setInterval(uint16_t intervalMSecs);
     void                setWindow(uint16_t windowMSecs);
+    void                setDuplicateFilter(bool active);
+    void                setLimitedOnly(bool active);
+    void                setFilterPolicy(uint8_t filter);
     bool                stop();
     void                clearResults();
     NimBLEScanResults   getResults();
