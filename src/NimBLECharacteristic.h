@@ -73,19 +73,28 @@ public:
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &uuid);
     NimBLEUUID        getUUID();
-    std::string       getValue();
+    std::string       getValue(time_t *timestamp = nullptr);
+
+    template<typename T>
+    T                 getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+        std::string value = getValue();
+        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
+        const char *pData = value.data();
+        return *((T *)pData);
+    }
+
     size_t            getDataLength();
     void              indicate();
     void              notify(bool is_notification = true);
     void              setCallbacks(NimBLECharacteristicCallbacks* pCallbacks);
     void              setValue(const uint8_t* data, size_t size);
     void              setValue(const std::string &value);
-    void              setValue(uint8_t data8);
-    void              setValue(uint16_t& data16);
-    void              setValue(uint32_t& data32);
-    void              setValue(int& data32);
-    void              setValue(float& data32);
-    void              setValue(double& data64);
+
+    template<typename T>
+    void setValue(const T &s) {
+        setValue((uint8_t*)&s, sizeof(T));
+    }
+
     std::string       toString();
     uint16_t          getHandle();
 
@@ -122,6 +131,7 @@ private:
     std::vector<NimBLEDescriptor*> m_dscVec;
     ble_task_data_t                *m_pTaskData;
     portMUX_TYPE                   m_valMux;
+    time_t                         m_timestamp;
 }; // NimBLECharacteristic
 
 

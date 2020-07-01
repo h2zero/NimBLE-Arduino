@@ -52,6 +52,11 @@ public:
     void         setValue(const std::string &value);
     std::string  toString();
 
+    template<typename T>
+    void setValue(const T &s) {
+        setValue((uint8_t*)&s, sizeof(T));
+    }
+
 private:
     friend class NimBLECharacteristic;
     friend class NimBLEService;

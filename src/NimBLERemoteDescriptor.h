@@ -47,7 +47,10 @@ public:
     std::string                 toString(void);
     bool                        writeValue(const uint8_t* data, size_t length, bool response = false);
     bool                        writeValue(const std::string &newValue, bool response = false);
-    bool                        writeValue(uint8_t newValue, bool response = false);
+    template<typename T>
+    bool writeValue(const T &s, bool response = false) {
+        return writeValue((uint8_t*)&s, sizeof(T), response);
+    }
 
 private:
     friend class                NimBLERemoteCharacteristic;
