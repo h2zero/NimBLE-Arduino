@@ -37,6 +37,8 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
     m_serviceData      = "";
     m_txPower          = 0;
     m_pScan            = nullptr;
+    m_payloadLength    = 0;
+    m_payload          = nullptr;
 
     m_haveAppearance       = false;
     m_haveManufacturerData = false;
@@ -45,6 +47,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
     m_haveServiceData      = false;
     m_haveServiceUUID      = false;
     m_haveTXPower          = false;
+    m_callbackSent         = false;
 
 } // NimBLEAdvertisedDevice
 

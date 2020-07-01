@@ -115,7 +115,7 @@ private:
     bool m_haveTXPower;
 
 
-    NimBLEAddress  m_address = NimBLEAddress("");
+    NimBLEAddress   m_address = NimBLEAddress("");
     uint8_t         m_advType;
     uint16_t        m_appearance;
     int             m_deviceType;
@@ -128,9 +128,10 @@ private:
     std::string     m_serviceData;
     NimBLEUUID      m_serviceDataUUID;
     uint8_t*        m_payload;
-    size_t          m_payloadLength = 0;
+    size_t          m_payloadLength;
     uint8_t         m_addressType;
     time_t          m_timestamp;
+    bool            m_callbackSent;
 };
 
 /**
