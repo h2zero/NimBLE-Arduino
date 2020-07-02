@@ -36,6 +36,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
     m_rssi             = -9999;
     m_serviceData      = "";
     m_txPower          = 0;
+    m_payloadLength    = 0;
     m_pScan            = nullptr;
     m_payloadLength    = 0;
     m_payload          = nullptr;
@@ -53,11 +54,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
 
 
 /**
- * @brief Get the address.
- *
- * Every %BLE device exposes an address that is used to identify it and subsequently connect to it.
- * Call this function to obtain the address of the advertised device.
- *
+ * @brief Get the address of the advertising device.
  * @return The address of the advertised device.
  */
 NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
@@ -66,9 +63,13 @@ NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
 
 
 /**
- * @brief Get the advertised type.
- *
- * @return The advertised type of the advertised device.
+ * @brief Get the advertisement type.
+ * @return The advertising type the device is reporting:
+ * * BLE_HCI_ADV_TYPE_ADV_IND            (0) - indirect advertising
+ * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_HD  (1) - direct advertisng - high duty cycle
+ * * BLE_HCI_ADV_TYPE_ADV_SCAN_IND       (2) - indirect scan response
+ * * BLE_HCI_ADV_TYPE_ADV_NONCONN_IND    (3) - indirect advertisng - not connectable
+ * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_LD  (4) - direct advertising - low duty cycle
  */
 uint8_t NimBLEAdvertisedDevice::getAdvType() {
     return m_advType;
@@ -98,7 +99,7 @@ std::string NimBLEAdvertisedDevice::getManufacturerData() {
 
 
 /**
- * @brief Get the name.
+ * @brief Get the advertised name.
  * @return The name of the advertised device.
  */
 std::string NimBLEAdvertisedDevice::getName() {
@@ -116,7 +117,7 @@ int NimBLEAdvertisedDevice::getRSSI() {
 
 
 /**
- * @brief Get the scan object that created this advertisement.
+ * @brief Get the scan object that created this advertised device.
  * @return The scan object.
  */
 NimBLEScan* NimBLEAdvertisedDevice::getScan() {
@@ -134,8 +135,8 @@ std::string NimBLEAdvertisedDevice::getServiceData() {
 
 
 /**
- * @brief Get the service data UUID.
- * @return The service data UUID.
+ * @brief Get the advertised service UUID.
+ * @return The advertise service UUID.
  */
 
 NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID() {
@@ -154,7 +155,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID() {  //TODO Remove it eventual
 
 
 /**
- * @brief Check advertised serviced for existence required UUID
+ * @brief Check advertised services for existance of the required UUID
  * @return Return true if service is advertised
  */
 bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid){
@@ -163,7 +164,7 @@ bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid){
         if (m_serviceUUIDs[i].equals(uuid)) return true;
     }
     return false;
-}
+} // isAdvertisingService
 
 
 /**
@@ -335,7 +336,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
         setAppearance(fields->appearance);
     }
 
-/**** TODO: create storage and fucntions for these parameters
+/* TODO: create storage and fucntions for these parameters
     if (fields->public_tgt_addr != NULL) {
         NIMBLE_LOGD(LOG_TAG, "    public_tgt_addr=");
         u8p = fields->public_tgt_addr;
@@ -435,7 +436,7 @@ void NimBLEAdvertisedDevice::setRSSI(int rssi) {
 
 /**
  * @brief Set the Scan that created this advertised device.
- * @param pScan The Scan that created this advertised device.
+ * @param [in] pScan The Scan that created this advertised device.
  */
 void NimBLEAdvertisedDevice::setScan(NimBLEScan* pScan) {
     m_pScan = pScan;
@@ -459,7 +460,7 @@ void NimBLEAdvertisedDevice::setServiceUUID(const char* serviceUUID) {
 void NimBLEAdvertisedDevice::setServiceUUID(NimBLEUUID serviceUUID) {
     // Don't add duplicates
     for (int i = 0; i < m_serviceUUIDs.size(); i++) {
-        if (m_serviceUUIDs[i].equals(serviceUUID)) {
+        if (m_serviceUUIDs[i] == serviceUUID) {
             return;
         }
     }
@@ -539,35 +540,68 @@ std::string NimBLEAdvertisedDevice::toString() {
 } // toString
 
 
+/**
+ * @brief Get the payload advertised by the device.
+ * @return The advertisement payload.
+ */
 uint8_t* NimBLEAdvertisedDevice::getPayload() {
     return m_payload;
-}
+} // getPayload
 
 
+/**
+ * @brief Get the advertised device address type.
+ * @return The device address type:
+ * * BLE_ADDR_PUBLIC      (0x00)
+ * * BLE_ADDR_RANDOM      (0x01)
+ * * BLE_ADDR_PUBLIC_ID   (0x02)
+ * * BLE_ADDR_RANDOM_ID   (0x03)
+ */
 uint8_t NimBLEAdvertisedDevice::getAddressType() {
     return m_addressType;
-}
+} // getAddressType
 
 
+/**
+ * @brief Get the timeStamp of when the device last advertised.
+ * @return The timeStamp of when the device was last seen.
+ */
 time_t NimBLEAdvertisedDevice::getTimestamp() {
     return m_timestamp;
-}
+} // getTimestamp
 
 
+/**
+ * @brief Set the advertised device address type.
+ * @param [in] type The address type of the device:
+ * * BLE_ADDR_PUBLIC      (0x00)
+ * * BLE_ADDR_RANDOM      (0x01)
+ * * BLE_ADDR_PUBLIC_ID   (0x02)
+ * * BLE_ADDR_RANDOM_ID   (0x03)
+ */
 void NimBLEAdvertisedDevice::setAddressType(uint8_t type) {
     m_addressType = type;
-}
+} // setAddressType
 
 
+/**
+ * @brief Get the length of the payload advertised by the device.
+ * @return The size of the payload in bytes.
+ */
 size_t NimBLEAdvertisedDevice::getPayloadLength() {
     return m_payloadLength;
-}
+} // getPayloadLength
 
 
+/**
+ * @brief Set the advertisment payload data.
+ * @param [in] payload A pointer to the device payload data.
+ * @param [in] length The length of the payload data in bytes.
+ */
 void NimBLEAdvertisedDevice::setAdvertisementResult(uint8_t* payload, uint8_t length){
     m_payload = payload;
     m_payloadLength = length;
-}
+} // setAdvertisementResult
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

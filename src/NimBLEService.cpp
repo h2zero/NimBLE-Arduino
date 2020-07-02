@@ -238,11 +238,21 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid
 } // createCharacteristic
 
 
+/**
+ * @brief Get a pointer to the characteristic object with the specified UUID.
+ * @param [in] uuid The UUID of the characteristic.
+ * @return A pointer to the characteristic object or nullptr if not found.
+ */
 NimBLECharacteristic* NimBLEService::getCharacteristic(const char* uuid) {
     return getCharacteristic(NimBLEUUID(uuid));
 }
 
 
+/**
+ * @brief Get a pointer to the characteristic object with the specified UUID.
+ * @param [in] uuid The UUID of the characteristic.
+ * @return A pointer to the characteristic object or nullptr if not found.
+ */
 NimBLECharacteristic* NimBLEService::getCharacteristic(const NimBLEUUID &uuid) {
     for (auto &it : m_chrVec) {
         if (it->getUUID() == uuid) {

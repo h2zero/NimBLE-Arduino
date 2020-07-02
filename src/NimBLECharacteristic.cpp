@@ -65,6 +65,7 @@ NimBLECharacteristic::~NimBLECharacteristic() {
  * @brief Create a new BLE Descriptor associated with this characteristic.
  * @param [in] uuid - The UUID of the descriptor.
  * @param [in] properties - The properties of the descriptor.
+ * @param [in] max_len - The max length in bytes of the descriptor value.
  * @return The new BLE descriptor.
  */
 NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint32_t properties, uint16_t max_len) {
@@ -76,6 +77,7 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint3
  * @brief Create a new BLE Descriptor associated with this characteristic.
  * @param [in] uuid - The UUID of the descriptor.
  * @param [in] properties - The properties of the descriptor.
+ * @param [in] max_len - The max length in bytes of the descriptor value.
  * @return The new BLE descriptor.
  */
 NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid, uint32_t properties, uint16_t max_len) {
@@ -106,8 +108,8 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid,
 
 /**
  * @brief Return the BLE Descriptor for the given UUID if associated with this characteristic.
- * @param [in] descriptorUUID The UUID of the descriptor that we wish to retrieve.
- * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
+ * @param [in] uuid The UUID of the descriptor that we wish to retrieve.
+ * @return pointer to the NimBLEDescriptor. If no such descriptor is associated with the characteristic, nullptr is returned.
  */
 NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* uuid) {
     return getDescriptorByUUID(NimBLEUUID(uuid));
@@ -116,8 +118,8 @@ NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* uuid) {
 
 /**
  * @brief Return the BLE Descriptor for the given UUID if associated with this characteristic.
- * @param [in] descriptorUUID The UUID of the descriptor that we wish to retrieve.
- * @return The BLE Descriptor.  If no such descriptor is associated with the characteristic, nullptr is returned.
+ * @param [in] uuid The UUID of the descriptor that we wish to retrieve.
+ * @return pointer to the NimBLEDescriptor. If no such descriptor is associated with the characteristic, nullptr is returned.
  */
 NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID &uuid) {
     for (auto &it : m_dscVec) {
@@ -138,6 +140,10 @@ uint16_t NimBLECharacteristic::getHandle() {
 } // getHandle
 
 
+/**
+ * @brief Get the properties of the characteristic.
+ * @return The properties of the characteristic.
+ */
 uint16_t NimBLECharacteristic::getProperties() {
     return m_properties;
 } // getProperties
@@ -162,7 +168,7 @@ NimBLEUUID NimBLECharacteristic::getUUID() {
 
 /**
  * @brief Retrieve the current value of the characteristic.
- * @return A pointer to storage containing the current characteristic value.
+ * @return A std::string containing the current characteristic value.
  */
 std::string NimBLECharacteristic::getValue(time_t *timestamp) {
     portENTER_CRITICAL(&m_valMux);
@@ -189,6 +195,9 @@ size_t NimBLECharacteristic::getDataLength() {
 }
 
 
+/**
+ * @brief STATIC callback to handle events from the NimBLE stack.
+ */
 int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                              struct ble_gatt_access_ctxt *ctxt,
                              void *arg)
@@ -253,9 +262,8 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
 
 
 /**
- * @brief Set the subscribe status for this characteristic.
- * This will maintain a map of subscribed clients and their indicate/notify status.
- * @return N/A
+ * @brief Set the subscribe status for this characteristic.\n
+ * This will maintain a vector of subscribed clients and their indicate/notify status.
  */
 void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     uint16_t subVal = 0;
@@ -313,10 +321,9 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
 
 
 /**
- * @brief Send an indication.
- * An indication is a transmission of up to the first 20 bytes of the characteristic value.  An indication
- * will block waiting a positive confirmation from the client.
- * @return N/A
+ * @brief Send an indication.\n
+ * An indication is a transmission of up to the first 20 bytes of the characteristic value.\n
+ * An indication will block waiting for a positive confirmation from the client.
  */
 void NimBLECharacteristic::indicate() {
     NIMBLE_LOGD(LOG_TAG, ">> indicate: length: %d", getDataLength());
@@ -325,10 +332,10 @@ void NimBLECharacteristic::indicate() {
 } // indicate
 
 /**
- * @brief Send a notify.
- * A notification is a transmission of up to the first 20 bytes of the characteristic value.  An notification
- * will not block; it is a fire and forget.
- * @return N/A.
+ * @brief Send a notification.\n
+ * A notification is a transmission of up to the first 20 bytes of the characteristic value.\n
+ * A notification will not block; it is a fire and forget.
+ * @param[in] is_notification if true sends a notification, false sends an indication.
  */
 void NimBLECharacteristic::notify(bool is_notification) {
     NIMBLE_LOGD(LOG_TAG, ">> notify: length: %d", getDataLength());
@@ -435,7 +442,8 @@ void NimBLECharacteristic::notify(bool is_notification) {
 
 /**
  * @brief Set the callback handlers for this characteristic.
- * @param [in] pCallbacks An instance of a callbacks structure used to define any callbacks for the characteristic.
+ * @param [in] pCallbacks An instance of a NimBLECharacteristicCallbacks class\n
+ * used to define any callbacks for the characteristic.
  */
 void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallbacks) {
     if (pCallbacks != nullptr){
@@ -473,11 +481,9 @@ void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
 
 
 /**
- * @brief Set the value of the characteristic from string data.
- * We set the value of the characteristic from the bytes contained in the
- * string.
- * @param [in] Set the value of the characteristic.
- * @return N/A.
+ * @brief Set the value of the characteristic from string data.\n
+ * We set the value of the characteristic from the bytes contained in the string.
+ * @param [in] value the std::string value of the characteristic.
  */
 void NimBLECharacteristic::setValue(const std::string &value) {
     setValue((uint8_t*)(value.data()), value.length());
@@ -537,8 +543,8 @@ void NimBLECharacteristicCallbacks::onNotify(NimBLECharacteristic* pCharacterist
 /**
  * @brief Callback function to support a Notify/Indicate Status report.
  * @param [in] pCharacteristic The characteristic that is the source of the event.
- * @param [in] s Status of the notification/indication
- * @param [in] code Additional code of underlying errors
+ * @param [in] s Status of the notification/indication.
+ * @param [in] code Additional return code from the NimBLE stack.
  */
 void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onStatus: default");

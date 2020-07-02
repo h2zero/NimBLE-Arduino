@@ -33,9 +33,9 @@ class NimBLEAdvertisedDeviceCallbacks;
 class NimBLEAddress;
 
 /**
- * @brief The result of having performed a scan.
- * When a scan completes, we have a set of found devices.  Each device is described
- * by a BLEAdvertisedDevice object.  The number of items in the set is given by
+ * @brief A class that contains and operates on the results of a BLE scan.
+ * @details When a scan completes, we have a set of found devices.  Each device is described
+ * by a NimBLEAdvertisedDevice object.  The number of items in the set is given by
  * getCount().  We can retrieve a device by calling getDevice() passing in the
  * index (starting at 0) of the desired device.
  */

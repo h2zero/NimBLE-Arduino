@@ -35,6 +35,10 @@ void print_addr(const void *addr);
 void print_bytes(const uint8_t *bytes, int len);
 }
 
+
+/**
+ * @brief A BLE Utility class with methods for debugging and general purpose use.
+ */
 class NimBLEUtils {
 public:
     static void                 dumpGapEvent(ble_gap_event *event, void *arg);

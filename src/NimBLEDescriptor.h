@@ -52,6 +52,10 @@ public:
     void         setValue(const std::string &value);
     std::string  toString();
 
+    /**
+     * @brief Convenience template to set the descriptor value to \<type\>val.
+     * @param [in] s The value to set.
+     */
     template<typename T>
     void setValue(const T &s) {
         setValue((uint8_t*)&s, sizeof(T));

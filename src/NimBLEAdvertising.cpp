@@ -31,7 +31,6 @@ static const char* LOG_TAG = "NimBLEAdvertising";
 
 /**
  * @brief Construct a default advertising object.
- *
  */
 NimBLEAdvertising::NimBLEAdvertising() {
     memset(&m_advData, 0, sizeof m_advData);
@@ -78,43 +77,70 @@ void NimBLEAdvertising::addServiceUUID(const char* serviceUUID) {
 
 /**
  * @brief Set the device appearance in the advertising data.
- * The appearance attribute is of type 0x19.  The codes for distinct appearances can be found here:
+ * The codes for distinct appearances can be found here:\n
  * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.gap.appearance.xml.
  * @param [in] appearance The appearance of the device in the advertising data.
- * @return N/A.
  */
 void NimBLEAdvertising::setAppearance(uint16_t appearance) {
     m_advData.appearance = appearance;
     m_advData.appearance_is_present = 1;
 } // setAppearance
 
+
+/**
+ * @brief Set the type of advertisment to use.
+ * @param [in] adv_type:
+ * * BLE_HCI_ADV_TYPE_ADV_IND            (0) - indirect advertising
+ * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_HD  (1) - direct advertisng - high duty cycle
+ * * BLE_HCI_ADV_TYPE_ADV_SCAN_IND       (2) - indirect scan response
+ * * BLE_HCI_ADV_TYPE_ADV_NONCONN_IND    (3) - indirect advertisng - not connectable
+ * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_LD  (4) - direct advertising - low duty cycle
+ */
 void NimBLEAdvertising::setAdvertisementType(uint8_t adv_type){
     m_advParams.conn_mode = adv_type;
 } // setAdvertisementType
 
+
+/**
+ * @brief Set the minimum advertising interval.
+ * @param [in] mininterval Minimum value for advertising interval in 0.625ms units, 0 = use default.
+ */
 void NimBLEAdvertising::setMinInterval(uint16_t mininterval) {
     m_advParams.itvl_min = mininterval;
 } // setMinInterval
 
+
+/**
+ * @brief Set the maximum advertising interval.
+ * @param [in] maxinterval Maximum value for advertising interval in 0.625ms units, 0 = use default.
+ */
 void NimBLEAdvertising::setMaxInterval(uint16_t maxinterval) {
     m_advParams.itvl_max = maxinterval;
 } // setMaxInterval
 
 
-/* These are dummy functions for now for compatibility */
+/**
+ * @brief NOP - Not yet implemented, dummy function for backward compatibility.
+ */
 void NimBLEAdvertising::setMinPreferred(uint16_t mininterval) {
-    //m_advData.min_interval = mininterval;
-} //
+} // setMinPreferred
 
+
+/**
+ * @brief NOP - Not yet implemented, dummy function for backward compatibility.
+ */
 void NimBLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
-    //m_advData.max_interval = maxinterval;
-} //
-/*******************************************************/
+} // setMaxPreferred
 
 
+/**
+ * @brief Set if scan response is available.
+ * @param [in] set true = scan response available.
+ */
 void NimBLEAdvertising::setScanResponse(bool set) {
     m_scanResp = set;
-}
+} // setScanResponse
+
 
 /**
  * @brief Set the filtering for the scan filter.
@@ -144,6 +170,7 @@ void NimBLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connec
         return;
     }
 } // setScanFilter
+
 
 /**
  * @brief Set the advertisement data that is to be published in a regular advertisement.
@@ -182,8 +209,6 @@ void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertiseme
 
 /**
  * @brief Start advertising.
- * Start advertising.
- * @return N/A.
  */
 void NimBLEAdvertising::start() {
     NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
@@ -375,8 +400,6 @@ void NimBLEAdvertising::start() {
 
 /**
  * @brief Stop advertising.
- * Stop advertising.
- * @return N/A.
  */
 void NimBLEAdvertising::stop() {
     NIMBLE_LOGD(LOG_TAG, ">> stop");
@@ -390,7 +413,7 @@ void NimBLEAdvertising::stop() {
 } // stop
 
 
-/**
+/*
  * Host reset seems to clear advertising data,
  * we need clear the flag so it reloads it.
  */
@@ -427,8 +450,8 @@ void NimBLEAdvertisementData::setAppearance(uint16_t appearance) {
 
 
 /**
- * @brief Set the complete services.
- * @param [in] uuid The single service to advertise.
+ * @brief Set the complete services to advertise.
+ * @param [in] uuid The UUID of the service.
  */
 void NimBLEAdvertisementData::setCompleteServices(const NimBLEUUID &uuid) {
     char cdata[2];
@@ -465,16 +488,7 @@ void NimBLEAdvertisementData::setCompleteServices(const NimBLEUUID &uuid) {
 
 /**
  * @brief Set the advertisement flags.
- * @param [in] The flags to be set in the advertisement.
- * * ****DO NOT USE THESE****
- * * ESP_BLE_ADV_FLAG_LIMIT_DISC
- * * ESP_BLE_ADV_FLAG_GEN_DISC
- * * ESP_BLE_ADV_FLAG_BREDR_NOT_SPT
- * * ESP_BLE_ADV_FLAG_DMT_CONTROLLER_SPT
- * * ESP_BLE_ADV_FLAG_DMT_HOST_SPT
- * * ESP_BLE_ADV_FLAG_NON_LIMIT_DISC
- * *
- * * ****THESE ARE SUPPORTED****
+ * @param [in] flag The flags to be set in the advertisement.
  * * BLE_HS_ADV_F_DISC_LTD
  * * BLE_HS_ADV_F_DISC_GEN
  * * BLE_HS_ADV_F_BREDR_UNSUP - must always use with NimBLE
@@ -490,7 +504,7 @@ void NimBLEAdvertisementData::setFlags(uint8_t flag) {
 
 /**
  * @brief Set manufacturer specific data.
- * @param [in] data Manufacturer data.
+ * @param [in] data The manufacturer data to advertise.
  */
 void NimBLEAdvertisementData::setManufacturerData(const std::string &data) {
     NIMBLE_LOGD("NimBLEAdvertisementData", ">> setManufacturerData");
@@ -503,8 +517,8 @@ void NimBLEAdvertisementData::setManufacturerData(const std::string &data) {
 
 
 /**
- * @brief Set the name.
- * @param [in] The complete name of the device.
+ * @brief Set the complete name of this device.
+ * @param [in] name The name to advertise.
  */
 void NimBLEAdvertisementData::setName(const std::string &name) {
     NIMBLE_LOGD("NimBLEAdvertisementData", ">> setName: %s", name.c_str());
@@ -517,7 +531,7 @@ void NimBLEAdvertisementData::setName(const std::string &name) {
 
 
 /**
- * @brief Set the partial services.
+ * @brief Set the partial services to advertise.
  * @param [in] uuid The single service to advertise.
  */
 void NimBLEAdvertisementData::setPartialServices(const NimBLEUUID &uuid) {
@@ -555,8 +569,8 @@ void NimBLEAdvertisementData::setPartialServices(const NimBLEUUID &uuid) {
 
 /**
  * @brief Set the service data (UUID + data)
- * @param [in] uuid The UUID to set with the service data.  Size of UUID will be used.
- * @param [in] data The data to be associated with the service data advert.
+ * @param [in] uuid The UUID to set with the service data.
+ * @param [in] data The data to be associated with the service data advertised.
  */
 void NimBLEAdvertisementData::setServiceData(const NimBLEUUID &uuid, const std::string &data) {
     char cdata[2];
@@ -593,7 +607,7 @@ void NimBLEAdvertisementData::setServiceData(const NimBLEUUID &uuid, const std::
 
 /**
  * @brief Set the short name.
- * @param [in] The short name of the device.
+ * @param [in] name The short name of the device.
  */
 void NimBLEAdvertisementData::setShortName(const std::string &name) {
     NIMBLE_LOGD("NimBLEAdvertisementData", ">> setShortName: %s", name.c_str());
