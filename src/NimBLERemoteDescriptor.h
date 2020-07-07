@@ -34,11 +34,11 @@ public:
     std::string                 readValue();
 
     /**
-     * @brief A template to convert the remote descriptor data to \<type\>.
+     * @brief A template to convert the remote descriptor data to <type\>.
      * @tparam T The type to convert the data to.
-     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(\<type\>)</tt>.
-     * @return The data converted to \<type\> or NULL if skipSizeCheck is false and the data is
-     * less than <tt>sizeof(\<type\>)</tt>.
+     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+     * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+     * less than <tt>sizeof(<type\>)</tt>.
      * @details <b>Use:</b> <tt>readValue<type>(skipSizeCheck);</tt>
      */
     template<typename T>
@@ -57,7 +57,7 @@ public:
     bool                        writeValue(const std::string &newValue, bool response = false);
     
     /**
-     * @brief Convenience template to set the remote descriptor value to \<type\>val.
+     * @brief Convenience template to set the remote descriptor value to <type\>val.
      * @param [in] s The value to write.
      * @param [in] response True == request write response.
      */

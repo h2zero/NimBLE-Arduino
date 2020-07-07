@@ -47,11 +47,11 @@ public:
     std::string     getManufacturerData();
 
 /**
- * @brief A template to convert the service data to \<type\>.
+ * @brief A template to convert the service data to <type\>.
  * @tparam T The type to convert the data to.
- * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(\<type\>)</tt>.
- * @return The data converted to \<type\> or NULL if skipSizeCheck is false and the data is
- * less than <tt>sizeof(\<type\>)</tt>.
+ * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+ * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+ * less than <tt>sizeof(<type\>)</tt>.
  * @details <b>Use:</b> <tt>getManufacturerData<type>(skipSizeCheck);</tt>
  */
     template<typename T>
@@ -68,11 +68,11 @@ public:
     std::string     getServiceData();
 
 /**
- * @brief A template to convert the service data to <tt>\<type\></tt>.
+ * @brief A template to convert the service data to <tt><type\></tt>.
  * @tparam T The type to convert the data to.
- * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(\<type\>)</tt>.
- * @return The data converted to \<type\> or NULL if skipSizeCheck is false and the data is
- * less than <tt>sizeof(\<type\>)</tt>.
+ * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+ * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+ * less than <tt>sizeof(<type\>)</tt>.
  * @details <b>Use:</b> <tt>getServiceData<type>(skipSizeCheck);</tt>
  */
     template<typename T>

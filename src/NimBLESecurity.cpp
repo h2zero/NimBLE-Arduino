@@ -28,14 +28,14 @@ NimBLESecurity::~NimBLESecurity() {
 /**
  * @brief Set requested authentication mode
  * @param [in] auth_req A bitmask containing one or more of:
- * *ESP_LE_AUTH_NO_BOND              0x00
- * *ESP_LE_AUTH_BOND                 0x01
- * *ESP_LE_AUTH_REQ_MITM             (1 << 2)
- * *ESP_LE_AUTH_REQ_BOND_MITM        (ESP_LE_AUTH_BOND | ESP_LE_AUTH_REQ_MITM)
- * *ESP_LE_AUTH_REQ_SC_ONLY          (1 << 3)
- * *ESP_LE_AUTH_REQ_SC_BOND          (ESP_LE_AUTH_BOND | ESP_LE_AUTH_REQ_SC_ONLY)
- * *ESP_LE_AUTH_REQ_SC_MITM          (ESP_LE_AUTH_REQ_MITM | ESP_LE_AUTH_REQ_SC_ONLY)
- * *ESP_LE_AUTH_REQ_SC_MITM_BOND     (ESP_LE_AUTH_REQ_MITM | ESP_LE_AUTH_REQ_SC_ONLY | ESP_LE_AUTH_BOND)
+ * * ESP_LE_AUTH_NO_BOND              0x00
+ * * ESP_LE_AUTH_BOND                 0x01
+ * * ESP_LE_AUTH_REQ_MITM             (1 << 2)
+ * * ESP_LE_AUTH_REQ_BOND_MITM        (ESP_LE_AUTH_BOND | ESP_LE_AUTH_REQ_MITM)
+ * * ESP_LE_AUTH_REQ_SC_ONLY          (1 << 3)
+ * * ESP_LE_AUTH_REQ_SC_BOND          (ESP_LE_AUTH_BOND | ESP_LE_AUTH_REQ_SC_ONLY)
+ * * ESP_LE_AUTH_REQ_SC_MITM          (ESP_LE_AUTH_REQ_MITM | ESP_LE_AUTH_REQ_SC_ONLY)
+ * * ESP_LE_AUTH_REQ_SC_MITM_BOND     (ESP_LE_AUTH_REQ_MITM | ESP_LE_AUTH_REQ_SC_ONLY | ESP_LE_AUTH_BOND)
  */
 void NimBLESecurity::setAuthenticationMode(esp_ble_auth_req_t auth_req) {
     NimBLEDevice::setSecurityAuth((auth_req & BLE_SM_PAIR_AUTHREQ_BOND)>0,
@@ -49,11 +49,11 @@ void NimBLESecurity::setAuthenticationMode(esp_ble_auth_req_t auth_req) {
  * either by displaying or entering generated 6-digit pin code or use \"just works\".
  * @param [in] iocap  The IO capabilites our device has.\n
  * Can be set to one of:
- * *ESP_IO_CAP_OUT                      0
- * *ESP_IO_CAP_IO                       1
- * *ESP_IO_CAP_IN                       2
- * *ESP_IO_CAP_NONE                     3
- * *ESP_IO_CAP_KBDISP                   4
+ * * ESP_IO_CAP_OUT                      0
+ * * ESP_IO_CAP_IO                       1
+ * * ESP_IO_CAP_IN                       2
+ * * ESP_IO_CAP_NONE                     3
+ * * ESP_IO_CAP_KBDISP                   4
  */
 void NimBLESecurity::setCapability(esp_ble_io_cap_t iocap) {
     NimBLEDevice::setSecurityIOCap(iocap);
@@ -64,10 +64,10 @@ void NimBLESecurity::setCapability(esp_ble_io_cap_t iocap) {
  * @brief Sets the keys we will distibute during encryption.
  * @param [in] init_key A bitmask of the keys we will distibute.\n
  * Can be one or more of:
- * *ESP_BLE_ENC_KEY_MASK    (1 << 0)
- * *ESP_BLE_ID_KEY_MASK     (1 << 1)
- * *ESP_BLE_CSR_KEY_MASK    (1 << 2)
- * *ESP_BLE_LINK_KEY_MASK   (1 << 3)
+ * * ESP_BLE_ENC_KEY_MASK    (1 << 0)
+ * * ESP_BLE_ID_KEY_MASK     (1 << 1)
+ * * ESP_BLE_CSR_KEY_MASK    (1 << 2)
+ * * ESP_BLE_LINK_KEY_MASK   (1 << 3)
  */
 void NimBLESecurity::setInitEncryptionKey(uint8_t init_key) {
     NimBLEDevice::setSecurityInitKey(init_key);
@@ -78,10 +78,10 @@ void NimBLESecurity::setInitEncryptionKey(uint8_t init_key) {
  * @brief Sets the keys we will accept during encryption.
  * @param [in] resp_key A bitmask of the keys we will accept.\n
  * Can be one or more of:
- * *ESP_BLE_ENC_KEY_MASK    (1 << 0)
- * *ESP_BLE_ID_KEY_MASK     (1 << 1)
- * *ESP_BLE_CSR_KEY_MASK    (1 << 2)
- * *ESP_BLE_LINK_KEY_MASK   (1 << 3)
+ * * ESP_BLE_ENC_KEY_MASK    (1 << 0)
+ * * ESP_BLE_ID_KEY_MASK     (1 << 1)
+ * * ESP_BLE_CSR_KEY_MASK    (1 << 2)
+ * * ESP_BLE_LINK_KEY_MASK   (1 << 3)
  */
 void NimBLESecurity::setRespEncryptionKey(uint8_t resp_key) {
     NimBLEDevice::setSecurityRespKey(resp_key);

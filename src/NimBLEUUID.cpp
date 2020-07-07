@@ -182,7 +182,7 @@ bool NimBLEUUID::equals(const NimBLEUUID &uuid) const {
  * 0x<UUID>
  * NNNN
  * NNNNNNNN
- * \<UUID\>
+ * <UUID\>
  *
  * @param [in] uuid The string to create the UUID from.
  */

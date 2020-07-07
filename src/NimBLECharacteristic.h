@@ -76,12 +76,12 @@ public:
     std::string       getValue(time_t *timestamp = nullptr);
 
     /**
-     * @brief A template to convert the characteristic data to \<type\>.
+     * @brief A template to convert the characteristic data to <type\>.
      * @tparam T The type to convert the data to.
      * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
-     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(\<type\>)</tt>.
-     * @return The data converted to \<type\> or NULL if skipSizeCheck is false and the data is
-     * less than <tt>sizeof(\<type\>)</tt>.
+     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+     * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+     * less than <tt>sizeof(<type\>)</tt>.
      * @details <b>Use:</b> <tt>getValue<type>(&timestamp, skipSizeCheck);</tt>
      */
     template<typename T>
@@ -100,7 +100,7 @@ public:
     void              setValue(const std::string &value);
 
     /**
-     * @brief Convenience template to set the characteristic value to \<type\>val.
+     * @brief Convenience template to set the characteristic value to <type\>val.
      * @param [in] s The value to set.
      */
     template<typename T>

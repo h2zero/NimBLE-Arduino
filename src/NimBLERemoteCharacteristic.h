@@ -64,12 +64,12 @@ public:
     std::string                                    readValue(time_t *timestamp = nullptr);
 
     /**
-     * @brief A template to convert the remote characteristic data to \<type\>.
+     * @brief A template to convert the remote characteristic data to <type\>.
      * @tparam T The type to convert the data to.
      * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
-     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(\<type\>)</tt>.
-     * @return The data converted to \<type\> or NULL if skipSizeCheck is false and the data is
-     * less than <tt>sizeof(\<type\>)</tt>.
+     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+     * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+     * less than <tt>sizeof(<type\>)</tt>.
      * @details <b>Use:</b> <tt>readValue<type>(&timestamp, skipSizeCheck);</tt>
      */
     template<typename T>
@@ -87,12 +87,12 @@ public:
     std::string                                    getValue(time_t *timestamp = nullptr);
 
     /**
-     * @brief A template to convert the remote characteristic data to \<type\>.
+     * @brief A template to convert the remote characteristic data to <type\>.
      * @tparam T The type to convert the data to.
      * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
-     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(\<type\>)</tt>.
-     * @return The data converted to \<type\> or NULL if skipSizeCheck is false and the data is
-     * less than <tt>sizeof(\<type\>)</tt>.
+     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+     * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+     * less than <tt>sizeof(<type\>)</tt>.
      * @details <b>Use:</b> <tt>getValue<type>(&timestamp, skipSizeCheck);</tt>
      */
     template<typename T>
@@ -117,7 +117,7 @@ public:
     bool                                           writeValue(const std::string &newValue,
                                                               bool response = false);
     /**
-     * @brief Convenience template to set the remote characteristic value to \<type\>val.
+     * @brief Convenience template to set the remote characteristic value to <type\>val.
      * @param [in] s The value to write.
      * @param [in] response True == request write response.
      */

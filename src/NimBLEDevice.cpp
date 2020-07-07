@@ -625,15 +625,15 @@ bool NimBLEDevice::getInitialized() {
 
 /**
  * @brief Set the keys we are willing to accept during pairing.
- * @param init_key A bitmap indicating which keys to accept during pairing.
+ * @param resp_key A bitmap indicating which keys to accept during pairing.
  * The available bits are defined as:
  * * 0x01: BLE_SM_PAIR_KEY_DIST_ENC  -  Accept the encryption key.
  * * 0x02: BLE_SM_PAIR_KEY_DIST_ID   -  Accept the ID key (IRK).
  * * 0x04: BLE_SM_PAIR_KEY_DIST_SIGN
  * * 0x08: BLE_SM_PAIR_KEY_DIST_LINK
  */
-/*STATIC*/void NimBLEDevice::setSecurityRespKey(uint8_t init_key) {
-    ble_hs_cfg.sm_their_key_dist = init_key;
+/*STATIC*/void NimBLEDevice::setSecurityRespKey(uint8_t resp_key) {
+    ble_hs_cfg.sm_their_key_dist = resp_key;
 } // setsSecurityRespKey
 
 

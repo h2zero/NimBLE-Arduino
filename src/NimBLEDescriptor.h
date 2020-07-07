@@ -53,7 +53,7 @@ public:
     std::string  toString();
 
     /**
-     * @brief Convenience template to set the descriptor value to \<type\>val.
+     * @brief Convenience template to set the descriptor value to <type\>val.
      * @param [in] s The value to set.
      */
     template<typename T>
