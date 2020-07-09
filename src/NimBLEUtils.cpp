@@ -16,6 +16,11 @@
 static const char* LOG_TAG = "NimBLEUtils";
 
 
+/**
+ * @brief A function for checking validity of connection parameters.
+ * @param [in] params A pointer to the structure containing the parameters to check.
+ * @return valid == 0 or error code.
+ */
 int NimBLEUtils::checkConnParams(ble_gap_conn_params* params) {
     /* Check connection interval min */
     if ((params->itvl_min < BLE_HCI_CONN_ITVL_MIN) ||
@@ -49,6 +54,11 @@ int NimBLEUtils::checkConnParams(ble_gap_conn_params* params) {
 }
 
 
+/**
+ * @brief Converts a return code from the NimBLE stack to a text string.
+ * @param [in] rc The return code to convert.
+ * @return A string representation of the return code.
+ */
 const char* NimBLEUtils::returnCodeToString(int rc) {
 #if defined(CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT)
     switch(rc) {
@@ -338,9 +348,9 @@ const char* NimBLEUtils::returnCodeToString(int rc) {
 
 
 /**
- * @brief Convert the BLE Advertising Data flags to a string.
- * @param adFlags The flags to convert
- * @return std::string A string representation of the advertising flags.
+ * @brief Convert the advertising type flag to a string.
+ * @param advType The type to convert.
+ * @return A string representation of the advertising flags.
  */
 const char* NimBLEUtils::advTypeToString(uint8_t advType) {
 #if defined(CONFIG_NIMBLE_CPP_ENABLE_ADVERTISMENT_TYPE_TEXT)
@@ -367,7 +377,7 @@ const char* NimBLEUtils::advTypeToString(uint8_t advType) {
 /**
  * @brief Create a hex representation of data.
  *
- * @param [in] target Where to write the hex string.  If this is null, we malloc storage.
+ * @param [in] target Where to write the hex string. If this is null, we malloc storage.
  * @param [in] source The start of the binary data.
  * @param [in] length The length of the data to convert.
  * @return A pointer to the formatted buffer.
@@ -400,6 +410,11 @@ char* NimBLEUtils::buildHexData(uint8_t* target, const uint8_t* source, uint8_t 
 } // buildHexData
 
 
+/**
+ * @brief Utility function to log the gap event info.
+ * @param [in] event A pointer to the gap event structure.
+ * @param [in] arg Unused.
+ */
 void NimBLEUtils::dumpGapEvent(ble_gap_event *event, void *arg){
 #if defined(CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
     NIMBLE_LOGD(LOG_TAG, "Received a GAP event: %s", gapEventToString(event->type));
@@ -408,7 +423,7 @@ void NimBLEUtils::dumpGapEvent(ble_gap_event *event, void *arg){
 
 
 /**
- * @brief Convert a BT GAP event type to a string representation.
+ * @brief Convert a GAP event type to a string representation.
  * @param [in] eventType The type of event.
  * @return A string representation of the event type.
  */
@@ -495,22 +510,29 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
 
 
 /**
- * Utility function to log an array of bytes.
+ * @brief Utility function to log an array of bytes.
+ * @param [in] bytes The buffer to print.
+ * @param [in] len The length of the buffer.
  */
 void print_bytes(const uint8_t *bytes, int len)
 {
     int i;
 
     for (i = 0; i < len; i++) {
-        MODLOG_DFLT(ERROR, "%s0x%02x", i != 0 ? ":" : "", bytes[i]);
+        NIMBLE_LOGD(LOG_TAG, "%s0x%02x", i != 0 ? ":" : "", bytes[i]);
         if(i % 30 == 0){
-            MODLOG_DFLT(ERROR, "\n");
+            NIMBLE_LOGD(LOG_TAG, "\n");
         }
     }
 
-    MODLOG_DFLT(ERROR, "\n");
+    NIMBLE_LOGD(LOG_TAG, "\n");
 }
 
+
+/**
+ * @brief Utility function to log an os_mbuf.
+ * @param [in] om The buffer to print.
+ */
 void print_mbuf(const struct os_mbuf *om)
 {
     int colon;
@@ -655,20 +677,21 @@ void print_adv_fields(const struct ble_hs_adv_fields *fields)
 
 
  /**
- * Logs information about a connection to the console.
- */
+  * @brief Logs information about a connection to the console.
+  * @param [in] desc The connection description struct to print.
+  */
 void print_conn_desc(const struct ble_gap_conn_desc *desc)
 {
-    MODLOG_DFLT(DEBUG, "handle=%d our_ota_addr_type=%d our_ota_addr=%s ",
+    NIMBLE_LOGD(LOG_TAG, "handle=%d our_ota_addr_type=%d our_ota_addr=%s ",
                 desc->conn_handle, desc->our_ota_addr.type,
                 addr_str(desc->our_ota_addr.val));
-    MODLOG_DFLT(DEBUG, "our_id_addr_type=%d our_id_addr=%s ",
+    NIMBLE_LOGD(LOG_TAG, "our_id_addr_type=%d our_id_addr=%s ",
                 desc->our_id_addr.type, addr_str(desc->our_id_addr.val));
-    MODLOG_DFLT(DEBUG, "peer_ota_addr_type=%d peer_ota_addr=%s ",
+    NIMBLE_LOGD(LOG_TAG, "peer_ota_addr_type=%d peer_ota_addr=%s ",
                 desc->peer_ota_addr.type, addr_str(desc->peer_ota_addr.val));
-    MODLOG_DFLT(DEBUG, "peer_id_addr_type=%d peer_id_addr=%s ",
+    NIMBLE_LOGD(LOG_TAG, "peer_id_addr_type=%d peer_id_addr=%s ",
                 desc->peer_id_addr.type, addr_str(desc->peer_id_addr.val));
-    MODLOG_DFLT(DEBUG, "conn_itvl=%d conn_latency=%d supervision_timeout=%d "
+    NIMBLE_LOGD(LOG_TAG, "conn_itvl=%d conn_latency=%d supervision_timeout=%d "
                 "encrypted=%d authenticated=%d bonded=%d",
                 desc->conn_itvl, desc->conn_latency,
                 desc->supervision_timeout,

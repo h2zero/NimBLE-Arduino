@@ -168,8 +168,8 @@ void NimBLEServer::start() {
 
 /**
  * @brief Disconnect the specified client with optional reason.
- * @param [in] Connection Id of the client to disconnect.
- * @param [in] Reason code for disconnecting.
+ * @param [in] connId Connection Id of the client to disconnect.
+ * @param [in] reason code for disconnecting.
  * @return NimBLE host return code.
  */
 int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
@@ -188,7 +188,7 @@ int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
 
 /**
  * @brief Set the server to automatically start advertising when a client disconnects.
- * @param [in] bool true == advertise, false == don't advertise.
+ * @param [in] aod true == advertise, false == don't advertise.
  */
 void NimBLEServer::advertiseOnDisconnect(bool aod) {
     m_advertiseOnDisconnect = aod;
@@ -516,7 +516,7 @@ uint32_t NimBLEServerCallbacks::onPassKeyRequest(){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyRequest: default: 123456");
     return 123456;
 }
-
+/*
 void NimBLEServerCallbacks::onPassKeyNotify(uint32_t pass_key){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyNotify: default: %d", pass_key);
 }
@@ -525,6 +525,7 @@ bool NimBLEServerCallbacks::onSecurityRequest(){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onSecurityRequest: default: true");
     return true;
 }
+*/
 void NimBLEServerCallbacks::onAuthenticationComplete(ble_gap_conn_desc*){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onAuthenticationComplete: default");
 }

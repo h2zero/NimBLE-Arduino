@@ -107,13 +107,48 @@ private:
 class NimBLEClientCallbacks {
 public:
     virtual ~NimBLEClientCallbacks() {};
+
+    /**
+     * @brief Called after client connects.
+     * @param [in] pClient A pointer to the calling client object.
+     */
     virtual void onConnect(NimBLEClient* pClient);
+
+    /**
+     * @brief Called when disconnected from the server.
+     * @param [in] pClient A pointer to the calling client object.
+     */
     virtual void onDisconnect(NimBLEClient* pClient);
+
+    /**
+     * @brief Called when server requests to update the connection parameters.
+     * @param [in] pClient A pointer to the calling client object.
+     * @param [in] params A pointer to the struct containing the connection parameters requested.
+     * @return True to accept the parmeters.
+     */
     virtual bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params);
+
+    /**
+     * @brief Called when server requests a passkey for pairing.
+     * @return The passkey to be sent to the server.
+     */
     virtual uint32_t onPassKeyRequest();
-    virtual void onPassKeyNotify(uint32_t pass_key);
-    virtual bool onSecurityRequest();
+
+    /*virtual void onPassKeyNotify(uint32_t pass_key);
+    virtual bool onSecurityRequest();*/
+
+    /**
+     * @brief Called when the pairing procedure is complete.
+     * @param [in] desc A pointer to the struct containing the connection information.\n
+     * This can be used to check the status of the connection encryption/pairing.
+     */
     virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);
+
+    /**
+     * @brief Called when using numeric comparision for pairing.
+     * @param [in] pin The pin to compare with the server.
+     * @return True to accept the pin.
+     */
     virtual bool onConfirmPIN(uint32_t pin);
 };
 

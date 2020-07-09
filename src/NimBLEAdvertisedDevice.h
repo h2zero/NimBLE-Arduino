@@ -46,6 +46,14 @@ public:
     uint16_t        getAppearance();
     std::string     getManufacturerData();
 
+/**
+ * @brief A template to convert the service data to <type\>.
+ * @tparam T The type to convert the data to.
+ * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+ * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+ * less than <tt>sizeof(<type\>)</tt>.
+ * @details <b>Use:</b> <tt>getManufacturerData<type>(skipSizeCheck);</tt>
+ */
     template<typename T>
     T               getManufacturerData(bool skipSizeCheck = false) {
         std::string data = getManufacturerData();
@@ -59,6 +67,14 @@ public:
     NimBLEScan*     getScan();
     std::string     getServiceData();
 
+/**
+ * @brief A template to convert the service data to <tt><type\></tt>.
+ * @tparam T The type to convert the data to.
+ * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+ * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+ * less than <tt>sizeof(<type\>)</tt>.
+ * @details <b>Use:</b> <tt>getServiceData<type>(skipSizeCheck);</tt>
+ */
     template<typename T>
     T               getServiceData(bool skipSizeCheck = false) {
         std::string data = getServiceData();
@@ -123,7 +139,6 @@ private:
     std::string     m_name;
     NimBLEScan*     m_pScan;
     int             m_rssi;
-    std::vector<NimBLEUUID> m_serviceUUIDs;
     int8_t          m_txPower;
     std::string     m_serviceData;
     NimBLEUUID      m_serviceDataUUID;
@@ -132,6 +147,8 @@ private:
     uint8_t         m_addressType;
     time_t          m_timestamp;
     bool            m_callbackSent;
+
+    std::vector<NimBLEUUID> m_serviceUUIDs;
 };
 
 /**

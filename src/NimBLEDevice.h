@@ -81,13 +81,13 @@
 #define NIMBLE_MAX_CONNECTIONS          CONFIG_NIMBLE_MAX_CONNECTIONS
 #endif
 
-/**
- * @brief BLE functions.
- */
- typedef int (*gap_event_handler)(ble_gap_event *event, void *arg);
+typedef int (*gap_event_handler)(ble_gap_event *event, void *arg);
 
 extern "C" void ble_store_config_init(void);
 
+/**
+ * @brief A model of a %BLE Device from which all the BLE roles are created.
+ */
 class NimBLEDevice {
 public:
     static void             init(const std::string &deviceName);
@@ -181,8 +181,6 @@ private:
     static NimBLESecurityCallbacks*   m_securityCallbacks;
     static uint32_t                   m_passkey;
     static ble_gap_event_listener     m_listener;
-
-public:
     static gap_event_handler          m_customGapHandler;
 };
 

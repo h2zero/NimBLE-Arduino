@@ -75,6 +75,15 @@ public:
     NimBLEUUID        getUUID();
     std::string       getValue(time_t *timestamp = nullptr);
 
+    /**
+     * @brief A template to convert the characteristic data to <type\>.
+     * @tparam T The type to convert the data to.
+     * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
+     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+     * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+     * less than <tt>sizeof(<type\>)</tt>.
+     * @details <b>Use:</b> <tt>getValue<type>(&timestamp, skipSizeCheck);</tt>
+     */
     template<typename T>
     T                 getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
         std::string value = getValue();
@@ -90,6 +99,10 @@ public:
     void              setValue(const uint8_t* data, size_t size);
     void              setValue(const std::string &value);
 
+    /**
+     * @brief Convenience template to set the characteristic value to <type\>val.
+     * @param [in] s The value to set.
+     */
     template<typename T>
     void setValue(const T &s) {
         setValue((uint8_t*)&s, sizeof(T));
@@ -144,6 +157,12 @@ private:
  */
 class NimBLECharacteristicCallbacks {
 public:
+
+/**
+ * @brief An enum to provide the callback the status of the
+ * notification/indication, implemented for backward compatibility.
+ * @deprecated To be removed in the future as the NimBLE stack return code is also provided.
+ */
     typedef enum {
         SUCCESS_INDICATE,
         SUCCESS_NOTIFY,

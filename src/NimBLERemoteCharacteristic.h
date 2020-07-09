@@ -63,6 +63,15 @@ public:
     NimBLEUUID                                     getUUID();
     std::string                                    readValue(time_t *timestamp = nullptr);
 
+    /**
+     * @brief A template to convert the remote characteristic data to <type\>.
+     * @tparam T The type to convert the data to.
+     * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
+     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+     * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+     * less than <tt>sizeof(<type\>)</tt>.
+     * @details <b>Use:</b> <tt>readValue<type>(&timestamp, skipSizeCheck);</tt>
+     */
     template<typename T>
     T                                              readValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
         std::string value = readValue(timestamp);
@@ -77,6 +86,15 @@ public:
     float                                          readFloat()  __attribute__ ((deprecated("Use template readValue<float>()")));
     std::string                                    getValue(time_t *timestamp = nullptr);
 
+    /**
+     * @brief A template to convert the remote characteristic data to <type\>.
+     * @tparam T The type to convert the data to.
+     * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
+     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
+     * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
+     * less than <tt>sizeof(<type\>)</tt>.
+     * @details <b>Use:</b> <tt>getValue<type>(&timestamp, skipSizeCheck);</tt>
+     */
     template<typename T>
     T                                              getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
         std::string value = getValue(timestamp);
@@ -98,6 +116,11 @@ public:
                                                               bool response = false);
     bool                                           writeValue(const std::string &newValue,
                                                               bool response = false);
+    /**
+     * @brief Convenience template to set the remote characteristic value to <type\>val.
+     * @param [in] s The value to write.
+     * @param [in] response True == request write response.
+     */
     template<typename T>
     bool writeValue(const T &s, bool response = false) {
         return writeValue((uint8_t*)&s, sizeof(T), response);
