@@ -9,8 +9,6 @@
 */
 
 #include <NimBLEDevice.h>
-#include <NimBLE2904.h>
-#include <NimBLE2902.h>
 
 static NimBLEServer* pServer;
 
@@ -112,8 +110,10 @@ class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
             NimBLE2902* p2902 = (NimBLE2902*)pDescriptor;
             if(p2902->getNotifications()) {
                 Serial.println("Client Subscribed to notfications");
+            } else if(p2902->getIndications()) {
+                Serial.println("Client Subscribed to indications");
             } else {
-                Serial.println("Client Unubscribed to notfications");
+                Serial.println("Client Unubscribed");
             }
         } else {
             std::string dscVal((char*)pDescriptor->getValue(), pDescriptor->getLength());

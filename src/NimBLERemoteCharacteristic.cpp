@@ -503,12 +503,12 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
 /**
  * @brief Subscribe or unsubscribe for notifications or indications.
  * @param [in] val 0x00 to unsubscribe, 0x01 for notifications, 0x02 for indications.
- * @param [in] response If write response required set this to true.
  * @param [in] notifyCallback A callback to be invoked for a notification.
+ * @param [in] response If write response required set this to true.
  * If NULL is provided then no callback is performed.
  * @return true if successful.
  */
-bool NimBLERemoteCharacteristic::setNotify(uint16_t val, bool response, notify_callback notifyCallback) {
+bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCallback, bool response) {
     NIMBLE_LOGD(LOG_TAG, ">> setNotify(): %s, %02x", toString().c_str(), val);
 
     NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
@@ -528,16 +528,16 @@ bool NimBLERemoteCharacteristic::setNotify(uint16_t val, bool response, notify_c
 /**
  * @brief Subscribe for notifications or indications.
  * @param [in] notifications If true, subscribe for notifications, false subscribe for indications.
- * @param [in] response If true, require a write response from the descriptor write operation.
  * @param [in] notifyCallback A callback to be invoked for a notification.
+ * @param [in] response If true, require a write response from the descriptor write operation.
  * If NULL is provided then no callback is performed.
  * @return true if successful.
  */
-bool NimBLERemoteCharacteristic::subscribe(bool notifications, bool response, notify_callback notifyCallback) {
+bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback notifyCallback, bool response) {
     if(notifications) {
-        return setNotify(0x01, response, notifyCallback);
+        return setNotify(0x01, notifyCallback, response);
     } else {
-        return setNotify(0x02, response, notifyCallback);
+        return setNotify(0x02, notifyCallback, response);
     }
 } // subscribe
 
@@ -548,7 +548,7 @@ bool NimBLERemoteCharacteristic::subscribe(bool notifications, bool response, no
  * @return true if successful.
  */
 bool NimBLERemoteCharacteristic::unsubscribe(bool response) {
-    return setNotify(0x00, response);
+    return setNotify(0x00, nullptr, response);
 } // unsubscribe
 
 
@@ -564,7 +564,7 @@ bool NimBLERemoteCharacteristic::unsubscribe(bool response) {
 bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, bool notifications, bool response) {
     bool success;
     if(notifyCallback != nullptr) {
-        success = subscribe(notifications, response, notifyCallback);
+        success = subscribe(notifications, notifyCallback, response);
     } else {
         success = unsubscribe(response);
     }

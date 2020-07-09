@@ -104,9 +104,9 @@ public:
     }
 
     bool                                           subscribe(bool notifications = true,
-                                                             bool response = true,
-                                                             notify_callback notifyCallback = nullptr);
-    bool                                           unsubscribe(bool response = true);
+                                                             notify_callback notifyCallback = nullptr,
+                                                             bool response = false);
+    bool                                           unsubscribe(bool response = false);
     bool                                           registerForNotify(notify_callback notifyCallback,
                                                                      bool notifications = true,
                                                                      bool response = true)
@@ -138,7 +138,7 @@ private:
     friend class      NimBLERemoteDescriptor;
 
     // Private member functions
-    bool              setNotify(uint16_t val, bool response = true, notify_callback notifyCallback = nullptr);
+    bool              setNotify(uint16_t val, notify_callback notifyCallback = nullptr, bool response = true);
     bool              retrieveDescriptors(const NimBLEUUID *uuid_filter = nullptr);
     static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error,
                                struct ble_gatt_attr *attr, void *arg);
