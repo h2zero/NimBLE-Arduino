@@ -71,7 +71,6 @@ NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
     if(NimBLEDevice::m_pServer == nullptr) {
         NimBLEDevice::m_pServer = new NimBLEServer();
         ble_gatts_reset();
-        ble_svc_gap_init();
         ble_svc_gatt_init();
     }
 

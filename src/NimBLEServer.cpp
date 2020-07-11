@@ -22,6 +22,10 @@
 #include "NimBLEDevice.h"
 #include "NimBLELog.h"
 
+#include "services/gap/ble_svc_gap.h"
+#include "services/gatt/ble_svc_gatt.h"
+
+
 static const char* LOG_TAG = "NimBLEServer";
 static NimBLEServerCallbacks defaultCallbacks;
 
@@ -37,6 +41,7 @@ NimBLEServer::NimBLEServer() {
     m_pServerCallbacks      = &defaultCallbacks;
     m_gattsStarted          = false;
     m_advertiseOnDisconnect = true;
+    m_svcChanged            = false;
 } // NimBLEServer
 
 
@@ -70,6 +75,11 @@ NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numH
 
     NimBLEService* pService = new NimBLEService(uuid, numHandles, this);
     m_svcVec.push_back(pService); // Save a reference to this service being on this server.
+
+    if(m_gattsStarted) {
+        m_svcChanged = true;
+        ble_svc_gatt_changed(0x0001, 0xffff);
+    }
 
     NIMBLE_LOGD(LOG_TAG, "<< createService");
     return pService;
@@ -146,7 +156,7 @@ void NimBLEServer::start() {
 
     NIMBLE_LOGI(LOG_TAG, "Service changed characterisic handle: %d", m_svcChgChrHdl);
 */
-    // Get the assigned service handles and build a vector of characteristics 
+    // Get the assigned service handles and build a vector of characteristics
     // with Notify / Indicate capabilities for event handling
     for(auto &svc : m_svcVec) {
         rc = ble_gatts_find_svc(&svc->getUUID().getNative()->u, &svc->m_handle);
@@ -266,6 +276,29 @@ size_t NimBLEServer::getConnectedCount() {
                                                           server->m_connectedPeersVec.end(),
                                                           event->disconnect.conn.conn_handle),
                                                           server->m_connectedPeersVec.end());
+
+            if(server->m_svcChanged && server->getConnectedCount() == 0) {
+                NimBLEDevice::stopAdvertising();
+                ble_gatts_reset();
+                ble_svc_gatt_init();
+                for(auto it = server->m_svcVec.begin(); it != server->m_svcVec.end(); ++it) {
+                    if ((*it)->m_removed) {
+                        delete *it;
+                        it = server->m_svcVec.erase(it);
+                        if(it == server->m_svcVec.end()) {
+                            break;
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    (*it)->start();
+                }
+
+                server->m_svcChanged = false;
+                server->m_gattsStarted = false;
+            }
+
             server->m_pServerCallbacks->onDisconnect(server);
 
             if(server->m_advertiseOnDisconnect) {
@@ -449,6 +482,22 @@ void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks) {
         m_pServerCallbacks = &defaultCallbacks;
     }
 } // setCallbacks
+
+
+/**
+ * @brief Remove a service from the server.
+ * @param [in] service The service object to remove.
+ */
+void NimBLEServer::removeService(NimBLEService* service) {
+    int rc = ble_gatts_svc_set_visibility(service->getHandle(), 0);
+    if(rc !=0) {
+        return;
+    }
+
+    service->m_removed = true;
+    m_svcChanged = true;
+    ble_svc_gatt_changed(0x0001, 0xffff);
+}
 
 
 /**
