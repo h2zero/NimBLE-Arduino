@@ -75,6 +75,7 @@ public:
     NimBLEAdvertising();
     void addServiceUUID(const NimBLEUUID &serviceUUID);
     void addServiceUUID(const char* serviceUUID);
+    void removeServiceUUID(const NimBLEUUID &serviceUUID);
     void start();
     void stop();
     void setAppearance(uint16_t appearance);

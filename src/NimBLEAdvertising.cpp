@@ -63,6 +63,7 @@ NimBLEAdvertising::NimBLEAdvertising() {
  */
 void NimBLEAdvertising::addServiceUUID(const NimBLEUUID &serviceUUID) {
     m_serviceUUIDs.push_back(serviceUUID);
+    m_advDataSet = false;
 } // addServiceUUID
 
 
@@ -72,6 +73,22 @@ void NimBLEAdvertising::addServiceUUID(const NimBLEUUID &serviceUUID) {
  */
 void NimBLEAdvertising::addServiceUUID(const char* serviceUUID) {
     addServiceUUID(NimBLEUUID(serviceUUID));
+} // addServiceUUID
+
+
+/**
+ * @brief Add a service uuid to exposed list of services.
+ * @param [in] serviceUUID The UUID of the service to expose.
+ */
+void NimBLEAdvertising::removeServiceUUID(const NimBLEUUID &serviceUUID) {
+    //m_serviceUUIDs.erase(std::remove_if(m_serviceUUIDs.begin(), m_serviceUUIDs.end(),[serviceUUID](const NimBLEUUID &s) {return serviceUUID == s;}), m_serviceUUIDs.end());
+    for(auto it = m_serviceUUIDs.begin(); it != m_serviceUUIDs.end(); ++it) {
+        if((*it) == serviceUUID) {
+            m_serviceUUIDs.erase(it);
+            break;
+        }
+    }
+    m_advDataSet = false;
 } // addServiceUUID
 
 

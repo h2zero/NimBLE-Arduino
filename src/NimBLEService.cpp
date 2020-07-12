@@ -54,7 +54,7 @@ NimBLEService::NimBLEService(const NimBLEUUID &uuid, uint16_t numHandles, NimBLE
     m_pServer      = pServer;
     m_numHandles   = numHandles;
     m_pSvcDef      = nullptr;
-    m_removed      = false;
+    m_removed      = 0;
 
 } // NimBLEService
 
@@ -71,6 +71,10 @@ NimBLEService::~NimBLEService() {
         }
 
         delete(m_pSvcDef);
+    }
+
+    for(auto &it : m_chrVec) {
+        delete it;
     }
 }
 

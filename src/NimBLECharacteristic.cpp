@@ -58,6 +58,9 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
  * @brief Destructor.
  */
 NimBLECharacteristic::~NimBLECharacteristic() {
+    for(auto &it : m_dscVec) {
+        delete it;
+    }
 } // ~NimBLECharacteristic
 
 

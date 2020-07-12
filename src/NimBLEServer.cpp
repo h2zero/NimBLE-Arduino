@@ -46,6 +46,16 @@ NimBLEServer::NimBLEServer() {
 
 
 /**
+ * @brief Destructor: frees all resources / attributes created.
+ */
+NimBLEServer::~NimBLEServer() {
+    for(auto &it : m_svcVec) {
+        delete it;
+    }
+}
+
+
+/**
  * @brief Create a %BLE Service.
  * @param [in] uuid The UUID of the new service.
  * @return A reference to the new service object.
@@ -77,8 +87,9 @@ NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numH
     m_svcVec.push_back(pService); // Save a reference to this service being on this server.
 
     if(m_gattsStarted) {
-        m_svcChanged = true;
         ble_svc_gatt_changed(0x0001, 0xffff);
+        m_svcChanged = true;
+        resetGATT();
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< createService");
@@ -159,9 +170,11 @@ void NimBLEServer::start() {
     // Get the assigned service handles and build a vector of characteristics
     // with Notify / Indicate capabilities for event handling
     for(auto &svc : m_svcVec) {
-        rc = ble_gatts_find_svc(&svc->getUUID().getNative()->u, &svc->m_handle);
-        if(rc != 0) {
-            abort();
+        if(svc->m_removed == 0) {
+            rc = ble_gatts_find_svc(&svc->getUUID().getNative()->u, &svc->m_handle);
+            if(rc != 0) {
+                abort();
+            }
         }
 
         for(auto &chr : svc->m_chrVec) {
@@ -277,26 +290,8 @@ size_t NimBLEServer::getConnectedCount() {
                                                           event->disconnect.conn.conn_handle),
                                                           server->m_connectedPeersVec.end());
 
-            if(server->m_svcChanged && server->getConnectedCount() == 0) {
-                NimBLEDevice::stopAdvertising();
-                ble_gatts_reset();
-                ble_svc_gatt_init();
-                for(auto it = server->m_svcVec.begin(); it != server->m_svcVec.end(); ++it) {
-                    if ((*it)->m_removed) {
-                        delete *it;
-                        it = server->m_svcVec.erase(it);
-                        if(it == server->m_svcVec.end()) {
-                            break;
-                        } else {
-                            continue;
-                        }
-                    }
-
-                    (*it)->start();
-                }
-
-                server->m_svcChanged = false;
-                server->m_gattsStarted = false;
+            if(server->m_svcChanged) {
+                server->resetGATT();
             }
 
             server->m_pServerCallbacks->onDisconnect(server);
@@ -488,15 +483,75 @@ void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks) {
  * @brief Remove a service from the server.
  * @param [in] service The service object to remove.
  */
-void NimBLEServer::removeService(NimBLEService* service) {
+void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
+    if(service->m_removed > 0) {
+        if(deleteSvc) {
+            for(auto it = m_svcVec.begin(); it != m_svcVec.end(); ++it) {
+                if ((*it)->getUUID() == service->getUUID()) {
+                    delete *it;
+                    m_svcVec.erase(it);
+                    break;
+                }
+            }
+        }
+        
+        return;
+    }
+    
     int rc = ble_gatts_svc_set_visibility(service->getHandle(), 0);
     if(rc !=0) {
         return;
     }
 
-    service->m_removed = true;
+    service->m_removed = deleteSvc ? 2 : 1;
     m_svcChanged = true;
+
     ble_svc_gatt_changed(0x0001, 0xffff);
+    resetGATT();
+}
+
+
+void NimBLEServer::addService(NimBLEService* service) {
+    // If adding a service that was not removed just return.
+    if(service->m_removed == 0) {
+        return;
+    }
+
+    service->m_removed = 0;
+    m_svcChanged = true;
+
+    ble_svc_gatt_changed(0x0001, 0xffff);
+    resetGATT();
+}
+
+
+void NimBLEServer::resetGATT() {
+    if(getConnectedCount() > 0) {
+        return;
+    }
+    
+    NimBLEDevice::stopAdvertising();
+    ble_gatts_reset();
+    ble_svc_gap_init();
+    ble_svc_gatt_init();
+    
+    for(auto it = m_svcVec.begin(); it != m_svcVec.end(); ) {
+        if ((*it)->m_removed > 0) {
+            if ((*it)->m_removed == 2) {
+                delete *it;
+                it = m_svcVec.erase(it);
+            } else {
+                ++it;
+            }
+            continue;
+        }
+
+        (*it)->start();
+        ++it;
+    }
+    
+    m_svcChanged = false;
+    m_gattsStarted = false;
 }
 
 
