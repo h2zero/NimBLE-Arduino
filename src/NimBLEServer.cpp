@@ -481,9 +481,26 @@ void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks) {
 
 /**
  * @brief Remove a service from the server.
+ *
+ * @details Immediately removes access to the service by clients, sends a service changed indication,
+ * and removes the service (if applicable) from the advertisments.
+ * The service is not deleted unless the deleteSvc parameter is true, otherwise the service remains
+ * available and can be re-added in the future. If desired a removed but not deleted service can
+ * be deleted later by calling this method with deleteSvc set to true.
+ *
+ * @note The service will not be removed from the database until all open connections are closed
+ * as it requires resetting the GATT server. In the interim the service will have it's visibility disabled.
+ *
+ * @note Advertising will need to be restarted by the user after calling this as we must stop
+ * advertising in order to remove the service.
+ *
  * @param [in] service The service object to remove.
+ * @param [in] deleteSvc true if the service should be deleted.
  */
 void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
+    // Check if the service was already removed and if so check if this
+    // is being called to delete the object and do so if requested.
+    // Otherwise, ignore the call and return.
     if(service->m_removed > 0) {
         if(deleteSvc) {
             for(auto it = m_svcVec.begin(); it != m_svcVec.end(); ++it) {
@@ -494,10 +511,10 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
                 }
             }
         }
-        
+
         return;
     }
-    
+
     int rc = ble_gatts_svc_set_visibility(service->getHandle(), 0);
     if(rc !=0) {
         return;
@@ -508,9 +525,18 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
 
     ble_svc_gatt_changed(0x0001, 0xffff);
     resetGATT();
+    NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
 }
 
 
+/**
+ * @brief Adds a service which was already created, but removed from availability.
+ *
+ * @note If it is desired to advertise the service it must be added by
+ * calling NimBLEAdvertising::addServiceUUID.
+ *
+ * @param [in} service The service object to add.
+ */
 void NimBLEServer::addService(NimBLEService* service) {
     // If adding a service that was not removed just return.
     if(service->m_removed == 0) {
@@ -525,16 +551,19 @@ void NimBLEServer::addService(NimBLEService* service) {
 }
 
 
+/**
+ * @brief Resets the GATT server, used when services are added/removed after initialization.
+ */
 void NimBLEServer::resetGATT() {
     if(getConnectedCount() > 0) {
         return;
     }
-    
+
     NimBLEDevice::stopAdvertising();
     ble_gatts_reset();
     ble_svc_gap_init();
     ble_svc_gatt_init();
-    
+
     for(auto it = m_svcVec.begin(); it != m_svcVec.end(); ) {
         if ((*it)->m_removed > 0) {
             if ((*it)->m_removed == 2) {
@@ -549,7 +578,7 @@ void NimBLEServer::resetGATT() {
         (*it)->start();
         ++it;
     }
-    
+
     m_svcChanged = false;
     m_gattsStarted = false;
 }

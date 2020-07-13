@@ -43,6 +43,14 @@ as a type specified by the user.
 A new method `NimBLEServer::advertiseOnDisconnect(bool)` has been implemented to control this, true(default) = enabled.  
 <br/>
 
+`NimBLEServer::removeService` takes an additional parameter `bool deleteSvc` that if true will delete the service  
+and all characteristics / descriptors belonging to it and invalidating any pointers to them.  
+
+If false the service is only removed from visibility by clients. The pointers to the service and  
+it's characteristics / descriptors will remain valid and the service can be re-added in the future  
+using `NimBLEServer::addService`.  
+<br/>
+
 # Client  
 
 NimBLERemoteCharacteristic::readValue(time_t\*, bool)  
