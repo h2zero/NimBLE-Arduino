@@ -343,7 +343,7 @@ bool NimBLEScan::stop() {
 
     m_stopped = true;
 
-    if (m_scanCompleteCB != nullptr) {
+    if (rc != BLE_HS_EALREADY && m_scanCompleteCB != nullptr) {
         m_scanCompleteCB(m_scanResults);
     }
 
