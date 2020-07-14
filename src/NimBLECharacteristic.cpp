@@ -207,6 +207,7 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
 {
     const ble_uuid_t *uuid;
     int rc;
+    struct ble_gap_conn_desc desc;
     NimBLECharacteristic* pCharacteristic = (NimBLECharacteristic*)arg;
 
     NIMBLE_LOGD(LOG_TAG, "Characteristic %s %s event", pCharacteristic->getUUID().toString().c_str(),
@@ -219,7 +220,10 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                 // If the packet header is only 8 bytes this is a follow up of a long read
                 // so we don't want to call the onRead() callback again.
                 if(ctxt->om->om_pkthdr_len > 8) {
+                    rc = ble_gap_conn_find(conn_handle, &desc);
+                    assert(rc == 0);
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
+                    pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
                 }
 
                 portENTER_CRITICAL(&pCharacteristic->m_valMux);
@@ -249,10 +253,11 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     len += next->om_len;
                     next = SLIST_NEXT(next, om_next);
                 }
-
+                rc = ble_gap_conn_find(conn_handle, &desc);
+                assert(rc == 0);
                 pCharacteristic->setValue(buf, len);
                 pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
-
+                pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, &desc);
                 return 0;
             }
             default:
@@ -524,6 +529,14 @@ void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onRead: default");
 } // onRead
 
+/**
+ * @brief Callback function to support a read request.
+ * @param [in] pCharacteristic The characteristic that is the source of the event.
+ * @param [in] desc The connection description struct that is associated with the peer that performed the read.
+ */
+void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc) {
+    NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onRead: default");
+} // onRead
 
 /**
  * @brief Callback function to support a write request.
@@ -533,6 +546,14 @@ void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristi
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onWrite: default");
 } // onWrite
 
+/**
+ * @brief Callback function to support a write request.
+ * @param [in] pCharacteristic The characteristic that is the source of the event.
+ * @param [in] desc The connection description struct that is associated with the peer that performed the write.
+ */
+void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc) {
+    NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onWrite: default");
+} // onWrite
 
 /**
  * @brief Callback function to support a Notify request.
