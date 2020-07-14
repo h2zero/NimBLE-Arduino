@@ -41,6 +41,8 @@ public:
     NimBLEService*         createService(const char* uuid);
     NimBLEService*         createService(const NimBLEUUID &uuid, uint32_t numHandles=15,
                                          uint8_t inst_id=0);
+    void                   removeService(NimBLEService* service, bool deleteSvc = false);
+    void                   addService(NimBLEService* service);
     NimBLEAdvertising*     getAdvertising();
     void                   setCallbacks(NimBLEServerCallbacks* pCallbacks);
     void                   startAdvertising();
@@ -59,12 +61,14 @@ public:
 
 private:
     NimBLEServer();
+    ~NimBLEServer();
     friend class           NimBLECharacteristic;
     friend class           NimBLEDevice;
     friend class           NimBLEAdvertising;
 
     bool                   m_gattsStarted;
     bool                   m_advertiseOnDisconnect;
+    bool                   m_svcChanged;
     NimBLEServerCallbacks* m_pServerCallbacks;
     std::vector<uint16_t>  m_connectedPeersVec;
 
@@ -74,6 +78,7 @@ private:
     std::vector<NimBLECharacteristic*> m_notifyChrVec;
 
     static int             handleGapEvent(struct ble_gap_event *event, void *arg);
+    void                   resetGATT();
 }; // NimBLEServer
 
 
