@@ -176,7 +176,9 @@ public:
 
     virtual ~NimBLECharacteristicCallbacks();
     virtual void onRead(NimBLECharacteristic* pCharacteristic);
+    virtual void onRead(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc);
     virtual void onWrite(NimBLECharacteristic* pCharacteristic);
+    virtual void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc);
     virtual void onNotify(NimBLECharacteristic* pCharacteristic);
     virtual void onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code);
 };
