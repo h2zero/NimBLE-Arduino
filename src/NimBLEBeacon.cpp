@@ -78,7 +78,7 @@ uint16_t NimBLEBeacon::getMinor() {
  * @return The UUID advertised.
  */
 NimBLEUUID NimBLEBeacon::getProximityUUID() {
-    return NimBLEUUID(m_beaconData.proximityUUID, 16, false);
+    return NimBLEUUID(m_beaconData.proximityUUID, 16, true);
 }
 
 
