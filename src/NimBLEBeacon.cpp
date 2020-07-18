@@ -15,6 +15,7 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include <string.h>
+#include <algorithm>
 #include "NimBLEBeacon.h"
 #include "NimBLELog.h"
 
