@@ -139,7 +139,9 @@ void NimBLEBeacon::setMinor(uint16_t minor) {
 void NimBLEBeacon::setProximityUUID(const NimBLEUUID &uuid) {
     NimBLEUUID temp_uuid = uuid;
     temp_uuid.to128();
-    memcpy(m_beaconData.proximityUUID, temp_uuid.getNative()->u128.value, 16);
+    std::reverse_copy(temp_uuid.getNative()->u128.value,
+                      temp_uuid.getNative()->u128.value + 16,
+                      m_beaconData.proximityUUID);
 } // setProximityUUID
 
 
