@@ -31,7 +31,6 @@ static const char* LOG_TAG = "NimBLEAdvertisedDevice";
 NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
     m_advType          = 0;
     m_appearance       = 0;
-    m_deviceType       = 0;
     m_manufacturerData = "";
     m_name             = "";
     m_rssi             = -9999;
@@ -130,6 +129,7 @@ NimBLEScan* NimBLEAdvertisedDevice::getScan() {
  */
 std::string NimBLEAdvertisedDevice::getServiceData(uint8_t index) {
     if(index > m_serviceDataVec.size()) {
+        NIMBLE_LOGW(LOG_TAG, "getServiceData: index out of range");
         return "";
     }
     return m_serviceDataVec[index].second;
@@ -147,7 +147,7 @@ std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID &uuid) const
             return it.second;
         }
     }
-
+        NIMBLE_LOGW(LOG_TAG, "getServiceData: uuid not found");
     return "";
 } //getServiceData
 
@@ -159,6 +159,7 @@ std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID &uuid) const
  */
 NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID(uint8_t index) {
     if(!haveServiceData() || index > m_serviceDataVec.size()) {
+        NIMBLE_LOGW(LOG_TAG, "getServiceDataUUID: index out of range");
         return NimBLEUUID("");
     }
     return m_serviceDataVec[index].first;
@@ -181,6 +182,7 @@ size_t NimBLEAdvertisedDevice::getServiceDataCount() {
  */
 NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID(uint8_t index) {
     if(!haveServiceUUID() || index > m_serviceUUIDs.size()) {
+        NIMBLE_LOGW(LOG_TAG, "getServiceUUID: index out of range");
         return NimBLEUUID("");
     }
     return m_serviceUUIDs[index];
@@ -193,7 +195,6 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID(uint8_t index) {
  */
 bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid){
     for (int i = 0; i < m_serviceUUIDs.size(); i++) {
-        NIMBLE_LOGI(LOG_TAG, "Comparing UUIDS: %s %s", m_serviceUUIDs[i].toString().c_str(), uuid.toString().c_str());
         if (m_serviceUUIDs[i].equals(uuid)) return true;
     }
     return false;
@@ -290,6 +291,12 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
 {
     m_payload = payload;
     m_payloadLength = length;
+
+#if CONFIG_LOG_DEFAULT_LEVEL > 3 || (ARDUINO_ARCH_ESP32 && CORE_DEBUG_LEVEL >= 4)
+    char* pHex = NimBLEUtils::buildHexData(nullptr, m_payload, m_payloadLength);
+    NIMBLE_LOGD(LOG_TAG,"payload: %s", pHex);
+    free(pHex);
+#endif
 
     if (fields->uuids16 != NULL) {
         for (int i = 0; i < fields->num_uuids16; i++) {
@@ -422,7 +429,6 @@ void NimBLEAdvertisedDevice::setAdvType(uint8_t advType) {
 void NimBLEAdvertisedDevice::setAppearance(uint16_t appearance) {
     m_appearance     = appearance;
     m_haveAppearance = true;
-    NIMBLE_LOGD(LOG_TAG,"- appearance: %d", m_appearance);
 } // setAppearance
 
 
@@ -433,10 +439,6 @@ void NimBLEAdvertisedDevice::setAppearance(uint16_t appearance) {
 void NimBLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
     m_manufacturerData     = manufacturerData;
     m_haveManufacturerData = true;
-
-    char* pHex = NimBLEUtils::buildHexData(nullptr, (uint8_t*) m_manufacturerData.data(), (uint8_t) m_manufacturerData.length());
-    NIMBLE_LOGD(LOG_TAG,"- manufacturer data: %s", pHex);
-    free(pHex);
 } // setManufacturerData
 
 
@@ -447,7 +449,6 @@ void NimBLEAdvertisedDevice::setManufacturerData(std::string manufacturerData) {
 void NimBLEAdvertisedDevice::setName(std::string name) {
     m_name     = name;
     m_haveName = true;
-    NIMBLE_LOGD(LOG_TAG,"- setName(): name: %s", m_name.c_str());
 } // setName
 
 
@@ -458,7 +459,6 @@ void NimBLEAdvertisedDevice::setName(std::string name) {
 void NimBLEAdvertisedDevice::setRSSI(int rssi) {
     m_rssi     = rssi;
     m_haveRSSI = true;
-    NIMBLE_LOGD(LOG_TAG,"- setRSSI(): rssi: %d", m_rssi);
 } // setRSSI
 
 
@@ -485,7 +485,6 @@ void NimBLEAdvertisedDevice::setServiceUUID(NimBLEUUID serviceUUID) {
     }
     m_serviceUUIDs.push_back(serviceUUID);
     m_haveServiceUUID = true;
-    NIMBLE_LOGD(LOG_TAG,"- addServiceUUID(): serviceUUID: %s", serviceUUID.toString().c_str());
 } // setServiceUUID
 
 
@@ -513,7 +512,6 @@ void NimBLEAdvertisedDevice::setServiceData(NimBLEUUID uuid, std::string data) {
 void NimBLEAdvertisedDevice::setTXPower(int8_t txPower) {
     m_txPower     = txPower;
     m_haveTXPower = true;
-    NIMBLE_LOGD(LOG_TAG,"- txPower: %d", m_txPower);
 } // setTXPower
 
 

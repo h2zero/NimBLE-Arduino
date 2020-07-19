@@ -152,7 +152,6 @@ private:
     NimBLEAddress   m_address = NimBLEAddress("");
     uint8_t         m_advType;
     uint16_t        m_appearance;
-    int             m_deviceType;
     std::string     m_manufacturerData;
     std::string     m_name;
     int             m_rssi;
