@@ -17,6 +17,7 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
+#include "NimBLEDevice.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -34,10 +35,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() {
     m_manufacturerData = "";
     m_name             = "";
     m_rssi             = -9999;
-    m_serviceData      = "";
     m_txPower          = 0;
-    m_payloadLength    = 0;
-    m_pScan            = nullptr;
     m_payloadLength    = 0;
     m_payload          = nullptr;
 
@@ -121,36 +119,71 @@ int NimBLEAdvertisedDevice::getRSSI() {
  * @return The scan object.
  */
 NimBLEScan* NimBLEAdvertisedDevice::getScan() {
-    return m_pScan;
+    return NimBLEDevice::getScan();
 } // getScan
 
 
 /**
  * @brief Get the service data.
- * @return The ServiceData of the advertised device.
+ * @param [in] index The vector index of the service data requested.
+ * @return The advertised service data or empty string if no data.
  */
-std::string NimBLEAdvertisedDevice::getServiceData() {
-    return m_serviceData;
+std::string NimBLEAdvertisedDevice::getServiceData(uint8_t index) {
+    if(index > m_serviceDataVec.size()) {
+        return "";
+    }
+    return m_serviceDataVec[index].second;
+} //getServiceData
+
+
+/**
+ * @brief Get the service data.
+ * @param [in] uuid The uuid of the service data requested.
+ * @return The advertised service data or empty string if no data.
+ */
+std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID &uuid) const{
+    for(auto &it : m_serviceDataVec) {
+        if(it.first == uuid) {
+            return it.second;
+        }
+    }
+
+    return "";
 } //getServiceData
 
 
 /**
  * @brief Get the advertised service UUID.
- * @return The advertise service UUID.
+ * @param [in] index The vector index of the service data UUID requested.
+ * @return The advertised service UUID or an empty UUID if not found.
  */
-
-NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID() {
-    return m_serviceDataUUID;
+NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID(uint8_t index) {
+    if(!haveServiceData() || index > m_serviceDataVec.size()) {
+        return NimBLEUUID("");
+    }
+    return m_serviceDataVec[index].first;
 } // getServiceDataUUID
 
 
 /**
- * @brief Get the Service UUID.
- * @return The Service UUID of the advertised device.
+ * @brief Get the count of advertised service data UUIDS
+ * @return The number of service data UUIDS in the vector.
  */
+size_t NimBLEAdvertisedDevice::getServiceDataCount() {
+    return m_serviceDataVec.size();
+} // getServiceDataCount
 
-NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID() {  //TODO Remove it eventually, is no longer useful
-    return m_serviceUUIDs[0];
+
+/**
+ * @brief Get the Service UUID.
+ * @param [in] index The vector index of the service UUID requested.
+ * @return The Service UUID of the advertised service, or an empty UUID if not found.
+ */
+NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID(uint8_t index) {
+    if(!haveServiceUUID() || index > m_serviceUUIDs.size()) {
+        return NimBLEUUID("");
+    }
+    return m_serviceUUIDs[index];
 } // getServiceUUID
 
 
@@ -251,26 +284,27 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
  *
  * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
  */
- void NimBLEAdvertisedDevice::parseAdvertisement(ble_hs_adv_fields *fields) {
-    //char s[BLE_HS_ADV_MAX_SZ];
-    uint8_t *u8p;
-    uint8_t length;
-    int i;
+ void NimBLEAdvertisedDevice::parseAdvertisement(ble_hs_adv_fields *fields,
+                                                 uint8_t* payload,
+                                                 uint8_t length)
+{
+    m_payload = payload;
+    m_payloadLength = length;
 
     if (fields->uuids16 != NULL) {
-        for (i = 0; i < fields->num_uuids16; i++) {
+        for (int i = 0; i < fields->num_uuids16; i++) {
             setServiceUUID(NimBLEUUID(fields->uuids16[i].value));
         }
     }
 
     if (fields->uuids32 != NULL) {
-        for (i = 0; i < fields->num_uuids32; i++) {
+        for (int i = 0; i < fields->num_uuids32; i++) {
             setServiceUUID(NimBLEUUID(fields->uuids32[i].value));
         }
     }
 
     if (fields->uuids128 != NULL) {
-        for (i = 0; i < fields->num_uuids128; i++) {
+        for (int i = 0; i < fields->num_uuids128; i++) {
             setServiceUUID(NimBLEUUID(&fields->uuids128[i]));
         }
     }
@@ -283,57 +317,53 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
         setTXPower(fields->tx_pwr_lvl);
     }
 
-    if (fields->svc_data_uuid16 != NULL) {
+    if (fields->svc_data_uuid16 != NULL ||
+        fields->svc_data_uuid32 != NULL ||
+        fields->svc_data_uuid128 != NULL)
+    {
+        ble_hs_adv_field *field;
+        uint8_t *data = payload;
+        while(length > 1) {
+            field = (ble_hs_adv_field*)data;
 
-        u8p = fields->svc_data_uuid16;
-        length = fields->svc_data_uuid16_len;
-
-        if (length < 2) {
-            NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_SERVICE_DATA");
-        }
-        else{
-            uint16_t uuid = *(uint16_t*)u8p;
-            setServiceDataUUID(NimBLEUUID(uuid));
-            if (length > 2) {
-                setServiceData(std::string(reinterpret_cast<char*>(u8p + 2), length - 2));
+            if(field->length > length) {
+                break;
             }
-        }
-    }
 
-    if (fields->svc_data_uuid32 != NULL) {
+            if(field->type == BLE_HS_ADV_TYPE_SVC_DATA_UUID16) {
+                if(field->length > 2) {
+                    uint16_t uuid;
+                    memcpy(&uuid, field->value, 2);
+                    setServiceData(NimBLEUUID(uuid), std::string(reinterpret_cast<char*>(field->value + 2), field->length - 3));
+                }
+            }
 
-        u8p = fields->svc_data_uuid16;
-        length = fields->svc_data_uuid16_len;
+            if(field->type == BLE_HS_ADV_TYPE_SVC_DATA_UUID32) {
+                if(field->length > 4) {
+                    uint32_t uuid;
+                    memcpy(&uuid, field->value, 4);
+                    setServiceData(NimBLEUUID(uuid), std::string(reinterpret_cast<char*>(field->value + 4), field->length - 5));
+                }
+            }
 
-        if (length < 4) {
-            NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_32SERVICE_DATA");
-        }
+            if(field->type == BLE_HS_ADV_TYPE_SVC_DATA_UUID128) {
+                if(field->length > 16) {
+                    NimBLEUUID uuid(field->value, (size_t)16, false);
+                    setServiceData(uuid, std::string(reinterpret_cast<char*>(field->value + 16), field->length - 17));
+                }
+            }
 
-        uint32_t uuid = *(uint32_t*) u8p;
-        setServiceDataUUID(NimBLEUUID(uuid));
-        if (length > 4) {
-            setServiceData(std::string(reinterpret_cast<char*>(u8p + 4), length - 4));
-        }
-    }
-
-    if (fields->svc_data_uuid128 != NULL) {
-
-        u8p = fields->svc_data_uuid16;
-        length = fields->svc_data_uuid16_len;
-
-        if (length < 16) {
-            NIMBLE_LOGE(LOG_TAG,"Length too small for ESP_BLE_AD_TYPE_128SERVICE_DATA");
-        }
-
-        setServiceDataUUID(NimBLEUUID(u8p, (size_t)16, false));
-        if (length > 16) {
-            setServiceData(std::string(reinterpret_cast<char*>(u8p + 16), length - 16));
+            length -= 1 + field->length;
+            data += 1 + field->length;
         }
     }
 
     if (fields->appearance_is_present) {
-        NIMBLE_LOGD(LOG_TAG, "    appearance=0x%04x", fields->appearance);
         setAppearance(fields->appearance);
+    }
+
+    if (fields->mfg_data != NULL) {
+        setManufacturerData(std::string(reinterpret_cast<char*>(fields->mfg_data), fields->mfg_data_len));
     }
 
 /* TODO: create storage and fucntions for these parameters
@@ -363,9 +393,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
         NIMBLE_LOGD(LOG_TAG, "\n");
     }
 */
-    if (fields->mfg_data != NULL) {
-        setManufacturerData(std::string(reinterpret_cast<char*>(fields->mfg_data), fields->mfg_data_len));
-    }
+
  } //parseAdvertisement
 
 
@@ -435,15 +463,6 @@ void NimBLEAdvertisedDevice::setRSSI(int rssi) {
 
 
 /**
- * @brief Set the Scan that created this advertised device.
- * @param [in] pScan The Scan that created this advertised device.
- */
-void NimBLEAdvertisedDevice::setScan(NimBLEScan* pScan) {
-    m_pScan = pScan;
-} // setScan
-
-
-/**
  * @brief Set the Service UUID for this device.
  * @param [in] serviceUUID The discovered serviceUUID
  */
@@ -472,22 +491,19 @@ void NimBLEAdvertisedDevice::setServiceUUID(NimBLEUUID serviceUUID) {
 
 /**
  * @brief Set the ServiceData value.
- * @param [in] data ServiceData value.
+ * @param [in] uuid The UUID that the service data belongs to.
+ * @param [in] data The service data.
  */
-void NimBLEAdvertisedDevice::setServiceData(std::string serviceData) {
-    m_haveServiceData = true;         // Set the flag that indicates we have service data.
-    m_serviceData     = serviceData;  // Save the service data that we received.
+void NimBLEAdvertisedDevice::setServiceData(NimBLEUUID uuid, std::string data) {
+    m_haveServiceData = true;
+    for(auto &it : m_serviceDataVec) {
+        if(it.first == uuid) {
+            it.second = data;
+            return;
+        }
+    }
+    m_serviceDataVec.push_back({uuid, data});
 } //setServiceData
-
-
-/**
- * @brief Set the ServiceDataUUID value.
- * @param [in] data ServiceDataUUID value.
- */
-void NimBLEAdvertisedDevice::setServiceDataUUID(NimBLEUUID uuid) {
-    m_haveServiceData = true;         // Set the flag that indicates we have service data.
-    m_serviceDataUUID = uuid;
-} // setServiceDataUUID
 
 
 /**
@@ -533,7 +549,15 @@ std::string NimBLEAdvertisedDevice::toString() {
         res += val;
     }
 
-    res += ", advType: " + std::string(NimBLEUtils::advTypeToString(m_advType));
+    if(haveServiceData()) {
+        size_t count = getServiceDataCount();
+        res += "\nService Data:";
+        for(size_t i = 0; i < count; i++) {
+            res += "\nUUID: " + std::string(getServiceDataUUID(i));
+            res += ", Data: " + getServiceData(i);
+        }
+    }
+    res += "\nadvType: " + std::string(NimBLEUtils::advTypeToString(m_advType));
 
     return res;
 
@@ -592,16 +616,6 @@ size_t NimBLEAdvertisedDevice::getPayloadLength() {
     return m_payloadLength;
 } // getPayloadLength
 
-
-/**
- * @brief Set the advertisment payload data.
- * @param [in] payload A pointer to the device payload data.
- * @param [in] length The length of the payload data in bytes.
- */
-void NimBLEAdvertisedDevice::setAdvertisementResult(uint8_t* payload, uint8_t length){
-    m_payload = payload;
-    m_payloadLength = length;
-} // setAdvertisementResult
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 #endif /* CONFIG_BT_ENABLED */

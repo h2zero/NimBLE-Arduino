@@ -102,9 +102,9 @@ NimBLEScan::NimBLEScan() {
                 NIMBLE_LOGI(LOG_TAG, "UPDATING PREVIOUSLY FOUND DEVICE: %s", advertisedAddress.toString().c_str());
             }
             advertisedDevice->setRSSI(event->disc.rssi);
-            advertisedDevice->parseAdvertisement(&fields);
-            advertisedDevice->setScan(pScan);
-            advertisedDevice->setAdvertisementResult(event->disc.data, event->disc.length_data);
+            if(event->disc.length_data > 0) {
+                advertisedDevice->parseAdvertisement(&fields, event->disc.data, event->disc.length_data);
+            }
             advertisedDevice->m_timestamp = time(nullptr);
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
