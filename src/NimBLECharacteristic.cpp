@@ -274,6 +274,11 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
  * This will maintain a vector of subscribed clients and their indicate/notify status.
  */
 void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
+    ble_gap_conn_desc desc;
+    if(ble_gap_conn_find(event->subscribe.conn_handle, &desc) != 0) {
+        return;
+    }
+
     uint16_t subVal = 0;
     if(event->subscribe.cur_notify) {
         subVal |= NIMBLE_DESC_FLAG_NOTIFY;
@@ -293,7 +298,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
 
     NimBLE2902* p2902 = (NimBLE2902*)getDescriptorByUUID(uint16_t(0x2902));
     if(p2902 == nullptr){
-        ESP_LOGE(LOG_TAG, "No 2902 descriptor found for %s",
+        NIMBLE_LOGE(LOG_TAG, "No 2902 descriptor found for %s",
         std::string(getUUID()).c_str());
         return;
     }
@@ -302,6 +307,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     p2902->setIndications(subVal & NIMBLE_DESC_FLAG_INDICATE);
     p2902->m_pCallbacks->onWrite(p2902);
 
+    m_pCallbacks->onSubscribe(this, &desc, subVal);
 
     auto it = p2902->m_subscribedVec.begin();
     for(;it != p2902->m_subscribedVec.end(); ++it) {
@@ -573,6 +579,21 @@ void NimBLECharacteristicCallbacks::onNotify(NimBLECharacteristic* pCharacterist
 void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onStatus: default");
 } // onStatus
+
+
+/**
+ * @brief Callback function called when a client changes subscription status.
+ * @param [in] pCharacteristic The characteristic that is the source of the event.
+ * @param [in] desc The connection description struct that is associated with the client.
+ * @param [in[ subValue The subscibe value, 0 = unsubscribed, 1 = Notifications, 2 = Indications.
+ */
+void NimBLECharacteristicCallbacks::onSubscribe(NimBLECharacteristic* pCharacteristic,
+                                                ble_gap_conn_desc* desc,
+                                                uint16_t subValue)
+{
+    NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onSubscribe: default");
+}
+
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

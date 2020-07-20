@@ -181,6 +181,7 @@ public:
     virtual void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc);
     virtual void onNotify(NimBLECharacteristic* pCharacteristic);
     virtual void onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code);
+    virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue);
 };
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
