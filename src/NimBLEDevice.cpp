@@ -540,7 +540,7 @@ void NimBLEDevice::stopAdvertising() {
 /**
  * @brief Shutdown the NimBLE stack/controller.
  */
-/* STATIC */ void NimBLEDevice::deinit() {
+/* STATIC */ void NimBLEDevice::deinit(bool clearAll) {
     int ret = nimble_port_stop();
     if (ret == 0) {
         nimble_port_deinit();
@@ -552,6 +552,42 @@ void NimBLEDevice::stopAdvertising() {
 
         initialized = false;
         m_synced = false;
+
+        if(clearAll) {
+#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+            if(NimBLEDevice::m_pServer != nullptr) {
+                delete NimBLEDevice::m_pServer;
+                NimBLEDevice::m_pServer = nullptr;
+            }
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+            if(NimBLEDevice::m_bleAdvertising != nullptr) {
+                delete NimBLEDevice::m_bleAdvertising;
+                NimBLEDevice::m_bleAdvertising = nullptr;
+            }
+#endif
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+            if(NimBLEDevice::m_pScan != nullptr) {
+                delete NimBLEDevice::m_pScan;
+                NimBLEDevice::m_pScan= nullptr;
+            }
+#endif
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+            for(auto &it : m_cList) {
+                deleteClient(it);
+                m_cList.clear();
+            }
+#endif
+
+            m_ignoreList.clear();
+
+            if(m_securityCallbacks != nullptr) {
+                delete m_securityCallbacks;
+            }
+        }
     }
 } // deinit
 
