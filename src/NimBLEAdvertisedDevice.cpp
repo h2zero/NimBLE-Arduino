@@ -285,10 +285,14 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
  *
  * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
  */
- void NimBLEAdvertisedDevice::parseAdvertisement(ble_hs_adv_fields *fields,
-                                                 uint8_t* payload,
-                                                 uint8_t length)
-{
+ void NimBLEAdvertisedDevice::parseAdvertisement(uint8_t* payload, uint8_t length) {
+    struct ble_hs_adv_fields fields;
+    int rc = ble_hs_adv_parse_fields(&fields, payload, length);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Gap Event Parse ERROR.");
+        return;
+    }
+
     m_payload = payload;
     m_payloadLength = length;
 
@@ -298,35 +302,35 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
     free(pHex);
 #endif
 
-    if (fields->uuids16 != NULL) {
-        for (int i = 0; i < fields->num_uuids16; i++) {
-            setServiceUUID(NimBLEUUID(fields->uuids16[i].value));
+    if (fields.uuids16 != NULL) {
+        for (int i = 0; i < fields.num_uuids16; i++) {
+            setServiceUUID(NimBLEUUID(fields.uuids16[i].value));
         }
     }
 
-    if (fields->uuids32 != NULL) {
-        for (int i = 0; i < fields->num_uuids32; i++) {
-            setServiceUUID(NimBLEUUID(fields->uuids32[i].value));
+    if (fields.uuids32 != NULL) {
+        for (int i = 0; i < fields.num_uuids32; i++) {
+            setServiceUUID(NimBLEUUID(fields.uuids32[i].value));
         }
     }
 
-    if (fields->uuids128 != NULL) {
-        for (int i = 0; i < fields->num_uuids128; i++) {
-            setServiceUUID(NimBLEUUID(&fields->uuids128[i]));
+    if (fields.uuids128 != NULL) {
+        for (int i = 0; i < fields.num_uuids128; i++) {
+            setServiceUUID(NimBLEUUID(&fields.uuids128[i]));
         }
     }
 
-    if (fields->name != NULL) {
-        setName(std::string(reinterpret_cast<char*>(fields->name), fields->name_len));
+    if (fields.name != NULL) {
+        setName(std::string(reinterpret_cast<char*>(fields.name), fields.name_len));
     }
 
-    if (fields->tx_pwr_lvl_is_present) {
-        setTXPower(fields->tx_pwr_lvl);
+    if (fields.tx_pwr_lvl_is_present) {
+        setTXPower(fields.tx_pwr_lvl);
     }
 
-    if (fields->svc_data_uuid16 != NULL ||
-        fields->svc_data_uuid32 != NULL ||
-        fields->svc_data_uuid128 != NULL)
+    if (fields.svc_data_uuid16 != NULL ||
+        fields.svc_data_uuid32 != NULL ||
+        fields.svc_data_uuid128 != NULL)
     {
         ble_hs_adv_field *field;
         uint8_t *data = payload;
@@ -365,38 +369,38 @@ bool NimBLEAdvertisedDevice::haveTXPower() {
         }
     }
 
-    if (fields->appearance_is_present) {
-        setAppearance(fields->appearance);
+    if (fields.appearance_is_present) {
+        setAppearance(fields.appearance);
     }
 
-    if (fields->mfg_data != NULL) {
-        setManufacturerData(std::string(reinterpret_cast<char*>(fields->mfg_data), fields->mfg_data_len));
+    if (fields.mfg_data != NULL) {
+        setManufacturerData(std::string(reinterpret_cast<char*>(fields.mfg_data), fields.mfg_data_len));
     }
 
 /* TODO: create storage and fucntions for these parameters
-    if (fields->public_tgt_addr != NULL) {
+    if (fields.public_tgt_addr != NULL) {
         NIMBLE_LOGD(LOG_TAG, "    public_tgt_addr=");
-        u8p = fields->public_tgt_addr;
-        for (i = 0; i < fields->num_public_tgt_addrs; i++) {
+        u8p = fields.public_tgt_addr;
+        for (i = 0; i < fields.num_public_tgt_addrs; i++) {
             NIMBLE_LOGD(LOG_TAG, "public_tgt_addr=%s ", addr_str(u8p));
             u8p += BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN;
         }
         NIMBLE_LOGD(LOG_TAG, "\n");
     }
 
-    if (fields->slave_itvl_range != NULL) {
+    if (fields.slave_itvl_range != NULL) {
         NIMBLE_LOGD(LOG_TAG, "    slave_itvl_range=");
-        print_bytes(fields->slave_itvl_range, BLE_HS_ADV_SLAVE_ITVL_RANGE_LEN);
+        print_bytes(fields.slave_itvl_range, BLE_HS_ADV_SLAVE_ITVL_RANGE_LEN);
         NIMBLE_LOGD(LOG_TAG, "\n");
     }
 
-    if (fields->adv_itvl_is_present) {
-        NIMBLE_LOGD(LOG_TAG, "    adv_itvl=0x%04x\n", fields->adv_itvl);
+    if (fields.adv_itvl_is_present) {
+        NIMBLE_LOGD(LOG_TAG, "    adv_itvl=0x%04x\n", fields.adv_itvl);
     }
 
-    if (fields->uri != NULL) {
+    if (fields.uri != NULL) {
         NIMBLE_LOGD(LOG_TAG, "    uri=");
-        print_bytes(fields->uri, fields->uri_len);
+        print_bytes(fields.uri, fields.uri_len);
         NIMBLE_LOGD(LOG_TAG, "\n");
     }
 */

@@ -128,7 +128,7 @@ public:
 private:
     friend class NimBLEScan;
 
-    void parseAdvertisement(ble_hs_adv_fields *fields, uint8_t* payload, uint8_t length);
+    void parseAdvertisement(uint8_t* payload, uint8_t length);
     void setAddress(NimBLEAddress address);
     void setAdvType(uint8_t advType);
     void setAppearance(uint16_t appearance);
