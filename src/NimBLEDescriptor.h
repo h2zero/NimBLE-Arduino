@@ -106,7 +106,6 @@ public:
 };
 
 #include "NimBLE2904.h"
-#include "NimBLE2902.h"
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #endif /* CONFIG_BT_ENABLED */

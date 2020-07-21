@@ -182,10 +182,6 @@ void NimBLEServer::start() {
             // we do it now.
             if((chr->m_properties & BLE_GATT_CHR_F_INDICATE) ||
                 (chr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
-
-                if(nullptr == chr->getDescriptorByUUID(uint16_t(0x2902))) {
-                    chr->createDescriptor(uint16_t(0x2902));
-                }
                 m_notifyChrVec.push_back(chr);
             }
         }

@@ -145,6 +145,8 @@ private:
     ble_task_data_t                *m_pTaskData;
     portMUX_TYPE                   m_valMux;
     time_t                         m_timestamp;
+
+    std::vector<std::pair<uint16_t, uint16_t>>  m_subscribedVec;
 }; // NimBLECharacteristic
 
 
