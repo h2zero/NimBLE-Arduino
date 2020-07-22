@@ -76,8 +76,10 @@ public:
 
 
 private:
-    NimBLEScan();
     friend class NimBLEDevice;
+
+    NimBLEScan();
+    ~NimBLEScan();
     static int          handleGapEvent(ble_gap_event*  event, void* arg);
     void                onHostReset();
 
