@@ -38,6 +38,8 @@
 #include "NimBLEServer.h"
 #endif
 
+#include "NimBLEMeshNode.h"
+
 #include "NimBLEUtils.h"
 #include "NimBLESecurity.h"
 #include "NimBLEAddress.h"
@@ -115,6 +117,9 @@ public:
     static NimBLEServer*    getServer();
 #endif
 
+    static NimBLEMeshNode*  createMeshNode(NimBLEUUID uuid, uint8_t type);
+    static NimBLEMeshNode*  getMeshNode();
+    
 #ifdef ESP_PLATFORM
     static void             setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
     static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
@@ -232,6 +237,7 @@ private:
     static uint8_t                    m_scanFilterMode;
 #endif
     static std::vector<NimBLEAddress> m_whiteList;
+    static NimBLEMeshNode*            m_pMeshNode;
 };
 
 
