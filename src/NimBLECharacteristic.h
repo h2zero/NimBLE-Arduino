@@ -110,6 +110,7 @@ public:
 
     std::string       toString();
     uint16_t          getHandle();
+    size_t            getSubscribedCount();
 
 private:
 

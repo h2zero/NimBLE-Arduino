@@ -261,6 +261,15 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
 
 
 /**
+ * @brief Get the number of clients subscribed to the characteristic.
+ * @returns Number of clients subscribed to notifications / indications.
+ */
+size_t NimBLECharacteristic::getSubscribedCount() {
+    return m_subscribedVec.size();
+}
+
+
+/**
  * @brief Set the subscribe status for this characteristic.\n
  * This will maintain a vector of subscribed clients and their indicate/notify status.
  */
