@@ -168,8 +168,8 @@ void NimBLEScan::setActiveScan(bool active) {
  * @details The controller has a limited buffer and will start reporting
  * dupicate devices once the limit is reached.
  */
-void NimBLEScan::setDuplicateFilter(bool active) {
-    m_scan_params.filter_duplicates = active;
+void NimBLEScan::setDuplicateFilter(bool enabled) {
+    m_scan_params.filter_duplicates = enabled;
 } // setDuplicateFilter
 
 
@@ -178,8 +178,8 @@ void NimBLEScan::setDuplicateFilter(bool active) {
  * from devices advertising in limited discovery mode, i.e. directed advertising.
  * @param [in] active If true, only limited discovery devices will be in scan results.
  */
-void NimBLEScan::setLimitedOnly(bool active) {
-    m_scan_params.limited = active;
+void NimBLEScan::setLimitedOnly(bool enabled) {
+    m_scan_params.limited = enabled;
 } // setLimited
 
 
@@ -234,6 +234,15 @@ void NimBLEScan::setInterval(uint16_t intervalMSecs) {
 void NimBLEScan::setWindow(uint16_t windowMSecs) {
     m_scan_params.window = windowMSecs / 0.625;
 } // setWindow
+
+
+/**
+ * @brief Get the status of the scanner.
+ * @return true if scanning or scan starting.
+ */
+bool NimBLEScan::isScanning() {
+    return !m_stopped;
+}
 
 
 /**
