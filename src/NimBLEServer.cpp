@@ -299,9 +299,9 @@ size_t NimBLEServer::getConnectedCount() {
         } // BLE_GAP_EVENT_DISCONNECT
 
         case BLE_GAP_EVENT_SUBSCRIBE: {
-            NIMBLE_LOGI(LOG_TAG, "subscribe event; cur_notify=%d\n value handle; "
-                              "val_handle=%d\n",
-                        event->subscribe.cur_notify, event->subscribe.attr_handle);
+            NIMBLE_LOGI(LOG_TAG, "subscribe event; attr_handle=%d, subscribed: %s",
+                                 event->subscribe.attr_handle,
+                                 (event->subscribe.cur_notify ? "true":"false"));
 
             for(auto &it : server->m_notifyChrVec) {
                 if(it->getHandle() == event->subscribe.attr_handle) {
