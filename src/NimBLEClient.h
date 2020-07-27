@@ -43,6 +43,7 @@ public:
                                                         bool refreshServices = true);
     int                                         disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     NimBLEAddress                               getPeerAddress();
+    uint8_t                                     getPeerType();
     int                                         getRssi();
     std::vector<NimBLERemoteService*>*          getServices(bool refresh = false);
     std::vector<NimBLERemoteService*>::iterator begin();
@@ -84,6 +85,7 @@ private:
     bool                    retrieveServices(const NimBLEUUID *uuid_filter = nullptr);
 
     NimBLEAddress           m_peerAddress = NimBLEAddress("");
+    uint8_t                 m_peerType = BLE_ADDR_PUBLIC;
     uint16_t                m_conn_id;
     bool                    m_isConnected;
     bool                    m_waitingToConnect;
