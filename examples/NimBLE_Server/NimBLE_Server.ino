@@ -184,7 +184,7 @@ void setup() {
     pBeefCharacteristic->setCallbacks(&chrCallbacks);
 
     /** 2904 descriptors are a special case, when createDescriptor is called with
-     *  0x2904 a NimBLE2904 class is created with the correct propertiesand sizes.
+     *  0x2904 a NimBLE2904 class is created with the correct properties and sizes.
      *  However we must cast the returned reference to the correct type as the method
      *  only returns a pointer to the base NimBLEDescriptor class.
      */
