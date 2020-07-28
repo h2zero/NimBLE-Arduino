@@ -452,6 +452,19 @@ void NimBLEAdvertisementData::addData(const std::string &data) {
 
 
 /**
+ * @brief Add data to the payload to be advertised.
+ * @param [in] data The data to be added to the payload.
+ * @param [in] length The size of data to be added to the payload.
+ */
+void NimBLEAdvertisementData::addData(char * data, size_t length){
+    if ((m_payload.length() + length) > BLE_HS_ADV_MAX_SZ) {
+        return;
+    }
+    m_payload.append(data,length);
+} // addData
+
+
+/**
  * @brief Set the appearance.
  * @param [in] appearance The appearance code value.
  *

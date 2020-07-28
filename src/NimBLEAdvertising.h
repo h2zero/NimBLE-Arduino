@@ -57,6 +57,7 @@ public:
     void setServiceData(const NimBLEUUID &uuid, const std::string &data);
     void setShortName(const std::string &name);
     void addData(const std::string &data);  // Add data to the payload.
+    void addData(char * data, size_t length);
     std::string getPayload();               // Retrieve the current advert payload.
 
 private:
