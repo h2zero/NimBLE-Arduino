@@ -172,7 +172,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
 
     ble_addr_t peerAddrt;
     memcpy(&peerAddrt.val, address.getNative(),6);
-    peerAddrt.type = m_peerType;
+    peerAddrt.type = type;
 
     ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
     m_pTaskData = &taskData;
