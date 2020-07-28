@@ -147,31 +147,14 @@ bool NimBLEService::start() {
 
             for(uint8_t i=0; i < numChrs;) {
                 uint8_t numDscs = pCharacteristic->m_dscVec.size();
-                if(numDscs) {
-                    // skip 2902 as it's automatically created by NimBLE
-                    // if Indicate or Notify flags are set
-                    if(((pCharacteristic->m_properties & BLE_GATT_CHR_F_INDICATE) ||
-                        (pCharacteristic->m_properties & BLE_GATT_CHR_F_NOTIFY))  &&
-                         pCharacteristic->getDescriptorByUUID("2902") != nullptr)
-                    {
-                        numDscs--;
-                    }
-                }
 
                 if(!numDscs){
                     pChr_a[i].descriptors = NULL;
                 } else {
                     // Must have last descriptor uuid = 0 so we have to create 1 extra
-                    //NIMBLE_LOGD(LOG_TAG, "Adding %d descriptors", numDscs);
                     pDsc_a = new ble_gatt_dsc_def[numDscs+1];
                     NimBLEDescriptor* pDescriptor = *pCharacteristic->m_dscVec.begin();
                     for(uint8_t d=0; d < numDscs;) {
-                        // skip 2902
-                        if(pDescriptor->m_uuid == NimBLEUUID(uint16_t(0x2902))) {
-                            //NIMBLE_LOGD(LOG_TAG, "Skipped 0x2902");
-                            pDescriptor = *(pCharacteristic->m_dscVec.begin()+d+1);
-                            continue;
-                        }
                         pDsc_a[d].uuid = &pDescriptor->m_uuid.getNative()->u;
                         pDsc_a[d].att_flags = pDescriptor->m_properties;
                         pDsc_a[d].min_key_size = 0;

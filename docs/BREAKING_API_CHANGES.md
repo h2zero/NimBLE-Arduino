@@ -33,15 +33,18 @@ When creating a characteristic the properties are now set with `NIMBLE_PROPERTY:
 ### Descriptors
 Descriptors are now created using the `NimBLECharacteristic::createDescriptor()` method.
  
-The previous method `BLECharacteristic::addDescriptor()` is now a private function in the library.
+The previous method `BLECharacteristic::addDescriptor()` has been removed.  
 
-This was done because the NimBLE host automatically creates a 0x2902 descriptor if a characteristic has NOTIFY or INDICATE properties applied.   
-Due to this fact, the library also creates one automatically for your application.    
-The only reason to manually create this descriptor now is to assign callback functions.   
-If you do not require this functionality you can safely exclude the manual creation of the 0x2902 descriptor.   
+0x2902 Descriptor class: formerly known as BLE2902 or NimBLE2902 has been removed.  
+It was no longer useful as a new callback `NimBLECharacteristicCallbacks::onSubscribe` was added  
+to handle callback functionality and the client subscription status is handled internally.  
 
-For any other descriptor, (except 0x2904, see below) it should now be created just as characteristics are    
-by using the `NimBLECharacteristic::createDescriptor` method.   
+NimBLE automatically creates the 0x2902 descriptor if a characteristic has a notification or indication property assigned to it.  
+
+**Note** Attempting to create a 0x2902 descriptor will trigger an assert to notify the error, 
+allowing the creation of it would cause a fault in the NimBLE stack.
+
+All other desctiptors are now created just as characteristics are by using the `NimBLECharacteristic::createDescriptor` methods (except 0x2904, see below).   
 Which are defined as:
 ```
 NimBLEDescriptor* createDescriptor(const char* uuid,
@@ -67,15 +70,14 @@ pDescriptor = pCharacteristic->createDescriptor("ABCD",
 Would create a descriptor with the UUID 0xABCD, publicly readable but only writable if paired/bonded (encrypted) and has a max value length of 25 bytes.  
 <br/>
 
-For the 0x2904 and 0x2902 descriptor, there is a special class that is created when you call `createDescriptor("2904")`or `createDescriptor("2902")`.
+For the 0x2904, there is a special class that is created when you call `createDescriptor("2904").
 
-The pointer returned is of the base class `NimBLEDescriptor` but the call will create the derived class of `NimBLE2904` or `NimBLE2902` so you must cast the returned pointer to  
-`NimBLE2904` or `NimBLE2902` to access the specific class methods.
+The pointer returned is of the base class `NimBLEDescriptor` but the call will create the derived class of `NimBLE2904` so you must cast the returned pointer to  
+`NimBLE2904` to access the specific class methods.
 
 ##### Example
 ```
 p2904 = (NimBLE2904*)pCharacteristic->createDescriptor("2904");
-p2902 = (NimBLE2902*)pCharacteristic->createDescriptor("2902");
 ```
 <br/>
 
@@ -91,7 +93,6 @@ Security is set on the characteristic or descriptor properties by applying one o
 When a peer wants to read or write a characteristic or descriptor with any of these properties applied    
 it will trigger the pairing process. By default the "just-works" pairing will be performed automatically.   
 This can be changed to use passkey authentication or numeric comparison. See [Security Differences](#security-differences) for details.  
-
 <br/>
 
 # Client API Differences

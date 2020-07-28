@@ -110,6 +110,7 @@ public:
 
     std::string       toString();
     uint16_t          getHandle();
+    size_t            getSubscribedCount();
 
 private:
 
@@ -145,6 +146,8 @@ private:
     ble_task_data_t                *m_pTaskData;
     portMUX_TYPE                   m_valMux;
     time_t                         m_timestamp;
+
+    std::vector<std::pair<uint16_t, uint16_t>>  m_subscribedVec;
 }; // NimBLECharacteristic
 
 
@@ -181,6 +184,7 @@ public:
     virtual void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc);
     virtual void onNotify(NimBLECharacteristic* pCharacteristic);
     virtual void onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code);
+    virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue);
 };
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)

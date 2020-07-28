@@ -182,10 +182,6 @@ void NimBLEServer::start() {
             // we do it now.
             if((chr->m_properties & BLE_GATT_CHR_F_INDICATE) ||
                 (chr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
-
-                if(nullptr == chr->getDescriptorByUUID(uint16_t(0x2902))) {
-                    chr->createDescriptor(uint16_t(0x2902));
-                }
                 m_notifyChrVec.push_back(chr);
             }
         }
@@ -303,9 +299,9 @@ size_t NimBLEServer::getConnectedCount() {
         } // BLE_GAP_EVENT_DISCONNECT
 
         case BLE_GAP_EVENT_SUBSCRIBE: {
-            NIMBLE_LOGI(LOG_TAG, "subscribe event; cur_notify=%d\n value handle; "
-                              "val_handle=%d\n",
-                        event->subscribe.cur_notify, event->subscribe.attr_handle);
+            NIMBLE_LOGI(LOG_TAG, "subscribe event; attr_handle=%d, subscribed: %s",
+                                 event->subscribe.attr_handle,
+                                 (event->subscribe.cur_notify ? "true":"false"));
 
             for(auto &it : server->m_notifyChrVec) {
                 if(it->getHandle() == event->subscribe.attr_handle) {
