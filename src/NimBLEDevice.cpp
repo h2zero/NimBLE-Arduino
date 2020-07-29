@@ -539,6 +539,8 @@ void NimBLEDevice::stopAdvertising() {
 
 /**
  * @brief Shutdown the NimBLE stack/controller.
+ * @param [in] clearAll If true, deletes all server/advertising/scan/client objects after deinitializing.
+ * @note If clearAll is true when called, any references to the created objects become invalid.
  */
 /* STATIC */ void NimBLEDevice::deinit(bool clearAll) {
     int ret = nimble_port_stop();
