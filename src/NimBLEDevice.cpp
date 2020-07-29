@@ -140,13 +140,16 @@ void NimBLEDevice::stopAdvertising() {
  * @return A reference to the new client object.
  */
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-/* STATIC */ NimBLEClient* NimBLEDevice::createClient() {
+/* STATIC */ NimBLEClient* NimBLEDevice::createClient(NimBLEAddress peerAddress) {
     if(m_cList.size() >= NIMBLE_MAX_CONNECTIONS) {
         NIMBLE_LOGW("Number of clients exceeds Max connections. Max=(%d)",
                                             NIMBLE_MAX_CONNECTIONS);
     }
 
     NimBLEClient* pClient = new NimBLEClient();
+    if(peerAddress != NimBLEAddress("")) {
+        pClient->setPeerAddress(peerAddress);
+    }
     m_cList.push_back(pClient);
 
     return pClient;
