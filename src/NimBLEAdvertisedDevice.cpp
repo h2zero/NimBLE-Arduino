@@ -141,7 +141,7 @@ std::string NimBLEAdvertisedDevice::getServiceData(uint8_t index) {
  * @param [in] uuid The uuid of the service data requested.
  * @return The advertised service data or empty string if no data.
  */
-std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID &uuid) const{
+std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID &uuid) const {
     for(auto &it : m_serviceDataVec) {
         if(it.first == uuid) {
             return it.second;
@@ -193,7 +193,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID(uint8_t index) {
  * @brief Check advertised services for existance of the required UUID
  * @return Return true if service is advertised
  */
-bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid){
+bool NimBLEAdvertisedDevice::isAdvertisingService(const NimBLEUUID &uuid) const {
     for (int i = 0; i < m_serviceUUIDs.size(); i++) {
         if (m_serviceUUIDs[i].equals(uuid)) return true;
     }
