@@ -41,8 +41,10 @@ public:
     bool                                        connect(NimBLEAdvertisedDevice* device, bool refreshServices = true);
     bool                                        connect(const NimBLEAddress &address, uint8_t type = BLE_ADDR_PUBLIC,
                                                         bool refreshServices = true);
+    bool                                        connect(bool refreshServices = true);
     int                                         disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     NimBLEAddress                               getPeerAddress();
+    void                                        setPeerAddress(const NimBLEAddress &address);
     int                                         getRssi();
     std::vector<NimBLERemoteService*>*          getServices(bool refresh = false);
     std::vector<NimBLERemoteService*>::iterator begin();

@@ -127,6 +127,10 @@ size_t NimBLEClient::deleteService(const NimBLEUUID &uuid) {
 } // deleteServices
 
 
+bool NimBLEClient::connect(bool refreshServices) {
+    return connect(m_peerAddress, 0, refreshServices);
+}
+
 /**
  * @brief Connect to an advertising device.
  * @param [in] device The device to connect to.
@@ -348,7 +352,23 @@ uint16_t NimBLEClient::getConnId() {
  */
 NimBLEAddress NimBLEClient::getPeerAddress() {
     return m_peerAddress;
-} // getAddress
+} // getPeerAddress
+
+
+/**
+ * @brief Set the peer address.
+ * @param [in] address The address of the peer that this client is
+ * connected or should connect to.
+ */
+void NimBLEClient::setPeerAddress(const NimBLEAddress &address) {
+    if(isConnected()) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot set peer address while connected");
+        return;
+    }
+
+    m_peerAddress = address;
+    NIMBLE_LOGE(LOG_TAG, "Peer address set: %s", std::string(m_peerAddress).c_str());
+} // setPeerAddress
 
 
 /**
