@@ -52,21 +52,12 @@ NimBLEScan::NimBLEScan() {
 /*STATIC*/int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
 
     NimBLEScan* pScan = (NimBLEScan*)arg;
-    struct ble_hs_adv_fields fields;
-    int rc = 0;
 
     switch(event->type) {
 
         case BLE_GAP_EVENT_DISC: {
             if(pScan->m_stopped) {
                 NIMBLE_LOGE(LOG_TAG, "Scan stop called, ignoring results.");
-                return 0;
-            }
-
-            rc = ble_hs_adv_parse_fields(&fields, event->disc.data,
-                                     event->disc.length_data);
-            if (rc != 0) {
-                NIMBLE_LOGE(LOG_TAG, "Gap Event Parse ERROR.");
                 return 0;
             }
 
@@ -102,9 +93,9 @@ NimBLEScan::NimBLEScan() {
                 NIMBLE_LOGI(LOG_TAG, "UPDATING PREVIOUSLY FOUND DEVICE: %s", advertisedAddress.toString().c_str());
             }
             advertisedDevice->setRSSI(event->disc.rssi);
-            advertisedDevice->parseAdvertisement(&fields);
-            advertisedDevice->setScan(pScan);
-            advertisedDevice->setAdvertisementResult(event->disc.data, event->disc.length_data);
+            if(event->disc.length_data > 0) {
+                advertisedDevice->parseAdvertisement(event->disc.data, event->disc.length_data);
+            }
             advertisedDevice->m_timestamp = time(nullptr);
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
