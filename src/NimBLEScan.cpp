@@ -90,7 +90,6 @@ NimBLEScan::~NimBLEScan() {
             // Otherwise just update the relevant parameters of the already known device.
             if(advertisedDevice == nullptr){
                 advertisedDevice = new NimBLEAdvertisedDevice();
-                advertisedDevice->setAddressType(event->disc.addr.type);
                 advertisedDevice->setAddress(advertisedAddress);
                 advertisedDevice->setAdvType(event->disc.event_type);
                 pScan->m_scanResults.m_advertisedDevicesVector.push_back(advertisedDevice);
