@@ -45,6 +45,13 @@ NimBLEScan::NimBLEScan() {
 
 
 /**
+ * @brief Scan destructor, release any allocated resources.
+ */
+NimBLEScan::~NimBLEScan() {
+     clearResults();
+}
+
+/**
  * @brief Handle GAP events related to scans.
  * @param [in] event The event type for this event.
  * @param [in] param Parameter data for this event.

@@ -42,6 +42,7 @@ NimBLEServer::NimBLEServer() {
     m_gattsStarted          = false;
     m_advertiseOnDisconnect = true;
     m_svcChanged            = false;
+    m_deleteCallbacks       = true;
 } // NimBLEServer
 
 
@@ -51,6 +52,10 @@ NimBLEServer::NimBLEServer() {
 NimBLEServer::~NimBLEServer() {
     for(auto &it : m_svcVec) {
         delete it;
+    }
+
+    if(m_deleteCallbacks && m_pServerCallbacks != &defaultCallbacks) {
+        delete m_pServerCallbacks;
     }
 }
 
@@ -465,10 +470,12 @@ size_t NimBLEServer::getConnectedCount() {
  * events are detected.
  *
  * @param [in] pCallbacks The callbacks to be invoked.
+ * @param [in] deleteCallbacks if true callback class will be deleted when server is destructed.
  */
-void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks) {
+void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks, bool deleteCallbacks) {
     if (pCallbacks != nullptr){
         m_pServerCallbacks = pCallbacks;
+        m_deleteCallbacks = deleteCallbacks;
     } else {
         m_pServerCallbacks = &defaultCallbacks;
     }

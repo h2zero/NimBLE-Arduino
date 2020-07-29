@@ -44,7 +44,8 @@ public:
     void                   removeService(NimBLEService* service, bool deleteSvc = false);
     void                   addService(NimBLEService* service);
     NimBLEAdvertising*     getAdvertising();
-    void                   setCallbacks(NimBLEServerCallbacks* pCallbacks);
+    void                   setCallbacks(NimBLEServerCallbacks* pCallbacks,
+                                        bool deleteCallbacks = true);
     void                   startAdvertising();
     void                   stopAdvertising();
     void                   start();
@@ -70,6 +71,7 @@ private:
     bool                   m_advertiseOnDisconnect;
     bool                   m_svcChanged;
     NimBLEServerCallbacks* m_pServerCallbacks;
+    bool                   m_deleteCallbacks;
     std::vector<uint16_t>  m_connectedPeersVec;
 
 //    uint16_t               m_svcChgChrHdl; // Future use
