@@ -127,21 +127,27 @@ size_t NimBLEClient::deleteService(const NimBLEUUID &uuid) {
 } // deleteServices
 
 
-bool NimBLEClient::connect(bool refreshServices) {
-    return connect(m_peerAddress, 0, refreshServices);
+/**
+ * @brief Connect to the BLE Server.
+ * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
+ * have created and clears the vectors after successful connection.
+ * @return True on success.
+ */
+bool NimBLEClient::connect(bool deleteAttibutes) {
+    return connect(m_peerAddress, 0, deleteAttibutes);
 }
 
 /**
  * @brief Connect to an advertising device.
  * @param [in] device The device to connect to.
- * @param [in] refreshServices If true this will delete any attribute objects this client may already\n
+ * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices) {
+bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes) {
     NimBLEAddress address(device->getAddress());
     uint8_t type = device->getAddressType();
-    return connect(address, type, refreshServices);
+    return connect(address, type, deleteAttibutes);
 }
 
 
@@ -149,11 +155,11 @@ bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool refreshServices)
  * @brief Connect to the BLE Server.
  * @param [in] address The address of the server.
  * @param [in] type The address type of the server (Random/public/other)
- * @param [in] refreshServices If true this will delete any attribute objects this client may already\n
+ * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refreshServices) {
+bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool deleteAttibutes) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
 
     if(!NimBLEDevice::m_synced) {
@@ -212,7 +218,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool refr
         return false;
     }
 
-    if(refreshServices) {
+    if(deleteAttibutes) {
         NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
         deleteServices();
     }
