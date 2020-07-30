@@ -146,8 +146,7 @@ bool NimBLEClient::connect(bool deleteAttibutes) {
  */
 bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes) {
     NimBLEAddress address(device->getAddress());
-    uint8_t type = device->getAddressType();
-    return connect(address, type, deleteAttibutes);
+    return connect(address, 0, deleteAttibutes);
 }
 
 
@@ -181,7 +180,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool dele
 
     ble_addr_t peerAddrt;
     memcpy(&peerAddrt.val, address.getNative(),6);
-    peerAddrt.type = type;
+    peerAddrt.type = address.getType();
 
     ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
     m_pTaskData = &taskData;
@@ -199,10 +198,9 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool dele
     }while(rc == BLE_HS_EBUSY);
 
     if (rc != 0 && rc != BLE_HS_EDONE) {
-        NIMBLE_LOGE(LOG_TAG, "Error: Failed to connect to device; addr_type=%d "
+        NIMBLE_LOGE(LOG_TAG, "Error: Failed to connect to device; "
                     "addr=%s, rc=%d; %s",
-                    type,
-                    m_peerAddress.toString().c_str(),
+                    std::string(m_peerAddress).c_str(),
                     rc, NimBLEUtils::returnCodeToString(rc));
         m_pTaskData = nullptr;
         m_waitingToConnect = false;
@@ -219,7 +217,6 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool dele
     }
 
     if(deleteAttibutes) {
-        NIMBLE_LOGD(LOG_TAG, "Refreshing Services for: (%s)", address.toString().c_str());
         deleteServices();
     }
 
@@ -373,7 +370,7 @@ void NimBLEClient::setPeerAddress(const NimBLEAddress &address) {
     }
 
     m_peerAddress = address;
-    NIMBLE_LOGE(LOG_TAG, "Peer address set: %s", std::string(m_peerAddress).c_str());
+    NIMBLE_LOGD(LOG_TAG, "Peer address set: %s", std::string(m_peerAddress).c_str());
 } // setPeerAddress
 
 
