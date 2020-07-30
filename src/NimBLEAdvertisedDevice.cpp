@@ -70,7 +70,7 @@ NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
  */
 uint8_t NimBLEAdvertisedDevice::getAdvType() {
     return m_advType;
-} // getAddress
+} // getAdvType
 
 
 /**
@@ -584,7 +584,7 @@ uint8_t* NimBLEAdvertisedDevice::getPayload() {
  * * BLE_ADDR_RANDOM_ID   (0x03)
  */
 uint8_t NimBLEAdvertisedDevice::getAddressType() {
-    return m_addressType;
+    return m_address.getType();
 } // getAddressType
 
 
@@ -595,19 +595,6 @@ uint8_t NimBLEAdvertisedDevice::getAddressType() {
 time_t NimBLEAdvertisedDevice::getTimestamp() {
     return m_timestamp;
 } // getTimestamp
-
-
-/**
- * @brief Set the advertised device address type.
- * @param [in] type The address type of the device:
- * * BLE_ADDR_PUBLIC      (0x00)
- * * BLE_ADDR_RANDOM      (0x01)
- * * BLE_ADDR_PUBLIC_ID   (0x02)
- * * BLE_ADDR_RANDOM_ID   (0x03)
- */
-void NimBLEAdvertisedDevice::setAddressType(uint8_t type) {
-    m_addressType = type;
-} // setAddressType
 
 
 /**

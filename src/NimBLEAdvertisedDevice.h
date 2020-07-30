@@ -111,19 +111,15 @@ public:
     size_t          getPayloadLength();
     uint8_t         getAddressType();
     time_t          getTimestamp();
-    void            setAddressType(uint8_t type);
-
-
-    bool        isAdvertisingService(const NimBLEUUID &uuid) const;
-    bool        haveAppearance();
-    bool        haveManufacturerData();
-    bool        haveName();
-    bool        haveRSSI();
-    bool        haveServiceData();
-    bool        haveServiceUUID();
-    bool        haveTXPower();
-
-    std::string toString();
+    bool            isAdvertisingService(const NimBLEUUID &uuid) const;
+    bool            haveAppearance();
+    bool            haveManufacturerData();
+    bool            haveName();
+    bool            haveRSSI();
+    bool            haveServiceData();
+    bool            haveServiceUUID();
+    bool            haveTXPower();
+    std::string     toString();
 
 private:
     friend class NimBLEScan;
@@ -158,7 +154,6 @@ private:
     int8_t          m_txPower;
     uint8_t*        m_payload;
     size_t          m_payloadLength;
-    uint8_t         m_addressType;
     time_t          m_timestamp;
     bool            m_callbackSent;
 
