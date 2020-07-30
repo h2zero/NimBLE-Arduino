@@ -138,7 +138,7 @@ void NimBLEDevice::stopAdvertising() {
  * @brief Creates a new client object and maintains a list of all client objects
  * each client can connect to 1 peripheral device.
  * @param [in] peerAddress An optional peer address that is copied to the new client
- * object, allows for calling connect() without providing a device or address.
+ * object, allows for calling NimBLEClient::connect(bool) without a device or address parameter.
  * @return A reference to the new client object.
  */
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
