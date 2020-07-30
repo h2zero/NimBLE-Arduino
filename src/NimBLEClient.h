@@ -38,10 +38,10 @@ class NimBLEAdvertisedDevice;
  */
 class NimBLEClient {
 public:
-    bool                                        connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes = true);
-    bool                                        connect(const NimBLEAddress &address, uint8_t type = BLE_ADDR_PUBLIC,
-                                                        bool deleteAttibutes = true);
     bool                                        connect(bool deleteAttibutes = true);
+    bool                                        connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes = true);
+    bool                                        connect(const NimBLEAddress &address, uint8_t type = 0xFF,
+                                                        bool deleteAttibutes = true);
     int                                         disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     NimBLEAddress                               getPeerAddress();
     void                                        setPeerAddress(const NimBLEAddress &address);
