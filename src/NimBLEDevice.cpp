@@ -148,10 +148,7 @@ void NimBLEDevice::stopAdvertising() {
                                             NIMBLE_MAX_CONNECTIONS);
     }
 
-    NimBLEClient* pClient = new NimBLEClient();
-    if(peerAddress != NimBLEAddress("")) {
-        pClient->setPeerAddress(peerAddress);
-    }
+    NimBLEClient* pClient = new NimBLEClient(peerAddress);
     m_cList.push_back(pClient);
 
     return pClient;

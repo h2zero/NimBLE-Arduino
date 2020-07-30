@@ -71,7 +71,7 @@ public:
     void                                        discoverAttributes();
 
 private:
-    NimBLEClient();
+    NimBLEClient(const NimBLEAddress &peerAddress);
     ~NimBLEClient();
 
     friend class            NimBLEDevice;
@@ -84,7 +84,7 @@ private:
                                                 void *arg);
     bool                    retrieveServices(const NimBLEUUID *uuid_filter = nullptr);
 
-    NimBLEAddress           m_peerAddress = NimBLEAddress("");
+    NimBLEAddress           m_peerAddress;
     uint16_t                m_conn_id;
     bool                    m_isConnected;
     bool                    m_waitingToConnect;
