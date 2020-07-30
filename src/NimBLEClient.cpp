@@ -134,7 +134,7 @@ size_t NimBLEClient::deleteService(const NimBLEUUID &uuid) {
  * @return True on success.
  */
 bool NimBLEClient::connect(bool deleteAttibutes) {
-    return connect(m_peerAddress, 0, deleteAttibutes);
+    return connect(m_peerAddress, deleteAttibutes);
 }
 
 /**
@@ -146,7 +146,7 @@ bool NimBLEClient::connect(bool deleteAttibutes) {
  */
 bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes) {
     NimBLEAddress address(device->getAddress());
-    return connect(address, 0, deleteAttibutes);
+    return connect(address, deleteAttibutes);
 }
 
 
@@ -158,7 +158,7 @@ bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes)
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool deleteAttibutes) {
+bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
 
     if(!NimBLEDevice::m_synced) {
@@ -175,15 +175,21 @@ bool NimBLEClient::connect(const NimBLEAddress &address, uint8_t type, bool dele
         return false;
     }
 
-    int rc = 0;
-    m_peerAddress = address;
+    if(address == NimBLEAddress("")) {
+        NIMBLE_LOGE(LOG_TAG, "Invalid peer address;(NULL)");
+        return false;
+    } else if(m_peerAddress != address) {
+        m_peerAddress = address;
+    }
 
     ble_addr_t peerAddrt;
-    memcpy(&peerAddrt.val, address.getNative(),6);
-    peerAddrt.type = address.getType();
+    memcpy(&peerAddrt.val, m_peerAddress.getNative(),6);
+    peerAddrt.type = m_peerAddress.getType();
 
     ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
     m_pTaskData = &taskData;
+
+    int rc = 0;
 
     /* Try to connect the the advertiser.  Allow 30 seconds (30000 ms) for
      *  timeout (default value of m_connectTimeout).
