@@ -53,8 +53,7 @@ static NimBLEClientCallbacks defaultCallbacks;
  * @brief Constructor, private - only callable by NimBLEDevice::createClient
  * to ensure proper handling of the list of client objects.
  */
-NimBLEClient::NimBLEClient()
-{
+NimBLEClient::NimBLEClient(const NimBLEAddress &peerAddress) : m_peerAddress(peerAddress) {
     m_pClientCallbacks = &defaultCallbacks;
     m_conn_id          = BLE_HS_CONN_HANDLE_NONE;
     m_isConnected      = false;
