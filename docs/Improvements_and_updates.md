@@ -87,6 +87,9 @@ NimBLEClient::getService will now retrieve only the service specified and not th
 otherwise wasted retrieving and allocating attributes the user application is not interested in.  
 <br/>
 
+NimBLEClient::connect() can now be called without an address or advertised device parameter. This will connect to the  
+device with the address previously set when last connected or set with NimBLEDevice::setPeerAddress(). 
+
 # General  
 To reduce resource use all instances of std::map have been replaced with std::vector.  
 

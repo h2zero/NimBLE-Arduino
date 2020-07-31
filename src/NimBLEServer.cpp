@@ -534,11 +534,9 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
 
 /**
  * @brief Adds a service which was already created, but removed from availability.
- *
+ * @param [in] service The service object to add.
  * @note If it is desired to advertise the service it must be added by
  * calling NimBLEAdvertising::addServiceUUID.
- *
- * @param [in} service The service object to add.
  */
 void NimBLEServer::addService(NimBLEService* service) {
     // If adding a service that was not removed just return.

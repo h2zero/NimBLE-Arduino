@@ -99,15 +99,17 @@ This can be changed to use passkey authentication or numeric comparison. See [Se
 The `NimBLEAdvertisedDeviceCallbacks::onResult()` method now receives a pointer to the    
 `NimBLEAdvertisedDevice` object instead of a copy.
 
-`NimBLEClient::connect()` now takes an extra parameter to indicate if the client should download the services   
- database from the peripheral, default value is true.
-
+`NimBLEClient::connect()` Has had it's parameters altered.  
 Defined as:
+> NimBLEClient::connect(bool refreshServices = true);  
 > NimBLEClient::connect(NimBLEAdvertisedDevice\* device, bool refreshServices = true);  
-> NimBLEClient::connect(NimBLEAddress address, uint8_t type = BLE_ADDR_PUBLIC, bool refreshServices = true);  
+> NimBLEClient::connect(NimBLEAddress address, bool refreshServices = true);  
+<br/>
 
-If set to false the client will use the services database it retrieved from the peripheral last time it connected.  
-This allows for faster connections and power saving if the devices just dropped connection and want to reconnect.  
+The type parameter has been removed and a new bool parameter has been added to indicate if the client should  
+delete the attribute database previously retrieved (if applicable) for the peripheral, default value is true.  
+If set to false the client will use the attribute database it retrieved from the peripheral when previously connected.  
+This allows for faster connections and power saving if the devices dropped connection and are reconnecting.  
 <br/>
 
 > NimBLERemoteCharacteristic::writeValue();  
@@ -117,6 +119,7 @@ Now return true or false to indicate success or failure so you can choose to dis
 <br/>
 
 > NimBLERemoteCharacteristic::registerForNotify();  
+
 Is now **deprecated**.  
 > NimBLERemoteCharacteristic::subscribe()  
 > NimBLERemoteCharacteristic::unsubscribe()  
@@ -129,7 +132,7 @@ Are the new methods added to replace it.
 > NimBLERemoteCharacteristic::readUInt32()  
 > NimBLERemoteCharacteristic::readFloat()  
 
-Are **deprecated** and NimBLERemoteCharacteristic::readValue(time_t\*, bool) template added to replace them.  
+Are **deprecated** and NimBLERemoteCharacteristic::readValue<type\>(time_t\*, bool) template added to replace them.  
 <br/>
 
 > NimBLERemoteService::getCharacteristicsByHandle()  
@@ -152,8 +155,9 @@ uint8_t *val = (uint8_t*)pChr->readValue().data();
 > NimBLERemoteService::getCharacteristics(bool refresh = false)    
 
 These methods now take an optional (bool) parameter and return a pointer to `std::vector` instead of `std::map`.   
-If passed true it will clear the respective vector and retrieve all the respective attributes from the peripheral.   
-If false(default) it will return the respective vector with the currently stored attributes. 
+If passed true it will clear the respective vector and retrieve **all** the respective attributes from the peripheral.   
+If false(default) it will return the respective vector with the currently stored attributes.  
+<br/>
 
 **Removed:** the automatic discovery of all peripheral attributes as they consumed time and resources for data   
 the user may not be interested in.  
@@ -175,6 +179,17 @@ These changes allow more control for the user to manage the resources used for t
 ### Client Security
 The client will automatically initiate security when the peripheral responds that it's required.  
 The default configuration will use "just-works" pairing with no bonding, if you wish to enable bonding see below.  
+<br/>
+
+# General Differences
+`NimBLEAddress()` When constructing an address the constructor now takes an optional `uint8_t type` paramameter  
+to specify the address type. Default is (0) Public static address.  
+
+Defined as:
+> NimBLEAddress(ble_addr_t address);  
+> NimBLEAddress(uint8_t address[6], uint8_t type = BLE_ADDR_PUBLIC);  
+> NimBLEAddress(const std::string &stringAddress, uint8_t type = BLE_ADDR_PUBLIC);  
+> NimBLEAddress(const uint64_t &address, uint8_t type = BLE_ADDR_PUBLIC);  
 <br/>
 
 # Security Differences

@@ -161,7 +161,7 @@ void NimBLEScan::setActiveScan(bool active) {
 /**
  * @brief Set whether or not the BLE controller should only report results
  * from devices it has not already seen.
- * @param [in] active If true, scanned devices will only be reported once.
+ * @param [in] enabled If true, scanned devices will only be reported once.
  * @details The controller has a limited buffer and will start reporting
  * dupicate devices once the limit is reached.
  */
@@ -173,7 +173,7 @@ void NimBLEScan::setDuplicateFilter(bool enabled) {
 /**
  * @brief Set whether or not the BLE controller only report scan results
  * from devices advertising in limited discovery mode, i.e. directed advertising.
- * @param [in] active If true, only limited discovery devices will be in scan results.
+ * @param [in] enabled If true, only limited discovery devices will be in scan results.
  */
 void NimBLEScan::setLimitedOnly(bool enabled) {
     m_scan_params.limited = enabled;
