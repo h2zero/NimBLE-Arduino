@@ -152,7 +152,6 @@ bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes)
 /**
  * @brief Connect to the BLE Server.
  * @param [in] address The address of the server.
- * @param [in] type The address type of the server (Random/public/other)
  * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
