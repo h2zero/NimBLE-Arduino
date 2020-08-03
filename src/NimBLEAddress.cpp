@@ -169,11 +169,10 @@ bool NimBLEAddress::operator !=(const NimBLEAddress & rhs) const {
  * that accept std::string and/or or it's methods as a parameter.
  */
 NimBLEAddress::operator std::string() const {
-    char buffer[28];
-    snprintf(buffer, sizeof(buffer), "%02x:%02x:%02x:%02x:%02x:%02x type: %d",
+    char buffer[18];
+    snprintf(buffer, sizeof(buffer), "%02x:%02x:%02x:%02x:%02x:%02x",
                                      m_address[5], m_address[4], m_address[3],
-                                     m_address[2], m_address[1], m_address[0],
-                                     m_addrType);
+                                     m_address[2], m_address[1], m_address[0]);
     return std::string(buffer);
 } // operator std::string
 
