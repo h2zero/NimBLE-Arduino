@@ -559,7 +559,6 @@ std::string NimBLEAdvertisedDevice::toString() {
             res += ", Data: " + getServiceData(i);
         }
     }
-    res += "\nadvType: " + std::string(NimBLEUtils::advTypeToString(m_advType));
 
     return res;
 
