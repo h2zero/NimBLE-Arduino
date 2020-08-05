@@ -48,14 +48,29 @@ See: [Breaking API Changes vs Original](docs/BREAKING_API_CHANGES.md) for detail
 
 Also see [Improvements_and_updates](docs/Improvements_and_updates.md) for information about non-breaking changes.  
 
-### Arduino
-    See the Refactored_original_examples in the examples folder for highlights of the differences with the original library.  
+### Arduino specific:
+See the Refactored_original_examples in the examples folder for highlights of the differences with the original library.  
 
-    More advanced examples highlighting many available features are in examples/NimBLE_Server, NimBLE_Client.  
+More advanced examples highlighting many available features are in examples/NimBLE_Server, NimBLE_Client.  
     
-    Beacon examples provided by [beegee-tokyo](https://github.com/beegee-tokyo) are in examples/BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon, BLE_EddystoneURL_Beacon.  
+Beacon examples provided by [beegee-tokyo](https://github.com/beegee-tokyo) are in examples/BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon, BLE_EddystoneURL_Beacon.  
 
-    Change the settings in the nimconfig.h file to customize NimBLE to your project, such as increasing max connections (default == 3).  
+Change the settings in the nimconfig.h file to customize NimBLE to your project, such as increasing max connections (default == 3).  
+
+**Note To increase max connections in Arduino it is also required to change the controller max connections defined in sdkconfig.h.**  
+
+This is located in your Arduino/hardware/espressif/esp32/tools/sdk/include/config folder.
+
+The values in `sdkconfig.h` you will need to change are:  
+```
+#define CONFIG_BTDM_CONTROLLER_BLE_MAX_CONN 3  
+#define CONFIG_BTDM_CONTROLLER_BLE_MAX_CONN_EFF 3  
+```
+In `nimconfig.h` the value is:  
+```
+#define CONFIG_BT_NIMBLE_MAX_CONNECTIONS 3  
+```
+Espressif has stated the hard maximum connections is 9.  
 <br/>  
 
 # Acknowledgments
