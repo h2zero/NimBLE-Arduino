@@ -894,7 +894,7 @@ uint16_t NimBLEClient::getMTU() {
                     pkey.passkey = NimBLEDevice::m_securityCallbacks->onPassKeyRequest();
                 /////////////////////////////////////////////
                 } else {
-                    client->m_pClientCallbacks->onPassKeyRequest();
+                    pkey.passkey = client->m_pClientCallbacks->onPassKeyRequest();
                 }
 
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
