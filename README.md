@@ -37,14 +37,16 @@ Download as .zip and extract to Arduino/libraries folder, or in Arduino IDE from
 
 `#include "NimBLEDevice.h"` at the beginning of your sketch.
 
-Tested and working with esp32-arduino v1.0.2 and 1.0.4 in Arduino IDE v1.8.12 and platform IO.  
+Tested and working with esp32-arduino in Arduino IDE and platform IO.  
 <br/>
 
 # Using
 This library is intended to be compatible with the original ESP32 BLE functions and types with minor changes.  
-See: [Breaking API Changes vs Original](docs/BREAKING_API_CHANGES.md) for changes that might required to adapt your exisiting projects.  
+See: [The migration guide](docs/Migration_guide.md) for details. 
 
-Also see [Improvements_and_updates](docs/Improvements_and_updates.md) for information about non-breaking changes.  
+Also see [Improvements_and_updates](docs/Improvements_and_updates.md) for information about non-breaking changes.
+
+[Full API documentation and class list can be found here.](h2zero.github.io/esp-nimble-cpp)  
 
 Check the Refactored_original_examples in the examples folder for highlights of the differences with the original library.
 

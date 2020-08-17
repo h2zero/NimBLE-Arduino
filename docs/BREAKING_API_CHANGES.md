@@ -44,7 +44,7 @@ NimBLE automatically creates the 0x2902 descriptor if a characteristic has a not
 **Note** Attempting to create a 0x2902 descriptor will trigger an assert to notify the error, 
 allowing the creation of it would cause a fault in the NimBLE stack.
 
-All other desctiptors are now created just as characteristics are by using the `NimBLECharacteristic::createDescriptor` methods (except 0x2904, see below).   
+All other descriptors are now created just as characteristics are by using the `NimBLECharacteristic::createDescriptor` methods (except 0x2904, see below).   
 Which are defined as:
 ```
 NimBLEDescriptor* createDescriptor(const char* uuid,
