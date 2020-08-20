@@ -238,15 +238,20 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
  */
 bool NimBLEClient::secureConnection() {
     ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
-    m_pTaskData = &taskData;
 
-    int rc = NimBLEDevice::startSecurity(m_conn_id);
-    if(rc != 0){
-        m_pTaskData = nullptr;
-        return false;
-    }
+    int retryCount = 1;
 
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    do {
+        m_pTaskData = &taskData;
+
+        int rc = NimBLEDevice::startSecurity(m_conn_id);
+        if(rc != 0){
+            m_pTaskData = nullptr;
+            return false;
+        }
+
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    } while (taskData.rc == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING) && retryCount--);
 
     if(taskData.rc != 0){
         return false;
@@ -822,12 +827,15 @@ uint16_t NimBLEClient::getMTU() {
                 return 0;
             }
 
-            if(event->enc_change.status == 0) {
+            if(event->enc_change.status == 0 || event->enc_change.status == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING)) {
                 struct ble_gap_conn_desc desc;
-                rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
+                rc = ble_gap_conn_find(event->enc_change.conn_handle, &desc);
                 assert(rc == 0);
 
-                if(NimBLEDevice::m_securityCallbacks != nullptr) {
+                if (event->enc_change.status == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING)) {
+                    // Key is missing, try deleting.
+                    ble_store_util_delete_peer(&desc.peer_id_addr);
+                } else if(NimBLEDevice::m_securityCallbacks != nullptr) {
                     NimBLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
                 } else {
                     client->m_pClientCallbacks->onAuthenticationComplete(&desc);
