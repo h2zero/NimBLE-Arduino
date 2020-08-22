@@ -137,20 +137,6 @@ void NimBLEAdvertising::setMaxInterval(uint16_t maxinterval) {
 
 
 /**
- * @brief NOP - Not yet implemented, dummy function for backward compatibility.
- */
-void NimBLEAdvertising::setMinPreferred(uint16_t mininterval) {
-} // setMinPreferred
-
-
-/**
- * @brief NOP - Not yet implemented, dummy function for backward compatibility.
- */
-void NimBLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
-} // setMaxPreferred
-
-
-/**
  * @brief Set if scan response is available.
  * @param [in] set true = scan response available.
  */

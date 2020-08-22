@@ -86,8 +86,6 @@ public:
     void setAdvertisementData(NimBLEAdvertisementData& advertisementData);
     void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
     void setScanResponseData(NimBLEAdvertisementData& advertisementData);
-    void setMinPreferred(uint16_t);
-    void setMaxPreferred(uint16_t);
     void setScanResponse(bool);
 
 private:
