@@ -42,7 +42,10 @@ Tested and working with esp32-arduino in Arduino IDE and platform IO.
 
 # Using
 This library is intended to be compatible with the original ESP32 BLE functions and types with minor changes.  
-See: [The migration guide](docs/Migration_guide.md) for details. 
+
+If you have not used the original Bluedroid library please refer to the [New user guide](docs/New_user_guide.md).  
+
+If you are familiar with the original library, see: [The migration guide](docs/Migration_guide.md) for details about breaking changes and migration.  
 
 Also see [Improvements_and_updates](docs/Improvements_and_updates.md) for information about non-breaking changes.
 
@@ -54,7 +57,7 @@ More advanced examples highlighting many available features are in examples/ Nim
 
 Beacon examples provided by @beegee-tokyo are in examples/ BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon, BLE_EddystoneURL_Beacon.   
 
-Change the settings in the `nimconfig.h` file to customize NimBLE to your project, such as increasing max connections, default is 3.  
+Change the settings in the `src/nimconfig.h` file to customize NimBLE to your project, such as increasing max connections, default is 3.  
 
 **Note To increase max connections in Arduino it is also required to change the controller max connections defined in sdkconfig.h.**  
 
