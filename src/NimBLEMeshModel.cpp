@@ -23,6 +23,9 @@ NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks) {
     } else {
         m_callbacks = pCallbacks;
     }
+
+    opList = nullptr;
+    opPub  = nullptr;
 }
 
 
@@ -32,6 +35,10 @@ NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks) {
 NimBLEMeshModel::~NimBLEMeshModel(){
     if(opList != nullptr) {
         delete[] opList;
+    }
+
+    if(opPub != nullptr) {
+        delete[] opPub;
     }
 }
 
@@ -49,13 +56,11 @@ NimBLEGenOnOffSrvModel::NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks* pCallba
     { BT_MESH_MODEL_OP_2(0x82, 0x02), 2, NimBLEGenOnOffSrvModel::setOnOff },
     { BT_MESH_MODEL_OP_2(0x82, 0x03), 2, NimBLEGenOnOffSrvModel::setOnOffUnack },
     BT_MESH_MODEL_OP_END};
-
-    opPub = nullptr;
 }
 
 
 /**
- * @brief Called by the NimBLE stack to get the status of the model 
+ * @brief Called by the NimBLE stack to get the on/off status of the model
  */
 void NimBLEGenOnOffSrvModel::getOnOff(bt_mesh_model *model,
                                       bt_mesh_msg_ctx *ctx,
@@ -78,7 +83,7 @@ void NimBLEGenOnOffSrvModel::getOnOff(bt_mesh_model *model,
 
 
 /**
- * @brief Called by the NimBLE stack to set the status of the model with acknowledgement. 
+ * @brief Called by the NimBLE stack to set the status of the model with acknowledgement.
  */
 void NimBLEGenOnOffSrvModel::setOnOff(bt_mesh_model *model,
                                       bt_mesh_msg_ctx *ctx,
@@ -86,14 +91,14 @@ void NimBLEGenOnOffSrvModel::setOnOff(bt_mesh_model *model,
 {
     NimBLEGenOnOffSrvModel *pModel = (NimBLEGenOnOffSrvModel*)model->user_data;
     pModel->m_callbacks->setOnOff(buf->om_data[0]);
-    
+
     // send the status update
     NimBLEGenOnOffSrvModel::getOnOff(model,ctx,buf);
 }
 
 
 /**
- * @brief Called by the NimBLE stack to set the status of the model without acknowledgement. 
+ * @brief Called by the NimBLE stack to set the status of the model without acknowledgement.
  */
 void NimBLEGenOnOffSrvModel::setOnOffUnack(bt_mesh_model *model,
                                            bt_mesh_msg_ctx *ctx,
@@ -121,16 +126,18 @@ NimBLEGenLevelSrvModel::NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks* pCallba
     { BT_MESH_MODEL_OP_2(0x82, 0x0b), 3, NimBLEGenLevelSrvModel::setMove },
     { BT_MESH_MODEL_OP_2(0x82, 0x0c), 3, NimBLEGenLevelSrvModel::setMoveUnack },
     BT_MESH_MODEL_OP_END};
-
-    opPub = nullptr;
 }
 
+
+/**
+ * @brief Called by the NimBLE stack to get the level value of the model.
+ */
 void NimBLEGenLevelSrvModel::getLevel(bt_mesh_model *model,
                                       bt_mesh_msg_ctx *ctx,
                                       os_mbuf *buf)
 {
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
-    
+
     struct os_mbuf *msg = NET_BUF_SIMPLE(4);
 
     bt_mesh_model_msg_init(msg, BT_MESH_MODEL_OP_2(0x82, 0x08));
@@ -144,6 +151,9 @@ void NimBLEGenLevelSrvModel::getLevel(bt_mesh_model *model,
 }
 
 
+/**
+ * @brief Called by the NimBLE stack to set the level value of the model.
+ */
 void NimBLEGenLevelSrvModel::setLevel(bt_mesh_model *model,
                                       bt_mesh_msg_ctx *ctx,
                                       os_mbuf *buf)
@@ -154,6 +164,10 @@ void NimBLEGenLevelSrvModel::setLevel(bt_mesh_model *model,
     NimBLEGenLevelSrvModel::getLevel(model, ctx, buf);
 }
 
+
+/**
+ * @brief Called by the NimBLE stack to set the level value of the model without acknowledgement.
+ */
 void NimBLEGenLevelSrvModel::setLevelUnack(bt_mesh_model *model,
                                            bt_mesh_msg_ctx *ctx,
                                            os_mbuf *buf)
@@ -163,6 +177,9 @@ void NimBLEGenLevelSrvModel::setLevelUnack(bt_mesh_model *model,
 }
 
 
+/**
+ * @brief Called by the NimBLE stack to set the level value by delta of the model.
+ */
 void NimBLEGenLevelSrvModel::setDelta(bt_mesh_model *model,
                                       bt_mesh_msg_ctx *ctx,
                                       os_mbuf *buf)
@@ -173,6 +190,10 @@ void NimBLEGenLevelSrvModel::setDelta(bt_mesh_model *model,
     NimBLEGenLevelSrvModel::getLevel(model, ctx, buf);
 }
 
+
+/**
+ * @brief Called by the NimBLE stack to set the level value by delta without acknowledgement.
+ */
 void NimBLEGenLevelSrvModel::setDeltaUnack(bt_mesh_model *model,
                                            bt_mesh_msg_ctx *ctx,
                                            os_mbuf *buf)
@@ -180,6 +201,7 @@ void NimBLEGenLevelSrvModel::setDeltaUnack(bt_mesh_model *model,
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
     pModel->m_callbacks->setDelta((int16_t) net_buf_simple_pull_le16(buf));
 }
+
 
 void NimBLEGenLevelSrvModel::setMove(bt_mesh_model *model,
                                      bt_mesh_msg_ctx *ctx,

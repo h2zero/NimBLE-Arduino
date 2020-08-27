@@ -20,6 +20,9 @@
 
 static const char* LOG_TAG = "NimBLEMeshNode";
 
+/**
+ * Health server callback struct
+ */
 static const struct bt_mesh_health_srv_cb health_srv_cb = {
     NimBLEHealthSrvCallbacks::faultGetCurrent,
     NimBLEHealthSrvCallbacks::faultGetRegistered,
@@ -29,7 +32,11 @@ static const struct bt_mesh_health_srv_cb health_srv_cb = {
     NimBLEHealthSrvCallbacks::attentionOff
 };
 
-
+/**
+ * @brief Construct a mesh node.
+ * @param [in] uuid The uuid used to advertise for provisioning.
+ * @param [in] type Bitmask of the node features supported.
+ */
 NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
     assert(uuid.bitSize() == 128);
 
@@ -53,7 +60,7 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
                                 BT_MESH_GATT_PROXY_DISABLED;*/
 
     m_serverConfig.default_ttl = 7;
-    
+
     // 3 transmissions with 20ms interval
     m_serverConfig.net_transmit = BT_MESH_TRANSMIT(2, 20);
     m_serverConfig.relay_retransmit = BT_MESH_TRANSMIT(2, 20);
@@ -64,15 +71,36 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
 
     // Default health pub config
     m_healthPub.msg = BT_MESH_HEALTH_FAULT_MSG(0);
-    
+
     // Provisioning config
     m_uuid          = uuid;
     m_prov.uuid     = m_uuid.getNative()->u128.value;
     m_prov.complete = NimBLEMeshNode::provComplete;
     m_prov.reset    = NimBLEMeshNode::provReset;
 
+    m_configSrvModel = nullptr;
+    m_configHthModel = nullptr;
+
     // Create the primary element
     m_elemVec.push_back(new NimBLEMeshElement());
+}
+
+
+/**
+ * @brief Destructor, cleanup any resources created.
+ */
+NimBLEMeshNode::~NimBLEMeshNode() {
+    if(m_configSrvModel != nullptr) {
+        delete m_configSrvModel;
+    }
+
+    if(m_configHthModel != nullptr) {
+        delete m_configHthModel;
+    }
+
+    if(m_comp.elem != nullptr) {
+        free (m_comp.elem);
+    }
 }
 
 
@@ -155,10 +183,15 @@ bool NimBLEMeshNode::start() {
     // setup node composition
     m_comp.cid = CID_VENDOR;
     m_comp.elem = (bt_mesh_elem*)calloc(m_elemVec.size(), sizeof(bt_mesh_elem));
+
+    if(m_comp.elem == nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "Error: No Mem");
+        return false;
+    }
+
     for(size_t i = 0; i < m_elemVec.size(); i++) {
         memcpy(&m_comp.elem[i], m_elemVec[i]->start(),sizeof(bt_mesh_elem));
     }
-    //m_comp.elem = m_elemVec[0]->start();
     m_comp.elem_count = (uint8_t)m_elemVec.size();
 
     // Use random address

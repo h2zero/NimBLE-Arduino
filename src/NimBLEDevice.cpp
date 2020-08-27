@@ -92,6 +92,12 @@ uint16_t                    NimBLEDevice::m_scanDuplicateSize = CONFIG_BTDM_SCAN
 uint8_t                     NimBLEDevice::m_scanFilterMode = CONFIG_BTDM_SCAN_DUPL_TYPE;
 #endif
 
+/**
+ * @brief Create a new mesh node.
+ * @param [in] uuid The uuid to advertise before being provisioned.
+ * @param [in] type A bitmask of the node type to create.
+ * @return A point to new instance of the mesh node.
+ */
 NimBLEMeshNode* NimBLEDevice::createMeshNode(NimBLEUUID uuid, uint8_t type) {
     if(m_pMeshNode == nullptr) {
         m_pMeshNode = new NimBLEMeshNode(uuid, type);
@@ -100,9 +106,15 @@ NimBLEMeshNode* NimBLEDevice::createMeshNode(NimBLEUUID uuid, uint8_t type) {
     return m_pMeshNode;
 }
 
+
+/**
+ * @brief Get the mesh node instance.
+ * @return a pointer to the mesh node instance or nullptr if no node exists.
+ */
 NimBLEMeshNode* NimBLEDevice::getMeshNode() {
     return m_pMeshNode;
 }
+
 
 /**
  * @brief Create a new instance of a server.
