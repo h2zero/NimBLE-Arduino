@@ -5,14 +5,24 @@
  *      Author H2zero
  *
  */
- 
+
 #include "NimBLEMeshElement.h"
 #include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLEMeshElement";
 
-NimBLEMeshElement::NimBLEMeshElement(){}
-NimBLEMeshElement::~NimBLEMeshElement(){}
+NimBLEMeshElement::NimBLEMeshElement() {
+    m_pElem = nullptr;
+}
+NimBLEMeshElement::~NimBLEMeshElement() {
+    if(m_pElem != nullptr) {
+        delete m_pElem;
+    }
+
+    for(auto &it : m_modelsVec) {
+        delete (NimBLEMeshModel*)it.user_data;
+    }
+}
 
 /**
  * @brief Creates a model and adds it the the elements model vector.
@@ -26,26 +36,26 @@ void NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCallbacks *pCa
             return;
         }
     }
-    
+
     NIMBLE_LOGD(LOG_TAG, "Creating model type: %04x", type);
-    
+
     NimBLEMeshModel* pModel = nullptr;
-    
-    switch(type) 
+
+    switch(type)
     {
-        case BT_MESH_MODEL_ID_GEN_ONOFF_SRV: 
+        case BT_MESH_MODEL_ID_GEN_ONOFF_SRV:
             pModel = new NimBLEGenOnOffSrvModel(pCallbacks);
             break;
-        
-        case BT_MESH_MODEL_ID_GEN_LEVEL_SRV: 
+
+        case BT_MESH_MODEL_ID_GEN_LEVEL_SRV:
             pModel = new NimBLEGenLevelSrvModel(pCallbacks);
             break;
-        
+
         default:
             NIMBLE_LOGE(LOG_TAG, "Error: model type %04x not supported", type);
             return;
     }
-    
+
     m_modelsVec.push_back(bt_mesh_model{{type},0,0,0, pModel->opPub,{0},{0},pModel->opList, pModel});
 }
 
@@ -63,7 +73,8 @@ void NimBLEMeshElement::addModel(bt_mesh_model* model) {
  * @details Must not be called until all models have been added.
  */
 bt_mesh_elem* NimBLEMeshElement::start() {
-    return new bt_mesh_elem{0, 0, uint8_t(m_modelsVec.size()), 0, &m_modelsVec[0], NULL};
+    m_pElem = new bt_mesh_elem{0, 0, uint8_t(m_modelsVec.size()), 0, &m_modelsVec[0], NULL};
+    return m_pElem;
 }
 
 

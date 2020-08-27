@@ -5,7 +5,7 @@
  *      Author H2zero
  *
  */
- 
+
 #ifndef MAIN_NIMBLE_MESH_MODEL_H_
 #define MAIN_NIMBLE_MESH_MODEL_H_
 
@@ -31,10 +31,10 @@ public:
 class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshElement;
     friend class NimBLEMeshNode;
-    
+
     NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks* pCallbacks);
     ~NimBLEGenOnOffSrvModel();
-    
+
     static void getOnOff(bt_mesh_model *model,
                          bt_mesh_msg_ctx *ctx,
                          os_mbuf *buf);
@@ -49,10 +49,10 @@ class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
 class NimBLEGenLevelSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshElement;
     friend class NimBLEMeshNode;
-    
+
     NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks* pCallbacks);
     ~NimBLEGenLevelSrvModel();
-    
+
     static void getLevel(bt_mesh_model *model,
                          bt_mesh_msg_ctx *ctx,
                          os_mbuf *buf);
@@ -84,7 +84,7 @@ public:
     virtual void    setLevel(int16_t);
     virtual int16_t getLevel();
     virtual void    setDelta(int16_t);
-    
+
 };
 
 #endif // CONFIG_BT_ENABLED

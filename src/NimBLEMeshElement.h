@@ -5,7 +5,7 @@
  *      Author H2zero
  *
  */
- 
+
 #ifndef MAIN_NIMBLE_MESH_ELEMENT_H_
 #define MAIN_NIMBLE_MESH_ELEMENT_H_
 
@@ -32,6 +32,7 @@ private:
     void addModel(bt_mesh_model* model);
     bt_mesh_elem* start();
 
+    bt_mesh_elem *m_pElem;
     std::vector<bt_mesh_model> m_modelsVec;
 };
 
