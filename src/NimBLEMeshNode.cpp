@@ -190,7 +190,7 @@ bool NimBLEMeshNode::start() {
     }
 
     for(size_t i = 0; i < m_elemVec.size(); i++) {
-        memcpy(&m_comp.elem[i], m_elemVec[i]->start(),sizeof(bt_mesh_elem));
+        memcpy((void*)&m_comp.elem[i], (void*)m_elemVec[i]->start(),sizeof(bt_mesh_elem));
     }
     m_comp.elem_count = (uint8_t)m_elemVec.size();
 
