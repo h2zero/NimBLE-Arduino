@@ -44,6 +44,7 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
     memset(&m_prov, 0, sizeof(m_prov));
     memset(&m_comp, 0, sizeof(m_comp));
     memset(&m_healthPub, 0, sizeof(m_healthPub));
+    memset(&m_healthSrv, 0, sizeof(m_healthSrv));
 
     // Default server config
     m_serverConfig.relay = BT_MESH_RELAY_DISABLED;/*(type & NIMBLE_MESH::RELAY) ?
@@ -66,7 +67,6 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
     m_serverConfig.relay_retransmit = BT_MESH_TRANSMIT(2, 20);
 
     // Default health server config
-    m_healthSrv     = {0};
     m_healthSrv.cb  = &health_srv_cb;
 
     // Default health pub config
@@ -222,16 +222,16 @@ bool NimBLEMeshNode::start() {
  * @brief Health server callbacks
  */
 int NimBLEHealthSrvCallbacks::faultGetCurrent(bt_mesh_model *model, uint8_t *test_id,
-			                                  uint16_t *company_id, uint8_t *faults,
-			                                  uint8_t *fault_count)
+                                              uint16_t *company_id, uint8_t *faults,
+                                              uint8_t *fault_count)
 {
     NIMBLE_LOGD(LOG_TAG, "faultGetCurrent - default");
     return 0;
 }
 
 int NimBLEHealthSrvCallbacks::faultGetRegistered(bt_mesh_model *model, uint16_t company_id,
-			                                     uint8_t *test_id, uint8_t *faults,
-			                                     uint8_t *fault_count)
+                                                 uint8_t *test_id, uint8_t *faults,
+                                                 uint8_t *fault_count)
 {
     NIMBLE_LOGD(LOG_TAG, "faultGetRegistered - default");
     return 0;

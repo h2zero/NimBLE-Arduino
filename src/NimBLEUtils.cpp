@@ -54,6 +54,22 @@ int NimBLEUtils::checkConnParams(ble_gap_conn_params* params) {
     return 0;
 }
 
+ble_npl_time_t NimBLEUtils::meshTransTimeMs(uint8_t tt) {
+    switch(tt >> 6) {
+        case 0:
+            return 100;
+        case 1:
+            return 1000;
+        case 2:
+            return 10000;
+        case 3:
+            return 600000;
+        default:
+            return 0;
+    }
+}
+
+
 
 /**
  * @brief Converts a return code from the NimBLE stack to a text string.
