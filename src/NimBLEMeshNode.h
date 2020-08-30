@@ -13,8 +13,11 @@
 #if defined(CONFIG_BT_ENABLED)
 #include "nimconfig.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-arith"
 #include "mesh/glue.h"
 #include "mesh/mesh.h"
+#pragma GCC diagnostic pop
 
 /****  FIX COMPILATION ****/
 #undef min
@@ -69,12 +72,12 @@ private:
 class NimBLEHealthSrvCallbacks {
 public:
     static int faultGetCurrent(bt_mesh_model *model, uint8_t *test_id,
-			                   uint16_t *company_id, uint8_t *faults,
-			                   uint8_t *fault_count);
+                               uint16_t *company_id, uint8_t *faults,
+                               uint8_t *fault_count);
 
     static int faultGetRegistered(bt_mesh_model *model, uint16_t company_id,
-			                      uint8_t *test_id, uint8_t *faults,
-			                      uint8_t *fault_count);
+                                  uint8_t *test_id, uint8_t *faults,
+                                  uint8_t *fault_count);
 
     static int faultClear(bt_mesh_model *model, uint16_t company_id);
 

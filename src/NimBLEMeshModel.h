@@ -26,6 +26,23 @@ public:
 
     bt_mesh_model_pub* opPub;
     NimBLEMeshModelCallbacks* m_callbacks;
+    int extractTransTimeDelay(os_mbuf *buf);
+    bool checkRetransmit(uint8_t tid, bt_mesh_msg_ctx *ctx);
+    void sendMessage(bt_mesh_model *model, bt_mesh_msg_ctx *ctx, os_mbuf *msg);
+    void startTdTimer(ble_npl_time_t timerMs);
+
+    uint8_t   m_lastTid;
+    uint16_t  m_lastSrcAddr;
+    uint16_t  m_lastDstAddr;
+    time_t    m_lastMsgTime;
+    uint8_t   m_transTime;
+    uint8_t   m_delayTime;
+    uint8_t   m_onOffValue;
+    uint8_t   m_onOffTarget;
+    int16_t   m_levelValue;
+    int16_t   m_levelTarget;
+    int16_t   m_transStep;
+    ble_npl_callout m_tdTimer;
 };
 
 class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
@@ -44,6 +61,7 @@ class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
     static void setOnOffUnack(bt_mesh_model *model,
                               bt_mesh_msg_ctx *ctx,
                               os_mbuf *buf);
+    static void tdTimerCb(ble_npl_event *event);
 };
 
 class NimBLEGenLevelSrvModel : NimBLEMeshModel {
@@ -74,6 +92,7 @@ class NimBLEGenLevelSrvModel : NimBLEMeshModel {
     static void setMoveUnack(bt_mesh_model *model,
                              bt_mesh_msg_ctx *ctx,
                              os_mbuf *buf);
+    static void tdTimerCb(ble_npl_event *event);
 };
 
 class NimBLEMeshModelCallbacks {
@@ -83,8 +102,6 @@ public:
     virtual uint8_t getOnOff();
     virtual void    setLevel(int16_t);
     virtual int16_t getLevel();
-    virtual void    setDelta(int16_t);
-
 };
 
 #endif // CONFIG_BT_ENABLED

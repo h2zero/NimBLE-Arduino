@@ -44,6 +44,7 @@ public:
     static const char*          advTypeToString(uint8_t advType);
     static const char*          returnCodeToString(int rc);
     static int                  checkConnParams(ble_gap_conn_params* params);
+    static ble_npl_time_t       meshTransTimeMs(uint8_t tt);
 };
 
 
