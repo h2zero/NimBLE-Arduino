@@ -43,7 +43,9 @@ Also tracking the NimBLE related changes in ESP-IDF, master branch, currently [@
 <br/>
 
 # Installation
-Download as .zip and extract to Arduino/libraries folder, or in Arduino IDE from Sketch menu -> Include library -> Add .Zip library.
+**Arduino Library manager:** Go to `sketch` -> `Include Library` -> `Manage Libraries` and search for NimBLE and install.  
+
+**Alternatively:** Download as .zip and extract to Arduino/libraries folder, or in Arduino IDE from Sketch menu -> Include library -> Add .Zip library.
 
 `#include "NimBLEDevice.h"` at the beginning of your sketch.
 
@@ -93,7 +95,5 @@ Espressif has stated the hard maximum connections is 9.
 <br/>  
 
 # Todo
-1. Document nimconfig.
-2. Examples.
-3. Improve documentation. 
+1. Add Bluetooth Mesh 
 <br/>  
