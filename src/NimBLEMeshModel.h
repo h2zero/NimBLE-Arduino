@@ -20,16 +20,18 @@ class NimBLEMeshModelCallbacks;
 class NimBLEMeshModel {
 public:
     NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks);
-    ~NimBLEMeshModel();
+    virtual ~NimBLEMeshModel();
 
-    bt_mesh_model_op* opList;
+    bt_mesh_model_op* m_opList;
 
-    bt_mesh_model_pub* opPub;
+    bt_mesh_model_pub m_opPub;
     NimBLEMeshModelCallbacks* m_callbacks;
     int extractTransTimeDelay(os_mbuf *buf);
     bool checkRetransmit(uint8_t tid, bt_mesh_msg_ctx *ctx);
     void sendMessage(bt_mesh_model *model, bt_mesh_msg_ctx *ctx, os_mbuf *msg);
     void startTdTimer(ble_npl_time_t timerMs);
+    void publish();
+    virtual void setPubMsg();
 
     uint8_t   m_lastTid;
     uint16_t  m_lastSrcAddr;
@@ -42,7 +44,9 @@ public:
     int16_t   m_levelValue;
     int16_t   m_levelTarget;
     int16_t   m_transStep;
+
     ble_npl_callout m_tdTimer;
+    ble_npl_callout m_pubTimer;
 };
 
 class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
@@ -50,7 +54,7 @@ class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshNode;
 
     NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks* pCallbacks);
-    ~NimBLEGenOnOffSrvModel();
+    ~NimBLEGenOnOffSrvModel(){};
 
     static void getOnOff(bt_mesh_model *model,
                          bt_mesh_msg_ctx *ctx,
@@ -62,6 +66,10 @@ class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
                               bt_mesh_msg_ctx *ctx,
                               os_mbuf *buf);
     static void tdTimerCb(ble_npl_event *event);
+
+    static void pubTimerCb(ble_npl_event *event);
+
+    void setPubMsg() override;
 };
 
 class NimBLEGenLevelSrvModel : NimBLEMeshModel {
@@ -69,7 +77,7 @@ class NimBLEGenLevelSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshNode;
 
     NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks* pCallbacks);
-    ~NimBLEGenLevelSrvModel();
+    ~NimBLEGenLevelSrvModel(){};
 
     static void getLevel(bt_mesh_model *model,
                          bt_mesh_msg_ctx *ctx,
@@ -93,6 +101,10 @@ class NimBLEGenLevelSrvModel : NimBLEMeshModel {
                              bt_mesh_msg_ctx *ctx,
                              os_mbuf *buf);
     static void tdTimerCb(ble_npl_event *event);
+
+    static void pubTimerCb(ble_npl_event *event);
+
+    void setPubMsg() override;
 };
 
 class NimBLEMeshModelCallbacks {
