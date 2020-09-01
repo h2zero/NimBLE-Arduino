@@ -56,7 +56,7 @@ void NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCallbacks *pCa
             return;
     }
 
-    m_modelsVec.push_back(bt_mesh_model{{type},0,0,0, pModel->opPub,{0},{0},pModel->opList, pModel});
+    m_modelsVec.push_back(bt_mesh_model{{type},0,0,0, &pModel->m_opPub,{0},{0},pModel->m_opList, pModel});
 }
 
 /**

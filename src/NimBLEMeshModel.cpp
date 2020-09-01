@@ -27,9 +27,8 @@ NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks) {
         m_callbacks = pCallbacks;
     }
 
-    opList = nullptr;
-    opPub  = nullptr;
-    m_lastTid = 0;
+    m_opList        = nullptr;
+    m_lastTid     = 0;
     m_lastSrcAddr = 0;
     m_lastDstAddr = 0;
     m_lastMsgTime = 0;
@@ -40,6 +39,8 @@ NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks) {
     m_levelValue  = 0;
     m_levelTarget = 0;
     m_transStep   = 0;
+
+    memset(&m_opPub, 0, sizeof(m_opPub));
 }
 
 
@@ -47,12 +48,8 @@ NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks) {
  * @brief destructor
  */
 NimBLEMeshModel::~NimBLEMeshModel() {
-    if(opList != nullptr) {
-        delete[] opList;
-    }
-
-    if(opPub != nullptr) {
-        delete[] opPub;
+    if(m_opList != nullptr) {
+        delete[] m_opList;
     }
 }
 
@@ -110,9 +107,19 @@ void NimBLEMeshModel::sendMessage(bt_mesh_model *model, bt_mesh_msg_ctx *ctx, os
 
 
 void NimBLEMeshModel::startTdTimer(ble_npl_time_t timerMs) {
-        ble_npl_time_t ticks;
-        ble_npl_time_ms_to_ticks(timerMs, &ticks);
-        ble_npl_callout_reset(&m_tdTimer, ticks);
+    ble_npl_time_t ticks;
+    ble_npl_time_ms_to_ticks(timerMs, &ticks);
+    ble_npl_callout_reset(&m_tdTimer, ticks);
+}
+
+
+void NimBLEMeshModel::publish() {
+    ble_npl_callout_reset(&m_pubTimer, 1);
+}
+
+void NimBLEMeshModel::setPubMsg() {
+    NIMBLE_LOGD(LOG_TAG,"Base setPubMsg");
+    m_opPub.msg = NULL;
 }
 
 
@@ -124,7 +131,7 @@ NimBLEGenOnOffSrvModel::NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks* pCallba
 :NimBLEMeshModel(pCallbacks)
 {
     // Register the opcodes for this model with the required callbacks
-    opList = new bt_mesh_model_op[4]{
+    m_opList = new bt_mesh_model_op[4]{
     { BT_MESH_MODEL_OP_2(0x82, 0x01), 0, NimBLEGenOnOffSrvModel::getOnOff },
     { BT_MESH_MODEL_OP_2(0x82, 0x02), 2, NimBLEGenOnOffSrvModel::setOnOff },
     { BT_MESH_MODEL_OP_2(0x82, 0x03), 2, NimBLEGenOnOffSrvModel::setOnOffUnack },
@@ -132,6 +139,10 @@ NimBLEGenOnOffSrvModel::NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks* pCallba
 
     ble_npl_callout_init(&m_tdTimer, nimble_port_get_dflt_eventq(),
                          NimBLEGenOnOffSrvModel::tdTimerCb, this);
+    ble_npl_callout_init(&m_pubTimer, nimble_port_get_dflt_eventq(),
+                         NimBLEGenOnOffSrvModel::pubTimerCb, this);
+
+    m_opPub.msg = NET_BUF_SIMPLE(2 + 3);
 }
 
 
@@ -143,6 +154,8 @@ void NimBLEGenOnOffSrvModel::getOnOff(bt_mesh_model *model,
                                       os_mbuf *buf)
 {
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
+    pModel->setPubMsg();
+/*
     struct os_mbuf *msg = NET_BUF_SIMPLE(2 + 3);
 
     bt_mesh_model_msg_init(msg, BT_MESH_MODEL_OP_2(0x82, 0x04));
@@ -159,7 +172,11 @@ void NimBLEGenOnOffSrvModel::getOnOff(bt_mesh_model *model,
                                     pModel->m_transTime : pModel->m_transTime + 1);
     }
 
-    pModel->sendMessage(model, ctx, msg);
+    pModel->sendMessage(model, ctx, msg);*/
+
+    if (bt_mesh_model_send(model, ctx, pModel->m_opPub.msg, NULL, NULL)) {
+        NIMBLE_LOGE(LOG_TAG, "Send status failed");
+    }
 }
 
 
@@ -233,16 +250,39 @@ void NimBLEGenOnOffSrvModel::tdTimerCb(ble_npl_event *event) {
     }
 
     if((pModel->m_transTime & 0x3F) && pModel->m_onOffTarget == 0) {
-        ble_npl_time_t ticks = 0;
-        ble_npl_time_ms_to_ticks(NimBLEUtils::meshTransTimeMs(pModel->m_transTime), &ticks);
-        ble_npl_callout_reset(&pModel->m_tdTimer, ticks);
+        pModel->startTdTimer(NimBLEUtils::meshTransTimeMs(pModel->m_transTime));
         pModel->m_transTime -= 1;
+        pModel->publish();
         return;
     }
 
     pModel->m_transTime = 0;
     pModel->m_onOffValue = pModel->m_onOffTarget;
     pModel->m_callbacks->setOnOff(pModel->m_onOffValue);
+    pModel->publish();
+}
+
+
+void NimBLEGenOnOffSrvModel::pubTimerCb(ble_npl_event *event) {
+    NimBLEMeshModel *pModel = (NimBLEMeshModel*)event->arg;
+    pModel->setPubMsg();
+
+    int err = bt_mesh_model_publish(pModel->m_opPub.mod);
+    if(err != 0) {
+        NIMBLE_LOGD(LOG_TAG, "Publish rc: %d",err);
+    }
+}
+
+
+void NimBLEGenOnOffSrvModel::setPubMsg() {
+    bt_mesh_model_msg_init(m_opPub.msg, BT_MESH_MODEL_OP_2(0x82, 0x04));
+    net_buf_simple_add_u8(m_opPub.msg, m_onOffValue);
+    if(m_transTime > 0) {
+        net_buf_simple_add_u8(m_opPub.msg, m_onOffTarget);
+        // If we started the transition timer in setOnOff we need to correct the reported remaining time.
+        net_buf_simple_add_u8(m_opPub.msg, (m_delayTime > 0) ?
+                                   m_transTime : m_transTime + 1);
+    }
 }
 
 /**
@@ -253,7 +293,7 @@ NimBLEGenLevelSrvModel::NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks* pCallba
 :NimBLEMeshModel(pCallbacks)
 {
     // Register the opcodes for this model with the required callbacks
-    opList = new bt_mesh_model_op[8]{
+    m_opList = new bt_mesh_model_op[8]{
     { BT_MESH_MODEL_OP_2(0x82, 0x05), 0, NimBLEGenLevelSrvModel::getLevel },
     { BT_MESH_MODEL_OP_2(0x82, 0x06), 3, NimBLEGenLevelSrvModel::setLevel },
     { BT_MESH_MODEL_OP_2(0x82, 0x07), 3, NimBLEGenLevelSrvModel::setLevelUnack },
@@ -265,6 +305,9 @@ NimBLEGenLevelSrvModel::NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks* pCallba
 
     ble_npl_callout_init(&m_tdTimer, nimble_port_get_dflt_eventq(),
                          NimBLEGenLevelSrvModel::tdTimerCb, this);
+    ble_npl_callout_init(&m_pubTimer, nimble_port_get_dflt_eventq(),
+                         NimBLEGenLevelSrvModel::pubTimerCb, this);
+    m_opPub.msg = NET_BUF_SIMPLE(2 + 5);
 }
 
 
@@ -276,7 +319,8 @@ void NimBLEGenLevelSrvModel::getLevel(bt_mesh_model *model,
                                       os_mbuf *buf)
 {
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
-
+    pModel->setPubMsg();
+/*
     struct os_mbuf *msg = NET_BUF_SIMPLE(4 + 3);
 
     bt_mesh_model_msg_init(msg, BT_MESH_MODEL_OP_2(0x82, 0x08));
@@ -290,6 +334,10 @@ void NimBLEGenLevelSrvModel::getLevel(bt_mesh_model *model,
     }
 
     pModel->sendMessage(model, ctx, msg);
+*/
+    if (bt_mesh_model_send(model, ctx, pModel->m_opPub.msg, NULL, NULL)) {
+        NIMBLE_LOGE(LOG_TAG, "Send status failed");
+    }
 }
 
 
@@ -423,16 +471,38 @@ void NimBLEGenLevelSrvModel::tdTimerCb(ble_npl_event *event) {
     if((pModel->m_transTime & 0x3F) && pModel->m_onOffTarget == 0) {
         pModel->m_levelValue += pModel->m_transStep;
         pModel->m_callbacks->setLevel(pModel->m_levelValue);
-        ble_npl_time_t ticks = 0;
-        ble_npl_time_ms_to_ticks(NimBLEUtils::meshTransTimeMs(pModel->m_transTime), &ticks);
-        ble_npl_callout_reset(&pModel->m_tdTimer, ticks);
+        pModel->startTdTimer(NimBLEUtils::meshTransTimeMs(pModel->m_transTime));
         pModel->m_transTime -= 1;
+        pModel->publish();
         return;
     }
 
     pModel->m_transTime = 0;
     pModel->m_levelValue = pModel->m_levelTarget;
     pModel->m_callbacks->setLevel(pModel->m_levelValue);
+    pModel->publish();
+}
+
+
+void NimBLEGenLevelSrvModel::pubTimerCb(ble_npl_event *event) {
+    NimBLEMeshModel *pModel = (NimBLEMeshModel*)event->arg;
+    pModel->setPubMsg();
+
+    int err = bt_mesh_model_publish(pModel->m_opPub.mod);
+    if(err != 0) {
+        NIMBLE_LOGD(LOG_TAG, "Publish rc: %d",err);
+    }
+}
+
+void NimBLEGenLevelSrvModel::setPubMsg() {
+    bt_mesh_model_msg_init(m_opPub.msg, BT_MESH_MODEL_OP_2(0x82, 0x08));
+    net_buf_simple_add_le16(m_opPub.msg, m_levelValue);
+    if(m_transTime > 0) {
+        net_buf_simple_add_le16(m_opPub.msg, m_levelTarget);
+        // If we started the transition timer in setOnOff we need to correct the reported remaining time.
+        net_buf_simple_add_u8(m_opPub.msg, (m_delayTime > 0) ?
+                                   m_transTime : m_transTime + 1);
+    }
 }
 
 /**
