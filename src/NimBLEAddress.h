@@ -33,6 +33,7 @@
  */
 class NimBLEAddress {
 public:
+    NimBLEAddress();
     NimBLEAddress(ble_addr_t address);
     NimBLEAddress(uint8_t address[6], uint8_t type = BLE_ADDR_PUBLIC);
     NimBLEAddress(const std::string &stringAddress, uint8_t type = BLE_ADDR_PUBLIC);

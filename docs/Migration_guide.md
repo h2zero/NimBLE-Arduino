@@ -47,6 +47,12 @@ For example `BLEAddress addr(11:22:33:44:55:66, 1)` will create the address obje
 
 As this paramameter is optional no changes to existing code are needed, it is mentioned here for information.  
 <br/>
+`BLEAddress::getNative` (`NimBLEAddress::getNative`) returns a uint8_t pointer to the native address byte array.  
+In this library the address bytes are stored in reverse order from the original library. This is due to the way  
+the NimBLE stack expects addresses to be presented to it. All other functions such as `toString` are  
+not affected as the endian change is made within them.  
+<br/>
+
 <a name="server-api"></a>
 ## Server API
 Creating a `BLEServer` instance is the same as original, no changes required.
