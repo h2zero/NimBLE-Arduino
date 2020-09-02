@@ -24,13 +24,14 @@
 #include "NimBLERemoteDescriptor.h"
 
 #include <vector>
+#include <functional>
 
 class NimBLERemoteService;
 class NimBLERemoteDescriptor;
 
 
-typedef void (*notify_callback)(NimBLERemoteCharacteristic* pBLERemoteCharacteristic,
-                                uint8_t* pData, size_t length, bool isNotify);
+typedef std::function<void (NimBLERemoteCharacteristic* pBLERemoteCharacteristic,
+                                uint8_t* pData, size_t length, bool isNotify)> notify_callback;
 
 typedef struct {
     const NimBLEUUID *uuid;
