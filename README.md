@@ -1,3 +1,7 @@
+[Latest release ![Release Version](https://img.shields.io/github/release/h2zero/NimBLE-Arduino.svg?style=plastic)
+![Release Date](https://img.shields.io/github/release-date/h2zero/NimBLE-Arduino.svg?style=plastic)](https://github.com/h2zero/NimBLE-Arduino/releases/latest/)  
+<br/>
+
 # NimBLE-Arduino
 A fork of the NimBLE stack restructured for compilation in the Ardruino IDE with a CPP library for use with ESP32.  
 
@@ -30,16 +34,6 @@ Sketch uses **603432** bytes (28%) of program storage space.
 Memory after connection: Free Heap: **269792**  
 
 **As shown: there is nearly a 50% reduction in flash use and approx. 100kB less ram consumed!**  
-<br/>
-
-# Development Status
-[Latest release ![Release Version](https://img.shields.io/github/release/h2zero/NimBLE-Arduino.svg?style=plastic) 
-![Release Date](https://img.shields.io/github/release-date/h2zero/NimBLE-Arduino.svg?style=plastic)](https://github.com/h2zero/NimBLE-Arduino/releases/latest/) 
-![Downloads](https://img.shields.io/github/downloads/h2zero/NimBLE-Arduino/latest/total.svg?style=plastic)  
-
-This Library is tracking the esp-nimble repo, nimble-1.2.0-idf master branch, currently [@95bd864.](https://github.com/espressif/esp-nimble)  
-
-Also tracking the NimBLE related changes in ESP-IDF, master branch, currently [@2ef4890.](https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble)  
 <br/>
 
 # Installation
@@ -87,6 +81,11 @@ In `nimconfig.h` the value is:
 Espressif has stated the hard maximum connections is 9.  
 <br/>
 
+# Development Status
+This Library is tracking the esp-nimble repo, nimble-1.2.0-idf master branch, currently [@95bd864.](https://github.com/espressif/esp-nimble)  
+
+Also tracking the NimBLE related changes in ESP-IDF, master branch, currently [@2ef4890.](https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble)  
+<br/>
 
 # Acknowledgments
 * [nkolban](https://github.com/nkolban) and [chegewara](https://github.com/chegewara) for the [original esp32 BLE library](https://github.com/nkolban/esp32-snippets/tree/master/cpp_utils) this project was derived from.
@@ -95,5 +94,8 @@ Espressif has stated the hard maximum connections is 9.
 <br/>  
 
 # Todo
-1. Add Bluetooth Mesh 
+- Improve host reset handler
+- Implement random address handling
+- Implement bond management
+- Add Bluetooth Mesh
 <br/>  
