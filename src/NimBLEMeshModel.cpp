@@ -34,10 +34,10 @@ NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks) {
     m_lastMsgTime = 0;
     m_transTime   = 0;
     m_delayTime   = 0;
-    m_onOffValue  = 0;
+   /* m_onOffValue  = 0;
     m_onOffTarget = 0;
     m_levelValue  = 0;
-    m_levelTarget = 0;
+    m_levelTarget = 0;*/
     m_transStep   = 0;
 
     memset(&m_opPub, 0, sizeof(m_opPub));
@@ -153,6 +153,7 @@ void NimBLEGenOnOffSrvModel::getOnOff(bt_mesh_model *model,
                                       os_mbuf *buf)
 {
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
+    //pModel->m_onOffValue = pModel->m_callbacks->getOnOff();
     pModel->setPubMsg();
 /*
     struct os_mbuf *msg = NET_BUF_SIMPLE(2 + 3);
@@ -200,7 +201,7 @@ void NimBLEGenOnOffSrvModel::setOnOffUnack(bt_mesh_model *model,
                                            os_mbuf *buf)
 {
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
-    int16_t newval = net_buf_simple_pull_u8(buf);
+    uint8_t newval = net_buf_simple_pull_u8(buf);
     uint8_t tid = net_buf_simple_pull_u8(buf);
 
     if(pModel->checkRetransmit(tid, ctx)) {
@@ -223,8 +224,9 @@ void NimBLEGenOnOffSrvModel::setOnOffUnack(bt_mesh_model *model,
 
     ble_npl_time_t timerMs = 0;
 
-    if(newval != pModel->m_onOffValue) {
-        pModel->m_onOffTarget = newval;
+    if(newval != *(uint8_t*)pModel->m_value.data()/*pModel->m_onOffValue*/) {
+       // pModel->m_onOffTarget = newval;
+       pModel->m_targetValue = std::string((char*)&newval, sizeof(newval));
 
         if(pModel->m_delayTime > 0) {
             timerMs = 5 * pModel->m_delayTime;
@@ -237,8 +239,10 @@ void NimBLEGenOnOffSrvModel::setOnOffUnack(bt_mesh_model *model,
     if(timerMs > 0) {
         pModel->startTdTimer(timerMs);
     } else {
-        pModel->m_onOffValue = pModel->m_onOffTarget;
-        pModel->m_callbacks->setOnOff(pModel->m_onOffValue);
+        //pModel->m_onOffValue = pModel->m_onOffTarget;
+        pModel->m_value = pModel->m_targetValue;
+        //pModel->m_callbacks->setOnOff(pModel->m_onOffValue);
+        pModel->m_callbacks->setOnOff(*(uint8_t*)pModel->m_value.data());
     }
 }
 
@@ -248,7 +252,7 @@ void NimBLEGenOnOffSrvModel::tdTimerCb(ble_npl_event *event) {
         pModel->m_delayTime = 0;
     }
 
-    if((pModel->m_transTime & 0x3F) && pModel->m_onOffTarget == 0) {
+    if((pModel->m_transTime & 0x3F) && *(uint8_t*)pModel->m_targetValue.data()/*m_onOffTarget*/ == 0) {
         pModel->startTdTimer(NimBLEUtils::meshTransTimeMs(pModel->m_transTime));
         pModel->m_transTime -= 1;
         pModel->publish();
@@ -256,8 +260,10 @@ void NimBLEGenOnOffSrvModel::tdTimerCb(ble_npl_event *event) {
     }
 
     pModel->m_transTime = 0;
-    pModel->m_onOffValue = pModel->m_onOffTarget;
-    pModel->m_callbacks->setOnOff(pModel->m_onOffValue);
+    //pModel->m_onOffValue = pModel->m_onOffTarget;
+    //pModel->m_callbacks->setOnOff(pModel->m_onOffValue);
+    pModel->m_value = pModel->m_targetValue;
+    pModel->m_callbacks->setOnOff(*(uint8_t*)pModel->m_value.data());
     pModel->publish();
 }
 
@@ -275,9 +281,11 @@ void NimBLEGenOnOffSrvModel::pubTimerCb(ble_npl_event *event) {
 
 void NimBLEGenOnOffSrvModel::setPubMsg() {
     bt_mesh_model_msg_init(m_opPub.msg, BT_MESH_MODEL_OP_2(0x82, 0x04));
-    net_buf_simple_add_u8(m_opPub.msg, m_onOffValue);
+    //net_buf_simple_add_u8(m_opPub.msg, m_onOffValue);
+    net_buf_simple_add_u8(m_opPub.msg, *(uint8_t*)m_value.data());
     if(m_transTime > 0) {
-        net_buf_simple_add_u8(m_opPub.msg, m_onOffTarget);
+        //net_buf_simple_add_u8(m_opPub.msg, m_onOffTarget);
+        net_buf_simple_add_u8(m_opPub.msg, *(uint8_t*)m_targetValue.data());
         // If we started the transition timer in setOnOff we need to correct the reported remaining time.
         net_buf_simple_add_u8(m_opPub.msg, (m_delayTime > 0) ?
                                    m_transTime : m_transTime + 1);
@@ -318,6 +326,7 @@ void NimBLEGenLevelSrvModel::getLevel(bt_mesh_model *model,
                                       os_mbuf *buf)
 {
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
+    //pModel->m_levelValue = pModel->m_callbacks->getLevel();
     pModel->setPubMsg();
 /*
     struct os_mbuf *msg = NET_BUF_SIMPLE(4 + 3);
@@ -377,15 +386,18 @@ void NimBLEGenLevelSrvModel::setLevelUnack(bt_mesh_model *model,
 
     ble_npl_time_t timerMs = 0;
 
-    if(newval != pModel->m_levelValue) {
-        pModel->m_levelTarget = newval;
+    if(newval != *(int16_t*)pModel->m_value.data()/*m_levelValue*/) {
+        //pModel->m_levelTarget = newval;
+        pModel->m_targetValue = std::string((char*)&newval, sizeof(newval));
 
         if(pModel->m_delayTime > 0) {
             timerMs = 5 * pModel->m_delayTime;
         }
 
         if(pModel->m_transTime & 0x3F) {
-            pModel->m_transStep = -1 *((pModel->m_levelValue - pModel->m_levelTarget) /
+           /* pModel->m_transStep = -1 *((pModel->m_levelValue - pModel->m_levelTarget) /
+                                      (pModel->m_transTime & 0x3F));*/
+            pModel->m_transStep = -1 *((*(int16_t*)pModel->m_value.data() - *(int16_t*)pModel->m_targetValue.data()) /
                                       (pModel->m_transTime & 0x3F));
             if(timerMs == 0) {
                 timerMs = NimBLEUtils::meshTransTimeMs(pModel->m_transTime);
@@ -396,9 +408,11 @@ void NimBLEGenLevelSrvModel::setLevelUnack(bt_mesh_model *model,
 
     if(timerMs > 0) {
         pModel->startTdTimer(timerMs);
-    } else {
+    } else {/*
         pModel->m_levelValue = pModel->m_levelTarget;
-        pModel->m_callbacks->setLevel(pModel->m_levelValue);
+        pModel->m_callbacks->setLevel(pModel->m_levelValue);*/
+        pModel->m_value = pModel->m_targetValue;
+        pModel->m_callbacks->setLevel(*(int16_t*)pModel->m_value.data());
     }
 }
 
@@ -425,7 +439,7 @@ void NimBLEGenLevelSrvModel::setDeltaUnack(bt_mesh_model *model,
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
     int32_t delta = (int32_t) net_buf_simple_pull_le32(buf);
 
-    int32_t temp32 = pModel->m_levelValue + delta;
+    int32_t temp32 = *(int16_t*)pModel->m_value.data()/*m_levelValue*/ + delta;
     if (temp32 < INT16_MIN) {
         temp32 = INT16_MIN;
     } else if (temp32 > INT16_MAX) {
@@ -467,9 +481,12 @@ void NimBLEGenLevelSrvModel::tdTimerCb(ble_npl_event *event) {
         pModel->m_delayTime = 0;
     }
 
-    if((pModel->m_transTime & 0x3F) && pModel->m_onOffTarget == 0) {
-        pModel->m_levelValue += pModel->m_transStep;
-        pModel->m_callbacks->setLevel(pModel->m_levelValue);
+    if(pModel->m_transTime & 0x3F) {
+        //pModel->m_levelValue += pModel->m_transStep;
+        //pModel->m_callbacks->setLevel(pModel->m_levelValue);
+        int16_t newval = *(int16_t*)pModel->m_value.data() += pModel->m_transStep;
+        pModel->m_value = std::string((char*)&newval, sizeof(newval));
+        pModel->m_callbacks->setLevel(newval);
         pModel->startTdTimer(NimBLEUtils::meshTransTimeMs(pModel->m_transTime));
         pModel->m_transTime -= 1;
         pModel->publish();
@@ -477,8 +494,10 @@ void NimBLEGenLevelSrvModel::tdTimerCb(ble_npl_event *event) {
     }
 
     pModel->m_transTime = 0;
-    pModel->m_levelValue = pModel->m_levelTarget;
-    pModel->m_callbacks->setLevel(pModel->m_levelValue);
+/*    pModel->m_levelValue = pModel->m_levelTarget;
+    pModel->m_callbacks->setLevel(pModel->m_levelValue);*/
+    pModel->m_value = pModel->m_targetValue;
+    pModel->m_callbacks->setLevel(*(int16_t*)pModel->m_value.data());
     pModel->publish();
 }
 
@@ -495,9 +514,11 @@ void NimBLEGenLevelSrvModel::pubTimerCb(ble_npl_event *event) {
 
 void NimBLEGenLevelSrvModel::setPubMsg() {
     bt_mesh_model_msg_init(m_opPub.msg, BT_MESH_MODEL_OP_2(0x82, 0x08));
-    net_buf_simple_add_le16(m_opPub.msg, m_levelValue);
+    //net_buf_simple_add_le16(m_opPub.msg, m_levelValue);
+    net_buf_simple_add_le16(m_opPub.msg, *(int16_t*)m_value.data());
     if(m_transTime > 0) {
-        net_buf_simple_add_le16(m_opPub.msg, m_levelTarget);
+        //net_buf_simple_add_le16(m_opPub.msg, m_levelTarget);
+        net_buf_simple_add_le16(m_opPub.msg, *(int16_t*)m_targetValue.data());
         // If we started the transition timer in setOnOff we need to correct the reported remaining time.
         net_buf_simple_add_u8(m_opPub.msg, (m_delayTime > 0) ?
                                    m_transTime : m_transTime + 1);
