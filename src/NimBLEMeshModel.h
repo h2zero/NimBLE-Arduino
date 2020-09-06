@@ -39,10 +39,12 @@ public:
     time_t    m_lastMsgTime;
     uint8_t   m_transTime;
     uint8_t   m_delayTime;
-    uint8_t   m_onOffValue;
+    std::string m_value;
+    std::string m_targetValue;
+    /*uint8_t   m_onOffValue;
     uint8_t   m_onOffTarget;
     int16_t   m_levelValue;
-    int16_t   m_levelTarget;
+    int16_t   m_levelTarget;*/
     int16_t   m_transStep;
 
     ble_npl_callout m_tdTimer;
