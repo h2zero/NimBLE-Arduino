@@ -19,10 +19,12 @@
 #include <vector>
 
 class NimBLEMeshModelCallbacks;
+class NimBLEMeshModel;
 
 class NimBLEMeshElement {
 public:
-    void createModel(uint16_t type, NimBLEMeshModelCallbacks* pCallbacks=nullptr);
+    NimBLEMeshModel* createModel(uint16_t type, NimBLEMeshModelCallbacks* pCallbacks=nullptr);
+    NimBLEMeshModel* getModel(uint16_t type);
 
 private:
     friend class NimBLEMeshNode;

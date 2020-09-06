@@ -118,7 +118,6 @@ void NimBLEMeshModel::publish() {
 }
 
 void NimBLEMeshModel::setPubMsg() {
-    NIMBLE_LOGD(LOG_TAG,"Base setPubMsg");
     m_opPub.msg = NULL;
 }
 
