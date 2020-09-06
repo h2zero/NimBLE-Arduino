@@ -47,6 +47,7 @@ void setup() {
   //pElem = pMesh->createElement();
   pElem->createModel(BT_MESH_MODEL_ID_GEN_LEVEL_SRV, new levelSrvModelCallbacks());
   pMesh->start();
+  Serial.println("Mesh Started");
 }
 
 void loop() {
