@@ -21,41 +21,63 @@ class NimBLEMeshModel {
 public:
     NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks);
     virtual ~NimBLEMeshModel();
-
-    bt_mesh_model_op* m_opList;
-
-    bt_mesh_model_pub m_opPub;
-    NimBLEMeshModelCallbacks* m_callbacks;
     int extractTransTimeDelay(os_mbuf *buf);
     bool checkRetransmit(uint8_t tid, bt_mesh_msg_ctx *ctx);
     void sendMessage(bt_mesh_model *model, bt_mesh_msg_ctx *ctx, os_mbuf *msg);
     void startTdTimer(ble_npl_time_t timerMs);
     void publish();
-    virtual void setPubMsg();
+    uint32_t getTransTime();
+    uint16_t getDelayTime();
+    virtual void setPubMsg(){};
+    virtual void setValue(uint8_t *val, size_t len){};
+    virtual void setTargetValue(uint8_t *val, size_t len){};
 
-    uint8_t   m_lastTid;
-    uint16_t  m_lastSrcAddr;
-    uint16_t  m_lastDstAddr;
-    time_t    m_lastMsgTime;
-    uint8_t   m_transTime;
-    uint8_t   m_delayTime;
-    std::string m_value;
-    std::string m_targetValue;
+    template<typename T>
+    void setValue(const T &s) {
+        setValue((uint8_t*)&s, sizeof(T));
+    }
+    
+    template<typename T>
+    void setTargetValue(const T &s) {
+        setTargetValue((uint8_t*)&s, sizeof(T));
+    }
+    
+    template<typename T>
+    void getValue(T &s) {
+        s = *(T*)m_value.data();
+    }
+    
+    template<typename T>
+    void getTargetValue(T &s) {
+        s = *(T*)m_targetValue.data();
+    }
+
+    bt_mesh_model_op*         m_opList;
+    bt_mesh_model_pub         m_opPub;
+    NimBLEMeshModelCallbacks* m_callbacks;
+    uint8_t                   m_lastTid;
+    uint16_t                  m_lastSrcAddr;
+    uint16_t                  m_lastDstAddr;
+    time_t                    m_lastMsgTime;
+    uint8_t                   m_transTime;
+    uint8_t                   m_delayTime;
+    std::string               m_value;
+    std::string               m_targetValue;
     /*uint8_t   m_onOffValue;
     uint8_t   m_onOffTarget;
     int16_t   m_levelValue;
     int16_t   m_levelTarget;*/
-    int16_t   m_transStep;
+    int16_t                   m_transStep;
 
-    ble_npl_callout m_tdTimer;
-    ble_npl_callout m_pubTimer;
+    ble_npl_callout           m_tdTimer;
+    ble_npl_callout           m_pubTimer;
 };
 
 class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshElement;
     friend class NimBLEMeshNode;
 
-    NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks* pCallbacks);
+    NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks *pCallbacks);
     ~NimBLEGenOnOffSrvModel(){};
 
     static void getOnOff(bt_mesh_model *model,
@@ -68,17 +90,18 @@ class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
                               bt_mesh_msg_ctx *ctx,
                               os_mbuf *buf);
     static void tdTimerCb(ble_npl_event *event);
-
     static void pubTimerCb(ble_npl_event *event);
 
     void setPubMsg() override;
+    void setValue(uint8_t *val, size_t len) override;
+    void setTargetValue(uint8_t *val, size_t len) override;
 };
 
 class NimBLEGenLevelSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshElement;
     friend class NimBLEMeshNode;
 
-    NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks* pCallbacks);
+    NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks *pCallbacks);
     ~NimBLEGenLevelSrvModel(){};
 
     static void getLevel(bt_mesh_model *model,
@@ -103,19 +126,20 @@ class NimBLEGenLevelSrvModel : NimBLEMeshModel {
                              bt_mesh_msg_ctx *ctx,
                              os_mbuf *buf);
     static void tdTimerCb(ble_npl_event *event);
-
     static void pubTimerCb(ble_npl_event *event);
 
     void setPubMsg() override;
+    void setValue(uint8_t *val, size_t len) override;
+    void setTargetValue(uint8_t *val, size_t len) override;
 };
 
 class NimBLEMeshModelCallbacks {
 public:
     virtual ~NimBLEMeshModelCallbacks();
-    virtual void    setOnOff(uint8_t);
-    virtual uint8_t getOnOff();
-    virtual void    setLevel(int16_t);
-    virtual int16_t getLevel();
+    virtual void    setOnOff(NimBLEMeshModel *pModel, uint8_t val);
+    virtual uint8_t getOnOff(NimBLEMeshModel *pModel);
+    virtual void    setLevel(NimBLEMeshModel *pModel, int16_t val);
+    virtual int16_t getLevel(NimBLEMeshModel *pModel);
 };
 
 #endif // CONFIG_BT_ENABLED
