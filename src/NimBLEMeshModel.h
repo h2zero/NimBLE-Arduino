@@ -15,6 +15,8 @@
 
 #include "NimBLEMeshElement.h"
 
+#include <vector>
+
 class NimBLEMeshModelCallbacks;
 
 class NimBLEMeshModel {
@@ -44,12 +46,12 @@ public:
     
     template<typename T>
     void getValue(T &s) {
-        s = *(T*)m_value.data();
+        s = (T)m_value[0];
     }
     
     template<typename T>
     void getTargetValue(T &s) {
-        s = *(T*)m_targetValue.data();
+        s = (T)m_targetValue[0];
     }
 
     bt_mesh_model_op*         m_opList;
@@ -61,12 +63,8 @@ public:
     time_t                    m_lastMsgTime;
     uint8_t                   m_transTime;
     uint8_t                   m_delayTime;
-    std::string               m_value;
-    std::string               m_targetValue;
-    /*uint8_t   m_onOffValue;
-    uint8_t   m_onOffTarget;
-    int16_t   m_levelValue;
-    int16_t   m_levelTarget;*/
+    std::vector<uint8_t>      m_value;
+    std::vector<uint8_t>      m_targetValue;
     int16_t                   m_transStep;
 
     ble_npl_callout           m_tdTimer;
