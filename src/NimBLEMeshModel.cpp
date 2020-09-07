@@ -20,7 +20,7 @@ static NimBLEMeshModelCallbacks defaultCallbacks;
  * @brief base model constructor
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
  */
-NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks) {
+NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks *pCallbacks) {
     if(pCallbacks == nullptr) {
         m_callbacks = &defaultCallbacks;
     } else {
@@ -117,16 +117,25 @@ void NimBLEMeshModel::publish() {
     ble_npl_callout_reset(&m_pubTimer, 1);
 }
 
-void NimBLEMeshModel::setPubMsg() {
-    m_opPub.msg = NULL;
+uint32_t NimBLEMeshModel::getTransTime() {
+    return (m_transTime & 0x3F) * NimBLEUtils::meshTransTimeMs(m_transTime);
 }
 
+uint16_t NimBLEMeshModel::getDelayTime() {
+    return m_delayTime * 5;
+}
+
+/*
+void NimBLEMeshModel::setValue() {
+    NIMBLE_LOGE(LOG_TAG,"DEFAULT SET VALUE");
+}
+*/
 
 /**
  * @brief Generic on/off server model constructor
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
  */
-NimBLEGenOnOffSrvModel::NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks* pCallbacks)
+NimBLEGenOnOffSrvModel::NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks *pCallbacks)
 :NimBLEMeshModel(pCallbacks)
 {
     // Register the opcodes for this model with the required callbacks
@@ -154,6 +163,9 @@ void NimBLEGenOnOffSrvModel::getOnOff(bt_mesh_model *model,
 {
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
     //pModel->m_onOffValue = pModel->m_callbacks->getOnOff();
+    if(pModel->m_callbacks != &defaultCallbacks) {
+        pModel->setValue(pModel->m_callbacks->getOnOff(pModel));
+    }
     pModel->setPubMsg();
 /*
     struct os_mbuf *msg = NET_BUF_SIMPLE(2 + 3);
@@ -242,7 +254,7 @@ void NimBLEGenOnOffSrvModel::setOnOffUnack(bt_mesh_model *model,
         //pModel->m_onOffValue = pModel->m_onOffTarget;
         pModel->m_value = pModel->m_targetValue;
         //pModel->m_callbacks->setOnOff(pModel->m_onOffValue);
-        pModel->m_callbacks->setOnOff(*(uint8_t*)pModel->m_value.data());
+        pModel->m_callbacks->setOnOff(pModel, *(uint8_t*)pModel->m_value.data());
     }
 }
 
@@ -263,8 +275,8 @@ void NimBLEGenOnOffSrvModel::tdTimerCb(ble_npl_event *event) {
     //pModel->m_onOffValue = pModel->m_onOffTarget;
     //pModel->m_callbacks->setOnOff(pModel->m_onOffValue);
     pModel->m_value = pModel->m_targetValue;
-    pModel->m_callbacks->setOnOff(*(uint8_t*)pModel->m_value.data());
-    pModel->publish();
+    pModel->m_callbacks->setOnOff(pModel, *(uint8_t*)pModel->m_value.data());
+//    pModel->publish();
 }
 
 
@@ -292,11 +304,27 @@ void NimBLEGenOnOffSrvModel::setPubMsg() {
     }
 }
 
+void NimBLEGenOnOffSrvModel::setValue(uint8_t *val, size_t len) {
+    if(len != sizeof(uint8_t)) {
+        NIMBLE_LOGE(LOG_TAG, "NimBLEGenOnOffSrvModel: Incorrect value length");
+        return;
+    }
+    m_value = std::string((char*)val, len);
+}
+
+void NimBLEGenOnOffSrvModel::setTargetValue(uint8_t *val, size_t len) {
+    if(len != sizeof(uint8_t)) {
+        NIMBLE_LOGE(LOG_TAG, "NimBLEGenOnOffSrvModel: Incorrect target value length");
+        return;
+    }
+    m_targetValue = std::string((char*)val, len);
+}
+
 /**
  * @brief Generic level server model constructor
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
  */
-NimBLEGenLevelSrvModel::NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks* pCallbacks)
+NimBLEGenLevelSrvModel::NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks *pCallbacks)
 :NimBLEMeshModel(pCallbacks)
 {
     // Register the opcodes for this model with the required callbacks
@@ -397,8 +425,8 @@ void NimBLEGenLevelSrvModel::setLevelUnack(bt_mesh_model *model,
         if(pModel->m_transTime & 0x3F) {
            /* pModel->m_transStep = -1 *((pModel->m_levelValue - pModel->m_levelTarget) /
                                       (pModel->m_transTime & 0x3F));*/
-            pModel->m_transStep = -1 *((*(int16_t*)pModel->m_value.data() - *(int16_t*)pModel->m_targetValue.data()) /
-                                      (pModel->m_transTime & 0x3F));
+            pModel->m_transStep = -1 * ((*(int16_t*)pModel->m_value.data() - *(int16_t*)pModel->m_targetValue.data()) /
+                                  (pModel->m_transTime & 0x3F));
             if(timerMs == 0) {
                 timerMs = NimBLEUtils::meshTransTimeMs(pModel->m_transTime);
                 pModel->m_transTime -= 1;
@@ -412,7 +440,7 @@ void NimBLEGenLevelSrvModel::setLevelUnack(bt_mesh_model *model,
         pModel->m_levelValue = pModel->m_levelTarget;
         pModel->m_callbacks->setLevel(pModel->m_levelValue);*/
         pModel->m_value = pModel->m_targetValue;
-        pModel->m_callbacks->setLevel(*(int16_t*)pModel->m_value.data());
+        pModel->m_callbacks->setLevel(pModel, *(int16_t*)pModel->m_value.data());
     }
 }
 
@@ -486,10 +514,10 @@ void NimBLEGenLevelSrvModel::tdTimerCb(ble_npl_event *event) {
         //pModel->m_callbacks->setLevel(pModel->m_levelValue);
         int16_t newval = *(int16_t*)pModel->m_value.data() += pModel->m_transStep;
         pModel->m_value = std::string((char*)&newval, sizeof(newval));
-        pModel->m_callbacks->setLevel(newval);
+        pModel->m_callbacks->setLevel(pModel, newval);
         pModel->startTdTimer(NimBLEUtils::meshTransTimeMs(pModel->m_transTime));
         pModel->m_transTime -= 1;
-        pModel->publish();
+        //pModel->publish();
         return;
     }
 
@@ -497,8 +525,8 @@ void NimBLEGenLevelSrvModel::tdTimerCb(ble_npl_event *event) {
 /*    pModel->m_levelValue = pModel->m_levelTarget;
     pModel->m_callbacks->setLevel(pModel->m_levelValue);*/
     pModel->m_value = pModel->m_targetValue;
-    pModel->m_callbacks->setLevel(*(int16_t*)pModel->m_value.data());
-    pModel->publish();
+    pModel->m_callbacks->setLevel(pModel, *(int16_t*)pModel->m_value.data());
+    //pModel->publish();
 }
 
 
@@ -525,25 +553,41 @@ void NimBLEGenLevelSrvModel::setPubMsg() {
     }
 }
 
+void NimBLEGenLevelSrvModel::setValue(uint8_t *val, size_t len) {
+    if(len != sizeof(int16_t)) {
+        NIMBLE_LOGE(LOG_TAG, "NimBLEGenLevelSrvModel: Incorrect value length");
+        return;
+    }
+    m_value = std::string((char*)val, len);
+}
+
+void NimBLEGenLevelSrvModel::setTargetValue(uint8_t *val, size_t len) {
+    if(len != sizeof(int16_t)) {
+        NIMBLE_LOGE(LOG_TAG, "NimBLEGenLevelSrvModel: Incorrect target value length");
+        return;
+    }
+    m_targetValue = std::string((char*)val, len);
+}
+
 /**
  * Default model callbacks
  */
 NimBLEMeshModelCallbacks::~NimBLEMeshModelCallbacks() {}
 
-void NimBLEMeshModelCallbacks::setOnOff(uint8_t val) {
+void NimBLEMeshModelCallbacks::setOnOff(NimBLEMeshModel *pModel, uint8_t val) {
     NIMBLE_LOGD(LOG_TAG, "Gen On/Off set val: %d", val);
 }
 
-uint8_t NimBLEMeshModelCallbacks::getOnOff() {
+uint8_t NimBLEMeshModelCallbacks::getOnOff(NimBLEMeshModel *pModel) {
     NIMBLE_LOGD(LOG_TAG, "Gen On/Off get");
     return 0;
 }
 
-void NimBLEMeshModelCallbacks::setLevel(int16_t val) {
+void NimBLEMeshModelCallbacks::setLevel(NimBLEMeshModel *pModel, int16_t val) {
     NIMBLE_LOGD(LOG_TAG, "Gen Level set val: %d", val);
 }
 
-int16_t NimBLEMeshModelCallbacks::getLevel() {
+int16_t NimBLEMeshModelCallbacks::getLevel(NimBLEMeshModel *pModel) {
     NIMBLE_LOGD(LOG_TAG, "Gen Level get");
     return 0;
 }
