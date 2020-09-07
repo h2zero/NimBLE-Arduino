@@ -10,25 +10,27 @@ static uint8_t onOffVal = 0;
 static int16_t levelVal = 0; 
 
 class onOffSrvModelCallbacks : public NimBLEMeshModelCallbacks {
-  void setOnOff(uint8_t val) {
-    Serial.printf("on/off set val %d\n", val);
+  void setOnOff(NimBLEMeshModel *pModel, uint8_t val) {
+    Serial.printf("on/off set val %d, transition time: %dms\n", val, pModel->getTransTime());
     onOffVal = val;
     digitalWrite(LEDG, !onOffVal);
+    pModel->publish();
   }
 
-  uint8_t getOnOff() {
+  uint8_t getOnOff(NimBLEMeshModel *pModel) {
     Serial.printf("on/off get val %d\n", onOffVal);
     return onOffVal;
   }
 };
 
 class levelSrvModelCallbacks : public NimBLEMeshModelCallbacks {
-  void setLevel(int16_t val) {
-    Serial.printf("Level set val %d\n", val);
+  void setLevel(NimBLEMeshModel *pModel, int16_t val) {
+    Serial.printf("Level set val %d, transition time: %dms\n", val, pModel->getTransTime());
     levelVal = val;
+    pModel->publish();
   }
 
-  int16_t getLevel() {
+  int16_t getLevel(NimBLEMeshModel *pModel) {
     Serial.printf("Level get val %d\n", levelVal);
     return levelVal;
   }
@@ -43,9 +45,11 @@ void setup() {
   NimBLEDevice::init("");
   NimBLEMeshNode *pMesh = NimBLEDevice::createMeshNode(NimBLEUUID(SERVICE_UUID),0);
   NimBLEMeshElement* pElem = pMesh->getElement();
-  pElem->createModel(BT_MESH_MODEL_ID_GEN_ONOFF_SRV, new onOffSrvModelCallbacks());
+  NimBLEMeshModel* pModel = pElem->createModel(BT_MESH_MODEL_ID_GEN_ONOFF_SRV, new onOffSrvModelCallbacks());
+  pModel->setValue(onOffVal);
   //pElem = pMesh->createElement();
-  pElem->createModel(BT_MESH_MODEL_ID_GEN_LEVEL_SRV, new levelSrvModelCallbacks());
+  pModel = pElem->createModel(BT_MESH_MODEL_ID_GEN_LEVEL_SRV, new levelSrvModelCallbacks());
+  pModel->setValue(levelVal);
   pMesh->start();
   Serial.println("Mesh Started");
 }
