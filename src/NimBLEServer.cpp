@@ -353,6 +353,12 @@ size_t NimBLEServer::getConnectedCount() {
             return 0;
         } // BLE_GAP_EVENT_NOTIFY_TX
 
+        case BLE_GAP_EVENT_ADV_COMPLETE: {
+            NIMBLE_LOGD(LOG_TAG, "Advertising Complete");
+            NimBLEDevice::getAdvertising()->advCompleteCB();
+            return 0;
+        }
+
         case BLE_GAP_EVENT_CONN_UPDATE: {
             NIMBLE_LOGD(LOG_TAG, "Connection parameters updated.");
             return 0;

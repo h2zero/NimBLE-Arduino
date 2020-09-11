@@ -77,7 +77,7 @@ public:
     void addServiceUUID(const NimBLEUUID &serviceUUID);
     void addServiceUUID(const char* serviceUUID);
     void removeServiceUUID(const NimBLEUUID &serviceUUID);
-    void start();
+    void start(uint32_t duration = 0, void (*advCompleteCB)(NimBLEAdvertising *pAdv) = nullptr);
     void stop();
     void setAppearance(uint16_t appearance);
     void setAdvertisementType(uint8_t adv_type);
@@ -87,20 +87,24 @@ public:
     void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
     void setScanResponseData(NimBLEAdvertisementData& advertisementData);
     void setScanResponse(bool);
+    void advCompleteCB();
+    bool isAdvertising();
 
 private:
     friend class NimBLEDevice;
 
-    void                 onHostReset();
+    void                    onHostReset();
+    static int              handleGapEvent(struct ble_gap_event *event, void *arg);
 
-    ble_hs_adv_fields    m_advData;
-    ble_hs_adv_fields    m_scanData;
-    ble_gap_adv_params   m_advParams;
+    ble_hs_adv_fields       m_advData;
+    ble_hs_adv_fields       m_scanData;
+    ble_gap_adv_params      m_advParams;
     std::vector<NimBLEUUID> m_serviceUUIDs;
-    bool                 m_customAdvData = false;  // Are we using custom advertising data?
-    bool                 m_customScanResponseData = false;  // Are we using custom scan response data?
-    bool                 m_scanResp = true;
-    bool                 m_advDataSet = false;
+    bool                    m_customAdvData;
+    bool                    m_customScanResponseData;
+    bool                    m_scanResp;
+    bool                    m_advDataSet;
+    void                   (*m_advCompCB)(NimBLEAdvertising *pAdv);
 
 };
 
