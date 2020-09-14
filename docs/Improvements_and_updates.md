@@ -4,6 +4,7 @@ Many improvements have been made to this library vs the original, this is a brie
 Refer to the [class documentation](https://h2zero.github.io/esp-nimble-cpp/annotated.html) for futher information on class specifics.  
 
 * [Server](#server)
+* [Advertising](#advertising)
 * [Client](#client)
 * [General](#general)  
 <br/>
@@ -58,6 +59,16 @@ and all characteristics / descriptors belonging to it and invalidating any point
 If false the service is only removed from visibility by clients. The pointers to the service and  
 it's characteristics / descriptors will remain valid and the service can be re-added in the future  
 using `NimBLEServer::addService`.  
+<br/>
+
+<a name="advertising"></a>
+# Advertising
+`NimBLEAdvertising::start`
+
+Now takes 2 optional parameters, the first is the duration to advertise for (in seconds), the second is a callback  
+that is invoked when advertsing ends and takes a pointer to a `NimBLEAdvertising` object (similar to the `NimBLEScan::start` API).  
+
+This provides an opportunity to update the advertisment data if desired.  
 <br/>
 
 <a name="client"></a>

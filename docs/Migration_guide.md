@@ -224,6 +224,14 @@ Calling `NimBLEAdvertising::setScanResponseData` without also calling `NimBLEAdv
 When using custom scan response data you must also use custom advertisement data.  
 <br/>
 
+> BLEAdvertising::start (NimBLEAdvertising::start)
+
+Now takes 2 optional parameters, the first is the duration to advertise for (in seconds), the second is a callback  
+that is invoked when advertsing ends and takes a pointer to a `NimBLEAdvertising` object (similar to the `NimBLEScan::start` API).  
+
+This provides an opportunity to update the advertisment data if desired.  
+<br/>
+
 <a name="client-api"></a>
 ## Client API
 

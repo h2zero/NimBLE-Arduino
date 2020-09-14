@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.  
 
+## [1.0.2] - 2020-09-13
+
+### Changed
+
+- `NimBLEAdvertising::start` Now takes 2 optional parameters, the first is the duration to advertise for (in seconds), the second is a  
+callback that is invoked when advertsing ends and takes a pointer to a `NimBLEAdvertising` object (similar to the `NimBLEScan::start` API).
+
+- (Arduino) Maximum BLE connections can now be altered by only changing the value of `CONFIG_BT_NIMBLE_MAX_CONNECTIONS` in `nimconfig.h`.
+Any changes to the controller max connection settings in `sdkconfig.h` will now have no effect when using this library.
+
+- (Arduino) Revert the previous change to fix the advertising start delay. Instead a replacement fix that routes all BLE controller commands from  
+a task running on core 0 (same as the controller) has been implemented. This improves response times and reliability for all BLE functions.
+
 ## [1.0.1] - 2020-09-02
 
 ### Added
