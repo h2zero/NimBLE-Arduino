@@ -101,17 +101,7 @@
  */
 #define CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_INTERNAL 1
 
-/**
- * @brief Sets the number of simultaneous connections (esp controller max is 9) 
- * @details To increase max connections in Arduino it is also required to change the
- * controller max connections defined in sdkconfig.h.\n
- *
- * This is located in your Arduino/hardware/espressif/esp32/tools/sdk/include/config folder.\n\n
- *
- * The values in sdkconfig.h you will need to change are:\n\n
- * `CONFIG_BTDM_CONTROLLER_BLE_MAX_CONN 3`\n
- * `CONFIG_BTDM_CONTROLLER_BLE_MAX_CONN_EFF 3`
- */
+/** @brief Sets the number of simultaneous connections (esp controller max is 9) */
 #define CONFIG_BT_NIMBLE_MAX_CONNECTIONS 3
 
 /** @brief Sets the number of devices allowed to store/bond with */

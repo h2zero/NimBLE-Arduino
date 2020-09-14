@@ -84,7 +84,7 @@ public:
     void setMaxInterval(uint16_t maxinterval);
     void setMinInterval(uint16_t mininterval);
     void setAdvertisementData(NimBLEAdvertisementData& advertisementData);
-    void setScanFilter(bool scanRequertWhitelistOnly, bool connectWhitelistOnly);
+    void setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly);
     void setScanResponseData(NimBLEAdvertisementData& advertisementData);
     void setScanResponse(bool);
 

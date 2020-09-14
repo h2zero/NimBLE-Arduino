@@ -209,12 +209,19 @@ This can be changed to use passkey authentication or numeric comparison. See [Se
 
 <a name="advertising-api"></a>
 ## Advertising API
-Advertising works the same as the original API except with the removal of:  
+Advertising works the same as the original API except:  
 > BLEAdvertising::setMinPreferred  
 > BLEAdvertising::setMaxPreferred  
 
 These methods were found to not provide useful functionality and consumed valuable advertising space (6 bytes of 31) if used unknowingly.  
-If you wish to advertise these parameters you can still do so manually via `NimBLEAdvertisementData::addData`.  
+If you wish to advertise these parameters you can still do so manually via `BLEAdvertisementData::addData` (`NimBLEAdvertisementData::addData`).  
+<br/>
+
+Calling `NimBLEAdvertising::setAdvertisementData` will entirely replace any data set with `NimBLEAdvertising::addServiceUUID`, or  
+`NimBLEAdvertising::setAppearance`. You should set all the data you wish to advertise within the `NimBLEAdvertisementData` instead.  
+
+Calling `NimBLEAdvertising::setScanResponseData` without also calling `NimBLEAdvertising::setAdvertisementData` will have no effect.  
+When using custom scan response data you must also use custom advertisement data.  
 <br/>
 
 <a name="client-api"></a>
