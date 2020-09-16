@@ -12,15 +12,19 @@
 static const char* LOG_TAG = "NimBLEMeshElement";
 
 NimBLEMeshElement::NimBLEMeshElement() {
-    m_pElem = nullptr;
+    m_pElem_t = nullptr;
 }
 NimBLEMeshElement::~NimBLEMeshElement() {
-    if(m_pElem != nullptr) {
-        delete m_pElem;
+    if(m_pElem_t != nullptr) {
+        delete m_pElem_t;
     }
 
+    delete m_pHealthModel;
+
     for(auto &it : m_modelsVec) {
-        delete (NimBLEMeshModel*)it.user_data;
+        if(it.id != BT_MESH_MODEL_ID_HEALTH_SRV) {
+            delete (NimBLEMeshModel*)it.user_data;
+        }
     }
 
     m_modelsVec.clear();
@@ -51,6 +55,12 @@ NimBLEMeshModel* NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCa
             pModel = new NimBLEGenLevelSrvModel(pCallbacks);
             break;
 
+        case BT_MESH_MODEL_ID_HEALTH_SRV:
+            m_pHealthModel = new NimBLEHealthSrvModel(pCallbacks);
+            pModel = m_pHealthModel;
+            m_modelsVec.push_back(bt_mesh_model{{BT_MESH_MODEL_ID_HEALTH_SRV},0,0,0,&pModel->m_opPub,{0},{0},bt_mesh_health_srv_op,pModel->getHealth_t()});
+            return pModel;
+
         default:
             NIMBLE_LOGE(LOG_TAG, "Error: model type %04x not supported", type);
             return nullptr;
@@ -70,6 +80,10 @@ void NimBLEMeshElement::addModel(bt_mesh_model* model) {
 
 
 NimBLEMeshModel* NimBLEMeshElement::getModel(uint16_t type) {
+    if(type == BT_MESH_MODEL_ID_HEALTH_SRV) {
+        return m_pHealthModel;
+    }
+
     for(auto &it : m_modelsVec) {
         if(it.id == type) {
             return (NimBLEMeshModel*)it.user_data;
@@ -86,8 +100,8 @@ NimBLEMeshModel* NimBLEMeshElement::getModel(uint16_t type) {
  * @details Must not be called until all models have been added.
  */
 bt_mesh_elem* NimBLEMeshElement::start() {
-    m_pElem = new bt_mesh_elem{0, 0, uint8_t(m_modelsVec.size()), 0, &m_modelsVec[0], NULL};
-    return m_pElem;
+    m_pElem_t = new bt_mesh_elem{0, 0, uint8_t(m_modelsVec.size()), 0, &m_modelsVec[0], NULL};
+    return m_pElem_t;
 }
 
 

@@ -60,33 +60,11 @@ private:
     uint16_t               m_primAddr;
     uint16_t               m_primNetIdx;
     bt_mesh_model*         m_configSrvModel;
-    bt_mesh_model*         m_configHthModel;
-    bt_mesh_health_srv     m_healthSrv;
-    bt_mesh_model_pub      m_healthPub;
     NimBLEUUID             m_uuid;
 
     std::vector<NimBLEMeshElement*> m_elemVec;
 };
 
-
-class NimBLEHealthSrvCallbacks {
-public:
-    static int faultGetCurrent(bt_mesh_model *model, uint8_t *test_id,
-                               uint16_t *company_id, uint8_t *faults,
-                               uint8_t *fault_count);
-
-    static int faultGetRegistered(bt_mesh_model *model, uint16_t company_id,
-                                  uint8_t *test_id, uint8_t *faults,
-                                  uint8_t *fault_count);
-
-    static int faultClear(bt_mesh_model *model, uint16_t company_id);
-
-    static int faultTest(bt_mesh_model *model, uint8_t test_id, uint16_t company_id);
-
-    static void attentionOn(bt_mesh_model *model);
-
-    static void attentionOff(bt_mesh_model *model);
-};
 
 #endif // CONFIG_BT_ENABLED
 #endif // MAIN_NIMBLE_MESH_NODE_H_

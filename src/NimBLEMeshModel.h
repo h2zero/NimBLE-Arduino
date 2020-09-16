@@ -33,22 +33,23 @@ public:
     virtual void setPubMsg(){};
     virtual void setValue(uint8_t *val, size_t len){};
     virtual void setTargetValue(uint8_t *val, size_t len){};
+    virtual bt_mesh_health_srv* getHealth_t();
 
     template<typename T>
     void setValue(const T &s) {
         setValue((uint8_t*)&s, sizeof(T));
     }
-    
+
     template<typename T>
     void setTargetValue(const T &s) {
         setTargetValue((uint8_t*)&s, sizeof(T));
     }
-    
+
     template<typename T>
     void getValue(T &s) {
         s = (T)m_value[0];
     }
-    
+
     template<typename T>
     void getTargetValue(T &s) {
         s = (T)m_targetValue[0];
@@ -70,6 +71,7 @@ public:
     ble_npl_callout           m_tdTimer;
     ble_npl_callout           m_pubTimer;
 };
+
 
 class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshElement;
@@ -94,6 +96,7 @@ class NimBLEGenOnOffSrvModel : NimBLEMeshModel {
     void setValue(uint8_t *val, size_t len) override;
     void setTargetValue(uint8_t *val, size_t len) override;
 };
+
 
 class NimBLEGenLevelSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshElement;
@@ -131,6 +134,20 @@ class NimBLEGenLevelSrvModel : NimBLEMeshModel {
     void setTargetValue(uint8_t *val, size_t len) override;
 };
 
+
+class NimBLEHealthSrvModel : NimBLEMeshModel {
+    friend class NimBLEMeshElement;
+    friend class NimBLEMeshNode;
+
+    NimBLEHealthSrvModel(NimBLEMeshModelCallbacks *pCallbacks);
+    ~NimBLEHealthSrvModel(){};
+
+    bt_mesh_health_srv*   getHealth_t() override;
+
+    bt_mesh_health_srv    m_healthSrv;
+};
+
+
 class NimBLEMeshModelCallbacks {
 public:
     virtual ~NimBLEMeshModelCallbacks();
@@ -138,6 +155,26 @@ public:
     virtual uint8_t getOnOff(NimBLEMeshModel *pModel);
     virtual void    setLevel(NimBLEMeshModel *pModel, int16_t val);
     virtual int16_t getLevel(NimBLEMeshModel *pModel);
+};
+
+
+class NimBLEHealthSrvCallbacks {
+public:
+    static int faultGetCurrent(bt_mesh_model *model, uint8_t *test_id,
+                               uint16_t *company_id, uint8_t *faults,
+                               uint8_t *fault_count);
+
+    static int faultGetRegistered(bt_mesh_model *model, uint16_t company_id,
+                                  uint8_t *test_id, uint8_t *faults,
+                                  uint8_t *fault_count);
+
+    static int faultClear(bt_mesh_model *model, uint16_t company_id);
+
+    static int faultTest(bt_mesh_model *model, uint8_t test_id, uint16_t company_id);
+
+    static void attentionOn(bt_mesh_model *model);
+
+    static void attentionOff(bt_mesh_model *model);
 };
 
 #endif // CONFIG_BT_ENABLED
