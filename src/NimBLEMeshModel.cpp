@@ -16,6 +16,15 @@ static const char* LOG_TAG = "NimBLEMeshModel";
 
 static NimBLEMeshModelCallbacks defaultCallbacks;
 
+static const struct bt_mesh_health_srv_cb health_srv_cb = {
+    NimBLEHealthSrvCallbacks::faultGetCurrent,
+    NimBLEHealthSrvCallbacks::faultGetRegistered,
+    NimBLEHealthSrvCallbacks::faultClear,
+    NimBLEHealthSrvCallbacks::faultTest,
+    NimBLEHealthSrvCallbacks::attentionOn,
+    NimBLEHealthSrvCallbacks::attentionOff
+};
+
 /**
  * @brief base model constructor
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
@@ -113,14 +122,20 @@ void NimBLEMeshModel::publish() {
     ble_npl_callout_reset(&m_pubTimer, 1);
 }
 
+
 uint32_t NimBLEMeshModel::getTransTime() {
     return (m_transTime & 0x3F) * NimBLEUtils::meshTransTimeMs(m_transTime);
 }
+
 
 uint16_t NimBLEMeshModel::getDelayTime() {
     return m_delayTime * 5;
 }
 
+
+bt_mesh_health_srv* NimBLEMeshModel::getHealth_t() {
+    return nullptr;
+}
 
 /**
  * @brief Generic on/off server model constructor
@@ -142,7 +157,7 @@ NimBLEGenOnOffSrvModel::NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks *pCallba
                          NimBLEGenOnOffSrvModel::pubTimerCb, this);
 
     m_opPub.msg = NET_BUF_SIMPLE(2 + 3);
-    
+
     m_value.push_back(0);
     m_targetValue.push_back(0);
 }
@@ -310,7 +325,7 @@ NimBLEGenLevelSrvModel::NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks *pCallba
     ble_npl_callout_init(&m_pubTimer, nimble_port_get_dflt_eventq(),
                          NimBLEGenLevelSrvModel::pubTimerCb, this);
     m_opPub.msg = NET_BUF_SIMPLE(2 + 5);
-    
+
     m_value.assign(2, 0);
     m_targetValue.assign(2, 0);
 }
@@ -371,9 +386,9 @@ void NimBLEGenLevelSrvModel::setLevelUnack(bt_mesh_model *model,
     ble_npl_callout_stop(&pModel->m_tdTimer);
 
     ble_npl_time_t timerMs = 0;
-     
+
     int16_t curval = *(int16_t*)&pModel->m_value[0];
-    
+
     if(newval != curval) {
         pModel->m_targetValue.assign({(uint8_t)newval, (uint8_t)(newval >> 8)});
 
@@ -488,6 +503,7 @@ void NimBLEGenLevelSrvModel::pubTimerCb(ble_npl_event *event) {
     }
 }
 
+
 void NimBLEGenLevelSrvModel::setPubMsg() {
     bt_mesh_model_msg_init(m_opPub.msg, BT_MESH_MODEL_OP_2(0x82, 0x08));
     net_buf_simple_add_le16(m_opPub.msg, *(int16_t*)&m_value[0]);
@@ -499,6 +515,7 @@ void NimBLEGenLevelSrvModel::setPubMsg() {
     }
 }
 
+
 void NimBLEGenLevelSrvModel::setValue(uint8_t *val, size_t len) {
     if(len != sizeof(int16_t)) {
         NIMBLE_LOGE(LOG_TAG, "NimBLEGenLevelSrvModel: Incorrect value length");
@@ -507,6 +524,7 @@ void NimBLEGenLevelSrvModel::setValue(uint8_t *val, size_t len) {
     m_value.assign({*val, val[1]});
 }
 
+
 void NimBLEGenLevelSrvModel::setTargetValue(uint8_t *val, size_t len) {
     if(len != sizeof(int16_t)) {
         NIMBLE_LOGE(LOG_TAG, "NimBLEGenLevelSrvModel: Incorrect target value length");
@@ -514,6 +532,24 @@ void NimBLEGenLevelSrvModel::setTargetValue(uint8_t *val, size_t len) {
     }
     m_targetValue.assign({*val, val[1]});
 }
+
+
+/**
+ * @brief Health server model constructor
+ * @param [in] pCallbacks, a pointer to a callback instance for model operations
+ */
+NimBLEHealthSrvModel::NimBLEHealthSrvModel(NimBLEMeshModelCallbacks *pCallbacks)
+:NimBLEMeshModel(pCallbacks)
+{
+    memset(&m_healthSrv, 0, sizeof(m_healthSrv));
+    m_healthSrv.cb  = &health_srv_cb;
+}
+
+
+bt_mesh_health_srv* NimBLEHealthSrvModel::getHealth_t() {
+    return &m_healthSrv;
+}
+
 
 /**
  * Default model callbacks
@@ -536,4 +572,45 @@ void NimBLEMeshModelCallbacks::setLevel(NimBLEMeshModel *pModel, int16_t val) {
 int16_t NimBLEMeshModelCallbacks::getLevel(NimBLEMeshModel *pModel) {
     NIMBLE_LOGD(LOG_TAG, "Gen Level get");
     return 0;
+}
+
+/**
+ * @brief Health server callbacks
+ */
+int NimBLEHealthSrvCallbacks::faultGetCurrent(bt_mesh_model *model, uint8_t *test_id,
+                                              uint16_t *company_id, uint8_t *faults,
+                                              uint8_t *fault_count)
+{
+    NIMBLE_LOGD(LOG_TAG, "faultGetCurrent - default");
+    return 0;
+}
+
+int NimBLEHealthSrvCallbacks::faultGetRegistered(bt_mesh_model *model, uint16_t company_id,
+                                                 uint8_t *test_id, uint8_t *faults,
+                                                 uint8_t *fault_count)
+{
+    NIMBLE_LOGD(LOG_TAG, "faultGetRegistered - default");
+    return 0;
+}
+
+int NimBLEHealthSrvCallbacks::faultClear(bt_mesh_model *model, uint16_t company_id)
+{
+    NIMBLE_LOGD(LOG_TAG, "faultClear - default");
+    return 0;
+}
+
+int NimBLEHealthSrvCallbacks::faultTest(bt_mesh_model *model, uint8_t test_id, uint16_t company_id)
+{
+    NIMBLE_LOGD(LOG_TAG, "faultTest - default");
+    return 0;
+}
+
+void NimBLEHealthSrvCallbacks::attentionOn(bt_mesh_model *model)
+{
+    NIMBLE_LOGD(LOG_TAG, "attentionOn - default");
+}
+
+void NimBLEHealthSrvCallbacks::attentionOff(bt_mesh_model *model)
+{
+    NIMBLE_LOGD(LOG_TAG, "attentionOff - default");
 }

@@ -20,17 +20,6 @@
 
 static const char* LOG_TAG = "NimBLEMeshNode";
 
-/**
- * Health server callback struct
- */
-static const struct bt_mesh_health_srv_cb health_srv_cb = {
-    NimBLEHealthSrvCallbacks::faultGetCurrent,
-    NimBLEHealthSrvCallbacks::faultGetRegistered,
-    NimBLEHealthSrvCallbacks::faultClear,
-    NimBLEHealthSrvCallbacks::faultTest,
-    NimBLEHealthSrvCallbacks::attentionOn,
-    NimBLEHealthSrvCallbacks::attentionOff
-};
 
 /**
  * @brief Construct a mesh node.
@@ -43,8 +32,6 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
     memset(&m_serverConfig, 0, sizeof(m_serverConfig));
     memset(&m_prov, 0, sizeof(m_prov));
     memset(&m_comp, 0, sizeof(m_comp));
-    memset(&m_healthPub, 0, sizeof(m_healthPub));
-    memset(&m_healthSrv, 0, sizeof(m_healthSrv));
 
     // Default server config
     m_serverConfig.relay = BT_MESH_RELAY_DISABLED;/*(type & NIMBLE_MESH::RELAY) ?
@@ -66,12 +53,6 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
     m_serverConfig.net_transmit = BT_MESH_TRANSMIT(2, 20);
     m_serverConfig.relay_retransmit = BT_MESH_TRANSMIT(2, 20);
 
-    // Default health server config
-    m_healthSrv.cb  = &health_srv_cb;
-
-    // Default health pub config
-    m_healthPub.msg = BT_MESH_HEALTH_FAULT_MSG(0);
-
     // Provisioning config
     m_uuid          = uuid;
     m_prov.uuid     = m_uuid.getNative()->u128.value;
@@ -79,7 +60,6 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
     m_prov.reset    = NimBLEMeshNode::provReset;
 
     m_configSrvModel = nullptr;
-    m_configHthModel = nullptr;
 
     // Create the primary element
     m_elemVec.push_back(new NimBLEMeshElement());
@@ -92,10 +72,6 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
 NimBLEMeshNode::~NimBLEMeshNode() {
     if(m_configSrvModel != nullptr) {
         delete m_configSrvModel;
-    }
-
-    if(m_configHthModel != nullptr) {
-        delete m_configHthModel;
     }
 
     if(m_comp.elem != nullptr) {
@@ -175,10 +151,11 @@ bool NimBLEMeshNode::start() {
         m_configSrvModel->groups[i] = BT_MESH_ADDR_UNASSIGNED;
     }
 
-    m_configHthModel = new bt_mesh_model{{BT_MESH_MODEL_ID_HEALTH_SRV},0,0,0,&m_healthPub,{0},{0},bt_mesh_health_srv_op,&m_healthSrv};
-
     m_elemVec[0]->addModel(m_configSrvModel);
-    m_elemVec[0]->addModel(m_configHthModel);
+
+    if(m_elemVec[0]->getModel(BT_MESH_MODEL_ID_HEALTH_SRV) == nullptr) {
+        m_elemVec[0]->createModel(BT_MESH_MODEL_ID_HEALTH_SRV);
+    }
 
     // setup node composition
     m_comp.cid = CID_VENDOR;
@@ -215,48 +192,6 @@ bool NimBLEMeshNode::start() {
     }
 
     return true;
-}
-
-
-/**
- * @brief Health server callbacks
- */
-int NimBLEHealthSrvCallbacks::faultGetCurrent(bt_mesh_model *model, uint8_t *test_id,
-                                              uint16_t *company_id, uint8_t *faults,
-                                              uint8_t *fault_count)
-{
-    NIMBLE_LOGD(LOG_TAG, "faultGetCurrent - default");
-    return 0;
-}
-
-int NimBLEHealthSrvCallbacks::faultGetRegistered(bt_mesh_model *model, uint16_t company_id,
-                                                 uint8_t *test_id, uint8_t *faults,
-                                                 uint8_t *fault_count)
-{
-    NIMBLE_LOGD(LOG_TAG, "faultGetRegistered - default");
-    return 0;
-}
-
-int NimBLEHealthSrvCallbacks::faultClear(bt_mesh_model *model, uint16_t company_id)
-{
-    NIMBLE_LOGD(LOG_TAG, "faultClear - default");
-    return 0;
-}
-
-int NimBLEHealthSrvCallbacks::faultTest(bt_mesh_model *model, uint8_t test_id, uint16_t company_id)
-{
-    NIMBLE_LOGD(LOG_TAG, "faultTest - default");
-    return 0;
-}
-
-void NimBLEHealthSrvCallbacks::attentionOn(bt_mesh_model *model)
-{
-    NIMBLE_LOGD(LOG_TAG, "attentionOn - default");
-}
-
-void NimBLEHealthSrvCallbacks::attentionOff(bt_mesh_model *model)
-{
-    NIMBLE_LOGD(LOG_TAG, "attentionOff - default");
 }
 
 
