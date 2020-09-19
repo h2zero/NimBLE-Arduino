@@ -641,6 +641,31 @@ bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &cha
 } // setValue
 
 
+/**
+ * @brief Get the remote characteristic with the specified handle.
+ * @param [in] handle The handle of the desired characteristic.
+ * @returns The matching remote characteristic, nullptr otherwise.
+ */
+NimBLERemoteCharacteristic* NimBLEClient::getCharacteristic(const uint16_t handle)
+{
+    NimBLERemoteService *pService = nullptr;
+    for(auto it = m_servicesVector.begin(); it != m_servicesVector.end(); ++it) {
+      if ((*it)->getStartHandle() <= handle && handle <= (*it)->getEndHandle()) {
+          pService = *it;
+          break;
+      }
+    }
+
+    if (pService != nullptr) {
+        for (auto it = pService->begin(); it != pService->end(); ++it) {
+            if ((*it)->getHandle() == handle) {
+                return *it;
+            }
+        }
+    }
+
+    return nullptr;
+}
 
 /**
  * @brief Get the current mtu of this connection.

@@ -30,6 +30,7 @@
 #include <string>
 
 class NimBLERemoteService;
+class NimBLERemoteCharacteristic;
 class NimBLEClientCallbacks;
 class NimBLEAdvertisedDevice;
 
@@ -55,6 +56,7 @@ public:
     std::string                                 getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
     bool                                        setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
                                                          const std::string &value);
+    NimBLERemoteCharacteristic*                 getCharacteristic(const uint16_t handle);
     bool                                        isConnected();
     void                                        setClientCallbacks(NimBLEClientCallbacks *pClientCallbacks,
                                                                    bool deleteCallbacks = true);
