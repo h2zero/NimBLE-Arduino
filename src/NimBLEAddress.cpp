@@ -38,6 +38,14 @@ NimBLEAddress::NimBLEAddress(ble_addr_t address) {
 
 
 /**
+ * @brief Create a blank address, i.e. 00:00:00:00:00:00, type 0.
+ */
+NimBLEAddress::NimBLEAddress() {
+    NimBLEAddress("");
+} // NimBLEAddress
+
+
+/**
  * @brief Create an address from a hex string
  *
  * A hex string is of the format:

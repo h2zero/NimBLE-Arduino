@@ -2,17 +2,32 @@
 
 This guide describes the required changes to existing projects migrating from the original bluedroid API to NimBLE.  
 
-The changes listed here are only some of the many that have been made, this is a short overview for migrating existing applications.  
+**The changes listed here are only the required changes that must be made**, and a short overview of options for migrating existing applications.  
 
-For more information on the improvements and additions please refer to the [class documentation](https://h2zero.github.io/esp-nimble-cpp/annotated.html) and [Improvements and updates](docs/Improvements_and_updates.md)  
-<br/>
+For more information on the improvements and additions please refer to the [class documentation](https://h2zero.github.io/esp-nimble-cpp/annotated.html) and [Improvements and updates](Improvements_and_updates.md)  
 
-# General Information
+* [General Changes](#general-information)
+* [Server](#server-api)
+    * [Services](#services)
+    * [characteristics](#characteristics)
+    * [descriptors](#descriptors)
+    * [Security](#server-security)
+* [Advertising](#advertising-api)
+* [Client](#client-api)
+    * [Remote Services](#remote-services)
+    * [Remote characteristics](#remote-characteristics)
+    * [Security](#client-security)
+* [General Security](#security-api)
+* [Configuration](#arduino-configuration)
+<br/>  
+
+<a name="general-information"></a>
+## General Information
 
 ### Header Files
 All classes are accessible by including `NimBLEDevice.h` in your application, no further headers need to be included.  
 
-You may choose to include `NimBLELog.h` in your appplication if you want to use the `NIMBLE_LOGx` macros for debugging.  
+(Mainly for Arduino) You may choose to include `NimBLELog.h` in your appplication if you want to use the `NIMBLE_LOGx` macros for debugging.  
 These macros are used the same way as the `ESP_LOGx` macros.  
 <br/>
 
@@ -25,26 +40,34 @@ this means **no class names need to be changed in existing code** and makes migr
 <br/>
 
 ### BLE Addresses
-`BLEAddress` (`NimBLEAddress`) When constructing an address the constructor now takes an *optional* `uint8_t type` paramameter  
+`BLEAddress` (`NimBLEAddress`) When constructing an address the constructor now takes an *(optional)* `uint8_t type` paramameter  
 to specify the address type. Default is (0) Public static address.  
 
 For example `BLEAddress addr(11:22:33:44:55:66, 1)` will create the address object with an address type of: 1 (Random).  
 
 As this paramameter is optional no changes to existing code are needed, it is mentioned here for information.  
 <br/>
+`BLEAddress::getNative` (`NimBLEAddress::getNative`) returns a uint8_t pointer to the native address byte array.  
+In this library the address bytes are stored in reverse order from the original library. This is due to the way  
+the NimBLE stack expects addresses to be presented to it. All other functions such as `toString` are  
+not affected as the endian change is made within them.  
+<br/>
 
-# Server API
+<a name="server-api"></a>
+## Server API
 Creating a `BLEServer` instance is the same as original, no changes required.
 For example `BLEDevice::createServer()` will work just as it did before.  
 
-`BLEServerCallbacks` (`NimBLEServerCallbacks`) has new methods for handling security operations.
+`BLEServerCallbacks` (`NimBLEServerCallbacks`) has new methods for handling security operations.  
 **Note:** All callback methods have default implementations which allows the application to implement only the methods applicable.  
 <br/>
 
+<a name="services"></a>
 ### Services
 Creating a `BLEService` (`NimBLEService`) instance is the same as original, no changes required.  
 For example `BLEServer::createService(SERVICE_UUID)` will work just as it did before.  
 
+<a name="characteristics"></a>
 ### Characteristics
 `BLEService::createCharacteristic` (`NimBLEService::createCharacteristic`) is used the same way as originally except the properties parameter has changed.  
 
@@ -93,10 +116,31 @@ BLECharacteristic *pCharacteristic = pService->createCharacteristic(
 ```
 <br/>
 
-`BLECharacteristicCallbacks` (`NimBLECharacteristicCallbacks`) has a new method `NimBLECharacteristicCallbacks::onSubscribe` which called when a client subscribes to notifications/indications.  
+`BLECharacteristicCallbacks` (`NimBLECharacteristicCallbacks`) has a new method `NimBLECharacteristicCallbacks::onSubscribe`  
+which is called when a client subscribes to notifications/indications.  
+
 **Note:** All callback methods have default implementations which allows the application to implement only the methods applicable.  
 <br/>
 
+> BLECharacteristic::getData  
+
+**Has been removed from the API.**  
+Originally this returned a `uint8_t*` to the internal data, which is volatile.  
+To prevent possibly throwing exceptions this has been removed and `NimBLECharacteristic::getValue` should be used  
+to get a copy of the data first which can then safely be accessed via pointer.  
+
+**Example:**
+```
+std::string value = pCharacteristic->getValue();
+uint8_t *pData = (uint8_t*)value.data();
+```
+Alternatively use the `getValue` template:
+```
+my_struct_t myStruct = pChr->getValue<my_struct_t>();
+```
+<br/>
+
+<a name="descriptors"></a>
 ### Descriptors
 The previous method `BLECharacteristic::addDescriptor()` has been removed.  
 
@@ -148,6 +192,7 @@ p2904 = (NimBLE2904*)pCharacteristic->createDescriptor("2904");
 ```
 <br/>
 
+<a name="server-security"></a>
 ### Server Security
 Security is set on the characteristic or descriptor properties by applying one of the following:
 > NIMBLE_PROPERTY::READ_ENC  
@@ -159,10 +204,36 @@ Security is set on the characteristic or descriptor properties by applying one o
 
 When a peer wants to read or write a characteristic or descriptor with any of these properties applied    
 it will trigger the pairing process. By default the "just-works" pairing will be performed automatically.   
-This can be changed to use passkey authentication or numeric comparison. See [Security Differences](#security-differences) for details.  
+This can be changed to use passkey authentication or numeric comparison. See [Security API](#security-api) for details.  
 <br/>
 
-# Client API
+<a name="advertising-api"></a>
+## Advertising API
+Advertising works the same as the original API except:  
+> BLEAdvertising::setMinPreferred  
+> BLEAdvertising::setMaxPreferred  
+
+These methods were found to not provide useful functionality and consumed valuable advertising space (6 bytes of 31) if used unknowingly.  
+If you wish to advertise these parameters you can still do so manually via `BLEAdvertisementData::addData` (`NimBLEAdvertisementData::addData`).  
+<br/>
+
+Calling `NimBLEAdvertising::setAdvertisementData` will entirely replace any data set with `NimBLEAdvertising::addServiceUUID`, or  
+`NimBLEAdvertising::setAppearance`. You should set all the data you wish to advertise within the `NimBLEAdvertisementData` instead.  
+
+Calling `NimBLEAdvertising::setScanResponseData` without also calling `NimBLEAdvertising::setAdvertisementData` will have no effect.  
+When using custom scan response data you must also use custom advertisement data.  
+<br/>
+
+> BLEAdvertising::start (NimBLEAdvertising::start)
+
+Now takes 2 optional parameters, the first is the duration to advertise for (in seconds), the second is a callback  
+that is invoked when advertsing ends and takes a pointer to a `NimBLEAdvertising` object (similar to the `NimBLEScan::start` API).  
+
+This provides an opportunity to update the advertisment data if desired.  
+<br/>
+
+<a name="client-api"></a>
+## Client API
 
 Client instances are created just as before with `BLEDevice::createClient` (`NimBLEDevice::createClient`).  
 
@@ -195,18 +266,23 @@ the user may not be interested in.
 to replace the the removed automatic functionality.  
 <br/>
 
+<a name="remote-services"></a>
 ### Remote Services
 `BLERemoteService` (`NimBLERemoteService`) Methods remain mostly unchanged with the exceptions of:  
+
 > BLERemoteService::getCharacteristicsByHandle
+
 This method has been removed.  
 <br/>
 
-> `BLERemoteService::getCharacteristics` (`NimBLERemoteService::getCharacteristics`)  
+> `BLERemoteService::getCharacteristics` (`NimBLERemoteService::getCharacteristics`) 
+
 This method now takes an optional (bool) parameter to indicate if the characteristics should be retrieved from the server (true) or  
 the currently known database returned (false : default).  
 Also now returns a pointer to `std::vector` instead of `std::map`.  
 <br/>
 
+<a name="remote-characteristics"></a>
 ### Remote Characteristics
 `BLERemoteCharacteristic` (`NimBLERemoteCharacteristic`) There have been a few changes to the methods in this class:  
 
@@ -219,27 +295,33 @@ Now return true or false to indicate success or failure so you can choose to dis
 > `BLERemoteCharacteristic::registerForNotify` (`NimBLERemoteCharacteristic::registerForNotify`)  
 
 Is now **deprecated**.  
-> NimBLERemoteCharacteristic::subscribe  
-> NimBLERemoteCharacteristic::unsubscribe  
+> `NimBLERemoteCharacteristic::subscribe`  
+> `NimBLERemoteCharacteristic::unsubscribe`  
 
 Are the new methods added to replace it.  
 <br/>
 
 > `BLERemoteCharacteristic::readUInt8` (`NimBLERemoteCharacteristic::readUInt8`)  
 > `BLERemoteCharacteristic::readUInt16` (`NimBLERemoteCharacteristic::readUInt16`)  
-> `BLERemoteCharacteristic::readUInt32` (`NimBLERemoteCharacteristic::readUInt32`) 
+> `BLERemoteCharacteristic::readUInt32` (`NimBLERemoteCharacteristic::readUInt32`)  
 > `BLERemoteCharacteristic::readFloat` (`NimBLERemoteCharacteristic::readFloat`)  
 
 Are **deprecated** a template: NimBLERemoteCharacteristic::readValue<type\>(time_t\*, bool) has been added to replace them.  
 <br/>
 
-> BLERemoteCharacteristic::readRawData  
+> `BLERemoteCharacteristic::readRawData`  
 
-Has been removed from the API as it stored an unnecessary copy of the data.  
+**Has been removed from the API**  
+Originally it stored an unnecessary copy of the data and was returning a `uint8_t` pointer to volatile internal data.  
 The user application should use `NimBLERemoteCharacteristic::readValue` or `NimBLERemoteCharacteristic::getValue`.  
-Then cast the returned std::string to the type they wish such as:  
+To obatain a copy of the data, then cast the returned std::string to the type required such as:  
 ```
-uint8_t *val = (uint8_t*)pChr->readValue().data();
+std::string value = pChr->readValue();
+uint8_t *data = (uint8_t*)value.data();
+```
+Alternatively use the `readValue` template:
+```
+my_struct_t myStruct = pChr->readValue<my_struct_t>();
 ```
 <br/>
   
@@ -250,54 +332,67 @@ the currently known database returned (false : default).
 Also now returns a pointer to `std::vector` instead of `std::map`.  
 <br/>
 
+<a name="client-security"></a>
 ### Client Security
 The client will automatically initiate security when the peripheral responds that it's required.  
 The default configuration will use "just-works" pairing with no bonding, if you wish to enable bonding see below.  
 <br/>
 
-# Security API
+<a name="security-api"></a>
+## Security API
 Security operations have been moved to `BLEDevice` (`NimBLEDevice`).
 
-Also security callback methods are now incorporated in the NimBLEServerCallbacks / NimBLEClientCallbacks classes.   
-However backward compatibility with the original `BLESecurity` (`NimBLESecurity`) class is retained to minimize app code changes.  
+Also security callback methods are now incorporated in the `NimBLEServerCallbacks` / `NimBLEClientCallbacks` classes.   
+However backward compatibility with the original `BLESecurity` (`NimBLESecurity`) class is retained to minimize application code changes.  
 
 The callback methods are:
 
-> bool     onConfirmPIN(uint32_t pin);  
+> `bool onConfirmPIN(uint32_t pin)`  
 
 Receives the pin when using numeric comparison authentication, `return true;` to accept.  
 <br/>
 
-> uint32_t onPassKeyRequest();  
+> `uint32_t onPassKeyRequest()`  
 
 For server callback; return the passkey expected from the client.  
 For client callback; return the passkey to send to the server.  
 <br/>
 
-> void     onAuthenticationComplete(ble_gap_conn_desc\* desc);  
+> `void onAuthenticationComplete(ble_gap_conn_desc\* desc)`  
 
 Authentication complete, success or failed information is in `desc`.  
 <br/>
 
 Security settings and IO capabilities are now set by the following methods of NimBLEDevice.
-> NimBLEDevice::setSecurityAuth(bool bonding, bool mitm, bool sc)  
-> NimBLEDevice::setSecurityAuth(uint8_t auth_req)  
+> `NimBLEDevice::setSecurityAuth(bool bonding, bool mitm, bool sc)`  
+> `NimBLEDevice::setSecurityAuth(uint8_t auth_req)`  
 
 Sets the authorization mode for this device.  
 <br/>
 
-> NimBLEDevice::setSecurityIOCap(uint8_t iocap)  
+> `NimBLEDevice::setSecurityIOCap(uint8_t iocap)`  
 
 Sets the Input/Output capabilities of this device.  
 <br/>
 
-> NimBLEDevice::setSecurityInitKey(uint8_t init_key)  
+> `NimBLEDevice::setSecurityInitKey(uint8_t init_key)`  
 
 If we are the initiator of the security procedure this sets the keys we will distribute.  
 <br/>
 
-> NimBLEDevice::setSecurityRespKey(uint8_t resp_key)  
+> `NimBLEDevice::setSecurityRespKey(uint8_t resp_key)`  
 
 Sets the keys we are willing to accept from the peer during pairing.  
 <br/>
 
+<a name="arduino-configuration"></a>
+## Arduino Configuration
+
+Unlike the original library pre-packaged in the esp32-arduino, this library has all the configuration  
+options that are normally set in menuconfig available in the *src/nimconfig.h* file.  
+
+This allows Arduino users to fully customize the build, such as increasing max connections  
+or loading the BLE stack into external PSRAM.  
+
+For details on the options, they are fully commented in *nimconfig.h*  
+<br/>

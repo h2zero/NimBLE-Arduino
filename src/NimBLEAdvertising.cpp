@@ -54,6 +54,11 @@ NimBLEAdvertising::NimBLEAdvertising() {
     m_advParams.itvl_min             = 0;
     m_advParams.itvl_max             = 0;
 
+    m_customAdvData                  = false;
+    m_customScanResponseData         = false;
+    m_scanResp                       = true;
+    m_advDataSet                     = false;
+
 } // NimBLEAdvertising
 
 
@@ -137,20 +142,6 @@ void NimBLEAdvertising::setMaxInterval(uint16_t maxinterval) {
 
 
 /**
- * @brief NOP - Not yet implemented, dummy function for backward compatibility.
- */
-void NimBLEAdvertising::setMinPreferred(uint16_t mininterval) {
-} // setMinPreferred
-
-
-/**
- * @brief NOP - Not yet implemented, dummy function for backward compatibility.
- */
-void NimBLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
-} // setMaxPreferred
-
-
-/**
  * @brief Set if scan response is available.
  * @param [in] set true = scan response available.
  */
@@ -192,6 +183,9 @@ void NimBLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connec
 /**
  * @brief Set the advertisement data that is to be published in a regular advertisement.
  * @param [in] advertisementData The data to be advertised.
+ * @details The use of this function will replace any data set with addServiceUUID\n
+ * or setAppearance. If you wish for these to be advertised you must include them\n
+ * in the advertisementData parameter sent.
  */
 
 void NimBLEAdvertising::setAdvertisementData(NimBLEAdvertisementData& advertisementData) {
@@ -210,6 +204,8 @@ void NimBLEAdvertising::setAdvertisementData(NimBLEAdvertisementData& advertisem
 /**
  * @brief Set the advertisement data that is to be published in a scan response.
  * @param [in] advertisementData The data to be advertised.
+ * @details Calling this without also using setAdvertisementData will have no effect.\n
+ * When using custom scan response data you must also use custom advertisement data.
  */
 void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertisementData) {
     NIMBLE_LOGD(LOG_TAG, ">> setScanResponseData");
@@ -226,8 +222,10 @@ void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertiseme
 
 /**
  * @brief Start advertising.
+ * @param [in] duration The duration, in seconds, to advertise, 0 == advertise forever.
+ * @param [in] advCompleteCB A pointer to a callback to be invoked when advertising ends.
  */
-void NimBLEAdvertising::start() {
+void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdvertising *pAdv)) {
     NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
 
     // If Host is not synced we cannot start advertising.
@@ -252,6 +250,15 @@ void NimBLEAdvertising::start() {
     if(ble_gap_adv_active()) {
         return;
     }
+
+    if(duration == 0){
+        duration = BLE_HS_FOREVER;
+    }
+    else{
+        duration = duration*1000; // convert duration to milliseconds
+    }
+
+    m_advCompCB = advCompleteCB;
 
     int rc = 0;
 
@@ -398,13 +405,13 @@ void NimBLEAdvertising::start() {
     }
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-    rc = ble_gap_adv_start(0, NULL, BLE_HS_FOREVER,
+    rc = ble_gap_adv_start(0, NULL, duration,
                            &m_advParams,
-                           (pServer != nullptr) ? NimBLEServer::handleGapEvent : NULL,
-                           pServer);
+                           (pServer != nullptr) ? NimBLEServer::handleGapEvent : NimBLEAdvertising::handleGapEvent,
+                           (pServer != nullptr) ? (void*)pServer : (void*)this);
 #else
-    rc = ble_gap_adv_start(0, NULL, BLE_HS_FOREVER,
-                           &m_advParams, NULL,NULL);
+    rc = ble_gap_adv_start(0, NULL, duration,
+                           &m_advParams, NimBLEAdvertising::handleGapEvent, this);
 #endif
     if (rc != 0) {
         NIMBLE_LOGC(LOG_TAG, "Error enabling advertising; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
@@ -430,12 +437,47 @@ void NimBLEAdvertising::stop() {
 } // stop
 
 
+/**
+ * @brief Handles the callback when advertising stops.
+ */
+void NimBLEAdvertising::advCompleteCB() {
+    if(m_advCompCB != nullptr) {
+        m_advCompCB(this);
+    }
+}
+
+
+/**
+ * @brief Check if currently advertising.
+ * @return true if advertising is active.
+ */
+bool NimBLEAdvertising::isAdvertising() {
+    return ble_gap_adv_active();
+}
+
+
 /*
  * Host reset seems to clear advertising data,
  * we need clear the flag so it reloads it.
  */
 void NimBLEAdvertising::onHostReset() {
     m_advDataSet = false;
+}
+
+
+/**
+ * @brief Handler for gap events when not using peripheral role.
+ * @param [in] event the event data.
+ * @param [in] arg pointer to the advertising instance.
+ */
+/*STATIC*/
+int NimBLEAdvertising::handleGapEvent(struct ble_gap_event *event, void *arg) {
+    NimBLEAdvertising *pAdv = (NimBLEAdvertising*)arg;
+
+    if(event->type == BLE_GAP_EVENT_ADV_COMPLETE) {
+        pAdv->advCompleteCB();
+    }
+    return 0;
 }
 
 

@@ -251,7 +251,7 @@ bool NimBLEClient::secureConnection() {
         }
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    } while (taskData.rc == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING) && retryCount--);
+    } while (taskData.rc == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING) && retryCount--);
 
     if(taskData.rc != 0){
         return false;
@@ -827,12 +827,12 @@ uint16_t NimBLEClient::getMTU() {
                 return 0;
             }
 
-            if(event->enc_change.status == 0 || event->enc_change.status == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING)) {
+            if(event->enc_change.status == 0 || event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
                 struct ble_gap_conn_desc desc;
                 rc = ble_gap_conn_find(event->enc_change.conn_handle, &desc);
                 assert(rc == 0);
 
-                if (event->enc_change.status == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING)) {
+                if (event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
                     // Key is missing, try deleting.
                     ble_store_util_delete_peer(&desc.peer_id_addr);
                 } else if(NimBLEDevice::m_securityCallbacks != nullptr) {
