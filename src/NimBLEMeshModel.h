@@ -33,7 +33,6 @@ public:
     virtual void setPubMsg(){};
     virtual void setValue(uint8_t *val, size_t len){};
     virtual void setTargetValue(uint8_t *val, size_t len){};
-    virtual bt_mesh_health_srv* getHealth_t();
 
     template<typename T>
     void setValue(const T &s) {
@@ -141,8 +140,6 @@ class NimBLEHealthSrvModel : NimBLEMeshModel {
 
     NimBLEHealthSrvModel(NimBLEMeshModelCallbacks *pCallbacks);
     ~NimBLEHealthSrvModel(){};
-
-    bt_mesh_health_srv*   getHealth_t() override;
 
     bt_mesh_health_srv    m_healthSrv;
 };

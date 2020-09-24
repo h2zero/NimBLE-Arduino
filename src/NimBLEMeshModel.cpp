@@ -133,10 +133,6 @@ uint16_t NimBLEMeshModel::getDelayTime() {
 }
 
 
-bt_mesh_health_srv* NimBLEMeshModel::getHealth_t() {
-    return nullptr;
-}
-
 /**
  * @brief Generic on/off server model constructor
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
@@ -543,11 +539,7 @@ NimBLEHealthSrvModel::NimBLEHealthSrvModel(NimBLEMeshModelCallbacks *pCallbacks)
 {
     memset(&m_healthSrv, 0, sizeof(m_healthSrv));
     m_healthSrv.cb  = &health_srv_cb;
-}
-
-
-bt_mesh_health_srv* NimBLEHealthSrvModel::getHealth_t() {
-    return &m_healthSrv;
+    m_opPub.msg = NET_BUF_SIMPLE(1 + 3);
 }
 
 
