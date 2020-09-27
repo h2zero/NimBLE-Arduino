@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.  
 
+## [Unreleased]
+
+### Added
+- `NimBLEClient::getCharacteristic(uint16_t handle)` Enabling the use of the characteristic handle to be used to find 
+the NimBLERemoteCharacteristic object.  
+
+### Changed
+- `NimBLEScan` When the scan ends the scan stopped flag is now set before calling the scan complete callback (if used)  
+this allows the starting of a new scan from the callback function.  
+
 ## [1.0.2] - 2020-09-13
 
 ### Changed
