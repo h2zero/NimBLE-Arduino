@@ -125,11 +125,12 @@ NimBLEScan::~NimBLEScan() {
             NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d",
                     event->disc_complete.reason);
 
+            pScan->m_stopped = true;
+
             if (pScan->m_scanCompleteCB != nullptr) {
                 pScan->m_scanCompleteCB(pScan->m_scanResults);
             }
 
-            pScan->m_stopped = true;
             if(pScan->m_pTaskData != nullptr) {
                 pScan->m_pTaskData->rc = event->disc_complete.reason;
                 xTaskNotifyGive(pScan->m_pTaskData->task);
@@ -263,7 +264,7 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
         return false;
     }
 
-    // If we are already scanning don't start again or we will get stuck on the semaphore.
+    // If we are already scanning don't start again
     if(!m_stopped || ble_gap_disc_active()) { // double check - can cause host reset.
         NIMBLE_LOGE(LOG_TAG, "Scan already in progress");
         return false;
