@@ -492,6 +492,11 @@ int ble_store_config_persist_cccds(void)
     union ble_store_value val;
 
     nvs_count = get_nvs_db_attribute(BLE_STORE_OBJ_TYPE_CCCD, 0, NULL, 0);
+    if (nvs_count == -1) {
+        ESP_LOGE(TAG, "NVS operation failed while persisting CCCD");
+        return BLE_HS_ESTORE_FAIL;
+    }
+
     if (nvs_count < ble_store_config_num_cccds) {
 
         /* NVS db count less than RAM count, write operation */
@@ -518,6 +523,11 @@ int ble_store_config_persist_peer_secs(void)
     union ble_store_value val;
 
     nvs_count = get_nvs_db_attribute(BLE_STORE_OBJ_TYPE_PEER_SEC, 0, NULL, 0);
+    if (nvs_count == -1) {
+        ESP_LOGE(TAG, "NVS operation failed while persisting peer sec");
+        return BLE_HS_ESTORE_FAIL;
+    }
+
     if (nvs_count < ble_store_config_num_peer_secs) {
 
         /* NVS db count less than RAM count, write operation */
@@ -544,6 +554,11 @@ int ble_store_config_persist_our_secs(void)
     union ble_store_value val;
 
     nvs_count = get_nvs_db_attribute(BLE_STORE_OBJ_TYPE_OUR_SEC, 0, NULL, 0);
+    if (nvs_count == -1) {
+        ESP_LOGE(TAG, "NVS operation failed while persisting our sec");
+        return BLE_HS_ESTORE_FAIL;
+    }
+
     if (nvs_count < ble_store_config_num_our_secs) {
 
         /* NVS db count less than RAM count, write operation */
@@ -573,7 +588,13 @@ int ble_store_persist_peer_records(void)
     struct ble_hs_dev_records *peer_dev_rec = ble_rpa_get_peer_dev_records();
 
     nvs_count = get_nvs_db_attribute(BLE_STORE_OBJ_TYPE_PEER_DEV_REC, 0, NULL, 0);
+    if (nvs_count == -1) {
+        ESP_LOGE(TAG, "NVS operation failed while persisting peer_dev_rec");
+        return BLE_HS_ESTORE_FAIL;
+    }
+
     if (nvs_count < ble_store_num_peer_dev_rec) {
+
         /* NVS db count less than RAM count, write operation */
         ESP_LOGD(TAG, "Persisting peer dev record to NVS...");
         peer_rec = peer_dev_rec[ble_store_num_peer_dev_rec - 1];
