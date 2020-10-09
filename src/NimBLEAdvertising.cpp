@@ -41,8 +41,8 @@ NimBLEAdvertising::NimBLEAdvertising() {
     m_advData.name                   = (uint8_t *)name;
     m_advData.name_len               = strlen(name);
     m_advData.name_is_complete       = 1;
-    m_scanData.tx_pwr_lvl_is_present = 1;
-    m_scanData.tx_pwr_lvl            = NimBLEDevice::getPower();
+    m_advData.tx_pwr_lvl_is_present = 1;
+    m_advData.tx_pwr_lvl            = NimBLEDevice::getPower();
     m_advData.flags                  = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
     m_advData.appearance             = 0;
     m_advData.appearance_is_present  = 0;
@@ -264,12 +264,16 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
 
     if (!m_customAdvData && !m_advDataSet) {
         //start with 3 bytes for the flags data
-        uint8_t payloadLen = 3;
+        uint8_t payloadLen = (2 + 1);
+        if(m_advData.appearance_is_present)
+            payloadLen += (2 + BLE_HS_ADV_APPEARANCE_LEN);
+        if(m_advData.tx_pwr_lvl_is_present)
+            payloadLen += (2 + 1);
 
         for(auto &it : m_serviceUUIDs) {
             if(it.getNative()->u.type == BLE_UUID_TYPE_16) {
                 int add = (m_advData.num_uuids16 > 0) ? 2 : 4;
-                if((payloadLen + add) > 31){
+                if((payloadLen + add) > BLE_HS_ADV_MAX_SZ){
                     m_advData.uuids16_is_complete = 0;
                     continue;
                 }
@@ -290,7 +294,7 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
             }
             if(it.getNative()->u.type == BLE_UUID_TYPE_32) {
                 int add = (m_advData.num_uuids32 > 0) ? 4 : 6;
-                if((payloadLen + add) > 31){
+                if((payloadLen + add) > BLE_HS_ADV_MAX_SZ){
                     m_advData.uuids32_is_complete = 0;
                     continue;
                 }
@@ -311,7 +315,7 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
             }
             if(it.getNative()->u.type == BLE_UUID_TYPE_128){
                 int add = (m_advData.num_uuids128 > 0) ? 16 : 18;
-                if((payloadLen + add) > 31){
+                if((payloadLen + add) > BLE_HS_ADV_MAX_SZ){
                     m_advData.uuids128_is_complete = 0;
                     continue;
                 }
@@ -333,7 +337,7 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
         }
 
         // check if there is room for the name, if not put it in scan data
-        if((payloadLen + m_advData.name_len) > 29) {
+        if((payloadLen + (2 + m_advData.name_len)) > BLE_HS_ADV_MAX_SZ) {
             if(m_scanResp){
                 m_scanData.name = m_advData.name;
                 m_scanData.name_len = m_advData.name_len;
@@ -343,38 +347,17 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
             } else {
                 // if not using scan response just cut the name down
                 // leaving 2 bytes for the data specifier.
-                m_advData.name_len = (29 - payloadLen);
+                m_advData.name_len = (BLE_HS_ADV_MAX_SZ - payloadLen - 2);
             }
             m_advData.name_is_complete = 0;
         }
 
-        if(m_advData.name_len > 0) {
-            payloadLen += (m_advData.name_len + 2);
-        }
-
         if(m_scanResp) {
-            // name length + type byte + length byte + tx power type + length + data
-            if((m_scanData.name_len + 5) > 31) {
-                // prioritize name data over tx power
-                m_scanData.tx_pwr_lvl_is_present = 0;
-                m_scanData.tx_pwr_lvl = 0;
-                // limit name to 29 to leave room for the data specifiers
-                if(m_scanData.name_len > 29) {
-                    m_scanData.name_len = 29;
-                    m_scanData.name_is_complete = false;
-                }
-            }
-
             rc = ble_gap_adv_rsp_set_fields(&m_scanData);
             if (rc != 0) {
                 NIMBLE_LOGC(LOG_TAG, "error setting scan response data; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
                 abort();
             }
-        // if not using scan response and there is room,
-        // put the tx power data into the advertisment
-        } else if (payloadLen < 29) {
-            m_advData.tx_pwr_lvl_is_present = 1;
-            m_advData.tx_pwr_lvl = NimBLEDevice::getPower();
         }
 
         rc = ble_gap_adv_set_fields(&m_advData);
