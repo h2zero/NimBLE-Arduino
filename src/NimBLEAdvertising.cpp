@@ -41,8 +41,8 @@ NimBLEAdvertising::NimBLEAdvertising() {
     m_advData.name                   = (uint8_t *)name;
     m_advData.name_len               = strlen(name);
     m_advData.name_is_complete       = 1;
-    m_advData.tx_pwr_lvl_is_present = 1;
-    m_advData.tx_pwr_lvl            = NimBLEDevice::getPower();
+    m_advData.tx_pwr_lvl_is_present  = 1;
+    m_advData.tx_pwr_lvl             = NimBLEDevice::getPower();
     m_advData.flags                  = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
     m_advData.appearance             = 0;
     m_advData.appearance_is_present  = 0;
@@ -345,6 +345,11 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
                 m_advData.name = nullptr;
                 m_advData.name_len = 0;
             } else {
+                if(m_advData.tx_pwr_lvl_is_present) {
+                    m_advData.tx_pwr_lvl_is_present = 0;
+                    m_advData.tx_pwr_lvl = 0;
+                    payloadLen -= (2 + 1);
+                }
                 // if not using scan response just cut the name down
                 // leaving 2 bytes for the data specifier.
                 m_advData.name_len = (BLE_HS_ADV_MAX_SZ - payloadLen - 2);
