@@ -352,7 +352,9 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
                 }
                 // if not using scan response just cut the name down
                 // leaving 2 bytes for the data specifier.
-                m_advData.name_len = (BLE_HS_ADV_MAX_SZ - payloadLen - 2);
+                if(m_advData.name_len > (BLE_HS_ADV_MAX_SZ - payloadLen - 2)) {
+                    m_advData.name_len = (BLE_HS_ADV_MAX_SZ - payloadLen - 2);
+                }
             }
             m_advData.name_is_complete = 0;
         }
