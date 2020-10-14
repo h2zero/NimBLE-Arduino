@@ -343,10 +343,13 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
                 m_scanData.name_len = m_advData.name_len;
                 if(m_scanData.name_len > BLE_HS_ADV_MAX_SZ - 2) {
                     m_scanData.name_len = BLE_HS_ADV_MAX_SZ - 2;
+                    m_scanData.name_is_complete = 0;
+                } else {
+                    m_scanData.name_is_complete = m_advData.name_is_complete;
                 }
-                m_scanData.name_is_complete = m_advData.name_is_complete;
                 m_advData.name = nullptr;
                 m_advData.name_len = 0;
+                m_advData.name_is_complete = 0;
             } else {
                 if(m_advData.tx_pwr_lvl_is_present) {
                     m_advData.tx_pwr_lvl = 0;
@@ -357,9 +360,9 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
                 // leaving 2 bytes for the data specifier.
                 if(m_advData.name_len > (BLE_HS_ADV_MAX_SZ - payloadLen - 2)) {
                     m_advData.name_len = (BLE_HS_ADV_MAX_SZ - payloadLen - 2);
+                    m_advData.name_is_complete = 0;
                 }
             }
-            m_advData.name_is_complete = 0;
         }
 
         if(m_scanResp) {
