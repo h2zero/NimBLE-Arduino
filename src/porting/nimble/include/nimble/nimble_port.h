@@ -23,7 +23,10 @@
 #include "nimble/nimble_npl.h"
 
 #define NIMBLE_CORE (CONFIG_BT_NIMBLE_PINNED_TO_CORE < portNUM_PROCESSORS ? CONFIG_BT_NIMBLE_PINNED_TO_CORE : tskNO_AFFINITY)
+
+#ifndef NIMBLE_STACK_SIZE
 #define NIMBLE_STACK_SIZE CONFIG_BT_NIMBLE_TASK_STACK_SIZE
+#endif
 
 #ifdef __cplusplus
 extern "C" {
