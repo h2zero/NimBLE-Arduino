@@ -129,6 +129,25 @@ NimBLEMeshElement* NimBLEMeshNode::createElement() {
 
 
 /**
+ * @brief Get a pointer to the health model instance that matches the ID's of the input model.
+ * @param [in] model A pointer to the NimBLE internal model instance.
+ * @returns A pointer to the model.
+ */
+NimBLEMeshModel* NimBLEMeshNode::getHealthModel(bt_mesh_model *model) {
+    NimBLEMeshModel* pModel;
+
+    for(auto &it : m_elemVec) {
+        pModel = it->getModelByIdx(model->elem_idx, model->mod_idx, BT_MESH_MODEL_ID_HEALTH_SRV);
+        if(pModel != nullptr) {
+            return pModel;
+        }
+    }
+
+    return nullptr;
+}
+
+
+/**
  * @brief Start the Mesh mode.
  * @returns true on success.
  */

@@ -29,6 +29,8 @@
 
 #include <vector>
 
+class NimBLEMeshModel;
+
 typedef enum {
     RELAY        =  0x01 << 0,
     BEACON       =  0x01 << 1,
@@ -40,9 +42,10 @@ class NimBLEMeshElement;
 
 class NimBLEMeshNode {
 public:
-    bool                   start();
-    NimBLEMeshElement*     createElement();
-    NimBLEMeshElement*     getElement(uint8_t index = 0);
+    bool                      start();
+    NimBLEMeshElement*        createElement();
+    NimBLEMeshElement*        getElement(uint8_t index = 0);
+    NimBLEMeshModel*          getHealthModel(bt_mesh_model *model);
 
 private:
     friend class NimBLEDevice;

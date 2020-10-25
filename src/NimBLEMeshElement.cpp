@@ -13,13 +13,18 @@ static const char* LOG_TAG = "NimBLEMeshElement";
 
 NimBLEMeshElement::NimBLEMeshElement() {
     m_pElem_t = nullptr;
+    m_pHealthModel = nullptr;
 }
+
+
 NimBLEMeshElement::~NimBLEMeshElement() {
     if(m_pElem_t != nullptr) {
         delete m_pElem_t;
     }
 
-    delete m_pHealthModel;
+    if(m_pHealthModel != nullptr) {
+        delete m_pHealthModel;
+    }
 
     for(auto &it : m_modelsVec) {
         if(it.id != BT_MESH_MODEL_ID_HEALTH_SRV) {
@@ -29,6 +34,7 @@ NimBLEMeshElement::~NimBLEMeshElement() {
 
     m_modelsVec.clear();
 }
+
 
 /**
  * @brief Creates a model and adds it the the elements model vector.
@@ -58,7 +64,7 @@ NimBLEMeshModel* NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCa
         case BT_MESH_MODEL_ID_HEALTH_SRV:
             m_pHealthModel = new NimBLEHealthSrvModel(pCallbacks);
             pModel = m_pHealthModel;
-            m_modelsVec.push_back(bt_mesh_model{{BT_MESH_MODEL_ID_HEALTH_SRV},0,0,0,&pModel->m_opPub,{0},{0},bt_mesh_health_srv_op,&m_pHealthModel->m_healthSrv});
+            m_modelsVec.push_back(bt_mesh_model{{type},0,0,0,&pModel->m_opPub,{0},{0},bt_mesh_health_srv_op,&m_pHealthModel->m_healthSrv});
             return pModel;
 
         default:
@@ -70,15 +76,21 @@ NimBLEMeshModel* NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCa
     return pModel;
 }
 
+
 /**
  * @brief Adds a model created outside of element context to the elements model vector.
  * @param [in] model A pointer to the model instance to add.
  */
-void NimBLEMeshElement::addModel(bt_mesh_model* model) {
+void NimBLEMeshElement::addModel(bt_mesh_model *model) {
     m_modelsVec.push_back(*model);
 }
 
 
+/**
+ * @brief Get a pointer to the model in the element with the type specified.
+ * @param [in] The model type requested.
+ * @returns A pointer to the model or nullptr if not found.
+ */
 NimBLEMeshModel* NimBLEMeshElement::getModel(uint16_t type) {
     if(type == BT_MESH_MODEL_ID_HEALTH_SRV) {
         return m_pHealthModel;
@@ -87,6 +99,28 @@ NimBLEMeshModel* NimBLEMeshElement::getModel(uint16_t type) {
     for(auto &it : m_modelsVec) {
         if(it.id == type) {
             return (NimBLEMeshModel*)it.user_data;
+        }
+    }
+
+    return nullptr;
+}
+
+
+/**
+ * @brief Get a pointer to a model with matching type and ID.
+ * @param [in] eidx The element ID to compare.
+ * @param [in] midx The model ID to compare.
+ * @param [in] The model type requested.
+ * @returns A pointer to the model or nullptr if not found.
+ */
+NimBLEMeshModel* NimBLEMeshElement::getModelByIdx(uint8_t eidx, uint8_t midx, uint16_t type) {
+    for(auto &it : m_modelsVec) {
+        if(it.elem_idx == eidx && it.mod_idx == midx) {
+            if(type == BT_MESH_MODEL_ID_HEALTH_SRV) {
+                return m_pHealthModel;
+            } else {
+                return (NimBLEMeshModel*)it.user_data;
+            }
         }
     }
 

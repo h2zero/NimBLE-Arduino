@@ -33,6 +33,8 @@ public:
     virtual void setPubMsg(){};
     virtual void setValue(uint8_t *val, size_t len){};
     virtual void setTargetValue(uint8_t *val, size_t len){};
+    virtual void setFault(uint8_t){};
+    virtual void clearFaults(){};
 
     template<typename T>
     void setValue(const T &s) {
@@ -137,11 +139,20 @@ class NimBLEGenLevelSrvModel : NimBLEMeshModel {
 class NimBLEHealthSrvModel : NimBLEMeshModel {
     friend class NimBLEMeshElement;
     friend class NimBLEMeshNode;
+    friend class NimBLEHealthSrvCallbacks;
 
     NimBLEHealthSrvModel(NimBLEMeshModelCallbacks *pCallbacks);
     ~NimBLEHealthSrvModel(){};
 
+public:
+    void         setFault(uint8_t) override;
+    void         clearFaults() override;
+
+private:
     bt_mesh_health_srv    m_healthSrv;
+    bool                  m_hasFault;
+    uint8_t               m_testId;
+    std::vector<uint8_t>  m_faults;
 };
 
 
@@ -152,6 +163,11 @@ public:
     virtual uint8_t getOnOff(NimBLEMeshModel *pModel);
     virtual void    setLevel(NimBLEMeshModel *pModel, int16_t val);
     virtual int16_t getLevel(NimBLEMeshModel *pModel);
+    virtual void    attentionOn(NimBLEMeshModel *pModel);
+    virtual void    attentionOff(NimBLEMeshModel *pModel);
+    virtual void    faultTest(NimBLEMeshModel *pModel);
+    virtual void    faultClear(NimBLEMeshModel *pModel);
+
 };
 
 
