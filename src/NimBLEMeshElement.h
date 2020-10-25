@@ -26,6 +26,7 @@ class NimBLEMeshElement {
 public:
     NimBLEMeshModel* createModel(uint16_t type, NimBLEMeshModelCallbacks* pCallbacks=nullptr);
     NimBLEMeshModel* getModel(uint16_t type);
+    NimBLEMeshModel* getModelByIdx(uint8_t eidx, uint8_t midx, uint16_t type);
 
 private:
     friend class NimBLEMeshNode;

@@ -12,6 +12,11 @@
 
 #include "nimble/nimble_port.h"
 
+#include "NimBLEDevice.h"
+
+#define CID_VENDOR 0x05C3
+#define STANDARD_TEST_ID 0x00
+
 static const char* LOG_TAG = "NimBLEMeshModel";
 
 static NimBLEMeshModelCallbacks defaultCallbacks;
@@ -241,6 +246,7 @@ void NimBLEGenOnOffSrvModel::setOnOffUnack(bt_mesh_model *model,
     }
 }
 
+
 void NimBLEGenOnOffSrvModel::tdTimerCb(ble_npl_event *event) {
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)event->arg;
     if(pModel->m_delayTime > 0) {
@@ -282,6 +288,7 @@ void NimBLEGenOnOffSrvModel::setPubMsg() {
     }
 }
 
+
 void NimBLEGenOnOffSrvModel::setValue(uint8_t *val, size_t len) {
     if(len != sizeof(uint8_t)) {
         NIMBLE_LOGE(LOG_TAG, "NimBLEGenOnOffSrvModel: Incorrect value length");
@@ -290,6 +297,7 @@ void NimBLEGenOnOffSrvModel::setValue(uint8_t *val, size_t len) {
     m_value[0] = *val;
 }
 
+
 void NimBLEGenOnOffSrvModel::setTargetValue(uint8_t *val, size_t len) {
     if(len != sizeof(uint8_t)) {
         NIMBLE_LOGE(LOG_TAG, "NimBLEGenOnOffSrvModel: Incorrect target value length");
@@ -297,6 +305,7 @@ void NimBLEGenOnOffSrvModel::setTargetValue(uint8_t *val, size_t len) {
     }
     m_targetValue[0] = *val;
 }
+
 
 /**
  * @brief Generic level server model constructor
@@ -539,7 +548,21 @@ NimBLEHealthSrvModel::NimBLEHealthSrvModel(NimBLEMeshModelCallbacks *pCallbacks)
 {
     memset(&m_healthSrv, 0, sizeof(m_healthSrv));
     m_healthSrv.cb  = &health_srv_cb;
-    m_opPub.msg = NET_BUF_SIMPLE(1 + 3);
+    m_opPub.msg     = NET_BUF_SIMPLE(1 + 3);
+    m_hasFault      = false;
+    m_testId        = 0;
+}
+
+
+void NimBLEHealthSrvModel::setFault(uint8_t fault) {
+    m_faults.push_back(fault);
+    m_hasFault = true;
+}
+
+
+void NimBLEHealthSrvModel::clearFaults() {
+    m_faults.clear();
+    m_hasFault = false;
 }
 
 
@@ -566,6 +589,23 @@ int16_t NimBLEMeshModelCallbacks::getLevel(NimBLEMeshModel *pModel) {
     return 0;
 }
 
+void NimBLEMeshModelCallbacks::attentionOn(NimBLEMeshModel *pModel) {
+    NIMBLE_LOGD(LOG_TAG, "Attention On Default");
+}
+
+void NimBLEMeshModelCallbacks::attentionOff(NimBLEMeshModel *pModel) {
+    NIMBLE_LOGD(LOG_TAG, "Attention Off Default");
+}
+
+void NimBLEMeshModelCallbacks::faultTest(NimBLEMeshModel *pModel) {
+    NIMBLE_LOGD(LOG_TAG, "Fault Test");
+}
+
+void NimBLEMeshModelCallbacks::faultClear(NimBLEMeshModel *pModel) {
+    NIMBLE_LOGD(LOG_TAG, "Fault Clear");
+}
+
+
 /**
  * @brief Health server callbacks
  */
@@ -574,6 +614,12 @@ int NimBLEHealthSrvCallbacks::faultGetCurrent(bt_mesh_model *model, uint8_t *tes
                                               uint8_t *fault_count)
 {
     NIMBLE_LOGD(LOG_TAG, "faultGetCurrent - default");
+
+    NimBLEHealthSrvModel* pModel = (NimBLEHealthSrvModel*)NimBLEDevice::getMeshNode()->getHealthModel(model);
+    *test_id = pModel->m_testId;
+    *company_id = CID_VENDOR;
+    faults = &pModel->m_faults[0];
+    *fault_count = pModel->m_faults.size();
     return 0;
 }
 
@@ -582,27 +628,64 @@ int NimBLEHealthSrvCallbacks::faultGetRegistered(bt_mesh_model *model, uint16_t 
                                                  uint8_t *fault_count)
 {
     NIMBLE_LOGD(LOG_TAG, "faultGetRegistered - default");
+
+    if (company_id != CID_VENDOR) {
+        return -BLE_HS_EINVAL;
+    }
+
+    NimBLEHealthSrvModel* pModel = (NimBLEHealthSrvModel*)NimBLEDevice::getMeshNode()->getHealthModel(model);
+    *test_id = pModel->m_testId;
+    faults = &pModel->m_faults[0];
+    *fault_count = pModel->m_faults.size();
+
     return 0;
 }
 
 int NimBLEHealthSrvCallbacks::faultClear(bt_mesh_model *model, uint16_t company_id)
 {
     NIMBLE_LOGD(LOG_TAG, "faultClear - default");
+
+    if (company_id != CID_VENDOR) {
+        return -BLE_HS_EINVAL;
+    }
+
+    NimBLEHealthSrvModel* pModel = (NimBLEHealthSrvModel*)NimBLEDevice::getMeshNode()->getHealthModel(model);
+    pModel->m_callbacks->faultClear(pModel);
+    pModel->clearFaults();
+
     return 0;
 }
 
 int NimBLEHealthSrvCallbacks::faultTest(bt_mesh_model *model, uint8_t test_id, uint16_t company_id)
 {
     NIMBLE_LOGD(LOG_TAG, "faultTest - default");
+
+    if (company_id != CID_VENDOR) {
+        return -BLE_HS_EINVAL;
+    }
+
+    if (test_id != STANDARD_TEST_ID) {
+        return -BLE_HS_EINVAL;
+    }
+
+    NimBLEHealthSrvModel* pModel = (NimBLEHealthSrvModel*)NimBLEDevice::getMeshNode()->getHealthModel(model);
+    pModel->setFault(0);
+    pModel->m_testId = test_id;
+    pModel->m_callbacks->faultTest(pModel);
+
     return 0;
 }
 
 void NimBLEHealthSrvCallbacks::attentionOn(bt_mesh_model *model)
 {
     NIMBLE_LOGD(LOG_TAG, "attentionOn - default");
+    NimBLEMeshModel* pModel = NimBLEDevice::getMeshNode()->getHealthModel(model);
+    pModel->m_callbacks->attentionOn(pModel);
 }
 
 void NimBLEHealthSrvCallbacks::attentionOff(bt_mesh_model *model)
 {
     NIMBLE_LOGD(LOG_TAG, "attentionOff - default");
+    NimBLEMeshModel* pModel = NimBLEDevice::getMeshNode()->getHealthModel(model);
+    pModel->m_callbacks->attentionOff(pModel);
 }
