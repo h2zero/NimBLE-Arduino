@@ -49,7 +49,11 @@ NimBLEAdvertising::NimBLEAdvertising() {
     m_advData.mfg_data_len           = 0;
     m_advData.mfg_data               = nullptr;
 
+#if !defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+    m_advParams.conn_mode            = BLE_GAP_CONN_MODE_NON;
+#else
     m_advParams.conn_mode            = BLE_GAP_CONN_MODE_UND;
+#endif
     m_advParams.disc_mode            = BLE_GAP_DISC_MODE_GEN;
     m_advParams.itvl_min             = 0;
     m_advParams.itvl_max             = 0;
@@ -112,11 +116,9 @@ void NimBLEAdvertising::setAppearance(uint16_t appearance) {
 /**
  * @brief Set the type of advertisment to use.
  * @param [in] adv_type:
- * * BLE_HCI_ADV_TYPE_ADV_IND            (0) - indirect advertising
- * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_HD  (1) - direct advertisng - high duty cycle
- * * BLE_HCI_ADV_TYPE_ADV_SCAN_IND       (2) - indirect scan response
- * * BLE_HCI_ADV_TYPE_ADV_NONCONN_IND    (3) - indirect advertisng - not connectable
- * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_LD  (4) - direct advertising - low duty cycle
+ * * BLE_GAP_CONN_MODE_NON    (0) - not connectable advertising
+ * * BLE_GAP_CONN_MODE_DIR    (1) - directed connectable advertising
+ * * BLE_GAP_CONN_MODE_UND    (2) - undirected connectable advertising
  */
 void NimBLEAdvertising::setAdvertisementType(uint8_t adv_type){
     m_advParams.conn_mode = adv_type;
@@ -260,6 +262,15 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
 
     m_advCompCB = advCompleteCB;
 
+    m_advParams.disc_mode = BLE_GAP_DISC_MODE_GEN;
+    m_advData.flags = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
+    if(m_advParams.conn_mode == BLE_GAP_CONN_MODE_NON) {
+        if(!m_scanResp) {
+            m_advParams.disc_mode = BLE_GAP_DISC_MODE_NON;
+            m_advData.flags = BLE_HS_ADV_F_BREDR_UNSUP;
+        }
+    }
+
     int rc = 0;
 
     if (!m_customAdvData && !m_advDataSet) {
@@ -345,7 +356,7 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
                     m_scanData.name_len = BLE_HS_ADV_MAX_SZ - 2;
                     m_scanData.name_is_complete = 0;
                 } else {
-                    m_scanData.name_is_complete = m_advData.name_is_complete;
+                    m_scanData.name_is_complete = 1;
                 }
                 m_advData.name = nullptr;
                 m_advData.name_len = 0;
