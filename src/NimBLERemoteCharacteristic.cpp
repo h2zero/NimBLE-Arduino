@@ -510,18 +510,19 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
  */
 bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCallback, bool response) {
     NIMBLE_LOGD(LOG_TAG, ">> setNotify(): %s, %02x", toString().c_str(), val);
-
+/*
     NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
     if(desc == nullptr) {
         NIMBLE_LOGE(LOG_TAG, "<< setNotify(): Could not get descriptor");
         return false;
     }
-
+*/
     m_notifyCallback = notifyCallback;
 
     NIMBLE_LOGD(LOG_TAG, "<< setNotify()");
 
-    return desc->writeValue((uint8_t *)&val, 2, response);
+  //  return desc->writeValue((uint8_t *)&val, 2, response);
+	return true;
 } // setNotify
 
 
