@@ -789,9 +789,10 @@ uint16_t NimBLEClient::getMTU() {
                 if(characteristic != cVector->cend()) {
                     NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", (*characteristic)->toString().c_str());
 
+                    time_t t = time(nullptr);
                     portENTER_CRITICAL(&(*characteristic)->m_valMux);
                     (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data, event->notify_rx.om->om_len);
-                    (*characteristic)->m_timestamp = time(nullptr);
+                    (*characteristic)->m_timestamp = t;
                     portEXIT_CRITICAL(&(*characteristic)->m_valMux);
 
                     if ((*characteristic)->m_notifyCallback != nullptr) {
