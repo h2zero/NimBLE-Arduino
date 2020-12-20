@@ -55,7 +55,7 @@ public:
     size_t                                      deleteService(const NimBLEUUID &uuid);
     std::string                                 getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
     bool                                        setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
-                                                         const std::string &value);
+                                                         const std::string &value, bool response = false);
     NimBLERemoteCharacteristic*                 getCharacteristic(const uint16_t handle);
     bool                                        isConnected();
     void                                        setClientCallbacks(NimBLEClientCallbacks *pClientCallbacks,

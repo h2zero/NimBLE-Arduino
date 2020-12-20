@@ -621,7 +621,7 @@ std::string NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUU
  * @returns true if successful otherwise false
  */
 bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
-                            const std::string &value)
+                            const std::string &value, bool response)
 {
     NIMBLE_LOGD(LOG_TAG, ">> setValue: serviceUUID: %s, characteristicUUID: %s",
                          serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
@@ -632,7 +632,7 @@ bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &cha
     if(pService != nullptr) {
         NimBLERemoteCharacteristic* pChar = pService->getCharacteristic(characteristicUUID);
         if(pChar != nullptr) {
-            ret = pChar->writeValue(value);
+            ret = pChar->writeValue(value, response);
         }
     }
 
