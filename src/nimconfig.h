@@ -51,28 +51,28 @@
 /** @brief Comment out if not using NimBLE Client functions \n
  *  Reduces flash size by approx. 7kB.
  */
-#ifndef CONFIG_BT_NIMBLE_ROLE_CENTRAL
+#ifndef CONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_CENTRAL
 #endif
 
 /** @brief Comment out if not using NimBLE Scan functions \n
  *  Reduces flash size by approx. 26kB.
  */
-#ifndef CONFIG_BT_NIMBLE_ROLE_OBSERVER
+#ifndef CONFIG_BT_NIMBLE_ROLE_OBSERVER_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_OBSERVER
 #endif
 
 /** @brief Comment out if not using NimBLE Server functions \n
  *  Reduces flash size by approx. 16kB.
  */
-#ifndef CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#ifndef CONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 #endif
 
 /** @brief Comment out if not using NimBLE Advertising functions \n
  *  Reduces flash size by approx. 5kB.
  */
-#ifndef CONFIG_BT_NIMBLE_ROLE_BROADCASTER
+#ifndef CONFIG_BT_NIMBLE_ROLE_BROADCASTER_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #endif
 
