@@ -95,7 +95,7 @@ public:
 private:
     friend class NimBLEDevice;
 
-    void                    onHostReset();
+    void                    onHostSync();
     static int              handleGapEvent(struct ble_gap_event *event, void *arg);
 
     ble_hs_adv_fields       m_advData;
@@ -108,7 +108,7 @@ private:
     bool                    m_advDataSet;
     void                    (*m_advCompCB)(NimBLEAdvertising *pAdv);
     uint8_t                 m_slaveItvl[4];
-
+    uint32_t                m_duration;
 };
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)

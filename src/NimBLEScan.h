@@ -83,6 +83,7 @@ private:
     ~NimBLEScan();
     static int          handleGapEvent(ble_gap_event*  event, void* arg);
     void                onHostReset();
+    void                onHostSync();
 
     NimBLEAdvertisedDeviceCallbacks*    m_pAdvertisedDeviceCallbacks = nullptr;
     void                                (*m_scanCompleteCB)(NimBLEScanResults scanResults);

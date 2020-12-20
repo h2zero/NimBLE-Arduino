@@ -410,30 +410,16 @@ void NimBLEDevice::stopAdvertising() {
 
     m_synced = false;
 
-#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
-    if(m_pScan != nullptr) {
-        m_pScan->onHostReset();
-    }
-#endif
-
-/*  Not needed
-    if(m_pServer != nullptr) {
-        m_pServer->onHostReset();
-    }
-
-    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
-        (*it)->onHostReset();
-    }
-*/
-
-#if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
-    if(m_bleAdvertising != nullptr) {
-        m_bleAdvertising->onHostReset();
-    }
-#endif
-
     NIMBLE_LOGC(LOG_TAG, "Resetting state; reason=%d, %s", reason,
                         NimBLEUtils::returnCodeToString(reason));
+
+#if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+    if(initialized) {
+        if(m_pScan != nullptr) {
+            m_pScan->onHostReset();
+        }
+    }
+#endif
 } // onReset
 
 
@@ -462,15 +448,13 @@ void NimBLEDevice::stopAdvertising() {
     if(initialized) {
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
         if(m_pScan != nullptr) {
-            // Restart scanning with the last values sent, allow to clear results.
-            m_pScan->start(m_pScan->m_duration, m_pScan->m_scanCompleteCB);
+            m_pScan->onHostSync();
         }
 #endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
         if(m_bleAdvertising != nullptr) {
-            // Restart advertisng, parameters should already be set.
-            m_bleAdvertising->start();
+            m_bleAdvertising->onHostSync();
         }
 #endif
     }
