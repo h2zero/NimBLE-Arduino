@@ -447,9 +447,10 @@ std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
         }
     } while(rc != 0 && retryCount--);
 
+    time_t t = time(nullptr);
     portENTER_CRITICAL(&m_valMux);
     m_value = value;
-    m_timestamp = time(nullptr);
+    m_timestamp = t;
     if(timestamp != nullptr) {
         *timestamp = m_timestamp;
     }
