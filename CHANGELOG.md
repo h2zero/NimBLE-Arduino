@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Conditional checks added for command line config options in `nimconfig.h` to support custom configuration in platformio.  
+
+- `NimBLEClient::setValue` Now takes an extra bool parameter `response` to enable the use of write with response (default = false).  
+
 - `NimBLEClient::getCharacteristic(uint16_t handle)` Enabling the use of the characteristic handle to be used to find 
 the NimBLERemoteCharacteristic object.  
 
@@ -16,19 +20,21 @@ to obtain information about the disconnected client.
 - Conditional checks in `nimconfig.h` for command line defined macros to support platformio config settings.  
 
 ### Changed
+- Advertising tx power level is now sent in the advertisement packet instead of scan response.  
+
 - `NimBLEScan` When the scan ends the scan stopped flag is now set before calling the scan complete callback (if used)  
 this allows the starting of a new scan from the callback function.  
 
-- Advertising tx power level is now sent in the advertisement packet instead of scan response.  
-
 ### Fixed
-- (Arduino) Ensure controller mode is set to BLE Only.  
+- `FreeRTOS` compile errors resolved in latest Ardruino core and IDF v3.3.  
 
-- Advertising payload length correction, now accounts for appearance.  
+- Multiple instances of `time()` called inside critical sections caused sporadic crashes, these have been moved out of critical regions.  
 
 - Advertisement type now correctly set when using non-connectable (advertiser only) mode.  
 
-- Multiple instances of `time()` called inside critical sections caused sporadic crashes, these have been moved out of critical regions.   
+- Advertising payload length correction, now accounts for appearance.  
+
+- (Arduino) Ensure controller mode is set to BLE Only.  
 
 ## [1.0.2] - 2020-09-13
 
