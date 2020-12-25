@@ -20,6 +20,9 @@ to obtain information about the disconnected client.
 - Conditional checks in `nimconfig.h` for command line defined macros to support platformio config settings.  
 
 ### Changed
+- `NimBLERemoteCharacteristic::subscribe` and `NimBLERemoteCharacteristic::registerForNotify` will now set the callback
+  regardless of the existance of the CCCD and return true unless the descriptor write operation failed.  
+
 - Advertising tx power level is now sent in the advertisement packet instead of scan response.  
 
 - `NimBLEScan` When the scan ends the scan stopped flag is now set before calling the scan complete callback (if used)  

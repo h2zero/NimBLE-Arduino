@@ -507,18 +507,18 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
  * @param [in] notifyCallback A callback to be invoked for a notification.
  * @param [in] response If write response required set this to true.
  * If NULL is provided then no callback is performed.
- * @return true if successful.
+ * @return false if writing to the descriptor failed.
  */
 bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCallback, bool response) {
     NIMBLE_LOGD(LOG_TAG, ">> setNotify(): %s, %02x", toString().c_str(), val);
+    
+    m_notifyCallback = notifyCallback;
 
     NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
     if(desc == nullptr) {
-        NIMBLE_LOGE(LOG_TAG, "<< setNotify(): Could not get descriptor");
-        return false;
+        NIMBLE_LOGW(LOG_TAG, "<< setNotify(): Callback set, CCCD not found");
+        return true;
     }
-
-    m_notifyCallback = notifyCallback;
 
     NIMBLE_LOGD(LOG_TAG, "<< setNotify()");
 
@@ -532,7 +532,7 @@ bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyC
  * @param [in] notifyCallback A callback to be invoked for a notification.
  * @param [in] response If true, require a write response from the descriptor write operation.
  * If NULL is provided then no callback is performed.
- * @return true if successful.
+ * @return false if writing to the descriptor failed.
  */
 bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback notifyCallback, bool response) {
     if(notifications) {
@@ -546,7 +546,7 @@ bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback n
 /**
  * @brief Unsubscribe for notifications or indications.
  * @param [in] response bool if true, require a write response from the descriptor write operation.
- * @return true if successful.
+ * @return false if writing to the descriptor failed.
  */
 bool NimBLERemoteCharacteristic::unsubscribe(bool response) {
     return setNotify(0x00, nullptr, response);
