@@ -87,6 +87,8 @@ public:
     void setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly);
     void setScanResponseData(NimBLEAdvertisementData& advertisementData);
     void setScanResponse(bool);
+    void setMinPreferred(uint16_t);
+    void setMaxPreferred(uint16_t);
     void advCompleteCB();
     bool isAdvertising();
 
@@ -104,7 +106,8 @@ private:
     bool                    m_customScanResponseData;
     bool                    m_scanResp;
     bool                    m_advDataSet;
-    void                   (*m_advCompCB)(NimBLEAdvertising *pAdv);
+    void                    (*m_advCompCB)(NimBLEAdvertising *pAdv);
+    uint8_t                 m_slaveItvl[4];
 
 };
 

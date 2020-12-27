@@ -32,7 +32,7 @@ static const char* LOG_TAG = "NimBLEAdvertising";
 /**
  * @brief Construct a default advertising object.
  */
-NimBLEAdvertising::NimBLEAdvertising() {
+NimBLEAdvertising::NimBLEAdvertising() : m_slaveItvl() {
     memset(&m_advData, 0, sizeof m_advData);
     memset(&m_scanData, 0, sizeof m_scanData);
     memset(&m_advParams, 0, sizeof m_advParams);
@@ -48,6 +48,7 @@ NimBLEAdvertising::NimBLEAdvertising() {
     m_advData.appearance_is_present  = 0;
     m_advData.mfg_data_len           = 0;
     m_advData.mfg_data               = nullptr;
+    m_advData.slave_itvl_range       = nullptr;
 
 #if !defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     m_advParams.conn_mode            = BLE_GAP_CONN_MODE_NON;
@@ -141,6 +142,64 @@ void NimBLEAdvertising::setMinInterval(uint16_t mininterval) {
 void NimBLEAdvertising::setMaxInterval(uint16_t maxinterval) {
     m_advParams.itvl_max = maxinterval;
 } // setMaxInterval
+
+
+/**
+ * @brief Set the advertised min connection interval preferred by this device.
+ * @param [in] mininterval the max interval value. Range = 0x0006 to 0x0C80.
+ * @details Values not within the range will cancel advertising of this data.\n
+ * Consumes 6 bytes of advertising space (combined with max interval).
+ */
+void NimBLEAdvertising::setMinPreferred(uint16_t mininterval) {
+    // invalid paramters, set the slave interval to null
+    if(mininterval < 0x0006 || mininterval > 0x0C80) {
+        m_advData.slave_itvl_range = nullptr;
+        return;
+    }
+
+    if(m_advData.slave_itvl_range == nullptr) {
+        m_advData.slave_itvl_range = m_slaveItvl;
+    }
+
+    m_slaveItvl[0] = mininterval;
+    m_slaveItvl[1] = mininterval >> 8;
+
+    uint16_t maxinterval = *(uint16_t*)(m_advData.slave_itvl_range+2);
+
+    // If mininterval is higher than the maxinterval make them the same
+    if(mininterval > maxinterval) {
+        m_slaveItvl[2] = m_slaveItvl[0];
+        m_slaveItvl[3] = m_slaveItvl[1];
+    }
+} // setMinPreferred
+
+
+/**
+ * @brief Set the advertised max connection interval preferred by this device.
+ * @param [in] maxinterval the max interval value. Range = 0x0006 to 0x0C80.
+ * @details Values not within the range will cancel advertising of this data.\n
+ * Consumes 6 bytes of advertising space (combined with min interval).
+ */
+void NimBLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
+    // invalid paramters, set the slave interval to null
+    if(maxinterval < 0x0006 || maxinterval > 0x0C80) {
+        m_advData.slave_itvl_range = nullptr;
+        return;
+    }
+    if(m_advData.slave_itvl_range == nullptr) {
+        m_advData.slave_itvl_range = m_slaveItvl;
+    }
+    m_slaveItvl[2] = maxinterval;
+    m_slaveItvl[3] = maxinterval >> 8;
+
+    uint16_t mininterval = *(uint16_t*)(m_advData.slave_itvl_range);
+
+    // If mininterval is higher than the maxinterval make them the same
+    if(mininterval > maxinterval) {
+        m_slaveItvl[0] = m_slaveItvl[2];
+        m_slaveItvl[1] = m_slaveItvl[3];
+    }
+} // setMaxPreferred
 
 
 /**
@@ -280,6 +339,8 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
             payloadLen += (2 + BLE_HS_ADV_APPEARANCE_LEN);
         if(m_advData.tx_pwr_lvl_is_present)
             payloadLen += (2 + 1);
+        if(m_advData.slave_itvl_range != nullptr)
+            payloadLen += (2 + 4);
 
         for(auto &it : m_serviceUUIDs) {
             if(it.getNative()->u.type == BLE_UUID_TYPE_16) {
