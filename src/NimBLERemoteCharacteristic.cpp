@@ -244,7 +244,7 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
 
     for(auto &it: m_descriptorVector) {
         if(it->getUUID() == uuid) {
-            NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found");
+            NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found the descriptor with uuid: %s", uuid.toString().c_str());
             return it;
         }
     }
@@ -254,7 +254,18 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
         if(m_descriptorVector.size() > prev_size) {
             return m_descriptorVector.back();
         }
+
+        // If the request was successful but 16/32 bit descriptor not found
+        // try again with the 128 bit uuid.
+        if(uuid.bitSize() == BLE_UUID_TYPE_16 ||
+           uuid.bitSize() == BLE_UUID_TYPE_32)
+        {
+            NimBLEUUID uuid128(uuid);
+            uuid128.to128();
+            return getDescriptor(uuid128);
+        }
     }
+
     NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
     return nullptr;
 } // getDescriptor

@@ -454,6 +454,16 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
         if(m_servicesVector.size() > prev_size) {
             return m_servicesVector.back();
         }
+
+        // If the request was successful but 16/32 bit service not found
+        // try again with the 128 bit uuid.
+        if(uuid.bitSize() == BLE_UUID_TYPE_16 ||
+           uuid.bitSize() == BLE_UUID_TYPE_32)
+        {
+            NimBLEUUID uuid128(uuid);
+            uuid128.to128();
+            return getService(uuid128);
+        }
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< getService: not found");
