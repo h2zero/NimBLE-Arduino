@@ -44,12 +44,11 @@ NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const struct ble
             m_uuid = NimBLEUUID(const_cast<ble_uuid128_t*>(&service->uuid.u128));
             break;
         default:
-            m_uuid = nullptr;
             break;
     }
     m_startHandle = service->start_handle;
     m_endHandle = service->end_handle;
-    NIMBLE_LOGD(LOG_TAG, "<< NimBLERemoteService()");
+    NIMBLE_LOGD(LOG_TAG, "<< NimBLERemoteService(): %s", m_uuid.toString().c_str());
 }
 
 

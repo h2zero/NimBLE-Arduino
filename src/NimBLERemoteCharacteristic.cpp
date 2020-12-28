@@ -38,7 +38,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  NimBLERemoteCharacteristic::NimBLERemoteCharacteristic(NimBLERemoteService *pRemoteService,
                                                         const struct ble_gatt_chr *chr)
 {
-
+    NIMBLE_LOGD(LOG_TAG, ">> NimBLERemoteCharacteristic()");
      switch (chr->uuid.u.type) {
         case BLE_UUID_TYPE_16:
             m_uuid = NimBLEUUID(chr->uuid.u16.value);
@@ -50,7 +50,6 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
             m_uuid = NimBLEUUID(const_cast<ble_uuid128_t*>(&chr->uuid.u128));
             break;
         default:
-            m_uuid = nullptr;
             break;
     }
 
@@ -61,6 +60,8 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_notifyCallback     = nullptr;
     m_timestamp          = 0;
     m_valMux             = portMUX_INITIALIZER_UNLOCKED;
+
+    NIMBLE_LOGD(LOG_TAG, "<< NimBLERemoteCharacteristic(): %s", m_uuid.toString().c_str());
  } // NimBLERemoteCharacteristic
 
 
@@ -511,7 +512,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
  */
 bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCallback, bool response) {
     NIMBLE_LOGD(LOG_TAG, ">> setNotify(): %s, %02x", toString().c_str(), val);
-    
+
     m_notifyCallback = notifyCallback;
 
     NimBLERemoteDescriptor* desc = getDescriptor(NimBLEUUID((uint16_t)0x2902));
