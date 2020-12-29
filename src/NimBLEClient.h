@@ -84,16 +84,16 @@ private:
                                                 const struct ble_gatt_error *error,
                                                 const struct ble_gatt_svc *service,
                                                 void *arg);
+    static void             dcTimerCb(ble_npl_event *event);
     bool                    retrieveServices(const NimBLEUUID *uuid_filter = nullptr);
 
     NimBLEAddress           m_peerAddress;
     uint16_t                m_conn_id;
-    bool                    m_isConnected;
-    bool                    m_waitingToConnect;
     bool                    m_deleteCallbacks;
     int32_t                 m_connectTimeout;
     NimBLEClientCallbacks*  m_pClientCallbacks;
-    ble_task_data_t         *m_pTaskData;
+    ble_task_data_t*        m_pTaskData;
+    ble_npl_callout         m_dcTimer;
 
     std::vector<NimBLERemoteService*> m_servicesVector;
 

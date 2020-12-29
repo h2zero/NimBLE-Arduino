@@ -144,8 +144,8 @@ void NimBLEDevice::stopAdvertising() {
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */ NimBLEClient* NimBLEDevice::createClient(NimBLEAddress peerAddress) {
     if(m_cList.size() >= NIMBLE_MAX_CONNECTIONS) {
-        NIMBLE_LOGW("Number of clients exceeds Max connections. Max=(%d)",
-                                            NIMBLE_MAX_CONNECTIONS);
+        NIMBLE_LOGW(LOG_TAG,"Number of clients exceeds Max connections. Cur=%d Max=%d",
+                    m_cList.size(), NIMBLE_MAX_CONNECTIONS);
     }
 
     NimBLEClient* pClient = new NimBLEClient(peerAddress);
@@ -167,24 +167,22 @@ void NimBLEDevice::stopAdvertising() {
 
     int rc =0;
 
-    if(pClient->m_isConnected) {
+    if(pClient->isConnected()) {
         rc = pClient->disconnect();
         if (rc != 0 && rc != BLE_HS_EALREADY && rc != BLE_HS_ENOTCONN) {
             return false;
         }
 
-        while(pClient->m_isConnected) {
-            vTaskDelay(10);
+        while(pClient->isConnected()) {
+            vTaskDelay(10 / portTICK_PERIOD_MS);
         }
-    }
-
-    if(pClient->m_waitingToConnect) {
+    } else if(pClient->m_pTaskData != nullptr) {
         rc = ble_gap_conn_cancel();
         if (rc != 0 && rc != BLE_HS_EALREADY) {
             return false;
         }
-        while(pClient->m_waitingToConnect) {
-            vTaskDelay(10);
+        while(pClient->m_pTaskData != nullptr) {
+            vTaskDelay(10 / portTICK_PERIOD_MS);
         }
     }
 

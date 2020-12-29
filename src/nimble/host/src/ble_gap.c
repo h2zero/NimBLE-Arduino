@@ -1017,7 +1017,7 @@ ble_gap_master_failed(int status)
 #endif
 
     default:
-        BLE_HS_DBG_ASSERT(0);
+        //BLE_HS_DBG_ASSERT(0);
         break;
     }
 }
