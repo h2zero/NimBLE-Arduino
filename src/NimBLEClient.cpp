@@ -62,6 +62,7 @@ NimBLEClient::NimBLEClient(const NimBLEAddress &peerAddress) : m_peerAddress(pee
     m_connectTimeout   = 30000;
     m_deleteCallbacks  = false;
     m_pTaskData        = nullptr;
+    m_connEstablished  = false;
 
     m_pConnParams.scan_itvl = 16;          // Scan interval in 0.625ms units (NimBLE Default)
     m_pConnParams.scan_window = 16;        // Scan window in 0.625ms units (NimBLE Default)
@@ -216,6 +217,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
                 break;
 
             case BLE_HS_EBUSY:
+                // Scan was still running, stop it and try again
                 if (!NimBLEDevice::getScan()->stop()) {
                     return false;
                 }
@@ -223,11 +225,16 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
                 break;
 
             case BLE_HS_EDONE:
+                // A connection to this device already exists, do not connect twice.
                 NIMBLE_LOGE(LOG_TAG, "Already connected to device; addr=%s",
                             std::string(m_peerAddress).c_str());
                 return false;
 
             case BLE_HS_EALREADY:
+                // Already attemting to connect to this device, cancel the previous
+                // attempt and report failure here so we don't get 2 connections.
+                NIMBLE_LOGE(LOG_TAG, "Already attempting to connect to %s - cancelling",
+                            std::string(m_peerAddress).c_str());
                 ble_gap_conn_cancel();
                 return false;
 
@@ -243,7 +250,18 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
     // Wait for the connection to complete.
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     if(taskData.rc != 0){
+        NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s",
+                    taskData.rc,
+                    NimBLEUtils::returnCodeToString(taskData.rc));
+        // If the failure was not a result of a disconnection
+        // make sure we disconnect now to avoid dangling connections
+        if(isConnected()) {
+            ble_gap_terminate(m_conn_id, BLE_ERR_REM_USER_CONN_TERM);
+        }
         return false;
+    } else {
+        NIMBLE_LOGI(LOG_TAG, "Connection established");
+        m_connEstablished = true;
     }
 
     if(deleteAttibutes) {
@@ -735,7 +753,8 @@ uint16_t NimBLEClient::getMTU() {
  * @param [in] event The event structure sent by the NimBLE stack.
  * @param [in] arg A pointer to the client instance that registered for this callback.
  */
- /*STATIC*/ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
+ /*STATIC*/
+ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
     NimBLEClient* client = (NimBLEClient*)arg;
     int rc;
 
@@ -744,15 +763,11 @@ uint16_t NimBLEClient::getMTU() {
     switch(event->type) {
 
         case BLE_GAP_EVENT_DISCONNECT: {
-            // If the connection id is invalid ignore this event
-            if(event->disconnect.conn.conn_handle == BLE_HS_CONN_HANDLE_NONE)
-                return 0;
-
-            // Check that the event is for this connection.
+            // Check that the event is for this client.
             if(client->m_conn_id != event->disconnect.conn.conn_handle)
                 return 0;
 
-            rc = event->disconnect.reason;
+            client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
 
             // Stop the disconnect timer since we are now disconnected.
             ble_npl_callout_stop(&client->m_dcTimer);
@@ -760,12 +775,18 @@ uint16_t NimBLEClient::getMTU() {
             // Remove the device from ignore list so we will scan it again
             NimBLEDevice::removeIgnored(client->m_peerAddress);
 
-            NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d, %s",
-                        rc, NimBLEUtils::returnCodeToString(rc));
+            rc = event->disconnect.reason;
+
+            // If we got a connected event but did not get established (no PDU)
+            // then a disconnect event will be sent but we should not send it to the
+            // app for processing. Instead we will ensure the task is released
+            // and report the error.
+            if(!client->m_connEstablished)
+                break;
 
             // If Host reset tell the device now before returning to prevent
             // any errors caused by calling host functions before resyncing.
-            switch(event->disconnect.reason) {
+            switch(rc) {
                 case BLE_HS_ETIMEOUT_HCI:
                 case BLE_HS_EOS:
                 case BLE_HS_ECONTROLLER:
@@ -774,18 +795,20 @@ uint16_t NimBLEClient::getMTU() {
                     NimBLEDevice::onReset(rc);
                     break;
                 default:
+                    NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d, %s",
+                                rc, NimBLEUtils::returnCodeToString(rc));
                     break;
             }
 
-            client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
+            client->m_connEstablished = false;
             client->m_pClientCallbacks->onDisconnect(client);
 
             break;
         } // BLE_GAP_EVENT_DISCONNECT
 
         case BLE_GAP_EVENT_CONNECT: {
-            // If we aren't waiting for this connection response, this is a delayed packet
-            // We should drop the connection immediately.
+            // If we aren't waiting for this connection response
+            // we should drop the connection immediately.
             if(client->isConnected() || client->m_pTaskData == nullptr) {
                 ble_gap_terminate(event->connect.conn_handle, BLE_ERR_REM_USER_CONN_TERM);
                 return 0;
@@ -793,13 +816,13 @@ uint16_t NimBLEClient::getMTU() {
 
             rc = event->connect.status;
             if (rc == 0) {
-                NIMBLE_LOGD(LOG_TAG, "Connection established");
+                NIMBLE_LOGI(LOG_TAG, "Connected event");
 
                 client->m_conn_id = event->connect.conn_handle;
 
                 rc = ble_gattc_exchange_mtu(client->m_conn_id, NULL,NULL);
                 if(rc != 0) {
-                    NIMBLE_LOGE(LOG_TAG, "ble_gattc_exchange_mtu: rc=%d %s",
+                    NIMBLE_LOGE(LOG_TAG, "MTU exchange error; rc=%d %s",
                                 rc, NimBLEUtils::returnCodeToString(rc));
                     break;
                 }
@@ -808,9 +831,6 @@ uint16_t NimBLEClient::getMTU() {
                 // scanning since we are already connected to it
                 NimBLEDevice::addIgnored(client->m_peerAddress);
             } else {
-                NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s",
-                            rc, NimBLEUtils::returnCodeToString(rc));
-
                 client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
                 break;
             }
@@ -822,7 +842,8 @@ uint16_t NimBLEClient::getMTU() {
             if(client->m_conn_id != event->notify_rx.conn_handle)
                 return 0;
 
-            NIMBLE_LOGD(LOG_TAG, "Notify Recieved for handle: %d",event->notify_rx.attr_handle);
+            NIMBLE_LOGD(LOG_TAG, "Notify Recieved for handle: %d",
+                        event->notify_rx.attr_handle);
 
             for(auto &it: client->m_servicesVector) {
                 // Dont waste cycles searching services without this handle in its range
@@ -832,8 +853,8 @@ uint16_t NimBLEClient::getMTU() {
 
                 auto cVector = &it->m_characteristicVector;
                 NIMBLE_LOGD(LOG_TAG, "checking service %s for handle: %d",
-                                      it->getUUID().toString().c_str(),
-                                      event->notify_rx.attr_handle);
+                            it->getUUID().toString().c_str(),
+                            event->notify_rx.attr_handle);
 
                 auto characteristic = cVector->cbegin();
                 for(; characteristic != cVector->cend(); ++characteristic) {
@@ -842,17 +863,19 @@ uint16_t NimBLEClient::getMTU() {
                 }
 
                 if(characteristic != cVector->cend()) {
-                    NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", (*characteristic)->toString().c_str());
+                    NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s",
+                                (*characteristic)->toString().c_str());
 
                     time_t t = time(nullptr);
                     portENTER_CRITICAL(&(*characteristic)->m_valMux);
-                    (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data, event->notify_rx.om->om_len);
+                    (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data,
+                                                             event->notify_rx.om->om_len);
                     (*characteristic)->m_timestamp = t;
                     portEXIT_CRITICAL(&(*characteristic)->m_valMux);
 
                     if ((*characteristic)->m_notifyCallback != nullptr) {
                         NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s",
-                                             (*characteristic)->toString().c_str());
+                                    (*characteristic)->toString().c_str());
                         (*characteristic)->m_notifyCallback(*characteristic, event->notify_rx.om->om_data,
                                                             event->notify_rx.om->om_len,
                                                             !event->notify_rx.indication);
@@ -871,10 +894,10 @@ uint16_t NimBLEClient::getMTU() {
             }
             NIMBLE_LOGD(LOG_TAG, "Peer requesting to update connection parameters");
             NIMBLE_LOGD(LOG_TAG, "MinInterval: %d, MaxInterval: %d, Latency: %d, Timeout: %d",
-                                    event->conn_update_req.peer_params->itvl_min,
-                                    event->conn_update_req.peer_params->itvl_max,
-                                    event->conn_update_req.peer_params->latency,
-                                    event->conn_update_req.peer_params->supervision_timeout);
+                        event->conn_update_req.peer_params->itvl_min,
+                        event->conn_update_req.peer_params->itvl_max,
+                        event->conn_update_req.peer_params->latency,
+                        event->conn_update_req.peer_params->supervision_timeout);
 
             rc = client->m_pClientCallbacks->onConnParamsUpdateRequest(client,
                                     event->conn_update_req.peer_params) ? 0 : BLE_ERR_CONN_PARMS;
@@ -1004,7 +1027,6 @@ uint16_t NimBLEClient::getMTU() {
     } // Switch
 
     if(client->m_pTaskData != nullptr) {
-        //NIMBLE_LOGC(LOG_TAG, "TASK GIVE rc = %d %s", rc, NimBLEUtils::gapEventToString(event->type));
         client->m_pTaskData->rc = rc;
         xTaskNotifyGive(client->m_pTaskData->task);
         client->m_pTaskData = nullptr;

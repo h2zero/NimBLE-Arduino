@@ -89,6 +89,7 @@ private:
 
     NimBLEAddress           m_peerAddress;
     uint16_t                m_conn_id;
+    bool                    m_connEstablished;
     bool                    m_deleteCallbacks;
     int32_t                 m_connectTimeout;
     NimBLEClientCallbacks*  m_pClientCallbacks;
