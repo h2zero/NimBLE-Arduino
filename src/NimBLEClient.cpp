@@ -221,7 +221,6 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
                 if (!NimBLEDevice::getScan()->stop()) {
                     return false;
                 }
-                vTaskDelay(1 / portTICK_PERIOD_MS);
                 break;
 
             case BLE_HS_EDONE:
@@ -1028,7 +1027,9 @@ uint16_t NimBLEClient::getMTU() {
 
     if(client->m_pTaskData != nullptr) {
         client->m_pTaskData->rc = rc;
-        xTaskNotifyGive(client->m_pTaskData->task);
+        if(client->m_pTaskData->task) {
+            xTaskNotifyGive(client->m_pTaskData->task);
+        }
         client->m_pTaskData = nullptr;
     }
 

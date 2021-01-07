@@ -174,7 +174,7 @@ void NimBLEDevice::stopAdvertising() {
         }
 
         while(pClient->isConnected()) {
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            taskYIELD();
         }
     } else if(pClient->m_pTaskData != nullptr) {
         rc = ble_gap_conn_cancel();
@@ -182,7 +182,7 @@ void NimBLEDevice::stopAdvertising() {
             return false;
         }
         while(pClient->m_pTaskData != nullptr) {
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            taskYIELD();
         }
     }
 
