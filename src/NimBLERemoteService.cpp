@@ -249,6 +249,23 @@ uint16_t NimBLERemoteService::getEndHandle() {
     return m_endHandle;
 } // getEndHandle
 
+/**
+ * @brief Get the end handle of specified NimBLERemoteCharacteristic.
+ */
+
+uint16_t NimBLERemoteService::getEndHandle(NimBLERemoteCharacteristic *pCharacteristic) {
+    uint16_t endHandle = m_endHandle;
+    
+    for(auto &it: m_characteristicVector) {
+        uint16_t defHandle = it->getDefHandle() - 1;
+        if(defHandle > pCharacteristic->getDefHandle() && endHandle > defHandle) {
+            endHandle = defHandle;
+        }
+    }
+
+    return endHandle;
+} // getEndHandle
+
 
 /**
  * @brief Get the service start handle.
