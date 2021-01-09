@@ -30,7 +30,7 @@ static const char* LOG_TAG = "NimBLEScan";
  * @brief Scan constuctor.
  */
 NimBLEScan::NimBLEScan() {
-    m_own_addr_type                  = 0;
+    m_own_addr_type                  = BLE_OWN_ADDR_PUBLIC;
     m_scan_params.filter_policy      = BLE_HCI_SCAN_FILT_NO_WL;
     m_scan_params.passive            = 1; // If set, don’t send scan requests to advertisers (i.e., don’t request additional advertising data).
     m_scan_params.itvl               = 0; // This is defined as the time interval from when the Controller started its last LE scan until it begins the subsequent LE scan. (units=0.625 msec)
@@ -221,6 +221,20 @@ void NimBLEScan::setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* p
 void NimBLEScan::setInterval(uint16_t intervalMSecs) {
     m_scan_params.itvl = intervalMSecs / 0.625;
 } // setInterval
+
+
+/**
+ * @brief Set the own address type.
+ * @param own_addr_type A bitmap indicating which keys to distribute during pairing.\n
+ * The available bits are defined as:
+ * * 0x00: BLE_OWN_ADDR_PUBLIC
+ * * 0x01: BLE_OWN_ADDR_RANDOM
+ * * 0x02: BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT
+ * * 0x03: BLE_OWN_ADDR_RPA_RANDOM_DEFAULT
+ */
+void NimBLEScan::setOwnAddrType(uint8_t own_addr_type) {
+    m_own_addr_type = own_addr_type;
+} // setOwnAddrType
 
 
 /**

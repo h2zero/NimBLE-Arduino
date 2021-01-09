@@ -66,6 +66,7 @@ public:
     void                setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates = false);
     void                setActiveScan(bool active);
     void                setInterval(uint16_t intervalMSecs);
+    void                setOwnAddrType(uint8_t own_addr_key);
     void                setWindow(uint16_t windowMSecs);
     void                setDuplicateFilter(bool enabled);
     void                setLimitedOnly(bool enabled);
