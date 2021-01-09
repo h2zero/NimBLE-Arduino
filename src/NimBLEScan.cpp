@@ -225,7 +225,7 @@ void NimBLEScan::setInterval(uint16_t intervalMSecs) {
 
 /**
  * @brief Set the own address type.
- * @param own_addr_type A bitmap indicating which keys to distribute during pairing.\n
+ * @param own_addr_type Own Bluetooth Device address type.\n
  * The available bits are defined as:
  * * 0x00: BLE_OWN_ADDR_PUBLIC
  * * 0x01: BLE_OWN_ADDR_RANDOM
