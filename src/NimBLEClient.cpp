@@ -762,9 +762,24 @@ uint16_t NimBLEClient::getMTU() {
     switch(event->type) {
 
         case BLE_GAP_EVENT_DISCONNECT: {
-            // Check that the event is for this client.
-            if(client->m_conn_id != event->disconnect.conn.conn_handle)
-                return 0;
+            rc = event->disconnect.reason;
+            // If Host reset tell the device now before returning to prevent
+            // any errors caused by calling host functions before resyncing.
+            switch(rc) {
+                case BLE_HS_ECONTROLLER:
+                case BLE_HS_ETIMEOUT_HCI:
+                case BLE_HS_ENOTSYNCED:
+                case BLE_HS_EOS:
+                    NIMBLE_LOGC(LOG_TAG, "Disconnect - host reset, rc=%d", rc);
+                    NimBLEDevice::onReset(rc);
+                    break;
+                default:
+                    // Check that the event is for this client.
+                    if(client->m_conn_id != event->disconnect.conn.conn_handle) {
+                        return 0;
+                    }
+                    break;
+            }
 
             client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
 
@@ -774,34 +789,18 @@ uint16_t NimBLEClient::getMTU() {
             // Remove the device from ignore list so we will scan it again
             NimBLEDevice::removeIgnored(client->m_peerAddress);
 
-            rc = event->disconnect.reason;
-
-            // If we got a connected event but did not get established (no PDU)
+            // If we received a connected event but did not get established (no PDU)
             // then a disconnect event will be sent but we should not send it to the
             // app for processing. Instead we will ensure the task is released
             // and report the error.
             if(!client->m_connEstablished)
                 break;
 
-            // If Host reset tell the device now before returning to prevent
-            // any errors caused by calling host functions before resyncing.
-            switch(rc) {
-                case BLE_HS_ETIMEOUT_HCI:
-                case BLE_HS_EOS:
-                case BLE_HS_ECONTROLLER:
-                case BLE_HS_ENOTSYNCED:
-                    NIMBLE_LOGC(LOG_TAG, "Disconnect - host reset, rc=%d", rc);
-                    NimBLEDevice::onReset(rc);
-                    break;
-                default:
-                    NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d, %s",
-                                rc, NimBLEUtils::returnCodeToString(rc));
-                    break;
-            }
+            NIMBLE_LOGI(LOG_TAG, "disconnect; reason=%d, %s",
+                        rc, NimBLEUtils::returnCodeToString(rc));
 
             client->m_connEstablished = false;
             client->m_pClientCallbacks->onDisconnect(client);
-
             break;
         } // BLE_GAP_EVENT_DISCONNECT
 
