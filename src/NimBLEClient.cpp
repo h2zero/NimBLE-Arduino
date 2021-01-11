@@ -260,13 +260,13 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
         return false;
     } else {
         NIMBLE_LOGI(LOG_TAG, "Connection established");
-        m_connEstablished = true;
     }
 
     if(deleteAttibutes) {
         deleteServices();
     }
 
+    m_connEstablished = true;
     m_pClientCallbacks->onConnect(this);
 
     NIMBLE_LOGD(LOG_TAG, "<< connect()");
@@ -839,6 +839,12 @@ uint16_t NimBLEClient::getMTU() {
         case BLE_GAP_EVENT_NOTIFY_RX: {
             if(client->m_conn_id != event->notify_rx.conn_handle)
                 return 0;
+
+            // If a notification comes before this flag is set we might
+            // access a vector while it is being cleared in connect()
+            if(!client->m_connEstablished) {
+                return 0;
+            }
 
             NIMBLE_LOGD(LOG_TAG, "Notify Recieved for handle: %d",
                         event->notify_rx.attr_handle);
