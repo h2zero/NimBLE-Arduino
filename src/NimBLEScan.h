@@ -88,7 +88,7 @@ private:
     void                                (*m_scanCompleteCB)(NimBLEScanResults scanResults);
     ble_gap_disc_params                 m_scan_params;
     uint8_t                             m_own_addr_type;
-    bool                                m_stopped;
+    bool                                m_ignoreResults;
     bool                                m_wantDuplicates;
     NimBLEScanResults                   m_scanResults;
     uint32_t                            m_duration;
