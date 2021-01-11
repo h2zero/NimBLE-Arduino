@@ -446,6 +446,10 @@ void NimBLEDevice::stopAdvertising() {
     int rc = ble_hs_util_ensure_addr(0);
     assert(rc == 0);
 
+    // Yield for houskeeping before returning to operations.
+    // Occasionally triggers exception without.
+    taskYIELD();
+
     m_synced = true;
 
     if(initialized) {
