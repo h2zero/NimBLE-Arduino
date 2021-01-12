@@ -232,7 +232,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
     if(taskData.rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "taskData.rc: rc=%d %s", taskData.rc, NimBLEUtils::returnCodeToString(0x0100+taskData.rc));
+        NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_chrs: startHandle:%d endHandle:%d taskData.rc=%d %s", m_handle, endHandle, taskData.rc, NimBLEUtils::returnCodeToString(0x0100+taskData.rc));
         return false;
     }
 
