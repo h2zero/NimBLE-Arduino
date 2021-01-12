@@ -25,6 +25,7 @@
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
 #include "host/ble_hs.h"
+#include "host/ble_hs_pvcy.h"
 #include "host/util/util.h"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
@@ -60,6 +61,7 @@ std::list <NimBLEClient*>   NimBLEDevice::m_cList;
 #endif
 std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
 NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
+uint8_t                     NimBLEDevice::m_own_addr_type = BLE_OWN_ADDR_PUBLIC;
 
 
 /**
@@ -703,6 +705,31 @@ bool NimBLEDevice::getInitialized() {
 void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
     NimBLEDevice::m_securityCallbacks = callbacks;
 } // setSecurityCallbacks
+
+
+/**
+ * @brief Set the own address type.
+ * @param own_addr_type Own Bluetooth Device address type.\n
+ * The available bits are defined as:
+ * * 0x00: BLE_OWN_ADDR_PUBLIC
+ * * 0x01: BLE_OWN_ADDR_RANDOM
+ * * 0x02: BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT
+ * * 0x03: BLE_OWN_ADDR_RPA_RANDOM_DEFAULT
+ */
+void NimBLEDevice::setOwnAddrType(uint8_t own_addr_type) {
+    m_own_addr_type = own_addr_type;
+    switch (own_addr_type) {
+        case BLE_OWN_ADDR_PUBLIC:
+            ble_hs_pvcy_rpa_config(NIMBLE_HOST_DISABLE_PRIVACY);
+        case BLE_OWN_ADDR_RANDOM:
+            ble_hs_pvcy_rpa_config(NIMBLE_HOST_ENABLE_NRPA);
+            break;
+        case BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT:
+        case BLE_OWN_ADDR_RPA_RANDOM_DEFAULT:
+            ble_hs_pvcy_rpa_config(NIMBLE_HOST_ENABLE_RPA);
+            break;
+    }
+} // setOwnAddrType
 
 
 /**

@@ -194,7 +194,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
      *  Loop on BLE_HS_EBUSY if the scan hasn't stopped yet.
      */
     do{
-        rc = ble_gap_connect(BLE_OWN_ADDR_PUBLIC, &peerAddrt, m_connectTimeout, &m_pConnParams,
+        rc = ble_gap_connect(NimBLEDevice::m_own_addr_type, &peerAddrt, m_connectTimeout, &m_pConnParams,
                             NimBLEClient::handleGapEvent, this);
         if(rc == BLE_HS_EBUSY) {
             vTaskDelay(1 / portTICK_PERIOD_MS);
