@@ -716,13 +716,18 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
  * * 0x02: BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT
  * * 0x03: BLE_OWN_ADDR_RPA_RANDOM_DEFAULT
  */
-void NimBLEDevice::setOwnAddrType(uint8_t own_addr_type) {
+void NimBLEDevice::setOwnAddrType(uint8_t own_addr_type, bool useNRPA) {
     m_own_addr_type = own_addr_type;
+    if (own_addr_type != BLE_OWN_ADDR_PUBLIC) {
+        setSecurityInitKey(BLE_SM_PAIR_KEY_DIST_ID);
+        setSecurityRespKey(BLE_SM_PAIR_KEY_DIST_ID);
+    }
     switch (own_addr_type) {
         case BLE_OWN_ADDR_PUBLIC:
             ble_hs_pvcy_rpa_config(NIMBLE_HOST_DISABLE_PRIVACY);
+            break;
         case BLE_OWN_ADDR_RANDOM:
-            ble_hs_pvcy_rpa_config(NIMBLE_HOST_ENABLE_NRPA);
+            ble_hs_pvcy_rpa_config(useNRPA ? NIMBLE_HOST_ENABLE_NRPA : NIMBLE_HOST_ENABLE_RPA);
             break;
         case BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT:
         case BLE_OWN_ADDR_RPA_RANDOM_DEFAULT:

@@ -116,7 +116,7 @@ public:
     static void             setSecurityPasskey(uint32_t pin);
     static uint32_t         getSecurityPasskey();
     static void             setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);
-    static void             setOwnAddrType(uint8_t own_addr_type);
+    static void             setOwnAddrType(uint8_t own_addr_type, bool useNRPA=false);
     static int              startSecurity(uint16_t conn_id);
     static int              setMTU(uint16_t mtu);
     static uint16_t         getMTU();
