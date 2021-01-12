@@ -165,6 +165,9 @@ void NimBLEDevice::stopAdvertising() {
         return false;
     }
 
+    // Set the connection established flag to false to stop notifications
+    // from accessing the attribute vectors while they are being deleted.
+    pClient->m_connEstablished = false;
     int rc =0;
 
     if(pClient->isConnected()) {
@@ -176,6 +179,10 @@ void NimBLEDevice::stopAdvertising() {
         while(pClient->isConnected()) {
             taskYIELD();
         }
+        // Since we set the flag to false the app will not get a callback
+        // in the disconnect event so we call it here for good measure.
+        pClient->m_pClientCallbacks->onDisconnect(pClient);
+
     } else if(pClient->m_pTaskData != nullptr) {
         rc = ble_gap_conn_cancel();
         if (rc != 0 && rc != BLE_HS_EALREADY) {
