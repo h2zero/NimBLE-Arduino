@@ -304,7 +304,7 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     m_ignoreResults = false;
     NIMBLE_LOGD(LOG_TAG, "<< start()");
 
-    if(rc != 0 || rc != BLE_HS_EALREADY) {
+    if(rc != 0 && rc != BLE_HS_EALREADY) {
         return false;
     }
     return true;
