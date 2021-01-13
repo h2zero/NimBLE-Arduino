@@ -40,6 +40,7 @@ NimBLEScan::NimBLEScan() {
     m_ignoreResults                  = false;
     m_wantDuplicates                 = false;
     m_pTaskData                      = nullptr;
+    m_duration                       = BLE_HS_FOREVER; // make sure this is non-zero in the event of a host reset
 }
 
 
@@ -302,7 +303,7 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     m_ignoreResults = false;
     NIMBLE_LOGD(LOG_TAG, "<< start()");
 
-    if(rc != 0 || rc != BLE_HS_EALREADY) {
+    if(rc != 0 && rc != BLE_HS_EALREADY) {
         return false;
     }
     return true;
@@ -377,11 +378,24 @@ void NimBLEScan::erase(const NimBLEAddress &address) {
 
 
 /**
- * @brief If the host reset the scan will have stopped so we should set the flag as stopped.
+ * @brief Called when host reset, we set a flag to stop scanning until synced.
  */
 void NimBLEScan::onHostReset() {
+    m_ignoreResults = true;
 }
 
+
+/**
+ * @brief If the host reset and re-synced this is called.
+ * If the application was scanning indefinitely with a callback, restart it.
+ */
+void NimBLEScan::onHostSync() {
+    m_ignoreResults = false;
+
+    if(m_duration == 0 && m_pAdvertisedDeviceCallbacks != nullptr) {
+        start(m_duration, m_scanCompleteCB);
+    }
+}
 
 /**
  * @brief Get the results of the scan.

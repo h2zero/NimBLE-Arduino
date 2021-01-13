@@ -312,6 +312,9 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
         return;
     }
 
+    // Save the duration incase of host reset so we can restart with the same params
+    m_duration = duration;
+
     if(duration == 0){
         duration = BLE_HS_FOREVER;
     }
@@ -495,6 +498,7 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
  */
 void NimBLEAdvertising::stop() {
     NIMBLE_LOGD(LOG_TAG, ">> stop");
+
     int rc = ble_gap_adv_stop();
     if (rc != 0 && rc != BLE_HS_EALREADY) {
         NIMBLE_LOGE(LOG_TAG, "ble_gap_adv_stop rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
@@ -528,8 +532,14 @@ bool NimBLEAdvertising::isAdvertising() {
  * Host reset seems to clear advertising data,
  * we need clear the flag so it reloads it.
  */
-void NimBLEAdvertising::onHostReset() {
+void NimBLEAdvertising::onHostSync() {
+    NIMBLE_LOGD(LOG_TAG, "Host re-synced");
+
     m_advDataSet = false;
+    // If we were advertising forever, restart it now
+    if(m_duration == 0) {
+        start(m_duration, m_advCompCB);
+    }
 }
 
 
@@ -543,6 +553,19 @@ int NimBLEAdvertising::handleGapEvent(struct ble_gap_event *event, void *arg) {
     NimBLEAdvertising *pAdv = (NimBLEAdvertising*)arg;
 
     if(event->type == BLE_GAP_EVENT_ADV_COMPLETE) {
+        switch(event->adv_complete.reason) {
+            // Don't call the callback if host reset, we want to
+            // preserve the active flag until re-sync to restart advertising.
+            case BLE_HS_ETIMEOUT_HCI:
+            case BLE_HS_EOS:
+            case BLE_HS_ECONTROLLER:
+            case BLE_HS_ENOTSYNCED:
+                NIMBLE_LOGC(LOG_TAG, "host reset, rc=%d", event->adv_complete.reason);
+                NimBLEDevice::onReset(event->adv_complete.reason);
+                return 0;
+            default:
+                break;
+        }
         pAdv->advCompleteCB();
     }
     return 0;
