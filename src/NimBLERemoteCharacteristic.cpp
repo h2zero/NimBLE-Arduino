@@ -209,15 +209,21 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
 bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filter) {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
+    uint16_t endHandle = getRemoteService()->getEndHandle(this);
+    if(m_handle >= endHandle) {
+        return false;
+    }
+
     int rc = 0;
     ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
     desc_filter_t filter = {uuid_filter, &taskData};
 
     rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(),
                                  m_handle,
-                                 getRemoteService()->getEndHandle(),
+                                 endHandle,
                                  NimBLERemoteCharacteristic::descriptorDiscCB,
                                  &filter);
+
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_chrs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;
@@ -226,12 +232,13 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
     if(taskData.rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_chrs: startHandle:%d endHandle:%d taskData.rc=%d %s", m_handle, endHandle, taskData.rc, NimBLEUtils::returnCodeToString(0x0100+taskData.rc));
         return false;
     }
 
     return true;
     NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): Found %d descriptors.", m_descriptorVector.size());
-} // getDescriptors
+} // retrieveDescriptors
 
 
 /**
