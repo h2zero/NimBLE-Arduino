@@ -30,7 +30,6 @@ static const char* LOG_TAG = "NimBLEScan";
  * @brief Scan constuctor.
  */
 NimBLEScan::NimBLEScan() {
-    m_own_addr_type                  = 0;
     m_scan_params.filter_policy      = BLE_HCI_SCAN_FILT_NO_WL;
     m_scan_params.passive            = 1; // If set, don’t send scan requests to advertisers (i.e., don’t request additional advertising data).
     m_scan_params.itvl               = 0; // This is defined as the time interval from when the Controller started its last LE scan until it begins the subsequent LE scan. (units=0.625 msec)
@@ -271,7 +270,7 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
         m_ignoreResults = true;
     }
 
-    int rc = ble_gap_disc(m_own_addr_type, duration, &m_scan_params,
+    int rc = ble_gap_disc(NimBLEDevice::m_own_addr_type, duration, &m_scan_params,
                           NimBLEScan::handleGapEvent, this);
 
     switch(rc) {

@@ -476,12 +476,12 @@ void NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
     }
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-    rc = ble_gap_adv_start(0, NULL, duration,
+    rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type, NULL, duration,
                            &m_advParams,
                            (pServer != nullptr) ? NimBLEServer::handleGapEvent : NimBLEAdvertising::handleGapEvent,
                            (pServer != nullptr) ? (void*)pServer : (void*)this);
 #else
-    rc = ble_gap_adv_start(0, NULL, duration,
+    rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type, NULL, duration,
                            &m_advParams, NimBLEAdvertising::handleGapEvent, this);
 #endif
     if (rc != 0) {
