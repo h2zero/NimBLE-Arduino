@@ -77,7 +77,7 @@ public:
     void addServiceUUID(const NimBLEUUID &serviceUUID);
     void addServiceUUID(const char* serviceUUID);
     void removeServiceUUID(const NimBLEUUID &serviceUUID);
-    void start(uint32_t duration = 0, void (*advCompleteCB)(NimBLEAdvertising *pAdv) = nullptr);
+    bool start(uint32_t duration = 0, void (*advCompleteCB)(NimBLEAdvertising *pAdv) = nullptr);
     void stop();
     void setAppearance(uint16_t appearance);
     void setAdvertisementType(uint8_t adv_type);
