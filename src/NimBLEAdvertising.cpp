@@ -541,6 +541,9 @@ void NimBLEAdvertising::onHostSync() {
     // If we were advertising forever, restart it now
     if(m_duration == 0) {
         start(m_duration, m_advCompCB);
+    } else {
+    // Otherwise we should tell the app that advertising stopped.
+        advCompleteCB();
     }
 }
 
