@@ -246,9 +246,23 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
 
     } while (rc == BLE_HS_EBUSY);
 
-    // Wait for the connection to complete.
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    if(taskData.rc != 0){
+    // Wait for the connect timeout time +1 second for the connection to complete
+    if(ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(m_connectTimeout + 1000)) == pdFALSE) {
+        m_pTaskData = nullptr;
+        // If a connection was made but no response from MTU exchange; disconnect
+        if(isConnected()) {
+            NIMBLE_LOGE(LOG_TAG, "Connect timeout - no response");
+            disconnect();
+        } else {
+        // workaround; if the controller doesn't cancel the connection
+        // at the timeout cancel it here.
+            NIMBLE_LOGE(LOG_TAG, "Connect timeout - cancelling");
+            ble_gap_conn_cancel();
+        }
+
+        return false;
+
+    } else if(taskData.rc != 0){
         NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s",
                     taskData.rc,
                     NimBLEUtils::returnCodeToString(taskData.rc));
