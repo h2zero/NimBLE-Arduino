@@ -284,7 +284,8 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
     m_pClientCallbacks->onConnect(this);
 
     NIMBLE_LOGD(LOG_TAG, "<< connect()");
-    return true;
+    // Check if still connected before returning
+    return isConnected();
 } // connect
 
 
