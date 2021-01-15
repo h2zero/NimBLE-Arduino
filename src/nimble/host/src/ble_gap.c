@@ -1458,8 +1458,8 @@ ble_gap_rx_periodic_adv_rpt(struct hci_le_subev_periodic_adv_rpt *evt)
 {
     struct ble_hs_periodic_sync *psync;
     struct ble_gap_event event;
-    ble_gap_event_fn *cb;
-    void *cb_arg;
+    ble_gap_event_fn *cb = NULL;
+    void *cb_arg = NULL;
 
     ble_hs_lock();
     psync = ble_hs_periodic_sync_find_by_handle(evt->sync_handle);

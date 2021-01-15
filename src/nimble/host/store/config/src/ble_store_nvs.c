@@ -180,7 +180,9 @@ static int
 get_nvs_db_attribute(int obj_type, bool empty, void *value, int num_value)
 {
     union ble_store_value cur = {0};
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
     struct ble_hs_dev_records p_dev_rec = {0};
+#endif
     esp_err_t err;
     int i, count = 0, max_limit = 0;
     char key_string[NIMBLE_NVS_STR_NAME_MAX_LEN];
@@ -190,11 +192,15 @@ get_nvs_db_attribute(int obj_type, bool empty, void *value, int num_value)
     for (i = 1; i <= max_limit; i++) {
         get_nvs_key_string(obj_type, i, key_string);
 
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
         if (obj_type != BLE_STORE_OBJ_TYPE_PEER_DEV_REC) {
+#endif
             err = get_nvs_db_value(obj_type, key_string, &cur);
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
         } else {
             err = get_nvs_peer_record(key_string, &p_dev_rec);
         }
+#endif
         /* Check if the user is searching for empty index to write to */
         if (err == ESP_ERR_NVS_NOT_FOUND) {
             if (empty) {
@@ -206,10 +212,13 @@ get_nvs_db_attribute(int obj_type, bool empty, void *value, int num_value)
             /* If user has provided value, then the purpose is to find
              * non-matching entry from NVS */
             if (value) {
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
                 if (obj_type == BLE_STORE_OBJ_TYPE_PEER_DEV_REC) {
                     err = get_nvs_matching_index(&p_dev_rec, value, num_value,
                                                  sizeof(struct ble_hs_dev_records));
-                } else {
+                } else
+#endif
+                {
                     if (obj_type != BLE_STORE_OBJ_TYPE_CCCD) {
                         err = get_nvs_matching_index(&cur.sec, value, num_value,
                                                      sizeof(struct ble_store_value_sec));
@@ -376,7 +385,9 @@ populate_db_from_nvs(int obj_type, void *dst, int *db_num)
 {
     uint8_t *db_item = (uint8_t *)dst;
     union ble_store_value cur = {0};
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
     struct ble_hs_dev_records p_dev_rec = {0};
+#endif
 
     esp_err_t err;
     int i;
@@ -385,8 +396,9 @@ populate_db_from_nvs(int obj_type, void *dst, int *db_num)
     for (i = 1; i <= get_nvs_max_obj_value(obj_type); i++) {
         get_nvs_key_string(obj_type, i, key_string);
 
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
         if (obj_type != BLE_STORE_OBJ_TYPE_PEER_DEV_REC) {
-
+#endif
             err = get_nvs_db_value(obj_type, key_string, &cur);
             if (err == ESP_ERR_NVS_NOT_FOUND) {
                 continue;
@@ -394,6 +406,7 @@ populate_db_from_nvs(int obj_type, void *dst, int *db_num)
                 ESP_LOGE(TAG, "NVS read operation failed !!");
                 return -1;
             }
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
         } else {
             err = get_nvs_peer_record(key_string, &p_dev_rec);
             if (err == ESP_ERR_NVS_NOT_FOUND) {
@@ -410,7 +423,9 @@ populate_db_from_nvs(int obj_type, void *dst, int *db_num)
             memcpy(db_item, &p_dev_rec, sizeof(struct ble_hs_dev_records));
             db_item += sizeof(struct ble_hs_dev_records);
             (*db_num)++;
-        } else {
+        } else
+#endif
+        {
             if (obj_type == BLE_STORE_OBJ_TYPE_CCCD) {
                 ESP_LOGD(TAG, "CCCD in RAM is filled up from NVS index = %d", i);
                 memcpy(db_item, &cur.cccd, sizeof(struct ble_store_value_cccd));
