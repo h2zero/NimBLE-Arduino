@@ -38,7 +38,10 @@
 #include "freertos/semphr.h"
 #include "esp_compiler.h"
 /* used to support older arduino verions */
-#include "esp_ipc.h"
+/* but does not exist for solo */
+#ifndef CONFIG_FREERTOS_UNICORE
+  #include "esp_ipc.h"
+#endif
 
 #define NIMBLE_VHCI_TIMEOUT_MS  2000
 
@@ -112,12 +115,17 @@ int ble_hci_trans_hs_cmd_tx(uint8_t *cmd)
 
     if (xSemaphoreTake(vhci_send_sem, NIMBLE_VHCI_TIMEOUT_MS / portTICK_PERIOD_MS) == pdTRUE) {
         if(_tx_using_nimble_core) {
+/* esp_ipc_call_blocking does not exist for solo */
+#ifndef CONFIG_FREERTOS_UNICORE
             if (xPortGetCoreID() != CONFIG_BT_NIMBLE_PINNED_TO_CORE) {
                 esp_ipc_call_blocking(CONFIG_BT_NIMBLE_PINNED_TO_CORE,
                                       ble_hci_trans_hs_cmd_tx_on_core, cmd);
             } else {
+#endif                                      
                 ble_hci_trans_hs_cmd_tx_on_core(cmd);
+#ifndef CONFIG_FREERTOS_UNICORE
             }
+#endif                                      
         } else {
             len = BLE_HCI_CMD_HDR_LEN + cmd[3] + 1;
             esp_vhci_host_send_packet(cmd, len);
@@ -169,12 +177,17 @@ int ble_hci_trans_hs_acl_tx(struct os_mbuf *om)
         }
 
         if (xSemaphoreTake(vhci_send_sem, NIMBLE_VHCI_TIMEOUT_MS / portTICK_PERIOD_MS) == pdTRUE) {
+/* esp_ipc_call_blocking does not exist for solo */
+#ifndef CONFIG_FREERTOS_UNICORE
             if (xPortGetCoreID() != CONFIG_BT_NIMBLE_PINNED_TO_CORE) {
                 esp_ipc_call_blocking(CONFIG_BT_NIMBLE_PINNED_TO_CORE,
                                       ble_hci_trans_hs_acl_tx_on_core, om);
             } else {
+#endif                                      
                 ble_hci_trans_hs_acl_tx_on_core(om);
+#ifndef CONFIG_FREERTOS_UNICORE
             }
+#endif                                      
         } else {
             rc = BLE_HS_ETIMEOUT_HCI;
         }
