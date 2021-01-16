@@ -704,6 +704,7 @@ std::string NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUU
  * @param [in] serviceUUID The service that owns the characteristic.
  * @param [in] characteristicUUID The characteristic whose value we wish to write.
  * @param [in] value The value to write to the characteristic.
+ * @param [in] response If true, uses write with response operation.
  * @returns true if successful otherwise false
  */
 bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,

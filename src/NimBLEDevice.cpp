@@ -702,12 +702,13 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
 
 /**
  * @brief Set the own address type.
- * @param own_addr_type Own Bluetooth Device address type.\n
+ * @param [in] own_addr_type Own Bluetooth Device address type.\n
  * The available bits are defined as:
  * * 0x00: BLE_OWN_ADDR_PUBLIC
  * * 0x01: BLE_OWN_ADDR_RANDOM
  * * 0x02: BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT
  * * 0x03: BLE_OWN_ADDR_RPA_RANDOM_DEFAULT
+ * @param [in] useNRPA If true, and address type is random, uses a non-resolvable random address.
  */
 void NimBLEDevice::setOwnAddrType(uint8_t own_addr_type, bool useNRPA) {
     m_own_addr_type = own_addr_type;

@@ -15,8 +15,13 @@
  * This converts them to "CONFIG_BT_NIMBLE_" format used in the latest IDF.
  */
 
-/* Detect if using ESP-IDF or Arduino (Arduino won't have these defines in sdkconfig) */
-#if defined(CONFIG_BT_NIMBLE_TASK_STACK_SIZE) || defined(CONFIG_NIMBLE_TASK_STACK_SIZE)
+/* Detect if using ESP-IDF or Arduino (Arduino won't have these defines in sdkconfig) 
+ *
+ * Note: We do not use #ifdef CONFIG_BT_NIMBLE_ENABLED since we cannot enable NimBLE when using
+ * Arduino as a component and the esp-nimble-compnent, so we check if other config options are defined.
+ * We also need to use a config parameter that must be present and not likely defined in the command line.
+ */
+#if defined(CONFIG_BT_NIMBLE_GAP_DEVICE_NAME_MAX_LEN) || defined(CONFIG_NIMBLE_GAP_DEVICE_NAME_MAX_LEN)
 
 #if defined(CONFIG_NIMBLE_ENABLED) && !defined(CONFIG_BT_NIMBLE_ENABLED)
 #define CONFIG_BT_NIMBLE_ENABLED
