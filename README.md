@@ -57,6 +57,8 @@ Also see [Improvements_and_updates](docs/Improvements_and_updates.md) for inform
 
 [Full API documentation and class list can be found here.](https://h2zero.github.io/esp-nimble-cpp/)  
 
+For added performance and optimizations see [Usage tips](docs/Usage_tips.md).
+
 Check the Refactored_original_examples in the examples folder for highlights of the differences with the original library.
 
 More advanced examples highlighting many available features are in examples/ NimBLE_Server, NimBLE_Client.
