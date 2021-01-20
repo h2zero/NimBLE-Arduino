@@ -100,9 +100,10 @@ NimBLEClient::~NimBLEClient() {
  * be called to reset the host in the case of a stalled controller.
  */
 void NimBLEClient::dcTimerCb(ble_npl_event *event) {
-    NimBLEClient *pClient = (NimBLEClient*)event->arg;
+ /*   NimBLEClient *pClient = (NimBLEClient*)event->arg;
     NIMBLE_LOGC(LOG_TAG, "Timed out disconnecting from %s - resetting host",
                 std::string(pClient->getPeerAddress()).c_str());
+ */
     ble_hs_sched_reset(BLE_HS_ECONTROLLER);
 }
 
