@@ -378,12 +378,12 @@ int NimBLEClient::disconnect(uint8_t reason) {
 
 /**
  * @brief Set the connection paramaters to use when connecting to a server.
- * @param [in] minInterval minimum connection interval in 0.625ms units.
- * @param [in] maxInterval maximum connection interval in 0.625ms units.
- * @param [in] latency number of packets allowed to skip (extends max interval)
- * @param [in] timeout the timeout time in 10ms units before disconnecting
- * @param [in] scanInterval the scan interval to use when attempting to connect in 0.625ms units.
- * @param [in] scanWindow the scan window to use when attempting to connect in 0.625ms units.
+ * @param [in] minInterval The minimum connection interval in 1.25ms units.
+ * @param [in] maxInterval The maximum connection interval in 1.25ms units.
+ * @param [in] latency The number of packets allowed to skip (extends max interval).
+ * @param [in] timeout The timeout time in 10ms units before disconnecting.
+ * @param [in] scanInterval The scan interval to use when attempting to connect in 0.625ms units.
+ * @param [in] scanWindow The scan window to use when attempting to connect in 0.625ms units.
  */
 void NimBLEClient::setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
                                 uint16_t latency, uint16_t timeout,
@@ -410,10 +410,10 @@ void NimBLEClient::setConnectionParams(uint16_t minInterval, uint16_t maxInterva
 /**
  * @brief Update the connection parameters:
  * * Can only be used after a connection has been established.
- * @param [in] minInterval minimum connection interval in 0.625ms units.
- * @param [in] maxInterval maximum connection interval in 0.625ms units.
- * @param [in] latency number of packets allowed to skip (extends max interval)
- * @param [in] timeout the timeout time in 10ms units before disconnecting
+ * @param [in] minInterval The minimum connection interval in 1.25ms units.
+ * @param [in] maxInterval The maximum connection interval in 1.25ms units.
+ * @param [in] latency The number of packets allowed to skip (extends max interval).
+ * @param [in] timeout The timeout time in 10ms units before disconnecting.
  */
 void NimBLEClient::updateConnParams(uint16_t minInterval, uint16_t maxInterval,
                             uint16_t latency, uint16_t timeout)

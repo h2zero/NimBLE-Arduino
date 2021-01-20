@@ -1,5 +1,7 @@
 [Latest release ![Release Version](https://img.shields.io/github/release/h2zero/NimBLE-Arduino.svg?style=plastic)
 ![Release Date](https://img.shields.io/github/release-date/h2zero/NimBLE-Arduino.svg?style=plastic)](https://github.com/h2zero/NimBLE-Arduino/releases/latest/)  
+
+Need help? Have questions or suggestions? Join the [![Gitter](https://badges.gitter.im/NimBLE-Arduino/community.svg)](https://gitter.im/NimBLE-Arduino/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)  
 <br/>
 
 # NimBLE-Arduino
