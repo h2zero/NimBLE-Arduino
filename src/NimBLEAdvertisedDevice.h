@@ -44,7 +44,11 @@ public:
     NimBLEAddress   getAddress();
     uint8_t         getAdvType();
     uint16_t        getAppearance();
+    uint16_t        getAdvInterval();
+    uint16_t        getMinInterval();
+    uint16_t        getMaxInterval();
     std::string     getManufacturerData();
+    std::string     getURI();
 
     /**
      * @brief A template to convert the service data to <type\>.
@@ -106,6 +110,8 @@ public:
     NimBLEUUID      getServiceDataUUID(uint8_t index = 0);
     NimBLEUUID      getServiceUUID(uint8_t index = 0);
     size_t          getServiceUUIDCount();
+    NimBLEAddress   getTargetAddress(uint8_t index);
+    size_t          getTargetAddressCount();
     int8_t          getTXPower();
     uint8_t*        getPayload();
     uint8_t         getAdvLength();
@@ -120,6 +126,10 @@ public:
     bool            haveServiceData();
     bool            haveServiceUUID();
     bool            haveTXPower();
+    bool            haveConnParams();
+    bool            haveAdvInterval();
+    bool            haveTargetAddress();
+    bool            haveURI();
     std::string     toString();
 
 private:

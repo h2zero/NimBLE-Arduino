@@ -76,12 +76,66 @@ uint16_t NimBLEAdvertisedDevice::getAppearance() {
     if(findAdvField(BLE_HS_ADV_TYPE_APPEARANCE, 0, &data_loc) > 0) {
         ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
         if(field->length == BLE_HS_ADV_APPEARANCE_LEN + 1) {
-            return *field->value | *(field->value +1) << 8;;
+            return *field->value | *(field->value + 1) << 8;
         }
     }
 
     return 0;
 } // getAppearance
+
+
+/**
+ * @brief Get the advertisement interval.
+ * @return The advertisement interval in 0.625ms units.
+ */
+uint16_t NimBLEAdvertisedDevice::getAdvInterval() {
+    uint8_t data_loc = 0;
+
+    if(findAdvField(BLE_HS_ADV_TYPE_ADV_ITVL, 0, &data_loc) > 0) {
+        ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
+        if(field->length == BLE_HS_ADV_ADV_ITVL_LEN + 1) {
+            return *field->value | *(field->value + 1) << 8;
+        }
+    }
+
+    return 0;
+} // getAdvInterval
+
+
+/**
+ * @brief Get the preferred min connection interval.
+ * @return The preferred min connection interval in 1.25ms units.
+ */
+uint16_t NimBLEAdvertisedDevice::getMinInterval() {
+    uint8_t data_loc = 0;
+
+    if(findAdvField(BLE_HS_ADV_TYPE_SLAVE_ITVL_RANGE, 0, &data_loc) > 0) {
+        ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
+        if(field->length == BLE_HS_ADV_SLAVE_ITVL_RANGE_LEN + 1) {
+            return *field->value | *(field->value + 1) << 8;
+        }
+    }
+
+    return 0;
+} // getMinInterval
+
+
+/**
+ * @brief Get the preferred max connection interval.
+ * @return The preferred max connection interval in 1.25ms units.
+ */
+uint16_t NimBLEAdvertisedDevice::getMaxInterval() {
+    uint8_t data_loc = 0;
+
+    if(findAdvField(BLE_HS_ADV_TYPE_SLAVE_ITVL_RANGE, 0, &data_loc) > 0) {
+        ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
+        if(field->length == BLE_HS_ADV_SLAVE_ITVL_RANGE_LEN + 1) {
+            return *(field->value + 2) | *(field->value + 3) << 8;
+        }
+    }
+
+    return 0;
+} // getMaxInterval
 
 
 /**
@@ -94,12 +148,30 @@ std::string NimBLEAdvertisedDevice::getManufacturerData() {
     if(findAdvField(BLE_HS_ADV_TYPE_MFG_DATA, 0, &data_loc) > 0) {
         ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
         if(field->length > 1) {
-            return std::string((char*)field->value, field->length-1);
+            return std::string((char*)field->value, field->length - 1);
         }
     }
 
     return "";
 } // getManufacturerData
+
+
+/**
+ * @brief Get the URI from the advertisement.
+ * @return The URI data.
+ */
+std::string NimBLEAdvertisedDevice::getURI() {
+    uint8_t data_loc = 0;
+
+    if(findAdvField(BLE_HS_ADV_TYPE_URI, 0, &data_loc) > 0) {
+        ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
+        if(field->length > 1) {
+            return std::string((char*)field->value, field->length - 1);
+        }
+    }
+
+    return "";
+} // getURI
 
 
 /**
@@ -114,7 +186,7 @@ std::string NimBLEAdvertisedDevice::getName() {
     {
         ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
         if(field->length > 1) {
-            return std::string((char*)field->value, field->length-1);
+            return std::string((char*)field->value, field->length - 1);
         }
     }
 
@@ -138,6 +210,52 @@ int NimBLEAdvertisedDevice::getRSSI() {
 NimBLEScan* NimBLEAdvertisedDevice::getScan() {
     return NimBLEDevice::getScan();
 } // getScan
+
+
+/**
+ * @brief Get the number of target addresses.
+ * @return The number of addresses.
+ */
+size_t NimBLEAdvertisedDevice::getTargetAddressCount() {
+    uint8_t count = 0;
+
+    count = findAdvField(BLE_HS_ADV_TYPE_PUBLIC_TGT_ADDR);
+    count += findAdvField(BLE_HS_ADV_TYPE_RANDOM_TGT_ADDR);
+
+    return count;
+}
+
+
+/**
+ * @brief Get the target address at the index.
+ * @param [in] index The index of the target address.
+ * @return The target address.
+ */
+NimBLEAddress NimBLEAdvertisedDevice::getTargetAddress(uint8_t index) {
+    ble_hs_adv_field *field = nullptr;
+    uint8_t count = 0;
+    uint8_t data_loc = 0xFF;
+
+    index++;
+    count = findAdvField(BLE_HS_ADV_TYPE_PUBLIC_TGT_ADDR, index, &data_loc);
+
+    if (count < index) {
+        index -= count;
+        count = findAdvField(BLE_HS_ADV_TYPE_RANDOM_TGT_ADDR, index, &data_loc);
+    }
+
+    if(count > 0 && data_loc != 0xFF) {
+        field = (ble_hs_adv_field *)&m_payload[data_loc];
+        if(field->length < index *  BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN) {
+            index -= count - field->length / BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN;
+        }
+        if(field->length > index * BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN) {
+            return NimBLEAddress(field->value + (index - 1) * BLE_HS_ADV_PUBLIC_TGT_ADDR_ENTRY_LEN);
+        }
+    }
+
+    return NimBLEAddress("");
+}
 
 
 /**
@@ -257,7 +375,6 @@ size_t NimBLEAdvertisedDevice::getServiceDataCount() {
     count += findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID32);
     count += findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID128);
 
-    NIMBLE_LOGD(LOG_TAG, "Service data count: %d", count);
     return count;
 } // getServiceDataCount
 
@@ -326,7 +443,6 @@ size_t NimBLEAdvertisedDevice::getServiceUUIDCount() {
     count += findAdvField(BLE_HS_ADV_TYPE_INCOMP_UUIDS128);
     count += findAdvField(BLE_HS_ADV_TYPE_COMP_UUIDS128);
 
-    NIMBLE_LOGD(LOG_TAG, "Service UUID count: %d", count);
     return count;
 } // getServiceUUIDCount
 
@@ -367,6 +483,24 @@ int8_t NimBLEAdvertisedDevice::getTXPower() {
 
 
 /**
+ * @brief Does this advertisement have preferred connection parameters?
+ * @return True if connection parameters are present.
+ */
+bool NimBLEAdvertisedDevice::haveConnParams() {
+    return findAdvField(BLE_HS_ADV_TYPE_SLAVE_ITVL_RANGE) > 0;
+} // haveConnParams
+
+
+/**
+ * @brief Does this advertisement have have the advertising interval?
+ * @return True if the advertisement interval is present.
+ */
+bool NimBLEAdvertisedDevice::haveAdvInterval() {
+    return findAdvField(BLE_HS_ADV_TYPE_ADV_ITVL) > 0;
+} // haveAdvInterval
+
+
+/**
  * @brief Does this advertisement have an appearance value?
  * @return True if there is an appearance value present.
  */
@@ -382,6 +516,25 @@ bool NimBLEAdvertisedDevice::haveAppearance() {
 bool NimBLEAdvertisedDevice::haveManufacturerData() {
     return findAdvField(BLE_HS_ADV_TYPE_MFG_DATA) > 0;
 } // haveManufacturerData
+
+
+/**
+ * @brief Does this advertisement have a URI?
+ * @return True if there is a URI present.
+ */
+bool NimBLEAdvertisedDevice::haveURI() {
+    return findAdvField(BLE_HS_ADV_TYPE_URI) > 0;
+} // haveURI
+
+
+/**
+ * @brief Does the advertisement contain a target address?
+ * @return True if an address is present.
+ */
+bool NimBLEAdvertisedDevice::haveTargetAddress() {
+    return findAdvField(BLE_HS_ADV_TYPE_PUBLIC_TGT_ADDR) > 0 ||
+           findAdvField(BLE_HS_ADV_TYPE_RANDOM_TGT_ADDR) > 0;
+}
 
 
 /**
@@ -462,6 +615,11 @@ uint8_t NimBLEAdvertisedDevice::findAdvField(uint8_t type, uint8_t index, uint8_
                 case BLE_HS_ADV_TYPE_INCOMP_UUIDS128:
                 case BLE_HS_ADV_TYPE_COMP_UUIDS128:
                     count += field->length / 16;
+                    break;
+
+                case BLE_HS_ADV_TYPE_PUBLIC_TGT_ADDR:
+                case BLE_HS_ADV_TYPE_RANDOM_TGT_ADDR:
+                    count += field->length / 6;
                     break;
 
                 default:
