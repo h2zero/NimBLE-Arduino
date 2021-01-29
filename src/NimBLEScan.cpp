@@ -38,9 +38,9 @@ NimBLEScan::NimBLEScan() {
     m_scan_params.filter_duplicates  = 0; // If set, the controller ignores all but the first advertisement from each device.
     m_pAdvertisedDeviceCallbacks     = nullptr;
     m_ignoreResults                  = false;
-    m_wantDuplicates                 = false;
     m_pTaskData                      = nullptr;
     m_duration                       = BLE_HS_FOREVER; // make sure this is non-zero in the event of a host reset
+    m_maxResults                     = 0xFF;
 }
 
 
@@ -88,44 +88,49 @@ NimBLEScan::~NimBLEScan() {
 
             // If we haven't seen this device before; create a new instance and insert it in the vector.
             // Otherwise just update the relevant parameters of the already known device.
-            if(advertisedDevice == nullptr){
+            if(advertisedDevice == nullptr && event->disc.event_type != BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP){
+                // Check if we have reach the scan results limit, ignore this one if so.
+                // We still need to store each device when maxResults is 0 to be able to append the scan results
+                if(pScan->m_maxResults > 0 && pScan->m_maxResults < 0xFF &&
+                  (pScan->m_scanResults.m_advertisedDevicesVector.size() >= pScan->m_maxResults))
+                {
+                    return 0;
+                }
                 advertisedDevice = new NimBLEAdvertisedDevice();
                 advertisedDevice->setAddress(advertisedAddress);
                 advertisedDevice->setAdvType(event->disc.event_type);
                 pScan->m_scanResults.m_advertisedDevicesVector.push_back(advertisedDevice);
                 NIMBLE_LOGI(LOG_TAG, "New advertiser: %s", advertisedAddress.toString().c_str());
-            } else {
+            } else if(advertisedDevice != nullptr) {
                 NIMBLE_LOGI(LOG_TAG, "Updated advertiser: %s", advertisedAddress.toString().c_str());
+            } else {
+                // Scan response from unknown device
+                return 0;
             }
 
             advertisedDevice->m_timestamp = time(nullptr);
             advertisedDevice->setRSSI(event->disc.rssi);
-
-            if(event->disc.length_data > 0) {
-                if(event->disc.event_type != BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
-                    advertisedDevice->setPayload(event->disc.data, event->disc.length_data, false);
-                } else {
-                    advertisedDevice->setPayload(event->disc.data, event->disc.length_data, true);
-                }
-            }
-
+            advertisedDevice->setPayload(event->disc.data, event->disc.length_data, 
+            event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP);
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
-                if(pScan->m_wantDuplicates || !advertisedDevice->m_callbackSent) {
-                    // If not active scanning or scan response is not available
-                    // report the result to the callback now.
-                    if(pScan->m_scan_params.passive ||
-                      (event->disc.event_type != BLE_HCI_ADV_TYPE_ADV_IND &&
-                       event->disc.event_type != BLE_HCI_ADV_TYPE_ADV_SCAN_IND))
-                    {
-                        advertisedDevice->m_callbackSent = true;
-                        pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                // If not active scanning or scan response is not available
+                // report the result to the callback now.
+                if(pScan->m_scan_params.passive ||
+                  (advertisedDevice->getAdvType() != BLE_HCI_ADV_TYPE_ADV_IND &&
+                   advertisedDevice->getAdvType() != BLE_HCI_ADV_TYPE_ADV_SCAN_IND))
+                {
+                    advertisedDevice->m_callbackSent = true;
+                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
 
-                    // Otherwise, wait for the scan response so we can report the complete data.
-                    } else if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
-                        advertisedDevice->m_callbackSent = true;
-                        pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
-                    }
+                // Otherwise, wait for the scan response so we can report the complete data.
+                } else if (event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                    advertisedDevice->m_callbackSent = true;
+                    pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
+                }
+                // If not storing results and we have invoked the callback, delete the device. 
+                if(pScan->m_maxResults == 0 && advertisedDevice->m_callbackSent) {
+                    pScan->erase(advertisedAddress);
                 }
             }
 
@@ -143,6 +148,10 @@ NimBLEScan::~NimBLEScan() {
                         pScan->m_pAdvertisedDeviceCallbacks->onResult(it);
                     }
                 }
+            }
+
+            if(pScan->m_maxResults == 0) {
+                pScan->clearResults();
             }
 
             if (pScan->m_scanCompleteCB != nullptr) {
@@ -165,15 +174,11 @@ NimBLEScan::~NimBLEScan() {
 
 /**
  * @brief Should we perform an active or passive scan?
- * The default is a passive scan.  An active scan means that we will wish a scan response.
+ * The default is a passive scan. An active scan means that we will request a scan response.
  * @param [in] active If true, we perform an active scan otherwise a passive scan.
  */
 void NimBLEScan::setActiveScan(bool active) {
-    if (active) {
-        m_scan_params.passive = 0;
-    } else {
-        m_scan_params.passive = 1;
-    }
+    m_scan_params.passive = !active;
 } // setActiveScan
 
 
@@ -223,13 +228,23 @@ void NimBLEScan::setFilterPolicy(uint8_t filter) {
 
 
 /**
+ * @brief Sets the max number of results to store.
+ * @param [in] maxResults The number of results to limit storage to\n
+ * 0 == none (callbacks only) 0xFF == unlimited, any other value is the limit.
+ */
+void NimBLEScan::setMaxResults(uint8_t maxResults) {
+    m_maxResults = maxResults;
+}
+
+
+/**
  * @brief Set the call backs to be invoked.
  * @param [in] pAdvertisedDeviceCallbacks Call backs to be invoked.
  * @param [in] wantDuplicates  True if we wish to be called back with duplicates.  Default is false.
  */
 void NimBLEScan::setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks,
                                               bool wantDuplicates) {
-    m_wantDuplicates = wantDuplicates;
+    setDuplicateFilter(!wantDuplicates);
     m_pAdvertisedDeviceCallbacks = pAdvertisedDeviceCallbacks;
 } // setAdvertisedDeviceCallbacks
 
@@ -364,6 +379,10 @@ bool NimBLEScan::stop() {
     if (rc != 0 && rc != BLE_HS_EALREADY) {
         NIMBLE_LOGE(LOG_TAG, "Failed to cancel scan; rc=%d", rc);
         return false;
+    }
+
+    if(m_maxResults == 0) {
+        clearResults();
     }
 
     if (rc != BLE_HS_EALREADY && m_scanCompleteCB != nullptr) {
