@@ -61,13 +61,13 @@ class NimBLECharacteristic {
 public:
     NimBLEDescriptor* createDescriptor(const char* uuid,
                                        uint32_t properties =
-                                       NIMBLE_PROPERTY::READ |
-                                       NIMBLE_PROPERTY::WRITE,
+                                       NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::READ_ENC |
+                                       NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_ENC,
                                        uint16_t max_len = 100);
     NimBLEDescriptor* createDescriptor(const NimBLEUUID &uuid,
                                        uint32_t properties =
-                                       NIMBLE_PROPERTY::READ |
-                                       NIMBLE_PROPERTY::WRITE,
+                                       NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::READ_ENC |
+                                       NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_ENC,
                                        uint16_t max_len = 100);
 
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
