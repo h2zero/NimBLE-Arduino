@@ -128,7 +128,7 @@ void NimBLEHIDDevice::hidInfo(uint8_t country, uint8_t flags) {
  * @return pointer to new input report characteristic
  */
 NimBLECharacteristic* NimBLEHIDDevice::inputReport(uint8_t reportID) {
-	NimBLECharacteristic* inputReportCharacteristic = m_hidService->createCharacteristic((uint16_t) 0x2a4d, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY | NIMBLE_PROPERTY::READ_ENC);
+	NimBLECharacteristic* inputReportCharacteristic = m_hidService->createCharacteristic((uint16_t) 0x2a4d, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY);
 	NimBLEDescriptor* inputReportDescriptor = inputReportCharacteristic->createDescriptor((uint16_t) 0x2908);
 
 	uint8_t desc1_val[] = { reportID, 0x01 };
