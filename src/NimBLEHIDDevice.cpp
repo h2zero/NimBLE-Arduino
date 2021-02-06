@@ -103,7 +103,7 @@ void NimBLEHIDDevice::manufacturer(std::string name) {
 /**
  * @brief Sets the Plug n Play characterisc value.
  * @param [in] sig The vendor ID source number.
- * @param [in[ vid The vendor ID number.
+ * @param [in] vid The vendor ID number.
  * @param [in] pid The product ID number.
  * @param [in] version The produce version number.
  */

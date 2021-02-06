@@ -305,7 +305,7 @@ void NimBLEDevice::stopAdvertising() {
 
 
 /**
- * @brief Set the transmission power.
+ * @brief Get the transmission power.
  * @param [in] powerType The power level to set, can be one of:
  * *   ESP_BLE_PWR_TYPE_CONN_HDL0  = 0,  For connection handle 0
  * *   ESP_BLE_PWR_TYPE_CONN_HDL1  = 1,  For connection handle 1
@@ -344,7 +344,7 @@ void NimBLEDevice::stopAdvertising() {
         default:
             return BLE_HS_ADV_TX_PWR_LVL_AUTO;
     }
-} // setPower
+} // getPower
 
 
 /**
@@ -404,7 +404,7 @@ void NimBLEDevice::stopAdvertising() {
 
 /**
  * @brief Set the duplicate filter mode for filtering scanned devices.
- * @param {in] cacheSize The number of advertisements filtered before the cache is reset.\n
+ * @param [in] cacheSize The number of advertisements filtered before the cache is reset.\n
  * Range is 10-1000, a larger value will reduce how often the same devices are reported.
  * @details Must only be called before calling NimBLEDevice::init.
  */
@@ -424,7 +424,7 @@ void NimBLEDevice::setScanDuplicateCacheSize(uint16_t cacheSize) {
 
 /**
  * @brief Set the duplicate filter mode for filtering scanned devices.
- * @param {in] mode One of three possible options:
+ * @param [in] mode One of three possible options:
  * * CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE (0) (default)\n
      Filter by device address only, advertisements from the same address will be reported only once.
  * * CONFIG_BTDM_SCAN_DUPL_TYPE_DATA (1)\n
