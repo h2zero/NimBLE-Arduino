@@ -50,10 +50,14 @@ class NimBLEAdvertisementData {
 public:
     void setAppearance(uint16_t appearance);
     void setCompleteServices(const NimBLEUUID &uuid);
+    void setCompleteServices16(const std::vector<NimBLEUUID> &v_uuid);
+    void setCompleteServices32(const std::vector<NimBLEUUID> &v_uuid);
     void setFlags(uint8_t);
     void setManufacturerData(const std::string &data);
     void setName(const std::string &name);
     void setPartialServices(const NimBLEUUID &uuid);
+    void setPartialServices16(const std::vector<NimBLEUUID> &v_uuid);
+    void setPartialServices32(const std::vector<NimBLEUUID> &v_uuid);
     void setServiceData(const NimBLEUUID &uuid, const std::string &data);
     void setShortName(const std::string &name);
     void addData(const std::string &data);  // Add data to the payload.
@@ -62,6 +66,8 @@ public:
 
 private:
     friend class NimBLEAdvertising;
+    void setServices(const bool complete, const uint8_t size,
+                     const std::vector<NimBLEUUID> &v_uuid);
     std::string m_payload;   // The payload of the advertisement.
 };   // NimBLEAdvertisementData
 
