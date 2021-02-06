@@ -419,7 +419,7 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
 
         // check if there is room for the name, if not put it in scan data
         if((payloadLen + (2 + m_advData.name_len)) > BLE_HS_ADV_MAX_SZ) {
-            if(m_scanResp){
+            if(m_scanResp && !m_customScanResponseData){
                 m_scanData.name = m_advData.name;
                 m_scanData.name_len = m_advData.name_len;
                 if(m_scanData.name_len > BLE_HS_ADV_MAX_SZ - 2) {
@@ -446,7 +446,7 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
             }
         }
 
-        if(m_scanResp) {
+        if(m_scanResp && !m_customScanResponseData) {
             rc = ble_gap_adv_rsp_set_fields(&m_scanData);
             switch(rc) {
                 case 0:
