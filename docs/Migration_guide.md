@@ -220,10 +220,11 @@ If you wish to advertise these parameters you can still do so manually via `BLEA
 <br/>
 
 Calling `NimBLEAdvertising::setAdvertisementData` will entirely replace any data set with `NimBLEAdvertising::addServiceUUID`, or  
-`NimBLEAdvertising::setAppearance`. You should set all the data you wish to advertise within the `NimBLEAdvertisementData` instead.  
+`NimBLEAdvertising::setAppearance` or similar methods. You should set all the data you wish to advertise within the `NimBLEAdvertisementData` instead.  
 
-Calling `NimBLEAdvertising::setScanResponseData` without also calling `NimBLEAdvertising::setAdvertisementData` will have no effect.  
-When using custom scan response data you must also use custom advertisement data.  
+~~Calling `NimBLEAdvertising::setScanResponseData` without also calling `NimBLEAdvertising::setAdvertisementData` will have no effect.  
+When using custom scan response data you must also use custom advertisement data.~~  
+No longer true as of release 1.2.0 and above, custom scan response is now supported without custom advertisement data.  
 <br/>
 
 > BLEAdvertising::start (NimBLEAdvertising::start)

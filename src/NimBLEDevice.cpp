@@ -403,7 +403,7 @@ void NimBLEDevice::stopAdvertising() {
 
 
 /**
- * @brief Set the duplicate filter mode for filtering scanned devices.
+ * @brief Set the duplicate filter cache size for filtering scanned devices.
  * @param [in] cacheSize The number of advertisements filtered before the cache is reset.\n
  * Range is 10-1000, a larger value will reduce how often the same devices are reported.
  * @details Must only be called before calling NimBLEDevice::init.

@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.  
 
-## [Unreleased]
+## [1.2.0] - 2021-02-08
 
 ### Added
 - `NimBLECharacteristic::getDescriptorByHandle`: Return the BLE Descriptor for the given handle.
@@ -47,11 +47,15 @@ Overloads to get a vector containing pointers to all the characteristics in a se
   - `haveTargetAddress/getTargetAddressCount/getTargetAddress(index)`: checks if a target address is present / gets a count of the addresses targeted / gets the address of the target at index.
 
 ### Changed
+- `nimconfig.h` (Arduino) is now easier to use.
+
 - `NimBLEServer::getServiceByUUID` Now takes an extra parameter of instanceID to support multiple services with the same UUID.
 
 - `NimBLEService::getCharacteristic` Now takes an extra parameter of instanceID to support multiple characteristics with the same UUID.
 
-- `NimBLEAdvertising` Transmission power is no longer advertised by default and can be added to the advertisement by calling `NimBLEAdvertising::addTxPower`  
+- `NimBLEAdvertising` Transmission power is no longer advertised by default and can be added to the advertisement by calling `NimBLEAdvertising::addTxPower`
+
+- `NimBLEAdvertising` Custom scan response data can now be used without custom advertisment.
 
 - `NimBLEScan` Now uses the controller duplicate filter.  
 

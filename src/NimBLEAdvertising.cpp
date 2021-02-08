@@ -142,7 +142,7 @@ void NimBLEAdvertising::setName(const std::string &name) {
 
 /**
  * @brief Set the advertised manufacturer data.
- * @param [in] name The data to advertise.
+ * @param [in] data The data to advertise.
  */
 void NimBLEAdvertising::setManufacturerData(const std::string &data) {
     m_mfgData.assign(data.begin(), data.end());
@@ -154,7 +154,7 @@ void NimBLEAdvertising::setManufacturerData(const std::string &data) {
 
 /**
  * @brief Set the advertised URI.
- * @param [in] name The URI to advertise.
+ * @param [in] uri The URI to advertise.
  */
 void NimBLEAdvertising::setURI(const std::string &uri) {
     m_uri.assign(uri.begin(), uri.end());

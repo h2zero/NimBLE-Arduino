@@ -126,7 +126,7 @@ NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID &uu
 
 /**
  * @brief Return the BLE Descriptor for the given handle.
- * @param [in] uuid The handle of the descriptor.
+ * @param [in] handle The handle of the descriptor.
  * @return A pointer to the descriptor object or nullptr if not found.
  */
 NimBLEDescriptor *NimBLECharacteristic::getDescriptorByHandle(uint16_t handle) {
