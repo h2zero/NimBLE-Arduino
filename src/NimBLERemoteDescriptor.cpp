@@ -11,10 +11,8 @@
  *  Created on: Jul 8, 2017
  *      Author: kolban
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLERemoteDescriptor.h"
@@ -243,6 +241,7 @@ int NimBLERemoteDescriptor::onWriteCB(uint16_t conn_handle,
                 const struct ble_gatt_error *error,
                 struct ble_gatt_attr *attr, void *arg)
 {
+    (void)attr;
     ble_task_data_t *pTaskData = (ble_task_data_t*)arg;
     NimBLERemoteDescriptor* descriptor = (NimBLERemoteDescriptor*)pTaskData->pATT;
 

@@ -1,4 +1,4 @@
- #pragma once
+#pragma once
 
 #include "sdkconfig.h"
 #include "nimconfig_rename.h"
@@ -186,12 +186,18 @@
 #define CONFIG_BT_NIMBLE_HS_FLOW_CTRL_THRESH 2
 #define CONFIG_BT_NIMBLE_HS_FLOW_CTRL_TX_ON_DISCONNECT 1
 
+#define CONFIG_BT_NIMBLE_HS_STOP_TIMEOUT_MS 2000
+
 #ifndef CONFIG_BT_ENABLED
 #define CONFIG_BT_ENABLED
 #endif
 
 #ifndef CONFIG_BTDM_CONTROLLER_MODE_BLE_ONLY
 #define CONFIG_BTDM_CONTROLLER_MODE_BLE_ONLY
+#endif
+
+#ifndef CONFIG_IDF_TARGET_ESP32
+#define CONFIG_IDF_TARGET_ESP32 1
 #endif
 
 /* Cannot use client without scan */

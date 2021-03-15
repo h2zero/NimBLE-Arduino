@@ -14,12 +14,11 @@
 
 // A service is identified by a UUID.  A service is also the container for one or more characteristics.
 
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
+#include "NimBLEDevice.h"
 #include "NimBLEService.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"

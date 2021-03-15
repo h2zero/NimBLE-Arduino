@@ -14,10 +14,8 @@
 
 #ifndef COMPONENTS_NIMBLEREMOTEDESCRIPTOR_H_
 #define COMPONENTS_NIMBLEREMOTEDESCRIPTOR_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLERemoteCharacteristic.h"

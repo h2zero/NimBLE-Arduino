@@ -14,11 +14,17 @@
 
 #ifndef MAIN_NIMBLESERVICE_H_
 #define MAIN_NIMBLESERVICE_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+
+#ifdef ESP_PLATFORM
+#define NIMBLE_DEFAULT_MAX_ATT_LEN BLE_ATT_ATTR_MAX_LEN
+#else
+#define NIMBLE_DEFAULT_MAX_ATT_LEN 20
+#endif
+
+#define NIMBLE_ATT_INIT_LENGTH 20
 
 #include "NimBLEServer.h"
 #include "NimBLECharacteristic.h"

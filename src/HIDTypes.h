@@ -45,7 +45,7 @@
 /* of data as per HID Class standard */
 
 /* Main items */
-#ifdef ARDUINO_ARCH_ESP32
+#ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
 #define HIDINPUT(size)             (0x80 | size)
 #define HIDOUTPUT(size)            (0x90 | size)
 #else

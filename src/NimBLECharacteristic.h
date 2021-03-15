@@ -13,13 +13,16 @@
 
 #ifndef MAIN_NIMBLECHARACTERISTIC_H_
 #define MAIN_NIMBLECHARACTERISTIC_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "host/ble_hs.h"
+#else
+#include "nimble/nimble/host/include/host/ble_hs.h"
+#endif
+
 /****  FIX COMPILATION ****/
 #undef min
 #undef max

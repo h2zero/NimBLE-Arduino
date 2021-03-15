@@ -14,11 +14,8 @@
 
 #ifndef MAIN_NIMBLEDEVICE_H_
 #define MAIN_NIMBLEDEVICE_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
-
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 #include "NimBLEScan.h"
 #endif
@@ -39,7 +36,9 @@
 #include "NimBLESecurity.h"
 #include "NimBLEAddress.h"
 
+#ifdef ESP_PLATFORM
 #include "esp_bt.h"
+#endif
 
 #include <map>
 #include <string>
@@ -116,15 +115,19 @@ public:
     static void             setSecurityPasskey(uint32_t pin);
     static uint32_t         getSecurityPasskey();
     static void             setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);
+#ifdef ESP_PLATFORM
     static void             setOwnAddrType(uint8_t own_addr_type, bool useNRPA=false);
+#endif
     static int              startSecurity(uint16_t conn_id);
     static int              setMTU(uint16_t mtu);
     static uint16_t         getMTU();
     static bool             isIgnored(const NimBLEAddress &address);
     static void             addIgnored(const NimBLEAddress &address);
     static void             removeIgnored(const NimBLEAddress &address);
+#ifdef ESP_PLATFORM
     static void             setScanDuplicateCacheSize(uint16_t cacheSize);
     static void             setScanFilterMode(uint8_t type);
+#endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
     static NimBLEAdvertising* getAdvertising();
@@ -194,8 +197,10 @@ private:
     static ble_gap_event_listener     m_listener;
     static gap_event_handler          m_customGapHandler;
     static uint8_t                    m_own_addr_type;
+#ifdef ESP_PLATFORM
     static uint16_t                   m_scanDuplicateSize;
     static uint8_t                    m_scanFilterMode;
+#endif
 };
 
 

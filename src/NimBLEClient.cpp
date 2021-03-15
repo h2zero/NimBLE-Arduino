@@ -11,10 +11,8 @@
  *      Author: kolban
  */
 
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEClient.h"
@@ -24,7 +22,11 @@
 #include <string>
 #include <unordered_set>
 
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "nimble/nimble_port.h"
+#else
+#include "nimble/porting/nimble/include/nimble/nimble_port.h"
+#endif
 
 
 static const char* LOG_TAG = "NimBLEClient";

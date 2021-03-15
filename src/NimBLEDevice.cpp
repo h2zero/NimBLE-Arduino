@@ -11,17 +11,25 @@
  *  Created on: Mar 16, 2017
  *      Author: kolban
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
 
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
+
 #include "NimBLEDevice.h"
 #include "NimBLEUtils.h"
 
+#ifdef ESP_PLATFORM
 #include "esp_err.h"
 #include "esp_bt.h"
 #include "nvs_flash.h"
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "esp_nimble_hci.h"
+#else
+#include "nimble/esp_port/esp-hci/include/esp_nimble_hci.h"
+#endif
+#endif
+
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
 #include "host/ble_hs.h"
@@ -29,8 +37,17 @@
 #include "host/util/util.h"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
+#else
+#include "nimble/porting/nimble/include/nimble/nimble_port.h"
+#include "nimble/porting/npl/freertos/include/nimble/nimble_port_freertos.h"
+#include "nimble/nimble/host/include/host/ble_hs.h"
+#include "nimble/nimble/host/include/host/ble_hs_pvcy.h"
+#include "nimble/nimble/host/util/include/host/util/util.h"
+#include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
+#include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
+#endif
 
-#ifdef ARDUINO_ARCH_ESP32
+#ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
 #include "esp32-hal-bt.h"
 #endif
 
