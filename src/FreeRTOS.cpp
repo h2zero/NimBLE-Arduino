@@ -4,8 +4,8 @@
  *  Created on: Feb 24, 2017
  *      Author: kolban
  */
-#include "sdkconfig.h"
-#include "FreeRTOS.h"
+#include "nimconfig.h"
+#include "FreeRTOSCpp.h"
 #include "NimBLELog.h"
 
 #include <freertos/FreeRTOS.h>   // Include the base FreeRTOS definitions
@@ -63,16 +63,22 @@ uint32_t FreeRTOS::getTimeSinceStart() {
  */
 uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
     NIMBLE_LOGD(LOG_TAG, ">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
-
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         pthread_mutex_lock(&m_pthread_mutex);
-    } else {
+    }
+    else
+#endif
+    {
         xSemaphoreTake(m_semaphore, portMAX_DELAY);
     }
-
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         pthread_mutex_unlock(&m_pthread_mutex);
-    } else {
+    }
+    else
+#endif
+    {
         xSemaphoreGive(m_semaphore);
     }
 
@@ -90,22 +96,30 @@ uint32_t FreeRTOS::Semaphore::wait(std::string owner) {
  */
 bool FreeRTOS::Semaphore::timedWait(std::string owner, uint32_t timeoutMs) {
     NIMBLE_LOGD(LOG_TAG, ">> wait: Semaphore waiting: %s for %s", toString().c_str(), owner.c_str());
-
+#ifdef ESP_PLATFORM
     if (m_usePthreads && timeoutMs != portMAX_DELAY) {
         assert(false);  // We apparently don't have a timed wait for pthreads.
     }
-
+#endif
     auto ret = pdTRUE;
-
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         pthread_mutex_lock(&m_pthread_mutex);
-    } else {
+    }
+    else
+#endif
+    {
         ret = xSemaphoreTake(m_semaphore, timeoutMs);
     }
 
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         pthread_mutex_unlock(&m_pthread_mutex);
-    } else {
+    }
+
+    else
+#endif
+    {
         xSemaphoreGive(m_semaphore);
     }
 
@@ -119,10 +133,14 @@ bool FreeRTOS::Semaphore::timedWait(std::string owner, uint32_t timeoutMs) {
  * @param [in] name A name string to provide debugging support.
  */
 FreeRTOS::Semaphore::Semaphore(std::string name) {
+#ifdef ESP_PLATFORM
     m_usePthreads = false;      // Are we using pThreads or FreeRTOS?
     if (m_usePthreads) {
         pthread_mutex_init(&m_pthread_mutex, nullptr);
-    } else {
+    }
+    else
+#endif
+    {
         //m_semaphore = xSemaphoreCreateMutex();
         m_semaphore = xSemaphoreCreateBinary();
         xSemaphoreGive(m_semaphore);
@@ -135,9 +153,13 @@ FreeRTOS::Semaphore::Semaphore(std::string name) {
 
 
 FreeRTOS::Semaphore::~Semaphore() {
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         pthread_mutex_destroy(&m_pthread_mutex);
-    } else {
+    }
+    else
+#endif
+    {
         vSemaphoreDelete(m_semaphore);
     }
 }
@@ -149,16 +171,15 @@ FreeRTOS::Semaphore::~Semaphore() {
 void FreeRTOS::Semaphore::give() {
     NIMBLE_LOGD(LOG_TAG, "Semaphore giving: %s", toString().c_str());
     m_owner = std::string("<N/A>");
-
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         pthread_mutex_unlock(&m_pthread_mutex);
-    } else {
+    }
+    else
+#endif
+    {
         xSemaphoreGive(m_semaphore);
     }
-// #ifdef ARDUINO_ARCH_ESP32
-//  FreeRTOS::sleep(10);
-// #endif
-
 } // Semaphore::give
 
 
@@ -178,9 +199,13 @@ void FreeRTOS::Semaphore::give(uint32_t value) {
  */
 void FreeRTOS::Semaphore::giveFromISR() {
     BaseType_t higherPriorityTaskWoken;
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         assert(false);
-    } else {
+    }
+    else
+#endif
+    {
         xSemaphoreGiveFromISR(m_semaphore, &higherPriorityTaskWoken);
     }
 } // giveFromISR
@@ -195,9 +220,13 @@ void FreeRTOS::Semaphore::giveFromISR() {
 bool FreeRTOS::Semaphore::take(std::string owner) {
     NIMBLE_LOGD(LOG_TAG, "Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
     bool rc = false;
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         pthread_mutex_lock(&m_pthread_mutex);
-    } else {
+    }
+    else
+#endif
+    {
         rc = ::xSemaphoreTake(m_semaphore, portMAX_DELAY) == pdTRUE;
     }
     m_owner = owner;
@@ -220,9 +249,13 @@ bool FreeRTOS::Semaphore::take(std::string owner) {
 bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, std::string owner) {
     NIMBLE_LOGD(LOG_TAG, "Semaphore taking: %s for %s", toString().c_str(), owner.c_str());
     bool rc = false;
+#ifdef ESP_PLATFORM
     if (m_usePthreads) {
         assert(false);  // We apparently don't have a timed wait for pthreads.
-    } else {
+    }
+    else
+#endif
+    {
         rc = ::xSemaphoreTake(m_semaphore, timeoutMs / portTICK_PERIOD_MS) == pdTRUE;
     }
     m_owner = owner;
@@ -258,7 +291,7 @@ void FreeRTOS::Semaphore::setName(std::string name) {
     m_name = name;
 } // setName
 
-
+#ifdef ESP_PLATFORM
 /**
  * @brief Create a ring buffer.
  * @param [in] length The amount of storage to allocate for the ring buffer.
@@ -312,5 +345,5 @@ void Ringbuffer::returnItem(void* item) {
 bool Ringbuffer::send(void* data, size_t length, TickType_t wait) {
     return ::xRingbufferSend(m_handle, data, length, wait) == pdTRUE;
 } // send
-
+#endif
 

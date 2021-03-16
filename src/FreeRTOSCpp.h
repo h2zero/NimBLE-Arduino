@@ -11,11 +11,13 @@
 #include <freertos/FreeRTOS.h>   // Include the base FreeRTOS definitions.
 #include <freertos/task.h>       // Include the task definitions.
 #include <freertos/semphr.h>     // Include the semaphore definitions.
+#ifdef ESP_PLATFORM
 #include <freertos/ringbuf.h>    // Include the ringbuffer definitions.
-
+#include <pthread.h>
+#endif
 #include <stdint.h>
 #include <string>
-#include <pthread.h>
+
 
 
 /**
@@ -53,16 +55,18 @@ public:
 
     private:
         SemaphoreHandle_t m_semaphore;
-        pthread_mutex_t   m_pthread_mutex;
+
         std::string       m_name;
         std::string       m_owner;
         uint32_t          m_value;
+#ifdef ESP_PLATFORM
+        pthread_mutex_t   m_pthread_mutex;
         bool              m_usePthreads;
-
+#endif
     };
 };
 
-
+#ifdef ESP_PLATFORM
 /**
  * @brief A wrapper class for a freeRTOS ringbuffer.
  */
@@ -85,5 +89,5 @@ public:
 private:
     RingbufHandle_t m_handle;
 };
-
+#endif
 #endif /* MAIN_FREERTOS_H_ */

@@ -47,6 +47,10 @@
 #include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
 #endif
 
+#ifndef ESP_PLATFORM
+#include "nimble/nimble/controller/include/controller/ble_phy.h"
+#endif
+
 #ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
 #include "esp32-hal-bt.h"
 #endif
@@ -286,7 +290,7 @@ void NimBLEDevice::stopAdvertising() {
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
-
+#ifdef ESP_PLATFORM
 /**
  * @brief Set the transmission power.
  * @param [in] powerLevel The power level to set, can be one of:
@@ -312,17 +316,15 @@ void NimBLEDevice::stopAdvertising() {
  * *   ESP_BLE_PWR_TYPE_SCAN       = 10, For scan
  * *   ESP_BLE_PWR_TYPE_DEFAULT    = 11, For default, if not set other, it will use default value
  */
-/* STATIC */ void NimBLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
+/* STATIC */
+void NimBLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
     NIMBLE_LOGD(LOG_TAG, ">> setPower: %d (type: %d)", powerLevel, powerType);
-#ifdef ESP_PLATFORM
+
     esp_err_t errRc = esp_ble_tx_power_set(powerType, powerLevel);
     if (errRc != ESP_OK) {
         NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_set: rc=%d", errRc);
     }
-#else
-    (void)powerLevel;
-    (void)powerType;
-#endif
+
     NIMBLE_LOGD(LOG_TAG, "<< setPower");
 } // setPower
 
@@ -345,8 +347,8 @@ void NimBLEDevice::stopAdvertising() {
  * @return the power level currently used by the type specified.
  */
 
-/* STATIC */ int NimBLEDevice::getPower(esp_ble_power_type_t powerType) {
-#ifdef ESP_PLATFORM
+/* STATIC */
+int NimBLEDevice::getPower(esp_ble_power_type_t powerType) {
     switch(esp_ble_tx_power_get(powerType)) {
         case ESP_PWR_LVL_N12:
             return -12;
@@ -367,12 +369,19 @@ void NimBLEDevice::stopAdvertising() {
         default:
             return BLE_HS_ADV_TX_PWR_LVL_AUTO;
     }
-#else
-    (void)powerType;
-    return BLE_HS_ADV_TX_PWR_LVL_AUTO;
-#endif
 } // getPower
 
+#else
+
+void NimBLEDevice::setPower(int dbm) {
+    ble_phy_txpwr_set(dbm);
+}
+
+
+int NimBLEDevice::getPower() {
+    return ble_phy_txpwr_get();
+}
+#endif
 
 /**
  * @brief Get our device address.

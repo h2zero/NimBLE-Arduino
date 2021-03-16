@@ -1,6 +1,11 @@
 #pragma once
 
+#ifdef ESP_PLATFORM
 #include "sdkconfig.h"
+#else
+#include <time.h>
+#endif
+
 #include "nimconfig_rename.h"
 
 /***********************************************

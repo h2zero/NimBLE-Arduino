@@ -104,8 +104,14 @@ public:
     static NimBLEServer*    getServer();
 #endif
 
+#ifdef ESP_PLATFORM
     static void             setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
     static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
+#else
+    static void             setPower(int dbm);
+    static int              getPower();
+#endif
+
     static void             setCustomGapHandler(gap_event_handler handler);
     static void             setSecurityAuth(bool bonding, bool mitm, bool sc);
     static void             setSecurityAuth(uint8_t auth_req);

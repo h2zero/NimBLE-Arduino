@@ -12,6 +12,8 @@
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
 
+#include <stdlib.h>
+
 static const char* LOG_TAG = "NimBLEUtils";
 
 
