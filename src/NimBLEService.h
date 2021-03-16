@@ -54,12 +54,14 @@ public:
     NimBLECharacteristic* createCharacteristic(const char* uuid,
                                               uint32_t properties =
                                               NIMBLE_PROPERTY::READ |
-                                              NIMBLE_PROPERTY::WRITE);
+                                              NIMBLE_PROPERTY::WRITE,
+                                              uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN);
 
     NimBLECharacteristic* createCharacteristic(const NimBLEUUID &uuid,
                                                uint32_t properties =
                                                NIMBLE_PROPERTY::READ |
-                                               NIMBLE_PROPERTY::WRITE);
+                                               NIMBLE_PROPERTY::WRITE,
+                                               uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN);
 
     NimBLECharacteristic* getCharacteristic(const char* uuid, uint16_t instanceId = 0);
     NimBLECharacteristic* getCharacteristic(const NimBLEUUID &uuid, uint16_t instanceId = 0);
@@ -71,17 +73,15 @@ public:
 
 
 private:
-    NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer);
-    NimBLEService(const NimBLEUUID &uuid, uint16_t numHandles, NimBLEServer* pServer);
+    NimBLEService(const char* uuid);
+    NimBLEService(const NimBLEUUID &uuid);
     ~NimBLEService();
 
     friend class          NimBLEServer;
     friend class          NimBLEDevice;
 
     uint16_t              m_handle;
-    NimBLEServer*         m_pServer;
     NimBLEUUID            m_uuid;
-    uint16_t              m_numHandles;
     ble_gatt_svc_def*     m_pSvcDef;
     uint8_t               m_removed;
     std::vector<NimBLECharacteristic*> m_chrVec;

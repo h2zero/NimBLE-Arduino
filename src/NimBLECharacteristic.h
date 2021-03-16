@@ -43,6 +43,13 @@ typedef enum {
     INDICATE     =  BLE_GATT_CHR_F_INDICATE
 } NIMBLE_PROPERTY;
 
+typedef struct
+{
+    uint16_t attr_max_len;  /*!<  attribute max value length */
+    uint16_t attr_len;      /*!<  attribute current value length */
+    uint8_t  *attr_value;    /*!<  the pointer to attribute value */
+} attr_value_t;
+
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
 
@@ -52,7 +59,6 @@ typedef enum {
 class NimBLEService;
 class NimBLEDescriptor;
 class NimBLECharacteristicCallbacks;
-
 
 /**
  * @brief The model of a %BLE Characteristic.
@@ -77,12 +83,12 @@ public:
                                        uint32_t properties =
                                        NIMBLE_PROPERTY::READ |
                                        NIMBLE_PROPERTY::WRITE,
-                                       uint16_t max_len = 100);
+                                       uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN);
     NimBLEDescriptor* createDescriptor(const NimBLEUUID &uuid,
                                        uint32_t properties =
                                        NIMBLE_PROPERTY::READ |
                                        NIMBLE_PROPERTY::WRITE,
-                                       uint16_t max_len = 100);
+                                       uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN);
 
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &uuid);
@@ -118,10 +124,6 @@ public:
         setValue((uint8_t*)&s, sizeof(T));
     }
 
-
-
-
-
 private:
 
     friend class      NimBLEServer;
@@ -131,11 +133,13 @@ private:
                          uint16_t properties =
                          NIMBLE_PROPERTY::READ |
                          NIMBLE_PROPERTY::WRITE,
+                         uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN,
                          NimBLEService* pService = nullptr);
     NimBLECharacteristic(const NimBLEUUID &uuid,
                          uint16_t properties =
                          NIMBLE_PROPERTY::READ |
                          NIMBLE_PROPERTY::WRITE,
+                         uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN,
                          NimBLEService* pService = nullptr);
 
     ~NimBLECharacteristic();
@@ -151,10 +155,12 @@ private:
     uint16_t                       m_properties;
     NimBLECharacteristicCallbacks* m_pCallbacks;
     NimBLEService*                 m_pService;
-    std::string                    m_value;
+    attr_value_t                   m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
     ble_task_data_t                *m_pTaskData;
+#ifdef ESP_PLATFORM
     portMUX_TYPE                   m_valMux;
+#endif
     time_t                         m_timestamp;
 
     std::vector<std::pair<uint16_t, uint16_t>>  m_subscribedVec;

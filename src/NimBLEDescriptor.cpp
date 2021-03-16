@@ -41,14 +41,19 @@ NimBLEDescriptor::NimBLEDescriptor(const char* uuid, uint16_t properties, uint16
 NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_t max_len,
                                     NimBLECharacteristic* pCharacteristic)
 {
+    (void)pCharacteristic;
+
     m_uuid               = uuid;
     m_value.attr_len     = 0;                           // Initial length is 0.
     m_value.attr_max_len = max_len;                     // Maximum length of the data.
     m_handle             = NULL_HANDLE;                 // Handle is initially unknown.
     m_pCharacteristic    = nullptr;                     // No initial characteristic.
     m_pCallbacks         = &defaultCallbacks;           // No initial callback.
-    m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
+    m_value.attr_value   = (uint8_t*) calloc(NIMBLE_ATT_INIT_LENGTH > max_len ?
+                                             max_len : NIMBLE_ATT_INIT_LENGTH ,1);
+#ifdef ESP_PLATFORM
     m_valMux             = portMUX_INITIALIZER_UNLOCKED;
+#endif
     m_properties         = 0;
 
     if (properties & BLE_GATT_CHR_F_READ) {             // convert uint16_t properties to uint8_t
@@ -129,8 +134,10 @@ std::string NimBLEDescriptor::getStringValue() {
 }
 
 int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
-                             struct ble_gatt_access_ctxt *ctxt,
-                                     void *arg) {
+                                     struct ble_gatt_access_ctxt *ctxt, void *arg) {
+    (void)conn_handle;
+    (void)attr_handle;
+
     const ble_uuid_t *uuid;
     int rc;
     NimBLEDescriptor* pDescriptor = (NimBLEDescriptor*)arg;
@@ -147,9 +154,15 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                 if(ctxt->om->om_pkthdr_len > 8) {
                     pDescriptor->m_pCallbacks->onRead(pDescriptor);
                 }
+#ifdef ESP_PLATFORM
                 portENTER_CRITICAL(&pDescriptor->m_valMux);
                 rc = os_mbuf_append(ctxt->om, pDescriptor->getValue(), pDescriptor->getLength());
                 portEXIT_CRITICAL(&pDescriptor->m_valMux);
+#else
+                portENTER_CRITICAL();
+                rc = os_mbuf_append(ctxt->om, pDescriptor->getValue(), pDescriptor->getLength());
+                portEXIT_CRITICAL();
+#endif
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 
@@ -220,10 +233,35 @@ void NimBLEDescriptor::setValue(const uint8_t* data, size_t length) {
         NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
         return;
     }
+
+    uint8_t *res = nullptr;
+
+    if (length > m_value.attr_len && length > NIMBLE_ATT_INIT_LENGTH) {
+        res = (uint8_t*)realloc(m_value.attr_value, length);
+        if (res == nullptr) {
+            NIMBLE_LOGE(LOG_TAG, "Could not allocate space for value");
+            return;
+        }
+    }
+
+#ifdef ESP_PLATFORM
     portENTER_CRITICAL(&m_valMux);
+    if (res != nullptr) {
+        m_value.attr_value = res;
+    }
     m_value.attr_len = length;
     memcpy(m_value.attr_value, data, length);
     portEXIT_CRITICAL(&m_valMux);
+#else
+    portENTER_CRITICAL();
+    if (res != nullptr) {
+        m_value.attr_value = res;
+    }
+    m_value.attr_len = length;
+    memcpy(m_value.attr_value, data, length);
+    portEXIT_CRITICAL();
+#endif
+
 } // setValue
 
 
@@ -255,6 +293,7 @@ NimBLEDescriptorCallbacks::~NimBLEDescriptorCallbacks() {}
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
 void NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor) {
+    (void)pDescriptor;
     NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onRead: default");
 } // onRead
 
@@ -264,6 +303,7 @@ void NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor) {
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
 void NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor) {
+    (void)pDescriptor;
     NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onWrite: default");
 } // onWrite
 

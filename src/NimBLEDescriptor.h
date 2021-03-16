@@ -23,14 +23,6 @@
 
 #include <string>
 
-
-typedef struct
-{
-    uint16_t attr_max_len;  /*!<  attribute max value length */
-    uint16_t attr_len;      /*!<  attribute current value length */
-    uint8_t  *attr_value;    /*!<  the pointer to attribute value */
-} attr_value_t;
-
 class NimBLEService;
 class NimBLECharacteristic;
 class NimBLEDescriptorCallbacks;
@@ -88,7 +80,9 @@ private:
     NimBLECharacteristic*      m_pCharacteristic;
     uint8_t                    m_properties;
     attr_value_t               m_value;
+#ifdef ESP_PLATFORM
     portMUX_TYPE               m_valMux;
+#endif
 }; // NimBLEDescriptor
 
 

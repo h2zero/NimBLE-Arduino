@@ -33,25 +33,21 @@ static const char* LOG_TAG = "NimBLEService"; // Tag for logging.
 /**
  * @brief Construct an instance of the NimBLEService
  * @param [in] uuid The UUID of the service.
- * @param [in] numHandles The maximum number of handles associated with the service.
  * @param [in] a pointer to the server instance that this service belongs to.
  */
-NimBLEService::NimBLEService(const char* uuid, uint16_t numHandles, NimBLEServer* pServer)
-: NimBLEService(NimBLEUUID(uuid), numHandles, pServer) {
+NimBLEService::NimBLEService(const char* uuid)
+: NimBLEService(NimBLEUUID(uuid)) {
 }
 
 
 /**
  * @brief Construct an instance of the BLEService
  * @param [in] uuid The UUID of the service.
- * @param [in] numHandles The maximum number of handles associated with the service.
  * @param [in] a pointer to the server instance that this service belongs to.
  */
-NimBLEService::NimBLEService(const NimBLEUUID &uuid, uint16_t numHandles, NimBLEServer* pServer) {
+NimBLEService::NimBLEService(const NimBLEUUID &uuid) {
     m_uuid         = uuid;
     m_handle       = NULL_HANDLE;
-    m_pServer      = pServer;
-    m_numHandles   = numHandles;
     m_pSvcDef      = nullptr;
     m_removed      = 0;
 
@@ -196,7 +192,6 @@ bool NimBLEService::start() {
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_add_svcs, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;
-
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< start()");
@@ -219,8 +214,8 @@ uint16_t NimBLEService::getHandle() {
  * @param [in] properties - The properties of the characteristic.
  * @return The new BLE characteristic.
  */
-NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint32_t properties) {
-    return createCharacteristic(NimBLEUUID(uuid), properties);
+NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint32_t properties, uint16_t max_len) {
+    return createCharacteristic(NimBLEUUID(uuid), properties, max_len);
 }
 
 
@@ -230,8 +225,8 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint
  * @param [in] properties - The properties of the characteristic.
  * @return The new BLE characteristic.
  */
-NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid, uint32_t properties) {
-    NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, this);
+NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid, uint32_t properties, uint16_t max_len) {
+    NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, max_len, this);
 
     if (getCharacteristic(uuid) != nullptr) {
         NIMBLE_LOGD(LOG_TAG, "<< Adding a duplicate characteristic with UUID: %s",
@@ -337,7 +332,7 @@ std::string NimBLEService::toString() {
  * @return The BLEServer associated with this service.
  */
 NimBLEServer* NimBLEService::getServer() {
-    return m_pServer;
+    return NimBLEDevice::getServer();
 }// getServer
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
