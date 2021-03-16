@@ -69,6 +69,7 @@ void NimBLEAdvertising::reset() {
     m_advDataSet                     = false;
     // Set this to non-zero to prevent auto start if host reset before started by app.
     m_duration                       = BLE_HS_FOREVER;
+    m_advCompCB                      = nullptr;
 } // reset
 
 
@@ -654,12 +655,8 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
             break;
     }
 
-    if(rc != 0) {
-        return false;
-    }
-
     NIMBLE_LOGD(LOG_TAG, "<< Advertising start");
-    return true;
+    return (rc == 0);
 } // start
 
 
