@@ -90,7 +90,9 @@ private:
     NimBLECharacteristic*      m_pCharacteristic;
     uint8_t                    m_properties;
     attr_value_t               m_value;
+#ifdef ESP_PLATFORM
     portMUX_TYPE               m_valMux;
+#endif
     uint8_t                    m_removed;
 }; // NimBLEDescriptor
 

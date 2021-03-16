@@ -186,6 +186,7 @@ int NimBLERemoteDescriptor::onReadCB(uint16_t conn_handle,
                 const struct ble_gatt_error *error,
                 struct ble_gatt_attr *attr, void *arg)
 {
+    (void)attr;
     ble_task_data_t *pTaskData = (ble_task_data_t*)arg;
     NimBLERemoteDescriptor* desc = (NimBLERemoteDescriptor*)pTaskData->pATT;
     uint16_t conn_id = desc->getRemoteCharacteristic()->getRemoteService()->getClient()->getConnId();

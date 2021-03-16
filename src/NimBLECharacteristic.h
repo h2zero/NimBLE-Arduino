@@ -153,7 +153,9 @@ private:
     NimBLEService*                 m_pService;
     std::string                    m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
+#ifdef ESP_PLATFORM
     portMUX_TYPE                   m_valMux;
+#endif
     time_t                         m_timestamp;
     uint8_t                        m_removed;
 

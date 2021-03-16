@@ -1,6 +1,11 @@
  #pragma once
 
+#ifdef ESP_PLATFORM
 #include "sdkconfig.h"
+#else
+#include "ext_nimble_config.h"
+#endif
+
 #include "nimconfig_rename.h"
 
 /***********************************************
@@ -203,13 +208,14 @@
 #define CONFIG_BT_ENABLED
 #endif
 
+#ifdef ESP_PLATFORM
 #ifndef CONFIG_BTDM_CONTROLLER_MODE_BLE_ONLY
 #define CONFIG_BTDM_CONTROLLER_MODE_BLE_ONLY
 #endif
 
-
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 #define CONFIG_IDF_TARGET_ESP32 1
+#endif
 #endif
 
 /* Cannot use client without scan */

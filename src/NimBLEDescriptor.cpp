@@ -49,7 +49,9 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_
     m_pCharacteristic    = pCharacteristic;
     m_pCallbacks         = &defaultCallbacks;           // No initial callback.
     m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
+#ifdef ESP_PLATFORM
     m_valMux             = portMUX_INITIALIZER_UNLOCKED;
+#endif
     m_properties         = 0;
     m_removed            = 0;
 
@@ -143,6 +145,9 @@ NimBLECharacteristic* NimBLEDescriptor::getCharacteristic() {
 
 int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                                      struct ble_gatt_access_ctxt *ctxt, void *arg) {
+    (void)conn_handle;
+    (void)attr_handle;
+
     const ble_uuid_t *uuid;
     int rc;
     NimBLEDescriptor* pDescriptor = (NimBLEDescriptor*)arg;
@@ -159,9 +164,15 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                 if(ctxt->om->om_pkthdr_len > 8) {
                     pDescriptor->m_pCallbacks->onRead(pDescriptor);
                 }
+#ifdef ESP_PLATFORM
                 portENTER_CRITICAL(&pDescriptor->m_valMux);
                 rc = os_mbuf_append(ctxt->om, pDescriptor->getValue(), pDescriptor->getLength());
                 portEXIT_CRITICAL(&pDescriptor->m_valMux);
+#else
+                portENTER_CRITICAL();
+                rc = os_mbuf_append(ctxt->om, pDescriptor->getValue(), pDescriptor->getLength());
+                portEXIT_CRITICAL();
+#endif
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 
@@ -232,10 +243,17 @@ void NimBLEDescriptor::setValue(const uint8_t* data, size_t length) {
         NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
         return;
     }
+#ifdef ESP_PLATFORM
     portENTER_CRITICAL(&m_valMux);
     m_value.attr_len = length;
     memcpy(m_value.attr_value, data, length);
     portEXIT_CRITICAL(&m_valMux);
+#else
+    portENTER_CRITICAL();
+    m_value.attr_len = length;
+    memcpy(m_value.attr_value, data, length);
+    portEXIT_CRITICAL();
+#endif
 } // setValue
 
 
@@ -275,6 +293,7 @@ NimBLEDescriptorCallbacks::~NimBLEDescriptorCallbacks() {}
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
 void NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor) {
+    (void)pDescriptor;
     NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onRead: default");
 } // onRead
 
@@ -284,6 +303,7 @@ void NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor) {
  * @param [in] pDescriptor The descriptor that is the source of the event.
  */
 void NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor) {
+    (void)pDescriptor;
     NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onWrite: default");
 } // onWrite
 
