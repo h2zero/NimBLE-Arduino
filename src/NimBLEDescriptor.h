@@ -20,8 +20,7 @@
 
 #include "NimBLECharacteristic.h"
 #include "NimBLEUUID.h"
-
-#include <string>
+#include "NimBLEAttValue.h"
 
 class NimBLEService;
 class NimBLECharacteristic;

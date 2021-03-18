@@ -43,18 +43,9 @@ typedef enum {
     INDICATE     =  BLE_GATT_CHR_F_INDICATE
 } NIMBLE_PROPERTY;
 
-typedef struct
-{
-    uint16_t attr_max_len;  /*!<  attribute max value length */
-    uint16_t attr_len;      /*!<  attribute current value length */
-    uint8_t  *attr_value;    /*!<  the pointer to attribute value */
-} attr_value_t;
-
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
-
-#include <string>
-#include <vector>
+#include "NimBLEAttValue.h"
 
 class NimBLEService;
 class NimBLEDescriptor;
@@ -94,7 +85,7 @@ public:
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &uuid);
     NimBLEDescriptor* getDescriptorByHandle(uint16_t handle);
 
-    std::string       getValue(time_t *timestamp = nullptr);
+    NimBLEAttValue    getValue(time_t *timestamp = nullptr);
     size_t            getDataLength();
     /**
      * @brief A template to convert the characteristic data to <type\>.
@@ -106,11 +97,9 @@ public:
      * @details <b>Use:</b> <tt>getValue<type>(&timestamp, skipSizeCheck);</tt>
      */
     template<typename T>
-    T                 getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
-        std::string value = getValue();
-        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
-        const char *pData = value.data();
-        return *((T *)pData);
+    T   getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+            if(!skipSizeCheck && m_value.getLength() < sizeof(T)) return T();
+            return *((T *)m_value.getValue());
     }
 
     void              setValue(const uint8_t* data, size_t size);
@@ -155,7 +144,7 @@ private:
     uint16_t                       m_properties;
     NimBLECharacteristicCallbacks* m_pCallbacks;
     NimBLEService*                 m_pService;
-    attr_value_t                   m_value;
+    NimBLEAttValue                 m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
 #ifdef ESP_PLATFORM
     portMUX_TYPE                   m_valMux;

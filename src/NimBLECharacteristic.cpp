@@ -45,16 +45,17 @@ NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties
  * @param [in] pService - pointer to the service instance this characteristic belongs to.
  */
 NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t properties,
-                                           uint16_t max_len, NimBLEService* pService) {
+                                           uint16_t max_len, NimBLEService* pService)
+:   m_value(NIMBLE_ATT_INIT_LENGTH > max_len ? max_len : NIMBLE_ATT_INIT_LENGTH, max_len) {
     m_uuid               = uuid;
     m_handle             = NULL_HANDLE;
     m_properties         = properties;
     m_pCallbacks         = &defaultCallback;
     m_pService           = pService;
-    m_value.attr_value   = (uint8_t*) calloc(NIMBLE_ATT_INIT_LENGTH > max_len ?
+    /*(NIMBLE_ATT_INIT_LENGTH > max_len ?
                                              max_len : NIMBLE_ATT_INIT_LENGTH ,1);
     m_value.attr_len     = 0;
-    m_value.attr_max_len = max_len;
+    m_value.attr_max_len = max_len;*/
 #ifdef ESP_PLATFORM
     m_valMux             = portMUX_INITIALIZER_UNLOCKED;
 #endif
@@ -68,8 +69,6 @@ NimBLECharacteristic::~NimBLECharacteristic() {
     for(auto &it : m_dscVec) {
         delete it;
     }
-
-    free(m_value.attr_value);
 } // ~NimBLECharacteristic
 
 
@@ -187,25 +186,24 @@ NimBLEUUID NimBLECharacteristic::getUUID() {
  * @brief Retrieve the current value of the characteristic.
  * @return A std::string containing the current characteristic value.
  */
-std::string NimBLECharacteristic::getValue(time_t *timestamp) {
+NimBLEAttValue NimBLECharacteristic::getValue(time_t *timestamp) {
 #ifdef ESP_PLATFORM
     portENTER_CRITICAL(&m_valMux);
-    std::string retVal((char*)m_value.attr_value, m_value.attr_len);
+    NimBLEAttValue retVal = m_value;
     if(timestamp != nullptr) {
         *timestamp = m_timestamp;
     }
     portEXIT_CRITICAL(&m_valMux);
 #else
     portENTER_CRITICAL();
-    std::string retVal((char*)m_value.attr_value, m_value.attr_len);
+    NimBLEAttValue retVal = m_value;
     if(timestamp != nullptr) {
         *timestamp = m_timestamp;
     }
     portEXIT_CRITICAL();
 #endif
     return retVal;
-} // getValue
-
+}
 
 /**
  * @brief Retrieve the the current data length of the characteristic.
@@ -214,11 +212,11 @@ std::string NimBLECharacteristic::getValue(time_t *timestamp) {
 size_t NimBLECharacteristic::getDataLength() {
 #ifdef ESP_PLATFORM
     portENTER_CRITICAL(&m_valMux);
-    size_t len = m_value.attr_len;
+    size_t len = m_value.getLength();
     portEXIT_CRITICAL(&m_valMux);
 #else
     portENTER_CRITICAL();
-    size_t len = m_value.attr_len;
+    size_t len = m_value.getLength();
     portEXIT_CRITICAL();
 #endif
     return len;
@@ -253,13 +251,13 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                 }
 #ifdef ESP_PLATFORM
                 portENTER_CRITICAL(&pCharacteristic->m_valMux);
-                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.attr_value,
-                                    pCharacteristic->m_value.attr_len);
+                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.getValue(),
+                                    pCharacteristic->m_value.getLength());
                 portEXIT_CRITICAL(&pCharacteristic->m_valMux);
 #else
                 portENTER_CRITICAL();
-                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.attr_value,
-                                    pCharacteristic->m_value.attr_len);
+                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.getValue(),
+                                    pCharacteristic->m_value.getLength());
                 portEXIT_CRITICAL();
 #endif
 
@@ -267,18 +265,18 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
             }
 
             case BLE_GATT_ACCESS_OP_WRITE_CHR: {
-                if (ctxt->om->om_len > pCharacteristic->m_value.attr_max_len) {
+                if (ctxt->om->om_len > pCharacteristic->m_value.getMaxLength()) {
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
 
-                uint8_t buf[pCharacteristic->m_value.attr_max_len];
+                uint8_t buf[pCharacteristic->m_value.getMaxLength()];
                 size_t len = ctxt->om->om_len;
                 memcpy(buf, ctxt->om->om_data,len);
 
                 os_mbuf *next;
                 next = SLIST_NEXT(ctxt->om, om_next);
                 while(next != NULL){
-                    if((len + next->om_len) > pCharacteristic->m_value.attr_max_len) {
+                    if((len + next->om_len) > pCharacteristic->m_value.getMaxLength()) {
                         return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                     }
                     memcpy(&buf[len], next->om_data, next->om_len);
@@ -417,7 +415,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
             }
         }
 
-        if (m_value.attr_len > _mtu) {
+        if (m_value.getLength() > _mtu) {
             NIMBLE_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
         }
 
@@ -436,7 +434,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
         // don't create the m_buf until we are sure to send the data or else
         // we could be allocating a buffer that doesn't get released.
         // We also must create it in each loop iteration because it is consumed with each host call.
-        os_mbuf *om = ble_hs_mbuf_from_flat(m_value.attr_value, m_value.attr_len);
+        os_mbuf *om = ble_hs_mbuf_from_flat(m_value.getValue(), m_value.getLength());
 
         if(!is_notification && (m_properties & NIMBLE_PROPERTY::INDICATE)) {
             if(!NimBLEDevice::getServer()->setIndicateWait(it.first)) {
@@ -484,40 +482,27 @@ void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
     free(pHex);
 #endif
 
-    if (length > m_value.attr_max_len) {
-        NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
+    if (length > m_value.getMaxLength()) {
+        NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, m_value.getMaxLength());
         return;
     }
 
-    uint8_t *res = nullptr;
-
-    if (length > m_value.attr_len && length > NIMBLE_ATT_INIT_LENGTH) {
-        res = (uint8_t*)realloc(m_value.attr_value, length);
-        if (res == nullptr) {
-            NIMBLE_LOGE(LOG_TAG, "Could not allocate space for value");
-            return;
-        }
+    uint8_t *res = m_value.checkMemAlloc(length);
+    if (res == nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "Could not allocate space for value");
+        return;
     }
 
     time_t t = time(nullptr);
+
 #ifdef ESP_PLATFORM
     portENTER_CRITICAL(&m_valMux);
-    if (res != nullptr) {
-        m_value.attr_value = res;
-    }
-
-    m_value.attr_len = length;
-    memcpy(m_value.attr_value, data, length);
+    m_value.setValue(data, length);
     m_timestamp = t;
     portEXIT_CRITICAL(&m_valMux);
 #else
     portENTER_CRITICAL();
-    if (res != nullptr) {
-        m_value.attr_value = res;
-    }
-
-    m_value.attr_len = length;
-    memcpy(m_value.attr_value, data, length);
+    m_value.setValue(data, length);
     m_timestamp = t;
     portEXIT_CRITICAL();
 #endif
