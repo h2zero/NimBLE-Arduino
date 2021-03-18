@@ -52,7 +52,6 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
     m_pService   = pService;
     m_value      = "";
     m_valMux     = portMUX_INITIALIZER_UNLOCKED;
-    m_pTaskData  = nullptr;
     m_timestamp  = 0;
 } // NimBLECharacteristic
 
@@ -301,14 +300,12 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         subVal |= NIMBLE_SUB_INDICATE;
     }
 
-    if(m_pTaskData != nullptr) {
-        m_pTaskData->rc = (subVal & NIMBLE_SUB_INDICATE) ? 0 :
-                          NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED;
-        xTaskNotifyGive(m_pTaskData->task);
-    }
-    
     NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d",
-                         event->subscribe.conn_handle, subVal);
+                          event->subscribe.conn_handle, subVal);
+
+    if(!event->subscribe.cur_indicate && event->subscribe.prev_indicate) {
+       NimBLEDevice::getServer()->clearIndicateWait(event->subscribe.conn_handle);
+    }
 
     m_pCallbacks->onSubscribe(this, &desc, subVal);
 
@@ -329,9 +326,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
 
     } else if(it != m_subscribedVec.end()) {
         m_subscribedVec.erase(it);
-        m_subscribedVec.shrink_to_fit();
     }
-    
 }
 
 
@@ -416,40 +411,20 @@ void NimBLECharacteristic::notify(bool is_notification) {
         // We also must create it in each loop iteration because it is consumed with each host call.
         os_mbuf *om = ble_hs_mbuf_from_flat((uint8_t*)value.data(), length);
 
-        NimBLECharacteristicCallbacks::Status statusRC;
-
         if(!is_notification && (m_properties & NIMBLE_PROPERTY::INDICATE)) {
-            ble_task_data_t taskData = {nullptr, xTaskGetCurrentTaskHandle(),0, nullptr};
-            m_pTaskData = &taskData;
+            if(!NimBLEDevice::getServer()->setIndicateWait(it.first)) {
+               NIMBLE_LOGE(LOG_TAG, "prior Indication in progress");
+               os_mbuf_free_chain(om);
+               return;
+            }
 
             rc = ble_gattc_indicate_custom(it.first, m_handle, om);
             if(rc != 0){
-                statusRC = NimBLECharacteristicCallbacks::Status::ERROR_GATT;
-            } else {
-                ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-                rc = m_pTaskData->rc;
-            }
-
-            m_pTaskData = nullptr;
-
-            if(rc == BLE_HS_EDONE) {
-                rc = 0;
-                statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE;
-            } else if(rc == BLE_HS_ETIMEOUT) {
-                statusRC = NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT;
-            } else {
-                statusRC = NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE;
+                NimBLEDevice::getServer()->clearIndicateWait(it.first);
             }
         } else {
-            rc = ble_gattc_notify_custom(it.first, m_handle, om);
-            if(rc == 0) {
-                statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_NOTIFY;
-            } else {
-                statusRC = NimBLECharacteristicCallbacks::Status::ERROR_GATT;
-            }
+            ble_gattc_notify_custom(it.first, m_handle, om);
         }
-
-        m_pCallbacks->onStatus(this, statusRC, rc);
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< notify");
