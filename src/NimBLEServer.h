@@ -74,6 +74,7 @@ private:
     bool                   m_svcChanged;
     NimBLEServerCallbacks* m_pServerCallbacks;
     bool                   m_deleteCallbacks;
+    uint16_t               m_indWait_a[CONFIG_BT_NIMBLE_MAX_CONNECTIONS];
     std::vector<uint16_t>  m_connectedPeersVec;
 
 //    uint16_t               m_svcChgChrHdl; // Future use
@@ -83,6 +84,8 @@ private:
 
     static int             handleGapEvent(struct ble_gap_event *event, void *arg);
     void                   resetGATT();
+    bool                   setIndicateWait(uint16_t conn_handle);
+    void                   clearIndicateWait(uint16_t conn_handle);
 }; // NimBLEServer
 
 
