@@ -137,15 +137,11 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                 if(ctxt->om->om_pkthdr_len > 8) {
                     pDescriptor->m_pCallbacks->onRead(pDescriptor);
                 }
-#ifdef ESP_PLATFORM
-                portENTER_CRITICAL(&pDescriptor->m_valMux);
-                rc = os_mbuf_append(ctxt->om, pDescriptor->m_value.m_attr_value, pDescriptor->m_value.m_attr_len);
-                portEXIT_CRITICAL(&pDescriptor->m_valMux);
-#else
-                portENTER_CRITICAL();
-                rc = os_mbuf_append(ctxt->om, pDescriptor->m_value.m_attr_value, pDescriptor->m_value.m_attr_len);
-                portEXIT_CRITICAL();
-#endif
+
+                pDescriptor->m_value.lock();
+                rc = os_mbuf_append(ctxt->om, pDescriptor->m_value.getValue(), pDescriptor->m_value.getLength());
+                pDescriptor->m_value.unlock();
+
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 

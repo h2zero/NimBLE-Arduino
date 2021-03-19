@@ -221,17 +221,11 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
                 }
-#ifdef ESP_PLATFORM
-                portENTER_CRITICAL(&pCharacteristic->m_value.m_valMux);
-                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.m_attr_value,
-                                    pCharacteristic->m_value.m_attr_len);
-                portEXIT_CRITICAL(&pCharacteristic->m_value.m_valMux);
-#else
-                portENTER_CRITICAL();
-                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.m_attr_value,
-                                    pCharacteristic->m_value.m_attr_len);
-                portEXIT_CRITICAL();
-#endif
+
+                pCharacteristic->m_value.lock();
+                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.getValue(),
+                                    pCharacteristic->m_value.getLength());
+                pCharacteristic->m_value.unlock();
 
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
@@ -453,8 +447,10 @@ void NimBLECharacteristic::setValue(const uint8_t* data, uint16_t length) {
     NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
     free(pHex);
 #endif
-
-    m_value.setValue(data, length);
+    NIMBLE_LOGD(LOG_TAG, ">> setValue");
+    if(!m_value.setValue(data, length)) {
+        NIMBLE_LOGE(LOG_TAG, "Error setting characteristic value");
+    }
     NIMBLE_LOGD(LOG_TAG, "<< setValue");
 } // setValue
 
@@ -465,7 +461,7 @@ void NimBLECharacteristic::setValue(const uint8_t* data, uint16_t length) {
  * @param [in] value the std::string value of the characteristic.
  */
 void NimBLECharacteristic::setValue(const std::string &value) {
-    setValue((uint8_t*)(value.data()), value.length());
+    setValue((uint8_t*)value.data(), value.length());
 } // setValue
 
 
