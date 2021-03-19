@@ -32,24 +32,23 @@ class NimBLEDescriptorCallbacks;
  */
 class NimBLEDescriptor {
 public:
-    uint16_t     getHandle();
-    NimBLEUUID   getUUID();
-    std::string  toString();
+    uint16_t       getHandle();
+    NimBLEUUID     getUUID();
+    std::string    toString();
 
-    void         setCallbacks(NimBLEDescriptorCallbacks* pCallbacks);
+    void           setCallbacks(NimBLEDescriptorCallbacks* pCallbacks);
 
-    size_t       getLength();
-    uint8_t*     getValue();
-    std::string  getStringValue();
+    size_t         getLength();
+    NimBLEAttValue getValue();
 
-    void         setValue(const uint8_t* data, size_t size);
-    void         setValue(const std::string &value);
+    void           setValue(const uint8_t* data, size_t size);
+    void           setValue(const std::string &value);
     /**
      * @brief Convenience template to set the descriptor value to <type\>val.
      * @param [in] s The value to set.
      */
     template<typename T>
-    void         setValue(const T &s) {
+    void setValue(const T &s) {
         setValue((uint8_t*)&s, sizeof(T));
     }
 
@@ -78,7 +77,7 @@ private:
     NimBLEDescriptorCallbacks* m_pCallbacks;
     NimBLECharacteristic*      m_pCharacteristic;
     uint8_t                    m_properties;
-    attr_value_t               m_value;
+    NimBLEAttValue             m_value;
 #ifdef ESP_PLATFORM
     portMUX_TYPE               m_valMux;
 #endif

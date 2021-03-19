@@ -86,7 +86,7 @@ public:
     NimBLEDescriptor* getDescriptorByHandle(uint16_t handle);
 
     NimBLEAttValue    getValue(time_t *timestamp = nullptr);
-    size_t            getDataLength();
+    uint16_t          getDataLength();
     /**
      * @brief A template to convert the characteristic data to <type\>.
      * @tparam T The type to convert the data to.
@@ -99,10 +99,10 @@ public:
     template<typename T>
     T   getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
             if(!skipSizeCheck && m_value.getLength() < sizeof(T)) return T();
-            return *((T *)m_value.getValue());
+            return *((T *)m_value.m_attr_value);
     }
 
-    void              setValue(const uint8_t* data, size_t size);
+    void              setValue(const uint8_t* data, uint16_t size);
     void              setValue(const std::string &value);
     /**
      * @brief Convenience template to set the characteristic value to <type\>val.
@@ -146,11 +146,6 @@ private:
     NimBLEService*                 m_pService;
     NimBLEAttValue                 m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
-#ifdef ESP_PLATFORM
-    portMUX_TYPE                   m_valMux;
-#endif
-    time_t                         m_timestamp;
-
     std::vector<std::pair<uint16_t, uint16_t>>  m_subscribedVec;
 }; // NimBLECharacteristic
 

@@ -52,14 +52,6 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
     m_properties         = properties;
     m_pCallbacks         = &defaultCallback;
     m_pService           = pService;
-    /*(NIMBLE_ATT_INIT_LENGTH > max_len ?
-                                             max_len : NIMBLE_ATT_INIT_LENGTH ,1);
-    m_value.attr_len     = 0;
-    m_value.attr_max_len = max_len;*/
-#ifdef ESP_PLATFORM
-    m_valMux             = portMUX_INITIALIZER_UNLOCKED;
-#endif
-    m_timestamp          = 0;
 } // NimBLECharacteristic
 
 /**
@@ -187,39 +179,19 @@ NimBLEUUID NimBLECharacteristic::getUUID() {
  * @return A std::string containing the current characteristic value.
  */
 NimBLEAttValue NimBLECharacteristic::getValue(time_t *timestamp) {
-#ifdef ESP_PLATFORM
-    portENTER_CRITICAL(&m_valMux);
-    NimBLEAttValue retVal = m_value;
-    if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
+    if (timestamp != nullptr) {
+        m_value.getValue(timestamp);
     }
-    portEXIT_CRITICAL(&m_valMux);
-#else
-    portENTER_CRITICAL();
-    NimBLEAttValue retVal = m_value;
-    if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
-    }
-    portEXIT_CRITICAL();
-#endif
-    return retVal;
+    return m_value;
 }
+
 
 /**
  * @brief Retrieve the the current data length of the characteristic.
  * @return The length of the current characteristic data.
  */
-size_t NimBLECharacteristic::getDataLength() {
-#ifdef ESP_PLATFORM
-    portENTER_CRITICAL(&m_valMux);
-    size_t len = m_value.getLength();
-    portEXIT_CRITICAL(&m_valMux);
-#else
-    portENTER_CRITICAL();
-    size_t len = m_value.getLength();
-    portEXIT_CRITICAL();
-#endif
-    return len;
+uint16_t NimBLECharacteristic::getDataLength() {
+    return m_value.getLength();
 }
 
 
@@ -250,14 +222,14 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
                 }
 #ifdef ESP_PLATFORM
-                portENTER_CRITICAL(&pCharacteristic->m_valMux);
-                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.getValue(),
-                                    pCharacteristic->m_value.getLength());
-                portEXIT_CRITICAL(&pCharacteristic->m_valMux);
+                portENTER_CRITICAL(&pCharacteristic->m_value.m_valMux);
+                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.m_attr_value,
+                                    pCharacteristic->m_value.m_attr_len);
+                portEXIT_CRITICAL(&pCharacteristic->m_value.m_valMux);
 #else
                 portENTER_CRITICAL();
-                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.getValue(),
-                                    pCharacteristic->m_value.getLength());
+                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.m_attr_value,
+                                    pCharacteristic->m_value.m_attr_len);
                 portEXIT_CRITICAL();
 #endif
 
@@ -475,38 +447,14 @@ void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallback
  * @param [in] data The data to set for the characteristic.
  * @param [in] length The length of the data in bytes.
  */
-void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
+void NimBLECharacteristic::setValue(const uint8_t* data, uint16_t length) {
 #if CONFIG_LOG_DEFAULT_LEVEL > 3 || (CONFIG_ENABLE_ARDUINO_DEPENDS && CORE_DEBUG_LEVEL >= 4)
     char* pHex = NimBLEUtils::buildHexData(nullptr, data, length);
     NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
     free(pHex);
 #endif
 
-    if (length > m_value.getMaxLength()) {
-        NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, m_value.getMaxLength());
-        return;
-    }
-
-    uint8_t *res = m_value.checkMemAlloc(length);
-    if (res == nullptr) {
-        NIMBLE_LOGE(LOG_TAG, "Could not allocate space for value");
-        return;
-    }
-
-    time_t t = time(nullptr);
-
-#ifdef ESP_PLATFORM
-    portENTER_CRITICAL(&m_valMux);
     m_value.setValue(data, length);
-    m_timestamp = t;
-    portEXIT_CRITICAL(&m_valMux);
-#else
-    portENTER_CRITICAL();
-    m_value.setValue(data, length);
-    m_timestamp = t;
-    portEXIT_CRITICAL();
-#endif
-
     NIMBLE_LOGD(LOG_TAG, "<< setValue");
 } // setValue
 
