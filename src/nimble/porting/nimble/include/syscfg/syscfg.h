@@ -622,11 +622,11 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_STORE_MAX_BONDS
-#define MYNEWT_VAL_BLE_STORE_MAX_BONDS (3)
+#define MYNEWT_VAL_BLE_STORE_MAX_BONDS (1)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_STORE_MAX_CCCDS
-#define MYNEWT_VAL_BLE_STORE_MAX_CCCDS (8)
+#define MYNEWT_VAL_BLE_STORE_MAX_CCCDS (3)
 #endif
 
 /*** @apache-mynewt-nimble/nimble/host/services/ans */

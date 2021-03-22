@@ -99,7 +99,7 @@ public:
     template<typename T>
     T   getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
             if(!skipSizeCheck && m_value.getLength() < sizeof(T)) return T();
-            return *((T *)m_value.m_attr_value);
+            return *((T *)m_value.getValue(timestamp));
     }
 
     void              setValue(const uint8_t* data, uint16_t size);

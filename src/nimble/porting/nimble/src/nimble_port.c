@@ -39,7 +39,6 @@ void
 nimble_port_init(void)
 {
     void os_msys_init(void);
-    void ble_store_ram_init(void);
 
 #if NIMBLE_CFG_CONTROLLER
     void ble_hci_ram_init(void);
@@ -53,9 +52,6 @@ nimble_port_init(void)
     os_msys_init();
 
     ble_hs_init();
-
-    /* XXX Need to have template for store */
-    ble_store_ram_init();
 
 #if NIMBLE_CFG_CONTROLLER
     hal_timer_init(5, NULL);

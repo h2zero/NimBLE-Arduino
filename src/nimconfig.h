@@ -222,3 +222,9 @@
 #endif
 
 #define NIMBLE_ATT_INIT_LENGTH 20
+
+#if defined __has_include
+#  if __has_include (<Arduino.h>)
+#    define NIMBLE_ARDUINO_AVAILABLE
+#  endif
+#endif

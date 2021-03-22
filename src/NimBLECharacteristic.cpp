@@ -199,15 +199,15 @@ uint16_t NimBLECharacteristic::getDataLength() {
  * @brief STATIC callback to handle events from the NimBLE stack.
  */
 int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
-                                         struct ble_gatt_access_ctxt *ctxt, void *arg)
+                                         ble_gatt_access_ctxt *ctxt, void *arg)
 {
     const ble_uuid_t *uuid;
     int rc;
-    struct ble_gap_conn_desc desc;
+    ble_gap_conn_desc desc;
     NimBLECharacteristic* pCharacteristic = (NimBLECharacteristic*)arg;
 
     NIMBLE_LOGD(LOG_TAG, "Characteristic %s %s event", pCharacteristic->getUUID().toString().c_str(),
-                          ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR ? "Read" : "Write");
+                         ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR ? "Read" : "Write");
 
     uuid = ctxt->chr->uuid;
     if(ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0){
@@ -293,7 +293,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     }
 
     NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d",
-                          event->subscribe.conn_handle, subVal);
+                         event->subscribe.conn_handle, subVal);
 
     if(!event->subscribe.cur_indicate && event->subscribe.prev_indicate) {
        NimBLEDevice::getServer()->clearIndicateWait(event->subscribe.conn_handle);
@@ -444,7 +444,8 @@ void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallback
 void NimBLECharacteristic::setValue(const uint8_t* data, uint16_t length) {
 #if CONFIG_LOG_DEFAULT_LEVEL > 3 || (CONFIG_ENABLE_ARDUINO_DEPENDS && CORE_DEBUG_LEVEL >= 4)
     char* pHex = NimBLEUtils::buildHexData(nullptr, data, length);
-    NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
+    NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s",
+                         length, pHex, getUUID().toString().c_str());
     free(pHex);
 #endif
     NIMBLE_LOGD(LOG_TAG, ">> setValue");
