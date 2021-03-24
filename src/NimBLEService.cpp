@@ -240,6 +240,11 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid
 } // createCharacteristic
 
 
+void NimBLEService::addCharacteristic(NimBLECharacteristic* pCharacteristic) {
+    pCharacteristic->setService(this);
+    m_chrVec.push_back(pCharacteristic);
+}
+
 /**
  * @brief Get a pointer to the characteristic object with the specified UUID.
  * @param [in] uuid The UUID of the characteristic.

@@ -87,18 +87,23 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint3
 NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid, uint32_t properties,
                                                          uint16_t max_len) {
     NimBLEDescriptor* pDescriptor = nullptr;
-    if(uuid == NimBLEUUID(uint16_t(0x2902))) {
-        assert(0 && "0x2902 descriptors cannot be manually created");
-    } else if (uuid == NimBLEUUID(uint16_t(0x2904))) {
-        pDescriptor = new NimBLE2904(this);
+
+    if (uuid == NimBLEUUID(uint16_t(0x2904))) {
+        pDescriptor = new NimBLE2904();
     } else {
-        pDescriptor = new NimBLEDescriptor(uuid, properties, max_len, this);
+        pDescriptor = new NimBLEDescriptor(uuid, properties, max_len);
     }
 
-    m_dscVec.push_back(pDescriptor);
-    return pDescriptor;
-} // createCharacteristic
+    addDescriptor(pDescriptor);
 
+    return pDescriptor;
+} // createDescriptor
+
+
+void NimBLECharacteristic::addDescriptor(NimBLEDescriptor *pDescriptor) {
+    m_dscVec.push_back(pDescriptor);
+    pDescriptor->setCharacteristic(this);
+}
 
 /**
  * @brief Return the BLE Descriptor for the given UUID.
@@ -163,6 +168,11 @@ uint16_t NimBLECharacteristic::getProperties() {
 NimBLEService* NimBLECharacteristic::getService() {
     return m_pService;
 } // getService
+
+
+void NimBLECharacteristic::setService(NimBLEService *pService) {
+    m_pService = pService;
+}
 
 
 /**

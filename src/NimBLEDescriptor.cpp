@@ -30,22 +30,24 @@ static NimBLEDescriptorCallbacks defaultCallbacks;
 /**
  * @brief NimBLEDescriptor constructor.
  */
-NimBLEDescriptor::NimBLEDescriptor(const char* uuid, uint16_t properties, uint16_t max_len,
-                                    NimBLECharacteristic* pCharacteristic)
-: NimBLEDescriptor(NimBLEUUID(uuid), max_len, properties, pCharacteristic) {
+NimBLEDescriptor::NimBLEDescriptor(const char* uuid, uint16_t properties, uint16_t max_len)
+: NimBLEDescriptor(NimBLEUUID(uuid), max_len, properties) {
 }
 
 /**
  * @brief NimBLEDescriptor constructor.
  */
-NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_t max_len,
-                                    NimBLECharacteristic* pCharacteristic)
+NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_t max_len)
 :   m_value(NIMBLE_ATT_INIT_LENGTH > max_len ? max_len : NIMBLE_ATT_INIT_LENGTH, max_len) {
     m_uuid               = uuid;
     m_handle             = NULL_HANDLE;                 // Handle is initially unknown.
-    m_pCharacteristic    = nullptr;                     // No initial characteristic.
-    m_pCallbacks         = &defaultCallbacks;           // No initial callback.
+    m_pCharacteristic    = nullptr;                     // Initial characteristic is null.
+    m_pCallbacks         = &defaultCallbacks;           // Default initial callback.
     m_properties         = 0;
+
+    if(m_uuid == NimBLEUUID(uint16_t(0x2902))) {
+        assert(0 && "0x2902 descriptors cannot be manually created");
+    }
 
     if (properties & BLE_GATT_CHR_F_READ) {             // convert uint16_t properties to uint8_t
         m_properties |= BLE_ATT_F_READ;
@@ -114,6 +116,15 @@ NimBLEUUID NimBLEDescriptor::getUUID() {
 NimBLEAttValue NimBLEDescriptor::getValue() {
     return m_value;
 } // getValue
+
+
+/**
+ * @brief Get the characteristic this descriptor belongs to.
+ * @return A pointer to the characteristic this descriptor belongs to.
+ */
+NimBLECharacteristic* NimBLEDescriptor::getCharacteristic() {
+    return m_pCharacteristic;
+} // getCharacteristic
 
 
 int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
@@ -216,6 +227,14 @@ void NimBLEDescriptor::setValue(const uint8_t* data, size_t length) {
 void NimBLEDescriptor::setValue(const std::string &value) {
     setValue((uint8_t*) value.data(), value.length());
 } // setValue
+
+/**
+ * @brief Set the characteristic this descriptor belongs to.
+ * @param [in] pChar A pointer to the characteristic this descriptior belongs to.
+ */
+void NimBLEDescriptor::setCharacteristic(NimBLECharacteristic* pChar) {
+    m_pCharacteristic = pChar;
+} // setCharacteristic
 
 
 /**

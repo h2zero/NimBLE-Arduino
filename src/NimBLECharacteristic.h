@@ -59,6 +59,20 @@ class NimBLECharacteristicCallbacks;
  */
 class NimBLECharacteristic {
 public:
+    NimBLECharacteristic(const char* uuid,
+                         uint16_t properties =
+                         NIMBLE_PROPERTY::READ |
+                         NIMBLE_PROPERTY::WRITE,
+                         uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN,
+                         NimBLEService* pService = nullptr);
+    NimBLECharacteristic(const NimBLEUUID &uuid,
+                         uint16_t properties =
+                         NIMBLE_PROPERTY::READ |
+                         NIMBLE_PROPERTY::WRITE,
+                         uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN,
+                         NimBLEService* pService = nullptr);
+
+    ~NimBLECharacteristic();
 
     uint16_t          getHandle();
     NimBLEUUID        getUUID();
@@ -80,7 +94,7 @@ public:
                                        NIMBLE_PROPERTY::READ |
                                        NIMBLE_PROPERTY::WRITE,
                                        uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN);
-
+    void              addDescriptor(NimBLEDescriptor *pDescriptor);
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &uuid);
     NimBLEDescriptor* getDescriptorByHandle(uint16_t handle);
@@ -118,22 +132,8 @@ private:
     friend class      NimBLEServer;
     friend class      NimBLEService;
 
-    NimBLECharacteristic(const char* uuid,
-                         uint16_t properties =
-                         NIMBLE_PROPERTY::READ |
-                         NIMBLE_PROPERTY::WRITE,
-                         uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN,
-                         NimBLEService* pService = nullptr);
-    NimBLECharacteristic(const NimBLEUUID &uuid,
-                         uint16_t properties =
-                         NIMBLE_PROPERTY::READ |
-                         NIMBLE_PROPERTY::WRITE,
-                         uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN,
-                         NimBLEService* pService = nullptr);
-
-    ~NimBLECharacteristic();
-
     NimBLEService*  getService();
+    void            setService(NimBLEService *pService);
     uint16_t        getProperties();
     void            setSubscribe(struct ble_gap_event *event);
     static int      handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,

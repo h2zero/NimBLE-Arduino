@@ -34,6 +34,10 @@ class NimBLECharacteristic;
 class NimBLEService {
 public:
 
+    NimBLEService(const char* uuid);
+    NimBLEService(const NimBLEUUID &uuid);
+    ~NimBLEService();
+
     NimBLEServer*         getServer();
 
     NimBLEUUID            getUUID();
@@ -55,6 +59,7 @@ public:
                                                NIMBLE_PROPERTY::WRITE,
                                                uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN);
 
+    void                  addCharacteristic(NimBLECharacteristic* pCharacteristic);
     NimBLECharacteristic* getCharacteristic(const char* uuid, uint16_t instanceId = 0);
     NimBLECharacteristic* getCharacteristic(const NimBLEUUID &uuid, uint16_t instanceId = 0);
     NimBLECharacteristic* getCharacteristicByHandle(uint16_t handle);
@@ -65,9 +70,6 @@ public:
 
 
 private:
-    NimBLEService(const char* uuid);
-    NimBLEService(const NimBLEUUID &uuid);
-    ~NimBLEService();
 
     friend class          NimBLEServer;
     friend class          NimBLEDevice;
