@@ -95,9 +95,20 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid,
         pDescriptor = new NimBLEDescriptor(uuid, properties, max_len, this);
     }
 
-    m_dscVec.push_back(pDescriptor);
+    addDescriptor(pDescriptor);
+
     return pDescriptor;
-} // createCharacteristic
+} // createDescriptor
+
+
+/**
+ * @brief Add a descriptor to the characteristic.
+ * @param [in] A pointer to the descriptor to add.
+ */
+void NimBLECharacteristic::addDescriptor(NimBLEDescriptor *pDescriptor) {
+    pDescriptor->setCharacteristic(this);
+    m_dscVec.push_back(pDescriptor);
+}
 
 
 /**
@@ -163,6 +174,11 @@ uint16_t NimBLECharacteristic::getProperties() {
 NimBLEService* NimBLECharacteristic::getService() {
     return m_pService;
 } // getService
+
+
+void NimBLECharacteristic::setService(NimBLEService *pService) {
+    m_pService = pService;
+}
 
 
 /**

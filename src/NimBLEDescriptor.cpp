@@ -37,6 +37,7 @@ NimBLEDescriptor::NimBLEDescriptor(const char* uuid, uint16_t properties, uint16
 : NimBLEDescriptor(NimBLEUUID(uuid), max_len, properties, pCharacteristic) {
 }
 
+
 /**
  * @brief NimBLEDescriptor constructor.
  */
@@ -47,7 +48,7 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_
     m_value.attr_len     = 0;                           // Initial length is 0.
     m_value.attr_max_len = max_len;                     // Maximum length of the data.
     m_handle             = NULL_HANDLE;                 // Handle is initially unknown.
-    m_pCharacteristic    = nullptr;                     // No initial characteristic.
+    m_pCharacteristic    = pCharacteristic;
     m_pCallbacks         = &defaultCallbacks;           // No initial callback.
     m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
     m_valMux             = portMUX_INITIALIZER_UNLOCKED;
@@ -122,6 +123,7 @@ uint8_t* NimBLEDescriptor::getValue() {
     return m_value.attr_value;
 } // getValue
 
+
 /**
  * @brief Get the value of this descriptor as a string.
  * @return A std::string instance containing a copy of the descriptor's value.
@@ -130,9 +132,18 @@ std::string NimBLEDescriptor::getStringValue() {
     return std::string((char *) m_value.attr_value, m_value.attr_len);
 }
 
+
+/**
+ * @brief Get the characteristic this descriptor belongs to.
+ * @return A pointer to the characteristic this descriptor belongs to.
+ */
+NimBLECharacteristic* NimBLEDescriptor::getCharacteristic() {
+    return m_pCharacteristic;
+} // getCharacteristic
+
+
 int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
-                             struct ble_gatt_access_ctxt *ctxt,
-                                     void *arg) {
+                                     struct ble_gatt_access_ctxt *ctxt, void *arg) {
     const ble_uuid_t *uuid;
     int rc;
     NimBLEDescriptor* pDescriptor = (NimBLEDescriptor*)arg;
@@ -236,6 +247,14 @@ void NimBLEDescriptor::setValue(const uint8_t* data, size_t length) {
 void NimBLEDescriptor::setValue(const std::string &value) {
     setValue((uint8_t*) value.data(), value.length());
 } // setValue
+
+/**
+ * @brief Set the characteristic this descriptor belongs to.
+ * @param [in] pChar A pointer to the characteristic this descriptior belongs to.
+ */
+void NimBLEDescriptor::setCharacteristic(NimBLECharacteristic* pChar) {
+    m_pCharacteristic = pChar;
+} // setCharacteristic
 
 
 /**
