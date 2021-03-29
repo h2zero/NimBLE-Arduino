@@ -478,7 +478,7 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_HS_LOG_LVL
-#define MYNEWT_VAL_BLE_HS_LOG_LVL (1)
+#define MYNEWT_VAL_BLE_HS_LOG_LVL (5)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_HS_LOG_MOD

@@ -16,8 +16,6 @@
 #include <pthread.h>
 #endif
 #include <stdint.h>
-#include <string>
-
 
 
 /**
@@ -26,7 +24,7 @@
 class FreeRTOS {
 public:
     static void sleep(uint32_t ms);
-    static void startTask(void task(void*), std::string taskName, void* param = nullptr, uint32_t stackSize = 2048);
+    static void startTask(void task(void*), const char *taskName, void* param = nullptr, uint32_t stackSize = 2048);
     static void deleteTask(TaskHandle_t pTask = nullptr);
 
     static uint32_t getTimeSinceStart();
@@ -36,17 +34,16 @@ public:
  */
     class Semaphore {
     public:
-        Semaphore(std::string owner = "<Unknown>");
+        Semaphore(const char* = nullptr);
         ~Semaphore();
         void        give();
         void        give(uint32_t value);
         void        giveFromISR();
-        void        setName(std::string name);
-        bool        take(std::string owner = "<Unknown>");
-        bool        take(uint32_t timeoutMs, std::string owner = "<Unknown>");
-        std::string toString();
-        bool        timedWait(std::string owner = "<Unknown>", uint32_t timeoutMs = portMAX_DELAY);
-        uint32_t    wait(std::string owner = "<Unknown>");
+        void        setName(const char *name);
+        bool        take(const char *owner = nullptr);
+        bool        take(uint32_t timeoutMs, const char *owner = nullptr);
+        bool        timedWait(const char *owner = nullptr, uint32_t timeoutMs = portMAX_DELAY);
+        uint32_t    wait(const char *owner = nullptr);
         /**
          * @brief Get the value of the semaphore.
          * @return The value stored if the semaphore was given with give(value);
@@ -56,8 +53,7 @@ public:
     private:
         SemaphoreHandle_t m_semaphore;
 
-        std::string       m_name;
-        std::string       m_owner;
+        const char*       m_name;
         uint32_t          m_value;
 #ifdef ESP_PLATFORM
         pthread_mutex_t   m_pthread_mutex;
