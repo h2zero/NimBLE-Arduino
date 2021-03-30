@@ -24,16 +24,17 @@
 
 #if NIMBLE_CFG_CONTROLLER
 #define LL_TASK_STACK_SIZE 90
-static StackType_t ll_xStack[ LL_TASK_STACK_SIZE ] __attribute__((aligned(8)));
+static StackType_t ll_xStack[ LL_TASK_STACK_SIZE ];
 static StaticTask_t ll_xTaskBuffer;
 static TaskHandle_t ll_task_h;
 #endif
 
 #ifndef ESP_PLATFORM
-static StackType_t hs_xStack[ NIMBLE_HS_TASK_STACK_SIZE ] __attribute__((aligned(8)));
+static StackType_t hs_xStack[ NIMBLE_HS_TASK_STACK_SIZE ];
 static StaticTask_t hs_xTaskBuffer;
-static TaskHandle_t host_task_h;
 #endif
+
+static TaskHandle_t host_task_h;
 
 void
 nimble_port_freertos_init(TaskFunction_t host_task_fn)
