@@ -49,6 +49,7 @@ public:
 
     NimBLEAttValue& operator =(const NimBLEAttValue & source);
     operator std::string() { return std::string((char*)m_attr_value, m_attr_len); }
+    operator const uint8_t*() { return m_attr_value; }
 
     template<typename T>
     operator std::vector<T>() { return std::vector<T>(*m_attr_value, m_attr_len); }

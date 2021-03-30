@@ -53,17 +53,40 @@
 #define NIMBLE_LOGC( tag, format, ... ) MODLOG_DFLT(CRITICAL,   "CRIT %s: "#format"\n",tag,##__VA_ARGS__)
 
 #elif ESP_PLATFORM
-#define NIMBLE_LOGE( tag, format, ... ) MODLOG_DFLT(ERROR,      "\033[0;31mE %s: "#format"\033[0m\n",tag,##__VA_ARGS__)
-#define NIMBLE_LOGW( tag, format, ... ) MODLOG_DFLT(WARN,       "\033[0;33mW %s: "#format"\033[0m\n",tag,##__VA_ARGS__)
-#define NIMBLE_LOGI( tag, format, ... ) MODLOG_DFLT(INFO,       "\033[0;32mI %s: "#format"\033[0m\n",tag,##__VA_ARGS__)
-#define NIMBLE_LOGD( tag, format, ... ) MODLOG_DFLT(DEBUG,      "D %s: "#format"\n",tag,##__VA_ARGS__)
-#define NIMBLE_LOGC( tag, format, ... ) MODLOG_DFLT(CRITICAL,   "\033[1;31mCRIT %s: "#format"\033[0m\n",tag,##__VA_ARGS__)
+
+#include "esp_log.h"
+
+#define NIMBLE_LOGE(tag, format, ...) ESP_LOGE(tag, format, ##__VA_ARGS__)
+#define NIMBLE_LOGW(tag, format, ...) ESP_LOGW(tag, format, ##__VA_ARGS__)
+#define NIMBLE_LOGI(tag, format, ...) ESP_LOGI(tag, format, ##__VA_ARGS__)
+#define NIMBLE_LOGD(tag, format, ...) ESP_LOGD(tag, format, ##__VA_ARGS__)
+#define NIMBLE_LOGC(tag, format, ...) ESP_LOGE(tag, format, ##__VA_ARGS__)
 
 #else
-#define NIMBLE_LOGE( tag, format, ... ) MODLOG_DFLT(ERROR,      "E %s: "#format"\n",tag,##__VA_ARGS__)
-#define NIMBLE_LOGW( tag, format, ... ) MODLOG_DFLT(WARN,       "W %s: "#format"\n",tag,##__VA_ARGS__)
-#define NIMBLE_LOGI( tag, format, ... ) MODLOG_DFLT(INFO,       "I %s: "#format"\n",tag,##__VA_ARGS__)
+#if NIMBLE_CPP_DEBUG_LEVEL >= 4
 #define NIMBLE_LOGD( tag, format, ... ) MODLOG_DFLT(DEBUG,      "D %s: "#format"\n",tag,##__VA_ARGS__)
+#else
+#define NIMBLE_LOGD( tag, format, ... ) (void)tag
+#endif
+
+#if NIMBLE_CPP_DEBUG_LEVEL >= 3
+#define NIMBLE_LOGI( tag, format, ... ) MODLOG_DFLT(INFO,       "I %s: "#format"\n",tag,##__VA_ARGS__)
+#else
+#define NIMBLE_LOGI( tag, format, ... ) (void)tag
+#endif
+
+#if NIMBLE_CPP_DEBUG_LEVEL >= 2
+#define NIMBLE_LOGW( tag, format, ... ) MODLOG_DFLT(WARN,       "W %s: "#format"\n",tag,##__VA_ARGS__)
+#else
+#define NIMBLE_LOGW( tag, format, ... ) (void)tag
+#endif
+
+#if NIMBLE_CPP_DEBUG_LEVEL >= 1
+#define NIMBLE_LOGE( tag, format, ... ) MODLOG_DFLT(ERROR,      "E %s: "#format"\n",tag,##__VA_ARGS__)
+#else
+#define NIMBLE_LOGE( tag, format, ... ) (void)tag
+#endif
+
 #define NIMBLE_LOGC( tag, format, ... ) MODLOG_DFLT(CRITICAL,   "CRIT %s: "#format"\n",tag,##__VA_ARGS__)
 #endif /*CONFIG_ENABLE_ARDUINO_DEPENDS*/
 

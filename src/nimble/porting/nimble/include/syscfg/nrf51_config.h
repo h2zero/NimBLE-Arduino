@@ -16,10 +16,12 @@
 #define MYNEWT_VAL(_name)                       MYNEWT_VAL_ ## _name
 #define MYNEWT_VAL_CHOICE(_name, _val)          MYNEWT_VAL_ ## _name ## __ ## _val
 
+#ifndef CONFIG_BT_NIMBLE_TASK_STACK_SIZE
+#define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 1600
+#endif
 
 #define MYNEWT_VAL_TIMER_5 (1)
 #define MYNEWT_VAL_OS_CPUTIME_TIMER_NUM (5)
-
 
 /*** @apache-mynewt-core/kernel/os */
 

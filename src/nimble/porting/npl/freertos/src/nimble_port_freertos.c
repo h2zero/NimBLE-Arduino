@@ -29,10 +29,11 @@ static StaticTask_t ll_xTaskBuffer;
 static TaskHandle_t ll_task_h;
 #endif
 
-#define HS_TASK_STACK_SIZE 410
-static StackType_t hs_xStack[ HS_TASK_STACK_SIZE ] __attribute__((aligned(8)));
+#ifndef ESP_PLATFORM
+static StackType_t hs_xStack[ NIMBLE_HS_TASK_STACK_SIZE ] __attribute__((aligned(8)));
 static StaticTask_t hs_xTaskBuffer;
 static TaskHandle_t host_task_h;
+#endif
 
 void
 nimble_port_freertos_init(TaskFunction_t host_task_fn)
@@ -57,7 +58,7 @@ nimble_port_freertos_init(TaskFunction_t host_task_fn)
     xTaskCreatePinnedToCore(host_task_fn, "ble", NIMBLE_STACK_SIZE,
                             NULL, (configMAX_PRIORITIES - 4), &host_task_h, NIMBLE_CORE);
 #else
-    host_task_h = xTaskCreateStatic(host_task_fn, "ble", HS_TASK_STACK_SIZE,
+    host_task_h = xTaskCreateStatic(host_task_fn, "ble", NIMBLE_HS_TASK_STACK_SIZE,
                                     NULL, (configMAX_PRIORITIES - 1), hs_xStack, &hs_xTaskBuffer);
 #endif
 }
