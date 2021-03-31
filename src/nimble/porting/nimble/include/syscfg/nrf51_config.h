@@ -1,5 +1,12 @@
 #ifndef __NRF51_CONFIG__
 #define __NRF51_CONFIG__
+
+#if defined __has_include
+#  if __has_include ("custom_config.h")
+#    include "custom_config.h"
+#  endif
+#endif
+
 #include "nimconfig.h"
 
 #ifndef NRF51
@@ -17,12 +24,12 @@
 #define MYNEWT_VAL_CHOICE(_name, _val)          MYNEWT_VAL_ ## _name ## __ ## _val
 
 #if defined(CONFIG_BT_NIMBLE_TASK_STACK_SIZE)
-#if CONFIG_BT_NIMBLE_TASK_STACK_SIZE > 2048
-#undef CONFIG_BT_NIMBLE_TASK_STACK_SIZE
-#define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 2048
-#endif
+#  if CONFIG_BT_NIMBLE_TASK_STACK_SIZE > 2048
+#    undef CONFIG_BT_NIMBLE_TASK_STACK_SIZE
+#    define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 2048
+#  endif
 #else
-#define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 1536
+#  define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 1600
 #endif
 
 #define MYNEWT_VAL_TIMER_5 (1)
@@ -298,6 +305,22 @@
 
 #ifndef MYNEWT_VAL_BLE_LL_NUM_COMP_PKT_ITVL_MS
 #define MYNEWT_VAL_BLE_LL_NUM_COMP_PKT_ITVL_MS (2000)
+#endif
+
+#ifndef MYNEWT_VAL_BLE_LL_SCHED_AUX_MAFS_DELAY
+#define MYNEWT_VAL_BLE_LL_SCHED_AUX_MAFS_DELAY (0)
+#endif
+
+#ifndef MYNEWT_VAL_BLE_LL_SCHED_AUX_CHAIN_MAFS_DELAY
+#define MYNEWT_VAL_BLE_LL_SCHED_AUX_CHAIN_MAFS_DELAY (0)
+#endif
+
+#ifndef MYNEWT_VAL_BLE_LL_SCHED_SCAN_AUX_PDU_LEN
+#define MYNEWT_VAL_BLE_LL_SCHED_SCAN_AUX_PDU_LEN (41)
+#endif
+
+#ifndef MYNEWT_VAL_BLE_LL_SCHED_SCAN_SYNC_PDU_LEN
+#define MYNEWT_VAL_BLE_LL_SCHED_SCAN_SYNC_PDU_LEN (32)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LP_CLOCK

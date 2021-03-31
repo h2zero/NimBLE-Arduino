@@ -50,9 +50,9 @@ public:
     NimBLEAttValue& operator =(const NimBLEAttValue & source);
     operator std::string() { return std::string((char*)m_attr_value, m_attr_len); }
     operator const uint8_t*() { return m_attr_value; }
-
     template<typename T>
     operator std::vector<T>() { return std::vector<T>(*m_attr_value, m_attr_len); }
+
 #ifdef NIMBLE_ARDUINO_AVAILABLE
     operator String() { return String((char*)m_attr_value); }
 #endif
@@ -157,7 +157,8 @@ inline bool NimBLEAttValue::setValue(const uint8_t *value, uint16_t len) {
         unlock();
         return true;
     }
-        NIMBLE_LOGE("NimBLEAttValue", "realloc failed len=%u, max=%u", len, m_attr_max_len);
+
+    NIMBLE_LOGE("NimBLEAttValue", "realloc failed len=%u, max=%u", len, m_attr_max_len);
     return false;
 }
 
