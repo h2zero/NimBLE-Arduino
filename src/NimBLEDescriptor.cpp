@@ -169,7 +169,7 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                     if((len + next->om_len) > pDescriptor->m_value.attr_max_len) {
                         return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                     }
-                    memcpy(&buf[len-1], next->om_data, next->om_len);
+                    memcpy(&buf[len], next->om_data, next->om_len);
                     len += next->om_len;
                     next = SLIST_NEXT(next, om_next);
                 }
