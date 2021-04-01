@@ -316,6 +316,8 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
             break;
 
         case BLE_HS_EALREADY:
+            // Clear the cache if already scanning in case an advertiser was missed.
+            clearDuplicateCache();
             break;
 
         case BLE_HS_EBUSY:
@@ -399,6 +401,14 @@ bool NimBLEScan::stop() {
 
 
 /**
+ * @brief Clears the duplicate scan filter cache.
+ */
+void NimBLEScan::clearDuplicateCache() {
+    esp_ble_scan_dupilcate_list_flush();
+}
+
+
+/**
  * @brief Delete peer device from the scan results vector.
  * @param [in] address The address of the device to delete from the results.
  * @details After disconnecting, it may be required in the case we were connected to a device without a public address.
@@ -453,6 +463,7 @@ void NimBLEScan::clearResults() {
         delete it;
     }
     m_scanResults.m_advertisedDevicesVector.clear();
+    clearDuplicateCache();
 }
 
 
