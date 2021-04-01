@@ -74,6 +74,7 @@ NimBLEClient::NimBLEClient(const NimBLEAddress &peerAddress) : m_peerAddress(pee
     m_pConnParams.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN; // Minimum length of connection event in 0.625ms units
     m_pConnParams.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN; // Maximum length of connection event in 0.625ms units
 
+    memset(&m_dcTimer, 0, sizeof(m_dcTimer));
     ble_npl_callout_init(&m_dcTimer, nimble_port_get_dflt_eventq(),
                          NimBLEClient::dcTimerCb, this);
 } // NimBLEClient
