@@ -32,6 +32,7 @@
 #include "base64/base64.h"
 #include "../include/store/config/ble_store_config.h"
 #include "ble_store_config_priv.h"
+#include "ble_bond_nvs/ble_bond_nvs.h"
 
 extern int conf_save_one(const char *name, char *value);
 
@@ -165,7 +166,8 @@ ble_store_config_persist_sec_set(const char *setting_name,
 
     ble_store_config_serialize_arr(secs, sizeof *secs, num_secs,
                                    buf, sizeof buf);
-    rc = conf_save_one(setting_name, buf);
+
+    rc = ble_bond_nvs_save_entry(setting_name, buf);
     if (rc != 0) {
         return BLE_HS_ESTORE_FAIL;
     }
@@ -214,15 +216,14 @@ ble_store_config_persist_cccds(void)
                                    ble_store_config_num_cccds,
                                    buf,
                                    sizeof buf);
-    rc = conf_save_one("ble_hs/cccd", buf);
+
+    rc = ble_bond_nvs_save_entry("ble_hs/cccd", buf);
     if (rc != 0) {
         return BLE_HS_ESTORE_FAIL;
     }
 
     return 0;
 }
-
-extern char *conf_restore_one(uint8_t index, uint32_t *val_addr);
 
 void
 ble_store_config_conf_init(void)
@@ -232,7 +233,7 @@ ble_store_config_conf_init(void)
     uint32_t val_addr = 0;
 
     do {
-        addr = conf_restore_one(index, &val_addr);
+        addr = ble_bond_nvs_get_entry(index, &val_addr);
 
         if (addr) {
             ble_store_config_conf_set( 1, &addr, (char*)val_addr);
