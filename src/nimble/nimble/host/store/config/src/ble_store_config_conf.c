@@ -231,12 +231,13 @@ ble_store_config_conf_init(void)
     char *addr = NULL;
     uint8_t index = 0;
     uint32_t val_addr = 0;
+    char *key_string = NULL;
 
     do {
-        addr = ble_bond_nvs_get_entry(index, &val_addr);
+        addr = ble_bond_nvs_get_entry(index, &val_addr, &key_string);
 
         if (addr) {
-            ble_store_config_conf_set( 1, &addr, (char*)val_addr);
+            ble_store_config_conf_set( 1, &key_string, (char*)val_addr);
         } else {
             break;
         }
