@@ -242,9 +242,7 @@ ble_store_config_conf_init(void)
             break;
         }
 
-        index++;
-
-    } while (addr);
+    } while (addr != 0 && ++index < 3);
  /*   int rc;
 
     rc = conf_register(&ble_store_config_conf_handler);
