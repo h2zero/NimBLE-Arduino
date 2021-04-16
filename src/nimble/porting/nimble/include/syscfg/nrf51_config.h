@@ -46,7 +46,7 @@
 #endif
 
 #ifndef CONFIG_BT_NIMBLE_LOG_LEVEL
-#define CONFIG_BT_NIMBLE_LOG_LEVEL 0
+#define CONFIG_BT_NIMBLE_LOG_LEVEL 5
 #endif
 
 #ifndef CONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED
@@ -216,7 +216,7 @@
 
 /* Overridden by @apache-mynewt-nimble/nimble/controller (defined by @apache-mynewt-nimble/nimble/controller) */
 #ifndef MYNEWT_VAL_BLE_HW_WHITELIST_ENABLE
-#define MYNEWT_VAL_BLE_HW_WHITELIST_ENABLE (0)
+#define MYNEWT_VAL_BLE_HW_WHITELIST_ENABLE (1)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_ADD_STRICT_SCHED_PERIODS
@@ -318,7 +318,7 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_RESOLV_LIST_SIZE
-#define MYNEWT_VAL_BLE_LL_RESOLV_LIST_SIZE (4)
+#define MYNEWT_VAL_BLE_LL_RESOLV_LIST_SIZE (1)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_RNG_BUFSIZE

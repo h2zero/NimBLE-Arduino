@@ -17,6 +17,10 @@
  * under the License.
  */
 
+/*
+ * Modified work Copyright (c) 2021 Ryan Powell.
+ */
+
 #ifndef ESP_PLATFORM
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
@@ -228,7 +232,25 @@ ble_store_config_persist_cccds(void)
 void
 ble_store_config_conf_init(void)
 {
-    char *addr = NULL;
+    uint32_t val_addr = 0;
+    char *key_string = NULL;
+
+    if (ble_bond_nvs_get_entry(our_sec, &val_addr)) {
+        *key_string = "our_addr";
+        ble_store_config_conf_set( 1, &key_string, (char*)val_addr);
+    }
+
+    if (ble_bond_nvs_get_entry(peer_sec, &val_addr)) {
+        *key_string = "peer_addr";
+        ble_store_config_conf_set( 1, &key_string, (char*)val_addr);
+    }
+
+    if (ble_bond_nvs_get_entry(cccd, &val_addr)) {
+        *key_string = "cccd";
+        ble_store_config_conf_set( 1, &key_string, (char*)val_addr);
+    }
+
+/*    char *addr = NULL;
     uint8_t index = 0;
     uint32_t val_addr = 0;
     char *key_string = NULL;
@@ -242,7 +264,7 @@ ble_store_config_conf_init(void)
             break;
         }
 
-    } while (addr != 0 && ++index < 3);
+    } while (addr != 0 && ++index < 3);*/
  /*   int rc;
 
     rc = conf_register(&ble_store_config_conf_handler);
