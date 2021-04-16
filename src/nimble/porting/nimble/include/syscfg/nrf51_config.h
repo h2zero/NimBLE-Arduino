@@ -1,6 +1,10 @@
 #ifndef __NRF51_CONFIG__
 #define __NRF51_CONFIG__
 
+#ifndef NRF51
+#error NRF51 not defined
+#else
+
 #if defined __has_include
 #  if __has_include ("custom_config.h")
 #    include "custom_config.h"
@@ -65,11 +69,6 @@
 #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #endif
 
-//#include "nimconfig.h"
-
-#ifndef NRF51
-#error NRF51 not defined
-#else
 
 /**
  * This macro exists to ensure code includes this header when needed.  If code
@@ -318,7 +317,7 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_RESOLV_LIST_SIZE
-#define MYNEWT_VAL_BLE_LL_RESOLV_LIST_SIZE (1)
+#define MYNEWT_VAL_BLE_LL_RESOLV_LIST_SIZE (4)
 #endif
 
 #ifndef MYNEWT_VAL_BLE_LL_RNG_BUFSIZE

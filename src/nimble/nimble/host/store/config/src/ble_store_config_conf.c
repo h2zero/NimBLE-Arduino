@@ -38,11 +38,10 @@
 #include "ble_store_config_priv.h"
 #include "ble_bond_nvs/ble_bond_nvs.h"
 
-extern int conf_save_one(const char *name, char *value);
-
+/*
 static int
 ble_store_config_conf_set(int argc, char **argv, char *val);
-/*static int
+static int
 ble_store_config_conf_export(void (*func)(char *name, char *val),
                              enum conf_export_tgt tgt);
 
@@ -94,7 +93,7 @@ ble_store_config_deserialize_arr(const char *enc,
     *out_num_objs = len / obj_sz;
     return 0;
 }
-
+/*
 static int
 ble_store_config_conf_set(int argc, char **argv, char *val)
 {
@@ -107,6 +106,7 @@ ble_store_config_conf_set(int argc, char **argv, char *val)
                     ble_store_config_our_secs,
                     sizeof *ble_store_config_our_secs,
                     &ble_store_config_num_our_secs);
+            printf("\nloading: %s %s rc=%d\n", *argv, val, rc);
             return rc;
         } else if (strcmp(argv[0], "peer_sec") == 0) {
             rc = ble_store_config_deserialize_arr(
@@ -114,6 +114,7 @@ ble_store_config_conf_set(int argc, char **argv, char *val)
                     ble_store_config_peer_secs,
                     sizeof *ble_store_config_peer_secs,
                     &ble_store_config_num_peer_secs);
+            printf("\nloading: %s %s rc=%d\n", *argv, val, rc);
             return rc;
         } else if (strcmp(argv[0], "cccd") == 0) {
             rc = ble_store_config_deserialize_arr(
@@ -121,12 +122,13 @@ ble_store_config_conf_set(int argc, char **argv, char *val)
                     ble_store_config_cccds,
                     sizeof *ble_store_config_cccds,
                     &ble_store_config_num_cccds);
+            printf("\nloading: %s %s rc=%d\n", *argv, val, rc);
             return rc;
         }
     }
     return OS_ENOENT;
 }
-/*
+
 static int
 ble_store_config_conf_export(void (*func)(char *name, char *val),
                              enum conf_export_tgt tgt)
@@ -161,7 +163,7 @@ ble_store_config_conf_export(void (*func)(char *name, char *val),
 }
 */
 static int
-ble_store_config_persist_sec_set(const char *setting_name,
+ble_store_config_persist_sec_set(uint32_t setting_name,
                                  const struct ble_store_value_sec *secs,
                                  int num_secs)
 {
@@ -184,7 +186,7 @@ ble_store_config_persist_our_secs(void)
 {
     int rc;
 
-    rc = ble_store_config_persist_sec_set("ble_hs/our_sec",
+    rc = ble_store_config_persist_sec_set(our_sec,
                                           ble_store_config_our_secs,
                                           ble_store_config_num_our_secs);
     if (rc != 0) {
@@ -199,7 +201,7 @@ ble_store_config_persist_peer_secs(void)
 {
     int rc;
 
-    rc = ble_store_config_persist_sec_set("ble_hs/peer_sec",
+    rc = ble_store_config_persist_sec_set(peer_sec,
                                           ble_store_config_peer_secs,
                                           ble_store_config_num_peer_secs);
     if (rc != 0) {
@@ -221,7 +223,7 @@ ble_store_config_persist_cccds(void)
                                    buf,
                                    sizeof buf);
 
-    rc = ble_bond_nvs_save_entry("ble_hs/cccd", buf);
+    rc = ble_bond_nvs_save_entry(cccd, buf);
     if (rc != 0) {
         return BLE_HS_ESTORE_FAIL;
     }
@@ -233,38 +235,59 @@ void
 ble_store_config_conf_init(void)
 {
     uint32_t val_addr = 0;
-    char *key_string = NULL;
+    int rc = 0;
 
-    if (ble_bond_nvs_get_entry(our_sec, &val_addr)) {
-        *key_string = "our_addr";
-        ble_store_config_conf_set( 1, &key_string, (char*)val_addr);
-    }
-
-    if (ble_bond_nvs_get_entry(peer_sec, &val_addr)) {
-        *key_string = "peer_addr";
-        ble_store_config_conf_set( 1, &key_string, (char*)val_addr);
-    }
-
-    if (ble_bond_nvs_get_entry(cccd, &val_addr)) {
-        *key_string = "cccd";
-        ble_store_config_conf_set( 1, &key_string, (char*)val_addr);
-    }
-
-/*    char *addr = NULL;
-    uint8_t index = 0;
-    uint32_t val_addr = 0;
-    char *key_string = NULL;
-
-    do {
-        addr = ble_bond_nvs_get_entry(index, &val_addr, &key_string);
-
-        if (addr) {
-            ble_store_config_conf_set( 1, &key_string, (char*)val_addr);
-        } else {
-            break;
+    rc = ble_bond_nvs_get_entry(our_sec, &val_addr);
+    if (rc == 0) {
+        rc = ble_store_config_deserialize_arr(
+                (char*)val_addr,
+                ble_store_config_our_secs,
+                sizeof *ble_store_config_our_secs,
+                &ble_store_config_num_our_secs);
+        if (rc != 0) {
+            printf("our_sec deserialize error rc=%d\n", rc);
+            return;
         }
 
-    } while (addr != 0 && ++index < 3);*/
+        rc = ble_bond_nvs_get_entry(peer_sec, &val_addr);
+        if (rc == 0) {
+            rc = ble_store_config_deserialize_arr(
+                    (char*)val_addr,
+                    ble_store_config_peer_secs,
+                    sizeof *ble_store_config_peer_secs,
+                    &ble_store_config_num_peer_secs);
+            if (rc != 0) {
+                printf("peer_sec deserialize error rc=%d\n", rc);
+                return;
+            }
+
+        } else {
+            /* If we have a security entry for our security but not a peer
+             * we should assume something wrong with the store so delete it.
+             */
+            printf("peer info not found\n");
+            ble_store_clear();
+            return;
+        }
+
+        rc = ble_bond_nvs_get_entry(cccd, &val_addr);
+        if (rc == 0) {
+            rc = ble_store_config_deserialize_arr(
+                    (char*)val_addr,
+                    ble_store_config_cccds,
+                    sizeof *ble_store_config_cccds,
+                    &ble_store_config_num_cccds);
+            if (rc != 0) {
+                printf("cccd deserialize error rc=%d\n", rc);
+                return;
+            }
+        }
+    } else {
+        printf("bond info not found\n");
+    }
+
+    ble_bond_nvs_dump();
+
  /*   int rc;
 
     rc = conf_register(&ble_store_config_conf_handler);
