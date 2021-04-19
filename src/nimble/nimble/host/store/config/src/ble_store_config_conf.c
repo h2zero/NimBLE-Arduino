@@ -28,7 +28,7 @@
 #if MYNEWT_VAL(BLE_STORE_CONFIG_PERSIST)
 
 #include <inttypes.h>
-#include <string.h>
+//#include <string.h>
 
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
 #include "../../../include/host/ble_hs.h"
@@ -36,7 +36,7 @@
 #include "base64/base64.h"
 #include "../include/store/config/ble_store_config.h"
 #include "ble_store_config_priv.h"
-#include "ble_bond_nvs/ble_bond_nvs.h"
+#include "ble_bond_nvs.h"
 
 /*
 static int
@@ -245,7 +245,7 @@ ble_store_config_conf_init(void)
                 sizeof *ble_store_config_our_secs,
                 &ble_store_config_num_our_secs);
         if (rc != 0) {
-            printf("our_sec deserialize error rc=%d\n", rc);
+             BLE_HS_LOG(ERROR, "our_sec restore error rc=%d\n", rc);
             return;
         }
 
@@ -257,7 +257,7 @@ ble_store_config_conf_init(void)
                     sizeof *ble_store_config_peer_secs,
                     &ble_store_config_num_peer_secs);
             if (rc != 0) {
-                printf("peer_sec deserialize error rc=%d\n", rc);
+                 BLE_HS_LOG(ERROR, "peer_sec restore error rc=%d\n", rc);
                 return;
             }
 
@@ -265,7 +265,7 @@ ble_store_config_conf_init(void)
             /* If we have a security entry for our security but not a peer
              * we should assume something wrong with the store so delete it.
              */
-            printf("peer info not found\n");
+            BLE_HS_LOG(ERROR, "peer info not found\n");
             ble_store_clear();
             return;
         }
@@ -278,15 +278,11 @@ ble_store_config_conf_init(void)
                     sizeof *ble_store_config_cccds,
                     &ble_store_config_num_cccds);
             if (rc != 0) {
-                printf("cccd deserialize error rc=%d\n", rc);
+                 BLE_HS_LOG(ERROR, "cccd restore error rc=%d\n", rc);
                 return;
             }
         }
-    } else {
-        printf("bond info not found\n");
     }
-
-    ble_bond_nvs_dump();
 
  /*   int rc;
 
