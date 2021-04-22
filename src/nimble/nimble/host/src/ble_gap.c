@@ -2056,7 +2056,7 @@ ble_gap_timer(void)
 
     min_ticks = min(master_ticks, update_ticks);
 
-#if NIMBLE_BLE_ADVERTISE &&  !MYNEWT_VAL(BLE_EXT_ADV)
+#if NIMBLE_BLE_ADVERTISE && !MYNEWT_VAL(BLE_EXT_ADV)
     min_ticks = min(min_ticks, ble_gap_slave_timer());
 #endif
 

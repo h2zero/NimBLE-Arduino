@@ -43,9 +43,6 @@ nimble_port_init(void)
 #if NIMBLE_CFG_CONTROLLER
     void ble_hci_ram_init(void);
 #endif
-#ifdef ESP_PLATFORM
-    esp_log_level_set("NimBLE", LOG_LOCAL_LEVEL);
-#endif
     /* Initialize default event queue */
     ble_npl_eventq_init(&g_eventq_dflt);
 

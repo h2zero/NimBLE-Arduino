@@ -21,8 +21,15 @@
 #define H_MODLOG_
 
 #include <stdio.h>
-#include <stdarg.h>
+
 #include "../log/log.h"
+#include "../log_common/log_common.h"
+
+#ifdef ESP_PLATFORM
+#include "esp_log.h"
+#include <stdio.h>
+#include <stdarg.h>
+#endif
 
 #define MODLOG_MODULE_DFLT 255
 
@@ -38,7 +45,7 @@ modlog_dummy(const char *msg, ...)
 #include "esp_log.h"
 
 #define MODLOG_ESP_LOCAL(level, ml_msg_, ...) do { \
-    if (LOG_LOCAL_LEVEL >= level) esp_log_write(level, "NimBLE", ml_msg_, ##__VA_ARGS__); \
+    if (MYNEWT_VAL(BLE_HS_LOG_LVL) <= level) esp_log_write((esp_log_level_t)level, "NimBLE", ml_msg_, ##__VA_ARGS__); \
 } while(0)
 
 #ifdef ARDUINO_ARCH_ESP32
@@ -59,21 +66,21 @@ modlog_dummy(const char *msg, ...)
 #else
 
 #define MODLOG_DEBUG(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(ESP_LOG_DEBUG, ml_msg_, ##__VA_ARGS__)
+    MODLOG_ESP_LOCAL(LOG_LEVEL_DEBUG, ml_msg_, ##__VA_ARGS__)
 
 #define MODLOG_INFO(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(ESP_LOG_INFO, ml_msg_, ##__VA_ARGS__)
+    MODLOG_ESP_LOCAL(LOG_LEVEL_INFO, ml_msg_, ##__VA_ARGS__)
 
 #define MODLOG_WARN(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(ESP_LOG_WARN, ml_msg_, ##__VA_ARGS__)
+    MODLOG_ESP_LOCAL(LOG_LEVEL_WARN, ml_msg_, ##__VA_ARGS__)
 
 #endif
 
 #define MODLOG_ERROR(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(ESP_LOG_ERROR, ml_msg_, ##__VA_ARGS__)
+    MODLOG_ESP_LOCAL(LOG_LEVEL_ERROR, ml_msg_, ##__VA_ARGS__)
 
 #define MODLOG_CRITICAL(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(ESP_LOG_ERROR, ml_msg_, ##__VA_ARGS__)
+    MODLOG_ESP_LOCAL(LOG_LEVEL_CRITICAL, ml_msg_, ##__VA_ARGS__)
 
 #else
 #include "nimble/console/console.h"
