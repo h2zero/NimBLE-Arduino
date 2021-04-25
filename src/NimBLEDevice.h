@@ -142,6 +142,14 @@ public:
     static std::list<NimBLEClient*>* getClientList();
 #endif
 
+#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+    static bool             deleteBond(const NimBLEAddress &address);
+    static int              getNumBonds();
+    static bool             isBonded(const NimBLEAddress &address);
+    static void             deleteAllBonds();
+    static NimBLEAddress    getBondedAddress(int index);
+#endif
+
 private:
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     friend class NimBLEClient;

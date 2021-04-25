@@ -448,6 +448,101 @@ void NimBLEDevice::setScanFilterMode(uint8_t mode) {
     m_scanFilterMode = mode;
 }
 
+#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+/**
+ * @brief Gets the number of bonded peers stored
+ */
+/*STATIC*/
+int NimBLEDevice::getNumBonds() {
+    ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+    int num_peers, rc;
+
+    rc = ble_store_util_bonded_peers(&peer_id_addrs[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
+    if (rc !=0) {
+        return 0;
+    }
+
+    return num_peers;
+}
+
+
+/**
+ * @brief Deletes all bonding information.
+ */
+ /*STATIC*/
+void NimBLEDevice::deleteAllBonds() {
+    ble_store_clear();
+}
+
+
+/**
+ * @brief Deletes a peer bond.
+ * @param [in] address The address of the peer with which to delete bond info.
+ * @returns true on success.
+ */
+/*STATIC*/
+bool NimBLEDevice::deleteBond(const NimBLEAddress &address) {
+    ble_addr_t delAddr;
+    memcpy(&delAddr.val, address.getNative(),6);
+    delAddr.type = address.getType();
+
+    int rc = ble_gap_unpair(&delAddr);
+    if (rc != 0) {
+        return false;
+    }
+
+    return true;
+}
+
+
+/**
+ * @brief Checks if a peer device is bonded.
+ * @param [in] address The address to check for bonding.
+ * @returns true if bonded.
+ */
+/*STATIC*/
+bool NimBLEDevice::isBonded(const NimBLEAddress &address) {
+    ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+    int num_peers, rc;
+
+    rc = ble_store_util_bonded_peers(&peer_id_addrs[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
+    if (rc != 0) {
+        return false;
+    }
+
+    for (int i = 0; i < num_peers; i++) {
+        NimBLEAddress storedAddr(peer_id_addrs[i]);
+        if(storedAddr == address) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+/**
+ * @brief Get the address of a bonded peer device by index.
+ * @param [in] index The index to retrieve the peer address of.
+ * @returns NimBLEAddress of the found bonded peer or nullptr if not found.
+ */
+/*STATIC*/
+NimBLEAddress NimBLEDevice::getBondedAddress(int index) {
+    ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
+    int num_peers, rc;
+
+    rc = ble_store_util_bonded_peers(&peer_id_addrs[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
+    if (rc != 0) {
+        return nullptr;
+    }
+
+    if (index > num_peers || index < 0) {
+        return nullptr;
+    }
+
+    return NimBLEAddress(peer_id_addrs[index]);
+}
+#endif
 
 /**
  * @brief Host reset, we pass the message so we don't make calls until resynced.
