@@ -1268,7 +1268,7 @@
 #define MYNEWT_VAL_BLE_PUBLIC_DEV_ADDR ((uint8_t[6]){0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 #endif
 
-#if defined(ARDUINO_ARCH_NRF5) && defined(NRF52)
+#if defined(ARDUINO_ARCH_NRF5) && defined(NRF52_SERIES)
 #ifndef MYNEWT_VAL_BLE_PHY_DBG_TIME_ADDRESS_END_PIN
 #define MYNEWT_VAL_BLE_PHY_DBG_TIME_ADDRESS_END_PIN (-1)
 #endif

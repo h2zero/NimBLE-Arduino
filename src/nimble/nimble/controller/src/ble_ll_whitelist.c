@@ -28,7 +28,7 @@
 
 #if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
 #include "nimble/nimble/drivers/nrf51/include/ble/xcvr.h"
-#elif defined(ARDUINO_ARCH_NRF5) && defined(NRF52)
+#elif defined(ARDUINO_ARCH_NRF5) && defined(NRF52_SERIES)
 #include "nimble/nimble/drivers/nrf52/include/ble/xcvr.h"
 #endif
 

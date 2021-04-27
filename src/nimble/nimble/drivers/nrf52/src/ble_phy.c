@@ -17,7 +17,7 @@
  * under the License.
  */
  
- #if defined(ARDUINO_ARCH_NRF5) && defined(NRF52)
+ #if defined(ARDUINO_ARCH_NRF5) && defined(NRF52_SERIES)
 
 #include <stdint.h>
 #include <string.h>
