@@ -306,6 +306,12 @@ ble_npl_hw_set_isr(int irqn, void (*addr)(void))
 {
     npl_freertos_hw_set_isr(irqn, addr);
 }
+
+static inline bool
+ble_npl_hw_is_in_critical(void)
+{
+    return (uxGetCriticalNestingDepth() > 0);
+}
 #endif
 
 #ifdef ESP_PLATFORM
@@ -335,7 +341,7 @@ ble_npl_hw_enter_critical(void)
 static inline void
 ble_npl_hw_exit_critical(uint32_t ctx)
 {
-    (void)ctx; // silence warning
+    (void)ctx;
     vPortExitCritical();
 }
 #endif

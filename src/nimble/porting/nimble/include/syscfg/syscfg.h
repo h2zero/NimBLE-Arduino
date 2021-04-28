@@ -11,6 +11,7 @@
 #include "ext_nimble_config.h"
 #endif
 
+#if 0
 /**
  * This macro exists to ensure code includes this header when needed.  If code
  * checks the existence of a setting directly via ifdef without including this
@@ -1191,4 +1192,5 @@
 #define MYNEWT_VAL_NEWT_FEATURE_LOGCFG (1)
 #endif
 
+#endif
 #endif
