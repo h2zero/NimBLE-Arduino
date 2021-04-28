@@ -7,9 +7,9 @@
 
 #ifdef ESP_PLATFORM
 #include "nimble/esp_port/port/include/esp_nimble_cfg.h"
-#elif NRF51
-#include "nrf51_config.h"
 #else
+#include "ext_nimble_config.h"
+#endif
 
 /**
  * This macro exists to ensure code includes this header when needed.  If code
@@ -1191,5 +1191,4 @@
 #define MYNEWT_VAL_NEWT_FEATURE_LOGCFG (1)
 #endif
 
-#endif
 #endif
