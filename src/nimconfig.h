@@ -3,7 +3,7 @@
 #ifdef ESP_PLATFORM
 #include "sdkconfig.h"
 #else
-#include <time.h>
+#include "ext_nimble_config.h"
 #endif
 
 #include "nimconfig_rename.h"
@@ -132,9 +132,9 @@
 #if CONFIG_BT_NIMBLE_MAX_BONDS
 #  ifndef CONFIG_BT_NIMBLE_MAX_CCCDS
 #    define CONFIG_BT_NIMBLE_MAX_CCCDS 8
-#  else
-#    define CONFIG_BT_NIMBLE_MAX_CCCDS 0
 #  endif
+#else
+#define CONFIG_BT_NIMBLE_MAX_CCCDS 0
 #endif
 
 #ifndef CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME
