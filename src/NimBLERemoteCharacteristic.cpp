@@ -35,7 +35,7 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
  */
  NimBLERemoteCharacteristic::NimBLERemoteCharacteristic(NimBLERemoteService *pRemoteService,
                                                         const struct ble_gatt_chr *chr)
-{
+:   m_value() {
     NIMBLE_LOGD(LOG_TAG, ">> NimBLERemoteCharacteristic()");
      switch (chr->uuid.u.type) {
         case BLE_UUID_TYPE_16:
@@ -56,7 +56,6 @@ static const char* LOG_TAG = "NimBLERemoteCharacteristic";
     m_charProp           = chr->properties;
     m_pRemoteService     = pRemoteService;
     m_notifyCallback     = nullptr;
-    m_timestamp          = 0;
 #ifdef ESP_PLATFORM
     m_valMux             = portMUX_INITIALIZER_UNLOCKED;
 #endif
@@ -359,19 +358,19 @@ NimBLEUUID NimBLERemoteCharacteristic::getUUID() {
  * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
  * @return The value of the remote characteristic.
  */
-std::string NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
+NimBLEAttValue NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
 #ifdef ESP_PLATFORM
     portENTER_CRITICAL(&m_valMux);
-    std::string value = m_value;
+    NimBLEAttValue value = m_value;
     if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
+        *timestamp = m_value.getTimeStamp();
     }
     portEXIT_CRITICAL(&m_valMux);
 #else
     portENTER_CRITICAL();
-    std::string value = m_value;
+    NimBLEAttValue value = m_value;
     if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
+        *timestamp = m_value.getTimeStamp();
     }
     portEXIT_CRITICAL();
 #endif
@@ -386,7 +385,7 @@ std::string NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
  * @deprecated Use readValue<uint16_t>().
  */
 uint16_t NimBLERemoteCharacteristic::readUInt16() {
-    return readValue<uint16_t>();
+    return 0;//readValue<uint16_t>();
 } // readUInt16
 
 
@@ -396,7 +395,7 @@ uint16_t NimBLERemoteCharacteristic::readUInt16() {
  * @deprecated Use readValue<uint32_t>().
  */
 uint32_t NimBLERemoteCharacteristic::readUInt32() {
-    return readValue<uint32_t>();
+    return 0;//return readValue<uint32_t>();
 } // readUInt32
 
 
@@ -406,7 +405,7 @@ uint32_t NimBLERemoteCharacteristic::readUInt32() {
  * @deprecated Use readValue<uint8_t>().
  */
 uint8_t NimBLERemoteCharacteristic::readUInt8() {
-    return readValue<uint8_t>();
+    return 0;//return readValue<uint8_t>();
 } // readUInt8
 
 
@@ -415,7 +414,7 @@ uint8_t NimBLERemoteCharacteristic::readUInt8() {
  * @return the float value.
  */
 float NimBLERemoteCharacteristic::readFloat() {
-	return readValue<float>();
+	return 0;//return readValue<float>();
 } // readFloat
 
 
@@ -424,12 +423,12 @@ float NimBLERemoteCharacteristic::readFloat() {
  * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
  * @return The value of the remote characteristic.
  */
-std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
+NimBLEAttValue NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
     NIMBLE_LOGD(LOG_TAG, ">> readValue(): uuid: %s, handle: %d 0x%.2x",
                          getUUID().toString().c_str(), getHandle(), getHandle());
 
     NimBLEClient* pClient = getRemoteService()->getClient();
-    std::string value;
+    NimBLEAttValue value;
 
     if (!pClient->isConnected()) {
         NIMBLE_LOGE(LOG_TAG, "Disconnected");
@@ -475,26 +474,25 @@ std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
         }
     } while(rc != 0 && retryCount--);
 
-    time_t t = time(nullptr);
+    //time_t t = time(nullptr);
+    value.setTimeStamp();
 #ifdef ESP_PLATFORM
     portENTER_CRITICAL(&m_valMux);
     m_value = value;
-    m_timestamp = t;
     if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
+        *timestamp = m_value.getTimeStamp();
     }
     portEXIT_CRITICAL(&m_valMux);
 #else
     portENTER_CRITICAL();
     m_value = value;
-    m_timestamp = t;
     if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
+        *timestamp = m_value.getTimeStamp();
     }
     portEXIT_CRITICAL();
 #endif
-    NIMBLE_LOGD(LOG_TAG, "<< readValue length: %d rc=%d", value.length(), rc);
-    return value;
+    NIMBLE_LOGD(LOG_TAG, "<< readValue length: %d rc=%d %s", value.getLength(), rc, std::string(m_value).c_str());
+    return m_value;
 } // readValue
 
 
@@ -516,16 +514,16 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
 
     NIMBLE_LOGI(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
 
-    std::string *strBuf = (std::string*)pTaskData->buf;
+    NimBLEAttValue *valBuf = (NimBLEAttValue*)pTaskData->buf;
     int rc = error->status;
 
     if(rc == 0) {
         if(attr) {
-            if(((*strBuf).length() + attr->om->om_len) > BLE_ATT_ATTR_MAX_LEN) {
+            if(((*valBuf).getLength() + attr->om->om_len) > BLE_ATT_ATTR_MAX_LEN) {
                 rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             } else {
                 NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
-                (*strBuf) += std::string((char*) attr->om->om_data, attr->om->om_len);
+                (*valBuf) += NimBLEAttValue(attr->om->om_data, attr->om->om_len);
                 return 0;
             }
         }
@@ -681,8 +679,8 @@ std::string NimBLERemoteCharacteristic::toString() {
  * @param [in] response Do we expect a response?
  * @return false if not connected or cant perform write for some reason.
  */
-bool NimBLERemoteCharacteristic::writeValue(const std::string &newValue, bool response) {
-    return writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
+bool NimBLERemoteCharacteristic::writeValue(const NimBLEAttValue &newValue, bool response) {
+    return writeValue(newValue.getValue(), newValue.getLength(), response);
 } // writeValue
 
 
