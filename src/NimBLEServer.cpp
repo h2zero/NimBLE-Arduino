@@ -254,6 +254,63 @@ size_t NimBLEServer::getConnectedCount() {
 
 
 /**
+ * @brief Get the vector of the connected client ID's.
+ */
+std::vector<uint16_t> NimBLEServer::getPeerDevices() {
+    return m_connectedPeersVec;
+} // getPeerDevices
+
+
+/**
+ * @brief Get the connection information of a connected peer by vector index.
+ * @param [in] index The vector index of the peer.
+ */
+NimBLEConnInfo NimBLEServer::getPeerInfo(uint8_t index) {
+    if (index >= m_connectedPeersVec.size()) {
+        NIMBLE_LOGE(LOG_TAG, "No peer at index %u", index);
+        return NimBLEConnInfo();
+    }
+
+    return getPeerIDInfo(m_connectedPeersVec[index]);
+} // getPeerInfo
+
+
+/**
+ * @brief Get the connection information of a connected peer by address.
+ * @param [in] address The address of the peer.
+ */
+NimBLEConnInfo NimBLEServer::getPeerInfo(const NimBLEAddress& address) {
+    ble_addr_t peerAddr;
+    memcpy(&peerAddr.val, address.getNative(),6);
+    peerAddr.type = address.getType();
+
+    NimBLEConnInfo peerInfo;
+    int rc = ble_gap_conn_find_by_addr(&peerAddr, &peerInfo.m_desc);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Peer info not found");
+    }
+
+    return peerInfo;
+} // getPeerInfo
+
+
+/**
+ * @brief Get the connection information of a connected peer by connection ID.
+ * @param [in] id The connection id of the peer.
+ */
+NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
+    NimBLEConnInfo peerInfo;
+
+    int rc = ble_gap_conn_find(id, &peerInfo.m_desc);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Peer info not found");
+    }
+
+    return peerInfo;
+} // getPeerIDInfo
+
+
+/**
  * @brief Handle a GATT Server Event.
  *
  * @param [in] event

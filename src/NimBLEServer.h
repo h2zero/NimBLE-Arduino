@@ -25,6 +25,7 @@
 #include "NimBLEAdvertising.h"
 #include "NimBLEService.h"
 #include "NimBLESecurity.h"
+#include "NimBLEConnInfo.h"
 
 
 class NimBLEService;
@@ -58,7 +59,10 @@ public:
                                             uint16_t minInterval, uint16_t maxInterval,
                                             uint16_t latency, uint16_t timeout);
     uint16_t               getPeerMTU(uint16_t conn_id);
-//    std::vector<uint16_t>  getPeerDevices();
+    std::vector<uint16_t>  getPeerDevices();
+    NimBLEConnInfo         getPeerInfo(uint8_t index);
+    NimBLEConnInfo         getPeerInfo(const NimBLEAddress& address);
+    NimBLEConnInfo         getPeerIDInfo(uint16_t id);
     void                   advertiseOnDisconnect(bool);
 
 private:
