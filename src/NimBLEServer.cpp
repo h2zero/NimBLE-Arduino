@@ -265,7 +265,7 @@ std::vector<uint16_t> NimBLEServer::getPeerDevices() {
  * @brief Get the connection information of a connected peer by vector index.
  * @param [in] index The vector index of the peer.
  */
-NimBLEConnInfo NimBLEServer::getPeerInfo(uint8_t index) {
+NimBLEConnInfo NimBLEServer::getPeerInfo(size_t index) {
     if (index >= m_connectedPeersVec.size()) {
         NIMBLE_LOGE(LOG_TAG, "No peer at index %u", index);
         return NimBLEConnInfo();
