@@ -337,7 +337,9 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
                 server->m_connectedPeersVec.push_back(event->connect.conn_handle);
 
                 rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
-                assert(rc == 0);
+                if (rc != 0) {
+                    return 0;
+                }
 
                 server->m_pServerCallbacks->onConnect(server);
                 server->m_pServerCallbacks->onConnect(server, &desc);
@@ -392,7 +394,9 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
                        (it->getProperties() & BLE_GATT_CHR_F_READ_ENC))
                     {
                         rc = ble_gap_conn_find(event->subscribe.conn_handle, &desc);
-                        assert(rc == 0);
+                        if (rc != 0) {
+                            break;
+                        }
 
                         if(!desc.sec_state.encrypted) {
                             NimBLEDevice::startSecurity(event->subscribe.conn_handle);
@@ -449,7 +453,10 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
 
             /* Delete the old bond. */
             rc = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
-            assert(rc == 0);
+            if (rc != 0){
+                return BLE_GAP_REPEAT_PAIRING_IGNORE;
+            }
+
             ble_store_util_delete_peer(&desc.peer_id_addr);
 
             /* Return BLE_GAP_REPEAT_PAIRING_RETRY to indicate that the host should
