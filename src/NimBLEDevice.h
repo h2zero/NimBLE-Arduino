@@ -95,6 +95,11 @@ public:
     static bool             getInitialized();
     static NimBLEAddress    getAddress();
     static std::string      toString();
+    static bool             whiteListAdd(const NimBLEAddress & address);
+    static bool             whiteListRemove(const NimBLEAddress & address);
+    static bool             onWhiteList(const NimBLEAddress & address);
+    static size_t           getWhiteListCount();
+    static NimBLEAddress    getWhiteListAddress(size_t index);
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
     static NimBLEScan*      getScan();
@@ -196,6 +201,7 @@ private:
     static uint8_t                    m_own_addr_type;
     static uint16_t                   m_scanDuplicateSize;
     static uint8_t                    m_scanFilterMode;
+    static std::vector<NimBLEAddress> m_whiteList;
 };
 
 

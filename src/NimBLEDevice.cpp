@@ -60,6 +60,7 @@ ble_gap_event_listener      NimBLEDevice::m_listener;
 std::list <NimBLEClient*>   NimBLEDevice::m_cList;
 #endif
 std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
+std::vector<NimBLEAddress>  NimBLEDevice::m_whiteList;
 NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 uint8_t                     NimBLEDevice::m_own_addr_type = BLE_OWN_ADDR_PUBLIC;
 uint16_t                    NimBLEDevice::m_scanDuplicateSize = CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE;
@@ -543,6 +544,116 @@ NimBLEAddress NimBLEDevice::getBondedAddress(int index) {
     return NimBLEAddress(peer_id_addrs[index]);
 }
 #endif
+
+/**
+ * @brief Checks if a peer device is whitelisted.
+ * @param [in] address The address to check for in the whitelist.
+ * @returns true if the address is in the whitelist.
+ */
+bool NimBLEDevice::onWhiteList(const NimBLEAddress & address) {
+    for (auto &it : m_whiteList) {
+        if (it == address) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+/**
+ * @brief Add a peer address to the whitelist.
+ * @param [in] address The address to add to the whitelist.
+ * @returns true if successful.
+ */
+bool NimBLEDevice::whiteListAdd(const NimBLEAddress & address) {
+    if (NimBLEDevice::onWhiteList(address)) {
+        return true;
+    }
+
+    m_whiteList.push_back(address);
+    std::vector<ble_addr_t> wlVec;
+    wlVec.reserve(m_whiteList.size());
+
+    for (auto &it : m_whiteList) {
+        ble_addr_t wlAddr;
+        memcpy(&wlAddr.val, it.getNative(), 6);
+        wlAddr.type = it.getType();
+        wlVec.push_back(wlAddr);
+    }
+
+    int rc = ble_gap_wl_set(&wlVec[0], wlVec.size());
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed adding to whitelist rc=%d", rc);
+        return false;
+    }
+
+    return true;
+}
+
+
+/**
+ * @brief Remove a peer address from the whitelist.
+ * @param [in] address The address to remove from the whitelist.
+ * @returns true if successful.
+ */
+bool NimBLEDevice::whiteListRemove(const NimBLEAddress & address) {
+    if (!NimBLEDevice::onWhiteList(address)) {
+        return true;
+    }
+
+    std::vector<ble_addr_t> wlVec;
+    wlVec.reserve(m_whiteList.size());
+
+    for (auto &it : m_whiteList) {
+        if (it != address) {
+            ble_addr_t wlAddr;
+            memcpy(&wlAddr.val, it.getNative(), 6);
+            wlAddr.type = it.getType();
+            wlVec.push_back(wlAddr);
+        }
+    }
+
+    int rc = ble_gap_wl_set(&wlVec[0], wlVec.size());
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed removing from whitelist rc=%d", rc);
+        return false;
+    }
+
+    // Don't remove from the list unless NimBLE returned success
+    for (auto it = m_whiteList.begin(); it < m_whiteList.end(); ++it) {
+        if ((*it) == address) {
+            m_whiteList.erase(it);
+            break;
+        }
+    }
+
+    return true;
+}
+
+
+/**
+ * @brief Gets the count of addresses in the whitelist.
+ * @returns The number of addresses in the whitelist.
+ */
+size_t NimBLEDevice::getWhiteListCount() {
+    return m_whiteList.size();
+}
+
+
+/**
+ * @brief Gets the address at the vector index.
+ * @param [in] index The vector index to retrieve the address from.
+ * @returns the NimBLEAddress at the whitelist index or nullptr if not found.
+ */
+NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
+    if (index > m_whiteList.size()) {
+        NIMBLE_LOGE(LOG_TAG, "Invalid index; %u", index);
+        return nullptr;
+    }
+    return m_whiteList[index];
+}
+
 
 /**
  * @brief Host reset, we pass the message so we don't make calls until resynced.
