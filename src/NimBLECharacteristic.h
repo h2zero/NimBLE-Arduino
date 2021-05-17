@@ -150,7 +150,6 @@ private:
     NimBLEService*                 m_pService;
     std::string                    m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
-    ble_task_data_t                *m_pTaskData;
     portMUX_TYPE                   m_valMux;
     time_t                         m_timestamp;
 

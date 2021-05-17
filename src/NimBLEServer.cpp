@@ -37,6 +37,7 @@ static NimBLEServerCallbacks defaultCallbacks;
  * the NimBLEDevice class.
  */
 NimBLEServer::NimBLEServer() {
+    memset(m_indWait, BLE_HS_CONN_HANDLE_NONE, sizeof(m_indWait));
 //    m_svcChgChrHdl          = 0xffff; // Future Use
     m_pServerCallbacks      = &defaultCallbacks;
     m_gattsStarted          = false;
@@ -419,17 +420,43 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
         } // BLE_GAP_EVENT_MTU
 
         case BLE_GAP_EVENT_NOTIFY_TX: {
-            if(event->notify_tx.indication && event->notify_tx.status != 0) {
-                for(auto &it : server->m_notifyChrVec) {
-                    if(it->getHandle() == event->notify_tx.attr_handle) {
-                        if(it->m_pTaskData != nullptr) {
-                            it->m_pTaskData->rc = event->notify_tx.status;
-                            xTaskNotifyGive(it->m_pTaskData->task);
-                        }
-                        break;
-                    }
+            NimBLECharacteristic *pChar = nullptr;
+
+            for(auto &it : server->m_notifyChrVec) {
+                if(it->getHandle() == event->notify_tx.attr_handle) {
+                    pChar = it;
                 }
             }
+
+            if(pChar == nullptr) {
+                return 0;
+            }
+
+            NimBLECharacteristicCallbacks::Status statusRC;
+
+            if(event->notify_tx.indication) {
+                if(event->notify_tx.status != 0) {
+                    if(event->notify_tx.status == BLE_HS_EDONE) {
+                        statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE;
+                    } else if(rc == BLE_HS_ETIMEOUT) {
+                        statusRC = NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT;
+                    } else {
+                        statusRC = NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE;
+                    }
+                } else {
+                    return 0;
+                }
+
+                server->clearIndicateWait(event->notify_tx.conn_handle);
+            } else {
+                if(event->notify_tx.status == 0) {
+                    statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_NOTIFY;
+                } else {
+                    statusRC = NimBLECharacteristicCallbacks::Status::ERROR_GATT;
+                }
+            }
+
+            pChar->m_pCallbacks->onStatus(pChar, statusRC, event->notify_tx.status);
 
             return 0;
         } // BLE_GAP_EVENT_NOTIFY_TX
@@ -730,6 +757,27 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
         NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
 }// updateConnParams
+
+
+bool NimBLEServer::setIndicateWait(uint16_t conn_handle) {
+    for(auto i = 0; i < CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
+        if(m_indWait[i] == conn_handle) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+void NimBLEServer::clearIndicateWait(uint16_t conn_handle) {
+    for(auto i = 0; i < CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
+        if(m_indWait[i] == conn_handle) {
+            m_indWait[i] = BLE_HS_CONN_HANDLE_NONE;
+            return;
+        }
+    }
+}
 
 
 /** Default callback handlers */
