@@ -65,6 +65,8 @@ public:
     std::string       toString();
 
     void              setCallbacks(NimBLECharacteristicCallbacks* pCallbacks);
+    NimBLECharacteristicCallbacks*
+                      getCallbacks();
 
     void              indicate();
     void              notify(bool is_notification = true);
