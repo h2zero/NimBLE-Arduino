@@ -307,7 +307,6 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
        NimBLEDevice::getServer()->clearIndicateWait(event->subscribe.conn_handle);
     }
 
-    m_pCallbacks->onSubscribe(this, &desc, subVal);
 
     auto it = m_subscribedVec.begin();
     for(;it != m_subscribedVec.end(); ++it) {
@@ -319,14 +318,14 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     if(subVal > 0) {
         if(it == m_subscribedVec.end()) {
             m_subscribedVec.push_back({event->subscribe.conn_handle, subVal});
-            return;
+        } else {
+            (*it).second = subVal;
         }
-
-        (*it).second = subVal;
-
     } else if(it != m_subscribedVec.end()) {
         m_subscribedVec.erase(it);
     }
+
+    m_pCallbacks->onSubscribe(this, &desc, subVal);
 }
 
 
