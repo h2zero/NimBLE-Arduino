@@ -444,6 +444,13 @@ void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallback
     }
 } // setCallbacks
 
+/**
+ * @brief Get the callback handlers for this characteristic.
+ */
+NimBLECharacteristicCallbacks* NimBLECharacteristic::getCallbacks() {
+    return m_pCallbacks;
+} //getCallbacks
+
 
 /**
  * @brief Set the value of the characteristic.
