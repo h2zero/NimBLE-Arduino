@@ -712,7 +712,7 @@ std::string NimBLERemoteCharacteristic::toString() {
  * @return false if not connected or cant perform write for some reason.
  */
 bool NimBLERemoteCharacteristic::writeValue(const std::string &newValue, bool response) {
-    return writeValue((uint8_t*)newValue.c_str(), strlen(newValue.c_str()), response);
+    return writeValue((uint8_t*)newValue.c_str(), newValue.length(), response);
 } // writeValue
 
 
