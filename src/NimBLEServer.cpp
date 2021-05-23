@@ -650,14 +650,23 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
 
 
 /**
- * @brief Adds a service which was already created, but removed from availability.
+ * @brief Adds a service which was either already created but removed from availability,\n
+ * or created and later added to services list.
  * @param [in] service The service object to add.
  * @note If it is desired to advertise the service it must be added by
  * calling NimBLEAdvertising::addServiceUUID.
  */
 void NimBLEServer::addService(NimBLEService* service) {
-    // If adding a service that was not removed just return.
+    // Check that a service with the supplied UUID does not already exist.
+    if(getServiceByUUID(service->getUUID()) != nullptr) {
+        NIMBLE_LOGW(LOG_TAG, "Warning creating a duplicate service UUID: %s",
+                             std::string(service->getUUID()).c_str());
+    }
+
+    // If adding a service that was not removed add it and return.
+    // Else reset GATT and send service changed notification.
     if(service->m_removed == 0) {
+        m_svcVec.push_back(service);
         return;
     }
 
