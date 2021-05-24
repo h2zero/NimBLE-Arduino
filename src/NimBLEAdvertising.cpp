@@ -13,13 +13,17 @@
  *      Author: kolban
  *
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
 
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
 
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "services/gap/ble_svc_gap.h"
+#else
+#include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
+#endif
+
 #include "NimBLEAdvertising.h"
 #include "NimBLEDevice.h"
 #include "NimBLEServer.h"
@@ -68,6 +72,7 @@ void NimBLEAdvertising::reset() {
     m_advDataSet                     = false;
     // Set this to non-zero to prevent auto start if host reset before started by app.
     m_duration                       = BLE_HS_FOREVER;
+    m_advCompCB                      = nullptr;
 } // reset
 
 
@@ -652,12 +657,8 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
             break;
     }
 
-    if(rc != 0) {
-        return false;
-    }
-
     NIMBLE_LOGD(LOG_TAG, "<< Advertising start");
-    return true;
+    return (rc == 0);
 } // start
 
 

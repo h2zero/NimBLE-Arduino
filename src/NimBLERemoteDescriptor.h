@@ -14,10 +14,8 @@
 
 #ifndef COMPONENTS_NIMBLEREMOTEDESCRIPTOR_H_
 #define COMPONENTS_NIMBLEREMOTEDESCRIPTOR_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLERemoteCharacteristic.h"
@@ -31,7 +29,7 @@ public:
     uint16_t                    getHandle();
     NimBLERemoteCharacteristic* getRemoteCharacteristic();
     NimBLEUUID                  getUUID();
-    std::string                 readValue();
+    NimBLEAttValue              readValue();
 
     /**
      * @brief A template to convert the remote descriptor data to <type\>.
@@ -42,11 +40,10 @@ public:
      * @details <b>Use:</b> <tt>readValue<type>(skipSizeCheck);</tt>
      */
     template<typename T>
-    T                           readValue(bool skipSizeCheck = false) {
-        std::string value = readValue();
-        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
-        const char *pData = value.data();
-        return *((T *)pData);
+    T readValue(bool skipSizeCheck = false) {
+        NimBLEAttValue value = readValue();
+        if(!skipSizeCheck && value.getLength() < sizeof(T)) return T();
+        return *((T *)value.getValue());
     }
 
     uint8_t                     readUInt8()  __attribute__ ((deprecated("Use template readValue<uint8_t>()")));
@@ -54,7 +51,7 @@ public:
     uint32_t                    readUInt32() __attribute__ ((deprecated("Use template readValue<uint32_t>()")));
     std::string                 toString(void);
     bool                        writeValue(const uint8_t* data, size_t length, bool response = false);
-    bool                        writeValue(const std::string &newValue, bool response = false);
+    bool                        writeValue(const NimBLEAttValue &newValue, bool response = false);
     
     /**
      * @brief Convenience template to set the remote descriptor value to <type\>val.

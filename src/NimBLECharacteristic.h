@@ -13,13 +13,16 @@
 
 #ifndef MAIN_NIMBLECHARACTERISTIC_H_
 #define MAIN_NIMBLECHARACTERISTIC_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "host/ble_hs.h"
+#else
+#include "nimble/nimble/host/include/host/ble_hs.h"
+#endif
+
 /****  FIX COMPILATION ****/
 #undef min
 #undef max
@@ -42,14 +45,11 @@ typedef enum {
 
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
-
-#include <string>
-#include <vector>
+#include "NimBLEAttValue.h"
 
 class NimBLEService;
 class NimBLEDescriptor;
 class NimBLECharacteristicCallbacks;
-
 
 /**
  * @brief The model of a %BLE Characteristic.
@@ -60,14 +60,12 @@ class NimBLECharacteristicCallbacks;
 class NimBLECharacteristic {
 public:
     NimBLECharacteristic(const char* uuid,
-                         uint16_t properties =
-                         NIMBLE_PROPERTY::READ |
-                         NIMBLE_PROPERTY::WRITE,
+                         uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
+                         uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN,
                          NimBLEService* pService = nullptr);
     NimBLECharacteristic(const NimBLEUUID &uuid,
-                         uint16_t properties =
-                         NIMBLE_PROPERTY::READ |
-                         NIMBLE_PROPERTY::WRITE,
+                         uint16_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
+                         uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN,
                          NimBLEService* pService = nullptr);
 
     ~NimBLECharacteristic();
@@ -85,23 +83,20 @@ public:
     size_t            getSubscribedCount();
 
     NimBLEDescriptor* createDescriptor(const char* uuid,
-                                       uint32_t properties =
-                                       NIMBLE_PROPERTY::READ |
-                                       NIMBLE_PROPERTY::WRITE,
-                                       uint16_t max_len = 100);
+                                       uint32_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
+                                       uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN);
+
     NimBLEDescriptor* createDescriptor(const NimBLEUUID &uuid,
-                                       uint32_t properties =
-                                       NIMBLE_PROPERTY::READ |
-                                       NIMBLE_PROPERTY::WRITE,
-                                       uint16_t max_len = 100);
+                                       uint32_t properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
+                                       uint16_t max_len = NIMBLE_DEFAULT_MAX_ATT_LEN);
 
     void              addDescriptor(NimBLEDescriptor *pDescriptor);
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &uuid);
     NimBLEDescriptor* getDescriptorByHandle(uint16_t handle);
 
-    std::string       getValue(time_t *timestamp = nullptr);
-    size_t            getDataLength();
+    NimBLEAttValue    getValue(time_t *timestamp = nullptr);
+    uint16_t          getDataLength();
     /**
      * @brief A template to convert the characteristic data to <type\>.
      * @tparam T The type to convert the data to.
@@ -112,14 +107,12 @@ public:
      * @details <b>Use:</b> <tt>getValue<type>(&timestamp, skipSizeCheck);</tt>
      */
     template<typename T>
-    T                 getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
-        std::string value = getValue();
-        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
-        const char *pData = value.data();
-        return *((T *)pData);
+    T   getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+            if(!skipSizeCheck && m_value.getLength() < sizeof(T)) return T();
+            return *((T *)m_value.getValue(timestamp));
     }
 
-    void              setValue(const uint8_t* data, size_t size);
+    void              setValue(const uint8_t* data, uint16_t size);
     void              setValue(const std::string &value);
     /**
      * @brief Convenience template to set the characteristic value to <type\>val.
@@ -148,10 +141,8 @@ private:
     uint16_t                       m_properties;
     NimBLECharacteristicCallbacks* m_pCallbacks;
     NimBLEService*                 m_pService;
-    std::string                    m_value;
+    NimBLEAttValue                 m_value;
     std::vector<NimBLEDescriptor*> m_dscVec;
-    portMUX_TYPE                   m_valMux;
-    time_t                         m_timestamp;
 
     std::vector<std::pair<uint16_t, uint16_t>>  m_subscribedVec;
 }; // NimBLECharacteristic

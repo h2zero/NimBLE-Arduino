@@ -9,10 +9,9 @@
  *  Created on: Jun 22, 2017
  *      Author: kolban
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
 
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLECharacteristic.h"
@@ -34,8 +33,9 @@ static const char* LOG_TAG = "NimBLECharacteristic";
  * @param [in] properties - Properties for the characteristic.
  * @param [in] pService - pointer to the service instance this characteristic belongs to.
  */
-NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties, NimBLEService* pService)
-: NimBLECharacteristic(NimBLEUUID(uuid), properties, pService) {
+NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties,
+                                           uint16_t max_len, NimBLEService* pService)
+: NimBLECharacteristic(NimBLEUUID(uuid), properties, max_len, pService) {
 }
 
 /**
@@ -44,15 +44,14 @@ NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties
  * @param [in] properties - Properties for the characteristic.
  * @param [in] pService - pointer to the service instance this characteristic belongs to.
  */
-NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t properties, NimBLEService* pService) {
-    m_uuid       = uuid;
-    m_handle     = NULL_HANDLE;
-    m_properties = properties;
-    m_pCallbacks = &defaultCallback;
-    m_pService   = pService;
-    m_value      = "";
-    m_valMux     = portMUX_INITIALIZER_UNLOCKED;
-    m_timestamp  = 0;
+NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t properties,
+                                           uint16_t max_len, NimBLEService* pService)
+:   m_value(NIMBLE_ATT_INIT_LENGTH > max_len ? max_len : NIMBLE_ATT_INIT_LENGTH, max_len) {
+    m_uuid               = uuid;
+    m_handle             = NULL_HANDLE;
+    m_properties         = properties;
+    m_pCallbacks         = &defaultCallback;
+    m_pService           = pService;
 } // NimBLECharacteristic
 
 /**
@@ -72,7 +71,8 @@ NimBLECharacteristic::~NimBLECharacteristic() {
  * @param [in] max_len - The max length in bytes of the descriptor value.
  * @return The new BLE descriptor.
  */
-NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint32_t properties, uint16_t max_len) {
+NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint32_t properties,
+                                                         uint16_t max_len) {
     return createDescriptor(NimBLEUUID(uuid), properties, max_len);
 }
 
@@ -84,14 +84,14 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint3
  * @param [in] max_len - The max length in bytes of the descriptor value.
  * @return The new BLE descriptor.
  */
-NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid, uint32_t properties, uint16_t max_len) {
+NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid, uint32_t properties,
+                                                         uint16_t max_len) {
     NimBLEDescriptor* pDescriptor = nullptr;
-    if(uuid == NimBLEUUID(uint16_t(0x2902))) {
-        assert(0 && "0x2902 descriptors cannot be manually created");
-    } else if (uuid == NimBLEUUID(uint16_t(0x2904))) {
-        pDescriptor = new NimBLE2904(this);
+
+    if (uuid == NimBLEUUID(uint16_t(0x2904))) {
+        pDescriptor = new NimBLE2904();
     } else {
-        pDescriptor = new NimBLEDescriptor(uuid, properties, max_len, this);
+        pDescriptor = new NimBLEDescriptor(uuid, properties, max_len);
     }
 
     addDescriptor(pDescriptor);
@@ -193,28 +193,20 @@ NimBLEUUID NimBLECharacteristic::getUUID() {
  * @brief Retrieve the current value of the characteristic.
  * @return A std::string containing the current characteristic value.
  */
-std::string NimBLECharacteristic::getValue(time_t *timestamp) {
-    portENTER_CRITICAL(&m_valMux);
-    std::string retVal = m_value;
-    if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
+NimBLEAttValue NimBLECharacteristic::getValue(time_t *timestamp) {
+    if (timestamp != nullptr) {
+        m_value.getValue(timestamp);
     }
-    portEXIT_CRITICAL(&m_valMux);
-
-    return retVal;
-} // getValue
+    return m_value;
+}
 
 
 /**
  * @brief Retrieve the the current data length of the characteristic.
  * @return The length of the current characteristic data.
  */
-size_t NimBLECharacteristic::getDataLength() {
-    portENTER_CRITICAL(&m_valMux);
-    size_t len = m_value.length();
-    portEXIT_CRITICAL(&m_valMux);
-
-    return len;
+uint16_t NimBLECharacteristic::getDataLength() {
+    return m_value.getLength();
 }
 
 
@@ -222,16 +214,15 @@ size_t NimBLECharacteristic::getDataLength() {
  * @brief STATIC callback to handle events from the NimBLE stack.
  */
 int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
-                             struct ble_gatt_access_ctxt *ctxt,
-                             void *arg)
+                                         ble_gatt_access_ctxt *ctxt, void *arg)
 {
     const ble_uuid_t *uuid;
     int rc;
-    struct ble_gap_conn_desc desc;
+    ble_gap_conn_desc desc;
     NimBLECharacteristic* pCharacteristic = (NimBLECharacteristic*)arg;
 
     NIMBLE_LOGD(LOG_TAG, "Characteristic %s %s event", pCharacteristic->getUUID().toString().c_str(),
-                                    ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR ? "Read" : "Write");
+                         ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR ? "Read" : "Write");
 
     uuid = ctxt->chr->uuid;
     if(ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0){
@@ -246,27 +237,27 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
                 }
 
-                portENTER_CRITICAL(&pCharacteristic->m_valMux);
-                rc = os_mbuf_append(ctxt->om, (uint8_t*)pCharacteristic->m_value.data(),
-                                    pCharacteristic->m_value.length());
-                portEXIT_CRITICAL(&pCharacteristic->m_valMux);
+                pCharacteristic->m_value.lock();
+                rc = os_mbuf_append(ctxt->om, pCharacteristic->m_value.getValue(),
+                                    pCharacteristic->m_value.getLength());
+                pCharacteristic->m_value.unlock();
 
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 
             case BLE_GATT_ACCESS_OP_WRITE_CHR: {
-                if (ctxt->om->om_len > BLE_ATT_ATTR_MAX_LEN) {
+                if (ctxt->om->om_len > pCharacteristic->m_value.getMaxLength()) {
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
 
-                uint8_t buf[BLE_ATT_ATTR_MAX_LEN];
+                uint8_t buf[pCharacteristic->m_value.getMaxLength()];
                 size_t len = ctxt->om->om_len;
                 memcpy(buf, ctxt->om->om_data,len);
 
                 os_mbuf *next;
                 next = SLIST_NEXT(ctxt->om, om_next);
                 while(next != NULL){
-                    if((len + next->om_len) > BLE_ATT_ATTR_MAX_LEN) {
+                    if((len + next->om_len) > pCharacteristic->m_value.getMaxLength()) {
                         return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                     }
                     memcpy(&buf[len], next->om_data, next->om_len);
@@ -322,7 +313,6 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     if(!event->subscribe.cur_indicate && event->subscribe.prev_indicate) {
        NimBLEDevice::getServer()->clearIndicateWait(event->subscribe.conn_handle);
     }
-
 
     auto it = m_subscribedVec.begin();
     for(;it != m_subscribedVec.end(); ++it) {
@@ -381,15 +371,13 @@ void NimBLECharacteristic::notify(bool is_notification) {
 
     m_pCallbacks->onNotify(this);
 
-    std::string value = getValue();
-    size_t length = value.length();
     bool reqSec = (m_properties & BLE_GATT_CHR_F_READ_AUTHEN) ||
                   (m_properties & BLE_GATT_CHR_F_READ_AUTHOR) ||
                   (m_properties & BLE_GATT_CHR_F_READ_ENC);
     int rc = 0;
 
     for (auto &it : m_subscribedVec) {
-        uint16_t _mtu = getService()->getServer()->getPeerMTU(it.first);
+        uint16_t _mtu = getService()->getServer()->getPeerMTU(it.first) - 3;
 
         // check if connected and subscribed
         if(_mtu == 0 || it.second == 0) {
@@ -405,7 +393,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
             }
         }
 
-        if (length > _mtu - 3) {
+        if (m_value.getLength() > _mtu) {
             NIMBLE_LOGW(LOG_TAG, "- Truncating to %d bytes (maximum notify size)", _mtu - 3);
         }
 
@@ -424,7 +412,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
         // don't create the m_buf until we are sure to send the data or else
         // we could be allocating a buffer that doesn't get released.
         // We also must create it in each loop iteration because it is consumed with each host call.
-        os_mbuf *om = ble_hs_mbuf_from_flat((uint8_t*)value.data(), length);
+        os_mbuf *om = ble_hs_mbuf_from_flat(m_value.getValue(), m_value.getLength());
 
         if(!is_notification && (m_properties & NIMBLE_PROPERTY::INDICATE)) {
             if(!NimBLEDevice::getServer()->setIndicateWait(it.first)) {
@@ -472,24 +460,17 @@ NimBLECharacteristicCallbacks* NimBLECharacteristic::getCallbacks() {
  * @param [in] data The data to set for the characteristic.
  * @param [in] length The length of the data in bytes.
  */
-void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 3 || (ARDUINO_ARCH_ESP32 && CORE_DEBUG_LEVEL >= 4)
+void NimBLECharacteristic::setValue(const uint8_t* data, uint16_t length) {
+#if CONFIG_LOG_DEFAULT_LEVEL > 3 || (CONFIG_ENABLE_ARDUINO_DEPENDS && CORE_DEBUG_LEVEL >= 4)
     char* pHex = NimBLEUtils::buildHexData(nullptr, data, length);
-    NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
+    NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s",
+                         length, pHex, getUUID().toString().c_str());
     free(pHex);
 #endif
-
-    if (length > BLE_ATT_ATTR_MAX_LEN) {
-        NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, BLE_ATT_ATTR_MAX_LEN);
-        return;
+    NIMBLE_LOGD(LOG_TAG, ">> setValue");
+    if(!m_value.setValue(data, length)) {
+        NIMBLE_LOGE(LOG_TAG, "Error setting characteristic value");
     }
-
-    time_t t = time(nullptr);
-    portENTER_CRITICAL(&m_valMux);
-    m_value = std::string((char*)data, length);
-    m_timestamp = t;
-    portEXIT_CRITICAL(&m_valMux);
-
     NIMBLE_LOGD(LOG_TAG, "<< setValue");
 } // setValue
 
@@ -500,7 +481,7 @@ void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
  * @param [in] value the std::string value of the characteristic.
  */
 void NimBLECharacteristic::setValue(const std::string &value) {
-    setValue((uint8_t*)(value.data()), value.length());
+    setValue((uint8_t*)value.data(), value.length());
 } // setValue
 
 

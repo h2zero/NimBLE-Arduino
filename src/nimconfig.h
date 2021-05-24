@@ -1,6 +1,11 @@
- #pragma once
+#pragma once
 
+#ifdef ESP_PLATFORM
 #include "sdkconfig.h"
+#else
+#include "ext_nimble_config.h"
+#endif
+
 #include "nimconfig_rename.h"
 
 /***********************************************
@@ -16,10 +21,8 @@
 /** @brief Un-comment to change default device name */
 // #define CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME "nimble"
 
-/** @brief Un-comment to see debug log messages from the NimBLE host
- *  Uses approx. 32kB of flash memory.
- */
-// #define CONFIG_BT_NIMBLE_DEBUG
+/** @brief Un-comment to change the log message level from NimBLE host (default 5 = none, 0 = all) */
+// #define CONFIG_BT_NIMBLE_LOG_LEVEL 5
 
 /** @brief Un-comment to see NimBLE host return codes as text debug log messages.
  *  Uses approx. 7kB of flash memory.
@@ -126,8 +129,12 @@
 #define CONFIG_BT_NIMBLE_MAX_BONDS 3
 #endif
 
-#ifndef CONFIG_BT_NIMBLE_MAX_CCCDS
-#define CONFIG_BT_NIMBLE_MAX_CCCDS 8
+#if CONFIG_BT_NIMBLE_MAX_BONDS
+#  ifndef CONFIG_BT_NIMBLE_MAX_CCCDS
+#    define CONFIG_BT_NIMBLE_MAX_CCCDS 8
+#  endif
+#else
+#define CONFIG_BT_NIMBLE_MAX_CCCDS 0
 #endif
 
 #ifndef CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME
@@ -148,6 +155,10 @@
 
 #ifndef CONFIG_BT_NIMBLE_RPA_TIMEOUT
 #define CONFIG_BT_NIMBLE_RPA_TIMEOUT 900
+#endif
+
+#ifndef CONFIG_BT_NIMBLE_LOG_LEVEL
+#define CONFIG_BT_NIMBLE_LOG_LEVEL 5
 #endif
 
 
@@ -210,3 +221,16 @@
 #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #endif
 
+#ifdef ESP_PLATFORM
+#define NIMBLE_DEFAULT_MAX_ATT_LEN BLE_ATT_ATTR_MAX_LEN
+#else
+#define NIMBLE_DEFAULT_MAX_ATT_LEN 20
+#endif
+
+#define NIMBLE_ATT_INIT_LENGTH 20
+
+#if defined __has_include
+#  if __has_include (<Arduino.h>)
+#    define NIMBLE_ARDUINO_AVAILABLE
+#  endif
+#endif

@@ -11,10 +11,8 @@
  *  Created on: Jun 22, 2017
  *      Author: kolban
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEService.h"
@@ -33,7 +31,7 @@ static NimBLEDescriptorCallbacks defaultCallbacks;
  * @brief NimBLEDescriptor constructor.
  */
 NimBLEDescriptor::NimBLEDescriptor(const char* uuid, uint16_t properties, uint16_t max_len,
-                                    NimBLECharacteristic* pCharacteristic)
+                                   NimBLECharacteristic* pCharacteristic)
 : NimBLEDescriptor(NimBLEUUID(uuid), max_len, properties, pCharacteristic) {
 }
 
@@ -42,17 +40,17 @@ NimBLEDescriptor::NimBLEDescriptor(const char* uuid, uint16_t properties, uint16
  * @brief NimBLEDescriptor constructor.
  */
 NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_t max_len,
-                                    NimBLECharacteristic* pCharacteristic)
-{
+                                   NimBLECharacteristic* pCharacteristic)
+:   m_value(NIMBLE_ATT_INIT_LENGTH > max_len ? max_len : NIMBLE_ATT_INIT_LENGTH, max_len) {
     m_uuid               = uuid;
-    m_value.attr_len     = 0;                           // Initial length is 0.
-    m_value.attr_max_len = max_len;                     // Maximum length of the data.
     m_handle             = NULL_HANDLE;                 // Handle is initially unknown.
     m_pCharacteristic    = pCharacteristic;
     m_pCallbacks         = &defaultCallbacks;           // No initial callback.
-    m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
-    m_valMux             = portMUX_INITIALIZER_UNLOCKED;
     m_properties         = 0;
+
+    if(m_uuid == NimBLEUUID(uint16_t(0x2902))) {
+        assert(0 && "0x2902 descriptors cannot be manually created");
+    }
 
     if (properties & BLE_GATT_CHR_F_READ) {             // convert uint16_t properties to uint8_t
         m_properties |= BLE_ATT_F_READ;
@@ -86,7 +84,6 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_
  * @brief NimBLEDescriptor destructor.
  */
 NimBLEDescriptor::~NimBLEDescriptor() {
-    free(m_value.attr_value);   // Release the storage we created in the constructor.
 } // ~NimBLEDescriptor
 
 /**
@@ -103,7 +100,7 @@ uint16_t NimBLEDescriptor::getHandle() {
  * @return The length (in bytes) of the value of this descriptor.
  */
 size_t NimBLEDescriptor::getLength() {
-    return m_value.attr_len;
+    return m_value.getLength();
 } // getLength
 
 
@@ -119,8 +116,8 @@ NimBLEUUID NimBLEDescriptor::getUUID() {
  * @brief Get the value of this descriptor.
  * @return A pointer to the value of this descriptor.
  */
-uint8_t* NimBLEDescriptor::getValue() {
-    return m_value.attr_value;
+NimBLEAttValue NimBLEDescriptor::getValue() {
+    return m_value;
 } // getValue
 
 
@@ -129,8 +126,8 @@ uint8_t* NimBLEDescriptor::getValue() {
  * @return A std::string instance containing a copy of the descriptor's value.
  */
 std::string NimBLEDescriptor::getStringValue() {
-    return std::string((char *) m_value.attr_value, m_value.attr_len);
-}
+     return std::string(m_value);
+ } // getStringValue
 
 
 /**
@@ -160,24 +157,26 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                 if(ctxt->om->om_pkthdr_len > 8) {
                     pDescriptor->m_pCallbacks->onRead(pDescriptor);
                 }
-                portENTER_CRITICAL(&pDescriptor->m_valMux);
-                rc = os_mbuf_append(ctxt->om, pDescriptor->getValue(), pDescriptor->getLength());
-                portEXIT_CRITICAL(&pDescriptor->m_valMux);
+
+                pDescriptor->m_value.lock();
+                rc = os_mbuf_append(ctxt->om, pDescriptor->m_value.getValue(), pDescriptor->m_value.getLength());
+                pDescriptor->m_value.unlock();
+
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 
             case BLE_GATT_ACCESS_OP_WRITE_DSC: {
-                if (ctxt->om->om_len > pDescriptor->m_value.attr_max_len) {
+                if (ctxt->om->om_len > pDescriptor->m_value.getMaxLength()) {
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
 
-                uint8_t buf[pDescriptor->m_value.attr_max_len];
+                uint8_t buf[pDescriptor->m_value.getMaxLength()];
                 size_t len = ctxt->om->om_len;
                 memcpy(buf, ctxt->om->om_data,len);
                 os_mbuf *next;
                 next = SLIST_NEXT(ctxt->om, om_next);
                 while(next != NULL){
-                    if((len + next->om_len) > pDescriptor->m_value.attr_max_len) {
+                    if((len + next->om_len) > pDescriptor->m_value.getMaxLength()) {
                         return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                     }
                     memcpy(&buf[len], next->om_data, next->om_len);
@@ -195,7 +194,7 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
     }
 
     return BLE_ATT_ERR_UNLIKELY;
-}
+} // handleGapEvent
 
 /**
  * @brief Set the callback handlers for this descriptor.
@@ -229,14 +228,7 @@ void NimBLEDescriptor::setHandle(uint16_t handle) {
  * @param [in] length The length of the data in bytes.
  */
 void NimBLEDescriptor::setValue(const uint8_t* data, size_t length) {
-    if (length > m_value.attr_max_len) {
-        NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
-        return;
-    }
-    portENTER_CRITICAL(&m_valMux);
-    m_value.attr_len = length;
-    memcpy(m_value.attr_value, data, length);
-    portEXIT_CRITICAL(&m_valMux);
+    m_value.setValue(data, length);
 } // setValue
 
 

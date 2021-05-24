@@ -14,10 +14,8 @@
 
 #ifndef MAIN_NIMBLE2904_H_
 #define MAIN_NIMBLE2904_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEDescriptor.h"
@@ -43,6 +41,7 @@ struct BLE2904_Data {
 class NimBLE2904: public NimBLEDescriptor {
 public:
     NimBLE2904(NimBLECharacteristic* pCharacterisitic = nullptr);
+
     static const uint8_t FORMAT_BOOLEAN   = 1;
     static const uint8_t FORMAT_UINT2     = 2;
     static const uint8_t FORMAT_UINT4     = 3;

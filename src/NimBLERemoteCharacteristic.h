@@ -14,11 +14,9 @@
 
 #ifndef COMPONENTS_NIMBLEREMOTECHARACTERISTIC_H_
 #define COMPONENTS_NIMBLEREMOTECHARACTERISTIC_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_ENABLED)
+#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLERemoteService.h"
 #include "NimBLERemoteDescriptor.h"
@@ -62,7 +60,7 @@ public:
     uint16_t                                       getHandle();
     uint16_t                                       getDefHandle();
     NimBLEUUID                                     getUUID();
-    std::string                                    readValue(time_t *timestamp = nullptr);
+    NimBLEAttValue                                 readValue(time_t *timestamp = nullptr);
 
     /**
      * @brief A template to convert the remote characteristic data to <type\>.
@@ -74,18 +72,17 @@ public:
      * @details <b>Use:</b> <tt>readValue<type>(&timestamp, skipSizeCheck);</tt>
      */
     template<typename T>
-    T                                              readValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
-        std::string value = readValue(timestamp);
-        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
-        const char *pData = value.data();
-        return *((T *)pData);
+    T readValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+        NimBLEAttValue value = readValue();
+        if(!skipSizeCheck && value.getLength() < sizeof(T)) return T();
+        return *((T *)value.getValue(timestamp));
     }
 
     uint8_t                                        readUInt8()  __attribute__ ((deprecated("Use template readValue<uint8_t>()")));
     uint16_t                                       readUInt16() __attribute__ ((deprecated("Use template readValue<uint16_t>()")));
     uint32_t                                       readUInt32() __attribute__ ((deprecated("Use template readValue<uint32_t>()")));
     float                                          readFloat()  __attribute__ ((deprecated("Use template readValue<float>()")));
-    std::string                                    getValue(time_t *timestamp = nullptr);
+    NimBLEAttValue                                 getValue(time_t *timestamp = nullptr);
 
     /**
      * @brief A template to convert the remote characteristic data to <type\>.
@@ -97,11 +94,9 @@ public:
      * @details <b>Use:</b> <tt>getValue<type>(&timestamp, skipSizeCheck);</tt>
      */
     template<typename T>
-    T                                              getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
-        std::string value = getValue(timestamp);
-        if(!skipSizeCheck && value.size() < sizeof(T)) return T();
-        const char *pData = value.data();
-        return *((T *)pData);
+    T getValue(time_t *timestamp = nullptr, bool skipSizeCheck = false) {
+        if(!skipSizeCheck && m_value.getLength() < sizeof(T)) return T();
+        return *((T *)m_value.getValue(timestamp));
     }
 
     bool                                           subscribe(bool notifications = true,
@@ -115,7 +110,7 @@ public:
     bool                                           writeValue(const uint8_t* data,
                                                               size_t length,
                                                               bool response = false);
-    bool                                           writeValue(const std::string &newValue,
+    bool                                           writeValue(const NimBLEAttValue &newValue,
                                                               bool response = false);
     /**
      * @brief Convenience template to set the remote characteristic value to <type\>val.
@@ -158,11 +153,11 @@ private:
     uint16_t                m_defHandle;
     uint16_t                m_endHandle;
     NimBLERemoteService*    m_pRemoteService;
-    std::string             m_value;
+    NimBLEAttValue          m_value;
     notify_callback         m_notifyCallback;
-    time_t                  m_timestamp;
+#ifdef ESP_PLATFORM
     portMUX_TYPE            m_valMux;
-
+#endif
     // We maintain a vector of descriptors owned by this characteristic.
     std::vector<NimBLERemoteDescriptor*> m_descriptorVector;
 }; // NimBLERemoteCharacteristic
