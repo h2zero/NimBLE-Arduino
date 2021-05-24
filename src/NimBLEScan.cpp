@@ -11,10 +11,8 @@
  *  Created on: Jul 1, 2017
  *      Author: kolban
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
 #include "NimBLEScan.h"
@@ -404,7 +402,9 @@ bool NimBLEScan::stop() {
  * @brief Clears the duplicate scan filter cache.
  */
 void NimBLEScan::clearDuplicateCache() {
+#ifdef ESP_PLATFORM
     esp_ble_scan_dupilcate_list_flush();
+#endif
 }
 
 

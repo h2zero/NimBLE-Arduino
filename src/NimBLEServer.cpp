@@ -12,19 +12,21 @@
  *      Author: kolban
  */
 
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEServer.h"
 #include "NimBLEDevice.h"
 #include "NimBLELog.h"
 
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
-
+#else
+#include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
+#include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
+#endif
 
 static const char* LOG_TAG = "NimBLEServer";
 static NimBLEServerCallbacks defaultCallbacks;
@@ -79,17 +81,16 @@ NimBLEService* NimBLEServer::createService(const char* uuid) {
  *             to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
-NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numHandles, uint8_t inst_id) {
+NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid) {
     NIMBLE_LOGD(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
-    // TODO: add functionality to use inst_id for multiple services with same uuid
-    (void)inst_id;
+
     // Check that a service with the supplied UUID does not already exist.
     if(getServiceByUUID(uuid) != nullptr) {
         NIMBLE_LOGW(LOG_TAG, "Warning creating a duplicate service UUID: %s",
                              std::string(uuid).c_str());
     }
 
-    NimBLEService* pService = new NimBLEService(uuid, numHandles, this);
+    NimBLEService* pService = new NimBLEService(uuid);
     m_svcVec.push_back(pService); // Save a reference to this service being on this server.
 
     if(m_gattsStarted) {
@@ -174,7 +175,7 @@ void NimBLEServer::start() {
         abort();
     }
 
-#if CONFIG_LOG_DEFAULT_LEVEL > 3 || (ARDUINO_ARCH_ESP32 && CORE_DEBUG_LEVEL >= 4)
+#if CONFIG_LOG_DEFAULT_LEVEL > 3 || (CONFIG_ENABLE_ARDUINO_DEPENDS && CORE_DEBUG_LEVEL >= 4)
     ble_gatts_show_local();
 #endif
 /*** Future use ***

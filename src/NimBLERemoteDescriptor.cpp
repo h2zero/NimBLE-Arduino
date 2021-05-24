@@ -11,10 +11,8 @@
  *  Created on: Jul 8, 2017
  *      Author: kolban
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLERemoteDescriptor.h"
@@ -126,11 +124,11 @@ uint32_t NimBLERemoteDescriptor::readUInt32() {
  * @brief Read the value of the remote descriptor.
  * @return The value of the remote descriptor.
  */
-std::string NimBLERemoteDescriptor::readValue() {
+NimBLEAttValue NimBLERemoteDescriptor::readValue() {
     NIMBLE_LOGD(LOG_TAG, ">> Descriptor readValue: %s", toString().c_str());
 
     NimBLEClient* pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
-    std::string value;
+    NimBLEAttValue value;
 
     if (!pClient->isConnected()) {
         NIMBLE_LOGE(LOG_TAG, "Disconnected");
@@ -175,7 +173,7 @@ std::string NimBLERemoteDescriptor::readValue() {
         }
     } while(rc != 0 && retryCount--);
 
-    NIMBLE_LOGD(LOG_TAG, "<< Descriptor readValue(): length: %d rc=%d", value.length(), rc);
+    NIMBLE_LOGD(LOG_TAG, "<< Descriptor readValue(): length: %d rc=%d", value.getLength(), rc);
     return value;
 } // readValue
 
@@ -198,16 +196,16 @@ int NimBLERemoteDescriptor::onReadCB(uint16_t conn_handle,
 
     NIMBLE_LOGD(LOG_TAG, "Read complete; status=%d conn_handle=%d", error->status, conn_handle);
 
-    std::string *strBuf = (std::string*)pTaskData->buf;
+    NimBLEAttValue *valBuf = (NimBLEAttValue*)pTaskData->buf;
     int rc = error->status;
 
     if(rc == 0) {
         if(attr) {
-            if(((*strBuf).length() + attr->om->om_len) > BLE_ATT_ATTR_MAX_LEN) {
+            if(((*valBuf).getLength() + attr->om->om_len) > BLE_ATT_ATTR_MAX_LEN) {
                 rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             } else {
                 NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
-                (*strBuf) += std::string((char*) attr->om->om_data, attr->om->om_len);
+                (*valBuf) += NimBLEAttValue(attr->om->om_data, attr->om->om_len);
                 return 0;
             }
         }
@@ -243,6 +241,7 @@ int NimBLERemoteDescriptor::onWriteCB(uint16_t conn_handle,
                 const struct ble_gatt_error *error,
                 struct ble_gatt_attr *attr, void *arg)
 {
+    (void)attr;
     ble_task_data_t *pTaskData = (ble_task_data_t*)arg;
     NimBLERemoteDescriptor* descriptor = (NimBLERemoteDescriptor*)pTaskData->pATT;
 
@@ -346,8 +345,8 @@ bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool
  * @param [in] response True if we expect a response.
  * @return True if successful
  */
-bool NimBLERemoteDescriptor::writeValue(const std::string &newValue, bool response) {
-    return writeValue((uint8_t*) newValue.data(), newValue.length(), response);
+bool NimBLERemoteDescriptor::writeValue(const NimBLEAttValue &newValue, bool response) {
+    return writeValue(newValue.getValue(), newValue.getLength(), response);
 } // writeValue
 
 #endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)

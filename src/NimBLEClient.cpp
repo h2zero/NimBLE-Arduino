@@ -11,10 +11,8 @@
  *      Author: kolban
  */
 
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEClient.h"
@@ -24,7 +22,11 @@
 #include <string>
 #include <unordered_set>
 
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "nimble/nimble_port.h"
+#else
+#include "nimble/porting/nimble/include/nimble/nimble_port.h"
+#endif
 
 
 static const char* LOG_TAG = "NimBLEClient";
@@ -73,6 +75,7 @@ NimBLEClient::NimBLEClient(const NimBLEAddress &peerAddress) : m_peerAddress(pee
     m_pConnParams.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN; // Minimum length of connection event in 0.625ms units
     m_pConnParams.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN; // Maximum length of connection event in 0.625ms units
 
+    memset(&m_dcTimer, 0, sizeof(m_dcTimer));
     ble_npl_callout_init(&m_dcTimer, nimble_port_get_dflt_eventq(),
                          NimBLEClient::dcTimerCb, this);
 } // NimBLEClient
@@ -717,11 +720,11 @@ int NimBLEClient::serviceDiscoveredCB(
  * @param [in] characteristicUUID The characteristic whose value we wish to read.
  * @returns characteristic value or an empty string if not found
  */
-std::string NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID) {
+NimBLEAttValue NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID) {
     NIMBLE_LOGD(LOG_TAG, ">> getValue: serviceUUID: %s, characteristicUUID: %s",
                          serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
 
-    std::string ret = "";
+    NimBLEAttValue ret;
     NimBLERemoteService* pService = getService(serviceUUID);
 
     if(pService != nullptr) {
@@ -745,7 +748,7 @@ std::string NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBLEUU
  * @returns true if successful otherwise false
  */
 bool NimBLEClient::setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
-                            const std::string &value, bool response)
+                            const NimBLEAttValue &value, bool response)
 {
     NIMBLE_LOGD(LOG_TAG, ">> setValue: serviceUUID: %s, characteristicUUID: %s",
                          serviceUUID.toString().c_str(), characteristicUUID.toString().c_str());
@@ -924,13 +927,19 @@ uint16_t NimBLEClient::getMTU() {
                     NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s",
                                 (*characteristic)->toString().c_str());
 
-                    time_t t = time(nullptr);
+                    //time_t t = time(nullptr);
+                    (*characteristic)->m_value.setTimeStamp();
+#ifdef ESP_PLATFORM
                     portENTER_CRITICAL(&(*characteristic)->m_valMux);
-                    (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data,
+                    (*characteristic)->m_value = NimBLEAttValue(event->notify_rx.om->om_data,
                                                              event->notify_rx.om->om_len);
-                    (*characteristic)->m_timestamp = t;
                     portEXIT_CRITICAL(&(*characteristic)->m_valMux);
-
+#else
+                    portENTER_CRITICAL();
+                    (*characteristic)->m_value = NimBLEAttValue(event->notify_rx.om->om_data,
+                                                             event->notify_rx.om->om_len);
+                    portEXIT_CRITICAL();
+#endif
                     if ((*characteristic)->m_notifyCallback != nullptr) {
                         NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s",
                                     (*characteristic)->toString().c_str());

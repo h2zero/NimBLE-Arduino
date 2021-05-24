@@ -15,10 +15,8 @@
 #ifndef _BLEHIDDEVICE_H_
 #define _BLEHIDDEVICE_H_
 
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
 
 #include "NimBLECharacteristic.h"

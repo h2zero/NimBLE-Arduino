@@ -14,24 +14,13 @@
 
 #ifndef MAIN_NIMBLEDESCRIPTOR_H_
 #define MAIN_NIMBLEDESCRIPTOR_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLECharacteristic.h"
 #include "NimBLEUUID.h"
-
-#include <string>
-
-
-typedef struct
-{
-    uint16_t attr_max_len;  /*!<  attribute max value length */
-    uint16_t attr_len;      /*!<  attribute current value length */
-    uint8_t  *attr_value;    /*!<  the pointer to attribute value */
-} attr_value_t;
+#include "NimBLEAttValue.h"
 
 class NimBLEService;
 class NimBLECharacteristic;
@@ -60,12 +49,13 @@ public:
     void                  setCallbacks(NimBLEDescriptorCallbacks* pCallbacks);
 
     size_t                getLength();
-    uint8_t*              getValue();
+    NimBLEAttValue        getValue();
     std::string           getStringValue();
 
     void                  setValue(const uint8_t* data, size_t size);
     void                  setValue(const std::string &value);
     NimBLECharacteristic* getCharacteristic();
+
 
     /**
      * @brief Convenience template to set the descriptor value to <type\>val.
@@ -91,8 +81,7 @@ private:
     NimBLEDescriptorCallbacks* m_pCallbacks;
     NimBLECharacteristic*      m_pCharacteristic;
     uint8_t                    m_properties;
-    attr_value_t               m_value;
-    portMUX_TYPE               m_valMux;
+    NimBLEAttValue             m_value;
 }; // NimBLEDescriptor
 
 

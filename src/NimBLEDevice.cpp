@@ -11,17 +11,25 @@
  *  Created on: Mar 16, 2017
  *      Author: kolban
  */
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
 
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
+
 #include "NimBLEDevice.h"
 #include "NimBLEUtils.h"
 
+#ifdef ESP_PLATFORM
 #include "esp_err.h"
 #include "esp_bt.h"
 #include "nvs_flash.h"
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "esp_nimble_hci.h"
+#else
+#include "nimble/esp_port/esp-hci/include/esp_nimble_hci.h"
+#endif
+#endif
+
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
 #include "host/ble_hs.h"
@@ -29,8 +37,21 @@
 #include "host/util/util.h"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
+#else
+#include "nimble/porting/nimble/include/nimble/nimble_port.h"
+#include "nimble/porting/npl/freertos/include/nimble/nimble_port_freertos.h"
+#include "nimble/nimble/host/include/host/ble_hs.h"
+#include "nimble/nimble/host/include/host/ble_hs_pvcy.h"
+#include "nimble/nimble/host/util/include/host/util/util.h"
+#include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
+#include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
+#endif
 
-#ifdef ARDUINO_ARCH_ESP32
+#ifndef ESP_PLATFORM
+#include "nimble/nimble/controller/include/controller/ble_phy.h"
+#endif
+
+#ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
 #include "esp32-hal-bt.h"
 #endif
 
@@ -63,9 +84,10 @@ std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
 std::vector<NimBLEAddress>  NimBLEDevice::m_whiteList;
 NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 uint8_t                     NimBLEDevice::m_own_addr_type = BLE_OWN_ADDR_PUBLIC;
+#ifdef ESP_PLATFORM
 uint16_t                    NimBLEDevice::m_scanDuplicateSize = CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE;
 uint8_t                     NimBLEDevice::m_scanFilterMode = CONFIG_BTDM_SCAN_DUPL_TYPE;
-
+#endif
 
 /**
  * @brief Create a new instance of a server.
@@ -269,7 +291,7 @@ void NimBLEDevice::stopAdvertising() {
 
 #endif // #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
-
+#ifdef ESP_PLATFORM
 /**
  * @brief Set the transmission power.
  * @param [in] powerLevel The power level to set, can be one of:
@@ -295,12 +317,15 @@ void NimBLEDevice::stopAdvertising() {
  * *   ESP_BLE_PWR_TYPE_SCAN       = 10, For scan
  * *   ESP_BLE_PWR_TYPE_DEFAULT    = 11, For default, if not set other, it will use default value
  */
-/* STATIC */ void NimBLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
+/* STATIC */
+void NimBLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
     NIMBLE_LOGD(LOG_TAG, ">> setPower: %d (type: %d)", powerLevel, powerType);
+
     esp_err_t errRc = esp_ble_tx_power_set(powerType, powerLevel);
     if (errRc != ESP_OK) {
         NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_set: rc=%d", errRc);
     }
+
     NIMBLE_LOGD(LOG_TAG, "<< setPower");
 } // setPower
 
@@ -323,8 +348,8 @@ void NimBLEDevice::stopAdvertising() {
  * @return the power level currently used by the type specified.
  */
 
-/* STATIC */ int NimBLEDevice::getPower(esp_ble_power_type_t powerType) {
-
+/* STATIC */
+int NimBLEDevice::getPower(esp_ble_power_type_t powerType) {
     switch(esp_ble_tx_power_get(powerType)) {
         case ESP_PWR_LVL_N12:
             return -12;
@@ -347,6 +372,17 @@ void NimBLEDevice::stopAdvertising() {
     }
 } // getPower
 
+#else
+
+void NimBLEDevice::setPower(int dbm) {
+    ble_phy_txpwr_set(dbm);
+}
+
+
+int NimBLEDevice::getPower() {
+    return ble_phy_txpwr_get();
+}
+#endif
 
 /**
  * @brief Get our device address.
@@ -403,6 +439,7 @@ void NimBLEDevice::stopAdvertising() {
 }
 
 
+#ifdef ESP_PLATFORM
 /**
  * @brief Set the duplicate filter cache size for filtering scanned devices.
  * @param [in] cacheSize The number of advertisements filtered before the cache is reset.\n
@@ -448,6 +485,7 @@ void NimBLEDevice::setScanFilterMode(uint8_t mode) {
 
     m_scanFilterMode = mode;
 }
+#endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 /**
@@ -696,6 +734,14 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
     int rc = ble_hs_util_ensure_addr(0);
     assert(rc == 0);
 
+#ifndef ESP_PLATFORM
+    rc = ble_hs_id_infer_auto(m_own_addr_type, &m_own_addr_type);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "error determining address type; rc=%d", rc);
+        return;
+    }
+#endif
+
     // Yield for houskeeping before returning to operations.
     // Occasionally triggers exception without.
     taskYIELD();
@@ -724,6 +770,7 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
 /* STATIC */ void NimBLEDevice::host_task(void *param)
 {
     NIMBLE_LOGI(LOG_TAG, "BLE Host Task Started");
+
     /* This function will return only when nimble_port_stop() is executed */
     nimble_port_run();
 
@@ -738,9 +785,10 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
 /* STATIC */ void NimBLEDevice::init(const std::string &deviceName) {
     if(!initialized){
         int rc=0;
+#ifdef ESP_PLATFORM
         esp_err_t errRc = ESP_OK;
 
-#ifdef ARDUINO_ARCH_ESP32
+#ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
         // make sure the linker includes esp32-hal-bt.c so ardruino init doesn't release BLE memory.
         btStarted();
 #endif
@@ -765,6 +813,7 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
         ESP_ERROR_CHECK(esp_bt_controller_init(&bt_cfg));
         ESP_ERROR_CHECK(esp_bt_controller_enable(ESP_BT_MODE_BLE));
         ESP_ERROR_CHECK(esp_nimble_hci_init());
+#endif
         nimble_port_init();
 
         // Setup callbacks for host events
@@ -789,9 +838,10 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
 
         nimble_port_freertos_init(NimBLEDevice::host_task);
     }
+
     // Wait for host and controller to sync before returning and accepting new tasks
     while(!m_synced){
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+        taskYIELD();
     }
 
     initialized = true; // Set the initialization flag to ensure we are only initialized once.
@@ -807,12 +857,12 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
     int ret = nimble_port_stop();
     if (ret == 0) {
         nimble_port_deinit();
-
+#ifdef ESP_PLATFORM
         ret = esp_nimble_hci_and_controller_deinit();
         if (ret != ESP_OK) {
             NIMBLE_LOGE(LOG_TAG, "esp_nimble_hci_and_controller_deinit() failed with error: %d", ret);
         }
-
+#endif
         initialized = false;
         m_synced = false;
 
@@ -964,6 +1014,7 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
 } // setSecurityCallbacks
 
 
+#ifdef ESP_PLATFORM
 /**
  * @brief Set the own address type.
  * @param [in] own_addr_type Own Bluetooth Device address type.\n
@@ -991,7 +1042,7 @@ void NimBLEDevice::setOwnAddrType(uint8_t own_addr_type, bool useNRPA) {
             break;
     }
 } // setOwnAddrType
-
+#endif
 
 /**
  * @brief Start the connection securing and authorization for this connection.
