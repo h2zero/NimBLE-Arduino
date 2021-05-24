@@ -103,6 +103,21 @@ static const struct ble_gap_conn_params ble_gap_conn_params_dflt = {
 };
 #endif
 
+#if NIMBLE_BLE_CONNECT && CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT
+struct ble_gap_connect_reattempt_ctxt {
+    uint8_t own_addr_type;
+    ble_addr_t peer_addr;
+    int32_t duration_ms;
+    struct ble_gap_conn_params conn_params;
+    ble_gap_event_fn *cb;
+    void *cb_arg;
+};
+
+static struct ble_gap_connect_reattempt_ctxt ble_conn_reattempt[MYNEWT_VAL(BLE_MAX_CONNECTIONS)];
+static uint16_t reattempt_idx;
+static bool conn_cookie_enabled;
+#endif
+
 /**
  * The state of the in-progress master connection.  If no master connection is
  * currently in progress, then the op field is set to BLE_GAP_OP_NULL.
@@ -864,6 +879,93 @@ ble_gap_master_connect_cancelled(void)
         state.cb(&event, state.cb_arg);
     }
 }
+
+#if CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT
+static void
+ble_gap_update_notify(uint16_t conn_handle, int status);
+
+static int
+ble_gap_find_retry_conn_param(const struct ble_gap_conn_desc *conn_desc)
+{
+    int i;
+
+    for(i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); i++) {
+        if (memcmp(&ble_conn_reattempt[i].peer_addr, &conn_desc->peer_ota_addr, sizeof(ble_addr_t)) == 0) {
+            return i;
+        }
+    }
+    /* No matching entry found. Return invalid index */
+    return MYNEWT_VAL(BLE_MAX_CONNECTIONS);
+}
+
+int
+ble_gap_master_connect_reattempt(uint16_t conn_handle)
+{
+    struct ble_gap_snapshot snap;
+    struct ble_gap_conn_desc conn;
+    struct ble_gap_update_entry *entry;
+    int idx;
+    int rc = BLE_HS_EUNKNOWN;
+
+    snap.desc = &conn;
+    rc = ble_gap_find_snapshot(conn_handle, &snap);
+    if (rc != 0) {
+        return rc;
+    }
+
+    if (conn.role == BLE_GAP_ROLE_MASTER) {
+        idx = ble_gap_find_retry_conn_param(&conn);
+        if (idx >= MYNEWT_VAL(BLE_MAX_CONNECTIONS)) {
+            return BLE_HS_EINVAL;
+        }
+
+        /* XXX Connection state in host needs to be removed and cleaned
+         * up to validate the connection when re-attempting. */
+
+        /* If there was a connection update in progress, indicate to the
+         * application that it did not complete.
+         */
+        ble_hs_lock();
+        entry = ble_gap_update_entry_remove(conn_handle);
+        ble_hs_unlock();
+
+        if (entry != NULL) {
+            ble_gap_update_notify(conn_handle, BLE_ERR_CONN_ESTABLISHMENT);
+            ble_gap_update_entry_free(entry);
+        }
+
+        ble_l2cap_sig_conn_broken(conn_handle, BLE_ERR_CONN_ESTABLISHMENT);
+        ble_sm_connection_broken(conn_handle);
+        ble_gatts_connection_broken(conn_handle);
+        ble_gattc_connection_broken(conn_handle);
+        ble_hs_flow_connection_broken(conn_handle);;
+
+        rc = ble_hs_atomic_conn_delete(conn_handle);
+        if (rc != 0) {
+            return rc;
+        }
+
+        /* Utilize cookie to get the index updated correctly for re-attempt */
+        ble_conn_reattempt[idx].cb_arg = &conn;
+        conn_cookie_enabled = true;
+
+        rc = ble_gap_connect(ble_conn_reattempt[idx].own_addr_type,
+                             &ble_conn_reattempt[idx].peer_addr,
+                             ble_conn_reattempt[idx].duration_ms,
+                             &ble_conn_reattempt[idx].conn_params,
+                             ble_conn_reattempt[idx].cb,
+                             ble_conn_reattempt[idx].cb_arg);
+        if (rc != 0) {
+            return rc;
+        }
+    } else {
+        rc = BLE_HS_EUNKNOWN;
+    }
+
+    return rc;
+}
+#endif
+
 #endif
 
 #if NIMBLE_BLE_SCAN
@@ -5007,6 +5109,31 @@ ble_gap_connect(uint8_t own_addr_type, const ble_addr_t *peer_addr,
     ble_gap_master.conn.our_addr_type = own_addr_type;
 
     ble_gap_master.op = BLE_GAP_OP_M_CONN;
+
+#if CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT
+    /* ble_gap_connect_reattempt save the connection parameters */
+    if ((cb_arg != NULL) && conn_cookie_enabled) {
+        struct ble_gap_conn_desc *conn_desc =  cb_arg;
+        /* reattempt_idx should follow conn handle corresponding to MASTER role */
+        reattempt_idx = conn_desc->conn_handle;
+        /* Reset cookie_enabled flag, it will be set again by reattempt call */
+        conn_cookie_enabled = false;
+    }
+
+    ble_conn_reattempt[reattempt_idx].own_addr_type = own_addr_type;
+    memcpy(&ble_conn_reattempt[reattempt_idx].peer_addr, peer_addr,
+           sizeof(ble_addr_t));
+    ble_conn_reattempt[reattempt_idx].duration_ms = duration_ms;
+    memcpy(&ble_conn_reattempt[reattempt_idx].conn_params,
+           conn_params,
+           sizeof(struct ble_gap_conn_params));
+    ble_conn_reattempt[reattempt_idx].cb = cb;
+    ble_conn_reattempt[reattempt_idx].cb_arg = cb_arg;
+    /* reattempt_idx need to be within limits. This may end up being unnecessary
+     * operation. However, it is better to be sure as it can get tricky with
+     * multiple connections and client + server roles XXX*/
+    reattempt_idx = (reattempt_idx + 1) % MYNEWT_VAL(BLE_MAX_CONNECTIONS);
+#endif
 
     rc = ble_gap_conn_create_tx(own_addr_type, peer_addr,
                                 conn_params);

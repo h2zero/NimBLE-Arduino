@@ -28,6 +28,17 @@
 #include "ble_hs_priv.h"
 #include "ble_hs_resolv_priv.h"
 
+#if CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT
+static uint16_t reattempt_conn[MYNEWT_VAL(BLE_MAX_CONNECTIONS)];
+extern int ble_gap_master_connect_reattempt(uint16_t conn_handle);
+
+#ifdef CONFIG_BT_NIMBLE_MAX_CONN_REATTEMPT
+#define MAX_REATTEMPT_ALLOWED CONFIG_BT_NIMBLE_MAX_CONN_REATTEMPT
+#else
+#define MAX_REATTEMPT_ALLOWED 0
+#endif
+#endif
+
 _Static_assert(sizeof (struct hci_data_hdr) == BLE_HCI_DATA_HDR_SZ,
                "struct hci_data_hdr must be 4 bytes");
 
@@ -155,6 +166,32 @@ ble_hs_hci_evt_disconn_complete(uint8_t event_code, const void *data,
         ble_hs_hci_add_avail_pkts(conn->bhc_outstanding_pkts);
     }
     ble_hs_unlock();
+
+#if CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT
+    int rc;
+
+    if (ev->reason == BLE_ERR_CONN_ESTABLISHMENT && (conn != NULL)) {
+        BLE_HS_LOG(DEBUG, "Reattempt connection; reason = 0x%x, status = %d,"
+                          " reattempt count = %d ", ev->reason, ev->status,
+                           reattempt_conn[ev->conn_handle]);
+        if (conn->bhc_flags & BLE_HS_CONN_F_MASTER) {
+            if (reattempt_conn[ev->conn_handle] < MAX_REATTEMPT_ALLOWED) {
+                reattempt_conn[ev->conn_handle] += 1;
+                rc = ble_gap_master_connect_reattempt(ev->conn_handle);
+                if (rc != 0) {
+                    BLE_HS_LOG(DEBUG, "Master reconnect attempt failed; rc = %d", rc);
+                }
+            } else {
+                reattempt_conn[ev->conn_handle] = 0;
+            }
+        }
+    } else {
+        /* Disconnect completed with some other reason than
+         * BLE_ERR_CONN_ESTABLISHMENT, reset the corresponding reattempt count
+         * */
+        reattempt_conn[ev->conn_handle] = 0;
+    }
+#endif
 
     ble_gap_rx_disconn_complete(ev);
 
