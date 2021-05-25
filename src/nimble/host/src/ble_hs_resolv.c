@@ -567,9 +567,25 @@ ble_hs_resolv_list_add(uint8_t *cmdbuf)
     addr_type = cmdbuf[0];
     ident_addr = cmdbuf + 1;
 
+/*--------------------------------------------------------------------------------*/
+    /* Temporary workaround to resolve an issue when deinitializing the stack
+     * and reinitializing. If the a peer deletes the bonding info after deiniting
+     * it will not be able to re-bond without this. Awaiting upstream fix.
+     */
+/*
     if (ble_hs_is_on_resolv_list(ident_addr, addr_type)) {
         return BLE_HS_EINVAL;
     }
+*/
+    int position = ble_hs_is_on_resolv_list(ident_addr, addr_type);
+    if (position) {
+        memmove(&g_ble_hs_resolv_list[position],
+                &g_ble_hs_resolv_list[position + 1],
+                (g_ble_hs_resolv_data.rl_cnt - position) * sizeof (struct
+                        ble_hs_resolv_entry));
+        --g_ble_hs_resolv_data.rl_cnt;
+    }
+/*--------------------------------------------------------------------------------*/
 
     rl = &g_ble_hs_resolv_list[g_ble_hs_resolv_data.rl_cnt];
     memset(rl, 0, sizeof(*rl));
