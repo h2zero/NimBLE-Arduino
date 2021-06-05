@@ -14,10 +14,9 @@
 
 #ifndef MAIN_NIMBLESERVER_H_
 #define MAIN_NIMBLESERVER_H_
-#include "sdkconfig.h"
+#include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#include "nimconfig.h"
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLEUtils.h"
