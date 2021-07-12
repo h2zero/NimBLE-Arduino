@@ -82,10 +82,4 @@ Also tracking the NimBLE related changes in ESP-IDF, master branch, currently [@
 * [beegee-tokyo](https://github.com/beegee-tokyo) for contributing your time to test/debug and contributing the beacon examples.
 * [Jeroen88](https://github.com/Jeroen88) for the amazing help debugging and improving the client code.  
 <br/>  
-
-# Todo
-- Improve host reset handler
-- Implement random address handling
-- Implement bond management
-- Add Bluetooth Mesh
-<br/>  
+  
