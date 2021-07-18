@@ -99,6 +99,7 @@ public:
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID &uuid);
     NimBLEDescriptor* getDescriptorByHandle(uint16_t handle);
+    void              removeDescriptor(NimBLEDescriptor *pDescriptor, bool deleteDsc = false);
 
     std::string       getValue(time_t *timestamp = nullptr);
     size_t            getDataLength();
@@ -152,6 +153,7 @@ private:
     std::vector<NimBLEDescriptor*> m_dscVec;
     portMUX_TYPE                   m_valMux;
     time_t                         m_timestamp;
+    uint8_t                        m_removed;
 
     std::vector<std::pair<uint16_t, uint16_t>>  m_subscribedVec;
 }; // NimBLECharacteristic

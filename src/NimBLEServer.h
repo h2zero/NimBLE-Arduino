@@ -20,6 +20,9 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
+#define NIMBLE_ATT_REMOVE_HIDE 1
+#define NIMBLE_ATT_REMOVE_DELETE 2
+
 #include "NimBLEUtils.h"
 #include "NimBLEAddress.h"
 #include "NimBLEAdvertising.h"
@@ -69,6 +72,7 @@ private:
     NimBLEServer();
     ~NimBLEServer();
     friend class           NimBLECharacteristic;
+    friend class           NimBLEService;
     friend class           NimBLEDevice;
     friend class           NimBLEAdvertising;
 
@@ -86,6 +90,7 @@ private:
     std::vector<NimBLECharacteristic*> m_notifyChrVec;
 
     static int             handleGapEvent(struct ble_gap_event *event, void *arg);
+    void                   serviceChanged();
     void                   resetGATT();
     bool                   setIndicateWait(uint16_t conn_handle);
     void                   clearIndicateWait(uint16_t conn_handle);
