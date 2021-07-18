@@ -416,6 +416,12 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
             NIMBLE_LOGI(LOG_TAG, "mtu update event; conn_handle=%d mtu=%d",
                         event->mtu.conn_handle,
                         event->mtu.value);
+            rc = ble_gap_conn_find(event->mtu.conn_handle, &desc);
+            if (rc != 0) {
+                return 0;
+            }
+
+            server->m_pServerCallbacks->onMTUChange(event->mtu.value, &desc);
             return 0;
         } // BLE_GAP_EVENT_MTU
 
@@ -808,6 +814,10 @@ void NimBLEServerCallbacks::onDisconnect(NimBLEServer* pServer) {
 void NimBLEServerCallbacks::onDisconnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
     NIMBLE_LOGD("NimBLEServerCallbacks", "onDisconnect(): Default");
 } // onDisconnect
+
+void NimBLEServerCallbacks::onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc) {
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onMTUChange(): Default");
+} // onMTUChange
 
 uint32_t NimBLEServerCallbacks::onPassKeyRequest(){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyRequest: default: 123456");
