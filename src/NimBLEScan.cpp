@@ -404,7 +404,9 @@ bool NimBLEScan::stop() {
  * @brief Clears the duplicate scan filter cache.
  */
 void NimBLEScan::clearDuplicateCache() {
+#ifdef CONFIG_IDF_TARGET_ESP32 // Not available for ESP32C3
     esp_ble_scan_dupilcate_list_flush();
+#endif
 }
 
 

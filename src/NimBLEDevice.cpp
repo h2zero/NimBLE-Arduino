@@ -757,8 +757,12 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
         esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
 
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+        bt_cfg.bluetooth_mode = ESP_BT_MODE_BLE;
+#else
         bt_cfg.mode = ESP_BT_MODE_BLE;
         bt_cfg.ble_max_conn = CONFIG_BT_NIMBLE_MAX_CONNECTIONS;
+#endif
         bt_cfg.normal_adv_size = m_scanDuplicateSize;
         bt_cfg.scan_duplicate_type = m_scanFilterMode;
 
@@ -977,17 +981,23 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
 void NimBLEDevice::setOwnAddrType(uint8_t own_addr_type, bool useNRPA) {
     m_own_addr_type = own_addr_type;
     switch (own_addr_type) {
+#ifdef CONFIG_IDF_TARGET_ESP32
         case BLE_OWN_ADDR_PUBLIC:
             ble_hs_pvcy_rpa_config(NIMBLE_HOST_DISABLE_PRIVACY);
             break;
+#endif
         case BLE_OWN_ADDR_RANDOM:
             setSecurityInitKey(BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID);
+#ifdef CONFIG_IDF_TARGET_ESP32
             ble_hs_pvcy_rpa_config(useNRPA ? NIMBLE_HOST_ENABLE_NRPA : NIMBLE_HOST_ENABLE_RPA);
+#endif
             break;
         case BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT:
         case BLE_OWN_ADDR_RPA_RANDOM_DEFAULT:
             setSecurityInitKey(BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID);
+#ifdef CONFIG_IDF_TARGET_ESP32
             ble_hs_pvcy_rpa_config(NIMBLE_HOST_ENABLE_RPA);
+#endif
             break;
     }
 } // setOwnAddrType
