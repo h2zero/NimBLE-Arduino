@@ -131,6 +131,14 @@ public:
      */
     virtual void onDisconnect(NimBLEServer* pServer, ble_gap_conn_desc* desc);
 
+     /**
+     * @brief Called when the connection MTU changes.
+     * @param [in] MTU The new MTU value.
+     * @param [in] desc A pointer to the connection description structure containig information
+     * about the connection.
+     */
+    virtual void onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc);
+
     /**
      * @brief Called when a client requests a passkey for pairing.
      * @return The passkey to be sent to the client.
