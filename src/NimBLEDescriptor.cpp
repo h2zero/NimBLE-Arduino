@@ -53,6 +53,7 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_
     m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
     m_valMux             = portMUX_INITIALIZER_UNLOCKED;
     m_properties         = 0;
+    m_removed            = 0;
 
     if (properties & BLE_GATT_CHR_F_READ) {             // convert uint16_t properties to uint8_t
         m_properties |= BLE_ATT_F_READ;

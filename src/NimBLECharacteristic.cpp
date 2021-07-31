@@ -45,14 +45,15 @@ NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties
  * @param [in] pService - pointer to the service instance this characteristic belongs to.
  */
 NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t properties, NimBLEService* pService) {
-    m_uuid       = uuid;
-    m_handle     = NULL_HANDLE;
-    m_properties = properties;
-    m_pCallbacks = &defaultCallback;
-    m_pService   = pService;
-    m_value      = "";
-    m_valMux     = portMUX_INITIALIZER_UNLOCKED;
-    m_timestamp  = 0;
+    m_uuid        = uuid;
+    m_handle      = NULL_HANDLE;
+    m_properties  = properties;
+    m_pCallbacks  = &defaultCallback;
+    m_pService    = pService;
+    m_value       = "";
+    m_valMux      = portMUX_INITIALIZER_UNLOCKED;
+    m_timestamp   = 0;
+    m_removed     = 0;
 } // NimBLECharacteristic
 
 /**
@@ -95,19 +96,61 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid,
     }
 
     addDescriptor(pDescriptor);
-
     return pDescriptor;
 } // createDescriptor
 
 
 /**
  * @brief Add a descriptor to the characteristic.
- * @param [in] A pointer to the descriptor to add.
+ * @param [in] pDescriptor A pointer to the descriptor to add.
  */
 void NimBLECharacteristic::addDescriptor(NimBLEDescriptor *pDescriptor) {
+    bool foundRemoved = false;
+
+    if(pDescriptor->m_removed > 0) {
+        for(auto& it : m_dscVec) {
+            if(it == pDescriptor) {
+                foundRemoved = true;
+                pDescriptor->m_removed = 0;
+            }
+        }
+    }
+
+    if(!foundRemoved) {
+        m_dscVec.push_back(pDescriptor);
+    }
+
     pDescriptor->setCharacteristic(this);
-    m_dscVec.push_back(pDescriptor);
+    NimBLEDevice::getServer()->serviceChanged();
 }
+
+
+/**
+ * @brief Remove a descriptor from the characterisitc.
+ * @param[in] pDescriptor A pointer to the descriptor instance to remove from the characterisitc.
+ * @param[in] deleteDsc If true it will delete the descriptor instance and free it's resources.
+ */
+void NimBLECharacteristic::removeDescriptor(NimBLEDescriptor *pDescriptor, bool deleteDsc) {
+    // Check if the descriptor was already removed and if so, check if this
+    // is being called to delete the object and do so if requested.
+    // Otherwise, ignore the call and return.
+    if(pDescriptor->m_removed > 0) {
+        if(deleteDsc) {
+            for(auto it = m_dscVec.begin(); it != m_dscVec.end(); ++it) {
+                if ((*it) == pDescriptor) {
+                    delete *it;
+                    m_dscVec.erase(it);
+                    break;
+                }
+            }
+        }
+
+        return;
+    }
+
+    pDescriptor->m_removed = deleteDsc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE;
+    NimBLEDevice::getServer()->serviceChanged();
+} // removeDescriptor
 
 
 /**

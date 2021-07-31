@@ -60,6 +60,7 @@ public:
                                                NIMBLE_PROPERTY::WRITE);
 
     void                  addCharacteristic(NimBLECharacteristic* pCharacteristic);
+    void                  removeCharacteristic(NimBLECharacteristic* pCharacteristic, bool deleteChr = false);
     NimBLECharacteristic* getCharacteristic(const char* uuid, uint16_t instanceId = 0);
     NimBLECharacteristic* getCharacteristic(const NimBLEUUID &uuid, uint16_t instanceId = 0);
     NimBLECharacteristic* getCharacteristicByHandle(uint16_t handle);
