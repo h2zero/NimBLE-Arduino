@@ -110,7 +110,7 @@ NimBLEScan::~NimBLEScan() {
 
             advertisedDevice->m_timestamp = time(nullptr);
             advertisedDevice->setRSSI(event->disc.rssi);
-            advertisedDevice->setPayload(event->disc.data, event->disc.length_data, 
+            advertisedDevice->setPayload(event->disc.data, event->disc.length_data,
             event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP);
 
             if (pScan->m_pAdvertisedDeviceCallbacks) {
@@ -128,7 +128,7 @@ NimBLEScan::~NimBLEScan() {
                     advertisedDevice->m_callbackSent = true;
                     pScan->m_pAdvertisedDeviceCallbacks->onResult(advertisedDevice);
                 }
-                // If not storing results and we have invoked the callback, delete the device. 
+                // If not storing results and we have invoked the callback, delete the device.
                 if(pScan->m_maxResults == 0 && advertisedDevice->m_callbackSent) {
                     pScan->erase(advertisedAddress);
                 }
