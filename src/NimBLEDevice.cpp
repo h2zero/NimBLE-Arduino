@@ -31,8 +31,7 @@
 #include "services/gatt/ble_svc_gatt.h"
 
 #ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
-extern "C" bool btInUse();
-bool btInUse(){ return true; }
+#include "esp32-hal-bt.h"
 #endif
 
 #include "NimBLELog.h"
@@ -740,6 +739,12 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
     if(!initialized){
         int rc=0;
         esp_err_t errRc = ESP_OK;
+
+#ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
+        // make sure the linker includes esp32-hal-bt.c so ardruino init doesn't release BLE memory.
+        btStarted();
+#endif
+
         errRc = nvs_flash_init();
 
         if (errRc == ESP_ERR_NVS_NO_FREE_PAGES || errRc == ESP_ERR_NVS_NEW_VERSION_FOUND) {
