@@ -383,6 +383,7 @@ void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertiseme
  * @brief Start advertising.
  * @param [in] duration The duration, in seconds, to advertise, 0 == advertise forever.
  * @param [in] advCompleteCB A pointer to a callback to be invoked when advertising ends.
+ * @return True if advertising started successfully.
  */
 bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdvertising *pAdv)) {
     NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d",
