@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.  
 
+## [1.3.1] - 2021-08-04
+
+### Fixed
+- Corrected a compiler/linker error when an application or a library uses bluetooth classic due to the redefinition of `btInUse`.
+
 ## [1.3.0] - 2021-08-02
 
 ### Added
