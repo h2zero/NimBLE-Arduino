@@ -64,7 +64,7 @@ NimBLEMeshModel* NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCa
         case BT_MESH_MODEL_ID_HEALTH_SRV:
             m_pHealthModel = new NimBLEHealthSrvModel(pCallbacks);
             pModel = m_pHealthModel;
-            m_modelsVec.push_back(bt_mesh_model{{type},0,0,0,&pModel->m_opPub,{0},{0},bt_mesh_health_srv_op,&m_pHealthModel->m_healthSrv});
+            m_modelsVec.push_back(bt_mesh_model{{type},0,0,0,&pModel->m_opPub,{0},{0},bt_mesh_health_srv_op,&bt_mesh_health_cli_cb,&m_pHealthModel->m_healthSrv});
             return pModel;
 
         default:
@@ -72,7 +72,7 @@ NimBLEMeshModel* NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCa
             return nullptr;
     }
 
-    m_modelsVec.push_back(bt_mesh_model{{type},0,0,0, &pModel->m_opPub,{0},{0},pModel->m_opList, pModel});
+    m_modelsVec.push_back(bt_mesh_model{{type},0,0,0, &pModel->m_opPub,{0},{0},pModel->m_opList,nullptr,pModel});
     return pModel;
 }
 

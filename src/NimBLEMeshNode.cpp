@@ -161,7 +161,7 @@ bool NimBLEMeshNode::start() {
 
     // Config server and primary health models are required in the primary element
     // create them here and add them as the first models.
-    m_configSrvModel = new bt_mesh_model{{BT_MESH_MODEL_ID_CFG_SRV},0,0,0,nullptr,{0},{0},bt_mesh_cfg_srv_op,&m_serverConfig};
+    m_configSrvModel = new bt_mesh_model{{BT_MESH_MODEL_ID_CFG_SRV},0,0,0,nullptr,{0},{0},bt_mesh_cfg_srv_op,&bt_mesh_cfg_srv_cb,&m_serverConfig};
     for(int i = 0; i < CONFIG_BT_MESH_MODEL_KEY_COUNT; i++) {
         m_configSrvModel->keys[i] = BT_MESH_KEY_UNUSED;
     }
