@@ -14,11 +14,9 @@
 
 #ifndef MAIN_NIMBLESERVER_H_
 #define MAIN_NIMBLESERVER_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #define NIMBLE_ATT_REMOVE_HIDE 1
 #define NIMBLE_ATT_REMOVE_DELETE 2
@@ -168,7 +166,5 @@ public:
     virtual bool onConfirmPIN(uint32_t pin);
 }; // NimBLEServerCallbacks
 
-
-#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
 #endif /* MAIN_NIMBLESERVER_H_ */

@@ -14,11 +14,9 @@
 
 #ifndef MAIN_NIMBLEDESCRIPTOR_H_
 #define MAIN_NIMBLEDESCRIPTOR_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 #include "NimBLECharacteristic.h"
 #include "NimBLEUUID.h"
@@ -113,6 +111,5 @@ public:
 
 #include "NimBLE2904.h"
 
-#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
 #endif /* MAIN_NIMBLEDESCRIPTOR_H_ */

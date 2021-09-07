@@ -11,11 +11,8 @@
  *      Author: kolban
  */
 
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEClient.h"
 #include "NimBLEDevice.h"
@@ -24,8 +21,11 @@
 #include <string>
 #include <unordered_set>
 
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "nimble/nimble_port.h"
-
+#else
+#include "nimble/porting/nimble/include/nimble/nimble_port.h"
+#endif
 
 static const char* LOG_TAG = "NimBLEClient";
 static NimBLEClientCallbacks defaultCallbacks;
@@ -1170,5 +1170,4 @@ bool NimBLEClientCallbacks::onConfirmPIN(uint32_t pin){
     return true;
 }
 
-#endif // #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-#endif // CONFIG_BT_ENABLED
+#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */

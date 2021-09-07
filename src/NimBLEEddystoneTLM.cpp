@@ -11,12 +11,14 @@
  *  Created on: Mar 12, 2018
  *      Author: pcbreflux
  */
-#include "sdkconfig.h"
+
+#include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLEEddystoneTLM.h"
 #include "NimBLELog.h"
 
+#include <stdio.h>
 #include <cstring>
 
 #define ENDIAN_CHANGE_U16(x) ((((x)&0xFF00)>>8) + (((x)&0xFF)<<8))

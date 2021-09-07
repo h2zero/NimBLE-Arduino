@@ -6,7 +6,7 @@
  *
  */
 
-#include "sdkconfig.h"
+#include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLEUtils.h"

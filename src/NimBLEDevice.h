@@ -14,10 +14,9 @@
 
 #ifndef MAIN_NIMBLEDEVICE_H_
 #define MAIN_NIMBLEDEVICE_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
 
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 #include "NimBLEScan.h"

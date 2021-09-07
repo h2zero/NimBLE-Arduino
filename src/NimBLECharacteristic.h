@@ -13,13 +13,15 @@
 
 #ifndef MAIN_NIMBLECHARACTERISTIC_H_
 #define MAIN_NIMBLECHARACTERISTIC_H_
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
 #include "nimconfig.h"
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
+#if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "host/ble_hs.h"
+#else
+#include "nimble/nimble/host/include/host/ble_hs.h"
+#endif
+
 /****  FIX COMPILATION ****/
 #undef min
 #undef max
@@ -195,6 +197,5 @@ public:
     virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue);
 };
 
-#endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-#endif /* CONFIG_BT_ENABLED */
+#endif /* CONFIG_BT_ENABLED  && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
 #endif /*MAIN_NIMBLECHARACTERISTIC_H_*/

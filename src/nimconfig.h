@@ -16,10 +16,11 @@
 /** @brief Un-comment to change default device name */
 // #define CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME "nimble"
 
-/** @brief Un-comment to see debug log messages from the NimBLE host
+/** @brief Un-comment to set the debug log messages level from the NimBLE host stack.\n
+ *  Values: 0 = DEBUG, 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5+ = NONE\n
  *  Uses approx. 32kB of flash memory.
  */
-// #define CONFIG_BT_NIMBLE_DEBUG
+// #define CONFIG_BT_NIMBLE_LOG_LEVEL 5
 
 /** @brief Un-comment to see NimBLE host return codes as text debug log messages.
  *  Uses approx. 7kB of flash memory.
@@ -148,6 +149,10 @@
 
 #ifndef CONFIG_BT_NIMBLE_RPA_TIMEOUT
 #define CONFIG_BT_NIMBLE_RPA_TIMEOUT 900
+#endif
+
+#ifndef CONFIG_BT_NIMBLE_LOG_LEVEL
+#define CONFIG_BT_NIMBLE_LOG_LEVEL 5
 #endif
 
 
