@@ -372,6 +372,38 @@ npl_freertos_sem_release(struct ble_npl_sem *sem)
     return BLE_NPL_OK;
 }
 
+
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+static void
+ble_npl_event_fn_wrapper(void *arg)
+{
+    struct ble_npl_callout *co = (struct ble_npl_callout *)arg;
+
+    if (co->evq) {
+        ble_npl_eventq_put(co->evq, &co->ev);
+    } else {
+        co->ev.fn(&co->ev);
+    }
+}
+
+static
+ble_npl_error_t esp_err_to_npl_error(esp_err_t err)
+{
+    switch(err) {
+    case ESP_ERR_INVALID_ARG:
+        return BLE_NPL_INVALID_PARAM;
+
+    case ESP_ERR_INVALID_STATE:
+        return BLE_NPL_EINVAL;
+
+    case ESP_OK:
+        return BLE_NPL_OK;
+
+    default:
+        return BLE_NPL_ERROR;
+    }
+}
+#else
 static void
 os_callout_timer_cb(TimerHandle_t timer)
 {
@@ -386,30 +418,56 @@ os_callout_timer_cb(TimerHandle_t timer)
         co->ev.fn(&co->ev);
     }
 }
+#endif
 
 void
 npl_freertos_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *evq,
                           ble_npl_event_fn *ev_cb, void *ev_arg)
 {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    co->ev.fn = ev_cb;
+    co->ev.arg = ev_arg;
+    co->evq = evq;
+
+    esp_timer_create_args_t create_args = {
+      .callback = ble_npl_event_fn_wrapper,
+      .arg = co,
+      .name = "nimble_timer"
+    };
+
+    ESP_ERROR_CHECK(esp_timer_create(&create_args, &co->handle));
+#else
     if (co->handle == NULL) {
         co->handle = xTimerCreate("co", 1, pdFALSE, co, os_callout_timer_cb);
     }
 
     co->evq = evq;
     ble_npl_event_init(&co->ev, ev_cb, ev_arg);
+#endif
 }
 
 void
 npl_freertos_callout_deinit(struct ble_npl_callout *co)
 {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_stop(co->handle));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_timer_delete(co->handle));
+#else
     if (co->handle) {
         xTimerDelete(co->handle, portMAX_DELAY);
     }
+#endif
 }
 
 ble_npl_error_t
 npl_freertos_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks)
 {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    esp_timer_stop(co->handle);
+
+    return esp_err_to_npl_error(esp_timer_start_once(co->handle, ticks*1000));
+#else
+
     BaseType_t woken1, woken2, woken3;
 
     if (co->handle == NULL) {
@@ -439,6 +497,45 @@ npl_freertos_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks)
     }
 
     return BLE_NPL_OK;
+#endif
+}
+
+void
+npl_freertos_callout_stop(struct ble_npl_callout *co)
+{
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    esp_timer_stop(co->handle);
+#else
+    xTimerStop(co->handle, portMAX_DELAY);
+#endif
+}
+
+bool
+npl_freertos_callout_is_active(struct ble_npl_callout *co)
+{
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    return esp_timer_is_active(co->handle);
+#else
+    return xTimerIsTimerActive(co->handle) == pdTRUE;
+#endif
+}
+
+ble_npl_time_t
+npl_freertos_callout_get_ticks(struct ble_npl_callout *co)
+{
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+   /* Currently, esp_timer does not support an API which gets the expiry time for
+    * current timer.
+    * Returning 0 from here should not cause any effect.
+    * Drawback of this approach is that existing code to reset timer would be called
+    * more often (since the if condition to invoke reset timer would always succeed if
+    * timer is active).
+    */
+
+    return 0;
+#else
+    return xTimerGetExpiryTime(co->handle);
+#endif
 }
 
 ble_npl_time_t

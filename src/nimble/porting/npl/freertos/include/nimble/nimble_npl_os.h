@@ -59,7 +59,11 @@ struct ble_npl_eventq {
 };
 
 struct ble_npl_callout {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+   esp_timer_handle_t handle;
+#else
     TimerHandle_t handle;
+#endif
     struct ble_npl_eventq *evq;
     struct ble_npl_event ev;
 };
@@ -221,6 +225,7 @@ ble_npl_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *evq,
 {
     npl_freertos_callout_init(co, evq, ev_cb, ev_arg);
 }
+
 static inline void
 ble_npl_callout_deinit(struct ble_npl_callout *co)
 {
@@ -236,19 +241,19 @@ ble_npl_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks)
 static inline void
 ble_npl_callout_stop(struct ble_npl_callout *co)
 {
-    xTimerStop(co->handle, portMAX_DELAY);
+    npl_freertos_callout_stop(co);
 }
 
 static inline bool
 ble_npl_callout_is_active(struct ble_npl_callout *co)
 {
-    return xTimerIsTimerActive(co->handle) == pdTRUE;
+    return npl_freertos_callout_is_active(co);
 }
 
 static inline ble_npl_time_t
 ble_npl_callout_get_ticks(struct ble_npl_callout *co)
 {
-    return xTimerGetExpiryTime(co->handle);
+    return npl_freertos_callout_get_ticks(co);
 }
 
 static inline uint32_t

@@ -57,6 +57,12 @@ void npl_freertos_callout_init(struct ble_npl_callout *co,
 
 void npl_freertos_callout_deinit(struct ble_npl_callout *co);
 
+void npl_freertos_callout_stop(struct ble_npl_callout *co);
+
+bool npl_freertos_callout_is_active(struct ble_npl_callout *co);
+
+ble_npl_time_t npl_freertos_callout_get_ticks(struct ble_npl_callout *co);
+
 ble_npl_error_t npl_freertos_callout_reset(struct ble_npl_callout *co,
                                            ble_npl_time_t ticks);
 

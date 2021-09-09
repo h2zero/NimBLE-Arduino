@@ -2246,11 +2246,6 @@ ble_gap_wl_set(const ble_addr_t *addrs, uint8_t white_list_count)
 
     ble_hs_lock();
 
-    if (white_list_count == 0) {
-        rc = BLE_HS_EINVAL;
-        goto done;
-    }
-
     for (i = 0; i < white_list_count; i++) {
         if (addrs[i].type != BLE_ADDR_PUBLIC &&
             addrs[i].type != BLE_ADDR_RANDOM) {
@@ -5615,6 +5610,11 @@ done:
 #else
     return BLE_HS_ENOTSUP;
 #endif
+}
+
+int ble_gap_set_data_len(uint16_t conn_handle, uint16_t tx_octets, uint16_t tx_time)
+{
+    return ble_hs_hci_util_set_data_len(conn_handle, tx_octets, tx_time);
 }
 
 /*****************************************************************************
