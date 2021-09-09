@@ -33,6 +33,28 @@
 
 #define MODLOG_MODULE_DFLT 255
 
+#if defined(ESP_PLATFORM) && !defined(ARDUINO_ARCH_ESP32)
+#define MODLOG_ESP_LOCAL(level, ml_msg_, ...) do { \
+    if (MYNEWT_VAL(BLE_HS_LOG_LVL) <= LOG_LOCAL_LEVEL) ESP_LOG_LEVEL_LOCAL(level, "NimBLE", ml_msg_, ##__VA_ARGS__); \
+} while(0)
+
+#define MODLOG_DEBUG(ml_mod_, ml_msg_, ...) \
+    MODLOG_ESP_LOCAL(ESP_LOG_DEBUG, ml_msg_, ##__VA_ARGS__)
+
+#define MODLOG_INFO(ml_mod_, ml_msg_, ...) \
+    MODLOG_ESP_LOCAL(ESP_LOG_INFO, ml_msg_, ##__VA_ARGS__)
+
+#define MODLOG_WARN(ml_mod_, ml_msg_, ...) \
+    MODLOG_ESP_LOCAL(ESP_LOG_WARN, ml_msg_, ##__VA_ARGS__)
+
+#define MODLOG_ERROR(ml_mod_, ml_msg_, ...) \
+    MODLOG_ESP_LOCAL(ESP_LOG_ERROR, ml_msg_, ##__VA_ARGS__)
+
+#define MODLOG_CRITICAL(ml_mod_, ml_msg_, ...) \
+    MODLOG_ESP_LOCAL(ESP_LOG_ERROR, ml_msg_, ##__VA_ARGS__)
+
+#else
+
 #if (MYNEWT_VAL(LOG_LEVEL) > 0)
 static inline void
 modlog_dummy(const char *msg, ...)
@@ -41,49 +63,8 @@ modlog_dummy(const char *msg, ...)
 }
 #endif
 
-#ifdef ESP_PLATFORM
-#include "esp_log.h"
-
-#define MODLOG_ESP_LOCAL(level, ml_msg_, ...) do { \
-    if (MYNEWT_VAL(BLE_HS_LOG_LVL) <= level) esp_log_write((esp_log_level_t)level, "NimBLE", ml_msg_, ##__VA_ARGS__); \
-} while(0)
-
-#ifdef ARDUINO_ARCH_ESP32
-#include "nimconfig.h"
-#endif
-
-#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_BT_NIMBLE_DEBUG)
-
-#define MODLOG_DEBUG(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(ESP_LOG_ERROR, ml_msg_, ##__VA_ARGS__)
-
-#define MODLOG_INFO(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(ESP_LOG_ERROR, ml_msg_, ##__VA_ARGS__)
-
-#define MODLOG_WARN(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(ESP_LOG_ERROR, ml_msg_, ##__VA_ARGS__)
-
-#else
-
-#define MODLOG_DEBUG(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(LOG_LEVEL_DEBUG, ml_msg_, ##__VA_ARGS__)
-
-#define MODLOG_INFO(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(LOG_LEVEL_INFO, ml_msg_, ##__VA_ARGS__)
-
-#define MODLOG_WARN(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(LOG_LEVEL_WARN, ml_msg_, ##__VA_ARGS__)
-
-#endif
-
-#define MODLOG_ERROR(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(LOG_LEVEL_ERROR, ml_msg_, ##__VA_ARGS__)
-
-#define MODLOG_CRITICAL(ml_mod_, ml_msg_, ...) \
-    MODLOG_ESP_LOCAL(LOG_LEVEL_CRITICAL, ml_msg_, ##__VA_ARGS__)
-
-#else
 #include "nimble/console/console.h"
+
 #if (MYNEWT_VAL(LOG_LEVEL) > 0)
 #define MODLOG_DEBUG(ml_mod_, ml_msg_, ...) \
         modlog_dummy((ml_msg_), ##__VA_ARGS__)
