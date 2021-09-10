@@ -735,7 +735,7 @@ void NimBLEServer::startAdvertising() {
  */
 void NimBLEServer::stopAdvertising() {
     NimBLEDevice::stopAdvertising();
-} // startAdvertising
+} // stopAdvertising
 
 
 /**
@@ -774,6 +774,21 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
         NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
 }// updateConnParams
+
+
+/**
+ * @brief Request an update of the data packet length.
+ * * Can only be used after a connection has been established.
+ * @param [in] conn_handle The connection handle of the peer to send the request to.
+ * @param [in] tx_octets The preferred number of payload octets to use (Range 0x001B-0x00FB).
+ * @param [in] tx_time The preferred number of microseconds to use when transmitting a single packet (Range 0x0148-0x4290).
+ */
+void NimBLEServer::setDataLen(uint16_t conn_handle, uint16_t tx_octets, uint16_t tx_time) {
+    int rc = ble_gap_set_data_len(conn_handle, tx_octets, tx_time);
+    if(rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Set data length error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+}// setDataLen
 
 
 bool NimBLEServer::setIndicateWait(uint16_t conn_handle) {
