@@ -773,22 +773,26 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
     if(rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Update params error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
-}// updateConnParams
+} // updateConnParams
 
 
 /**
  * @brief Request an update of the data packet length.
  * * Can only be used after a connection has been established.
+ * @details Sends a data length update request to the peer.
+ * The Data Length Extension (DLE) allows to increase the Data Channel Payload from 27 bytes to up to 251 bytes.
+ * The peer needs to support the Bluetooth 4.2 specifications, to be capable of DLE.
  * @param [in] conn_handle The connection handle of the peer to send the request to.
  * @param [in] tx_octets The preferred number of payload octets to use (Range 0x001B-0x00FB).
- * @param [in] tx_time The preferred number of microseconds to use when transmitting a single packet (Range 0x0148-0x4290).
  */
-void NimBLEServer::setDataLen(uint16_t conn_handle, uint16_t tx_octets, uint16_t tx_time) {
+void NimBLEServer::setDataLen(uint16_t conn_handle, uint16_t tx_octets) {
+    uint16_t tx_time = (tx_octets + 14) * 8;
+
     int rc = ble_gap_set_data_len(conn_handle, tx_octets, tx_time);
     if(rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Set data length error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
-}// setDataLen
+} // setDataLen
 
 
 bool NimBLEServer::setIndicateWait(uint16_t conn_handle) {
