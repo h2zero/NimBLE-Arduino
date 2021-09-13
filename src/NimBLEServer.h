@@ -59,6 +59,7 @@ public:
     void                   updateConnParams(uint16_t conn_handle,
                                             uint16_t minInterval, uint16_t maxInterval,
                                             uint16_t latency, uint16_t timeout);
+    void                   setDataLen(uint16_t conn_handle, uint16_t tx_octets);
     uint16_t               getPeerMTU(uint16_t conn_id);
     std::vector<uint16_t>  getPeerDevices();
     NimBLEConnInfo         getPeerInfo(size_t index);
