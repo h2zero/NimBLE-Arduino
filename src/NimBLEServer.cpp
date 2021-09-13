@@ -80,18 +80,17 @@ NimBLEService* NimBLEServer::createService(const char* uuid) {
  *             to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
-NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid, uint32_t numHandles, uint8_t inst_id) {
+NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid) {
     NIMBLE_LOGD(LOG_TAG, ">> createService - %s", uuid.toString().c_str());
-    // TODO: add functionality to use inst_id for multiple services with same uuid
-    (void)inst_id;
+
     // Check that a service with the supplied UUID does not already exist.
     if(getServiceByUUID(uuid) != nullptr) {
         NIMBLE_LOGW(LOG_TAG, "Warning creating a duplicate service UUID: %s",
                              std::string(uuid).c_str());
     }
 
-    NimBLEService* pService = new NimBLEService(uuid, numHandles, this);
-    m_svcVec.push_back(pService); // Save a reference to this service being on this server.
+    NimBLEService* pService = new NimBLEService(uuid);
+    m_svcVec.push_back(pService);
     serviceChanged();
 
     NIMBLE_LOGD(LOG_TAG, "<< createService");

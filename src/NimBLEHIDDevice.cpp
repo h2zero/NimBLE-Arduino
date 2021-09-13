@@ -27,7 +27,7 @@ NimBLEHIDDevice::NimBLEHIDDevice(NimBLEServer* server) {
 	 * Here we create mandatory services described in bluetooth specification
 	 */
 	m_deviceInfoService = server->createService(NimBLEUUID((uint16_t) 0x180a));
-	m_hidService = server->createService(NimBLEUUID((uint16_t) 0x1812), 40);
+	m_hidService = server->createService(NimBLEUUID((uint16_t) 0x1812));
 	m_batteryService = server->createService(NimBLEUUID((uint16_t) 0x180f));
 
 	/*
