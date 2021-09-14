@@ -159,9 +159,6 @@ private:
     std::string             m_value;
     notify_callback         m_notifyCallback;
     time_t                  m_timestamp;
-#ifdef ESP_PLATFORM
-    portMUX_TYPE            m_valMux;
-#endif
 
     // We maintain a vector of descriptors owned by this characteristic.
     std::vector<NimBLERemoteDescriptor*> m_descriptorVector;

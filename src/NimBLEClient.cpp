@@ -948,19 +948,12 @@ uint16_t NimBLEClient::getMTU() {
                                 (*characteristic)->toString().c_str());
 
                     time_t t = time(nullptr);
-#ifdef ESP_PLATFORM
-                    portENTER_CRITICAL(&(*characteristic)->m_valMux);
+                    ble_npl_hw_enter_critical();
                     (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data,
                                                              event->notify_rx.om->om_len);
                     (*characteristic)->m_timestamp = t;
-                    portEXIT_CRITICAL(&(*characteristic)->m_valMux);
-#else
-                    portENTER_CRITICAL();
-                    (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data,
-                                                             event->notify_rx.om->om_len);
-                    (*characteristic)->m_timestamp = t;
-                    portEXIT_CRITICAL();
-#endif
+                    ble_npl_hw_exit_critical(0);
+
                     if ((*characteristic)->m_notifyCallback != nullptr) {
                         NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s",
                                     (*characteristic)->toString().c_str());

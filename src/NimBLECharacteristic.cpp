@@ -49,9 +49,6 @@ NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID &uuid, uint16_t prop
     m_pCallbacks  = &defaultCallback;
     m_pService    = pService;
     m_value       = "";
-#ifdef ESP_PLATFORM
-    m_valMux      = portMUX_INITIALIZER_UNLOCKED;
-#endif
     m_timestamp   = 0;
     m_removed     = 0;
 } // NimBLECharacteristic
@@ -237,21 +234,12 @@ NimBLEUUID NimBLECharacteristic::getUUID() {
  * @return A std::string containing the current characteristic value.
  */
 std::string NimBLECharacteristic::getValue(time_t *timestamp) {
-#ifdef ESP_PLATFORM
-    portENTER_CRITICAL(&m_valMux);
+    ble_npl_hw_enter_critical();
     std::string retVal = m_value;
     if(timestamp != nullptr) {
         *timestamp = m_timestamp;
     }
-    portEXIT_CRITICAL(&m_valMux);
-#else
-    portENTER_CRITICAL();
-    std::string retVal = m_value;
-    if(timestamp != nullptr) {
-        *timestamp = m_timestamp;
-    }
-    portEXIT_CRITICAL();
-#endif
+    ble_npl_hw_exit_critical(0);
 
     return retVal;
 } // getValue
@@ -262,15 +250,9 @@ std::string NimBLECharacteristic::getValue(time_t *timestamp) {
  * @return The length of the current characteristic data.
  */
 size_t NimBLECharacteristic::getDataLength() {
-#ifdef ESP_PLATFORM
-    portENTER_CRITICAL(&m_valMux);
+    ble_npl_hw_enter_critical();
     size_t len = m_value.length();
-    portEXIT_CRITICAL(&m_valMux);
-#else
-    portENTER_CRITICAL();
-    size_t len = m_value.length();
-    portEXIT_CRITICAL();
-#endif
+    ble_npl_hw_exit_critical(0);
     return len;
 }
 
@@ -302,17 +284,11 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
                 }
-#ifdef ESP_PLATFORM
-                portENTER_CRITICAL(&pCharacteristic->m_valMux);
+
+                ble_npl_hw_enter_critical();
                 rc = os_mbuf_append(ctxt->om, (uint8_t*)pCharacteristic->m_value.data(),
                                     pCharacteristic->m_value.length());
-                portEXIT_CRITICAL(&pCharacteristic->m_valMux);
-#else
-                portENTER_CRITICAL();
-                rc = os_mbuf_append(ctxt->om, (uint8_t*)pCharacteristic->m_value.data(),
-                                    pCharacteristic->m_value.length());
-                portEXIT_CRITICAL();
-#endif
+                ble_npl_hw_exit_critical(0);
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 
@@ -547,17 +523,10 @@ void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
     }
 
     time_t t = time(nullptr);
-#ifdef ESP_PLATFORM
-    portENTER_CRITICAL(&m_valMux);
+    ble_npl_hw_enter_critical();
     m_value = std::string((char*)data, length);
     m_timestamp = t;
-    portEXIT_CRITICAL(&m_valMux);
-#else
-    portENTER_CRITICAL();
-    m_value = std::string((char*)data, length);
-    m_timestamp = t;
-    portEXIT_CRITICAL();
-#endif
+    ble_npl_hw_exit_critical(0);
 
     NIMBLE_LOGD(LOG_TAG, "<< setValue");
 } // setValue

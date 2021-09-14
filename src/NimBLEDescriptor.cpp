@@ -49,9 +49,6 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_
     m_pCharacteristic    = pCharacteristic;
     m_pCallbacks         = &defaultCallbacks;           // No initial callback.
     m_value.attr_value   = (uint8_t*) calloc(max_len,1);  // Allocate storage for the value.
-#ifdef ESP_PLATFORM
-    m_valMux             = portMUX_INITIALIZER_UNLOCKED;
-#endif
     m_properties         = 0;
     m_removed            = 0;
 
@@ -164,15 +161,10 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                 if(ctxt->om->om_pkthdr_len > 8) {
                     pDescriptor->m_pCallbacks->onRead(pDescriptor);
                 }
-#ifdef ESP_PLATFORM
-                portENTER_CRITICAL(&pDescriptor->m_valMux);
+
+                ble_npl_hw_enter_critical();
                 rc = os_mbuf_append(ctxt->om, pDescriptor->getValue(), pDescriptor->getLength());
-                portEXIT_CRITICAL(&pDescriptor->m_valMux);
-#else
-                portENTER_CRITICAL();
-                rc = os_mbuf_append(ctxt->om, pDescriptor->getValue(), pDescriptor->getLength());
-                portEXIT_CRITICAL();
-#endif
+                ble_npl_hw_exit_critical(0);
                 return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 
@@ -243,17 +235,12 @@ void NimBLEDescriptor::setValue(const uint8_t* data, size_t length) {
         NIMBLE_LOGE(LOG_TAG, "Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
         return;
     }
-#ifdef ESP_PLATFORM
-    portENTER_CRITICAL(&m_valMux);
+
+    ble_npl_hw_enter_critical();
     m_value.attr_len = length;
     memcpy(m_value.attr_value, data, length);
-    portEXIT_CRITICAL(&m_valMux);
-#else
-    portENTER_CRITICAL();
-    m_value.attr_len = length;
-    memcpy(m_value.attr_value, data, length);
-    portEXIT_CRITICAL();
-#endif
+    ble_npl_hw_exit_critical(0);
+
 } // setValue
 
 
