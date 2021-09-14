@@ -786,12 +786,16 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
  * @param [in] tx_octets The preferred number of payload octets to use (Range 0x001B-0x00FB).
  */
 void NimBLEServer::setDataLen(uint16_t conn_handle, uint16_t tx_octets) {
+#ifdef CONFIG_NIMBLE_CPP_IDF // not yet available in IDF, Sept 9 2021
+    return;
+#else
     uint16_t tx_time = (tx_octets + 14) * 8;
 
     int rc = ble_gap_set_data_len(conn_handle, tx_octets, tx_time);
     if(rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Set data length error: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
+#endif
 } // setDataLen
 
 
