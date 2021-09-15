@@ -250,10 +250,11 @@ uint16_t NimBLEService::getHandle() {
  * @brief Create a new BLE Characteristic associated with this service.
  * @param [in] uuid - The UUID of the characteristic.
  * @param [in] properties - The properties of the characteristic.
+ * @param [in] max_len - The maximum length in bytes that the characteristic value can hold.
  * @return The new BLE characteristic.
  */
-NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint32_t properties) {
-    return createCharacteristic(NimBLEUUID(uuid), properties);
+NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint32_t properties, uint16_t max_len) {
+    return createCharacteristic(NimBLEUUID(uuid), properties, max_len);
 }
 
 
@@ -261,10 +262,11 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint
  * @brief Create a new BLE Characteristic associated with this service.
  * @param [in] uuid - The UUID of the characteristic.
  * @param [in] properties - The properties of the characteristic.
+ * @param [in] max_len - The maximum length in bytes that the characteristic value can hold.
  * @return The new BLE characteristic.
  */
-NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid, uint32_t properties) {
-    NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, this);
+NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID &uuid, uint32_t properties, uint16_t max_len) {
+    NimBLECharacteristic* pCharacteristic = new NimBLECharacteristic(uuid, properties, max_len, this);
 
     if (getCharacteristic(uuid) != nullptr) {
         NIMBLE_LOGD(LOG_TAG, "<< Adding a duplicate characteristic with UUID: %s",

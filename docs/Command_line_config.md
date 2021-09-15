@@ -6,6 +6,24 @@ Sets the number of simultaneous connections (esp controller max is 9)
 - Default value is 3  
 <br/>
 
+`CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED`
+
+Enable/disable storing the timestamp when an attribute value is updated  
+This allows for checking the last update time using getTimeStamp() or getValue(time_t*)  
+If disabled, the timestamp returned from these functions will be 0.  
+Disabling timestamps will reduce the memory used for each value.  
+1 = Enabled, 0 = Disabled; Default = Disabled  
+<br/>
+
+`CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH`
+
+Set the default allocation size (bytes) for each attribute.  
+If not specified when the constructor is called. This is also the size used when a remote  
+characteristic or descriptor is constructed before a value is read/notifed.  
+Increasing this will reduce reallocations but increase memory footprint.  
+Default value is 20. Range: 1 : 512 (BLE_ATT_ATTR_MAX_LEN)  
+ <br/>
+
 `CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU`  
 
 Sets the default MTU size.  
