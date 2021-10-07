@@ -63,6 +63,7 @@ NimBLEClient::NimBLEClient(const NimBLEAddress &peerAddress) : m_peerAddress(pee
     m_deleteCallbacks  = false;
     m_pTaskData        = nullptr;
     m_connEstablished  = false;
+    m_lastErr          = 0;
 
     m_pConnParams.scan_itvl = 16;          // Scan interval in 0.625ms units (NimBLE Default)
     m_pConnParams.scan_window = 16;        // Scan window in 0.625ms units (NimBLE Default)
@@ -251,6 +252,8 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
 
     } while (rc == BLE_HS_EBUSY);
 
+    m_lastErr = rc;
+
     if(rc != 0) {
         m_pTaskData = nullptr;
         return false;
@@ -273,6 +276,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
         return false;
 
     } else if(taskData.rc != 0){
+        m_lastErr = taskData.rc;
         NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s",
                     taskData.rc,
                     NimBLEUtils::returnCodeToString(taskData.rc));
@@ -314,6 +318,7 @@ bool NimBLEClient::secureConnection() {
 
         int rc = NimBLEDevice::startSecurity(m_conn_id);
         if(rc != 0){
+            m_lastErr = rc;
             m_pTaskData = nullptr;
             return false;
         }
@@ -322,6 +327,7 @@ bool NimBLEClient::secureConnection() {
     } while (taskData.rc == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING) && retryCount--);
 
     if(taskData.rc != 0){
+        m_lastErr = taskData.rc;
         return false;
     }
 
@@ -372,6 +378,7 @@ int NimBLEClient::disconnect(uint8_t reason) {
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< disconnect()");
+    m_lastErr = rc;
     return rc;
 } // disconnect
 
@@ -512,6 +519,7 @@ int NimBLEClient::getRssi() {
     if(rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Failed to read RSSI error code: %d, %s",
                                 rc, NimBLEUtils::returnCodeToString(rc));
+        m_lastErr = rc;
         return 0;
     }
 
@@ -650,11 +658,13 @@ bool NimBLEClient::retrieveServices(const NimBLEUUID *uuid_filter) {
 
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_svcs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+        m_lastErr = rc;
         return false;
     }
 
     // wait until we have all the services
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    m_lastErr = taskData.rc;
 
     if(taskData.rc == 0){
         NIMBLE_LOGD(LOG_TAG, "<< retrieveServices");
@@ -1134,6 +1144,15 @@ std::string NimBLEClient::toString() {
 
     return res;
 } // toString
+
+
+/**
+ * @brief Get the last error code reported by the NimBLE host
+ * @return int, the NimBLE error code.
+ */
+int NimBLEClient::getLastError() {
+    return m_lastErr;
+} // getLastError
 
 
 void NimBLEClientCallbacks::onConnect(NimBLEClient* pClient) {

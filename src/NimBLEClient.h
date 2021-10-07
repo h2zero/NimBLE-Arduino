@@ -73,6 +73,7 @@ public:
                                                                  uint16_t latency, uint16_t timeout);
     void                                        discoverAttributes();
     NimBLEConnInfo                              getConnInfo();
+    int                                         getLastError();
 
 private:
     NimBLEClient(const NimBLEAddress &peerAddress);
@@ -90,6 +91,7 @@ private:
     bool                    retrieveServices(const NimBLEUUID *uuid_filter = nullptr);
 
     NimBLEAddress           m_peerAddress;
+    int                     m_lastErr;
     uint16_t                m_conn_id;
     bool                    m_connEstablished;
     bool                    m_deleteCallbacks;
