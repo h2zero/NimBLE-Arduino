@@ -73,7 +73,7 @@ public:
     void                setLimitedOnly(bool enabled);
     void                setFilterPolicy(uint8_t filter);
     void                clearDuplicateCache();
-    bool                stop();
+    bool                stop(bool clear_results = true);
     void                clearResults();
     NimBLEScanResults   getResults();
     void                setMaxResults(uint8_t maxResults);

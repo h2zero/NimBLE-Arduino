@@ -370,9 +370,11 @@ NimBLEScanResults NimBLEScan::start(uint32_t duration, bool is_continue) {
 
 /**
  * @brief Stop an in progress scan.
+ * @param [in] clear_results Only used when scanning continuously, clears leftover results if true.\n
+   NimBLEClient::connect will call with false to avoid concurrent access in edge cases. Default = true.
  * @return True if successful.
  */
-bool NimBLEScan::stop() {
+bool NimBLEScan::stop(bool clear_results) {
     NIMBLE_LOGD(LOG_TAG, ">> stop()");
 
     int rc = ble_gap_disc_cancel();
@@ -381,7 +383,7 @@ bool NimBLEScan::stop() {
         return false;
     }
 
-    if(m_maxResults == 0) {
+    if(m_maxResults == 0 && clear_results) {
         clearResults();
     }
 

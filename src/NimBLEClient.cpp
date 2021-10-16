@@ -225,7 +225,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
 
             case BLE_HS_EBUSY:
                 // Scan was still running, stop it and try again
-                if (!NimBLEDevice::getScan()->stop()) {
+                if (!NimBLEDevice::getScan()->stop(false)) {
                     rc = BLE_HS_EUNKNOWN;
                 }
                 break;
