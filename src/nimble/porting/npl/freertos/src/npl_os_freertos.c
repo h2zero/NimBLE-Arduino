@@ -455,6 +455,7 @@ npl_freertos_callout_deinit(struct ble_npl_callout *co)
 #else
     if (co->handle) {
         xTimerDelete(co->handle, portMAX_DELAY);
+        co->handle = NULL;
     }
 #endif
 }
