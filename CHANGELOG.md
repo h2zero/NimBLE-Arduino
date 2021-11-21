@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.  
 
+## [1.3.2] - 2021-11-20
+
+### Fixed
+- Added missing macros for scan filter.
+
+### Added
+- `NimBLEClient::getLastError` : Gets the error code of the last function call that produces a return code from the stack.
+
 ## [1.3.1] - 2021-08-04
 
 ### Fixed
