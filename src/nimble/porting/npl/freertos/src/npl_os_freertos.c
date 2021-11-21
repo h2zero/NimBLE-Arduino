@@ -492,11 +492,9 @@ npl_freertos_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks)
         portYIELD_FROM_ISR(woken1 || woken2 || woken3);
 #endif
     } else {
-        #include "nimble/console/console.h"
         xTimerStop(co->handle, portMAX_DELAY);
         xTimerChangePeriod(co->handle, ticks, portMAX_DELAY);
         xTimerReset(co->handle, portMAX_DELAY);
-        console_printf("reset %u\n", ticks);
     }
 
     return BLE_NPL_OK;
