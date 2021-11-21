@@ -235,7 +235,10 @@ ble_npl_callout_stop(struct ble_npl_callout *co)
 static inline bool
 ble_npl_callout_is_active(struct ble_npl_callout *co)
 {
-    return xTimerIsTimerActive(co->handle) == pdTRUE;
+    /* Workaround for bug in xTimerIsTimerActive with latest arduino core.
+     * Sometimes xTimerIsTimerActive returns pdTRUE even though the timer has expired, so we double check.
+     */
+    return xTimerIsTimerActive(co->handle) == pdTRUE && xTimerGetExpiryTime(co->handle) > xTaskGetTickCountFromISR();
 }
 
 static inline ble_npl_time_t
