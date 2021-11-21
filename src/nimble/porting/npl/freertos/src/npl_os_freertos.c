@@ -492,9 +492,11 @@ npl_freertos_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks)
         portYIELD_FROM_ISR(woken1 || woken2 || woken3);
 #endif
     } else {
+        #include "nimble/console/console.h"
         xTimerStop(co->handle, portMAX_DELAY);
         xTimerChangePeriod(co->handle, ticks, portMAX_DELAY);
         xTimerReset(co->handle, portMAX_DELAY);
+        console_printf("reset %u\n", ticks);
     }
 
     return BLE_NPL_OK;
@@ -517,7 +519,10 @@ npl_freertos_callout_is_active(struct ble_npl_callout *co)
 #if CONFIG_BT_NIMBLE_USE_ESP_TIMER
     return esp_timer_is_active(co->handle);
 #else
-    return xTimerIsTimerActive(co->handle) == pdTRUE;
+    /* Workaround for bug in xTimerIsTimerActive with latest arduino core.
+     * Sometimes xTimerIsTimerActive returns pdTRUE even though the timer has expired, so we double check.
+     */
+    return xTimerIsTimerActive(co->handle) == pdTRUE && xTimerGetExpiryTime(co->handle) > xTaskGetTickCountFromISR();
 #endif
 }
 
