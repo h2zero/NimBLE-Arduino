@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.  
 
+## [1.3.3] - 2021-11-24
+
+### Fixed
+- Workaround added for FreeRTOS bug that affected timers, causing scan and advertising timer expirations to not correctly trigger callbacks.
+
 ## [1.3.2] - 2021-11-20
 
 ### Fixed

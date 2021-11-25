@@ -235,7 +235,8 @@ ble_npl_callout_stop(struct ble_npl_callout *co)
 static inline bool
 ble_npl_callout_is_active(struct ble_npl_callout *co)
 {
-    /* Workaround for bug in xTimerIsTimerActive with latest arduino core.
+    /* Workaround for bug in xTimerIsTimerActive with FreeRTOS V10.2.0, fixed in V10.4.4
+     * See: https://github.com/FreeRTOS/FreeRTOS-Kernel/pull/305
      * Sometimes xTimerIsTimerActive returns pdTRUE even though the timer has expired, so we double check.
      */
     return xTimerIsTimerActive(co->handle) == pdTRUE && xTimerGetExpiryTime(co->handle) > xTaskGetTickCountFromISR();
