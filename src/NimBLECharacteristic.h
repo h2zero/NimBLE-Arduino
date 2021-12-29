@@ -84,6 +84,8 @@ public:
 
     void              indicate();
     void              notify(bool is_notification = true);
+    void              notify(std::string value, bool is_notification = true);
+
     size_t            getSubscribedCount();
 
     NimBLEDescriptor* createDescriptor(const char* uuid,

@@ -394,6 +394,7 @@ void NimBLECharacteristic::indicate() {
     NIMBLE_LOGD(LOG_TAG, "<< indicate");
 } // indicate
 
+
 /**
  * @brief Send a notification.\n
  * A notification is a transmission of up to the first 20 bytes of the characteristic value.\n
@@ -401,8 +402,18 @@ void NimBLECharacteristic::indicate() {
  * @param[in] is_notification if true sends a notification, false sends an indication.
  */
 void NimBLECharacteristic::notify(bool is_notification) {
-    NIMBLE_LOGD(LOG_TAG, ">> notify: length: %d", getDataLength());
+    notify(getValue(), is_notification);
+}
 
+/**
+ * @brief Send a notification.\n
+ * A notification is a transmission of up to the first 20 bytes of the characteristic value.\n
+ * A notification will not block; it is a fire and forget.
+ * @param[in] is_notification if true sends a notification, false sends an indication.
+ */
+void NimBLECharacteristic::notify(std::string value, bool is_notification) {
+    size_t length = value.length();
+    NIMBLE_LOGD(LOG_TAG, ">> notify: length: %d", length);
 
     if(!(m_properties & NIMBLE_PROPERTY::NOTIFY) &&
        !(m_properties & NIMBLE_PROPERTY::INDICATE))
@@ -419,8 +430,6 @@ void NimBLECharacteristic::notify(bool is_notification) {
 
     m_pCallbacks->onNotify(this);
 
-    std::string value = getValue();
-    size_t length = value.length();
     bool reqSec = (m_properties & BLE_GATT_CHR_F_READ_AUTHEN) ||
                   (m_properties & BLE_GATT_CHR_F_READ_AUTHOR) ||
                   (m_properties & BLE_GATT_CHR_F_READ_ENC);
