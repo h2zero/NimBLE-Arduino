@@ -551,11 +551,12 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
 
     if(rc == 0) {
         if(attr) {
-            if(((*strBuf).length() + attr->om->om_len) > BLE_ATT_ATTR_MAX_LEN) {
+            uint32_t data_len = OS_MBUF_PKTLEN(attr->om);
+            if(((*strBuf).length() + data_len) > BLE_ATT_ATTR_MAX_LEN) {
                 rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             } else {
-                NIMBLE_LOGD(LOG_TAG, "Got %d bytes", attr->om->om_len);
-                (*strBuf) += std::string((char*) attr->om->om_data, attr->om->om_len);
+                NIMBLE_LOGD(LOG_TAG, "Got %d bytes", data_len);
+                (*strBuf) += std::string((char*) attr->om->om_data, data_len);
                 return 0;
             }
         }
