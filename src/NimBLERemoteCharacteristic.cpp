@@ -237,7 +237,8 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
     }
 
     int rc = 0;
-    ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
+    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
+    ble_task_data_t taskData = {this, cur_task, 0, nullptr};
 
     // If we don't know the end handle of this characteristic retrieve the next one in the service
     // The end handle is the next characteristic definition handle -1.
@@ -252,6 +253,10 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
             return false;
         }
 
+#ifdef ulTaskNotifyValueClear
+        // Clear the task notification value to ensure we block
+        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
+#endif
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
         if (taskData.rc != 0) {
@@ -273,6 +278,10 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
         return false;
     }
 
+#ifdef ulTaskNotifyValueClear
+    // Clear the task notification value to ensure we block
+    ulTaskNotifyValueClear(cur_task, ULONG_MAX);
+#endif
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
     if (taskData.rc != 0) {
@@ -473,7 +482,8 @@ std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
 
     int rc = 0;
     int retryCount = 1;
-    ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(),0, &value};
+    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
+    ble_task_data_t taskData = {this, cur_task, 0, &value};
 
     do {
         rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
@@ -485,6 +495,10 @@ std::string NimBLERemoteCharacteristic::readValue(time_t *timestamp) {
             return value;
         }
 
+#ifdef ulTaskNotifyValueClear
+        // Clear the task notification value to ensure we block
+        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
+#endif
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         rc = taskData.rc;
 
@@ -742,7 +756,8 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
         return (rc==0);
     }
 
-    ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
+    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
+    ble_task_data_t taskData = {this, cur_task, 0, nullptr};
 
     do {
         if(length > mtu) {
@@ -762,6 +777,10 @@ bool NimBLERemoteCharacteristic::writeValue(const uint8_t* data, size_t length, 
             return false;
         }
 
+#ifdef ulTaskNotifyValueClear
+        // Clear the task notification value to ensure we block
+        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
+#endif
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         rc = taskData.rc;
 
