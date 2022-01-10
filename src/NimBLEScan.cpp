@@ -358,10 +358,15 @@ NimBLEScanResults NimBLEScan::start(uint32_t duration, bool is_continue) {
         NIMBLE_LOGW(LOG_TAG, "Blocking scan called with duration = forever");
     }
 
-    ble_task_data_t taskData = {nullptr, xTaskGetCurrentTaskHandle(),0, nullptr};
+    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
+    ble_task_data_t taskData = {nullptr, cur_task, 0, nullptr};
     m_pTaskData = &taskData;
 
     if(start(duration, nullptr, is_continue)) {
+#ifdef ulTaskNotifyValueClear
+        // Clear the task notification value to ensure we block
+        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
+#endif
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     }
 
