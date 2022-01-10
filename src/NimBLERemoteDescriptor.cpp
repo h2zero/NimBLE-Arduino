@@ -137,7 +137,8 @@ std::string NimBLERemoteDescriptor::readValue() {
 
     int rc = 0;
     int retryCount = 1;
-    ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(),0, &value};
+    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
+    ble_task_data_t taskData = {this, cur_task, 0, &value};
 
     do {
         rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0,
@@ -149,6 +150,10 @@ std::string NimBLERemoteDescriptor::readValue() {
             return value;
         }
 
+#ifdef ulTaskNotifyValueClear
+        // Clear the task notification value to ensure we block
+        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
+#endif
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         rc = taskData.rc;
 
@@ -289,7 +294,8 @@ bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool
         return (rc == 0);
     }
 
-    ble_task_data_t taskData = {this, xTaskGetCurrentTaskHandle(), 0, nullptr};
+    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
+    ble_task_data_t taskData = {this, cur_task, 0, nullptr};
 
     do {
         if(length > mtu) {
@@ -310,6 +316,10 @@ bool NimBLERemoteDescriptor::writeValue(const uint8_t* data, size_t length, bool
             return false;
         }
 
+#ifdef ulTaskNotifyValueClear
+        // Clear the task notification value to ensure we block
+        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
+#endif
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         rc = taskData.rc;
 
