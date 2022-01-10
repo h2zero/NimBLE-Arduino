@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.  
 
+## [1.3.4] - 2022-01-09
+
+### Fixed
+- Workaround for latest Arduino-esp32 core that causes tasks not to block when required, which caused functions to return prematurely resulting in exceptions/crashing.
+- The wrong length value was being used to set the values read from peer attributes. This has been corrected to use the proper value size.
+
 ## [1.3.3] - 2021-11-24
 
 ### Fixed
