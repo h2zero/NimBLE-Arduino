@@ -21,6 +21,8 @@
 #define NIMBLE_ATT_REMOVE_HIDE 1
 #define NIMBLE_ATT_REMOVE_DELETE 2
 
+#define onMtuChanged onMTUChange
+
 #include "NimBLEUtils.h"
 #include "NimBLEAddress.h"
 #include "NimBLEAdvertising.h"
