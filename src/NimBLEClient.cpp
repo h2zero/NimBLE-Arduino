@@ -973,10 +973,10 @@ uint16_t NimBLEClient::getMTU() {
                     NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s",
                                 (*characteristic)->toString().c_str());
 
+                    uint32_t data_len = OS_MBUF_PKTLEN(event->notify_rx.om);
                     time_t t = time(nullptr);
                     ble_npl_hw_enter_critical();
-                    (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data,
-                                                             event->notify_rx.om->om_len);
+                    (*characteristic)->m_value = std::string((char *)event->notify_rx.om->om_data, data_len);
                     (*characteristic)->m_timestamp = t;
                     ble_npl_hw_exit_critical(0);
 
@@ -984,8 +984,7 @@ uint16_t NimBLEClient::getMTU() {
                         NIMBLE_LOGD(LOG_TAG, "Invoking callback for notification on characteristic %s",
                                     (*characteristic)->toString().c_str());
                         (*characteristic)->m_notifyCallback(*characteristic, event->notify_rx.om->om_data,
-                                                            event->notify_rx.om->om_len,
-                                                            !event->notify_rx.indication);
+                                                            data_len, !event->notify_rx.indication);
                     }
                     break;
                 }
