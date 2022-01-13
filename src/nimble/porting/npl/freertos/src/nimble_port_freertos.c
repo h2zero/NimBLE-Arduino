@@ -24,9 +24,9 @@
 
 #if NIMBLE_CFG_CONTROLLER
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-#define NIMBLE_LL_TASK_STACK_SIZE   (120)
+#define NIMBLE_LL_TASK_STACK_SIZE   (130)
 #else
-#define NIMBLE_LL_TASK_STACK_SIZE   (90)
+#define NIMBLE_LL_TASK_STACK_SIZE   (100)
 #endif
 static StackType_t ll_xStack[ NIMBLE_LL_TASK_STACK_SIZE ];
 static StaticTask_t ll_xTaskBuffer;
