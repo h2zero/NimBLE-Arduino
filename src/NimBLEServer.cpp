@@ -181,7 +181,7 @@ void NimBLEServer::start() {
         abort();
     }
 
-#if CONFIG_LOG_DEFAULT_LEVEL > 3 || (ARDUINO_ARCH_ESP32 && CORE_DEBUG_LEVEL >= 4)
+#if CONFIG_NIMBLE_CPP_DEBUG_LEVEL >= 4
     ble_gatts_show_local();
 #endif
 /*** Future use ***
