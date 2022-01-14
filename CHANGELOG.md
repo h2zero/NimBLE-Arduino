@@ -1,6 +1,14 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.  
+All notable changes to this project will be documented in this file.
+
+## [1.3.5] - 2022-01-14
+
+### Added
+- CONFIG_NIMBLE_CPP_DEBUG_LEVEL macro in nimconfig.h to allow setting the log level separately from the Arduino core log level.
+
+### Fixed
+- Memory leak when initializing/deinitializing the BLE stack caused by new FreeRTOS timers be created on each initialization.
 
 ## [1.3.4] - 2022-01-09
 
