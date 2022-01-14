@@ -516,7 +516,7 @@ NimBLECharacteristicCallbacks* NimBLECharacteristic::getCallbacks() {
  * @param [in] length The length of the data in bytes.
  */
 void NimBLECharacteristic::setValue(const uint8_t* data, size_t length) {
-#if CONFIG_LOG_DEFAULT_LEVEL > 3 || (ARDUINO_ARCH_ESP32 && CORE_DEBUG_LEVEL >= 4)
+#if CONFIG_NIMBLE_CPP_DEBUG_LEVEL >= 4
     char* pHex = NimBLEUtils::buildHexData(nullptr, data, length);
     NIMBLE_LOGD(LOG_TAG, ">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
     free(pHex);

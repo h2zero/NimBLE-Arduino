@@ -8,7 +8,7 @@
 #ifndef MAIN_NIMBLELOG_H_
 #define MAIN_NIMBLELOG_H_
 
-#include "sdkconfig.h"
+#include "nimconfig.h"
 
 #if defined(CONFIG_BT_ENABLED)
 
@@ -20,29 +20,33 @@
 // Note: because CONFIG_LOG_DEFAULT_LEVEL is set at ERROR in Arduino we must use MODLOG_DFLT(ERROR
 // otherwise no messages will be printed above that level.
 
-#ifndef CORE_DEBUG_LEVEL
-#define CORE_DEBUG_LEVEL CONFIG_ARDUHAL_LOG_DEFAULT_LEVEL
+#ifndef CONFIG_NIMBLE_CPP_DEBUG_LEVEL
+  #ifdef CORE_DEBUG_LEVEL
+    #define CONFIG_NIMBLE_CPP_DEBUG_LEVEL CORE_DEBUG_LEVEL
+  #else
+    #define CONFIG_NIMBLE_CPP_DEBUG_LEVEL 0
+  #endif
 #endif
 
-#if CORE_DEBUG_LEVEL >= 4
+#if CONFIG_NIMBLE_CPP_DEBUG_LEVEL >= 4
 #define NIMBLE_LOGD( tag, format, ... ) MODLOG_DFLT(ERROR,      "D %s: "#format"\n",tag,##__VA_ARGS__)
 #else
 #define NIMBLE_LOGD( tag, format, ... ) (void)tag
 #endif
 
-#if CORE_DEBUG_LEVEL >= 3
+#if CONFIG_NIMBLE_CPP_DEBUG_LEVEL >= 3
 #define NIMBLE_LOGI( tag, format, ... ) MODLOG_DFLT(ERROR,      "I %s: "#format"\n",tag,##__VA_ARGS__)
 #else
 #define NIMBLE_LOGI( tag, format, ... ) (void)tag
 #endif
 
-#if CORE_DEBUG_LEVEL >= 2
+#if CONFIG_NIMBLE_CPP_DEBUG_LEVEL >= 2
 #define NIMBLE_LOGW( tag, format, ... ) MODLOG_DFLT(ERROR,      "W %s: "#format"\n",tag,##__VA_ARGS__)
 #else
 #define NIMBLE_LOGW( tag, format, ... ) (void)tag
 #endif
 
-#if CORE_DEBUG_LEVEL >= 1
+#if CONFIG_NIMBLE_CPP_DEBUG_LEVEL >= 1
 #define NIMBLE_LOGE( tag, format, ... ) MODLOG_DFLT(ERROR,      "E %s: "#format"\n",tag,##__VA_ARGS__)
 #else
 #define NIMBLE_LOGE( tag, format, ... ) (void)tag
