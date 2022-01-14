@@ -1,6 +1,33 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.  
+All notable changes to this project will be documented in this file.
+
+## [1.3.5] - 2022-01-14
+
+### Added
+- CONFIG_NIMBLE_CPP_DEBUG_LEVEL macro in nimconfig.h to allow setting the log level separately from the Arduino core log level.
+
+### Fixed
+- Memory leak when initializing/deinitializing the BLE stack caused by new FreeRTOS timers be created on each initialization.
+
+## [1.3.4] - 2022-01-09
+
+### Fixed
+- Workaround for latest Arduino-esp32 core that causes tasks not to block when required, which caused functions to return prematurely resulting in exceptions/crashing.
+- The wrong length value was being used to set the values read from peer attributes. This has been corrected to use the proper value size.
+
+## [1.3.3] - 2021-11-24
+
+### Fixed
+- Workaround added for FreeRTOS bug that affected timers, causing scan and advertising timer expirations to not correctly trigger callbacks.
+
+## [1.3.2] - 2021-11-20
+
+### Fixed
+- Added missing macros for scan filter.
+
+### Added
+- `NimBLEClient::getLastError` : Gets the error code of the last function call that produces a return code from the stack.
 
 ## [1.3.1] - 2021-08-04
 
