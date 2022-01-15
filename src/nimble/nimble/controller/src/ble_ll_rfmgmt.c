@@ -195,6 +195,7 @@ ble_ll_rfmgmt_ticks_to_enabled(void)
             break;
         }
         rfmgmt->state = RFMGMT_STATE_ENABLED;
+        /* Else falls through. */
         /* no break */
     case RFMGMT_STATE_ENABLED:
         rem_ticks = 0;

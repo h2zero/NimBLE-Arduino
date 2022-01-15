@@ -537,7 +537,7 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
 
             } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
-                NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %d", event->passkey.params.numcmp);
+                NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %" PRIu32, event->passkey.params.numcmp);
                 pkey.action = event->passkey.params.action;
                 // Compatibility only - Do not use, should be removed the in future
                 if(NimBLEDevice::m_securityCallbacks != nullptr) {
@@ -786,7 +786,7 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
  */
 void NimBLEServer::setDataLen(uint16_t conn_handle, uint16_t tx_octets) {
 #if defined(CONFIG_NIMBLE_CPP_IDF) && defined(ESP_IDF_VERSION) && \
-           ESP_IDF_VERSION <= ESP_IDF_VERSION_VAL(4,3,2)
+           ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3 && ESP_IDF_VERSION_PATCH >= 2
     return;
 #else
     uint16_t tx_time = (tx_octets + 14) * 8;
