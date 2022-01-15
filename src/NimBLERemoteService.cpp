@@ -20,6 +20,8 @@
 #include "NimBLEDevice.h"
 #include "NimBLELog.h"
 
+#include <climits>
+
 static const char* LOG_TAG = "NimBLERemoteService";
 
 /**

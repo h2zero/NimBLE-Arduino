@@ -20,6 +20,7 @@
 
 #include <string>
 #include <unordered_set>
+#include <climits>
 
 #if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "nimble/nimble_port.h"
