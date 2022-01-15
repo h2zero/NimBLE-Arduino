@@ -785,7 +785,8 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
  * @param [in] tx_octets The preferred number of payload octets to use (Range 0x001B-0x00FB).
  */
 void NimBLEServer::setDataLen(uint16_t conn_handle, uint16_t tx_octets) {
-#ifdef CONFIG_NIMBLE_CPP_IDF // not yet available in IDF, Sept 9 2021
+#if defined(CONFIG_NIMBLE_CPP_IDF) && defined(ESP_IDF_VERSION) && \
+           ESP_IDF_VERSION <= ESP_IDF_VERSION_VAL(4,3,2)
     return;
 #else
     uint16_t tx_time = (tx_octets + 14) * 8;
