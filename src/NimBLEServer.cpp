@@ -75,9 +75,6 @@ NimBLEService* NimBLEServer::createService(const char* uuid) {
 /**
  * @brief Create a %BLE Service.
  * @param [in] uuid The UUID of the new service.
- * @param [in] numHandles The maximum number of handles associated with this service.
- * @param [in] inst_id if we have multiple services with the same UUID we need
- *             to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
 NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid) {

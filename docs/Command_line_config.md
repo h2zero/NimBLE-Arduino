@@ -24,6 +24,13 @@ If defined, enables debug log messages from the NimBLE host
 - Uses approx. 32kB of flash memory.  
 <br/>
 
+`CONFIG_NIMBLE_CPP_LOG_LEVEL`   
+
+Define to set the debug log message level from the NimBLE CPP Wrapper.  
+If not defined it will use the same value as the Arduino core debug level.  
+Values: 0 = NONE, 1 = ERROR, 2 = WARNING, 3 = INFO, 4+ = DEBUG  
+<br/>
+
 `CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT`  
 
 If defined, NimBLE host return codes will be printed as text in debug log messages.  

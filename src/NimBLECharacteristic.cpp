@@ -409,6 +409,7 @@ void NimBLECharacteristic::notify(bool is_notification) {
  * @brief Send a notification.\n
  * A notification is a transmission of up to the first 20 bytes of the characteristic value.\n
  * A notification will not block; it is a fire and forget.
+ * @param[in] value An optional value to send as the notification, else the current characteristic value is used.
  * @param[in] is_notification if true sends a notification, false sends an indication.
  */
 void NimBLECharacteristic::notify(std::string value, bool is_notification) {
