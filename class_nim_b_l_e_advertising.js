@@ -1,0 +1,27 @@
+var class_nim_b_l_e_advertising =
+[
+    [ "NimBLEAdvertising", "class_nim_b_l_e_advertising.html#abe6258a917243a4567c3d6eece2ddcdd", null ],
+    [ "addServiceUUID", "class_nim_b_l_e_advertising.html#a5e596e8dfa9268554a5b189380405d5c", null ],
+    [ "addServiceUUID", "class_nim_b_l_e_advertising.html#a4f334752ea04223185292fe9ab524b69", null ],
+    [ "addTxPower", "class_nim_b_l_e_advertising.html#ac4ff0af45d1f7ed5bc208612852bc43a", null ],
+    [ "advCompleteCB", "class_nim_b_l_e_advertising.html#a4de7bf016a086a2d3f6f14ae134678f2", null ],
+    [ "isAdvertising", "class_nim_b_l_e_advertising.html#ac257ab68520a244cb6494d793f9b6c2a", null ],
+    [ "removeServiceUUID", "class_nim_b_l_e_advertising.html#a725437c00152ff57ef1e21bdf7be980d", null ],
+    [ "reset", "class_nim_b_l_e_advertising.html#a545b505ea76396c33133d41a78fad5b8", null ],
+    [ "setAdvertisementData", "class_nim_b_l_e_advertising.html#af7083f58717b7e76d90d367f00a0ef08", null ],
+    [ "setAdvertisementType", "class_nim_b_l_e_advertising.html#a68d54f11b47b9993322efec1d07c3519", null ],
+    [ "setAppearance", "class_nim_b_l_e_advertising.html#aa0d30dfb57670cc8180e17dffddad416", null ],
+    [ "setManufacturerData", "class_nim_b_l_e_advertising.html#a1eff592870a47b0f62b0f0894efadbd4", null ],
+    [ "setMaxInterval", "class_nim_b_l_e_advertising.html#aab512576d8873fbbb631bac8ada19530", null ],
+    [ "setMaxPreferred", "class_nim_b_l_e_advertising.html#a3382cdf80f5ae46a52e3b9159f8e1b66", null ],
+    [ "setMinInterval", "class_nim_b_l_e_advertising.html#a16bd135cab3f06bc0ba81c2aec19cbbc", null ],
+    [ "setMinPreferred", "class_nim_b_l_e_advertising.html#a3bc158da1f732361df69cf16ca1cfd42", null ],
+    [ "setName", "class_nim_b_l_e_advertising.html#add2ecd09877d7e4548b11ec7cb8c7a47", null ],
+    [ "setScanFilter", "class_nim_b_l_e_advertising.html#aa3da80c7d17a7824484ee254076e4790", null ],
+    [ "setScanResponse", "class_nim_b_l_e_advertising.html#a6fb4d9ad3949928ac83d3e74857ab91f", null ],
+    [ "setScanResponseData", "class_nim_b_l_e_advertising.html#a04a51a0c639a70295a9b671f73b34358", null ],
+    [ "setServiceData", "class_nim_b_l_e_advertising.html#a994e43e9e4ace6ce64c57e57d0575781", null ],
+    [ "setURI", "class_nim_b_l_e_advertising.html#a6495d7c9ad80a8c2a5edf974705f8103", null ],
+    [ "start", "class_nim_b_l_e_advertising.html#aeeee5a131b42a4f76010751f4c182e4f", null ],
+    [ "stop", "class_nim_b_l_e_advertising.html#ab19c9e9015e812055e3cad29d52ed2ff", null ]
+];
