@@ -31,7 +31,7 @@
  *  Values: 0 = NONE, 1 = ERROR, 2 = WARNING, 3 = INFO, 4+ = DEBUG\n
  *  Uses approx. 32kB of flash memory.
  */
- // #define CONFIG_NIMBLE_CPP_DEBUG_LEVEL 0
+ // #define CONFIG_NIMBLE_CPP_LOG_LEVEL 0
 
 /** @brief Un-comment to see NimBLE host return codes as text debug log messages.
  *  Uses approx. 7kB of flash memory.

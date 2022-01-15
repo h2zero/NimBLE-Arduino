@@ -181,7 +181,7 @@ void NimBLEServer::start() {
         abort();
     }
 
-#if CONFIG_NIMBLE_CPP_DEBUG_LEVEL >= 4
+#if CONFIG_NIMBLE_CPP_LOG_LEVEL >= 4
     ble_gatts_show_local();
 #endif
 /*** Future use ***
