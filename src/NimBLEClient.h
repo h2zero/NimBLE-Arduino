@@ -21,6 +21,7 @@
 #include "NimBLEUUID.h"
 #include "NimBLEUtils.h"
 #include "NimBLEConnInfo.h"
+#include "NimBLEAttValue.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
 
@@ -51,9 +52,9 @@ public:
     NimBLERemoteService*                        getService(const NimBLEUUID &uuid);
     void                                        deleteServices();
     size_t                                      deleteService(const NimBLEUUID &uuid);
-    std::string                                 getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
+    NimBLEAttValue                              getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
     bool                                        setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
-                                                         const std::string &value, bool response = false);
+                                                         const NimBLEAttValue &value, bool response = false);
     NimBLERemoteCharacteristic*                 getCharacteristic(const uint16_t handle);
     bool                                        isConnected();
     void                                        setClientCallbacks(NimBLEClientCallbacks *pClientCallbacks,

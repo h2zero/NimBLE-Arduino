@@ -15,6 +15,22 @@
 /** @brief Un-comment to change the number of simultaneous connections (esp controller max is 9) */
 // #define CONFIG_BT_NIMBLE_MAX_CONNECTIONS 3
 
+/** @brief Un-comment to enable storing the timestamp when an attribute value is updated\n
+ *  This allows for checking the last update time using getTimeStamp() or getValue(time_t*)\n
+ *  If disabled, the timestamp returned from these functions will be 0.\n
+ *  Disabling timestamps will reduce the memory used for each value.\n
+ *  1 = Enabled, 0 = Disabled; Default = Disabled
+ */
+// #define CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED 0
+
+/** @brief Uncomment to set the default allocation size (bytes) for each attribute if\n
+ *  not specified when the constructor is called. This is also the size used when a remote\n
+ *  characteristic or descriptor is constructed before a value is read/notifed.\n
+ *  Increasing this will reduce reallocations but increase memory footprint.\n
+ *  Default value is 20. Range: 1 : 512 (BLE_ATT_ATTR_MAX_LEN)
+ */
+// #define CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH 20
+
 /** @brief Un-comment to change the default MTU size */
 // #define CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU 255
 
@@ -32,6 +48,11 @@
  *  Uses approx. 32kB of flash memory.
  */
  // #define CONFIG_NIMBLE_CPP_LOG_LEVEL 0
+
+ /** @brief Un-comment to use timestamps with characteristic / descriptor values
+ *  If not enabled the `::get/readValue()` calls with a timestamp parameter will set the timestamp to 0.
+ */
+// #define NIMBLE_ATT_VALUE_TIMESTAMP_ENABLED
 
 /** @brief Un-comment to see NimBLE host return codes as text debug log messages.
  *  Uses approx. 7kB of flash memory.
@@ -240,3 +261,9 @@
 #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #endif
 
+/* Enables the use of Arduino String class for attribute values */
+#if defined __has_include
+#  if __has_include (<Arduino.h>)
+#    define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  endif
+#endif
