@@ -121,6 +121,12 @@ bool NimBLEService::start() {
 
     // Rebuild the service definition if the server attributes have changed.
     if(getServer()->m_svcChanged && m_pSvcDef != nullptr) {
+        if(m_pSvcDef[0].characteristics) {
+            if(m_pSvcDef[0].characteristics[0].descriptors) {
+                delete(m_pSvcDef[0].characteristics[0].descriptors);
+            }
+            delete(m_pSvcDef[0].characteristics);
+        }
         delete(m_pSvcDef);
         m_pSvcDef = nullptr;
     }
