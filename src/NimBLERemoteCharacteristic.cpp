@@ -319,7 +319,7 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
             return m_descriptorVector.back();
         }
 
-        // If the request was successful but 16/32 bit descriptor not found
+        // If the request was successful but 16/32 bit uuid not found
         // try again with the 128 bit uuid.
         if(uuid.bitSize() == BLE_UUID_TYPE_16 ||
            uuid.bitSize() == BLE_UUID_TYPE_32)
@@ -327,6 +327,15 @@ NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUU
             NimBLEUUID uuid128(uuid);
             uuid128.to128();
             return getDescriptor(uuid128);
+        } else {
+            // If the request was successful but the 128 bit uuid not found
+            // try again with the 16 bit uuid.
+            NimBLEUUID uuid16(uuid);
+            uuid16.to16();
+            // if the uuid was 128 bit but not of the BLE base type this check will fail
+            if (uuid16.bitSize() == BLE_UUID_TYPE_16) {
+                return getDescriptor(uuid16);
+            }
         }
     }
 

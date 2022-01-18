@@ -42,6 +42,7 @@ public:
     bool                  equals(const NimBLEUUID &uuid) const;
     const ble_uuid_any_t* getNative() const;
     const NimBLEUUID &    to128();
+    const NimBLEUUID&     to16();
     std::string           toString() const;
     static NimBLEUUID     fromString(const std::string &uuid);
 
