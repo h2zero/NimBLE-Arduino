@@ -110,7 +110,7 @@ int ble_hci_trans_hs_cmd_tx(uint8_t *cmd)
     if (xSemaphoreTake(vhci_send_sem, NIMBLE_VHCI_TIMEOUT_MS / portTICK_PERIOD_MS) == pdTRUE) {
 /* esp_ipc_call_blocking does not exist for solo */
 #ifndef CONFIG_FREERTOS_UNICORE
-        if (xPortGetCoreID() != CONFIG_BT_NIMBLE_PINNED_TO_CORE) {
+        if (xPortGetCoreID() != CONFIG_BT_NIMBLE_PINNED_TO_CORE && !xPortInIsrContext()) {
             esp_ipc_call_blocking(CONFIG_BT_NIMBLE_PINNED_TO_CORE,
                                   ble_hci_trans_hs_cmd_tx_on_core, cmd);
         } else {
@@ -166,7 +166,7 @@ int ble_hci_trans_hs_acl_tx(struct os_mbuf *om)
 /* Don't check core ID if unicore */
 #ifndef CONFIG_FREERTOS_UNICORE
     tx_using_nimble_core = xPortGetCoreID() != CONFIG_BT_NIMBLE_PINNED_TO_CORE;
-    if (tx_using_nimble_core) {
+    if (tx_using_nimble_core && !xPortInIsrContext()) {
         data[0] = len;
         data[1] = (len >> 8);
         data[2] = BLE_HCI_UART_H4_ACL;
@@ -183,7 +183,7 @@ int ble_hci_trans_hs_acl_tx(struct os_mbuf *om)
     if (xSemaphoreTake(vhci_send_sem, NIMBLE_VHCI_TIMEOUT_MS / portTICK_PERIOD_MS) == pdTRUE) {
 /* esp_ipc_call_blocking does not exist for solo */
 #ifndef CONFIG_FREERTOS_UNICORE
-        if (tx_using_nimble_core) {
+        if (tx_using_nimble_core && !xPortInIsrContext()) {
             esp_ipc_call_blocking(CONFIG_BT_NIMBLE_PINNED_TO_CORE,
                                   ble_hci_trans_hs_acl_tx_on_core, data);
         } else {
