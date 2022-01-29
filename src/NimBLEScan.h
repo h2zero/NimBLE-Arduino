@@ -27,6 +27,7 @@
 #endif
 
 #include <vector>
+#include <functional>
 
 class NimBLEDevice;
 class NimBLEScan;
@@ -55,6 +56,8 @@ private:
     std::vector<NimBLEAdvertisedDevice*> m_advertisedDevicesVector;
 };
 
+typedef std::function<void (NimBLEScanResults scanResults)> scan_complete_callback;
+
 /**
  * @brief Perform and manage %BLE scans.
  *
@@ -62,7 +65,7 @@ private:
  */
 class NimBLEScan {
 public:
-    bool                start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue = false);
+    bool                start(uint32_t duration, scan_complete_callback scanCompleteCB, bool is_continue = false);
     NimBLEScanResults   start(uint32_t duration, bool is_continue = false);
     bool                isScanning();
     void                setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates = false);
@@ -90,7 +93,7 @@ private:
     void                onHostSync();
 
     NimBLEAdvertisedDeviceCallbacks*    m_pAdvertisedDeviceCallbacks = nullptr;
-    void                                (*m_scanCompleteCB)(NimBLEScanResults scanResults);
+    scan_complete_callback              m_scanCompleteCB;
     ble_gap_disc_params                 m_scan_params;
     bool                                m_ignoreResults;
     NimBLEScanResults                   m_scanResults;

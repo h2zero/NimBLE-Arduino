@@ -282,7 +282,7 @@ bool NimBLEScan::isScanning() {
  * @param [in] is_continue Set to true to save previous scan results, false to clear them.
  * @return True if scan started or false if there was an error.
  */
-bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue) {
+bool NimBLEScan::start(uint32_t duration, scan_complete_callback scanCompleteCB, bool is_continue) {
     NIMBLE_LOGD(LOG_TAG, ">> start: duration=%" PRIu32, duration);
 
     // Save the callback to be invoked when the scan completes.
