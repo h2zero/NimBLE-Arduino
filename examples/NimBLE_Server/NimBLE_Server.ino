@@ -9,6 +9,7 @@
 */
 
 #include <NimBLEDevice.h>
+#include <Arduino.h>
 
 static NimBLEServer* pServer;
 
@@ -127,7 +128,7 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
 /** Handler class for descriptor actions */    
 class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
     void onWrite(NimBLEDescriptor* pDescriptor) {
-        std::string dscVal = pDescriptor->getValue();
+        std::string dscVal((char*)pDescriptor->getValue(), pDescriptor->getLength());
         Serial.print("Descriptor witten value:");
         Serial.println(dscVal.c_str());
     };
