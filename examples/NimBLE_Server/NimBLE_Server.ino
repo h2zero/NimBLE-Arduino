@@ -9,7 +9,6 @@
 */
 
 #include <NimBLEDevice.h>
-#include <Arduino.h>
 
 static NimBLEServer* pServer;
 
