@@ -323,7 +323,8 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
  * @param [in] param
  *
  */
-/*STATIC*/int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
+/*STATIC*/
+int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
     NimBLEServer* server = (NimBLEServer*)arg;
     NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent: %s",
                          NimBLEUtils::gapEventToString(event->type));
@@ -782,8 +783,8 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
  * @param [in] tx_octets The preferred number of payload octets to use (Range 0x001B-0x00FB).
  */
 void NimBLEServer::setDataLen(uint16_t conn_handle, uint16_t tx_octets) {
-#if defined(CONFIG_NIMBLE_CPP_IDF) && defined(ESP_IDF_VERSION) && \
-           ESP_IDF_VERSION_MAJOR >= 4 && ESP_IDF_VERSION_MINOR >= 3 && ESP_IDF_VERSION_PATCH >= 2
+#if defined(CONFIG_NIMBLE_CPP_IDF) && !defined(ESP_IDF_VERSION) || \
+  (ESP_IDF_VERSION_MAJOR * 100 + ESP_IDF_VERSION_MINOR * 10 + ESP_IDF_VERSION_PATCH) < 432
     return;
 #else
     uint16_t tx_time = (tx_octets + 14) * 8;
