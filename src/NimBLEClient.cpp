@@ -94,6 +94,8 @@ NimBLEClient::~NimBLEClient() {
         delete m_pClientCallbacks;
     }
 
+    ble_npl_callout_deinit(&m_dcTimer);
+
 } // ~NimBLEClient
 
 
