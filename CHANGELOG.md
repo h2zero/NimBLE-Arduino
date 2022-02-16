@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.7] - 2022-02-15
+
+### Fixed
+
+- Crash when retrieving an attribute that does not exist on the peer.
+- Memory leak when deleting client instances.
+- Compilation errors for esp32s3
+
 ## [1.3.6] - 2022-01-18
 
 ### Changed
