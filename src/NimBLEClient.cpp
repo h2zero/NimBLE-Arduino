@@ -596,7 +596,11 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
         {
             NimBLEUUID uuid128(uuid);
             uuid128.to128();
-            return getService(uuid128);
+            if(retrieveServices(&uuid128)) {
+                if(m_servicesVector.size() > prev_size) {
+                    return m_servicesVector.back();
+                }
+            }
         } else {
             // If the request was successful but the 128 bit uuid not found
             // try again with the 16 bit uuid.
@@ -604,7 +608,11 @@ NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
             uuid16.to16();
             // if the uuid was 128 bit but not of the BLE base type this check will fail
             if (uuid16.bitSize() == BLE_UUID_TYPE_16) {
-                return getService(uuid16);
+                if(retrieveServices(&uuid16)) {
+                    if(m_servicesVector.size() > prev_size) {
+                        return m_servicesVector.back();
+                    }
+                }
             }
         }
     }
