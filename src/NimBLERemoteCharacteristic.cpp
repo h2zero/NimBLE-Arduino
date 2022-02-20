@@ -269,6 +269,10 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
         }
     }
 
+    if (m_handle == m_endHandle) {
+        return true;
+    }
+
     desc_filter_t filter = {uuid_filter, &taskData};
 
     rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(),
