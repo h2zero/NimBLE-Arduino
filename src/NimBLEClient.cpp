@@ -768,7 +768,7 @@ int NimBLEClient::serviceDiscoveredCB(
     if(error->status == BLE_HS_EDONE) {
         pTaskData->rc = 0;
     } else {
-        NIMBLE_LOGE(LOG_TAG, "characteristicDiscCB() rc=%d %s",
+        NIMBLE_LOGE(LOG_TAG, "serviceDiscoveredCB() rc=%d %s",
                              error->status,
                              NimBLEUtils::returnCodeToString(error->status));
         pTaskData->rc = error->status;
@@ -776,7 +776,7 @@ int NimBLEClient::serviceDiscoveredCB(
 
     xTaskNotifyGive(pTaskData->task);
 
-    NIMBLE_LOGD(LOG_TAG,"<< << Service Discovered");
+    NIMBLE_LOGD(LOG_TAG,"<< Service Discovered");
     return error->status;
 }
 
@@ -801,7 +801,7 @@ NimBLEAttValue NimBLEClient::getValue(const NimBLEUUID &serviceUUID, const NimBL
         }
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<<getValue");
+    NIMBLE_LOGD(LOG_TAG, "<< getValue");
     return ret;
 } // getValue
 
