@@ -256,7 +256,9 @@ bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID *uuid_filter)
                 }
             }
 
-            m_characteristicVector.back()->m_endHandle = getEndHandle();
+            if (m_characteristicVector.size() > 0) {
+                m_characteristicVector.back()->m_endHandle = getEndHandle();
+            }
         }
 
         NIMBLE_LOGD(LOG_TAG, "<< retrieveCharacteristics()");
