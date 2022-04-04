@@ -73,6 +73,9 @@ public:
     void                                        discoverAttributes();
     NimBLEConnInfo                              getConnInfo();
     int                                         getLastError();
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    void                                        setConnectPhy(uint8_t mask);
+#endif
 
 private:
     NimBLEClient(const NimBLEAddress &peerAddress);
@@ -98,6 +101,9 @@ private:
     NimBLEClientCallbacks*  m_pClientCallbacks;
     ble_task_data_t*        m_pTaskData;
     ble_npl_callout         m_dcTimer;
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    uint8_t                 m_phyMask;
+#endif
 
     std::vector<NimBLERemoteService*> m_servicesVector;
 

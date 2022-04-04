@@ -14,7 +14,9 @@
  *
  */
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+#if (defined(CONFIG_BT_ENABLED) && \
+    defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER) && \
+    !CONFIG_BT_NIMBLE_EXT_ADV) || defined(_DOXYGEN_)
 
 #if defined(CONFIG_NIMBLE_CPP_IDF)
 #include "services/gap/ble_svc_gap.h"
@@ -412,7 +414,7 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
     // If already advertising just return
     if(ble_gap_adv_active()) {
         NIMBLE_LOGW(LOG_TAG, "Advertising already active");
-        return false;
+        return true;
     }
 
     // Save the duration incase of host reset so we can restart with the same params
@@ -625,13 +627,17 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
                            &m_advParams,
                            (pServer != nullptr) ? NimBLEServer::handleGapEvent :
                                                   NimBLEAdvertising::handleGapEvent,
-                           (pServer != nullptr) ? (void*)pServer : (void*)this);
+                           (void*)this);
 #else
     rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type, NULL, duration,
                            &m_advParams, NimBLEAdvertising::handleGapEvent, this);
 #endif
     switch(rc) {
         case 0:
+             break;
+
+        case BLE_HS_EALREADY:
+             NIMBLE_LOGI(LOG_TAG, "Advertisement Already active");
              break;
 
         case BLE_HS_EINVAL:
@@ -656,24 +662,26 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< Advertising start");
-    return (rc == 0);
+    return (rc == 0 || rc == BLE_HS_EALREADY);
 } // start
 
 
 /**
  * @brief Stop advertising.
+ * @return True if advertising stopped successfully.
  */
-void NimBLEAdvertising::stop() {
+bool NimBLEAdvertising::stop() {
     NIMBLE_LOGD(LOG_TAG, ">> stop");
 
     int rc = ble_gap_adv_stop();
     if (rc != 0 && rc != BLE_HS_EALREADY) {
         NIMBLE_LOGE(LOG_TAG, "ble_gap_adv_stop rc=%d %s",
                     rc, NimBLEUtils::returnCodeToString(rc));
-        return;
+        return false;
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< stop");
+    return true;
 } // stop
 
 
@@ -1026,4 +1034,4 @@ std::string NimBLEAdvertisementData::getPayload() {
     return m_payload;
 } // getPayload
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER */
+#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER  && !CONFIG_BT_NIMBLE_EXT_ADV */

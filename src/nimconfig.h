@@ -31,6 +31,32 @@
  */
 // #define CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH 20
 
+
+/****************************************************
+ *         Extended advertising settings            *
+ * For use with ESP32C3, ESP32S3, ESP32H2 ONLY!     *
+ /**************************************************/
+ 
+/** @brief Un-comment to enable extended advertising */
+// #define CONFIG_BT_NIMBLE_EXT_ADV 1
+
+/** @brief Un-comment to set the max number of extended advertising instances (Range: 0 - 4) */
+// #define CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES 1
+
+/** @brief Un-comment to set the max extended advertising data size (Range: 31 - 1650) */
+// #define CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN 251
+
+/** @brief Un-comment to enable periodic advertising */
+// #define CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV 1
+
+/** @brief Un-comment to change the maximum number of periodically synced devices */
+// #define CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS 1
+
+/****************************************************
+ * END For use with ESP32C3, ESP32S3, ESP32H2 ONLY! *
+ ***************************************************/
+ 
+
 /** @brief Un-comment to change the default MTU size */
 // #define CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU 255
 
@@ -207,7 +233,11 @@
 #define CONFIG_BT_NIMBLE_ACL_BUF_SIZE 255
 
 /** @brief HCI Event Buffer size */
-#define CONFIG_BT_NIMBLE_HCI_EVT_BUF_SIZE 70
+#if CONFIG_BT_NIMBLE_EXT_ADV || CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV
+#  define CONFIG_BT_NIMBLE_HCI_EVT_BUF_SIZE 257
+#else
+#  define CONFIG_BT_NIMBLE_HCI_EVT_BUF_SIZE 70
+#endif
 
 /** @brief Number of high priority HCI event buffers */
 #define CONFIG_BT_NIMBLE_HCI_EVT_HI_BUF_COUNT 30
@@ -249,6 +279,31 @@
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
 #define CONFIG_IDF_TARGET_ESP32 1
 #endif
+
+#if CONFIG_BT_NIMBLE_EXT_ADV || CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV
+#  if defined(CONFIG_IDF_TARGET_ESP32)
+#    error Extended advertising is not supported on ESP32.
+#  endif
+#endif
+#endif
+
+#if CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV && !CONFIG_BT_NIMBLE_EXT_ADV
+#  error Extended advertising must be enabled to use periodic advertising.
+#endif
+
+/* Must have max instances and data length set if extended advertising is enabled */
+#if CONFIG_BT_NIMBLE_EXT_ADV
+#  if !defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES)
+#    define CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES 1
+#  endif
+#  if !defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN)
+#    define CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN 255
+#  endif
+#endif
+
+/* Must set max number of syncs if periodic advertising is enabled */
+#if CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV && !defined(CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS)
+#  define CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS 1
 #endif
 
 /* Cannot use client without scan */
