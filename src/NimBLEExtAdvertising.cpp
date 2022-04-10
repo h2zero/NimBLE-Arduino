@@ -49,10 +49,9 @@ bool NimBLEExtAdvertising::setInstanceData(uint8_t inst_id, NimBLEExtAdvertiseme
         adv.m_params.scannable = true;
     }
 
-    // Always set this if scan response is enabled, the application can choose
-    // to handle it or not.
-    if (adv.m_params.scannable && !adv.m_params.connectable) {
-        adv.m_params.scan_req_notif = true;
+    // If connectable or not scannable disable the callback for scan response requests
+    if (adv.m_params.connectable || !adv.m_params.scannable) {
+        adv.m_params.scan_req_notif = false;
     }
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
@@ -161,12 +160,6 @@ bool NimBLEExtAdvertising::start(uint8_t inst_id, int duration, int max_events) 
         return false;
     }
 
-    // If already advertising just return
-    if (isAdvertising(inst_id)) {
-        NIMBLE_LOGW(LOG_TAG, "Advertisement already active");
-        return true;
-    }
-
     int rc = ble_gap_ext_adv_start(inst_id, duration / 10, max_events);
 
     switch (rc) {
@@ -208,13 +201,14 @@ bool NimBLEExtAdvertising::start(uint8_t inst_id, int duration, int max_events) 
 bool NimBLEExtAdvertising::removeInstance(uint8_t inst_id) {
     if (stop(inst_id)) {
         int rc =  ble_gap_ext_adv_remove(inst_id);
-        if (rc == 0 || rc == BLE_HS_EALREADY) {
-            return true;
-        } else {
+        if (rc != 0 && rc != BLE_HS_EALREADY) {
             NIMBLE_LOGE(LOG_TAG, "ble_gap_ext_adv_remove rc = %d %s",
                         rc, NimBLEUtils::returnCodeToString(rc));
+            return false;
         }
+        return true;
     }
+
     return false;
 } // removeInstance
 
@@ -233,6 +227,7 @@ bool NimBLEExtAdvertising::removeAll() {
                         rc, NimBLEUtils::returnCodeToString(rc));
         }
     }
+
     return false;
 } // removeAll
 
@@ -260,13 +255,11 @@ bool NimBLEExtAdvertising::stop(uint8_t inst_id) {
  * @return True if successful.
  */
 bool NimBLEExtAdvertising::stop() {
-    for (int i=0; i < CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES; i++) {
-        int rc = ble_gap_ext_adv_stop(i);
-        if (rc != 0 && rc != BLE_HS_EALREADY) {
-            NIMBLE_LOGE(LOG_TAG, "ble_gap_ext_adv_stop rc = %d %s",
-                        rc, NimBLEUtils::returnCodeToString(rc));
-            return false;
-        }
+    int rc = ble_gap_ext_adv_clear();
+    if (rc != 0 && rc != BLE_HS_EALREADY) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gap_ext_adv_stop rc = %d %s",
+                    rc, NimBLEUtils::returnCodeToString(rc));
+        return false;
     }
 
     for(auto it : m_advStatus) {
@@ -298,8 +291,22 @@ void NimBLEExtAdvertising::setCallbacks(NimBLEExtAdvertisingCallbacks* pCallback
  * @param [in] inst_id The instance ID of the advertised data to get the status of.
  * @return True if advertising is active.
  */
-bool NimBLEExtAdvertising::isAdvertising(uint8_t inst_id) {
+bool NimBLEExtAdvertising::isActive(uint8_t inst_id) {
     return m_advStatus[inst_id];
+} // isAdvertising
+
+
+/**
+ * @brief Check if any instances are currently advertising.
+ * @return True if any instance is active.
+ */
+bool NimBLEExtAdvertising::isAdvertising() {
+    for (auto it : m_advStatus) {
+        if (it) {
+            return true;
+        }
+    }
+    return false;
 } // isAdvertising
 
 
@@ -309,6 +316,9 @@ bool NimBLEExtAdvertising::isAdvertising(uint8_t inst_id) {
  */
 void NimBLEExtAdvertising::onHostSync() {
     NIMBLE_LOGD(LOG_TAG, "Host re-synced");
+    for(auto it : m_advStatus) {
+        it = false;
+    }
 } // onHostSync
 
 
@@ -337,18 +347,19 @@ int NimBLEExtAdvertising::handleGapEvent(struct ble_gap_event *event, void *arg)
                 default:
                     break;
             }
-
+            pAdv->m_advStatus[event->adv_complete.instance] = false;
             pAdv->m_pCallbacks->onStopped(pAdv, event->adv_complete.reason,
-                                        event->adv_complete.instance);
+                                          event->adv_complete.instance);
             break;
         }
 
         case BLE_GAP_EVENT_SCAN_REQ_RCVD: {
-            pAdv->m_pCallbacks->onScanRequest(pAdv, event->scan_req_rcvd.instance);
+            pAdv->m_pCallbacks->onScanRequest(pAdv, event->scan_req_rcvd.instance,
+                                              NimBLEAddress(event->scan_req_rcvd.scan_addr));
             break;
         }
-
     }
+
     return 0;
 } // handleGapEvent
 
@@ -361,7 +372,7 @@ void NimBLEExtAdvertisingCallbacks::onStopped(NimBLEExtAdvertising *pAdv,
 
 
 void NimBLEExtAdvertisingCallbacks::onScanRequest(NimBLEExtAdvertising *pAdv,
-                                                  uint8_t inst_id) {
+                                                  uint8_t inst_id, NimBLEAddress addr) {
     NIMBLE_LOGD("NimBLEExtAdvertisingCallbacks", "onScanRequest: Default");
 } // onScanRequest
 
@@ -550,6 +561,15 @@ void NimBLEExtAdvertisement::setSecondaryPhy(uint8_t phy) {
 void NimBLEExtAdvertisement::setAnonymous(bool val) {
     m_params.anonymous = val;
 } // setAnonymous
+
+
+/**
+ * @brief Sets whether the scan response request callback should be called.
+ * @param [in] enable If true the scan response request callback will be called for this advertisement.
+ */
+void NimBLEExtAdvertisement::enableScanRequestCallback(bool enable) {
+    m_params.scan_req_notif = enable;
+} // enableScanRequestCallback
 
 
 /**

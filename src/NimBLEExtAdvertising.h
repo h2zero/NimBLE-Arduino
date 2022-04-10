@@ -27,7 +27,6 @@
 #include "NimBLEUUID.h"
 
 #include <vector>
-#include <functional>
 
 class NimBLEExtAdvertisingCallbacks;
 
@@ -71,6 +70,7 @@ public:
     void   setPrimaryChannels(bool ch37, bool ch38, bool ch39);
     void   setTxPower(int8_t dbm);
     void   setAddress(const NimBLEAddress & addr);
+    void   enableScanRequestCallback(bool enable);
     void   clearData();
     size_t getDataSize();
 
@@ -103,7 +103,8 @@ public:
     bool removeAll();
     bool stop(uint8_t inst_id);
     bool stop();
-    bool isAdvertising(uint8_t inst_id);
+    bool isActive(uint8_t inst_id);
+    bool isAdvertising();
     void setCallbacks(NimBLEExtAdvertisingCallbacks* callbacks,
                       bool deleteCallbacks = true);
 
@@ -138,12 +139,13 @@ public:
     virtual void onStopped(NimBLEExtAdvertising *pAdv, int reason, uint8_t inst_id);
 
     /**
-     * @brief Handle a client connection.
-     * This is called when a client connects.
+     * @brief Handle a scan response request.
+     * This is called when a scanning device requests a scan response.
      * @param [in] pAdv A convenience pointer to the extended advertising interface.
-     * @param [in] inst_id The instance ID of the advertisement that the scan request was made.
+     * @param [in] inst_id The instance ID of the advertisement that the scan response request was made.
+     * @param [in] addr The address of the device making the request.
      */
-    virtual void onScanRequest(NimBLEExtAdvertising *pAdv, uint8_t inst_id);
+    virtual void onScanRequest(NimBLEExtAdvertising *pAdv, uint8_t inst_id, NimBLEAddress addr);
 }; // NimBLEExtAdvertisingCallbacks
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && CONFIG_BT_NIMBLE_EXT_ADV */
