@@ -65,6 +65,11 @@ NimBLEClient::NimBLEClient(const NimBLEAddress &peerAddress) : m_peerAddress(pee
     m_pTaskData        = nullptr;
     m_connEstablished  = false;
     m_lastErr          = 0;
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    m_phyMask          = BLE_GAP_LE_PHY_1M_MASK |
+                         BLE_GAP_LE_PHY_2M_MASK |
+                         BLE_GAP_LE_PHY_CODED_MASK;
+#endif
 
     m_pConnParams.scan_itvl = 16;          // Scan interval in 0.625ms units (NimBLE Default)
     m_pConnParams.scan_window = 16;        // Scan window in 0.625ms units (NimBLE Default)
@@ -220,9 +225,22 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
      *  Loop on BLE_HS_EBUSY if the scan hasn't stopped yet.
      */
     do {
+#if CONFIG_BT_NIMBLE_EXT_ADV
+        rc = ble_gap_ext_connect(NimBLEDevice::m_own_addr_type,
+                                 &peerAddr_t,
+                                 m_connectTimeout,
+                                 m_phyMask,
+                                 &m_pConnParams,
+                                 &m_pConnParams,
+                                 &m_pConnParams,
+                                 NimBLEClient::handleGapEvent,
+                                 this);
+
+#else
         rc = ble_gap_connect(NimBLEDevice::m_own_addr_type, &peerAddr_t,
                              m_connectTimeout, &m_pConnParams,
                              NimBLEClient::handleGapEvent, this);
+#endif
         switch (rc) {
             case 0:
                 break;
@@ -395,6 +413,21 @@ int NimBLEClient::disconnect(uint8_t reason) {
     m_lastErr = rc;
     return rc;
 } // disconnect
+
+
+#if CONFIG_BT_NIMBLE_EXT_ADV
+/**
+ * @brief Set the PHY types to use when connecting to a server.
+ * @param [in] mask A bitmask indicating what PHYS to connect with.\n
+ * The available bits are:
+ * * 0x01 BLE_GAP_LE_PHY_1M_MASK
+ * * 0x02 BLE_GAP_LE_PHY_2M_MASK
+ * * 0x04 BLE_GAP_LE_PHY_CODED_MASK
+ */
+void NimBLEClient::setConnectPhy(uint8_t mask) {
+    m_phyMask = mask;
+}
+#endif
 
 
 /**
