@@ -482,10 +482,6 @@ ble_gap_conn_find(uint16_t handle, struct ble_gap_conn_desc *out_desc)
 {
     struct ble_hs_conn *conn;
 
-    if (!ble_hs_is_enabled()) {
-       return BLE_HS_EDISABLED;
-    }
-
     ble_hs_lock();
 
     conn = ble_hs_conn_find(handle);
@@ -2147,10 +2143,6 @@ ble_gap_set_event_cb(uint16_t conn_handle, ble_gap_event_fn *cb, void *cb_arg)
 {
     struct ble_hs_conn *conn;
 
-    if (!ble_hs_is_enabled()) {
-       return BLE_HS_EDISABLED;
-    }
-
     ble_hs_lock();
 
     conn = ble_hs_conn_find(conn_handle);
@@ -2753,10 +2745,6 @@ ble_gap_adv_rsp_set_fields(const struct ble_hs_adv_fields *rsp_fields)
     uint8_t buf[BLE_HS_ADV_MAX_SZ];
     uint8_t buf_sz;
     int rc;
-
-    if (!ble_hs_is_enabled()) {
-       return BLE_HS_EDISABLED;
-    }
 
     rc = ble_hs_adv_set_fields(rsp_fields, buf, &buf_sz, sizeof buf);
     if (rc != 0) {
