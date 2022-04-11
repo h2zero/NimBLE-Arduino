@@ -362,7 +362,6 @@ static inline void sys_memcpy_swap(void *dst, const void *src, size_t length)
     __ASSERT(((src < dst && (src + length) <= dst) ||
           (src > dst && (dst + length) <= src)),
          "Source and destination buffers must not overlap");
-
     src += length - 1;
 
     for (; length > 0; length--) {
