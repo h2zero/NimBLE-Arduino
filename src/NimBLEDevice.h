@@ -119,7 +119,7 @@ public:
 
     static NimBLEMeshNode*  createMeshNode(NimBLEUUID uuid, uint8_t type);
     static NimBLEMeshNode*  getMeshNode();
-    
+
 #ifdef ESP_PLATFORM
     static void             setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);
     static int              getPower(esp_ble_power_type_t powerType=ESP_BLE_PWR_TYPE_DEFAULT);

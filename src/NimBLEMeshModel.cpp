@@ -617,13 +617,13 @@ int NimBLEHealthSrvCallbacks::faultGetCurrent(bt_mesh_model *model, uint8_t *tes
                                               uint16_t *company_id, uint8_t *faults,
                                               uint8_t *fault_count)
 {
-    NIMBLE_LOGD(LOG_TAG, "faultGetCurrent - default");
+    NIMBLE_LOGD(LOG_TAG, "faultGetCurrent");
 
     NimBLEHealthSrvModel* pModel = (NimBLEHealthSrvModel*)NimBLEDevice::getMeshNode()->getHealthModel(model);
     *test_id = pModel->m_testId;
     *company_id = CID_VENDOR;
-    faults = &pModel->m_faults[0];
-    *fault_count = pModel->m_faults.size();
+    *fault_count = std::min(*(size_t*)fault_count, pModel->m_faults.size());
+    memcpy(faults, &pModel->m_faults[0], *fault_count);
     return 0;
 }
 
@@ -631,7 +631,7 @@ int NimBLEHealthSrvCallbacks::faultGetRegistered(bt_mesh_model *model, uint16_t 
                                                  uint8_t *test_id, uint8_t *faults,
                                                  uint8_t *fault_count)
 {
-    NIMBLE_LOGD(LOG_TAG, "faultGetRegistered - default");
+    NIMBLE_LOGD(LOG_TAG, "faultGetRegistered");
 
     if (company_id != CID_VENDOR) {
         return -BLE_HS_EINVAL;
@@ -639,8 +639,8 @@ int NimBLEHealthSrvCallbacks::faultGetRegistered(bt_mesh_model *model, uint16_t 
 
     NimBLEHealthSrvModel* pModel = (NimBLEHealthSrvModel*)NimBLEDevice::getMeshNode()->getHealthModel(model);
     *test_id = pModel->m_testId;
-    faults = &pModel->m_faults[0];
-    *fault_count = pModel->m_faults.size();
+    *fault_count = std::min(*(size_t*)fault_count, pModel->m_faults.size());
+    memcpy(faults, &pModel->m_faults[0], *fault_count);
 
     return 0;
 }
