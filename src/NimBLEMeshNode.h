@@ -9,14 +9,18 @@
 #ifndef MAIN_NIMBLE_MESH_NODE_H_
 #define MAIN_NIMBLE_MESH_NODE_H_
 
-#include "sdkconfig.h"
-#if defined(CONFIG_BT_ENABLED)
 #include "nimconfig.h"
+#if defined(CONFIG_BT_ENABLED)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpointer-arith"
-#include "mesh/glue.h"
-#include "mesh/mesh.h"
+#if defined(CONFIG_NIMBLE_CPP_IDF)
+#  include "mesh/glue.h"
+#  include "mesh/mesh.h"
+#else
+#  include "nimble/nimble/host/mesh/include/mesh/glue.h"
+#  include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#endif
 #pragma GCC diagnostic pop
 
 /****  FIX COMPILATION ****/

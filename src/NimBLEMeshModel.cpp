@@ -10,7 +10,11 @@
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
 
-#include "nimble/nimble_port.h"
+#if defined(CONFIG_NIMBLE_CPP_IDF)
+#  include "nimble/nimble_port.h"
+#else
+#  include "nimble/porting/nimble/include/nimble/nimble_port.h"
+#endif
 
 #include "NimBLEDevice.h"
 

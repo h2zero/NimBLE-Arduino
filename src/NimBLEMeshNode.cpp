@@ -1,20 +1,27 @@
 /*
- * NimBLEMeshNoce.cpp
+ * NimBLEMeshNode.cpp
  *
  *  Created: on July 22 2020
  *      Author H2zero
  *
  */
 
-#include "sdkconfig.h"
+#include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLEMeshNode.h"
 #include "NimBLELog.h"
 #include "NimBLEDevice.h"
 
-#include "services/gap/ble_svc_gap.h"
-#include "services/gatt/ble_svc_gatt.h"
+#if defined(CONFIG_NIMBLE_CPP_IDF)
+#  include "services/gap/ble_svc_gap.h"
+#  include "services/gatt/ble_svc_gatt.h"
+#else
+#  include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
+#  include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
+#endif
+
+
 
 #define CID_VENDOR 0x05C3
 

@@ -29,7 +29,7 @@ typedef struct {
     void *pATT;
     TaskHandle_t task;
     int rc;
-    std::string *buf;
+    void *buf;
 } ble_task_data_t;
 
 

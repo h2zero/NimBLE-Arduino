@@ -15,6 +15,48 @@
 /** @brief Un-comment to change the number of simultaneous connections (esp controller max is 9) */
 // #define CONFIG_BT_NIMBLE_MAX_CONNECTIONS 3
 
+/** @brief Un-comment to enable storing the timestamp when an attribute value is updated\n
+ *  This allows for checking the last update time using getTimeStamp() or getValue(time_t*)\n
+ *  If disabled, the timestamp returned from these functions will be 0.\n
+ *  Disabling timestamps will reduce the memory used for each value.\n
+ *  1 = Enabled, 0 = Disabled; Default = Disabled
+ */
+// #define CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED 0
+
+/** @brief Uncomment to set the default allocation size (bytes) for each attribute if\n
+ *  not specified when the constructor is called. This is also the size used when a remote\n
+ *  characteristic or descriptor is constructed before a value is read/notifed.\n
+ *  Increasing this will reduce reallocations but increase memory footprint.\n
+ *  Default value is 20. Range: 1 : 512 (BLE_ATT_ATTR_MAX_LEN)
+ */
+// #define CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH 20
+
+
+/****************************************************
+ *         Extended advertising settings            *
+ * For use with ESP32C3, ESP32S3, ESP32H2 ONLY!     *
+ ***************************************************/
+ 
+/** @brief Un-comment to enable extended advertising */
+// #define CONFIG_BT_NIMBLE_EXT_ADV 1
+
+/** @brief Un-comment to set the max number of extended advertising instances (Range: 0 - 4) */
+// #define CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES 1
+
+/** @brief Un-comment to set the max extended advertising data size (Range: 31 - 1650) */
+// #define CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN 251
+
+/** @brief Un-comment to enable periodic advertising */
+// #define CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV 1
+
+/** @brief Un-comment to change the maximum number of periodically synced devices */
+// #define CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS 1
+
+/****************************************************
+ * END For use with ESP32C3, ESP32S3, ESP32H2 ONLY! *
+ ***************************************************/
+ 
+
 /** @brief Un-comment to change the default MTU size */
 // #define CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU 255
 
@@ -31,7 +73,12 @@
  *  Values: 0 = NONE, 1 = ERROR, 2 = WARNING, 3 = INFO, 4+ = DEBUG\n
  *  Uses approx. 32kB of flash memory.
  */
- // #define CONFIG_NIMBLE_CPP_DEBUG_LEVEL 0
+ // #define CONFIG_NIMBLE_CPP_LOG_LEVEL 0
+
+ /** @brief Un-comment to use timestamps with characteristic / descriptor values
+ *  If not enabled the `::get/readValue()` calls with a timestamp parameter will set the timestamp to 0.
+ */
+// #define NIMBLE_ATT_VALUE_TIMESTAMP_ENABLED
 
 /** @brief Un-comment to see NimBLE host return codes as text debug log messages.
  *  Uses approx. 7kB of flash memory.
@@ -186,7 +233,11 @@
 #define CONFIG_BT_NIMBLE_ACL_BUF_SIZE 255
 
 /** @brief HCI Event Buffer size */
-#define CONFIG_BT_NIMBLE_HCI_EVT_BUF_SIZE 70
+#if CONFIG_BT_NIMBLE_EXT_ADV || CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV
+#  define CONFIG_BT_NIMBLE_HCI_EVT_BUF_SIZE 257
+#else
+#  define CONFIG_BT_NIMBLE_HCI_EVT_BUF_SIZE 70
+#endif
 
 /** @brief Number of high priority HCI event buffers */
 #define CONFIG_BT_NIMBLE_HCI_EVT_HI_BUF_COUNT 30
@@ -238,9 +289,34 @@
 #define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE 2
 #endif
 
-#if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3)
+#if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
 #define CONFIG_IDF_TARGET_ESP32 1
 #endif
+
+#if CONFIG_BT_NIMBLE_EXT_ADV || CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV
+#  if defined(CONFIG_IDF_TARGET_ESP32)
+#    error Extended advertising is not supported on ESP32.
+#  endif
+#endif
+#endif
+
+#if CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV && !CONFIG_BT_NIMBLE_EXT_ADV
+#  error Extended advertising must be enabled to use periodic advertising.
+#endif
+
+/* Must have max instances and data length set if extended advertising is enabled */
+#if CONFIG_BT_NIMBLE_EXT_ADV
+#  if !defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES)
+#    define CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES 1
+#  endif
+#  if !defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN)
+#    define CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN 251
+#  endif
+#endif
+
+/* Must set max number of syncs if periodic advertising is enabled */
+#if CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV && !defined(CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS)
+#  define CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS 1
 #endif
 
 /* Cannot use client without scan */
@@ -253,3 +329,9 @@
 #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #endif
 
+/* Enables the use of Arduino String class for attribute values */
+#if defined __has_include
+#  if __has_include (<Arduino.h>)
+#    define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  endif
+#endif

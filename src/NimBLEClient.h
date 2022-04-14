@@ -21,6 +21,7 @@
 #include "NimBLEUUID.h"
 #include "NimBLEUtils.h"
 #include "NimBLEConnInfo.h"
+#include "NimBLEAttValue.h"
 #include "NimBLEAdvertisedDevice.h"
 #include "NimBLERemoteService.h"
 
@@ -51,9 +52,9 @@ public:
     NimBLERemoteService*                        getService(const NimBLEUUID &uuid);
     void                                        deleteServices();
     size_t                                      deleteService(const NimBLEUUID &uuid);
-    std::string                                 getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
+    NimBLEAttValue                              getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);
     bool                                        setValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID,
-                                                         const std::string &value, bool response = false);
+                                                         const NimBLEAttValue &value, bool response = false);
     NimBLERemoteCharacteristic*                 getCharacteristic(const uint16_t handle);
     bool                                        isConnected();
     void                                        setClientCallbacks(NimBLEClientCallbacks *pClientCallbacks,
@@ -72,6 +73,9 @@ public:
     void                                        discoverAttributes();
     NimBLEConnInfo                              getConnInfo();
     int                                         getLastError();
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    void                                        setConnectPhy(uint8_t mask);
+#endif
 
 private:
     NimBLEClient(const NimBLEAddress &peerAddress);
@@ -97,6 +101,9 @@ private:
     NimBLEClientCallbacks*  m_pClientCallbacks;
     ble_task_data_t*        m_pTaskData;
     ble_npl_callout         m_dcTimer;
+#if CONFIG_BT_NIMBLE_EXT_ADV
+    uint8_t                 m_phyMask;
+#endif
 
     std::vector<NimBLERemoteService*> m_servicesVector;
 

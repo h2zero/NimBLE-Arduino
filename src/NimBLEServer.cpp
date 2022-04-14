@@ -42,7 +42,9 @@ NimBLEServer::NimBLEServer() {
 //    m_svcChgChrHdl          = 0xffff; // Future Use
     m_pServerCallbacks      = &defaultCallbacks;
     m_gattsStarted          = false;
+#if !CONFIG_BT_NIMBLE_EXT_ADV
     m_advertiseOnDisconnect = true;
+#endif
     m_svcChanged            = false;
     m_deleteCallbacks       = true;
 } // NimBLEServer
@@ -75,9 +77,6 @@ NimBLEService* NimBLEServer::createService(const char* uuid) {
 /**
  * @brief Create a %BLE Service.
  * @param [in] uuid The UUID of the new service.
- * @param [in] numHandles The maximum number of handles associated with this service.
- * @param [in] inst_id if we have multiple services with the same UUID we need
- *             to provide inst_id value different for each service.
  * @return A reference to the new service object.
  */
 NimBLEService* NimBLEServer::createService(const NimBLEUUID &uuid) {
@@ -142,15 +141,26 @@ NimBLEService *NimBLEServer::getServiceByHandle(uint16_t handle) {
     return nullptr;
 }
 
+
+#if CONFIG_BT_NIMBLE_EXT_ADV
 /**
  * @brief Retrieve the advertising object that can be used to advertise the existence of the server.
- *
+ * @return An advertising object.
+ */
+NimBLEExtAdvertising* NimBLEServer::getAdvertising() {
+    return NimBLEDevice::getAdvertising();
+} // getAdvertising
+#endif
+
+#if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
+/**
+ * @brief Retrieve the advertising object that can be used to advertise the existence of the server.
  * @return An advertising object.
  */
 NimBLEAdvertising* NimBLEServer::getAdvertising() {
     return NimBLEDevice::getAdvertising();
 } // getAdvertising
-
+#endif
 
 /**
  * @brief Sends a service changed notification and resets the GATT server.
@@ -181,7 +191,7 @@ void NimBLEServer::start() {
         abort();
     }
 
-#if CONFIG_NIMBLE_CPP_DEBUG_LEVEL >= 4
+#if CONFIG_NIMBLE_CPP_LOG_LEVEL >= 4
     ble_gatts_show_local();
 #endif
 /*** Future use ***
@@ -243,6 +253,7 @@ int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
 } // disconnect
 
 
+#if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
 /**
  * @brief Set the server to automatically start advertising when a client disconnects.
  * @param [in] aod true == advertise, false == don't advertise.
@@ -250,7 +261,7 @@ int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
 void NimBLEServer::advertiseOnDisconnect(bool aod) {
     m_advertiseOnDisconnect = aod;
 } // advertiseOnDisconnect
-
+#endif
 
 /**
  * @brief Return the number of connected clients.
@@ -326,8 +337,9 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
  * @param [in] param
  *
  */
-/*STATIC*/int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
-    NimBLEServer* server = (NimBLEServer*)arg;
+/*STATIC*/
+int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
+    NimBLEServer* server = NimBLEDevice::getServer();
     NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent: %s",
                          NimBLEUtils::gapEventToString(event->type));
     int rc = 0;
@@ -339,7 +351,9 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
             if (event->connect.status != 0) {
                 /* Connection failed; resume advertising */
                 NIMBLE_LOGE(LOG_TAG, "Connection failed");
+#if !CONFIG_BT_NIMBLE_EXT_ADV
                 NimBLEDevice::startAdvertising();
+#endif
             }
             else {
                 server->m_connectedPeersVec.push_back(event->connect.conn_handle);
@@ -384,9 +398,11 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
             server->m_pServerCallbacks->onDisconnect(server);
             server->m_pServerCallbacks->onDisconnect(server, &event->disconnect.conn);
 
+#if !CONFIG_BT_NIMBLE_EXT_ADV
             if(server->m_advertiseOnDisconnect) {
                 server->startAdvertising();
             }
+#endif
             return 0;
         } // BLE_GAP_EVENT_DISCONNECT
 
@@ -474,11 +490,15 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
             return 0;
         } // BLE_GAP_EVENT_NOTIFY_TX
 
-        case BLE_GAP_EVENT_ADV_COMPLETE: {
-            NIMBLE_LOGD(LOG_TAG, "Advertising Complete");
-            NimBLEDevice::getAdvertising()->advCompleteCB();
-            return 0;
-        }
+
+        case BLE_GAP_EVENT_ADV_COMPLETE:
+#if CONFIG_BT_NIMBLE_EXT_ADV
+        case BLE_GAP_EVENT_SCAN_REQ_RCVD:
+            return NimBLEExtAdvertising::handleGapEvent(event, arg);
+#else
+            return NimBLEAdvertising::handleGapEvent(event, arg);
+#endif
+        // BLE_GAP_EVENT_ADV_COMPLETE | BLE_GAP_EVENT_SCAN_REQ_RCVD
 
         case BLE_GAP_EVENT_CONN_UPDATE: {
             NIMBLE_LOGD(LOG_TAG, "Connection parameters updated.");
@@ -537,7 +557,7 @@ NimBLEConnInfo NimBLEServer::getPeerIDInfo(uint16_t id) {
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
 
             } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
-                NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %d", event->passkey.params.numcmp);
+                NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %" PRIu32, event->passkey.params.numcmp);
                 pkey.action = event->passkey.params.action;
                 // Compatibility only - Do not use, should be removed the in future
                 if(NimBLEDevice::m_securityCallbacks != nullptr) {
@@ -655,7 +675,9 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
 
     service->m_removed = deleteSvc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE;
     serviceChanged();
+#if !CONFIG_BT_NIMBLE_EXT_ADV
     NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
+#endif
 }
 
 
@@ -718,22 +740,52 @@ void NimBLEServer::resetGATT() {
 }
 
 
+#if CONFIG_BT_NIMBLE_EXT_ADV
 /**
  * @brief Start advertising.
- *
- * Start the server advertising its existence.  This is a convenience function and is equivalent to
+ * @param [in] inst_id The extended advertisement instance ID to start.
+ * @param [in] duration How long to advertise for in milliseconds, 0 = forever (default).
+ * @param [in] max_events Maximum number of advertisement events to send, 0 = no limit (default).
+ * @return True if advertising started successfully.
+ * @details Start the server advertising its existence.  This is a convenience function and is equivalent to
  * retrieving the advertising object and invoking start upon it.
  */
-void NimBLEServer::startAdvertising() {
-    NimBLEDevice::startAdvertising();
+bool NimBLEServer::startAdvertising(uint8_t inst_id,
+                                    int duration,
+                                    int max_events) {
+    return getAdvertising()->start(inst_id, duration, max_events);
 } // startAdvertising
 
 
 /**
- * @brief Stop advertising.
+ * @brief Convenience function to stop advertising a data set.
+ * @param [in] inst_id The extended advertisement instance ID to stop advertising.
+ * @return True if advertising stopped successfully.
  */
-void NimBLEServer::stopAdvertising() {
-    NimBLEDevice::stopAdvertising();
+bool NimBLEServer::stopAdvertising(uint8_t inst_id) {
+    return getAdvertising()->stop(inst_id);
+} // stopAdvertising
+#endif
+
+#if !CONFIG_BT_NIMBLE_EXT_ADV|| defined(_DOXYGEN_)
+/**
+ * @brief Start advertising.
+ * @return True if advertising started successfully.
+ * @details Start the server advertising its existence.  This is a convenience function and is equivalent to
+ * retrieving the advertising object and invoking start upon it.
+ */
+bool NimBLEServer::startAdvertising() {
+    return getAdvertising()->start();
+} // startAdvertising
+#endif
+
+
+/**
+ * @brief Stop advertising.
+ * @return True if advertising stopped successfully.
+ */
+bool NimBLEServer::stopAdvertising() {
+    return getAdvertising()->stop();
 } // stopAdvertising
 
 
@@ -785,7 +837,8 @@ void NimBLEServer::updateConnParams(uint16_t conn_handle,
  * @param [in] tx_octets The preferred number of payload octets to use (Range 0x001B-0x00FB).
  */
 void NimBLEServer::setDataLen(uint16_t conn_handle, uint16_t tx_octets) {
-#ifdef CONFIG_NIMBLE_CPP_IDF // not yet available in IDF, Sept 9 2021
+#if defined(CONFIG_NIMBLE_CPP_IDF) && !defined(ESP_IDF_VERSION) || \
+  (ESP_IDF_VERSION_MAJOR * 100 + ESP_IDF_VERSION_MINOR * 10 + ESP_IDF_VERSION_PATCH) < 432
     return;
 #else
     uint16_t tx_time = (tx_octets + 14) * 8;
