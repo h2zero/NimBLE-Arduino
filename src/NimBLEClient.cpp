@@ -703,13 +703,29 @@ std::vector<NimBLERemoteService*>* NimBLEClient::getServices(bool refresh) {
 
 /**
  * @brief Retrieves the full database of attributes that the peripheral has available.
+ * @return True if successful.
  */
-void NimBLEClient::discoverAttributes() {
-    for(auto svc: *getServices(true)) {
-        for(auto chr: *svc->getCharacteristics(true)) {
-            chr->getDescriptors(true);
+bool NimBLEClient::discoverAttributes() {
+    deleteServices();
+
+    if (!retrieveServices()){
+        return false;
+    }
+
+
+    for(auto svc: m_servicesVector) {
+        if (!svc->retrieveCharacteristics()) {
+            return false;
+        }
+
+        for(auto chr: svc->m_characteristicVector) {
+            if (!chr->retrieveDescriptors()) {
+                return false;
+            }
         }
     }
+
+    return true;
 } // discoverAttributes
 
 
