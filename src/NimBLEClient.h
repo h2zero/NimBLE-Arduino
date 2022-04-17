@@ -71,7 +71,7 @@ public:
                                                                     uint16_t scanInterval=16, uint16_t scanWindow=16);
     void                                        updateConnParams(uint16_t minInterval, uint16_t maxInterval,
                                                                  uint16_t latency, uint16_t timeout);
-    void                                        discoverAttributes();
+    bool                                        discoverAttributes();
     NimBLEConnInfo                              getConnInfo();
     int                                         getLastError();
 
