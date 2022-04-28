@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.8] - 2022-04-27
+
+### Fixed
+- Fix compile error with ESP32S3.
+- Prevent a potential crash when retrieving characteristics from a service if the result was successful but no characteristics found.
+
+### Changed
+- Save resources when retrieving descriptors if the characteristic handle is the same as the end handle (no descriptors).
+- Subscribing to characteristic notifications/indications will now always use write with response, as per BLE specifications.
+- `NimBLEClient::discoverAttributes` now returns a bool value to indicate success/failure
+
 ## [1.3.7] - 2022-02-15
 
 ### Fixed
