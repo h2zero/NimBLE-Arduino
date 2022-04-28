@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.5</span>
+   &#160;<span id="projectnumber">1.3.8</span>
    </div>
   </td>
  </tr>
@@ -86,14 +86,14 @@ $(document).ready(function(){initNavTree('md__usage_tips.html',''); initResizabl
 <div class="title">Usage Tips </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md77"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md85"></a>
 Put BLE functions in a task running on the NimBLE stack core</h1>
 <p>When commands are sent to the stack from a differnt core they can experience delays in execution. <br  />
  This library detects this and invokes the esp32 IPC to reroute these commands through the correct core but this also increases overhead. <br  />
  Therefore it is highly recommended to create tasks for BLE to run on the same core, the macro <code>CONFIG_BT_NIMBLE_PINNED_TO_CORE</code> can be used to set the core. <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md78"></a>
+<h1><a class="anchor" id="autotoc_md86"></a>
 Do not delete client instances unless necessary or unused</h1>
 <p>When a client instance has been created and has connected to a peer device and it has retrieved service/characteristic information it will store that data for the life of the client instance. <br  />
  If you are periodically connecting to the same devices and you have deleted the client instance or the services when connecting again it will cause a retrieval of that information from the peer again. <br  />
@@ -105,7 +105,7 @@ Do not delete client instances unless necessary or unused</h1>
  <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md79"></a>
+<h1><a class="anchor" id="autotoc_md87"></a>
 Only retrieve the services and characteriscs needed</h1>
 <p>As a client the use of <code><a class="el" href="class_nim_b_l_e_client.html#acb9007569b3bb13b3b49f3c4cb47b21a" title="Get a pointer to the vector of found services.">NimBLEClient::getServices</a></code> or <code><a class="el" href="class_nim_b_l_e_remote_service.html#a2c9e91c842598a6a9576c7b87af0863a" title="Get a pointer to the vector of found characteristics.">NimBLERemoteService::getCharacteristics</a></code> and using <code>true</code> for the parameter should be limited to devices that are not known. <br  />
  Instead <code>NimBLEClient::getService(NimBLEUUID)</code> or <code>NimBLERemoteService::getCharacteristic(NimBLEUUID)</code> should be used to access certain attributes that are useful to the application. <br  />
@@ -113,7 +113,7 @@ Only retrieve the services and characteriscs needed</h1>
  <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md80"></a>
+<h1><a class="anchor" id="autotoc_md88"></a>
 Check return values</h1>
 <p>Many user issues can be avoided by checking if a function returned successfully, by either testing for true/false such as when calling <code><a class="el" href="class_nim_b_l_e_client.html#aab311f0a8af21fb63f78e7fbac29951a" title="Connect to an advertising device.">NimBLEClient::connect</a></code>, <br  />
  or nullptr such as when calling <code><a class="el" href="class_nim_b_l_e_client.html#ae22379ab10bd82932d2303fb3753c366" title="Get the service BLE Remote Service instance corresponding to the uuid.">NimBLEClient::getService</a></code>. The latter being a must, as calling a method on a nullptr will surely result in a crash. <br  />
@@ -121,7 +121,7 @@ Check return values</h1>
  <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md81"></a>
+<h1><a class="anchor" id="autotoc_md89"></a>
 There will be bugs - please report them</h1>
 <p>No code is bug free and unit testing will not find them all on it's own. If you encounter a bug, please report it along with any logs and decoded backtrace if applicable. <br  />
  Best efforts will be made to correct any errors ASAP. <br  />

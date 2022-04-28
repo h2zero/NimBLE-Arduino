@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.5</span>
+   &#160;<span id="projectnumber">1.3.8</span>
    </div>
   </td>
  </tr>
@@ -130,6 +130,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a7103976da820d0c1840aa77aca38306c"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a7103976da820d0c1840aa77aca38306c">to128</a> ()</td></tr>
 <tr class="memdesc:a7103976da820d0c1840aa77aca38306c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a UUID to its 128 bit representation.  <a href="class_nim_b_l_e_u_u_i_d.html#a7103976da820d0c1840aa77aca38306c">More...</a><br /></td></tr>
 <tr class="separator:a7103976da820d0c1840aa77aca38306c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a618f6c29565338a496715ca951c98afb"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a618f6c29565338a496715ca951c98afb">to16</a> ()</td></tr>
+<tr class="memdesc:a618f6c29565338a496715ca951c98afb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert 128 bit UUID to its 16 bit representation.  <a href="class_nim_b_l_e_u_u_i_d.html#a618f6c29565338a496715ca951c98afb">More...</a><br /></td></tr>
+<tr class="separator:a618f6c29565338a496715ca951c98afb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9708e07b8e0915aafcfa32fe74ccdf64"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a9708e07b8e0915aafcfa32fe74ccdf64">toString</a> () const</td></tr>
 <tr class="memdesc:a9708e07b8e0915aafcfa32fe74ccdf64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a string representation of the UUID.  <a href="class_nim_b_l_e_u_u_i_d.html#a9708e07b8e0915aafcfa32fe74ccdf64">More...</a><br /></td></tr>
 <tr class="separator:a9708e07b8e0915aafcfa32fe74ccdf64"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -494,7 +497,27 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Convert a UUID to its 128 bit representation. </p>
-<p>A UUID can be internally represented as 16bit, 32bit or the full 128bit. This method will convert 16 or 32 bit representations to the full 128bit. </p><dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID</a> converted to 128bit. </dd></dl>
+<p>A UUID can be internally represented as 16bit, 32bit or the full 128bit. This method will convert 16 or 32bit representations to the full 128bit. </p><dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID</a> converted to 128bit. </dd></dl>
+
+</div>
+</div>
+<a id="a618f6c29565338a496715ca951c98afb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a618f6c29565338a496715ca951c98afb">&#9670;&nbsp;</a></span>to16()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp; NimBLEUUID::to16 </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convert 128 bit UUID to its 16 bit representation. </p>
+<p>A UUID can be internally represented as 16bit, 32bit or the full 128bit. This method will convert a 128bit uuid to 16bit if it contains the ble base uuid. </p><dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID</a> converted to 16bit if successful, otherwise the original uuid. </dd></dl>
 
 </div>
 </div>

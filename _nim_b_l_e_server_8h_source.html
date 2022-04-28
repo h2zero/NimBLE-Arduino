@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.5</span>
+   &#160;<span id="projectnumber">1.3.8</span>
    </div>
   </td>
  </tr>
@@ -105,7 +105,7 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_server_8h_source.html','');
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &quot;sdkconfig.h&quot;</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#if defined(CONFIG_BT_ENABLED)</span></div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="nimconfig_8h.html">nimconfig.h</a>&quot;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#include &quot;nimconfig.h&quot;</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)</span></div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#define NIMBLE_ATT_REMOVE_HIDE 1</span></div>
@@ -166,7 +166,7 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_server_8h_source.html','');
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordtype">bool</span>                   m_svcChanged;</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <a class="code" href="class_nim_b_l_e_server_callbacks.html">NimBLEServerCallbacks</a>* m_pServerCallbacks;</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordtype">bool</span>                   m_deleteCallbacks;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    uint16_t               m_indWait[<a class="code" href="nimconfig_8h.html#a2ea633774bbf41ac57b314875f16d5f9">CONFIG_BT_NIMBLE_MAX_CONNECTIONS</a>];</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    uint16_t               m_indWait[CONFIG_BT_NIMBLE_MAX_CONNECTIONS];</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    std::vector&lt;uint16_t&gt;  m_connectedPeersVec;</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="comment">//    uint16_t               m_svcChgChrHdl; // Future use</span></div>
@@ -243,8 +243,6 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_server_8h_source.html','');
 <div class="ttc" id="aclass_nim_b_l_e_server_html_ae94ad52f3c97f62553af9765acdb7bcb"><div class="ttname"><a href="class_nim_b_l_e_server.html#ae94ad52f3c97f62553af9765acdb7bcb">NimBLEServer::start</a></div><div class="ttdeci">void start()</div><div class="ttdoc">Start the GATT server. Required to be called after setup of all services and characteristics / descri...</div><div class="ttdef"><b>Definition:</b> NimBLEServer.cpp:171</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_service_html"><div class="ttname"><a href="class_nim_b_l_e_service.html">NimBLEService</a></div><div class="ttdoc">The model of a BLE service.</div><div class="ttdef"><b>Definition:</b> NimBLEService.h:36</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_u_u_i_d_html"><div class="ttname"><a href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a></div><div class="ttdoc">A model of a BLE UUID.</div><div class="ttdef"><b>Definition:</b> NimBLEUUID.h:31</div></div>
-<div class="ttc" id="animconfig_8h_html"><div class="ttname"><a href="nimconfig_8h.html">nimconfig.h</a></div></div>
-<div class="ttc" id="animconfig_8h_html_a2ea633774bbf41ac57b314875f16d5f9"><div class="ttname"><a href="nimconfig_8h.html#a2ea633774bbf41ac57b314875f16d5f9">CONFIG_BT_NIMBLE_MAX_CONNECTIONS</a></div><div class="ttdeci">#define CONFIG_BT_NIMBLE_MAX_CONNECTIONS</div><div class="ttdoc">Un-comment to change the number of simultaneous connections (esp controller max is 9)</div><div class="ttdef"><b>Definition:</b> nimconfig.h:33</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

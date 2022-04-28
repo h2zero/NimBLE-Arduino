@@ -14,5 +14,6 @@ var class_nim_b_l_e_u_u_i_d =
     [ "operator!=", "class_nim_b_l_e_u_u_i_d.html#abeee22e6661f7533f05802e1f89fedfe", null ],
     [ "operator==", "class_nim_b_l_e_u_u_i_d.html#a46484dcb0a1bfef6a8afe97f49f97875", null ],
     [ "to128", "class_nim_b_l_e_u_u_i_d.html#a7103976da820d0c1840aa77aca38306c", null ],
+    [ "to16", "class_nim_b_l_e_u_u_i_d.html#a618f6c29565338a496715ca951c98afb", null ],
     [ "toString", "class_nim_b_l_e_u_u_i_d.html#a9708e07b8e0915aafcfa32fe74ccdf64", null ]
 ];

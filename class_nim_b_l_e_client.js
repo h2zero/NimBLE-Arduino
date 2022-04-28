@@ -7,7 +7,7 @@ var class_nim_b_l_e_client =
     [ "deleteService", "class_nim_b_l_e_client.html#a0f940c51807469db1f1802b742180beb", null ],
     [ "deleteServices", "class_nim_b_l_e_client.html#a668d476de250055a106a9f46bb7719f3", null ],
     [ "disconnect", "class_nim_b_l_e_client.html#a5f77999664cc8a83f3cdb603ba4a5c8c", null ],
-    [ "discoverAttributes", "class_nim_b_l_e_client.html#a3d8cbf51caf8b3b8a0ec6ce2074ba71d", null ],
+    [ "discoverAttributes", "class_nim_b_l_e_client.html#a1019178a12799ca2c3a84f523b3a7db9", null ],
     [ "end", "class_nim_b_l_e_client.html#a0accd665926ea77d85ecb483b2b853fe", null ],
     [ "getCharacteristic", "class_nim_b_l_e_client.html#a2fc46f43a71dd0df63a377961baf8009", null ],
     [ "getConnId", "class_nim_b_l_e_client.html#aa09466a7050bf08bab2390da66007896", null ],

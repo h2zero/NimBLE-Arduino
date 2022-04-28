@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.5</span>
+   &#160;<span id="projectnumber">1.3.8</span>
    </div>
   </td>
  </tr>
@@ -86,78 +86,188 @@ $(document).ready(function(){initNavTree('nimconfig_8h_source.html',''); initRes
 <div class="title">nimconfig.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<a href="nimconfig_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#pragma once</span></div>
+<div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor"> #pragma once</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;sdkconfig.h&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;nimconfig_rename.h&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">/***********************************************</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment"> * Arduino user-config options start here</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment"> **********************************************/</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;sdkconfig.h&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;nimconfig_rename.h&quot;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_MAX_CONNECTIONS 3</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#if defined(CONFIG_BT_ENABLED)</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">// Allows cpp wrapper to select the correct include paths when using esp-idf</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#define CONFIG_NIMBLE_CPP_IDF</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="comment">/* Cannot use client without scan */</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) &amp;&amp; !defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_OBSERVER</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">/* Cannot use server without advertise */</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL) &amp;&amp; !defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_BROADCASTER</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* CONFIG_BT_ENABLED */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU 255</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME &quot;nimble&quot;</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_DEBUG</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; <span class="comment">// #define CONFIG_NIMBLE_CPP_DEBUG_LEVEL 0</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#ifdef _DOXYGEN_</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a2ea633774bbf41ac57b314875f16d5f9">   33</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MAX_CONNECTIONS 3</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">// #define CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a8fa28ebea6e979630359a2acde3ae578">   36</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU 255</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a7b98160e6904e45e99e28a7fcc6b2a3a">   39</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME &quot;nimble&quot;</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a1cfe4f7cfbce0d842fad09e4b668d3df">   45</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_LOG_LEVEL 5</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a43c8bc8415e7723caabe0646f332320f">   50</a></span>&#160;<span class="preprocessor">#define CONFIG_NIMBLE_CPP_DEBUG_LEVEL 0</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a136a5d626ac04aa780c6ec07ee88d242">   55</a></span>&#160;<span class="preprocessor">#define CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a97b51f4248845f6225806eadbab3bcdb">   60</a></span>&#160;<span class="preprocessor">#define CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a07c0fd3908c3466e9f4835f85d913880">   65</a></span>&#160;<span class="preprocessor">#define CONFIG_NIMBLE_CPP_ENABLE_ADVERTISMENT_TYPE_TEXT</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a300d3f8ff48d217a1a2b6608454dfadb">   68</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_SVC_GAP_APPEARANCE 0x0</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00073"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a6ebb331a6664a3863fb2a57b91a6cd2d">   73</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#ab91646223e52e5c24f1004a0ed21b829">   78</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_OBSERVER_DISABLED</span></div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a677d7e75eef5bc96e8d0b4c659db90b0">   83</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">// #define CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">// #define CONFIG_NIMBLE_CPP_ENABLE_ADVERTISMENT_TYPE_TEXT</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_SVC_GAP_APPEARANCE 0x0</span></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_ROLE_OBSERVER_DISABLED</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER_DISABLED</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_MAX_BONDS 3</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_MAX_CCCDS 8</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_RPA_TIMEOUT 900</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_MSYS1_BLOCK_COUNT 12</span></div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
-<div class="line"><a name="l00088"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a2a6b4f35f8975778ac2aac5ff169cbda">   88</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_BROADCASTER_DISABLED</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
-<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a11ebe4c94e55f9e710be03169b91f964">   91</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MAX_BONDS 3</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
-<div class="line"><a name="l00094"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#abdc3219ca772a22427beed33477ea252">   94</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MAX_CCCDS 8</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00097"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a9d22f9f555a2180787ccec86aa10dc24">   97</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_RPA_TIMEOUT 900</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
-<div class="line"><a name="l00105"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a2f0eb3c3124a34b191a70908dc5af441">  105</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MSYS1_BLOCK_COUNT 12</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL 1</span></div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_PINNED_TO_CORE 0</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="comment">// #define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 4096</span></div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160; </div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="comment">/**********************************</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="comment"> End Arduino user-config</span></div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment">**********************************/</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="comment">/* This section should not be altered */</span></div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED</span></div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_CENTRAL</span></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_ROLE_OBSERVER_DISABLED</span></div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_OBSERVER</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
-<div class="line"><a name="l00108"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a1f39f56a0fe8a36ef7823a7c3e1c6e3b">  108</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL 1</span></div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
-<div class="line"><a name="l00111"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#ab86912bde65d198f2f7aa7f83ef11ee8">  111</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_PINNED_TO_CORE 0</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
-<div class="line"><a name="l00114"></a><span class="lineno"><a class="line" href="nimconfig_8h.html#a227a536958a284235daf409b2b3d1766">  114</a></span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 4096</span></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// _DOXYGEN_</span></div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED</span></div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL</span></div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160; </div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_ROLE_BROADCASTER_DISABLED</span></div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_BROADCASTER</span></div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_PINNED_TO_CORE</span></div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_PINNED_TO_CORE 0</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160; </div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_TASK_STACK_SIZE</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 4096</span></div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL</span></div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_INTERNAL 1</span></div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160; </div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_MAX_CONNECTIONS</span></div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MAX_CONNECTIONS 3</span></div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160; </div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_MAX_BONDS</span></div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MAX_BONDS 3</span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160; </div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_MAX_CCCDS</span></div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MAX_CCCDS 8</span></div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160; </div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME</span></div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_SVC_GAP_DEVICE_NAME &quot;nimble&quot;</span></div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160; </div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU</span></div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU 255</span></div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_SVC_GAP_APPEARANCE</span></div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_SVC_GAP_APPEARANCE 0x0</span></div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160; </div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_MSYS1_BLOCK_COUNT</span></div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_MSYS1_BLOCK_COUNT 12</span></div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160; </div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_NIMBLE_RPA_TIMEOUT</span></div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_RPA_TIMEOUT 900</span></div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160; </div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160; </div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_NVS_PERSIST 1</span></div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160; </div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_SM_LEGACY 1</span></div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_SM_SC 1</span></div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160; </div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_GAP_DEVICE_NAME_MAX_LEN 31</span></div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160; </div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ACL_BUF_COUNT 12</span></div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160; </div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ACL_BUF_SIZE 255</span></div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160; </div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_HCI_EVT_BUF_SIZE 70</span></div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160; </div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_HCI_EVT_HI_BUF_COUNT 30</span></div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160; </div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_HCI_EVT_LO_BUF_COUNT 8</span></div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM 0</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160; </div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_HS_FLOW_CTRL 1</span></div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_HS_FLOW_CTRL_ITVL 1000</span></div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_HS_FLOW_CTRL_THRESH 2</span></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_HS_FLOW_CTRL_TX_ON_DISCONNECT 1</span></div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160; </div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_HS_STOP_TIMEOUT_MS 2000</span></div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160; </div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="preprocessor">#ifndef CONFIG_BT_ENABLED</span></div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="preprocessor">#define CONFIG_BT_ENABLED</span></div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160; </div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;<span class="preprocessor">#ifndef CONFIG_BTDM_CONTROLLER_MODE_BLE_ONLY</span></div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;<span class="preprocessor">#define CONFIG_BTDM_CONTROLLER_MODE_BLE_ONLY</span></div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160; </div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="preprocessor">#ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE</span></div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="preprocessor">#define CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE 0</span></div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="preprocessor">#ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DATA</span></div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;<span class="preprocessor">#define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA 1</span></div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160; </div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;<span class="preprocessor">#ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE</span></div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;<span class="preprocessor">#define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE 2</span></div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160; </div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="preprocessor">#if !defined(CONFIG_IDF_TARGET_ESP32) &amp;&amp; !defined(CONFIG_IDF_TARGET_ESP32C3) &amp;&amp; !defined(CONFIG_IDF_TARGET_ESP32S3)</span></div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;<span class="preprocessor">#define CONFIG_IDF_TARGET_ESP32 1</span></div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160; </div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<span class="comment">/* Cannot use client without scan */</span></div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;<span class="preprocessor">#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) &amp;&amp; !defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)</span></div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_OBSERVER</span></div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160; </div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;<span class="comment">/* Cannot use server without advertise */</span></div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<span class="preprocessor">#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL) &amp;&amp; !defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)</span></div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;<span class="preprocessor">#define CONFIG_BT_NIMBLE_ROLE_BROADCASTER</span></div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="nimconfig_8h.html">nimconfig.h</a></li>
+    <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><b>nimconfig.h</b></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>

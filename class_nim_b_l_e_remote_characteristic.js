@@ -26,9 +26,9 @@ var class_nim_b_l_e_remote_characteristic =
     [ "readValue", "class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67", null ],
     [ "readValue", "class_nim_b_l_e_remote_characteristic.html#a463760cabc9ca104a6fe094eb942fec0", null ],
     [ "registerForNotify", "class_nim_b_l_e_remote_characteristic.html#ab4f54eabe90a416546b7b3fc3477f49c", null ],
-    [ "subscribe", "class_nim_b_l_e_remote_characteristic.html#aa08b2f62376568e1fc833e4ff91e8aa7", null ],
+    [ "subscribe", "class_nim_b_l_e_remote_characteristic.html#ad2691a8ea85488c8270f78701352fbb2", null ],
     [ "toString", "class_nim_b_l_e_remote_characteristic.html#a4b86a1f600a61036487f5161f1f1726a", null ],
-    [ "unsubscribe", "class_nim_b_l_e_remote_characteristic.html#a6e331afdbdbc32bf461c9866236a97aa", null ],
+    [ "unsubscribe", "class_nim_b_l_e_remote_characteristic.html#ae2791429ba4a8c310ffc24139a985da6", null ],
     [ "writeValue", "class_nim_b_l_e_remote_characteristic.html#a2cfc2e8d2e281dd61e578eb5e860fc02", null ],
     [ "writeValue", "class_nim_b_l_e_remote_characteristic.html#acf8bcf2cf94ca8bd8cf0c7c39f9883ae", null ],
     [ "writeValue", "class_nim_b_l_e_remote_characteristic.html#a3c8d1fd77dd074df866c091c614eafb3", null ]

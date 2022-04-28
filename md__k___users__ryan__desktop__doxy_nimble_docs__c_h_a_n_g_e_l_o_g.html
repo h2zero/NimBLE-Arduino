@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.5</span>
+   &#160;<span id="projectnumber">1.3.8</span>
    </div>
   </td>
  </tr>
@@ -88,54 +88,93 @@ $(document).ready(function(){initNavTree('md__k___users__ryan__desktop__doxy_nim
 <div class="contents">
 <div class="textblock"><p>All notable changes to this project will be documented in this file.</p>
 <h1><a class="anchor" id="autotoc_md1"></a>
-[1.3.5] - 2022-01-14</h1>
+[1.3.8] - 2022-04-27</h1>
 <h2><a class="anchor" id="autotoc_md2"></a>
-Added</h2>
+Fixed</h2>
 <ul>
-<li>CONFIG_NIMBLE_CPP_DEBUG_LEVEL macro in <a class="el" href="nimconfig_8h.html">nimconfig.h</a> to allow setting the log level separately from the Arduino core log level.</li>
+<li>Fix compile error with ESP32S3.</li>
+<li>Prevent a potential crash when retrieving characteristics from a service if the result was successful but no characteristics found.</li>
 </ul>
 <h2><a class="anchor" id="autotoc_md3"></a>
+Changed</h2>
+<ul>
+<li>Save resources when retrieving descriptors if the characteristic handle is the same as the end handle (no descriptors).</li>
+<li>Subscribing to characteristic notifications/indications will now always use write with response, as per BLE specifications.</li>
+<li><code><a class="el" href="class_nim_b_l_e_client.html#a1019178a12799ca2c3a84f523b3a7db9" title="Retrieves the full database of attributes that the peripheral has available.">NimBLEClient::discoverAttributes</a></code> now returns a bool value to indicate success/failure</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md4"></a>
+[1.3.7] - 2022-02-15</h1>
+<h2><a class="anchor" id="autotoc_md5"></a>
+Fixed</h2>
+<ul>
+<li>Crash when retrieving an attribute that does not exist on the peer.</li>
+<li>Memory leak when deleting client instances.</li>
+<li>Compilation errors for esp32s3</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md6"></a>
+[1.3.6] - 2022-01-18</h1>
+<h2><a class="anchor" id="autotoc_md7"></a>
+Changed</h2>
+<ul>
+<li>When retrieving attributes from a server fails with a 128bit UUID containing the ble base UUID another attempt will be made with the 16bit version of the UUID.</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md8"></a>
+Fixed</h2>
+<ul>
+<li>Memory leak when services are changed on server devices.</li>
+<li>Rare crashing that occurs when BLE commands are sent from ISR context using IPC.</li>
+<li>Crashing caused by uninitialized disconnect timer in client.</li>
+<li>Potential crash due to unintialized advertising callback pointer.</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md9"></a>
+[1.3.5] - 2022-01-14</h1>
+<h2><a class="anchor" id="autotoc_md10"></a>
+Added</h2>
+<ul>
+<li>CONFIG_NIMBLE_CPP_DEBUG_LEVEL macro in <a class="el" href="nimconfig_8h_source.html">nimconfig.h</a> to allow setting the log level separately from the Arduino core log level.</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md11"></a>
 Fixed</h2>
 <ul>
 <li>Memory leak when initializing/deinitializing the BLE stack caused by new FreeRTOS timers be created on each initialization.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md4"></a>
+<h1><a class="anchor" id="autotoc_md12"></a>
 [1.3.4] - 2022-01-09</h1>
-<h2><a class="anchor" id="autotoc_md5"></a>
+<h2><a class="anchor" id="autotoc_md13"></a>
 Fixed</h2>
 <ul>
 <li>Workaround for latest Arduino-esp32 core that causes tasks not to block when required, which caused functions to return prematurely resulting in exceptions/crashing.</li>
 <li>The wrong length value was being used to set the values read from peer attributes. This has been corrected to use the proper value size.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md6"></a>
+<h1><a class="anchor" id="autotoc_md14"></a>
 [1.3.3] - 2021-11-24</h1>
-<h2><a class="anchor" id="autotoc_md7"></a>
+<h2><a class="anchor" id="autotoc_md15"></a>
 Fixed</h2>
 <ul>
 <li>Workaround added for FreeRTOS bug that affected timers, causing scan and advertising timer expirations to not correctly trigger callbacks.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md8"></a>
+<h1><a class="anchor" id="autotoc_md16"></a>
 [1.3.2] - 2021-11-20</h1>
-<h2><a class="anchor" id="autotoc_md9"></a>
+<h2><a class="anchor" id="autotoc_md17"></a>
 Fixed</h2>
 <ul>
 <li>Added missing macros for scan filter.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md10"></a>
+<h2><a class="anchor" id="autotoc_md18"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_client.html#a178d06bed13028e4ae0384923062d18d" title="Get the last error code reported by the NimBLE host.">NimBLEClient::getLastError</a></code> : Gets the error code of the last function call that produces a return code from the stack.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md11"></a>
+<h1><a class="anchor" id="autotoc_md19"></a>
 [1.3.1] - 2021-08-04</h1>
-<h2><a class="anchor" id="autotoc_md12"></a>
+<h2><a class="anchor" id="autotoc_md20"></a>
 Fixed</h2>
 <ul>
 <li>Corrected a compiler/linker error when an application or a library uses bluetooth classic due to the redefinition of <code>btInUse</code>.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md13"></a>
+<h1><a class="anchor" id="autotoc_md21"></a>
 [1.3.0] - 2021-08-02</h1>
-<h2><a class="anchor" id="autotoc_md14"></a>
+<h2><a class="anchor" id="autotoc_md22"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_characteristic.html#a2c0ed8932ee257a8632e3d72e353489b" title="Remove a descriptor from the characterisitc.">NimBLECharacteristic::removeDescriptor</a></code>: Dynamically remove a descriptor from a characterisic. Takes effect after all connections are closed and sends a service changed indication.</li>
@@ -161,7 +200,7 @@ Added</h2>
 <li>Connection Information class: <code><a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a></code>.</li>
 <li><code><a class="el" href="class_nim_b_l_e_scan.html#a6a97fd1c7f16fccd7f19994592b6dfe6" title="Clears the duplicate scan filter cache.">NimBLEScan::clearDuplicateCache</a></code>: This can be used to reset the cache of advertised devices so they will be immediately discovered again.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md15"></a>
+<h2><a class="anchor" id="autotoc_md23"></a>
 Changed</h2>
 <ul>
 <li>FreeRTOS files have been removed as they are not used by the library.</li>
@@ -169,7 +208,7 @@ Changed</h2>
 <li>Excess logging and some asserts removed.</li>
 <li>Use ESP_LOGx macros to enable using local log level filtering.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md16"></a>
+<h2><a class="anchor" id="autotoc_md24"></a>
 Fixed</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a3c0c0f524bc0d00d24a7c5ea92c5cb7e" title="Callback function called when a client changes subscription status.">NimBLECharacteristicCallbacks::onSubscribe</a></code> Is now called after the connection is added to the vector.</li>
@@ -181,9 +220,9 @@ Fixed</h2>
 <li>BLE controller memory could be released when using Arduino as a component.</li>
 <li>Complile errors with NimBLE release 1.3.0.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md17"></a>
+<h1><a class="anchor" id="autotoc_md25"></a>
 [1.2.0] - 2021-02-08</h1>
-<h2><a class="anchor" id="autotoc_md18"></a>
+<h2><a class="anchor" id="autotoc_md26"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_characteristic.html#a062f52918f13c49a37ce8e58b9e7382a" title="Return the BLE Descriptor for the given handle.">NimBLECharacteristic::getDescriptorByHandle</a></code>: Return the BLE Descriptor for the given handle.</li>
@@ -222,10 +261,10 @@ Added</h2>
 </ul>
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md19"></a>
+<h2><a class="anchor" id="autotoc_md27"></a>
 Changed</h2>
 <ul>
-<li><code><a class="el" href="nimconfig_8h.html">nimconfig.h</a></code> (Arduino) is now easier to use.</li>
+<li><code><a class="el" href="nimconfig_8h_source.html">nimconfig.h</a></code> (Arduino) is now easier to use.</li>
 <li><code><a class="el" href="class_nim_b_l_e_server.html#a87ebb3d230e98a6b3cf85bc403d227e0" title="Get a BLE Service by its UUID.">NimBLEServer::getServiceByUUID</a></code> Now takes an extra parameter of instanceID to support multiple services with the same UUID.</li>
 <li><code><a class="el" href="class_nim_b_l_e_service.html#a305b680286096638a4239620ec2de567" title="Get a pointer to the characteristic object with the specified UUID.">NimBLEService::getCharacteristic</a></code> Now takes an extra parameter of instanceID to support multiple characteristics with the same UUID.</li>
 <li><code><a class="el" href="class_nim_b_l_e_advertising.html" title="Perform and manage BLE advertising.">NimBLEAdvertising</a></code> Transmission power is no longer advertised by default and can be added to the advertisement by calling <code><a class="el" href="class_nim_b_l_e_advertising.html#ac4ff0af45d1f7ed5bc208612852bc43a" title="Add the transmission power level to the advertisement packet.">NimBLEAdvertising::addTxPower</a></code></li>
@@ -236,14 +275,14 @@ Changed</h2>
  Instead the data will be parsed on-demand when the user application asks for specific data. <br  />
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md20"></a>
+<h2><a class="anchor" id="autotoc_md28"></a>
 Fixed</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_h_i_d_device.html" title="A model of a BLE Human Interface Device.">NimBLEHIDDevice</a></code> Characteristics now use encryption, this resolves an issue with communicating with devices requiring encryption for HID devices.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md21"></a>
+<h1><a class="anchor" id="autotoc_md29"></a>
 [1.1.0] - 2021-01-20</h1>
-<h2><a class="anchor" id="autotoc_md22"></a>
+<h2><a class="anchor" id="autotoc_md30"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_device.html#aa95f75d0a4325335ed0165f566d3a27d" title="Set the own address type.">NimBLEDevice::setOwnAddrType</a></code> added to enable the use of random and random-resolvable addresses, by asukiaaa <br  />
@@ -252,7 +291,7 @@ Added</h2>
 </li>
 <li><code>NimBLEAdvertising::SetMinPreferred</code> and <code>NimBLEAdvertising::SetMinPreferred</code> re-added. <br  />
 </li>
-<li>Conditional checks added for command line config options in <code><a class="el" href="nimconfig_8h.html">nimconfig.h</a></code> to support custom configuration in platformio. <br  />
+<li>Conditional checks added for command line config options in <code><a class="el" href="nimconfig_8h_source.html">nimconfig.h</a></code> to support custom configuration in platformio. <br  />
 </li>
 <li><code><a class="el" href="class_nim_b_l_e_client.html#a0910bbe298a68e9122a169ab229bf767" title="Set the value of a specific characteristic associated with a specific service.">NimBLEClient::setValue</a></code> Now takes an extra bool parameter <code>response</code> to enable the use of write with response (default = false). <br  />
 </li>
@@ -263,10 +302,10 @@ Added</h2>
 <li><code><a class="el" href="class_nim_b_l_e_server_callbacks.html#a3dbf72280a895e80e0972599a7373ca0" title="Handle a client disconnection. This is called when a client disconnects.">NimBLEServerCallbacks::onDisconnect</a></code> overloaded callback added to provide a ble_gap_conn_desc parameter for the application <br  />
  to obtain information about the disconnected client. <br  />
 </li>
-<li>Conditional checks in <code><a class="el" href="nimconfig_8h.html">nimconfig.h</a></code> for command line defined macros to support platformio config settings. <br  />
+<li>Conditional checks in <code><a class="el" href="nimconfig_8h_source.html">nimconfig.h</a></code> for command line defined macros to support platformio config settings. <br  />
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md23"></a>
+<h2><a class="anchor" id="autotoc_md31"></a>
 Changed</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_advertising.html#aeeee5a131b42a4f76010751f4c182e4f" title="Start advertising.">NimBLEAdvertising::start</a></code> now returns a bool value to indicate success/failure. <br  />
@@ -275,7 +314,7 @@ Changed</h2>
 </li>
 <li>If a host reset event occurs, scanning and advertising will now only be restarted if their previous duration was indefinite. <br  />
 </li>
-<li><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#aa08b2f62376568e1fc833e4ff91e8aa7" title="Subscribe for notifications or indications.">NimBLERemoteCharacteristic::subscribe</a></code> and <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ab4f54eabe90a416546b7b3fc3477f49c" title="backward-compatibility method for subscribe/unsubscribe notifications/indications">NimBLERemoteCharacteristic::registerForNotify</a></code> will now set the callback regardless of the existance of the CCCD and return true unless the descriptor write operation failed. <br  />
+<li><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ad2691a8ea85488c8270f78701352fbb2" title="Subscribe for notifications or indications.">NimBLERemoteCharacteristic::subscribe</a></code> and <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ab4f54eabe90a416546b7b3fc3477f49c" title="backward-compatibility method for subscribe/unsubscribe notifications/indications">NimBLERemoteCharacteristic::registerForNotify</a></code> will now set the callback regardless of the existance of the CCCD and return true unless the descriptor write operation failed. <br  />
 </li>
 <li>Advertising tx power level is now sent in the advertisement packet instead of scan response. <br  />
 </li>
@@ -283,7 +322,7 @@ Changed</h2>
  this allows the starting of a new scan from the callback function. <br  />
 </li>
 </ul>
-<h2><a class="anchor" id="autotoc_md24"></a>
+<h2><a class="anchor" id="autotoc_md32"></a>
 Fixed</h2>
 <ul>
 <li>Sometimes <code><a class="el" href="class_nim_b_l_e_client.html#aab311f0a8af21fb63f78e7fbac29951a" title="Connect to an advertising device.">NimBLEClient::connect</a></code> would hang on the task block if no event arrived to unblock. <br  />
@@ -317,36 +356,36 @@ Fixed</h2>
 <li>(Arduino) Ensure controller mode is set to BLE Only. <br  />
 </li>
 </ul>
-<h1><a class="anchor" id="autotoc_md25"></a>
+<h1><a class="anchor" id="autotoc_md33"></a>
 [1.0.2] - 2020-09-13</h1>
-<h2><a class="anchor" id="autotoc_md26"></a>
+<h2><a class="anchor" id="autotoc_md34"></a>
 Changed</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_advertising.html#aeeee5a131b42a4f76010751f4c182e4f" title="Start advertising.">NimBLEAdvertising::start</a></code> Now takes 2 optional parameters, the first is the duration to advertise for (in seconds), the second is a <br  />
  callback that is invoked when advertsing ends and takes a pointer to a <code><a class="el" href="class_nim_b_l_e_advertising.html" title="Perform and manage BLE advertising.">NimBLEAdvertising</a></code> object (similar to the <code><a class="el" href="class_nim_b_l_e_scan.html#a21b1e27816717b77533755f31dfaa820" title="Start scanning.">NimBLEScan::start</a></code> API).</li>
-<li>(Arduino) Maximum BLE connections can now be altered by only changing the value of <code>CONFIG_BT_NIMBLE_MAX_CONNECTIONS</code> in <code><a class="el" href="nimconfig_8h.html">nimconfig.h</a></code>. Any changes to the controller max connection settings in <code>sdkconfig.h</code> will now have no effect when using this library.</li>
+<li>(Arduino) Maximum BLE connections can now be altered by only changing the value of <code>CONFIG_BT_NIMBLE_MAX_CONNECTIONS</code> in <code><a class="el" href="nimconfig_8h_source.html">nimconfig.h</a></code>. Any changes to the controller max connection settings in <code>sdkconfig.h</code> will now have no effect when using this library.</li>
 <li>(Arduino) Revert the previous change to fix the advertising start delay. Instead a replacement fix that routes all BLE controller commands from <br  />
  a task running on core 0 (same as the controller) has been implemented. This improves response times and reliability for all BLE functions.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md27"></a>
+<h1><a class="anchor" id="autotoc_md35"></a>
 [1.0.1] - 2020-09-02</h1>
-<h2><a class="anchor" id="autotoc_md28"></a>
+<h2><a class="anchor" id="autotoc_md36"></a>
 Added</h2>
 <ul>
 <li>Empty <code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a></code> constructor: <code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress()</a></code> produces an address of 00:00:00:00:00:00 type 0.</li>
 <li>Documentation of the difference of <a class="el" href="class_nim_b_l_e_address.html#adef69a03a08303957d7e40eef07b4d80" title="Get the native representation of the address.">NimBLEAddress::getNative</a> vs the original bluedroid library.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md29"></a>
+<h2><a class="anchor" id="autotoc_md37"></a>
 Changed</h2>
 <ul>
 <li>notify_callback typedef is now defined as std::function to enable the use of std::bind to call a class member function.</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md30"></a>
+<h2><a class="anchor" id="autotoc_md38"></a>
 Fixed</h2>
 <ul>
 <li>Fix advertising start delay when first called.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md31"></a>
+<h1><a class="anchor" id="autotoc_md39"></a>
 [1.0.0] - 2020-08-22</h1>
 <p>First stable release.</p>
 <p>All the original library functionality is complete and many extras added with full documentation. </p>

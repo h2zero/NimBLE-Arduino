@@ -1,17 +1,17 @@
 var searchData=
 [
-  ['haveadvinterval_547',['haveAdvInterval',['../class_nim_b_l_e_advertised_device.html#aa8b4660e5d123f16a07e0fefa3bcf4bc',1,'NimBLEAdvertisedDevice']]],
-  ['haveappearance_548',['haveAppearance',['../class_nim_b_l_e_advertised_device.html#accc6713f85db6174cfe8436059aa8bf1',1,'NimBLEAdvertisedDevice']]],
-  ['haveconnparams_549',['haveConnParams',['../class_nim_b_l_e_advertised_device.html#a3274624943c942f357c6f8d489481bc8',1,'NimBLEAdvertisedDevice']]],
-  ['havemanufacturerdata_550',['haveManufacturerData',['../class_nim_b_l_e_advertised_device.html#abe58f5fde119d8c0a8fb85ba1e8cc5c9',1,'NimBLEAdvertisedDevice']]],
-  ['havename_551',['haveName',['../class_nim_b_l_e_advertised_device.html#a86805fecd4432335feecf77bb6a0f12e',1,'NimBLEAdvertisedDevice']]],
-  ['haverssi_552',['haveRSSI',['../class_nim_b_l_e_advertised_device.html#a611802e8898e422842d60486b60b8c42',1,'NimBLEAdvertisedDevice']]],
-  ['haveservicedata_553',['haveServiceData',['../class_nim_b_l_e_advertised_device.html#afba3425cfcfc12eca219a1abe5f6732c',1,'NimBLEAdvertisedDevice']]],
-  ['haveserviceuuid_554',['haveServiceUUID',['../class_nim_b_l_e_advertised_device.html#a5c4aae7e27c27201846ba4e15448e557',1,'NimBLEAdvertisedDevice']]],
-  ['havetargetaddress_555',['haveTargetAddress',['../class_nim_b_l_e_advertised_device.html#a1172d33a77bc018e314be78664b222b9',1,'NimBLEAdvertisedDevice']]],
-  ['havetxpower_556',['haveTXPower',['../class_nim_b_l_e_advertised_device.html#af5293030ef439856c195caa3aba86543',1,'NimBLEAdvertisedDevice']]],
-  ['haveuri_557',['haveURI',['../class_nim_b_l_e_advertised_device.html#a83ebd08b512dc936b1059db7a69b9ead',1,'NimBLEAdvertisedDevice']]],
-  ['hidcontrol_558',['hidControl',['../class_nim_b_l_e_h_i_d_device.html#a5c42da43e0b8dfcd1d045e8a86d0b5a2',1,'NimBLEHIDDevice']]],
-  ['hidinfo_559',['hidInfo',['../class_nim_b_l_e_h_i_d_device.html#a33fc2bfc990ecd250859ca8f34a4314e',1,'NimBLEHIDDevice']]],
-  ['hidservice_560',['hidService',['../class_nim_b_l_e_h_i_d_device.html#ae80cf58c481c25bd6d7392a43b6fa48b',1,'NimBLEHIDDevice']]]
+  ['haveadvinterval_526',['haveAdvInterval',['../class_nim_b_l_e_advertised_device.html#aa8b4660e5d123f16a07e0fefa3bcf4bc',1,'NimBLEAdvertisedDevice']]],
+  ['haveappearance_527',['haveAppearance',['../class_nim_b_l_e_advertised_device.html#accc6713f85db6174cfe8436059aa8bf1',1,'NimBLEAdvertisedDevice']]],
+  ['haveconnparams_528',['haveConnParams',['../class_nim_b_l_e_advertised_device.html#a3274624943c942f357c6f8d489481bc8',1,'NimBLEAdvertisedDevice']]],
+  ['havemanufacturerdata_529',['haveManufacturerData',['../class_nim_b_l_e_advertised_device.html#abe58f5fde119d8c0a8fb85ba1e8cc5c9',1,'NimBLEAdvertisedDevice']]],
+  ['havename_530',['haveName',['../class_nim_b_l_e_advertised_device.html#a86805fecd4432335feecf77bb6a0f12e',1,'NimBLEAdvertisedDevice']]],
+  ['haverssi_531',['haveRSSI',['../class_nim_b_l_e_advertised_device.html#a611802e8898e422842d60486b60b8c42',1,'NimBLEAdvertisedDevice']]],
+  ['haveservicedata_532',['haveServiceData',['../class_nim_b_l_e_advertised_device.html#afba3425cfcfc12eca219a1abe5f6732c',1,'NimBLEAdvertisedDevice']]],
+  ['haveserviceuuid_533',['haveServiceUUID',['../class_nim_b_l_e_advertised_device.html#a5c4aae7e27c27201846ba4e15448e557',1,'NimBLEAdvertisedDevice']]],
+  ['havetargetaddress_534',['haveTargetAddress',['../class_nim_b_l_e_advertised_device.html#a1172d33a77bc018e314be78664b222b9',1,'NimBLEAdvertisedDevice']]],
+  ['havetxpower_535',['haveTXPower',['../class_nim_b_l_e_advertised_device.html#af5293030ef439856c195caa3aba86543',1,'NimBLEAdvertisedDevice']]],
+  ['haveuri_536',['haveURI',['../class_nim_b_l_e_advertised_device.html#a83ebd08b512dc936b1059db7a69b9ead',1,'NimBLEAdvertisedDevice']]],
+  ['hidcontrol_537',['hidControl',['../class_nim_b_l_e_h_i_d_device.html#a5c42da43e0b8dfcd1d045e8a86d0b5a2',1,'NimBLEHIDDevice']]],
+  ['hidinfo_538',['hidInfo',['../class_nim_b_l_e_h_i_d_device.html#a33fc2bfc990ecd250859ca8f34a4314e',1,'NimBLEHIDDevice']]],
+  ['hidservice_539',['hidService',['../class_nim_b_l_e_h_i_d_device.html#ae80cf58c481c25bd6d7392a43b6fa48b',1,'NimBLEHIDDevice']]]
 ];
