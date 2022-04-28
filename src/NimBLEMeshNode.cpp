@@ -12,6 +12,7 @@
 #include "NimBLEMeshNode.h"
 #include "NimBLELog.h"
 #include "NimBLEDevice.h"
+#include "NimBLEMeshCreateModel.h"
 
 #if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "services/gap/ble_svc_gap.h"
@@ -66,8 +67,6 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
     m_prov.complete = NimBLEMeshNode::provComplete;
     m_prov.reset    = NimBLEMeshNode::provReset;
 
-    m_configSrvModel = nullptr;
-
     // Create the primary element
     m_elemVec.push_back(new NimBLEMeshElement());
 }
@@ -77,10 +76,6 @@ NimBLEMeshNode::NimBLEMeshNode(const NimBLEUUID &uuid, uint8_t type) {
  * @brief Destructor, cleanup any resources created.
  */
 NimBLEMeshNode::~NimBLEMeshNode() {
-    if(m_configSrvModel != nullptr) {
-        delete m_configSrvModel;
-    }
-
     if(m_comp.elem != nullptr) {
         free (m_comp.elem);
     }
@@ -168,16 +163,7 @@ bool NimBLEMeshNode::start() {
 
     // Config server and primary health models are required in the primary element
     // create them here and add them as the first models.
-    m_configSrvModel = new bt_mesh_model{{BT_MESH_MODEL_ID_CFG_SRV},0,0,0,nullptr,{0},{0},bt_mesh_cfg_srv_op,&bt_mesh_cfg_srv_cb,&m_serverConfig};
-    for(int i = 0; i < CONFIG_BT_MESH_MODEL_KEY_COUNT; i++) {
-        m_configSrvModel->keys[i] = BT_MESH_KEY_UNUSED;
-    }
-
-    for(int i = 0; i < CONFIG_BT_MESH_MODEL_GROUP_COUNT; i++) {
-        m_configSrvModel->groups[i] = BT_MESH_ADDR_UNASSIGNED;
-    }
-
-    m_elemVec[0]->addModel(m_configSrvModel);
+    m_elemVec[0]->addModel(createConfigSrvModel(&m_serverConfig));
 
     if(m_elemVec[0]->getModel(BT_MESH_MODEL_ID_HEALTH_SRV) == nullptr) {
         m_elemVec[0]->createModel(BT_MESH_MODEL_ID_HEALTH_SRV);
@@ -193,7 +179,7 @@ bool NimBLEMeshNode::start() {
     }
 
     for(size_t i = 0; i < m_elemVec.size(); i++) {
-        memcpy((void*)&m_comp.elem[i], (void*)m_elemVec[i]->start(),sizeof(bt_mesh_elem));
+        memcpy((void*)&m_comp.elem[i], (void*)m_elemVec[i]->start(), sizeof(bt_mesh_elem));
     }
     m_comp.elem_count = (uint8_t)m_elemVec.size();
 

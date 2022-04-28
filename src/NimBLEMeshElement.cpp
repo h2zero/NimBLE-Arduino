@@ -8,18 +8,19 @@
 
 #include "NimBLEMeshElement.h"
 #include "NimBLELog.h"
+#include "NimBLEMeshCreateModel.h"
 
 static const char* LOG_TAG = "NimBLEMeshElement";
 
 NimBLEMeshElement::NimBLEMeshElement() {
-    m_pElem_t = nullptr;
+    m_pElem = nullptr;
     m_pHealthModel = nullptr;
 }
 
 
 NimBLEMeshElement::~NimBLEMeshElement() {
-    if(m_pElem_t != nullptr) {
-        delete m_pElem_t;
+    if(m_pElem != nullptr) {
+        delete m_pElem;
     }
 
     if(m_pHealthModel != nullptr) {
@@ -64,7 +65,7 @@ NimBLEMeshModel* NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCa
         case BT_MESH_MODEL_ID_HEALTH_SRV:
             m_pHealthModel = new NimBLEHealthSrvModel(pCallbacks);
             pModel = m_pHealthModel;
-            m_modelsVec.push_back(bt_mesh_model{{type},0,0,0,&pModel->m_opPub,{0},{0},bt_mesh_health_srv_op,&bt_mesh_health_cli_cb,&m_pHealthModel->m_healthSrv});
+            m_modelsVec.push_back(createHealthModel(&m_pHealthModel->m_healthSrv, &pModel->m_opPub));
             return pModel;
 
         default:
@@ -72,7 +73,7 @@ NimBLEMeshModel* NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCa
             return nullptr;
     }
 
-    m_modelsVec.push_back(bt_mesh_model{{type},0,0,0, &pModel->m_opPub,{0},{0},pModel->m_opList,nullptr,pModel});
+    m_modelsVec.push_back(createGenModel(type, pModel->m_opList, &pModel->m_opPub, pModel));
     return pModel;
 }
 
@@ -81,8 +82,8 @@ NimBLEMeshModel* NimBLEMeshElement::createModel(uint16_t type, NimBLEMeshModelCa
  * @brief Adds a model created outside of element context to the elements model vector.
  * @param [in] model A pointer to the model instance to add.
  */
-void NimBLEMeshElement::addModel(bt_mesh_model *model) {
-    m_modelsVec.push_back(*model);
+void NimBLEMeshElement::addModel(const bt_mesh_model & model) {
+    m_modelsVec.push_back(model);
 }
 
 
@@ -134,8 +135,8 @@ NimBLEMeshModel* NimBLEMeshElement::getModelByIdx(uint8_t eidx, uint8_t midx, ui
  * @details Must not be called until all models have been added.
  */
 bt_mesh_elem* NimBLEMeshElement::start() {
-    m_pElem_t = new bt_mesh_elem{0, 0, uint8_t(m_modelsVec.size()), 0, &m_modelsVec[0], NULL};
-    return m_pElem_t;
+    m_pElem = new bt_mesh_elem{0, 0, uint8_t(m_modelsVec.size()), 0, &m_modelsVec[0], NULL};
+    return m_pElem;
 }
 
 

@@ -33,10 +33,10 @@ private:
 
     NimBLEMeshElement();
     ~NimBLEMeshElement();
-    void addModel(bt_mesh_model* model);
+    void addModel(const bt_mesh_model & model);
     bt_mesh_elem* start();
 
-    bt_mesh_elem *m_pElem_t;
+    bt_mesh_elem *m_pElem;
     NimBLEHealthSrvModel*      m_pHealthModel;
     std::vector<bt_mesh_model> m_modelsVec;
 };

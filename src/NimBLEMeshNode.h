@@ -66,7 +66,6 @@ private:
     bt_mesh_comp           m_comp;
     uint16_t               m_primAddr;
     uint16_t               m_primNetIdx;
-    bt_mesh_model*         m_configSrvModel;
     NimBLEUUID             m_uuid;
 
     std::vector<NimBLEMeshElement*> m_elemVec;
