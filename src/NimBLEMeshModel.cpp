@@ -38,7 +38,11 @@ static const struct bt_mesh_health_srv_cb health_srv_cb = {
  * @brief base model constructor
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
  */
-NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks *pCallbacks) {
+NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks *pCallbacks,
+                                 uint16_t initDataSize, uint16_t maxDataSize)
+:   m_value(initDataSize, maxDataSize),
+    m_targetValue(initDataSize, maxDataSize)
+{
     if(pCallbacks == nullptr) {
         m_callbacks = &defaultCallbacks;
     } else {
@@ -147,7 +151,7 @@ uint16_t NimBLEMeshModel::getDelayTime() {
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
  */
 NimBLEGenOnOffSrvModel::NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks *pCallbacks)
-:NimBLEMeshModel(pCallbacks)
+:NimBLEMeshModel(pCallbacks, 1, 1)
 {
     // Register the opcodes for this model with the required callbacks
     m_opList = new bt_mesh_model_op[4]{
@@ -162,9 +166,6 @@ NimBLEGenOnOffSrvModel::NimBLEGenOnOffSrvModel(NimBLEMeshModelCallbacks *pCallba
                          NimBLEGenOnOffSrvModel::pubTimerCb, this);
 
     m_opPub.msg = NET_BUF_SIMPLE(2 + 3);
-
-    m_value.push_back(0);
-    m_targetValue.push_back(0);
 }
 
 
@@ -232,7 +233,7 @@ void NimBLEGenOnOffSrvModel::setOnOffUnack(bt_mesh_model *model,
     ble_npl_time_t timerMs = 0;
 
     if(newval != pModel->m_value[0]) {
-       pModel->m_targetValue[0] = newval;
+       pModel->m_targetValue.setValue(&newval, sizeof(newval));
 
         if(pModel->m_delayTime > 0) {
             timerMs = 5 * pModel->m_delayTime;
@@ -257,7 +258,7 @@ void NimBLEGenOnOffSrvModel::tdTimerCb(ble_npl_event *event) {
         pModel->m_delayTime = 0;
     }
 
-    if((pModel->m_transTime & 0x3F) && pModel->m_targetValue[0]/*m_onOffTarget*/ == 0) {
+    if((pModel->m_transTime & 0x3F) && pModel->m_targetValue[0] == 0) {
         pModel->startTdTimer(NimBLEUtils::meshTransTimeMs(pModel->m_transTime));
         pModel->m_transTime -= 1;
         pModel->publish();
@@ -298,7 +299,7 @@ void NimBLEGenOnOffSrvModel::setValue(uint8_t *val, size_t len) {
         NIMBLE_LOGE(LOG_TAG, "NimBLEGenOnOffSrvModel: Incorrect value length");
         return;
     }
-    m_value[0] = *val;
+    m_value.setValue(val, len);
 }
 
 
@@ -307,7 +308,7 @@ void NimBLEGenOnOffSrvModel::setTargetValue(uint8_t *val, size_t len) {
         NIMBLE_LOGE(LOG_TAG, "NimBLEGenOnOffSrvModel: Incorrect target value length");
         return;
     }
-    m_targetValue[0] = *val;
+    m_targetValue.setValue(val, len);
 }
 
 
@@ -316,7 +317,7 @@ void NimBLEGenOnOffSrvModel::setTargetValue(uint8_t *val, size_t len) {
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
  */
 NimBLEGenLevelSrvModel::NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks *pCallbacks)
-:NimBLEMeshModel(pCallbacks)
+:NimBLEMeshModel(pCallbacks, 2, 2)
 {
     // Register the opcodes for this model with the required callbacks
     m_opList = new bt_mesh_model_op[8]{
@@ -334,9 +335,6 @@ NimBLEGenLevelSrvModel::NimBLEGenLevelSrvModel(NimBLEMeshModelCallbacks *pCallba
     ble_npl_callout_init(&m_pubTimer, nimble_port_get_dflt_eventq(),
                          NimBLEGenLevelSrvModel::pubTimerCb, this);
     m_opPub.msg = NET_BUF_SIMPLE(2 + 5);
-
-    m_value.assign(2, 0);
-    m_targetValue.assign(2, 0);
 }
 
 
@@ -396,10 +394,10 @@ void NimBLEGenLevelSrvModel::setLevelUnack(bt_mesh_model *model,
 
     ble_npl_time_t timerMs = 0;
 
-    int16_t curval = *(int16_t*)&pModel->m_value[0];
+    int16_t curval = pModel->m_value.getValue<int16_t>(nullptr, true);
 
     if(newval != curval) {
-        pModel->m_targetValue.assign({(uint8_t)newval, (uint8_t)(newval >> 8)});
+        pModel->m_targetValue.setValue(newval);
 
         if(pModel->m_delayTime > 0) {
             timerMs = 5 * pModel->m_delayTime;
@@ -445,7 +443,7 @@ void NimBLEGenLevelSrvModel::setDeltaUnack(bt_mesh_model *model,
     NimBLEMeshModel *pModel = (NimBLEMeshModel*)model->user_data;
     int32_t delta = (int32_t) net_buf_simple_pull_le32(buf);
 
-    int32_t temp32 = *(int16_t*)&pModel->m_value[0] + delta;
+    int32_t temp32 = pModel->m_value.getValue<int16_t>(nullptr, true) + delta;
     if (temp32 < INT16_MIN) {
         temp32 = INT16_MIN;
     } else if (temp32 > INT16_MAX) {
@@ -488,8 +486,8 @@ void NimBLEGenLevelSrvModel::tdTimerCb(ble_npl_event *event) {
     }
 
     if(pModel->m_transTime & 0x3F) {
-        int16_t newval = *(int16_t*)&pModel->m_value[0] + pModel->m_transStep;
-        pModel->m_value.assign({(uint8_t)newval, (uint8_t)(newval >> 8)});
+        int16_t newval = pModel->m_value.getValue<int16_t>(nullptr, true) + pModel->m_transStep;
+        pModel->m_value.setValue(newval);
         pModel->m_callbacks->setLevel(pModel, newval);
         pModel->startTdTimer(NimBLEUtils::meshTransTimeMs(pModel->m_transTime));
         pModel->m_transTime -= 1;
@@ -498,7 +496,7 @@ void NimBLEGenLevelSrvModel::tdTimerCb(ble_npl_event *event) {
 
     pModel->m_transTime = 0;
     pModel->m_value = pModel->m_targetValue;
-    pModel->m_callbacks->setLevel(pModel, *(int16_t*)&pModel->m_value[0]);
+    pModel->m_callbacks->setLevel(pModel, pModel->m_value.getValue<int16_t>(nullptr, true));
 }
 
 
@@ -515,9 +513,9 @@ void NimBLEGenLevelSrvModel::pubTimerCb(ble_npl_event *event) {
 
 void NimBLEGenLevelSrvModel::setPubMsg() {
     bt_mesh_model_msg_init(m_opPub.msg, BT_MESH_MODEL_OP_2(0x82, 0x08));
-    net_buf_simple_add_le16(m_opPub.msg, *(int16_t*)&m_value[0]);
+    net_buf_simple_add_le16(m_opPub.msg, m_value.getValue<int16_t>(nullptr, true));
     if(m_transTime > 0) {
-        net_buf_simple_add_le16(m_opPub.msg, *(int16_t*)&m_targetValue[0]);
+        net_buf_simple_add_le16(m_opPub.msg, m_targetValue.getValue<int16_t>(nullptr, true));
         // If we started the transition timer in setOnOff we need to correct the reported remaining time.
         net_buf_simple_add_u8(m_opPub.msg, (m_delayTime > 0) ?
                                    m_transTime : m_transTime + 1);
@@ -530,7 +528,7 @@ void NimBLEGenLevelSrvModel::setValue(uint8_t *val, size_t len) {
         NIMBLE_LOGE(LOG_TAG, "NimBLEGenLevelSrvModel: Incorrect value length");
         return;
     }
-    m_value.assign({*val, val[1]});
+    m_value.setValue(val, len);
 }
 
 
@@ -539,7 +537,7 @@ void NimBLEGenLevelSrvModel::setTargetValue(uint8_t *val, size_t len) {
         NIMBLE_LOGE(LOG_TAG, "NimBLEGenLevelSrvModel: Incorrect target value length");
         return;
     }
-    m_targetValue.assign({*val, val[1]});
+    m_targetValue.setValue(val, len);
 }
 
 
@@ -548,7 +546,7 @@ void NimBLEGenLevelSrvModel::setTargetValue(uint8_t *val, size_t len) {
  * @param [in] pCallbacks, a pointer to a callback instance for model operations
  */
 NimBLEHealthSrvModel::NimBLEHealthSrvModel(NimBLEMeshModelCallbacks *pCallbacks)
-:NimBLEMeshModel(pCallbacks)
+:NimBLEMeshModel(pCallbacks, 1, 1)
 {
     memset(&m_healthSrv, 0, sizeof(m_healthSrv));
     m_healthSrv.cb  = &health_srv_cb;

@@ -14,6 +14,7 @@
 #include "nimconfig.h"
 
 #include "NimBLEMeshElement.h"
+#include "NimBLEAttValue.h"
 
 #include <vector>
 
@@ -21,7 +22,9 @@ class NimBLEMeshModelCallbacks;
 
 class NimBLEMeshModel {
 public:
-    NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks);
+    NimBLEMeshModel(NimBLEMeshModelCallbacks* pCallbacks,
+                    uint16_t initDataSize = CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH,
+                    uint16_t maxDataSize = BLE_ATT_ATTR_MAX_LEN);
     virtual ~NimBLEMeshModel();
     int extractTransTimeDelay(os_mbuf *buf);
     bool checkRetransmit(uint8_t tid, bt_mesh_msg_ctx *ctx);
@@ -65,8 +68,8 @@ public:
     time_t                    m_lastMsgTime;
     uint8_t                   m_transTime;
     uint8_t                   m_delayTime;
-    std::vector<uint8_t>      m_value;
-    std::vector<uint8_t>      m_targetValue;
+    NimBLEAttValue            m_value;
+    NimBLEAttValue            m_targetValue;
     int16_t                   m_transStep;
 
     ble_npl_callout           m_tdTimer;
