@@ -440,46 +440,7 @@ NimBLEAttValue NimBLERemoteCharacteristic::getValue(time_t *timestamp) {
     }
 
     return m_value;
-}
-
-
-/**
- * @brief Read an unsigned 16 bit value
- * @return The unsigned 16 bit value.
- * @deprecated Use readValue<uint16_t>().
- */
-uint16_t NimBLERemoteCharacteristic::readUInt16() {
-    return readValue<uint16_t>();
-} // readUInt16
-
-
-/**
- * @brief Read an unsigned 32 bit value.
- * @return the unsigned 32 bit value.
- * @deprecated Use readValue<uint32_t>().
- */
-uint32_t NimBLERemoteCharacteristic::readUInt32() {
-    return readValue<uint32_t>();
-} // readUInt32
-
-
-/**
- * @brief Read a byte value
- * @return The value as a byte
- * @deprecated Use readValue<uint8_t>().
- */
-uint8_t NimBLERemoteCharacteristic::readUInt8() {
-    return readValue<uint8_t>();
-} // readUInt8
-
-
-/**
- * @brief Read a float value.
- * @return the float value.
- */
-float NimBLERemoteCharacteristic::readFloat() {
-	return readValue<float>();
-} // readFloat
+} // getValue
 
 
 /**
@@ -592,7 +553,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
     xTaskNotifyGive(pTaskData->task);
 
     return rc;
-}
+} // onReadCB
 
 
 /**
@@ -603,7 +564,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
  * If NULL is provided then no callback is performed.
  * @return false if writing to the descriptor failed.
  */
-bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCallback, bool response) {
+bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCallback) {
     NIMBLE_LOGD(LOG_TAG, ">> setNotify(): %s, %02x", toString().c_str(), val);
 
     m_notifyCallback = notifyCallback;
@@ -615,9 +576,7 @@ bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyC
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< setNotify()");
-
-    response = true; // Always write with response as per Bluetooth core specification.
-    return desc->writeValue((uint8_t *)&val, 2, response);
+    return desc->writeValue((uint8_t *)&val, 2, true);
 } // setNotify
 
 
@@ -629,11 +588,11 @@ bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyC
  * If NULL is provided then no callback is performed.
  * @return false if writing to the descriptor failed.
  */
-bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback notifyCallback, bool response) {
+bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback notifyCallback) {
     if(notifications) {
-        return setNotify(0x01, notifyCallback, response);
+        return setNotify(0x01, notifyCallback);
     } else {
-        return setNotify(0x02, notifyCallback, response);
+        return setNotify(0x02, notifyCallback);
     }
 } // subscribe
 
@@ -643,29 +602,9 @@ bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback n
  * @param [in] response bool if true, require a write response from the descriptor write operation.
  * @return false if writing to the descriptor failed.
  */
-bool NimBLERemoteCharacteristic::unsubscribe(bool response) {
-    return setNotify(0x00, nullptr, response);
+bool NimBLERemoteCharacteristic::unsubscribe() {
+    return setNotify(0x00, nullptr);
 } // unsubscribe
-
-
- /**
- * @brief backward-compatibility method for subscribe/unsubscribe notifications/indications
- * @param [in] notifyCallback A callback to be invoked for a notification. If NULL is provided then we
- * will unregister for notifications.
- * @param [in] notifications If true, register for notifications, false register for indications.
- * @param [in] response If true, require a write response from the descriptor write operation.
- * @return true if successful.
- * @deprecated Use subscribe() / unsubscribe() instead.
- */
-bool NimBLERemoteCharacteristic::registerForNotify(notify_callback notifyCallback, bool notifications, bool response) {
-    bool success;
-    if(notifyCallback != nullptr) {
-        success = subscribe(notifications, notifyCallback, response);
-    } else {
-        success = unsubscribe(response);
-    }
-    return success;
-} // registerForNotify
 
 
 /**

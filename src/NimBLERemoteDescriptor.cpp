@@ -81,36 +81,6 @@ NimBLEUUID NimBLERemoteDescriptor::getUUID() {
 
 
 /**
- * @brief Read a byte value
- * @return The value as a byte
- * @deprecated Use readValue<uint8_t>().
- */
-uint8_t NimBLERemoteDescriptor::readUInt8() {
-    return readValue<uint8_t>();
-} // readUInt8
-
-
-/**
- * @brief Read an unsigned 16 bit value
- * @return The unsigned 16 bit value.
- * @deprecated Use readValue<uint16_t>().
- */
-uint16_t NimBLERemoteDescriptor::readUInt16() {
-    return readValue<uint16_t>();
-} // readUInt16
-
-
-/**
- * @brief Read an unsigned 32 bit value.
- * @return the unsigned 32 bit value.
- * @deprecated Use readValue<uint32_t>().
- */
-uint32_t NimBLERemoteDescriptor::readUInt32() {
-    return readValue<uint32_t>();
-} // readUInt32
-
-
-/**
  * @brief Read the value of the remote descriptor.
  * @return The value of the remote descriptor.
  */

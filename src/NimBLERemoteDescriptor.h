@@ -30,10 +30,6 @@ public:
     NimBLERemoteCharacteristic* getRemoteCharacteristic();
     NimBLEUUID                  getUUID();
     NimBLEAttValue              readValue();
-
-    uint8_t                     readUInt8()  __attribute__ ((deprecated("Use template readValue<uint8_t>()")));
-    uint16_t                    readUInt16() __attribute__ ((deprecated("Use template readValue<uint16_t>()")));
-    uint32_t                    readUInt32() __attribute__ ((deprecated("Use template readValue<uint32_t>()")));
     std::string                 toString(void);
     bool                        writeValue(const uint8_t* data, size_t length, bool response = false);
     bool                        writeValue(const std::vector<uint8_t>& v, bool response = false);
