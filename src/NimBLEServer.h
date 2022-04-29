@@ -31,7 +31,6 @@
 #include "NimBLEAdvertising.h"
 #endif
 #include "NimBLEService.h"
-#include "NimBLESecurity.h"
 #include "NimBLEConnInfo.h"
 
 

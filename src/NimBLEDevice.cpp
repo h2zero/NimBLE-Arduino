@@ -83,7 +83,6 @@ std::list <NimBLEClient*>   NimBLEDevice::m_cList;
 #endif
 std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
 std::vector<NimBLEAddress>  NimBLEDevice::m_whiteList;
-NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 uint8_t                     NimBLEDevice::m_own_addr_type = BLE_OWN_ADDR_PUBLIC;
 #ifdef ESP_PLATFORM
 uint16_t                    NimBLEDevice::m_scanDuplicateSize = CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE;
@@ -963,10 +962,6 @@ void NimBLEDevice::deinit(bool clearAll) {
 #endif
 
             m_ignoreList.clear();
-
-            if(m_securityCallbacks != nullptr) {
-                delete m_securityCallbacks;
-            }
         }
     }
 } // deinit
@@ -1086,17 +1081,6 @@ void NimBLEDevice::setSecurityPasskey(uint32_t pin) {
 uint32_t NimBLEDevice::getSecurityPasskey() {
     return m_passkey;
 } // getSecurityPasskey
-
-
-/**
- * @brief Set callbacks that will be used to handle encryption negotiation events and authentication events
- * @param [in] callbacks Pointer to NimBLESecurityCallbacks class
- * @deprecated For backward compatibility, New code should use client/server callback methods.
- */
-/*STATIC*/
-void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
-    NimBLEDevice::m_securityCallbacks = callbacks;
-} // setSecurityCallbacks
 
 
 #ifdef ESP_PLATFORM
