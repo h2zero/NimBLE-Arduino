@@ -62,7 +62,7 @@
 #define BLEAddress                      NimBLEAddress
 #define BLEUtils                        NimBLEUtils
 #define BLEClientCallbacks              NimBLEClientCallbacks
-#define BLEAdvertisedDeviceCallbacks    NimBLEAdvertisedDeviceCallbacks
+#define BLEAdvertisedDeviceCallbacks    NimBLEScanCallbacks
 #define BLEScanResults                  NimBLEScanResults
 #define BLEServer                       NimBLEServer
 #define BLEService                      NimBLEService
