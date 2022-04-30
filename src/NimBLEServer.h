@@ -60,7 +60,7 @@ public:
     bool                   stopAdvertising(uint8_t inst_id);
 #else
     NimBLEAdvertising*     getAdvertising();
-    bool                   startAdvertising();
+    bool                   startAdvertising(uint32_t duration = 0);
 #endif
     bool                   stopAdvertising();
     void                   start();

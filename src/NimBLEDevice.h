@@ -152,7 +152,7 @@ public:
     static bool                  stopAdvertising();
 #  else
     static NimBLEAdvertising*    getAdvertising();
-    static bool                  startAdvertising();
+    static bool                  startAdvertising(uint32_t duration = 0);
     static bool                  stopAdvertising();
 #  endif
 #endif

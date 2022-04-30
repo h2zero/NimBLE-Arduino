@@ -298,7 +298,7 @@ bool NimBLEScan::isScanning() {
 
 /**
  * @brief Start scanning.
- * @param [in] duration The duration in seconds for which to scan.
+ * @param [in] duration The duration in milliseconds for which to scan.
  * @param [in] scanCompleteCB A function to be called when scanning has completed.
  * @param [in] is_continue Set to true to save previous scan results, false to clear them.
  * @return True if scan started or false if there was an error.
@@ -314,10 +314,6 @@ bool NimBLEScan::start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResul
     // If 0 duration specified then we assume a continuous scan is desired.
     if(duration == 0){
         duration = BLE_HS_FOREVER;
-    }
-    else{
-        // convert duration to milliseconds
-        duration = duration * 1000;
     }
 
     // Set the flag to ignore the results while we are deleting the vector

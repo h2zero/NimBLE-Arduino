@@ -533,10 +533,10 @@ NimBLEConnInfo NimBLEClient::getConnInfo() {
 
 /**
  * @brief Set the timeout to wait for connection attempt to complete.
- * @param [in] time The number of seconds before timeout.
+ * @param [in] time The number of milliseconds before timeout.
  */
-void NimBLEClient::setConnectTimeout(uint8_t time) {
-    m_connectTimeout = (uint32_t)(time * 1000);
+void NimBLEClient::setConnectTimeout(uint32_t time) {
+    m_connectTimeout = time;
 } // setConnectTimeout
 
 

@@ -767,15 +767,16 @@ bool NimBLEServer::stopAdvertising(uint8_t inst_id) {
 } // stopAdvertising
 #endif
 
-#if !CONFIG_BT_NIMBLE_EXT_ADV|| defined(_DOXYGEN_)
+#if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
 /**
  * @brief Start advertising.
+ * @param [in] duration The duration in milliseconds to advertise for, default = forever.
  * @return True if advertising started successfully.
- * @details Start the server advertising its existence.  This is a convenience function and is equivalent to
+ * @details Start the server advertising its existence. This is a convenience function and is equivalent to
  * retrieving the advertising object and invoking start upon it.
  */
-bool NimBLEServer::startAdvertising() {
-    return getAdvertising()->start();
+bool NimBLEServer::startAdvertising(uint32_t duration) {
+    return getAdvertising()->start(duration);
 } // startAdvertising
 #endif
 

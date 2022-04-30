@@ -63,7 +63,7 @@ public:
     uint16_t                                    getConnId();
     uint16_t                                    getMTU();
     bool                                        secureConnection();
-    void                                        setConnectTimeout(uint8_t timeout);
+    void                                        setConnectTimeout(uint32_t timeout);
     void                                        setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
                                                                     uint16_t latency, uint16_t timeout,
                                                                     uint16_t scanInterval=16, uint16_t scanWindow=16);

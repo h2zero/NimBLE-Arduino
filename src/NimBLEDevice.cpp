@@ -171,10 +171,11 @@ NimBLEAdvertising* NimBLEDevice::getAdvertising() {
 
 /**
  * @brief Convenience function to begin advertising.
+ * @param [in] duration The duration in milliseconds to advertise for, default = forever.
  * @return True if advertising started successfully.
  */
-bool NimBLEDevice::startAdvertising() {
-    return getAdvertising()->start();
+bool NimBLEDevice::startAdvertising(uint32_t duration) {
+    return getAdvertising()->start(duration);
 } // startAdvertising
 #  endif
 
