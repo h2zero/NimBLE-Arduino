@@ -55,7 +55,16 @@ not affected as the endian change is made within them.
 Creating a `BLEServer` instance is the same as original, no changes required.
 For example `BLEDevice::createServer()` will work just as it did before.
 
-`BLEServerCallbacks` (`NimBLEServerCallbacks`) has new methods for handling security operations.
+`BLEServerCallbacks` (`NimBLEServerCallbacks`) has new methods for handling security operations.  
+
+`BLEServerCallbacks::onConnect` (`NimBLEServerCallbacks::onConnect`) only has a single callback declaration which takes an additional parameter `NimBLEConnInfo & connInfo`, which has methods to get information about the connected peer.  
+> `onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo)`  
+
+`BLEServerCallbacks::onDisconnect` (`NimBLEServerCallbacks::onDisconnect`) only has a single callback declaration which takes 2 additional parameters `NimBLEConnInfo & connInfo`, which provides information about the peer and `int reason`, which gives the reason code for disconnection.  
+> `onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason)`
+
+`BLEServerCallbacks::onMtuChanged` (`NimBLEServerCallbacks::onMtuChanged`) takes the parameter `NimBLEConnInfo & connInfo` instead of `esp_ble_gatts_cb_param_t`, which has methods to get information about the connected peer.  
+
 **Note:** All callback methods have default implementations which allows the application to implement only the methods applicable.
 <br/>
 
