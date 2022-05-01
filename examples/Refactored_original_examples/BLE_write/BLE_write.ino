@@ -20,7 +20,7 @@
 
 
 class MyCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
+    void onWrite(BLECharacteristic *pCharacteristic, BLEConnInfo& connInfo) {
       std::string value = pCharacteristic->getValue();
 
       if (value.length() > 0) {

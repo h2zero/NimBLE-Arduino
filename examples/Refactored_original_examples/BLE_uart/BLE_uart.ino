@@ -47,11 +47,11 @@ uint8_t txValue = 0;
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */  
 class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
+    void onConnect(BLEServer* pServer, BLEConnInfo& connInfo) {
       deviceConnected = true;
     };
 
-    void onDisconnect(BLEServer* pServer) {
+    void onDisconnect(BLEServer* pServer, BLEConnInfo& connInfo, int reason) {
       deviceConnected = false;
     }
   /***************** New - Security handled here ********************
@@ -66,14 +66,14 @@ class MyServerCallbacks: public BLEServerCallbacks {
       return true; 
     }
 
-    void onAuthenticationComplete(ble_gap_conn_desc desc){
+    void onAuthenticationComplete(BLEConnInfo& connInfo){
       Serial.println("Starting BLE work!");
     }
   /*******************************************************************/
 };
 
 class MyCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
+    void onWrite(BLECharacteristic *pCharacteristic, BLEConnInfo& connInfo) {
       std::string rxValue = pCharacteristic->getValue();
 
       if (rxValue.length() > 0) {

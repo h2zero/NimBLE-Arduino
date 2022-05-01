@@ -71,12 +71,12 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         return true;
     };
 
-    /** Pairing process complete, we can check the results in ble_gap_conn_desc */
-    void onAuthenticationComplete(ble_gap_conn_desc* desc){
-        if(!desc->sec_state.encrypted) {
+    /** Pairing process complete, we can check the results in NimBLEConnInfo */
+    void onAuthenticationComplete(NimBLEConnInfo& connInfo){
+        if(!connInfo.isEncrypted()) {
             Serial.println("Encrypt connection failed - disconnecting");
-            /** Find the client with the connection handle provided in desc */
-            NimBLEDevice::getClientByID(desc->conn_handle)->disconnect();
+            /** Find the client with the connection handle provided in connInfo */
+            NimBLEDevice::getClientByID(connInfo.getConnHandle())->disconnect();
             return;
         }
     };

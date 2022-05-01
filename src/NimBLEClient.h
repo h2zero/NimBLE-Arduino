@@ -152,7 +152,7 @@ public:
      * @param [in] desc A pointer to the struct containing the connection information.\n
      * This can be used to check the status of the connection encryption/pairing.
      */
-    virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);
+    virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when using numeric comparision for pairing.

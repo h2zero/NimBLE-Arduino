@@ -263,7 +263,7 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
 {
     const ble_uuid_t *uuid;
     int rc;
-    struct ble_gap_conn_desc desc;
+    NimBLEConnInfo peerInfo;
     NimBLECharacteristic* pCharacteristic = (NimBLECharacteristic*)arg;
 
     NIMBLE_LOGD(LOG_TAG, "Characteristic %s %s event", pCharacteristic->getUUID().toString().c_str(),
@@ -273,15 +273,14 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
     if(ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0){
         switch(ctxt->op) {
             case BLE_GATT_ACCESS_OP_READ_CHR: {
-                rc = ble_gap_conn_find(conn_handle, &desc);
+                rc = ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
                 assert(rc == 0);
 
                  // If the packet header is only 8 bytes this is a follow up of a long read
                  // so we don't want to call the onRead() callback again.
                 if(ctxt->om->om_pkthdr_len > 8 ||
-                   pCharacteristic->m_value.size() <= (ble_att_mtu(desc.conn_handle) - 3)) {
-                    pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
-                    pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
+                   pCharacteristic->m_value.size() <= (ble_att_mtu(peerInfo.m_desc.conn_handle) - 3)) {
+                    pCharacteristic->m_pCallbacks->onRead(pCharacteristic, peerInfo);
                 }
 
                 ble_npl_hw_enter_critical();
@@ -311,11 +310,10 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     len += next->om_len;
                     next = SLIST_NEXT(next, om_next);
                 }
-                rc = ble_gap_conn_find(conn_handle, &desc);
+                rc = ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
                 assert(rc == 0);
                 pCharacteristic->setValue(buf, len);
-                pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
-                pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, &desc);
+                pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, peerInfo);
                 return 0;
             }
             default:
@@ -341,8 +339,8 @@ size_t NimBLECharacteristic::getSubscribedCount() {
  * This will maintain a vector of subscribed clients and their indicate/notify status.
  */
 void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
-    ble_gap_conn_desc desc;
-    if(ble_gap_conn_find(event->subscribe.conn_handle, &desc) != 0) {
+    NimBLEConnInfo peerInfo;
+    if(ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc) != 0) {
         return;
     }
 
@@ -379,7 +377,7 @@ void NimBLECharacteristic::setSubscribe(struct ble_gap_event *event) {
         m_subscribedVec.erase(it);
     }
 
-    m_pCallbacks->onSubscribe(this, &desc, subVal);
+    m_pCallbacks->onSubscribe(this, peerInfo, subVal);
 }
 
 
@@ -529,6 +527,7 @@ void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallback
     }
 } // setCallbacks
 
+
 /**
  * @brief Get the callback handlers for this characteristic.
  */
@@ -584,42 +583,25 @@ std::string NimBLECharacteristic::toString() {
 } // toString
 
 
-NimBLECharacteristicCallbacks::~NimBLECharacteristicCallbacks() {}
-
-
 /**
  * @brief Callback function to support a read request.
  * @param [in] pCharacteristic The characteristic that is the source of the event.
+ * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  */
-void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic) {
+void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onRead: default");
 } // onRead
 
-/**
- * @brief Callback function to support a read request.
- * @param [in] pCharacteristic The characteristic that is the source of the event.
- * @param [in] desc The connection description struct that is associated with the peer that performed the read.
- */
-void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc) {
-    NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onRead: default");
-} // onRead
 
 /**
  * @brief Callback function to support a write request.
  * @param [in] pCharacteristic The characteristic that is the source of the event.
+ * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  */
-void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic) {
+void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onWrite: default");
 } // onWrite
 
-/**
- * @brief Callback function to support a write request.
- * @param [in] pCharacteristic The characteristic that is the source of the event.
- * @param [in] desc The connection description struct that is associated with the peer that performed the write.
- */
-void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc) {
-    NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onWrite: default");
-} // onWrite
 
 /**
  * @brief Callback function to support a Notify request.
@@ -645,7 +627,7 @@ void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacterist
 /**
  * @brief Callback function called when a client changes subscription status.
  * @param [in] pCharacteristic The characteristic that is the source of the event.
- * @param [in] desc The connection description struct that is associated with the client.
+ * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  * @param [in] subValue The subscription status:
  * * 0 = Un-Subscribed
  * * 1 = Notifications
@@ -653,7 +635,7 @@ void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacterist
  * * 3 = Notifications and Indications
  */
 void NimBLECharacteristicCallbacks::onSubscribe(NimBLECharacteristic* pCharacteristic,
-                                                ble_gap_conn_desc* desc,
+                                                NimBLEConnInfo& connInfo,
                                                 uint16_t subValue)
 {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onSubscribe: default");

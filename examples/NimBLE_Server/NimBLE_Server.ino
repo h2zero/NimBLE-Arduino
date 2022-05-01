@@ -15,17 +15,9 @@ static NimBLEServer* pServer;
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */
 class ServerCallbacks: public NimBLEServerCallbacks {
-    void onConnect(NimBLEServer* pServer) {
-        Serial.println("Client connected");
-        Serial.println("Multi-connect support: start advertising");
-        NimBLEDevice::startAdvertising();
-    };
-    /** Alternative onConnect() method to extract details of the connection.
-     *  See: src/ble_gap.h for the details of the ble_gap_conn_desc struct.
-     */
-    void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
+    void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) {
         Serial.print("Client address: ");
-        Serial.println(NimBLEAddress(desc->peer_ota_addr).toString().c_str());
+        Serial.println(connInfo.getAddress().toString().c_str());
         /** We can use the connection handle here to ask for different connection parameters.
          *  Args: connection handle, min connection interval, max connection interval
          *  latency, supervision timeout.
@@ -33,14 +25,14 @@ class ServerCallbacks: public NimBLEServerCallbacks {
          *  Latency: number of intervals allowed to skip.
          *  Timeout: 10 millisecond increments, try for 5x interval time for best results.
          */
-        pServer->updateConnParams(desc->conn_handle, 24, 48, 0, 60);
+        pServer->updateConnParams(connInfo.getConnHandle(), 24, 48, 0, 60);
     };
-    void onDisconnect(NimBLEServer* pServer) {
+    void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) {
         Serial.println("Client disconnected - start advertising");
         NimBLEDevice::startAdvertising();
     };
-    void onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc) {
-        Serial.printf("MTU updated: %u for connection ID: %u\n", MTU, desc->conn_handle);
+    void onMTUChange(uint16_t MTU, NimBLEConnInfo& connInfo) {
+        Serial.printf("MTU updated: %u for connection ID: %u\n", MTU, connInfo.getConnHandle());
     };
 
 /********************* Security handled here **********************
@@ -59,10 +51,10 @@ class ServerCallbacks: public NimBLEServerCallbacks {
         return true;
     };
 
-    void onAuthenticationComplete(ble_gap_conn_desc* desc){
+    void onAuthenticationComplete(NimBLEConnInfo& connInfo){
         /** Check that encryption was successful, if not we disconnect the client */
-        if(!desc->sec_state.encrypted) {
-            NimBLEDevice::getServer()->disconnect(desc->conn_handle);
+        if(!connInfo.isEncrypted()) {
+            NimBLEDevice::getServer()->disconnect(connInfo.getConnHandle());
             Serial.println("Encrypt connection failed - disconnecting client");
             return;
         }
@@ -72,13 +64,13 @@ class ServerCallbacks: public NimBLEServerCallbacks {
 
 /** Handler class for characteristic actions */
 class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
-    void onRead(NimBLECharacteristic* pCharacteristic){
+    void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo){
         Serial.print(pCharacteristic->getUUID().toString().c_str());
         Serial.print(": onRead(), value: ");
         Serial.println(pCharacteristic->getValue().c_str());
     };
 
-    void onWrite(NimBLECharacteristic* pCharacteristic) {
+    void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
         Serial.print(pCharacteristic->getUUID().toString().c_str());
         Serial.print(": onWrite(), value: ");
         Serial.println(pCharacteristic->getValue().c_str());
@@ -102,11 +94,11 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
         Serial.println(str);
     };
 
-    void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue) {
+    void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue) {
         String str = "Client ID: ";
-        str += desc->conn_handle;
+        str += connInfo.getConnHandle();
         str += " Address: ";
-        str += std::string(NimBLEAddress(desc->peer_ota_addr)).c_str();
+        str += connInfo.getAddress().toString().c_str();
         if(subValue == 0) {
             str += " Unsubscribed to ";
         }else if(subValue == 1) {
@@ -124,13 +116,13 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
 
 /** Handler class for descriptor actions */
 class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
-    void onWrite(NimBLEDescriptor* pDescriptor) {
+    void onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
         std::string dscVal = pDescriptor->getValue();
         Serial.print("Descriptor witten value:");
         Serial.println(dscVal.c_str());
     };
 
-    void onRead(NimBLEDescriptor* pDescriptor) {
+    void onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
         Serial.print(pDescriptor->getUUID().toString().c_str());
         Serial.println(" Descriptor read");
     };
