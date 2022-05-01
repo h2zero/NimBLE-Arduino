@@ -461,31 +461,16 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
                 return 0;
             }
 
-            NimBLECharacteristicCallbacks::Status statusRC;
+            int status;
 
             if(event->notify_tx.indication) {
-                if(event->notify_tx.status != 0) {
-                    if(event->notify_tx.status == BLE_HS_EDONE) {
-                        statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_INDICATE;
-                    } else if(rc == BLE_HS_ETIMEOUT) {
-                        statusRC = NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT;
-                    } else {
-                        statusRC = NimBLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE;
-                    }
-                } else {
-                    return 0;
-                }
-
-                server->clearIndicateWait(event->notify_tx.conn_handle);
-            } else {
                 if(event->notify_tx.status == 0) {
-                    statusRC = NimBLECharacteristicCallbacks::Status::SUCCESS_NOTIFY;
-                } else {
-                    statusRC = NimBLECharacteristicCallbacks::Status::ERROR_GATT;
+                    return 0; // Indication sent but not yet acknowledged.
                 }
+                server->clearIndicateWait(event->notify_tx.conn_handle);
             }
 
-            pChar->m_pCallbacks->onStatus(pChar, statusRC, event->notify_tx.status);
+            pChar->m_pCallbacks->onStatus(pChar, event->notify_tx.status);
 
             return 0;
         } // BLE_GAP_EVENT_NOTIFY_TX
