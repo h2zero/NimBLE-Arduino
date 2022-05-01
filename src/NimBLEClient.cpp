@@ -973,7 +973,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
                         rc, NimBLEUtils::returnCodeToString(rc));
 
             client->m_connEstablished = false;
-            client->m_pClientCallbacks->onDisconnect(client);
+            client->m_pClientCallbacks->onDisconnect(client, rc);
             break;
         } // BLE_GAP_EVENT_DISCONNECT
 
@@ -1263,7 +1263,7 @@ void NimBLEClientCallbacks::onConnect(NimBLEClient* pClient) {
     NIMBLE_LOGD("NimBLEClientCallbacks", "onConnect: default");
 }
 
-void NimBLEClientCallbacks::onDisconnect(NimBLEClient* pClient) {
+void NimBLEClientCallbacks::onDisconnect(NimBLEClient* pClient, int reason) {
     NIMBLE_LOGD("NimBLEClientCallbacks", "onDisconnect: default");
 }
 
@@ -1276,15 +1276,7 @@ uint32_t NimBLEClientCallbacks::onPassKeyRequest(){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onPassKeyRequest: default: 123456");
     return 123456;
 }
-/*
-void NimBLEClientCallbacks::onPassKeyNotify(uint32_t pass_key){
-    NIMBLE_LOGD("NimBLEClientCallbacks", "onPassKeyNotify: default: %d", pass_key);
-}
 
-bool NimBLEClientCallbacks::onSecurityRequest(){
-    NIMBLE_LOGD("NimBLEClientCallbacks", "onSecurityRequest: default: true");
-    return true;
-}*/
 void NimBLEClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onAuthenticationComplete: default");
 }

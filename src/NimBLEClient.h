@@ -131,7 +131,7 @@ public:
      * @brief Called when disconnected from the server.
      * @param [in] pClient A pointer to the calling client object.
      */
-    virtual void onDisconnect(NimBLEClient* pClient);
+    virtual void onDisconnect(NimBLEClient* pClient, int reason);
 
     /**
      * @brief Called when server requests to update the connection parameters.
@@ -146,9 +146,6 @@ public:
      * @return The passkey to be sent to the server.
      */
     virtual uint32_t onPassKeyRequest();
-
-    /*virtual void onPassKeyNotify(uint32_t pass_key);
-    virtual bool onSecurityRequest();*/
 
     /**
      * @brief Called when the pairing procedure is complete.
