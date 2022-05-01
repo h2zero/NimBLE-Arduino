@@ -60,7 +60,7 @@ class MyClientCallback : public BLEClientCallbacks {
     return true;
   }
 
-  void onAuthenticationComplete(ble_gap_conn_desc desc){
+  void onAuthenticationComplete(BLEConnInfo& connInfo){
     Serial.println("Starting BLE work!");
   }
 /*******************************************************************/

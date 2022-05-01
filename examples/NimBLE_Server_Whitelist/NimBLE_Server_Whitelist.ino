@@ -20,15 +20,15 @@ uint32_t value = 0;
 
 
 class MyServerCallbacks: public NimBLEServerCallbacks {
-    void onConnect(NimBLEServer* pServer) {
+    void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) {
       deviceConnected = true;
     };
 
-    void onDisconnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
+    void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) {
       // Peer disconnected, add them to the whitelist
       // This allows us to use the whitelist to filter connection attempts
       // which will minimize reconnection time.
-      NimBLEDevice::whiteListAdd(NimBLEAddress(desc->peer_ota_addr));
+      NimBLEDevice::whiteListAdd(connInfo.getAddress());
       deviceConnected = false;
     }
 };

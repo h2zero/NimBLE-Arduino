@@ -43,11 +43,11 @@ static uint8_t secondaryPhy = BLE_HCI_LE_PHY_1M;
 
 /* Handler class for server events */
 class ServerCallbacks: public NimBLEServerCallbacks {
-    void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
-        Serial.printf("Client connected: %s\n", NimBLEAddress(desc->peer_ota_addr).toString().c_str());
+    void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) {
+        Serial.printf("Client connected: %s\n", connInfo.getAddress().toString().c_str());
     };
 
-    void onDisconnect(NimBLEServer* pServer) {
+    void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) {
         Serial.printf("Client disconnected\n");
         // if still advertising we won't sleep yet.
         if (!pServer->getAdvertising()->isAdvertising()) {

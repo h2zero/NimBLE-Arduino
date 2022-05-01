@@ -45,6 +45,7 @@ typedef enum {
 #include "NimBLEService.h"
 #include "NimBLEDescriptor.h"
 #include "NimBLEAttValue.h"
+#include "NimBLEConnInfo.h"
 
 #include <string>
 #include <vector>
@@ -200,14 +201,12 @@ private:
  */
 class NimBLECharacteristicCallbacks {
 public:
-    virtual      ~NimBLECharacteristicCallbacks();
-    virtual void onRead(NimBLECharacteristic* pCharacteristic);
-    virtual void onRead(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc);
-    virtual void onWrite(NimBLECharacteristic* pCharacteristic);
-    virtual void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc);
+    virtual      ~NimBLECharacteristicCallbacks(){}
+    virtual void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
+    virtual void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
     virtual void onNotify(NimBLECharacteristic* pCharacteristic);
     virtual void onStatus(NimBLECharacteristic* pCharacteristic, int code);
-    virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue);
+    virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue);
 };
 
 #endif /* CONFIG_BT_ENABLED  && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */

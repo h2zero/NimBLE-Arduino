@@ -46,12 +46,12 @@ uint32_t value = 0;
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */  
 class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
+    void onConnect(BLEServer* pServer, BLEConnInfo& connInfo) {
       deviceConnected = true;
       BLEDevice::startAdvertising();
     };
 
-    void onDisconnect(BLEServer* pServer) {
+    void onDisconnect(BLEServer* pServer, BLEConnInfo& connInfo, int reason) {
       deviceConnected = false;
     }
   /***************** New - Security handled here ********************
@@ -66,7 +66,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
       return true; 
     }
 
-    void onAuthenticationComplete(ble_gap_conn_desc desc){
+    void onAuthenticationComplete(BLEConnInfo& connInfo){
       Serial.println("Starting BLE work!");
     }
   /*******************************************************************/

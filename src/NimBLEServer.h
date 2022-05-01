@@ -127,41 +127,28 @@ public:
      * @brief Handle a client connection.
      * This is called when a client connects.
      * @param [in] pServer A pointer to the %BLE server that received the client connection.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     * about the peer connection parameters.
      */
-    virtual void onConnect(NimBLEServer* pServer);
+    virtual void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo);
 
     /**
-     * @brief Handle a client connection.
-     * This is called when a client connects.
-     * @param [in] pServer A pointer to the %BLE server that received the client connection.
-     * @param [in] desc A pointer to the connection description structure containig information
-     * about the connection parameters.
-     */
-    virtual void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc);
-
-    /**
-     * @brief Handle a client disconnection.
-     * This is called when a client disconnects.
-     * @param [in] pServer A reference to the %BLE server that received the existing client disconnection.
-     */
-    virtual void onDisconnect(NimBLEServer* pServer);
-
-     /**
      * @brief Handle a client disconnection.
      * This is called when a client discconnects.
      * @param [in] pServer A pointer to the %BLE server that received the client disconnection.
-     * @param [in] desc A pointer to the connection description structure containing information
-     * about the connection.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     * about the peer connection parameters.
+     * @param [in] reason The reason code for the disconnection.
      */
-    virtual void onDisconnect(NimBLEServer* pServer, ble_gap_conn_desc* desc);
+    virtual void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason);
 
-     /**
+    /**
      * @brief Called when the connection MTU changes.
      * @param [in] MTU The new MTU value.
-     * @param [in] desc A pointer to the connection description structure containing information
-     * about the connection.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     * about the peer connection parameters.
      */
-    virtual void onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc);
+    virtual void onMTUChange(uint16_t MTU, NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when a client requests a passkey for pairing.
@@ -169,15 +156,12 @@ public:
      */
     virtual uint32_t onPassKeyRequest();
 
-    //virtual void onPassKeyNotify(uint32_t pass_key);
-    //virtual bool onSecurityRequest();
-
     /**
      * @brief Called when the pairing procedure is complete.
-     * @param [in] desc A pointer to the struct containing the connection information.\n
-     * This can be used to check the status of the connection encryption/pairing.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     * about the peer connection parameters.
      */
-    virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);
+    virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when using numeric comparision for pairing.
