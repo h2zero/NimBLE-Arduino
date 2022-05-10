@@ -59,6 +59,8 @@ NimBLEMeshModel::NimBLEMeshModel(NimBLEMeshModelCallbacks *pCallbacks,
     m_transStep   = 0;
 
     memset(&m_opPub, 0, sizeof(m_opPub));
+    memset(&m_tdTimer, 0, sizeof(m_tdTimer));
+    memset(&m_pubTimer, 0, sizeof(m_pubTimer));
 }
 
 
