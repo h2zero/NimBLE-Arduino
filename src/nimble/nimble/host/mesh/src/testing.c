@@ -23,7 +23,7 @@
 #include "transport.h"
 
 
-static sys_slist_t cb_slist;
+//static sys_slist_t cb_slist;
 
 void bt_test_cb_register(struct bt_test_cb *cb)
 {

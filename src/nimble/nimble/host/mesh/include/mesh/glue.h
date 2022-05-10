@@ -357,6 +357,8 @@ static inline void net_buf_simple_restore(struct os_mbuf *buf,
       buf->om_len = state->len;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-arith"
 static inline void sys_memcpy_swap(void *dst, const void *src, size_t length)
 {
     __ASSERT(((src < dst && (src + length) <= dst) ||
@@ -368,6 +370,7 @@ static inline void sys_memcpy_swap(void *dst, const void *src, size_t length)
         *((u8_t *)dst++) = *((u8_t *)src--);
     }
 }
+#pragma GCC diagnostic pop
 
 #define popcount(x) __builtin_popcount(x)
 
