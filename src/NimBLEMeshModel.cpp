@@ -6,6 +6,9 @@
  *
  */
 
+#include "nimconfig.h"
+#if CONFIG_BT_NIMBLE_MESH
+
 #include "NimBLEMeshModel.h"
 #include "NimBLEUtils.h"
 #include "NimBLELog.h"
@@ -693,3 +696,5 @@ void NimBLEHealthSrvCallbacks::attentionOff(bt_mesh_model *model)
     NimBLEMeshModel* pModel = NimBLEDevice::getMeshNode()->getHealthModel(model);
     pModel->m_callbacks->attentionOff(pModel);
 }
+
+#endif // CONFIG_BT_NIMBLE_MESH

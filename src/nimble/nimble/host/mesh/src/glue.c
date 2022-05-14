@@ -29,7 +29,7 @@
 #endif
 
 #if MYNEWT_VAL(BLE_MESH_SETTINGS)
-#include "base64/base64.h"
+#include "mesh_config_store/base64/base64.h"
 #endif
 
 extern u8_t g_mesh_addr_type;

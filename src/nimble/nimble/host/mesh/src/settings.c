@@ -22,7 +22,7 @@
 #include "settings.h"
 #include "nodes.h"
 
-#include "config/config.h"
+#include "mesh_config_store/config/config.h"
 
 /* Tracking of what storage changes are pending for App and Net Keys. We
  * track this in a separate array here instead of within the respective

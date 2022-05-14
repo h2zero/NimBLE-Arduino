@@ -6,6 +6,9 @@
  *
  */
 
+#include "nimconfig.h"
+#if CONFIG_BT_NIMBLE_MESH
+
 #include "NimBLEMeshCreateModel.h"
 
 static struct bt_mesh_model_cb mod_cb = {
@@ -28,3 +31,5 @@ struct bt_mesh_model createGenModel(int16_t _id, struct bt_mesh_model_op* op,
     struct bt_mesh_model mod = BT_MESH_MODEL_CB(_id, op, pub, udata, &mod_cb);
     return mod;
 }
+
+#endif // CONFIG_BT_NIMBLE_MESH

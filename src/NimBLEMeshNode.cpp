@@ -7,7 +7,7 @@
  */
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if CONFIG_BT_NIMBLE_MESH
 
 #include "NimBLEMeshNode.h"
 #include "NimBLELog.h"
@@ -206,5 +206,4 @@ bool NimBLEMeshNode::start() {
     return true;
 }
 
-
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BT_NIMBLE_MESH

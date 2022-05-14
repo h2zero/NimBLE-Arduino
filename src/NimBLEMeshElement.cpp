@@ -6,6 +6,9 @@
  *
  */
 
+#include "nimconfig.h"
+#if CONFIG_BT_NIMBLE_MESH
+
 #include "NimBLEMeshElement.h"
 #include "NimBLELog.h"
 #include "NimBLEMeshCreateModel.h"
@@ -139,4 +142,4 @@ bt_mesh_elem* NimBLEMeshElement::start() {
     return m_pElem;
 }
 
-
+#endif // CONFIG_BT_NIMBLE_MESH

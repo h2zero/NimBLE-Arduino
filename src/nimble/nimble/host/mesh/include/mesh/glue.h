@@ -55,7 +55,7 @@
 #endif
 
 #if MYNEWT_VAL(BLE_MESH_SETTINGS)
-#include "config/config.h"
+#include "mesh_config_store/config/config.h"
 #endif
 
 #ifdef __cplusplus
