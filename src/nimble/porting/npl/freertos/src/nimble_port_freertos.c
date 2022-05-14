@@ -21,6 +21,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "../../../nimble/include/nimble/nimble_port.h"
+#ifdef ESP_PLATFORM
+#include "esp_bt.h"
+#endif
+
 
 #if NIMBLE_CFG_CONTROLLER
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
@@ -34,7 +38,7 @@ static TaskHandle_t ll_task_h;
 #endif
 
 #ifndef ESP_PLATFORM
-static StackType_t hs_xStack[ NIMBLE_HS_TASK_STACK_SIZE ];
+static StackType_t hs_xStack[ NIMBLE_HS_STACK_SIZE ];
 static StaticTask_t hs_xTaskBuffer;
 #endif
 
@@ -50,20 +54,24 @@ nimble_port_freertos_init(TaskFunction_t host_task_fn)
      * provided by NimBLE and in case of FreeRTOS it does not need to be wrapped
      * since it has compatible prototype.
      */
+#ifdef ESP_PLATFORM
+    esp_bt_controller_enable(ESP_BT_MODE_BLE);
+#else
     ll_task_h = xTaskCreateStatic(nimble_port_ll_task_func, "ll", NIMBLE_LL_TASK_STACK_SIZE,
                                   NULL, configMAX_PRIORITIES, ll_xStack, &ll_xTaskBuffer);
 #endif
 
+#endif
     /*
      * Create task where NimBLE host will run. It is not strictly necessary to
      * have separate task for NimBLE host, but since something needs to handle
      * default queue it is just easier to make separate task which does this.
      */
 #ifdef ESP_PLATFORM
-    xTaskCreatePinnedToCore(host_task_fn, "ble", NIMBLE_STACK_SIZE,
-                            NULL, (configMAX_PRIORITIES - 4), &host_task_h, NIMBLE_CORE);
+    xTaskCreatePinnedToCore(host_task_fn, "ble", NIMBLE_HS_STACK_SIZE,
+                NULL, (configMAX_PRIORITIES - 4), &host_task_h, NIMBLE_CORE);
 #else
-    host_task_h = xTaskCreateStatic(host_task_fn, "ble", NIMBLE_HS_TASK_STACK_SIZE,
+    host_task_h = xTaskCreateStatic(host_task_fn, "ble", NIMBLE_HS_STACK_SIZE,
                                     NULL, (configMAX_PRIORITIES - 1), hs_xStack, &hs_xTaskBuffer);
 #endif
 }
@@ -74,6 +82,9 @@ nimble_port_freertos_deinit(void)
     if (host_task_h) {
         vTaskDelete(host_task_h);
     }
+#ifdef ESP_PLATFORM
+    esp_bt_controller_disable();
+#endif
 }
 
 #if NIMBLE_CFG_CONTROLLER

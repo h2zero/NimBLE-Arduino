@@ -39,41 +39,47 @@ extern "C" {
 struct hci_le_conn_complete;
 struct hci_conn_update;
 
+#define BLE_GAP_ADV_ITVL_MS(t)              ((t) * 1000 / BLE_HCI_ADV_ITVL)
+#define BLE_GAP_SCAN_ITVL_MS(t)             ((t) * 1000 / BLE_HCI_SCAN_ITVL)
+#define BLE_GAP_SCAN_WIN_MS(t)              ((t) * 1000 / BLE_HCI_SCAN_ITVL)
+#define BLE_GAP_CONN_ITVL_MS(t)             ((t) * 1000 / BLE_HCI_CONN_ITVL)
+#define BLE_GAP_SUPERVISION_TIMEOUT_MS(t)   ((t) / 10)
+
 /** 30 ms. */
-#define BLE_GAP_ADV_FAST_INTERVAL1_MIN      (30 * 1000 / BLE_HCI_ADV_ITVL)
+#define BLE_GAP_ADV_FAST_INTERVAL1_MIN      BLE_GAP_ADV_ITVL_MS(30)
 
 /** 60 ms. */
-#define BLE_GAP_ADV_FAST_INTERVAL1_MAX      (60 * 1000 / BLE_HCI_ADV_ITVL)
+#define BLE_GAP_ADV_FAST_INTERVAL1_MAX      BLE_GAP_ADV_ITVL_MS(60)
 
 /** 100 ms. */
-#define BLE_GAP_ADV_FAST_INTERVAL2_MIN      (100 * 1000 / BLE_HCI_ADV_ITVL)
+#define BLE_GAP_ADV_FAST_INTERVAL2_MIN      BLE_GAP_ADV_ITVL_MS(100)
 
 /** 150 ms. */
-#define BLE_GAP_ADV_FAST_INTERVAL2_MAX      (150 * 1000 / BLE_HCI_ADV_ITVL)
+#define BLE_GAP_ADV_FAST_INTERVAL2_MAX      BLE_GAP_ADV_ITVL_MS(150)
 
 /** 30 ms; active scanning. */
-#define BLE_GAP_SCAN_FAST_INTERVAL_MIN      (30 * 1000 / BLE_HCI_ADV_ITVL)
+#define BLE_GAP_SCAN_FAST_INTERVAL_MIN      BLE_GAP_SCAN_ITVL_MS(30)
 
 /** 60 ms; active scanning. */
-#define BLE_GAP_SCAN_FAST_INTERVAL_MAX      (60 * 1000 / BLE_HCI_ADV_ITVL)
+#define BLE_GAP_SCAN_FAST_INTERVAL_MAX      BLE_GAP_SCAN_ITVL_MS(60)
 
 /** 11.25 ms; limited discovery interval. */
-#define BLE_GAP_LIM_DISC_SCAN_INT           (11.25 * 1000 / BLE_HCI_SCAN_ITVL)
+#define BLE_GAP_LIM_DISC_SCAN_INT           BLE_GAP_SCAN_ITVL_MS(11.25)
 
 /** 11.25 ms; limited discovery window (not from the spec). */
-#define BLE_GAP_LIM_DISC_SCAN_WINDOW        (11.25 * 1000 / BLE_HCI_SCAN_ITVL)
+#define BLE_GAP_LIM_DISC_SCAN_WINDOW        BLE_GAP_SCAN_WIN_MS(11.25)
 
 /** 30 ms; active scanning. */
-#define BLE_GAP_SCAN_FAST_WINDOW            (30 * 1000 / BLE_HCI_SCAN_ITVL)
+#define BLE_GAP_SCAN_FAST_WINDOW            BLE_GAP_SCAN_WIN_MS(30)
 
 /* 30.72 seconds; active scanning. */
-#define BLE_GAP_SCAN_FAST_PERIOD            (30.72 * 1000)
+#define BLE_GAP_SCAN_FAST_PERIOD            BLE_GAP_SCAN_ITVL_MS(30.72)
 
 /** 1.28 seconds; background scanning. */
-#define BLE_GAP_SCAN_SLOW_INTERVAL1         (1280 * 1000 / BLE_HCI_SCAN_ITVL)
+#define BLE_GAP_SCAN_SLOW_INTERVAL1         BLE_GAP_SCAN_ITVL_MS(1280)
 
 /** 11.25 ms; background scanning. */
-#define BLE_GAP_SCAN_SLOW_WINDOW1           (11.25 * 1000 / BLE_HCI_SCAN_ITVL)
+#define BLE_GAP_SCAN_SLOW_WINDOW1           BLE_GAP_SCAN_WIN_MS(11.25)
 
 /** 10.24 seconds. */
 #define BLE_GAP_DISC_DUR_DFLT               (10.24 * 1000)
@@ -88,10 +94,10 @@ struct hci_conn_update;
 #define BLE_GAP_CONN_PAUSE_PERIPHERAL       (5 * 1000)
 
 /* 30 ms. */
-#define BLE_GAP_INITIAL_CONN_ITVL_MIN       (30 * 1000 / BLE_HCI_CONN_ITVL)
+#define BLE_GAP_INITIAL_CONN_ITVL_MIN       BLE_GAP_CONN_ITVL_MS(30)
 
 /* 50 ms. */
-#define BLE_GAP_INITIAL_CONN_ITVL_MAX       (50 * 1000 / BLE_HCI_CONN_ITVL)
+#define BLE_GAP_INITIAL_CONN_ITVL_MAX       BLE_GAP_CONN_ITVL_MS(50)
 
 /** Default channels mask: all three channels are used. */
 #define BLE_GAP_ADV_DFLT_CHANNEL_MAP        0x07
