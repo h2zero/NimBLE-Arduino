@@ -24,6 +24,38 @@
 extern "C" {
 #endif
 
+typedef void ble_npl_event_fn(struct ble_npl_event *ev);
+
+struct ble_npl_event_freertos {
+    bool queued;
+    ble_npl_event_fn *fn;
+    void *arg;
+};
+
+struct ble_npl_eventq_freertos {
+    QueueHandle_t q;
+};
+
+struct ble_npl_callout_freertos {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+   esp_timer_handle_t handle;
+#else
+    TimerHandle_t handle;
+#endif
+    struct ble_npl_eventq *evq;
+    struct ble_npl_event ev;
+};
+
+struct ble_npl_mutex_freertos {
+    SemaphoreHandle_t handle;
+};
+
+struct ble_npl_sem_freertos {
+    SemaphoreHandle_t handle;
+};
+
+typedef void ble_npl_event_fn_freertos(struct ble_npl_event_freertos *ev);
+
 struct ble_npl_eventq *npl_freertos_eventq_dflt_get(void);
 
 struct ble_npl_event *npl_freertos_eventq_get(struct ble_npl_eventq *evq,

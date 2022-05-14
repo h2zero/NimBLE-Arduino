@@ -43,6 +43,7 @@ ble_hs_periodic_sync_alloc(void)
         memset(psync, 0, sizeof(*psync));
     }
 
+    ble_npl_event_init(&psync->lost_ev, ble_gap_npl_sync_lost, psync);
     return psync;
 }
 
@@ -55,6 +56,7 @@ ble_hs_periodic_sync_free(struct ble_hs_periodic_sync *psync)
         return;
     }
 
+    ble_npl_event_deinit(&psync->lost_ev);
 #if MYNEWT_VAL(BLE_HS_DEBUG)
     memset(psync, 0xff, sizeof *psync);
 #endif
