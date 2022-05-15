@@ -77,11 +77,12 @@ nimble_port_init(void)
 
 #else //SOC_ESP_NIMBLE_CONTROLLER
 
+#if CONFIG_NIMBLE_STACK_USE_MEM_POOLS
     /* Initialize the function pointers for OS porting */
     npl_freertos_funcs_init();
 
     npl_freertos_mempool_init();
-
+#endif
     /* Initialize default event queue */
 
     ble_npl_eventq_init(&g_eventq_dflt);

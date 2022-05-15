@@ -36,7 +36,7 @@
  *         Extended advertising settings            *
  * For use with ESP32C3, ESP32S3, ESP32H2 ONLY!     *
  ***************************************************/
- 
+
 /** @brief Un-comment to enable extended advertising */
 // #define CONFIG_BT_NIMBLE_EXT_ADV 1
 
@@ -55,7 +55,7 @@
 /****************************************************
  * END For use with ESP32C3, ESP32S3, ESP32H2 ONLY! *
  ***************************************************/
- 
+
 
 /** @brief Un-comment to change the default MTU size */
 // #define CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU 255
@@ -142,7 +142,13 @@
 // #define CONFIG_BT_NIMBLE_PINNED_TO_CORE 0
 
 /** @brief Un-comment to change the stack size for the NimBLE host task */
-// #define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 4096
+// #define CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE 4096
+
+/**
+ * @brief Un-comment to use memory pools for stack operations
+ * @details this will use slightly more RAM but may provide more stability.
+ */
+// #define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 1
 
 /**********************************
  End Arduino user-config
@@ -169,8 +175,8 @@
 #define CONFIG_BT_NIMBLE_PINNED_TO_CORE 0
 #endif
 
-#ifndef CONFIG_BT_NIMBLE_TASK_STACK_SIZE
-#define CONFIG_BT_NIMBLE_TASK_STACK_SIZE 4096
+#ifndef CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE
+#define CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE 4096
 #endif
 
 #ifndef CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL
@@ -213,6 +219,9 @@
 #define CONFIG_BT_NIMBLE_LOG_LEVEL 5
 #endif
 
+#ifndef CONFIG_NIMBLE_STACK_USE_MEM_POOLS
+#define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 0
+#endif
 
 /** @brief Set if CCCD's and bond data should be stored in NVS */
 #define CONFIG_BT_NIMBLE_NVS_PERSIST 1
