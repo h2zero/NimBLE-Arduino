@@ -20,10 +20,13 @@
 #ifndef _NPL_FREERTOS_H_
 #define _NPL_FREERTOS_H_
 
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#if CONFIG_NIMBLE_STACK_USE_MEM_POOLS
 typedef void ble_npl_event_fn(struct ble_npl_event *ev);
 
 struct ble_npl_event_freertos {
@@ -55,6 +58,7 @@ struct ble_npl_sem_freertos {
 };
 
 typedef void ble_npl_event_fn_freertos(struct ble_npl_event_freertos *ev);
+#endif
 
 struct ble_npl_eventq *npl_freertos_eventq_dflt_get(void);
 
