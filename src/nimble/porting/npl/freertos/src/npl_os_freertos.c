@@ -771,10 +771,9 @@ IRAM_ATTR npl_freertos_callout_init(struct ble_npl_callout *co, struct ble_npl_e
         PLATFORM_BLE_LL_ASSERT(callout);
 
         memset(callout, 0, sizeof(*callout));
+        ble_npl_event_init(&callout->ev, ev_cb, ev_arg);
 
 #if CONFIG_BT_NIMBLE_USE_ESP_TIMER
-	callout->ev.fn = ev_cb;
-	callout->ev.event = ev_arg;
 	callout->evq = evq;
 
 	esp_timer_create_args_t create_args = {
@@ -793,6 +792,8 @@ IRAM_ATTR npl_freertos_callout_init(struct ble_npl_callout *co, struct ble_npl_e
     } else {
 	callout = (struct ble_npl_callout_freertos *)co->co;
 	PLATFORM_BLE_LL_ASSERT(callout);
+	callout->evq = evq;
+	ble_npl_event_init(&callout->ev, ev_cb, ev_arg);
     }
 #else
 
@@ -802,10 +803,9 @@ IRAM_ATTR npl_freertos_callout_init(struct ble_npl_callout *co, struct ble_npl_e
         PLATFORM_BLE_LL_ASSERT(callout);
 
 	memset(callout, 0, sizeof(*callout));
+        ble_npl_event_init(&callout->ev, ev_cb, ev_arg);
 
 #if CONFIG_BT_NIMBLE_USE_ESP_TIMER
-	callout->ev.fn = ev_cb;
-	callout->ev.event = ev_arg;
 	callout->evq = evq;
 
 	esp_timer_create_args_t create_args = {
@@ -824,11 +824,11 @@ IRAM_ATTR npl_freertos_callout_init(struct ble_npl_callout *co, struct ble_npl_e
     else {
         callout = (struct ble_npl_callout_freertos *)co->co;
         PLATFORM_BLE_LL_ASSERT(callout);
+	callout->evq = evq;
+	ble_npl_event_init(&callout->ev, ev_cb, ev_arg);
     }
 #endif
 
-    callout->evq = evq;
-    ble_npl_event_init(&callout->ev, ev_cb, ev_arg);
 }
 
 void
