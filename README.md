@@ -57,7 +57,7 @@ If you are familiar with the original library, see: [The migration guide](docs/M
 
 Also see [Improvements_and_updates](docs/Improvements_and_updates.md) for information about non-breaking changes.
 
-[Full API documentation and class list can be found here.](https://h2zero.github.io/esp-nimble-cpp/)  
+[Full API documentation and class list can be found here.](https://h2zero.github.io/NimBLE-Arduino/)  
 
 For added performance and optimizations see [Usage tips](docs/Usage_tips.md).
 
@@ -72,9 +72,9 @@ such as increasing max connections, default is 3, absolute maximum connections i
 <br/>
 
 # Development Status
-This Library is tracking the esp-nimble repo, nimble-1.3.0-idf master branch, currently [@5bb7b40.](https://github.com/espressif/esp-nimble)  
+This Library is tracking the esp-nimble repo, nimble-1.4.0-idf branch, currently [@3c2e1d4.](https://github.com/espressif/esp-nimble)  
 
-Also tracking the NimBLE related changes in ESP-IDF, master branch, currently [@639e7ad.](https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble) 
+Also tracking the NimBLE related changes in ESP-IDF, master branch, currently [@95db4bb.](https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble) 
 <br/>
 
 # Acknowledgments

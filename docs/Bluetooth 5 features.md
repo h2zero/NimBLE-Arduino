@@ -7,12 +7,11 @@ Extended advertising allows for much more capability and flexibility.
 
 * New PHY's (physical layers) that allow for faster data rate (2M PHY) or long range/slower data rates (CODED PHY) as well as the original 1M PHY.
 
-* New periodic advertising, allowing the scanning device to sync with the advertisements of a beacon. This allows for the scanning device to sleep or perform other tasks before the next expected advertisement is sent, preserving cpu cycles and power (To be implemented).
-<br>
+* New periodic advertising, allowing the scanning device to sync with the advertisements of a beacon. This allows for the scanning device to sleep or perform other tasks before the next expected advertisement is sent, preserving cpu cycles and power (To be implemented).  
+<br/>
 
 ## Enabling extended advertising
-Extended advertising is supported when enabled with the config option `CONFIG_BT_NIMBLE_EXT_ADV` set to a value of 1. This is done in menuconfig under `Component config > Bluetooth > NimBLE options >
-Enable extended advertising`.
+Extended advertising is supported when enabled with the config option `CONFIG_BT_NIMBLE_EXT_ADV` set to a value of 1. This is done in menuconfig under `Component config > Bluetooth > NimBLE options > Enable extended advertising`, or set in `nimconfig.h` for Arduino, or in `build_flags` in PlatformIO.
 
 When enabled the following will occur:
 * `NimBLEScan::start` method will scan on both the 1M PHY and the coded PHY standards automatically.
