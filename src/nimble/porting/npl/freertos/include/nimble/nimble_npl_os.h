@@ -70,9 +70,6 @@ struct ble_npl_event;
 typedef void ble_npl_event_fn(struct ble_npl_event *ev);
 
 struct ble_npl_event {
-#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
-    ble_npl_event_fn *fn;
-#endif
     void *event;
 };
 
