@@ -4,7 +4,7 @@ This guide describes the required changes to existing projects migrating from th
 
 **The changes listed here are only the required changes that must be made**, and a short overview of options for migrating existing applications.
 
-For more information on the improvements and additions please refer to the [class documentation](https://h2zero.github.io/esp-nimble-cpp/annotated.html) and [Improvements and updates](Improvements_and_updates.md)
+For more information on the improvements and additions please refer to the [class documentation](https://h2zero.github.io/NimBLE-Arduino/annotated.html) and [Improvements and updates](Improvements_and_updates.md)
 
 * [General Changes](#general-information)
 * [Server](#server-api)
@@ -266,9 +266,10 @@ Also now returns a pointer to `std::vector` instead of `std::map`.
 
 <a name="remote-characteristics"></a>
 ### Remote Characteristics
-`BLERemoteCharacteristic` (`NimBLERemoteCharacteristic`) There have been a few changes to the methods in this class:
+`BLERemoteCharacteristic` (`NimBLERemoteCharacteristic`)  
+ There have been a few changes to the methods in this class:
 
-> `BLERemoteCharacteristic::writeValue` (`NimBLERemoteCharacteristic::writeValue`)
+> `BLERemoteCharacteristic::writeValue` (`NimBLERemoteCharacteristic::writeValue`)  
 > `BLERemoteCharacteristic::registerForNotify` (`NimBLERemoteCharacteristic::registerForNotify`)
 
 Now return true or false to indicate success or failure so you can choose to disconnect or try again.  

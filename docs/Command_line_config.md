@@ -147,7 +147,7 @@ Set the task stack size for the NimBLE core.
 - Options: 0 or 1, default is disabled (0)  
 <br/>
 
-## Extended advertising settings, For use with ESP32C3, ESP32S3, ESP32H2 ONLY!
+### Extended advertising settings, For use with ESP32C3, ESP32S3, ESP32H2 ONLY!
  
 `CONFIG_BT_NIMBLE_EXT_ADV`
 
