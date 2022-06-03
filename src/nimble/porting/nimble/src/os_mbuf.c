@@ -381,6 +381,8 @@ os_mbuf_len(const struct os_mbuf *om)
     return len;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-arith"
 int
 os_mbuf_append(struct os_mbuf *om, const void *data,  uint16_t len)
 {
@@ -454,6 +456,7 @@ os_mbuf_append(struct os_mbuf *om, const void *data,  uint16_t len)
 err:
     return (rc);
 }
+#pragma GCC diagnostic pop
 
 int
 os_mbuf_appendfrom(struct os_mbuf *dst, const struct os_mbuf *src,
@@ -663,6 +666,9 @@ os_mbuf_adj(struct os_mbuf *mp, int req_len)
     }
 }
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-arith"
 int
 os_mbuf_cmpf(const struct os_mbuf *om, int off, const void *data, int len)
 {
@@ -703,6 +709,7 @@ os_mbuf_cmpf(const struct os_mbuf *om, int off, const void *data, int len)
         }
     }
 }
+#pragma GCC diagnostic pop
 
 int
 os_mbuf_cmpm(const struct os_mbuf *om1, uint16_t offset1,

@@ -28,7 +28,11 @@
 #include "ble_hs_priv.h"
 #include "ble_monitor_priv.h"
 #ifdef ESP_PLATFORM
-#include "soc/soc_caps.h"
+#  if defined __has_include
+#    if __has_include ("soc/soc_caps.h")
+#      include "soc/soc_caps.h"
+#    endif
+#  endif
 #endif
 
 static int

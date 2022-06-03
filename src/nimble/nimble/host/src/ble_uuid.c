@@ -228,6 +228,8 @@ ble_uuid_to_mbuf(const ble_uuid_t *uuid, struct os_mbuf *om)
     return 0;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-arith"
 int
 ble_uuid_flat(const ble_uuid_t *uuid, void *dst)
 {
@@ -250,6 +252,7 @@ ble_uuid_flat(const ble_uuid_t *uuid, void *dst)
 
     return 0;
 }
+#pragma GCC diagnostic pop
 
 int
 ble_uuid_length(const ble_uuid_t *uuid)

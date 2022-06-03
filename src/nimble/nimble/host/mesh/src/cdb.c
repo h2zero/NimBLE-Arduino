@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #define BT_DBG_ENABLED MYNEWT_VAL(BLE_MESH_DEBUG_CDB)
 #define LOG_MODULE_NAME bt_mesh_cdb
 #include "nimble/porting/nimble/include/log/log.h"
@@ -386,3 +389,5 @@ void bt_mesh_cdb_app_key_store(const struct bt_mesh_cdb_app_key *key)
 	}
 }
 #endif
+
+#endif // MYNEWT_VAL(BLE_MESH)
