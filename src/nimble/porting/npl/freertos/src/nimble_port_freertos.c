@@ -61,6 +61,7 @@ nimble_port_freertos_init(TaskFunction_t host_task_fn)
 #endif
 
 #endif
+#if CONFIG_BT_NIMBLE_ENABLED
     /*
      * Create task where NimBLE host will run. It is not strictly necessary to
      * have separate task for NimBLE host, but since something needs to handle
@@ -72,7 +73,8 @@ nimble_port_freertos_init(TaskFunction_t host_task_fn)
 #else
     host_task_h = xTaskCreateStatic(host_task_fn, "ble", NIMBLE_HS_STACK_SIZE,
                                     NULL, (configMAX_PRIORITIES - 1), hs_xStack, &hs_xTaskBuffer);
-#endif
+#endif //ESP_PLATFORM
+#endif //CONFIG_BT_NIMBLE_ENABLED
 }
 
 void

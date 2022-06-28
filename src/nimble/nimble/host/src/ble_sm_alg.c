@@ -643,6 +643,10 @@ mbedtls_gen_keypair(uint8_t *public_key, uint8_t *private_key)
 
     mbedtls_entropy_init(&entropy);
     mbedtls_ctr_drbg_init(&ctr_drbg);
+
+    /* Free the previously allocate keypair */
+    mbedtls_ecp_keypair_free(&keypair);
+
     mbedtls_ecp_keypair_init(&keypair);
 
     if (( rc = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
@@ -678,6 +682,11 @@ exit:
     }
 
     return 0;
+}
+
+void mbedtls_free_keypair(void)
+{
+    mbedtls_ecp_keypair_free(&keypair);
 }
 #endif
 

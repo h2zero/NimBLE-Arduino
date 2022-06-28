@@ -45,7 +45,7 @@ ble_hs_util_load_rand_addr(ble_addr_t *addr)
 #if SOC_ESP_NIMBLE_CONTROLLER
     int rc;
 
-    rc = esp_ble_hw_get_static_addr(addr);
+    rc = esp_ble_hw_get_static_addr((esp_ble_addr_t *)addr);
     if (rc == 0) {
         return 0;
     }

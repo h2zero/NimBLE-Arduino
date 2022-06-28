@@ -60,14 +60,28 @@ static const char *TAG = "Timer";
 
 #define OS_MEM_ALLOC (1)
 
+#if CONFIG_BT_NIMBLE_ENABLED
+#define BT_LE_HCI_EVT_HI_BUF_COUNT MYNEWT_VAL(BLE_HCI_EVT_HI_BUF_COUNT)
+#define BT_LE_HCI_EVT_LO_BUF_COUNT MYNEWT_VAL(BLE_HCI_EVT_LO_BUF_COUNT)
+#define BT_LE_MAX_EXT_ADV_INSTANCES MYNEWT_VAL(BLE_MULTI_ADV_INSTANCES)
+#define BT_LE_MAX_CONNECTIONS MYNEWT_VAL(BLE_MAX_CONNECTIONS)
+#else
+#include "esp_bt.h"
+#define BT_LE_HCI_EVT_HI_BUF_COUNT DEFAULT_BT_LE_HCI_EVT_HI_BUF_COUNT
+#define BT_LE_HCI_EVT_LO_BUF_COUNT DEFAULT_BT_LE_HCI_EVT_LO_BUF_COUNT
+#define BT_LE_MAX_EXT_ADV_INSTANCES DEFAULT_BT_LE_MAX_EXT_ADV_INSTANCES
+#define BT_LE_MAX_CONNECTIONS DEFAULT_BT_LE_MAX_CONNECTIONS
+#endif
+
 #define BLE_HS_HCI_EVT_COUNT                    \
-    (MYNEWT_VAL(BLE_HCI_EVT_HI_BUF_COUNT) +     \
-     MYNEWT_VAL(BLE_HCI_EVT_LO_BUF_COUNT))
+    (BT_LE_HCI_EVT_HI_BUF_COUNT +        \
+     BT_LE_HCI_EVT_LO_BUF_COUNT)
+
 
 #define LL_NPL_BASE_EVENT_COUNT     (11)
 #define LL_SCAN_EXT_AUX_EVT_CNT     (MYNEWT_VAL(BLE_LL_EXT_ADV_AUX_PTR_CNT))
 #define HCI_LL_NPL_EVENT_COUNT      (1)
-#define ADV_LL_NPL_EVENT_COUNT      ((MYNEWT_VAL(BLE_MULTI_ADV_INSTANCES)+1)*3)
+#define ADV_LL_NPL_EVENT_COUNT      ((BT_LE_MAX_EXT_ADV_INSTANCES+1)*3)
 #define SCAN_LL_NPL_EVENT_COUNT     (2)
 #define RL_LL_NPL_EVENT_COUNT       (1)
 #define SYNC_LL_NPL_EVENT_COUNT     (7)
@@ -84,7 +98,8 @@ static const char *TAG = "Timer";
 #define LL_CFG_FEAT_LE_PING_EVT   (0)
 #endif
 
-#define CONN_MODULE_NPL_EVENT_COUNT (((LL_CFG_FEAT_LE_PING_EVT+2)*MYNEWT_VAL(BLE_MAX_CONNECTIONS))+LL_CTRL_TO_HOST_FLOW_CTRL_EVT)
+#define CONN_MODULE_NPL_EVENT_COUNT (((LL_CFG_FEAT_LE_PING_EVT+2)*BT_LE_MAX_CONNECTIONS)+LL_CTRL_TO_HOST_FLOW_CTRL_EVT)
+
 
 #define BLE_LL_EV_COUNT (LL_NPL_BASE_EVENT_COUNT +      \
                          LL_SCAN_EXT_AUX_EVT_CNT +      \
@@ -99,7 +114,7 @@ static const char *TAG = "Timer";
 
 #define BLE_TOTAL_EVQ_COUNT (10)
 
-#define BLE_TOTAL_CO_COUNT (20)
+#define BLE_TOTAL_CO_COUNT (40)
 
 #define BLE_TOTAL_SEM_COUNT (10)
 
@@ -1013,15 +1028,22 @@ IRAM_ATTR npl_freertos_callout_set_arg(struct ble_npl_callout *co, void *arg)
 uint32_t
 IRAM_ATTR npl_freertos_time_get(void)
 {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    return esp_timer_get_time() / 1000;
+#else
     return xTaskGetTickCountFromISR();
+#endif
 }
 
 ble_npl_error_t
 IRAM_ATTR npl_freertos_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks)
 {
     uint64_t ticks;
-
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    ticks = (uint64_t)ms;
+#else
     ticks = ((uint64_t)ms * configTICK_RATE_HZ) / 1000;
+#endif
     if (ticks > UINT32_MAX) {
         return BLE_NPL_EINVAL;
     }
@@ -1035,8 +1057,11 @@ ble_npl_error_t
 IRAM_ATTR npl_freertos_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_ms)
 {
     uint64_t ms;
-
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    ms = ((uint64_t)ticks);
+#else
     ms = ((uint64_t)ticks * 1000) / configTICK_RATE_HZ;
+#endif
     if (ms > UINT32_MAX) {
         return BLE_NPL_EINVAL;
      }
@@ -1049,19 +1074,31 @@ IRAM_ATTR npl_freertos_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_ms)
 ble_npl_time_t
 IRAM_ATTR npl_freertos_time_ms_to_ticks32(uint32_t ms)
 {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    return ms;
+#else
     return ms * configTICK_RATE_HZ / 1000;
+#endif
 }
 
 uint32_t
 IRAM_ATTR npl_freertos_time_ticks_to_ms32(ble_npl_time_t ticks)
 {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    return ticks;
+#else
     return ticks * 1000 / configTICK_RATE_HZ;
+#endif
 }
 
 void
 IRAM_ATTR npl_freertos_time_delay(ble_npl_time_t ticks)
 {
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+    vTaskDelay(ticks / portTICK_PERIOD_MS);
+#else
     vTaskDelay(ticks);
+#endif
 }
 
 #ifdef ESP_PLATFORM

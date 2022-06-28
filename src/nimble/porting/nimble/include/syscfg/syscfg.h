@@ -6,9 +6,12 @@
 #define H_SYSCFG_
 
 #ifdef ESP_PLATFORM
-#include "nimble/esp_port/port/include/esp_nimble_cfg.h"
+#  include "nimble/esp_port/port/include/esp_nimble_cfg.h"
 #else
-#include "ext_nimble_config.h"
+#  include "ext_nimble_config.h"
+#  ifndef CONFIG_BT_NIMBLE_ENABLED
+#    define CONFIG_BT_NIMBLE_ENABLED 1
+#  endif
 #endif
 
 #if 0

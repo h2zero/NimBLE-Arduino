@@ -30,11 +30,25 @@
 static STAILQ_HEAD(, os_mbuf_pool) g_msys_pool_list =
     STAILQ_HEAD_INITIALIZER(g_msys_pool_list);
 
-#if MYNEWT_VAL(MSYS_1_BLOCK_COUNT) > 0
+#if CONFIG_BT_NIMBLE_ENABLED
+#define OS_MSYS_1_BLOCK_COUNT MYNEWT_VAL(MSYS_1_BLOCK_COUNT)
+#define OS_MSYS_1_BLOCK_SIZE MYNEWT_VAL(MSYS_1_BLOCK_SIZE)
+#define OS_MSYS_2_BLOCK_COUNT MYNEWT_VAL(MSYS_2_BLOCK_COUNT)
+#define OS_MSYS_2_BLOCK_SIZE MYNEWT_VAL(MSYS_2_BLOCK_SIZE)
+#else
+#define OS_MSYS_1_BLOCK_COUNT CONFIG_BT_LE_MSYS_1_BLOCK_COUNT
+#define OS_MSYS_1_BLOCK_SIZE CONFIG_BT_LE_MSYS_1_BLOCK_SIZE
+#define OS_MSYS_2_BLOCK_COUNT CONFIG_BT_LE_MSYS_2_BLOCK_COUNT
+#define OS_MSYS_2_BLOCK_SIZE CONFIG_BT_LE_MSYS_2_BLOCK_SIZE
+#endif
+
+
+
+#if OS_MSYS_1_BLOCK_COUNT > 0
 #define SYSINIT_MSYS_1_MEMBLOCK_SIZE                \
-    OS_ALIGN(MYNEWT_VAL(MSYS_1_BLOCK_SIZE), 4)
+    OS_ALIGN(OS_MSYS_1_BLOCK_SIZE, 4)
 #define SYSINIT_MSYS_1_MEMPOOL_SIZE                 \
-    OS_MEMPOOL_SIZE(MYNEWT_VAL(MSYS_1_BLOCK_COUNT),  \
+    OS_MEMPOOL_SIZE(OS_MSYS_1_BLOCK_COUNT,  \
                     SYSINIT_MSYS_1_MEMBLOCK_SIZE)
 #ifdef ESP_PLATFORM
 static os_membuf_t *os_msys_init_1_data;
@@ -45,11 +59,11 @@ static struct os_mbuf_pool os_msys_init_1_mbuf_pool;
 static struct os_mempool os_msys_init_1_mempool;
 #endif
 
-#if MYNEWT_VAL(MSYS_2_BLOCK_COUNT) > 0
+#if OS_MSYS_2_BLOCK_COUNT > 0
 #define SYSINIT_MSYS_2_MEMBLOCK_SIZE                \
-    OS_ALIGN(MYNEWT_VAL(MSYS_2_BLOCK_SIZE), 4)
+    OS_ALIGN(OS_MSYS_2_BLOCK_SIZE, 4)
 #define SYSINIT_MSYS_2_MEMPOOL_SIZE                 \
-    OS_MEMPOOL_SIZE(MYNEWT_VAL(MSYS_2_BLOCK_COUNT),  \
+    OS_MEMPOOL_SIZE(OS_MSYS_2_BLOCK_COUNT,  \
                     SYSINIT_MSYS_2_MEMBLOCK_SIZE)
 #ifdef ESP_PLATFORM
 static os_membuf_t *os_msys_init_2_data;
@@ -135,14 +149,14 @@ os_msys_init_once(void *data, struct os_mempool *mempool,
 int
 os_msys_buf_alloc(void)
 {
-#if MYNEWT_VAL(MSYS_1_BLOCK_COUNT) > 0
+#if OS_MSYS_1_BLOCK_COUNT > 0
     os_msys_init_1_data = (os_membuf_t *)nimble_platform_mem_calloc(1, (sizeof(os_membuf_t) * SYSINIT_MSYS_1_MEMPOOL_SIZE));
     if (!os_msys_init_1_data) {
         return ESP_FAIL;
     }
 #endif
 
-#if MYNEWT_VAL(MSYS_2_BLOCK_COUNT) > 0
+#if OS_MSYS_2_BLOCK_COUNT > 0
     os_msys_init_2_data = (os_membuf_t *)nimble_platform_mem_calloc(1, (sizeof(os_membuf_t) * SYSINIT_MSYS_2_MEMPOOL_SIZE));
     if (!os_msys_init_2_data) {
         return ESP_FAIL;
@@ -155,12 +169,12 @@ os_msys_buf_alloc(void)
 void
 os_msys_buf_free(void)
 {
-#if MYNEWT_VAL(MSYS_1_BLOCK_COUNT) > 0
+#if OS_MSYS_1_BLOCK_COUNT > 0
     nimble_platform_mem_free(os_msys_init_1_data);
     os_msys_init_1_data = NULL;
 #endif
 
-#if MYNEWT_VAL(MSYS_2_BLOCK_COUNT) > 0
+#if OS_MSYS_2_BLOCK_COUNT > 0
     nimble_platform_mem_free(os_msys_init_2_data);
     os_msys_init_2_data = NULL;
 #endif
@@ -176,20 +190,20 @@ void os_msys_init(void)
 
     os_msys_reset();
 
-#if MYNEWT_VAL(MSYS_1_BLOCK_COUNT) > 0
+#if OS_MSYS_1_BLOCK_COUNT > 0
     os_msys_init_once(os_msys_init_1_data,
                       &os_msys_init_1_mempool,
                       &os_msys_init_1_mbuf_pool,
-                      MYNEWT_VAL(MSYS_1_BLOCK_COUNT),
+                      OS_MSYS_1_BLOCK_COUNT,
                       SYSINIT_MSYS_1_MEMBLOCK_SIZE,
                       "msys_1");
 #endif
 
-#if MYNEWT_VAL(MSYS_2_BLOCK_COUNT) > 0
+#if OS_MSYS_2_BLOCK_COUNT > 0
     os_msys_init_once(os_msys_init_2_data,
                       &os_msys_init_2_mempool,
                       &os_msys_init_2_mbuf_pool,
-                      MYNEWT_VAL(MSYS_2_BLOCK_COUNT),
+                      OS_MSYS_2_BLOCK_COUNT,
                       SYSINIT_MSYS_2_MEMBLOCK_SIZE,
                       "msys_2");
 #endif
