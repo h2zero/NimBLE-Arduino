@@ -1771,6 +1771,10 @@ npl_freertos_callout_init(struct ble_npl_callout *co, struct ble_npl_eventq *evq
 void
 npl_freertos_callout_deinit(struct ble_npl_callout *co)
 {
+    if (!co->handle) {
+        return;
+    }
+
 #if CONFIG_BT_NIMBLE_USE_ESP_TIMER
     if(esp_timer_stop(co->handle))
 	ESP_LOGW(TAG, "Timer not stopped");
@@ -1778,9 +1782,8 @@ npl_freertos_callout_deinit(struct ble_npl_callout *co)
     if(esp_timer_delete(co->handle))
 	ESP_LOGW(TAG, "Timer not deleted");
 #else
-    if (co->handle) {
-        xTimerDelete(co->handle, portMAX_DELAY);
-    }
+    xTimerDelete(co->handle, portMAX_DELAY);
+    ble_npl_event_deinit(&co->ev);
 #endif
     memset(co, 0, sizeof(struct ble_npl_callout));
 }
@@ -1824,6 +1827,9 @@ npl_freertos_callout_reset(struct ble_npl_callout *co, ble_npl_time_t ticks)
 void
 npl_freertos_callout_stop(struct ble_npl_callout *co)
 {
+    if (!co->handle) {
+        return;
+    }
 #if CONFIG_BT_NIMBLE_USE_ESP_TIMER
     esp_timer_stop(co->handle);
 #else
