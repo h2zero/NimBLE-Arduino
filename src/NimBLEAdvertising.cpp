@@ -758,7 +758,7 @@ int NimBLEAdvertising::handleGapEvent(struct ble_gap_event *event, void *arg) {
  */
 void NimBLEAdvertisementData::addData(const std::string &data) {
     if ((m_payload.length() + data.length()) > BLE_HS_ADV_MAX_SZ) {
-        NIMBLE_LOGE(LOG_TAG, "Advertisement data length exceded");
+        NIMBLE_LOGE(LOG_TAG, "Advertisement data length exceeded");
         return;
     }
     m_payload.append(data);

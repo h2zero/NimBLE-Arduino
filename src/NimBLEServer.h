@@ -151,7 +151,7 @@ public:
      * @brief Handle a client disconnection.
      * This is called when a client discconnects.
      * @param [in] pServer A pointer to the %BLE server that received the client disconnection.
-     * @param [in] desc A pointer to the connection description structure containig information
+     * @param [in] desc A pointer to the connection description structure containing information
      * about the connection.
      */
     virtual void onDisconnect(NimBLEServer* pServer, ble_gap_conn_desc* desc);
@@ -159,7 +159,7 @@ public:
      /**
      * @brief Called when the connection MTU changes.
      * @param [in] MTU The new MTU value.
-     * @param [in] desc A pointer to the connection description structure containig information
+     * @param [in] desc A pointer to the connection description structure containing information
      * about the connection.
      */
     virtual void onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc);

@@ -157,35 +157,35 @@ size_t NimBLEClient::deleteService(const NimBLEUUID &uuid) {
 
 /**
  * @brief Connect to the BLE Server.
- * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
+ * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(bool deleteAttibutes) {
-    return connect(m_peerAddress, deleteAttibutes);
+bool NimBLEClient::connect(bool deleteAttributes) {
+    return connect(m_peerAddress, deleteAttributes);
 }
 
 /**
  * @brief Connect to an advertising device.
  * @param [in] device The device to connect to.
- * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
+ * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes) {
+bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttributes) {
     NimBLEAddress address(device->getAddress());
-    return connect(address, deleteAttibutes);
+    return connect(address, deleteAttributes);
 }
 
 
 /**
  * @brief Connect to the BLE Server.
  * @param [in] address The address of the server.
- * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
+ * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
+bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
 
     if(!NimBLEDevice::m_synced) {
@@ -259,7 +259,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
                 break;
 
             case BLE_HS_EALREADY:
-                // Already attemting to connect to this device, cancel the previous
+                // Already attempting to connect to this device, cancel the previous
                 // attempt and report failure here so we don't get 2 connections.
                 NIMBLE_LOGE(LOG_TAG, "Already attempting to connect to %s - cancelling",
                             std::string(m_peerAddress).c_str());
@@ -317,7 +317,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
         NIMBLE_LOGI(LOG_TAG, "Connection established");
     }
 
-    if(deleteAttibutes) {
+    if(deleteAttributes) {
         deleteServices();
     }
 
@@ -390,8 +390,8 @@ int NimBLEClient::disconnect(uint8_t reason) {
         // We use a timer to detect a controller error in the event that it does
         // not inform the stack when disconnection is complete.
         // This is a common error in certain esp-idf versions.
-        // The disconnect timeout time is the supervison timeout time + 1 second.
-        // In the case that the event happenss shortly after the supervision timeout
+        // The disconnect timeout time is the supervision timeout time + 1 second.
+        // In the case that the event happens shortly after the supervision timeout
         // we don't want to prematurely reset the host.
         ble_npl_time_t ticks;
         ble_npl_time_ms_to_ticks((desc.supervision_timeout + 100) * 10, &ticks);
@@ -431,7 +431,7 @@ void NimBLEClient::setConnectPhy(uint8_t mask) {
 
 
 /**
- * @brief Set the connection paramaters to use when connecting to a server.
+ * @brief Set the connection parameters to use when connecting to a server.
  * @param [in] minInterval The minimum connection interval in 1.25ms units.
  * @param [in] maxInterval The maximum connection interval in 1.25ms units.
  * @param [in] latency The number of packets allowed to skip (extends max interval).

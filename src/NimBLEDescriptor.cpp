@@ -261,7 +261,7 @@ void NimBLEDescriptor::setValue(const std::vector<uint8_t>& vec) {
 
 /**
  * @brief Set the characteristic this descriptor belongs to.
- * @param [in] pChar A pointer to the characteristic this descriptior belongs to.
+ * @param [in] pChar A pointer to the characteristic this descriptor belongs to.
  */
 void NimBLEDescriptor::setCharacteristic(NimBLECharacteristic* pChar) {
     m_pCharacteristic = pChar;

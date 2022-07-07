@@ -38,9 +38,9 @@ class NimBLEAdvertisedDevice;
  */
 class NimBLEClient {
 public:
-    bool                                        connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes = true);
-    bool                                        connect(const NimBLEAddress &address, bool deleteAttibutes = true);
-    bool                                        connect(bool deleteAttibutes = true);
+    bool                                        connect(NimBLEAdvertisedDevice* device, bool deleteAttributes = true);
+    bool                                        connect(const NimBLEAddress &address, bool deleteAttributes = true);
+    bool                                        connect(bool deleteAttributes = true);
     int                                         disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     NimBLEAddress                               getPeerAddress();
     void                                        setPeerAddress(const NimBLEAddress &address);
@@ -137,7 +137,7 @@ public:
      * @brief Called when server requests to update the connection parameters.
      * @param [in] pClient A pointer to the calling client object.
      * @param [in] params A pointer to the struct containing the connection parameters requested.
-     * @return True to accept the parmeters.
+     * @return True to accept the parameters.
      */
     virtual bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params);
 

@@ -373,7 +373,7 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
 
         case BLE_GAP_EVENT_DISCONNECT: {
             // If Host reset tell the device now before returning to prevent
-            // any errors caused by calling host functions before resyncing.
+            // any errors caused by calling host functions before resync.
             switch(event->disconnect.reason) {
                 case BLE_HS_ETIMEOUT_HCI:
                 case BLE_HS_EOS:
@@ -636,7 +636,7 @@ void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks, bool deleteCa
  * @brief Remove a service from the server.
  *
  * @details Immediately removes access to the service by clients, sends a service changed indication,
- * and removes the service (if applicable) from the advertisments.
+ * and removes the service (if applicable) from the advertisements.
  * The service is not deleted unless the deleteSvc parameter is true, otherwise the service remains
  * available and can be re-added in the future. If desired a removed but not deleted service can
  * be deleted later by calling this method with deleteSvc set to true.

@@ -2,18 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.4.0] - 2022-07-10
 
 ### Fixed
 - Fixed missing data from long notification values.
+- Fixed NimbleCharacteristicCallbacks::onRead not being called when a non-long read command is received.
 
 ### Changed
-- Updated NimBLE core to use the v1.4.0 branch of esp-nimble
+- Updated NimBLE core to use the v1.4.0 branch of esp-nimble.
+- AD flags are no longer set in the advertisements of non-connectable beacons, freeing up 3 bytes of advertisement room.
 
 ### Added
-- Preliminary support for non-esp devices, NRF51 and NRF52 devices supported with [n-able arduino core](https://github.com/h2zero/n-able)
+- Preliminary support for non-esp devices, NRF51 and NRF52 devices supported with [n-able arduino core](https://github.com/h2zero/n-able-Arduino)
 - Alias added for  `NimBLEServerCallbacks::onMTUChange` to `onMtuChanged` in order to support porting code from original library.
-- `NimBLEAttValue` Class added to reduce and control RAM footprint of characteristic/descriptor values and support conversions from Arduio Strings and many other data types.
+- `NimBLEAttValue` Class added to reduce and control RAM footprint of characteristic/descriptor values and support conversions from Arduino Strings and many other data types.
 - Bluetooth 5 extended advertising support for capable devices. CODED Phy, 2M Phy, extended advertising data, and multi-advertising are supported, periodic advertising will be implemented in the future.
 
 ## [1.3.8] - 2022-04-27
@@ -44,7 +46,7 @@ All notable changes to this project will be documented in this file.
 - Memory leak when services are changed on server devices.
 - Rare crashing that occurs when BLE commands are sent from ISR context using IPC.
 - Crashing caused by uninitialized disconnect timer in client.
-- Potential crash due to unintialized advertising callback pointer.
+- Potential crash due to uninitialized advertising callback pointer.
 
 ## [1.3.5] - 2022-01-14
 
@@ -81,7 +83,7 @@ All notable changes to this project will be documented in this file.
 ## [1.3.0] - 2021-08-02
 
 ### Added
-- `NimBLECharacteristic::removeDescriptor`: Dynamically remove a descriptor from a characterisic. Takes effect after all connections are closed and sends a service changed indication.
+- `NimBLECharacteristic::removeDescriptor`: Dynamically remove a descriptor from a characteristic. Takes effect after all connections are closed and sends a service changed indication.
 - `NimBLEService::removeCharacteristic`: Dynamically remove a characteristic from a service. Takes effect after all connections are closed and sends a service changed indication
 - `NimBLEServerCallbacks::onMTUChange`: This is callback is called when the MTU is updated after connection with a client.
 - ESP32C3 support
@@ -112,12 +114,12 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - `NimBLECharacteristicCallbacks::onSubscribe` Is now called after the connection is added to the vector.
 - Corrected bonding failure when reinitializing the BLE stack.
-- Writing to a characterisic with a std::string value now correctly writes values with null characters.
-- Retrieving remote descriptors now uses the characterisic end handle correctly.
+- Writing to a characteristic with a std::string value now correctly writes values with null characters.
+- Retrieving remote descriptors now uses the characteristic end handle correctly.
 - Missing data in long writes to remote descriptors.
 - Hanging on task notification when sending an indication from the characteristic callback.
 - BLE controller memory could be released when using Arduino as a component.
-- Complile errors with NimBLE release 1.3.0.
+- Compile errors with NimBLE release 1.3.0.
 
 ## [1.2.0] - 2021-02-08
 
@@ -172,7 +174,7 @@ Overloads to get a vector containing pointers to all the characteristics in a se
 
 - `NimBLEAdvertising` Transmission power is no longer advertised by default and can be added to the advertisement by calling `NimBLEAdvertising::addTxPower`
 
-- `NimBLEAdvertising` Custom scan response data can now be used without custom advertisment.
+- `NimBLEAdvertising` Custom scan response data can now be used without custom advertisement.
 
 - `NimBLEScan` Now uses the controller duplicate filter.
 
@@ -214,7 +216,7 @@ to obtain information about the disconnected client.
 - If a host reset event occurs, scanning and advertising will now only be restarted if their previous duration was indefinite.
 
 - `NimBLERemoteCharacteristic::subscribe` and `NimBLERemoteCharacteristic::registerForNotify` will now set the callback
-regardless of the existance of the CCCD and return true unless the descriptor write operation failed.
+regardless of the existence of the CCCD and return true unless the descriptor write operation failed.
 
 - Advertising tx power level is now sent in the advertisement packet instead of scan response.
 
@@ -225,7 +227,7 @@ this allows the starting of a new scan from the callback function.
 - Sometimes `NimBLEClient::connect` would hang on the task block if no event arrived to unblock.
 A time limit has been added to timeout appropriately.
 
-- When getting descriptors for a characterisic the end handle of the service was used as a proxy for the characteristic end
+- When getting descriptors for a characteristic the end handle of the service was used as a proxy for the characteristic end
 handle. This would be rejected by some devices and has been changed to use the next characteristic handle as the end when possible.
 
 - An exception could occur when deleting a client instance if a notification arrived while the attribute vectors were being
@@ -242,7 +244,7 @@ and would be unable to reconnect. A timer has been added to reset the host/contr
 - 16bit and 32bit UUID's in some cases were not discovered or compared correctly if the device
 advertised them as 16/32bit but resolved them to 128bits. Both are now checked.
 
-- `FreeRTOS` compile errors resolved in latest Ardruino core and IDF v3.3.
+- `FreeRTOS` compile errors resolved in latest Arduino core and IDF v3.3.
 
 - Multiple instances of `time()` called inside critical sections caused sporadic crashes, these have been moved out of critical regions.
 
@@ -258,7 +260,7 @@ advertised them as 16/32bit but resolved them to 128bits. Both are now checked.
 ### Changed
 
 - `NimBLEAdvertising::start` Now takes 2 optional parameters, the first is the duration to advertise for (in seconds), the second is a
-callback that is invoked when advertsing ends and takes a pointer to a `NimBLEAdvertising` object (similar to the `NimBLEScan::start` API).
+callback that is invoked when advertising ends and takes a pointer to a `NimBLEAdvertising` object (similar to the `NimBLEScan::start` API).
 
 - (Arduino) Maximum BLE connections can now be altered by only changing the value of `CONFIG_BT_NIMBLE_MAX_CONNECTIONS` in `nimconfig.h`.
 Any changes to the controller max connection settings in `sdkconfig.h` will now have no effect when using this library.

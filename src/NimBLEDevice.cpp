@@ -802,7 +802,7 @@ void NimBLEDevice::onSync(void)
     }
 #endif
 
-    // Yield for houskeeping before returning to operations.
+    // Yield for housekeeping before returning to operations.
     // Occasionally triggers exception without.
     taskYIELD();
 
@@ -851,7 +851,7 @@ void NimBLEDevice::init(const std::string &deviceName) {
         esp_err_t errRc = ESP_OK;
 
 #ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
-        // make sure the linker includes esp32-hal-bt.c so ardruino init doesn't release BLE memory.
+        // make sure the linker includes esp32-hal-bt.c so Arduino init doesn't release BLE memory.
         btStarted();
 #endif
 

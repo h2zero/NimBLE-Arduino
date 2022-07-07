@@ -126,8 +126,8 @@ void NimBLECharacteristic::addDescriptor(NimBLEDescriptor *pDescriptor) {
 
 
 /**
- * @brief Remove a descriptor from the characterisitc.
- * @param[in] pDescriptor A pointer to the descriptor instance to remove from the characterisitc.
+ * @brief Remove a descriptor from the characteristic.
+ * @param[in] pDescriptor A pointer to the descriptor instance to remove from the characteristic.
  * @param[in] deleteDsc If true it will delete the descriptor instance and free it's resources.
  */
 void NimBLECharacteristic::removeDescriptor(NimBLEDescriptor *pDescriptor, bool deleteDsc) {
@@ -442,7 +442,7 @@ void NimBLECharacteristic::notify(const uint8_t* value, size_t length, bool is_n
        !(m_properties & NIMBLE_PROPERTY::INDICATE))
     {
         NIMBLE_LOGE(LOG_TAG,
-                    "<< notify-Error; Notify/indicate not enabled for characterisitc: %s",
+                    "<< notify-Error; Notify/indicate not enabled for characteristic: %s",
                     std::string(getUUID()).c_str());
     }
 

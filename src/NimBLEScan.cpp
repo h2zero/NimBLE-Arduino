@@ -164,7 +164,7 @@ NimBLEScan::~NimBLEScan() {
             NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d",
                         event->disc_complete.reason);
 
-            // If a device advertised with scan reponse available and it was not received
+            // If a device advertised with scan response available and it was not received
             // the callback would not have been invoked, so do it here.
             if(pScan->m_pAdvertisedDeviceCallbacks) {
                 for(auto &it : pScan->m_scanResults.m_advertisedDevicesVector) {
@@ -211,7 +211,7 @@ void NimBLEScan::setActiveScan(bool active) {
  * from devices it has not already seen.
  * @param [in] enabled If true, scanned devices will only be reported once.
  * @details The controller has a limited buffer and will start reporting
- * dupicate devices once the limit is reached.
+ * duplicate devices once the limit is reached.
  */
 void NimBLEScan::setDuplicateFilter(bool enabled) {
     m_scan_params.filter_duplicates = enabled;
@@ -236,7 +236,7 @@ void NimBLEScan::setLimitedOnly(bool enabled) {
  *      directed, connectable advertising packets not sent to the scanner.
  * * BLE_HCI_SCAN_FILT_USE_WL            (1)
  *      Scanner processes advertisements from white list only. A connectable,\n
- *      directed advertisment is ignored unless it contains scanners address.
+ *      directed advertisement is ignored unless it contains scanners address.
  * * BLE_HCI_SCAN_FILT_NO_WL_INITA       (2)
  *      Scanner process all advertising packets (white list not used). A\n
  *      connectable, directed advertisement shall not be ignored if the InitA

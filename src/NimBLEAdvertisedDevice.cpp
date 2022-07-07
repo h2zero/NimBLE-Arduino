@@ -52,9 +52,9 @@ NimBLEAddress NimBLEAdvertisedDevice::getAddress() {
  * @brief Get the advertisement type.
  * @return The advertising type the device is reporting:
  * * BLE_HCI_ADV_TYPE_ADV_IND            (0) - indirect advertising
- * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_HD  (1) - direct advertisng - high duty cycle
+ * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_HD  (1) - direct advertising - high duty cycle
  * * BLE_HCI_ADV_TYPE_ADV_SCAN_IND       (2) - indirect scan response
- * * BLE_HCI_ADV_TYPE_ADV_NONCONN_IND    (3) - indirect advertisng - not connectable
+ * * BLE_HCI_ADV_TYPE_ADV_NONCONN_IND    (3) - indirect advertising - not connectable
  * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_LD  (4) - direct advertising - low duty cycle
  */
 uint8_t NimBLEAdvertisedDevice::getAdvType() {
@@ -66,7 +66,7 @@ uint8_t NimBLEAdvertisedDevice::getAdvType() {
  * @brief Get the appearance.
  *
  * A %BLE device can declare its own appearance.  The appearance is how it would like to be shown to an end user
- * typcially in the form of an icon.
+ * typically in the form of an icon.
  *
  * @return The appearance of the advertised device.
  */
@@ -308,7 +308,7 @@ std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID &uuid) {
 
 
 /**
- * @brief Get the UUID of the serice data at the index.
+ * @brief Get the UUID of the service data at the index.
  * @param [in] index The index of the service data UUID requested.
  * @return The advertised service data UUID or an empty UUID if not found.
  */
@@ -448,7 +448,7 @@ uint8_t NimBLEAdvertisedDevice::getServiceUUIDCount() {
 
 
 /**
- * @brief Check advertised services for existance of the required UUID
+ * @brief Check advertised services for existence of the required UUID
  * @param [in] uuid The service uuid to look for in the advertisement.
  * @return Return true if service is advertised
  */
@@ -794,7 +794,7 @@ void NimBLEAdvertisedDevice::setPayload(const uint8_t *payload, uint8_t length, 
 
 /**
  * @brief Get the length of the advertisement data in the payload.
- * @return The number of bytes in the payload that is from the advertisment.
+ * @return The number of bytes in the payload that is from the advertisement.
  */
 uint8_t NimBLEAdvertisedDevice::getAdvLength() {
     return m_advLength;

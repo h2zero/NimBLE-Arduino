@@ -272,7 +272,7 @@ bool NimBLEExtAdvertising::stop() {
 
 /**
  * @brief Set a callback to call when the advertisement stops.
- * @param [in] pCallbacks A pointer to a callback to be invoked when an advertisment stops.
+ * @param [in] pCallbacks A pointer to a callback to be invoked when an advertisement stops.
  * @param [in] deleteCallbacks if true callback class will be deleted when advertising is destructed.
  */
 void NimBLEExtAdvertising::setCallbacks(NimBLEExtAdvertisingCallbacks* pCallbacks,

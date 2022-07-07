@@ -25,7 +25,7 @@
 
 /** @brief Uncomment to set the default allocation size (bytes) for each attribute if\n
  *  not specified when the constructor is called. This is also the size used when a remote\n
- *  characteristic or descriptor is constructed before a value is read/notifed.\n
+ *  characteristic or descriptor is constructed before a value is read/notified.\n
  *  Increasing this will reduce reallocations but increase memory footprint.\n
  *  Default value is 20. Range: 1 : 512 (BLE_ATT_ATTR_MAX_LEN)
  */
@@ -75,11 +75,6 @@
  */
  // #define CONFIG_NIMBLE_CPP_LOG_LEVEL 0
 
- /** @brief Un-comment to use timestamps with characteristic / descriptor values
- *  If not enabled the `::get/readValue()` calls with a timestamp parameter will set the timestamp to 0.
- */
-// #define NIMBLE_ATT_VALUE_TIMESTAMP_ENABLED
-
 /** @brief Un-comment to see NimBLE host return codes as text debug log messages.
  *  Uses approx. 7kB of flash memory.
  */
@@ -90,10 +85,10 @@
  */
 // #define CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT
 
-/** @brief Un-comment to see advertisment types as text while scanning in debug log messages.
+/** @brief Un-comment to see advertisement types as text while scanning in debug log messages.
  *  Uses approx. 250 bytes of flash memory.
  */
-// #define CONFIG_NIMBLE_CPP_ENABLE_ADVERTISMENT_TYPE_TEXT
+// #define CONFIG_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT
 
 /** @brief Un-comment to change the default GAP appearance */
 // #define CONFIG_BT_NIMBLE_SVC_GAP_APPEARANCE 0x0
