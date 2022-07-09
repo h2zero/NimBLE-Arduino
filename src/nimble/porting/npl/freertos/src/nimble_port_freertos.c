@@ -41,7 +41,51 @@ static StackType_t hs_xStack[ NIMBLE_HS_STACK_SIZE ];
 static StaticTask_t hs_xTaskBuffer;
 #endif
 
-static TaskHandle_t host_task_h;
+static TaskHandle_t host_task_h = NULL;
+
+#ifdef ESP_PLATFORM
+/**
+ * @brief esp_nimble_enable - Initialize the NimBLE host
+ *
+ * @param host_task
+ * @return esp_err_t
+ */
+esp_err_t esp_nimble_enable(void *host_task)
+{
+    /*
+     * Create task where NimBLE host will run. It is not strictly necessary to
+     * have separate task for NimBLE host, but since something needs to handle
+     * default queue it is just easier to make separate task which does this.
+     */
+    xTaskCreatePinnedToCore(host_task, "nimble_host", NIMBLE_HS_STACK_SIZE,
+                            NULL, (configMAX_PRIORITIES - 4), &host_task_h, NIMBLE_CORE);
+    return ESP_OK;
+
+}
+
+/**
+ * @brief esp_nimble_disable - Disable the NimBLE host
+ *
+ * @return esp_err_t
+ */
+esp_err_t esp_nimble_disable(void)
+{
+    if (host_task_h) {
+        vTaskDelete(host_task_h);
+        host_task_h = NULL;
+    }
+    return ESP_OK;
+}
+
+// Compatibility wrappers for new functions
+void nimble_port_freertos_init(TaskFunction_t host_task_fn) {
+    esp_nimble_enable((void*)host_task_fn);
+}
+void nimble_port_freertos_deinit(void) {
+    esp_nimble_disable();
+}
+
+#else // ESP_PLATFORM
 
 void
 nimble_port_freertos_init(TaskFunction_t host_task_fn)
@@ -53,28 +97,16 @@ nimble_port_freertos_init(TaskFunction_t host_task_fn)
      * provided by NimBLE and in case of FreeRTOS it does not need to be wrapped
      * since it has compatible prototype.
      */
-#ifdef ESP_PLATFORM
-    esp_bt_controller_enable(ESP_BT_MODE_BLE);
-#else
     ll_task_h = xTaskCreateStatic(nimble_port_ll_task_func, "ll", NIMBLE_LL_STACK_SIZE,
                                   NULL, configMAX_PRIORITIES, ll_xStack, &ll_xTaskBuffer);
 #endif
-
-#endif
-#if CONFIG_BT_NIMBLE_ENABLED
     /*
      * Create task where NimBLE host will run. It is not strictly necessary to
      * have separate task for NimBLE host, but since something needs to handle
      * default queue it is just easier to make separate task which does this.
      */
-#ifdef ESP_PLATFORM
-    xTaskCreatePinnedToCore(host_task_fn, "ble", NIMBLE_HS_STACK_SIZE,
-                NULL, (configMAX_PRIORITIES - 4), &host_task_h, NIMBLE_CORE);
-#else
     host_task_h = xTaskCreateStatic(host_task_fn, "ble", NIMBLE_HS_STACK_SIZE,
                                     NULL, (configMAX_PRIORITIES - 1), hs_xStack, &hs_xTaskBuffer);
-#endif //ESP_PLATFORM
-#endif //CONFIG_BT_NIMBLE_ENABLED
 }
 
 void
@@ -83,12 +115,8 @@ nimble_port_freertos_deinit(void)
     if (host_task_h) {
         vTaskDelete(host_task_h);
     }
-#ifdef ESP_PLATFORM
-    esp_bt_controller_disable();
-#endif
 }
 
-#ifndef ESP_PLATFORM
 #if NIMBLE_CFG_CONTROLLER
 UBaseType_t
 nimble_port_freertos_get_ll_hwm(void)
@@ -96,10 +124,11 @@ nimble_port_freertos_get_ll_hwm(void)
     return uxTaskGetStackHighWaterMark(ll_task_h);
 }
 #endif
-#endif
 
 UBaseType_t
 nimble_port_freertos_get_hs_hwm(void)
 {
     return uxTaskGetStackHighWaterMark(host_task_h);
 }
+
+#endif //ESP_PLATFORM

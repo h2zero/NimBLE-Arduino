@@ -1162,6 +1162,38 @@ int ble_gap_adv_rsp_set_fields(const struct ble_hs_adv_fields *rsp_fields);
 int ble_hs_hci_util_set_data_len(uint16_t conn_handle, uint16_t tx_octets,
                                  uint16_t tx_time);
 
+/**
+ * Read host's suggested values for the controller's maximum transmitted number of payload octets
+ * and maximum packet transmission time (OGF = 0x08, OCF = 0x0024).
+ *
+ * @param out_sugg_max_tx_octets    The Host's suggested value for the Controller's maximum transmitted
+ *                                  number of payload octets in LL Data PDUs to be used for new
+ *                                  connections. (Range 0x001B-0x00FB).
+ * @param out_sugg_max_tx_time      The Host's suggested value for the Controller's maximum packet
+ *                                  transmission time for packets containing LL Data PDUs to be used
+ *                                  for new connections. (Range 0x0148-0x4290).
+ *
+ * @return                          0 on success,
+ *                                  other error code on failure.
+ */
+int ble_hs_hci_util_read_sugg_def_data_len(uint16_t *out_sugg_max_tx_octets,
+                                           uint16_t *out_sugg_max_tx_time);
+/**
+ * Configure host's suggested maximum transmitted number of payload octets and maximum packet
+ * transmission time in controller (OGF = 0x08, OCF = 0x0024).
+ *
+ * @param sugg_max_tx_octets    The Host's suggested value for the Controller's maximum transmitted
+ *                              number of payload octets in LL Data PDUs to be used for new
+ *                              connections. (Range 0x001B-0x00FB).
+ * @param sugg_max_tx_time      The Host's suggested value for the Controller's maximum packet
+ *                              transmission time for packets containing LL Data PDUs to be used
+ *                              for new connections. (Range 0x0148-0x4290).
+ *
+ * @return                      0 on success,
+ *                              other error code on failure.
+ */
+int ble_hs_hci_util_write_sugg_def_data_len(uint16_t sugg_max_tx_octets, uint16_t sugg_max_tx_time);
+
 #if MYNEWT_VAL(BLE_EXT_ADV)
 /** @brief Extended advertising parameters  */
 struct ble_gap_ext_adv_params {
@@ -1842,6 +1874,37 @@ int ble_gap_update_params(uint16_t conn_handle,
  *                         other error code on failure.
  */
 int ble_gap_set_data_len(uint16_t conn_handle, uint16_t tx_octets, uint16_t tx_time);
+
+/**
+ * Read LE Suggested Default Data Length in controller (OGF = 0x08, OCF = 0x0024).
+ *
+ * @param out_sugg_max_tx_octets    The Host's suggested value for the Controller's maximum transmitted
+ *                                  number of payload octets in LL Data PDUs to be used for new
+ *                                  connections. (Range 0x001B-0x00FB).
+ * @param out_sugg_max_tx_time      The Host's suggested value for the Controller's maximum packet
+ *                                  transmission time for packets containing LL Data PDUs to be used
+ *                                  for new connections. (Range 0x0148-0x4290).
+ *
+ * @return                          0 on success,
+ *                                  other error code on failure.
+ */
+int ble_gap_read_sugg_def_data_len(uint16_t *out_sugg_max_tx_octets,
+                                   uint16_t *out_sugg_max_tx_time);
+
+/**
+ * Configure LE Suggested Default Data Length in controller (OGF = 0x08, OCF = 0x0024).
+ *
+ * @param sugg_max_tx_octets    The Host's suggested value for the Controller's maximum transmitted
+ *                              number of payload octets in LL Data PDUs to be used for new
+ *                              connections. (Range 0x001B-0x00FB).
+ * @param sugg_max_tx_time      The Host's suggested value for the Controller's maximum packet
+ *                              transmission time for packets containing LL Data PDUs to be used
+ *                              for new connections. (Range 0x0148-0x4290).
+ *
+ * @return                      0 on success,
+ *                              other error code on failure.
+ */
+int ble_gap_write_sugg_def_data_len(uint16_t sugg_max_tx_octets, uint16_t sugg_max_tx_time);
 
 /**
  * Initiates the GAP security procedure.
