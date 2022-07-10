@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.8</span>
+   &#160;<span id="projectnumber">1.4.0</span>
    </div>
   </td>
  </tr>
@@ -144,32 +144,30 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ad62c63468995a24d736c4176c9607eeb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ad62c63468995a24d736c4176c9607eeb">getUUID</a> ()</td></tr>
 <tr class="memdesc:ad62c63468995a24d736c4176c9607eeb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the UUID for this characteristic.  <a href="class_nim_b_l_e_remote_characteristic.html#ad62c63468995a24d736c4176c9607eeb">More...</a><br /></td></tr>
 <tr class="separator:ad62c63468995a24d736c4176c9607eeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e10fa37095d7c80dc36c768fe783e67"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67">readValue</a> (time_t *timestamp=nullptr)</td></tr>
-<tr class="memdesc:a7e10fa37095d7c80dc36c768fe783e67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the value of the remote characteristic.  <a href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67">More...</a><br /></td></tr>
-<tr class="separator:a7e10fa37095d7c80dc36c768fe783e67"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a463760cabc9ca104a6fe094eb942fec0"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a463760cabc9ca104a6fe094eb942fec0"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a463760cabc9ca104a6fe094eb942fec0">readValue</a> (time_t *timestamp=nullptr, bool skipSizeCheck=false)</td></tr>
-<tr class="memdesc:a463760cabc9ca104a6fe094eb942fec0"><td class="mdescLeft">&#160;</td><td class="mdescRight">A template to convert the remote characteristic data to &lt;type&gt;.  <a href="class_nim_b_l_e_remote_characteristic.html#a463760cabc9ca104a6fe094eb942fec0">More...</a><br /></td></tr>
-<tr class="separator:a463760cabc9ca104a6fe094eb942fec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade5c6ae280c3cf36c9905be23df8f080"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ade5c6ae280c3cf36c9905be23df8f080">readUInt8</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67">readValue</a>&lt;uint8_t&gt;()&quot;)))</td></tr>
+<tr class="memitem:a417bb44d000758535253488f4d77774a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a">readValue</a> (time_t *timestamp=nullptr)</td></tr>
+<tr class="memdesc:a417bb44d000758535253488f4d77774a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the value of the remote characteristic.  <a href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a">More...</a><br /></td></tr>
+<tr class="separator:a417bb44d000758535253488f4d77774a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b86a1f600a61036487f5161f1f1726a"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a4b86a1f600a61036487f5161f1f1726a">toString</a> ()</td></tr>
+<tr class="memdesc:a4b86a1f600a61036487f5161f1f1726a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a <a class="el" href="class_nim_b_l_e_remote_characteristic.html" title="A model of a remote BLE characteristic.">NimBLERemoteCharacteristic</a> to a string representation;.  <a href="class_nim_b_l_e_remote_characteristic.html#a4b86a1f600a61036487f5161f1f1726a">More...</a><br /></td></tr>
+<tr class="separator:a4b86a1f600a61036487f5161f1f1726a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a943183a55b020de9e09ac2cfaebcde32"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_remote_service.html">NimBLERemoteService</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a943183a55b020de9e09ac2cfaebcde32">getRemoteService</a> ()</td></tr>
+<tr class="memdesc:a943183a55b020de9e09ac2cfaebcde32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the remote service associated with this characteristic.  <a href="class_nim_b_l_e_remote_characteristic.html#a943183a55b020de9e09ac2cfaebcde32">More...</a><br /></td></tr>
+<tr class="separator:a943183a55b020de9e09ac2cfaebcde32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade5c6ae280c3cf36c9905be23df8f080"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ade5c6ae280c3cf36c9905be23df8f080">readUInt8</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a">readValue</a>&lt;uint8_t&gt;()&quot;)))</td></tr>
 <tr class="memdesc:ade5c6ae280c3cf36c9905be23df8f080"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a byte value.  <a href="class_nim_b_l_e_remote_characteristic.html#ade5c6ae280c3cf36c9905be23df8f080">More...</a><br /></td></tr>
 <tr class="separator:ade5c6ae280c3cf36c9905be23df8f080"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a181c54862bc422d8ad0b326af675922d"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a181c54862bc422d8ad0b326af675922d">readUInt16</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67">readValue</a>&lt;uint16_t&gt;()&quot;)))</td></tr>
+<tr class="memitem:a181c54862bc422d8ad0b326af675922d"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a181c54862bc422d8ad0b326af675922d">readUInt16</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a">readValue</a>&lt;uint16_t&gt;()&quot;)))</td></tr>
 <tr class="memdesc:a181c54862bc422d8ad0b326af675922d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read an unsigned 16 bit value.  <a href="class_nim_b_l_e_remote_characteristic.html#a181c54862bc422d8ad0b326af675922d">More...</a><br /></td></tr>
 <tr class="separator:a181c54862bc422d8ad0b326af675922d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71793454ffab034f87af3a5e9677a63d"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a71793454ffab034f87af3a5e9677a63d">readUInt32</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67">readValue</a>&lt;uint32_t&gt;()&quot;)))</td></tr>
+<tr class="memitem:a71793454ffab034f87af3a5e9677a63d"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a71793454ffab034f87af3a5e9677a63d">readUInt32</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a">readValue</a>&lt;uint32_t&gt;()&quot;)))</td></tr>
 <tr class="memdesc:a71793454ffab034f87af3a5e9677a63d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read an unsigned 32 bit value.  <a href="class_nim_b_l_e_remote_characteristic.html#a71793454ffab034f87af3a5e9677a63d">More...</a><br /></td></tr>
 <tr class="separator:a71793454ffab034f87af3a5e9677a63d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81f39759d48a8fb792c94e4b3b455eef"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a81f39759d48a8fb792c94e4b3b455eef">readFloat</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67">readValue</a>&lt;float&gt;()&quot;)))</td></tr>
+<tr class="memitem:a81f39759d48a8fb792c94e4b3b455eef"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a81f39759d48a8fb792c94e4b3b455eef">readFloat</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a">readValue</a>&lt;float&gt;()&quot;)))</td></tr>
 <tr class="memdesc:a81f39759d48a8fb792c94e4b3b455eef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a float value.  <a href="class_nim_b_l_e_remote_characteristic.html#a81f39759d48a8fb792c94e4b3b455eef">More...</a><br /></td></tr>
 <tr class="separator:a81f39759d48a8fb792c94e4b3b455eef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add1a1daed14b5f3e729e284dbd369257"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#add1a1daed14b5f3e729e284dbd369257">getValue</a> (time_t *timestamp=nullptr)</td></tr>
-<tr class="memdesc:add1a1daed14b5f3e729e284dbd369257"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of the remote characteristic.  <a href="class_nim_b_l_e_remote_characteristic.html#add1a1daed14b5f3e729e284dbd369257">More...</a><br /></td></tr>
-<tr class="separator:add1a1daed14b5f3e729e284dbd369257"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74ad8484cbc88d8eb36d4684233c538b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a74ad8484cbc88d8eb36d4684233c538b"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a74ad8484cbc88d8eb36d4684233c538b">getValue</a> (time_t *timestamp=nullptr, bool skipSizeCheck=false)</td></tr>
-<tr class="memdesc:a74ad8484cbc88d8eb36d4684233c538b"><td class="mdescLeft">&#160;</td><td class="mdescRight">A template to convert the remote characteristic data to &lt;type&gt;.  <a href="class_nim_b_l_e_remote_characteristic.html#a74ad8484cbc88d8eb36d4684233c538b">More...</a><br /></td></tr>
-<tr class="separator:a74ad8484cbc88d8eb36d4684233c538b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d0779ffe7e89449121428e7fd6083d8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6d0779ffe7e89449121428e7fd6083d8">getValue</a> (time_t *timestamp=nullptr)</td></tr>
+<tr class="memdesc:a6d0779ffe7e89449121428e7fd6083d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of the remote characteristic.  <a href="class_nim_b_l_e_remote_characteristic.html#a6d0779ffe7e89449121428e7fd6083d8">More...</a><br /></td></tr>
+<tr class="separator:a6d0779ffe7e89449121428e7fd6083d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad2691a8ea85488c8270f78701352fbb2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ad2691a8ea85488c8270f78701352fbb2">subscribe</a> (bool notifications=true, notify_callback notifyCallback=nullptr, bool response=true)</td></tr>
 <tr class="memdesc:ad2691a8ea85488c8270f78701352fbb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subscribe for notifications or indications.  <a href="class_nim_b_l_e_remote_characteristic.html#ad2691a8ea85488c8270f78701352fbb2">More...</a><br /></td></tr>
 <tr class="separator:ad2691a8ea85488c8270f78701352fbb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -180,21 +178,30 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ab4f54eabe90a416546b7b3fc3477f49c"><td class="mdescLeft">&#160;</td><td class="mdescRight">backward-compatibility method for subscribe/unsubscribe notifications/indications  <a href="class_nim_b_l_e_remote_characteristic.html#ab4f54eabe90a416546b7b3fc3477f49c">More...</a><br /></td></tr>
 <tr class="separator:ab4f54eabe90a416546b7b3fc3477f49c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c8d1fd77dd074df866c091c614eafb3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a3c8d1fd77dd074df866c091c614eafb3">writeValue</a> (const uint8_t *data, size_t length, bool response=false)</td></tr>
-<tr class="memdesc:a3c8d1fd77dd074df866c091c614eafb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the new value for the characteristic from a data buffer.  <a href="class_nim_b_l_e_remote_characteristic.html#a3c8d1fd77dd074df866c091c614eafb3">More...</a><br /></td></tr>
+<tr class="memdesc:a3c8d1fd77dd074df866c091c614eafb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a new value to the remote characteristic from a data buffer.  <a href="class_nim_b_l_e_remote_characteristic.html#a3c8d1fd77dd074df866c091c614eafb3">More...</a><br /></td></tr>
 <tr class="separator:a3c8d1fd77dd074df866c091c614eafb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2cfc2e8d2e281dd61e578eb5e860fc02"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a2cfc2e8d2e281dd61e578eb5e860fc02">writeValue</a> (const std::string &amp;newValue, bool response=false)</td></tr>
-<tr class="memdesc:a2cfc2e8d2e281dd61e578eb5e860fc02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write the new value for the characteristic.  <a href="class_nim_b_l_e_remote_characteristic.html#a2cfc2e8d2e281dd61e578eb5e860fc02">More...</a><br /></td></tr>
-<tr class="separator:a2cfc2e8d2e281dd61e578eb5e860fc02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94ae59940fcd128efeaf339b282b7ef9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a94ae59940fcd128efeaf339b282b7ef9">writeValue</a> (const std::vector&lt; uint8_t &gt; &amp;v, bool response=false)</td></tr>
+<tr class="memdesc:a94ae59940fcd128efeaf339b282b7ef9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a new value to the remote characteristic from a std::vector&lt;uint8_t&gt;.  <a href="class_nim_b_l_e_remote_characteristic.html#a94ae59940fcd128efeaf339b282b7ef9">More...</a><br /></td></tr>
+<tr class="separator:a94ae59940fcd128efeaf339b282b7ef9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19362aaf357835e1f771c78f0c4cd9dd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a19362aaf357835e1f771c78f0c4cd9dd">writeValue</a> (const char *s, bool response=false)</td></tr>
+<tr class="memdesc:a19362aaf357835e1f771c78f0c4cd9dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a new value to the remote characteristic from a const char*.  <a href="class_nim_b_l_e_remote_characteristic.html#a19362aaf357835e1f771c78f0c4cd9dd">More...</a><br /></td></tr>
+<tr class="separator:a19362aaf357835e1f771c78f0c4cd9dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#acf8bcf2cf94ca8bd8cf0c7c39f9883ae">writeValue</a> (const T &amp;s, bool response=false)</td></tr>
-<tr class="memdesc:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience template to set the remote characteristic value to &lt;type&gt;val.  <a href="class_nim_b_l_e_remote_characteristic.html#acf8bcf2cf94ca8bd8cf0c7c39f9883ae">More...</a><br /></td></tr>
+<tr class="memdesc:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to set the remote characteristic value to &lt;type&gt;val.  <a href="class_nim_b_l_e_remote_characteristic.html#acf8bcf2cf94ca8bd8cf0c7c39f9883ae">More...</a><br /></td></tr>
 <tr class="separator:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b86a1f600a61036487f5161f1f1726a"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a4b86a1f600a61036487f5161f1f1726a">toString</a> ()</td></tr>
-<tr class="memdesc:a4b86a1f600a61036487f5161f1f1726a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a <a class="el" href="class_nim_b_l_e_remote_characteristic.html" title="A model of a remote BLE characteristic.">NimBLERemoteCharacteristic</a> to a string representation;.  <a href="class_nim_b_l_e_remote_characteristic.html#a4b86a1f600a61036487f5161f1f1726a">More...</a><br /></td></tr>
-<tr class="separator:a4b86a1f600a61036487f5161f1f1726a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a943183a55b020de9e09ac2cfaebcde32"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_remote_service.html">NimBLERemoteService</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a943183a55b020de9e09ac2cfaebcde32">getRemoteService</a> ()</td></tr>
-<tr class="memdesc:a943183a55b020de9e09ac2cfaebcde32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the remote service associated with this characteristic.  <a href="class_nim_b_l_e_remote_characteristic.html#a943183a55b020de9e09ac2cfaebcde32">More...</a><br /></td></tr>
-<tr class="separator:a943183a55b020de9e09ac2cfaebcde32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#acf8bcf2cf94ca8bd8cf0c7c39f9883ae">writeValue</a> (const T &amp;s, bool response=false)</td></tr>
+<tr class="memdesc:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to set the remote characteristic value to &lt;type&gt;val.  <a href="class_nim_b_l_e_remote_characteristic.html#acf8bcf2cf94ca8bd8cf0c7c39f9883ae">More...</a><br /></td></tr>
+<tr class="separator:acf8bcf2cf94ca8bd8cf0c7c39f9883ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74ad8484cbc88d8eb36d4684233c538b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a74ad8484cbc88d8eb36d4684233c538b"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a74ad8484cbc88d8eb36d4684233c538b">getValue</a> (time_t *timestamp=nullptr, bool skipSizeCheck=false)</td></tr>
+<tr class="memdesc:a74ad8484cbc88d8eb36d4684233c538b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to convert the remote characteristic data to &lt;type&gt;.  <a href="class_nim_b_l_e_remote_characteristic.html#a74ad8484cbc88d8eb36d4684233c538b">More...</a><br /></td></tr>
+<tr class="separator:a74ad8484cbc88d8eb36d4684233c538b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a463760cabc9ca104a6fe094eb942fec0"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a463760cabc9ca104a6fe094eb942fec0"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a463760cabc9ca104a6fe094eb942fec0">readValue</a> (time_t *timestamp=nullptr, bool skipSizeCheck=false)</td></tr>
+<tr class="memdesc:a463760cabc9ca104a6fe094eb942fec0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to convert the remote characteristic data to &lt;type&gt;.  <a href="class_nim_b_l_e_remote_characteristic.html#a463760cabc9ca104a6fe094eb942fec0">More...</a><br /></td></tr>
+<tr class="separator:a463760cabc9ca104a6fe094eb942fec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A model of a remote BLE characteristic. </p>
@@ -542,14 +549,14 @@ If false the vector will be returned with the currently stored descriptors of th
 
 </div>
 </div>
-<a id="add1a1daed14b5f3e729e284dbd369257"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add1a1daed14b5f3e729e284dbd369257">&#9670;&nbsp;</a></span>getValue() <span class="overload">[1/2]</span></h2>
+<a id="a6d0779ffe7e89449121428e7fd6083d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d0779ffe7e89449121428e7fd6083d8">&#9670;&nbsp;</a></span>getValue() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::string NimBLERemoteCharacteristic::getValue </td>
+          <td class="memname"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a> NimBLERemoteCharacteristic::getValue </td>
           <td>(</td>
           <td class="paramtype">time_t *&#160;</td>
           <td class="paramname"><em>timestamp</em> = <code>nullptr</code></td><td>)</td>
@@ -605,7 +612,7 @@ template&lt;typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>A template to convert the remote characteristic data to &lt;type&gt;. </p>
+<p>Template to convert the remote characteristic data to &lt;type&gt;. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">T</td><td>The type to convert the data to. </td></tr>
@@ -661,7 +668,7 @@ template&lt;typename T &gt; </div>
 
 <p>Read an unsigned 16 bit value. </p>
 <dl class="section return"><dt>Returns</dt><dd>The unsigned 16 bit value. </dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000004">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67" title="Read the value of the remote characteristic.">readValue&lt;uint16_t&gt;()</a>. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000004">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">readValue&lt;uint16_t&gt;()</a>. </dd></dl>
 
 </div>
 </div>
@@ -682,7 +689,7 @@ template&lt;typename T &gt; </div>
 
 <p>Read an unsigned 32 bit value. </p>
 <dl class="section return"><dt>Returns</dt><dd>the unsigned 32 bit value. </dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000005">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67" title="Read the value of the remote characteristic.">readValue&lt;uint32_t&gt;()</a>. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000005">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">readValue&lt;uint32_t&gt;()</a>. </dd></dl>
 
 </div>
 </div>
@@ -703,18 +710,18 @@ template&lt;typename T &gt; </div>
 
 <p>Read a byte value. </p>
 <dl class="section return"><dt>Returns</dt><dd>The value as a byte </dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000006">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a7e10fa37095d7c80dc36c768fe783e67" title="Read the value of the remote characteristic.">readValue&lt;uint8_t&gt;()</a>. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000006">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">readValue&lt;uint8_t&gt;()</a>. </dd></dl>
 
 </div>
 </div>
-<a id="a7e10fa37095d7c80dc36c768fe783e67"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7e10fa37095d7c80dc36c768fe783e67">&#9670;&nbsp;</a></span>readValue() <span class="overload">[1/2]</span></h2>
+<a id="a417bb44d000758535253488f4d77774a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a417bb44d000758535253488f4d77774a">&#9670;&nbsp;</a></span>readValue() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::string NimBLERemoteCharacteristic::readValue </td>
+          <td class="memname"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a> NimBLERemoteCharacteristic::readValue </td>
           <td>(</td>
           <td class="paramtype">time_t *&#160;</td>
           <td class="paramname"><em>timestamp</em> = <code>nullptr</code></td><td>)</td>
@@ -770,7 +777,7 @@ template&lt;typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>A template to convert the remote characteristic data to &lt;type&gt;. </p>
+<p>Template to convert the remote characteristic data to &lt;type&gt;. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">T</td><td>The type to convert the data to. </td></tr>
@@ -927,8 +934,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a2cfc2e8d2e281dd61e578eb5e860fc02"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2cfc2e8d2e281dd61e578eb5e860fc02">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[1/3]</span></h2>
+<a id="a19362aaf357835e1f771c78f0c4cd9dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19362aaf357835e1f771c78f0c4cd9dd">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[1/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -936,8 +943,8 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname">bool NimBLERemoteCharacteristic::writeValue </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>newValue</em>, </td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>char_s</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -953,20 +960,58 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Write the new value for the characteristic. </p>
+<p>Write a new value to the remote characteristic from a const char*. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">newValue</td><td>The new value to write. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>Do we expect a response? </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">char_s</td><td>A character string to write to the remote characteristic. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>Whether we require a response from the write. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>false if not connected or cant perform write for some reason. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>false if not connected or otherwise cannot perform write. </dd></dl>
+
+</div>
+</div>
+<a id="a94ae59940fcd128efeaf339b282b7ef9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94ae59940fcd128efeaf339b282b7ef9">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[2/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLERemoteCharacteristic::writeValue </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>vec</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>response</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Write a new value to the remote characteristic from a std::vector&lt;uint8_t&gt;. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec</td><td>A std::vector&lt;uint8_t&gt; value to write to the remote characteristic. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>Whether we require a response from the write. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if not connected or otherwise cannot perform write. </dd></dl>
 
 </div>
 </div>
 <a id="acf8bcf2cf94ca8bd8cf0c7c39f9883ae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf8bcf2cf94ca8bd8cf0c7c39f9883ae">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[2/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#acf8bcf2cf94ca8bd8cf0c7c39f9883ae">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[3/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1001,19 +1046,68 @@ template&lt;typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Convenience template to set the remote characteristic value to &lt;type&gt;val. </p>
+<p>Template to set the remote characteristic value to &lt;type&gt;val. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>The value to write. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>True == request write response. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>True == request write response.</td></tr>
   </table>
   </dd>
 </dl>
+<p>Only used for non-arrays and types without a <code>c_str()</code> method. </p>
+
+</div>
+</div>
+<a id="acf8bcf2cf94ca8bd8cf0c7c39f9883ae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf8bcf2cf94ca8bd8cf0c7c39f9883ae">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[4/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLERemoteCharacteristic::writeValue </td>
+          <td>(</td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>s</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>response</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Template to set the remote characteristic value to &lt;type&gt;val. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>The value to write. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>True == request write response.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Only used if the &lt;type&gt; has a <code>c_str()</code> method. </p>
 
 </div>
 </div>
 <a id="a3c8d1fd77dd074df866c091c614eafb3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3c8d1fd77dd074df866c091c614eafb3">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[3/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c8d1fd77dd074df866c091c614eafb3">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[5/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1044,7 +1138,7 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Write the new value for the characteristic from a data buffer. </p>
+<p>Write a new value to the remote characteristic from a data buffer. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>A pointer to a data buffer. </td></tr>
@@ -1053,7 +1147,7 @@ template&lt;typename T &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>false if not connected or cant perform write for some reason. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>false if not connected or otherwise cannot perform write. </dd></dl>
 
 </div>
 </div>

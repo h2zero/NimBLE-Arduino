@@ -8,9 +8,10 @@ var class_nim_b_l_e_descriptor =
     [ "getLength", "class_nim_b_l_e_descriptor.html#a378346f59afb706d4c1d961227b98c5d", null ],
     [ "getStringValue", "class_nim_b_l_e_descriptor.html#a7153e051e5808469c23e2207fa6711db", null ],
     [ "getUUID", "class_nim_b_l_e_descriptor.html#abc5398a570edc197fbadad3f5b45e186", null ],
-    [ "getValue", "class_nim_b_l_e_descriptor.html#ac54fd0830ceb64b91037b623dbc427b5", null ],
+    [ "getValue", "class_nim_b_l_e_descriptor.html#a8f64c733c8848948fe9123bd7cd3fd53", null ],
+    [ "getValue", "class_nim_b_l_e_descriptor.html#a61062547f21ca8e102ec5d8e0843c9f9", null ],
     [ "setCallbacks", "class_nim_b_l_e_descriptor.html#aa9cb8727f9e17cf8050cf619e5fe3096", null ],
-    [ "setValue", "class_nim_b_l_e_descriptor.html#ad14bda7d046b5f814ed599c8157c7e51", null ],
+    [ "setValue", "class_nim_b_l_e_descriptor.html#a644f739b6621702856be8db93035e9a0", null ],
     [ "setValue", "class_nim_b_l_e_descriptor.html#a9136cc9e4b41110b3dd99d1c9553a477", null ],
     [ "setValue", "class_nim_b_l_e_descriptor.html#a9447cee9092dc516266f7764131ba923", null ],
     [ "toString", "class_nim_b_l_e_descriptor.html#ac15dc6c9c24d280c4b0eb766080497e5", null ]

@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.8</span>
+   &#160;<span id="projectnumber">1.4.0</span>
    </div>
   </td>
  </tr>
@@ -90,8 +90,8 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_service.html',''); ini
 <p>This is the complete list of members for <a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a>, including all inherited members.</p>
 <table class="directory">
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#af8215dbfdaf7ced32d6158f8ff5116e8">addCharacteristic</a>(NimBLECharacteristic *pCharacteristic)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#adab5552c080b9cb88095af262d326309">createCharacteristic</a>(const char *uuid, uint32_t properties=NIMBLE_PROPERTY::READ|NIMBLE_PROPERTY::WRITE)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a80fe6bca60d0db69ea3ae689a3947c19">createCharacteristic</a>(const NimBLEUUID &amp;uuid, uint32_t properties=NIMBLE_PROPERTY::READ|NIMBLE_PROPERTY::WRITE)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a415e1b836946831c6f9edd74adba8763">createCharacteristic</a>(const char *uuid, uint32_t properties=NIMBLE_PROPERTY::READ|NIMBLE_PROPERTY::WRITE, uint16_t max_len=BLE_ATT_ATTR_MAX_LEN)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#aa780d072e6257258e27cbc96106626ad">createCharacteristic</a>(const NimBLEUUID &amp;uuid, uint32_t properties=NIMBLE_PROPERTY::READ|NIMBLE_PROPERTY::WRITE, uint16_t max_len=BLE_ATT_ATTR_MAX_LEN)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a71488881933ae8adbf11c5986f9dfb75">dump</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a305b680286096638a4239620ec2de567">getCharacteristic</a>(const char *uuid, uint16_t instanceId=0)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#adfc4e67f79aaabc8f2c6bdb5c6966609">getCharacteristic</a>(const NimBLEUUID &amp;uuid, uint16_t instanceId=0)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
@@ -102,8 +102,8 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_service.html',''); ini
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a86d65ef61a77bdd660632b4041c2b640">getHandle</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#af304386c4e067dd0eeb27b86c0e59d0f">getServer</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#ab000b7d2b7dbb3978a5a8c1e17b1d649">getUUID</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a2f21520dead11ac352562c7b232bc854">NimBLEService</a>(const char *uuid, uint16_t numHandles, NimBLEServer *pServer)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a66b3bc41ed067ea7f5f00a8af53dd1ef">NimBLEService</a>(const NimBLEUUID &amp;uuid, uint16_t numHandles, NimBLEServer *pServer)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a5084a6db9c9b5ddb4f3e9261606b1e65">NimBLEService</a>(const char *uuid)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#af4e9e030046352a6ff3d9ba67fe872e3">NimBLEService</a>(const NimBLEUUID &amp;uuid)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#af992d0c27e3a559789fb77fc46623234">removeCharacteristic</a>(NimBLECharacteristic *pCharacteristic, bool deleteChr=false)</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#ad37324ed0404d596923d6fdc0133b985">start</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_nim_b_l_e_service.html#a10d10d14f8c5a970a06915cd407a0a73">toString</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a></td><td class="entry"></td></tr>

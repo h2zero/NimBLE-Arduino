@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.8</span>
+   &#160;<span id="projectnumber">1.4.0</span>
    </div>
   </td>
  </tr>
@@ -92,7 +92,7 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_server.html',''); init
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a6eda4c9e0ac1dd031c678d4bf7da1d56">addService</a>(NimBLEService *service)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a6bfd923ecd0ea06d5564343ab7209122">advertiseOnDisconnect</a>(bool)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#aaeb58b4de85754d1aac6964e9248aa35">createService</a>(const char *uuid)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#addc0753b57de87e172cc2d5f158bd6c6">createService</a>(const NimBLEUUID &amp;uuid, uint32_t numHandles=15, uint8_t inst_id=0)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a5f0d43106db713e2ac716eabd70a10b2">createService</a>(const NimBLEUUID &amp;uuid)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a63c9dce5c4bbc1c6bc720b6c51bcf3e1">disconnect</a>(uint16_t connID, uint8_t reason=BLE_ERR_REM_USER_CONN_TERM)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#ab41d8bb9b334734f95a726f1e15200fc">getAdvertising</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a98ea12f57c10c0477b0c1c5efab23ee5">getConnectedCount</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
@@ -106,9 +106,11 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_server.html',''); init
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#ac28df6ead4d7151df3e84f4fa991eb1f">getServiceByUUID</a>(const NimBLEUUID &amp;uuid, uint16_t instanceId=0)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a00c92f62f41ec1c499dfaf042b487d75">removeService</a>(NimBLEService *service, bool deleteSvc=false)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a485c90ce36275f9e4ec26a7f3d348cd9">setCallbacks</a>(NimBLEServerCallbacks *pCallbacks, bool deleteCallbacks=true)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#ae94ad52f3c97f62553af9765acdb7bcb">start</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a2540ae7b61fc6513f794da2512d66f74">startAdvertising</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#ab713fd5619ddbfc1a88bf43a1686f454">stopAdvertising</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a15112931d1eb6226188c7e383523ba06">setDataLen</a>(uint16_t conn_handle, uint16_t tx_octets)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#ae94ad52f3c97f62553af9765acdb7bcb">start</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a8f4b6c2fc5602f5ec34f963df6a21f75">startAdvertising</a>(uint8_t inst_id, int duration=0, int max_events=0)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#af827ef8988c1584795447a634502f0df">stopAdvertising</a>(uint8_t inst_id)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a7a4c114b572675e82700604db29e6e25">stopAdvertising</a>()</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_nim_b_l_e_server.html#a9b08738766de90d7065263761314030a">updateConnParams</a>(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout)</td><td class="entry"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a></td><td class="entry"></td></tr>
 </table></div><!-- contents -->
 </div><!-- doc-content -->

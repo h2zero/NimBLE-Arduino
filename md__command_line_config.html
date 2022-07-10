@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.8</span>
+   &#160;<span id="projectnumber">1.4.0</span>
    </div>
   </td>
  </tr>
@@ -94,6 +94,22 @@ $(document).ready(function(){initNavTree('md__command_line_config.html',''); ini
  <br  />
 </li>
 </ul>
+<p><code>CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED</code></p>
+<p>Enable/disable storing the timestamp when an attribute value is updated <br  />
+ This allows for checking the last update time using getTimeStamp() or getValue(time_t*) <br  />
+ If disabled, the timestamp returned from these functions will be 0. <br  />
+ Disabling timestamps will reduce the memory used for each value. <br  />
+ 1 = Enabled, 0 = Disabled; Default = Disabled <br  />
+ <br  />
+</p>
+<p><code>CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH</code></p>
+<p>Set the default allocation size (bytes) for each attribute. <br  />
+ If not specified when the constructor is called. This is also the size used when a remote <br  />
+ characteristic or descriptor is constructed before a value is read/notifed. <br  />
+ Increasing this will reduce reallocations but increase memory footprint. <br  />
+ Default value is 20. Range: 1 : 512 (BLE_ATT_ATTR_MAX_LEN) <br  />
+ <br  />
+</p>
 <p><code>CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU</code> <br  />
 </p>
 <p>Sets the default MTU size. <br  />
@@ -118,6 +134,13 @@ $(document).ready(function(){initNavTree('md__command_line_config.html',''); ini
  <br  />
 </li>
 </ul>
+<p><code>CONFIG_NIMBLE_CPP_LOG_LEVEL</code> <br  />
+</p>
+<p>Define to set the debug log message level from the NimBLE CPP Wrapper. <br  />
+ If not defined it will use the same value as the Arduino core debug level. <br  />
+ Values: 0 = NONE, 1 = ERROR, 2 = WARNING, 3 = INFO, 4+ = DEBUG <br  />
+ <br  />
+</p>
 <p><code>CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT</code> <br  />
 </p>
 <p>If defined, NimBLE host return codes will be printed as text in debug log messages. <br  />
@@ -236,7 +259,39 @@ $(document).ready(function(){initNavTree('md__command_line_config.html',''); ini
 </p><ul>
 <li>Default is 4096 <br  />
  <br  />
- </li>
+</li>
+</ul>
+<p><code>CONFIG_NIMBLE_STACK_USE_MEM_POOLS</code></p>
+<p>Enable the use of memory pools for stack operations. This will use slightly more RAM but may provide more stability.</p>
+<ul>
+<li>Options: 0 or 1, default is disabled (0) <br  />
+ <br  />
+</li>
+</ul>
+<h2><a class="anchor" id="autotoc_md4"></a>
+Extended advertising settings, For use with ESP32C3, ESP32S3, ESP32H2 ONLY!</h2>
+<p><code>CONFIG_BT_NIMBLE_EXT_ADV</code></p>
+<p>Set to 1 to enable extended advertising features. <br  />
+</p>
+<p><code>CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES</code></p>
+<p>Sets the max number of extended advertising instances</p><ul>
+<li>Range: 0 - 4</li>
+<li>Default is 1 <br  />
+</li>
+</ul>
+<p><code>CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN</code></p>
+<p>Set the max extended advertising data size,</p><ul>
+<li>Range: 31 - 1650</li>
+<li>Default is 255 <br  />
+</li>
+</ul>
+<p><code>CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV</code></p>
+<p>Set to 1 to enable periodic advertising. <br  />
+</p>
+<p><code>CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS</code></p>
+<p>Set the maximum number of periodically synced devices.</p><ul>
+<li>Range: 1 - 8</li>
+<li>Default is 1 </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

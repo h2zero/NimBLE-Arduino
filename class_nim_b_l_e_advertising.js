@@ -23,5 +23,5 @@ var class_nim_b_l_e_advertising =
     [ "setServiceData", "class_nim_b_l_e_advertising.html#a994e43e9e4ace6ce64c57e57d0575781", null ],
     [ "setURI", "class_nim_b_l_e_advertising.html#a6495d7c9ad80a8c2a5edf974705f8103", null ],
     [ "start", "class_nim_b_l_e_advertising.html#aeeee5a131b42a4f76010751f4c182e4f", null ],
-    [ "stop", "class_nim_b_l_e_advertising.html#ab19c9e9015e812055e3cad29d52ed2ff", null ]
+    [ "stop", "class_nim_b_l_e_advertising.html#a3ab772936ace18c9a7e509740aa59800", null ]
 ];

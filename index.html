@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.8</span>
+   &#160;<span id="projectnumber">1.4.0</span>
    </div>
   </td>
  </tr>
@@ -86,91 +86,64 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <div class="title">Overview </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md_index"></a> This is a C++ BLE library for the ESP32 that uses the NimBLE host stack instead of bluedroid. <br  />
- The aim is to maintain, as much as reasonable, the original bluedroid C++ &amp; Arduino BLE API by while adding new features <br  />
- and making improvements in performance, resource use, and stability. <br  />
-</p>
-<p><b>Testing shows a nearly 50% reduction in flash use and approx. 100kB less ram consumed vs the original!</b> <br  />
- <em>Your results may vary</em> <br  />
+<div class="textblock"><p><a class="anchor" id="md_index"></a> This is a C++ BLE library for Espressif ESP32 and Nordic nRF51/nRF52 devices that uses the NimBLE BLE stack. <br  />
+ The aim is to maintain, as much as reasonable, the original ESP32 Arduino BLE API by while adding new features and making improvements in performance, resource use, and stability. <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md47"></a>
+<h1><a class="anchor" id="autotoc_md11"></a>
 What is NimBLE?</h1>
 <p>NimBLE is a completely open source Bluetooth Low Energy stack produced by <a href="https://github.com/apache/mynewt-nimble">Apache</a>. <br  />
- It is more suited to resource constrained devices than bluedroid and has now been ported to the ESP32 by Espressif. <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md48"></a>
-Arduino Installation</h1>
-<p><b>Arduino Library manager:</b> Go to <code>sketch</code> -&gt; <code>Include Library</code> -&gt; <code>Manage Libraries</code> and search for NimBLE and install. <br  />
-</p>
-<p><b>Alternatively:</b> Download as .zip and extract to Arduino/libraries folder, or in Arduino IDE from Sketch menu -&gt; Include library -&gt; Add .Zip library. <br  />
-</p>
-<p><code>#include "NimBLEDevice.h"</code> at the beginning of your sketch. <br  />
-</p>
-<p>Call <code><a class="el" href="class_nim_b_l_e_device.html#a674d2e68d4ba0e3f84d7993f9da7d15b" title="Initialize the BLE environment.">NimBLEDevice::init</a></code> in <code>setup</code>.</p>
-<p>Tested and working with esp32-arduino in Arduino IDE and platform IO. <br  />
- <br  />
+<h1><a class="anchor" id="autotoc_md12"></a>
+Arduino installation</h1>
+<p><b>NOTE:</b> Nordic devices require using <a href="https://github.com/h2zero/n-able-Arduino">n-able arduino core</a></p>
+<p><b>Arduino Library manager:</b> Go to <code>sketch</code> -&gt; <code>Include Library</code> -&gt; <code>Manage Libraries</code> and search for NimBLE and install.</p>
+<p><b>Alternatively:</b> Download as .zip and extract to Arduino/libraries folder, or in Arduino IDE from Sketch menu -&gt; Include library -&gt; Add .Zip library.</p>
+<p><code>#include "NimBLEDevice.h"</code> at the beginning of your sketch.</p>
+<p>Call <code><a class="el" href="class_nim_b_l_e_device.html#a674d2e68d4ba0e3f84d7993f9da7d15b" title="Initialize the BLE environment.">NimBLEDevice::init</a></code> in <code>setup</code>. <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md49"></a>
-ESP-IDF Installation</h1>
-<h3><a class="anchor" id="autotoc_md50"></a>
-v4.0+</h3>
-<p>Download as .zip and extract or clone into the components folder in your esp-idf project.</p>
-<p>Run menuconfig, go to <code>Component config-&gt;Bluetooth</code> enable Bluetooth and in <code>Bluetooth host</code> NimBLE. <br  />
- Configure settings in <code>NimBLE Options</code>. <br  />
- <code>#include "NimBLEDevice.h"</code> in main.cpp. <br  />
- Call <code><a class="el" href="class_nim_b_l_e_device.html#a674d2e68d4ba0e3f84d7993f9da7d15b" title="Initialize the BLE environment.">NimBLEDevice::init</a></code> in <code>app_main</code>. <br  />
+<h1><a class="anchor" id="autotoc_md13"></a>
+Platformio installation</h1>
+<ul>
+<li>Open platformio.ini, a project configuration file located in the root of PlatformIO project. <br  />
+</li>
+<li>Add the following line to the lib_deps option of [env:] section: <div class="fragment"><div class="line">h2zero/NimBLE-Arduino@^1.4.0</div>
+</div><!-- fragment --></li>
+<li>Build a project, PlatformIO will automatically install dependencies. <br  />
  <br  />
-</p>
-<h3><a class="anchor" id="autotoc_md51"></a>
-v3.2 &amp; v3.3</h3>
-<p>The NimBLE component does not come with these versions of IDF (now included in 3.3.2 and above). <br  />
- A backport that works in these versions has been created and is <a href="https://github.com/h2zero/esp-nimble-component">available here</a>. <br  />
- Download or clone that repo into your project/components folder and run menuconfig. Configure settings in <code>main menu -&gt; NimBLE Options</code>. <br  />
-</p>
-<p><code>#include "NimBLEDevice.h"</code> in main.cpp. <br  />
- Call <code><a class="el" href="class_nim_b_l_e_device.html#a674d2e68d4ba0e3f84d7993f9da7d15b" title="Initialize the BLE environment.">NimBLEDevice::init</a></code> in <code>app_main</code>. <br  />
- <br  />
- <br  />
-</p>
-<h1><a class="anchor" id="autotoc_md52"></a>
+</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md14"></a>
 Using</h1>
-<p>This library is intended to be compatible with the original ESP32 BLE functions and types with minor changes. <br  />
-</p>
-<p>If you have not used the original Bluedroid library please refer to the <a class="el" href="md__new_user_guide.html">New user guide</a>.</p>
-<p>If you are familiar with the original library, see: <a class="el" href="md__migration_guide.html">The migration guide</a> for details. <br  />
-</p>
-<p>Also see <a class="el" href="md__improvements_and_updates.html">Improvements and updates</a> for information about non-breaking changes. <br  />
-</p>
+<p>This library is intended to be compatible with the original ESP32 BLE library functions and types with minor changes.</p>
+<p>If you have not used the original BLE library please refer to the <a class="el" href="md__new_user_guide.html">New user guide</a>.</p>
+<p>If you are familiar with the original library, see: <a class="el" href="md__migration_guide.html">The migration guide</a> for details.</p>
+<p>Also see <a class="el" href="md__improvements_and_updates.html">Improvements and updates</a> for information about non-breaking changes.</p>
 <p>For more advanced usage see <a class="el" href="md__usage_tips.html">Usage tips</a> for more performance and optimization. <br  />
  <br  />
 </p>
-<h3><a class="anchor" id="autotoc_md53"></a>
-Arduino specific</h3>
-<p>See the Refactored_original_examples in the examples folder for highlights of the differences with the original library. <br  />
-</p>
-<p>More advanced examples highlighting many available features are in examples/NimBLE_Server, NimBLE_Client. <br  />
-</p>
-<p>Beacon examples provided by <a href="https://github.com/beegee-tokyo">beegee-tokyo</a> are in examples/BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon, BLE_EddystoneURL_Beacon. <br  />
-</p>
+<h2><a class="anchor" id="autotoc_md15"></a>
+Examples</h2>
+<p>See the Refactored_original_examples in the examples folder for highlights of the differences with the original library.</p>
+<p>More advanced examples highlighting many available features are in examples/NimBLE_Server, NimBLE_Client.</p>
+<p>Beacon examples provided by <a href="https://github.com/beegee-tokyo">beegee-tokyo</a> are in examples/BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon, BLE_EddystoneURL_Beacon.</p>
 <p>Change the settings in the <a class="el" href="nimconfig_8h_source.html">nimconfig.h</a> file to customize NimBLE to your project, such as increasing max connections (default is 3). <br  />
  <br  />
 </p>
-<h3><a class="anchor" id="autotoc_md54"></a>
-Arduino command line and platformio</h3>
-<p>As an alternative to changing the configuration in <a class="el" href="nimconfig_8h_source.html">nimconfig.h</a>, Arduino command line and platformio.ini options are available. <br  />
- See the command line configuration options available in <a class="el" href="md__command_line_config.html">Command line config</a>. <br  />
- <br  />
+<h2><a class="anchor" id="autotoc_md16"></a>
+Arduino command line and platformio</h2>
+<p>As an alternative to changing the configuration in <a class="el" href="nimconfig_8h_source.html">nimconfig.h</a>, Arduino command line and platformio.ini options are available.</p>
+<p>See the command line configuration options available in <a class="el" href="md__command_line_config.html">Command line config</a>. <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md55"></a>
+<h1><a class="anchor" id="autotoc_md17"></a>
 Need help? Have a question or suggestion?</h1>
 <p>Come chat on <a href="https://gitter.im/NimBLE-Arduino/community?utm_source=share-link&amp;utm_medium=link&amp;utm_campaign=share-link">gitter</a> or open an issue at <a href="https://github.com/h2zero/NimBLE-Arduino/issues">NimBLE-Arduino</a> or <a href="https://github.com/h2zero/esp-nimble-cpp/issues">esp-nimble-cpp</a> <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md56"></a>
+<h1><a class="anchor" id="autotoc_md18"></a>
 Acknowledgments</h1>
 <ul>
 <li><a href="https://github.com/nkolban">nkolban</a> and <a href="https://github.com/chegewara">chegewara</a> for the <a href="https://github.com/nkolban/esp32-snippets/tree/master/cpp_utils">original esp32 BLE library</a> this project was derived from.</li>

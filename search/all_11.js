@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['whitelistadd_341',['whiteListAdd',['../class_nim_b_l_e_device.html#aabc68166b6dd4a744a98f94e569f37db',1,'NimBLEDevice']]],
-  ['whitelistremove_342',['whiteListRemove',['../class_nim_b_l_e_device.html#a81abbad5e371fe1cdd91c002b42cc654',1,'NimBLEDevice']]],
-  ['writevalue_343',['writeValue',['../class_nim_b_l_e_remote_characteristic.html#a3c8d1fd77dd074df866c091c614eafb3',1,'NimBLERemoteCharacteristic::writeValue(const uint8_t *data, size_t length, bool response=false)'],['../class_nim_b_l_e_remote_characteristic.html#a2cfc2e8d2e281dd61e578eb5e860fc02',1,'NimBLERemoteCharacteristic::writeValue(const std::string &amp;newValue, bool response=false)'],['../class_nim_b_l_e_remote_characteristic.html#acf8bcf2cf94ca8bd8cf0c7c39f9883ae',1,'NimBLERemoteCharacteristic::writeValue(const T &amp;s, bool response=false)'],['../class_nim_b_l_e_remote_descriptor.html#a0d3fb6424b2c86730e1a292281cd836e',1,'NimBLERemoteDescriptor::writeValue(const uint8_t *data, size_t length, bool response=false)'],['../class_nim_b_l_e_remote_descriptor.html#a30bc16403ed53d3b4417c0a01cc4a40f',1,'NimBLERemoteDescriptor::writeValue(const std::string &amp;newValue, bool response=false)'],['../class_nim_b_l_e_remote_descriptor.html#a1abc84a09001537dffd13c810a503b9c',1,'NimBLERemoteDescriptor::writeValue(const T &amp;s, bool response=false)']]]
+  ['unsubscribe_380',['unsubscribe',['../class_nim_b_l_e_remote_characteristic.html#ae2791429ba4a8c310ffc24139a985da6',1,'NimBLERemoteCharacteristic']]],
+  ['updateconnparams_381',['updateConnParams',['../class_nim_b_l_e_client.html#aff7d389ec48567286ea732c54d320526',1,'NimBLEClient::updateConnParams()'],['../class_nim_b_l_e_server.html#a9b08738766de90d7065263761314030a',1,'NimBLEServer::updateConnParams()']]],
+  ['usage_20tips_382',['Usage Tips',['../md__usage_tips.html',1,'']]]
 ];

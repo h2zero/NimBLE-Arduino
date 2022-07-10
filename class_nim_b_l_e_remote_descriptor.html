@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.3.8</span>
+   &#160;<span id="projectnumber">1.4.0</span>
    </div>
   </td>
  </tr>
@@ -104,35 +104,42 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ace6b19cd3d9aa8226b4c17371616ad58"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#ace6b19cd3d9aa8226b4c17371616ad58">getUUID</a> ()</td></tr>
 <tr class="memdesc:ace6b19cd3d9aa8226b4c17371616ad58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the UUID associated this remote descriptor.  <a href="class_nim_b_l_e_remote_descriptor.html#ace6b19cd3d9aa8226b4c17371616ad58">More...</a><br /></td></tr>
 <tr class="separator:ace6b19cd3d9aa8226b4c17371616ad58"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b6952aa46b3541fb0a8247e4e542257"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a3b6952aa46b3541fb0a8247e4e542257">readValue</a> ()</td></tr>
-<tr class="memdesc:a3b6952aa46b3541fb0a8247e4e542257"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the value of the remote descriptor.  <a href="class_nim_b_l_e_remote_descriptor.html#a3b6952aa46b3541fb0a8247e4e542257">More...</a><br /></td></tr>
-<tr class="separator:a3b6952aa46b3541fb0a8247e4e542257"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4e3a21818903b69ace41c36a58d3c46"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:ac4e3a21818903b69ace41c36a58d3c46"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#ac4e3a21818903b69ace41c36a58d3c46">readValue</a> (bool skipSizeCheck=false)</td></tr>
-<tr class="memdesc:ac4e3a21818903b69ace41c36a58d3c46"><td class="mdescLeft">&#160;</td><td class="mdescRight">A template to convert the remote descriptor data to &lt;type&gt;.  <a href="class_nim_b_l_e_remote_descriptor.html#ac4e3a21818903b69ace41c36a58d3c46">More...</a><br /></td></tr>
-<tr class="separator:ac4e3a21818903b69ace41c36a58d3c46"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab07e86707a91e48f68e9de55686e939b"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#ab07e86707a91e48f68e9de55686e939b">readUInt8</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a3b6952aa46b3541fb0a8247e4e542257">readValue</a>&lt;uint8_t&gt;()&quot;)))</td></tr>
+<tr class="memitem:a7c7c07e6ccd969de568b5bda72ec52d7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7">readValue</a> ()</td></tr>
+<tr class="memdesc:a7c7c07e6ccd969de568b5bda72ec52d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the value of the remote descriptor.  <a href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7">More...</a><br /></td></tr>
+<tr class="separator:a7c7c07e6ccd969de568b5bda72ec52d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab07e86707a91e48f68e9de55686e939b"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#ab07e86707a91e48f68e9de55686e939b">readUInt8</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7">readValue</a>&lt;uint8_t&gt;()&quot;)))</td></tr>
 <tr class="memdesc:ab07e86707a91e48f68e9de55686e939b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read a byte value.  <a href="class_nim_b_l_e_remote_descriptor.html#ab07e86707a91e48f68e9de55686e939b">More...</a><br /></td></tr>
 <tr class="separator:ab07e86707a91e48f68e9de55686e939b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14351ea51b7b04f91b71e388881edd53"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a14351ea51b7b04f91b71e388881edd53">readUInt16</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a3b6952aa46b3541fb0a8247e4e542257">readValue</a>&lt;uint16_t&gt;()&quot;)))</td></tr>
+<tr class="memitem:a14351ea51b7b04f91b71e388881edd53"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a14351ea51b7b04f91b71e388881edd53">readUInt16</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7">readValue</a>&lt;uint16_t&gt;()&quot;)))</td></tr>
 <tr class="memdesc:a14351ea51b7b04f91b71e388881edd53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read an unsigned 16 bit value.  <a href="class_nim_b_l_e_remote_descriptor.html#a14351ea51b7b04f91b71e388881edd53">More...</a><br /></td></tr>
 <tr class="separator:a14351ea51b7b04f91b71e388881edd53"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a219606f84d63bc02f093051d66f05204"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a219606f84d63bc02f093051d66f05204">readUInt32</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a3b6952aa46b3541fb0a8247e4e542257">readValue</a>&lt;uint32_t&gt;()&quot;)))</td></tr>
+<tr class="memitem:a219606f84d63bc02f093051d66f05204"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a219606f84d63bc02f093051d66f05204">readUInt32</a> () __attribute__((deprecated(&quot;Use template <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7">readValue</a>&lt;uint32_t&gt;()&quot;)))</td></tr>
 <tr class="memdesc:a219606f84d63bc02f093051d66f05204"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read an unsigned 32 bit value.  <a href="class_nim_b_l_e_remote_descriptor.html#a219606f84d63bc02f093051d66f05204">More...</a><br /></td></tr>
 <tr class="separator:a219606f84d63bc02f093051d66f05204"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a008795a09d1fbe8533c2e9d0e8deb33a"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a008795a09d1fbe8533c2e9d0e8deb33a">toString</a> (void)</td></tr>
 <tr class="memdesc:a008795a09d1fbe8533c2e9d0e8deb33a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of this Remote Descriptor.  <a href="class_nim_b_l_e_remote_descriptor.html#a008795a09d1fbe8533c2e9d0e8deb33a">More...</a><br /></td></tr>
 <tr class="separator:a008795a09d1fbe8533c2e9d0e8deb33a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d3fb6424b2c86730e1a292281cd836e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a0d3fb6424b2c86730e1a292281cd836e">writeValue</a> (const uint8_t *data, size_t length, bool response=false)</td></tr>
-<tr class="memdesc:a0d3fb6424b2c86730e1a292281cd836e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write data to the BLE Remote Descriptor.  <a href="class_nim_b_l_e_remote_descriptor.html#a0d3fb6424b2c86730e1a292281cd836e">More...</a><br /></td></tr>
+<tr class="memdesc:a0d3fb6424b2c86730e1a292281cd836e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a new value to a remote descriptor.  <a href="class_nim_b_l_e_remote_descriptor.html#a0d3fb6424b2c86730e1a292281cd836e">More...</a><br /></td></tr>
 <tr class="separator:a0d3fb6424b2c86730e1a292281cd836e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30bc16403ed53d3b4417c0a01cc4a40f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a30bc16403ed53d3b4417c0a01cc4a40f">writeValue</a> (const std::string &amp;newValue, bool response=false)</td></tr>
-<tr class="memdesc:a30bc16403ed53d3b4417c0a01cc4a40f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write data represented as a string to the BLE Remote Descriptor.  <a href="class_nim_b_l_e_remote_descriptor.html#a30bc16403ed53d3b4417c0a01cc4a40f">More...</a><br /></td></tr>
-<tr class="separator:a30bc16403ed53d3b4417c0a01cc4a40f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab1654a0b1dc86fe042b3d5b983fbd08c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#ab1654a0b1dc86fe042b3d5b983fbd08c">writeValue</a> (const std::vector&lt; uint8_t &gt; &amp;v, bool response=false)</td></tr>
+<tr class="memdesc:ab1654a0b1dc86fe042b3d5b983fbd08c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a new value to a remote descriptor from a std::vector&lt;uint8_t&gt;.  <a href="class_nim_b_l_e_remote_descriptor.html#ab1654a0b1dc86fe042b3d5b983fbd08c">More...</a><br /></td></tr>
+<tr class="separator:ab1654a0b1dc86fe042b3d5b983fbd08c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7cab188f311f44d06638434117938e7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#ab7cab188f311f44d06638434117938e7">writeValue</a> (const char *s, bool response=false)</td></tr>
+<tr class="memdesc:ab7cab188f311f44d06638434117938e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Write a new value to the remote descriptor from a const char*.  <a href="class_nim_b_l_e_remote_descriptor.html#ab7cab188f311f44d06638434117938e7">More...</a><br /></td></tr>
+<tr class="separator:ab7cab188f311f44d06638434117938e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1abc84a09001537dffd13c810a503b9c"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a1abc84a09001537dffd13c810a503b9c"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a1abc84a09001537dffd13c810a503b9c">writeValue</a> (const T &amp;s, bool response=false)</td></tr>
-<tr class="memdesc:a1abc84a09001537dffd13c810a503b9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience template to set the remote descriptor value to &lt;type&gt;val.  <a href="class_nim_b_l_e_remote_descriptor.html#a1abc84a09001537dffd13c810a503b9c">More...</a><br /></td></tr>
+<tr class="memdesc:a1abc84a09001537dffd13c810a503b9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to set the remote descriptor value to &lt;type&gt;val.  <a href="class_nim_b_l_e_remote_descriptor.html#a1abc84a09001537dffd13c810a503b9c">More...</a><br /></td></tr>
 <tr class="separator:a1abc84a09001537dffd13c810a503b9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1abc84a09001537dffd13c810a503b9c"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a1abc84a09001537dffd13c810a503b9c"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#a1abc84a09001537dffd13c810a503b9c">writeValue</a> (const T &amp;s, bool response=false)</td></tr>
+<tr class="memdesc:a1abc84a09001537dffd13c810a503b9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to set the remote descriptor value to &lt;type&gt;val.  <a href="class_nim_b_l_e_remote_descriptor.html#a1abc84a09001537dffd13c810a503b9c">More...</a><br /></td></tr>
+<tr class="separator:a1abc84a09001537dffd13c810a503b9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4e3a21818903b69ace41c36a58d3c46"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ac4e3a21818903b69ace41c36a58d3c46"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_remote_descriptor.html#ac4e3a21818903b69ace41c36a58d3c46">readValue</a> (bool skipSizeCheck=false)</td></tr>
+<tr class="memdesc:ac4e3a21818903b69ace41c36a58d3c46"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to convert the remote descriptor data to &lt;type&gt;.  <a href="class_nim_b_l_e_remote_descriptor.html#ac4e3a21818903b69ace41c36a58d3c46">More...</a><br /></td></tr>
+<tr class="separator:ac4e3a21818903b69ace41c36a58d3c46"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A model of remote BLE descriptor. </p>
@@ -214,7 +221,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Read an unsigned 16 bit value. </p>
 <dl class="section return"><dt>Returns</dt><dd>The unsigned 16 bit value. </dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000009">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a3b6952aa46b3541fb0a8247e4e542257" title="Read the value of the remote descriptor.">readValue&lt;uint16_t&gt;()</a>. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000009">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7" title="Read the value of the remote descriptor.">readValue&lt;uint16_t&gt;()</a>. </dd></dl>
 
 </div>
 </div>
@@ -235,7 +242,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Read an unsigned 32 bit value. </p>
 <dl class="section return"><dt>Returns</dt><dd>the unsigned 32 bit value. </dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000010">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a3b6952aa46b3541fb0a8247e4e542257" title="Read the value of the remote descriptor.">readValue&lt;uint32_t&gt;()</a>. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000010">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7" title="Read the value of the remote descriptor.">readValue&lt;uint32_t&gt;()</a>. </dd></dl>
 
 </div>
 </div>
@@ -256,18 +263,18 @@ Public Member Functions</h2></td></tr>
 
 <p>Read a byte value. </p>
 <dl class="section return"><dt>Returns</dt><dd>The value as a byte </dd></dl>
-<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000008">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a3b6952aa46b3541fb0a8247e4e542257" title="Read the value of the remote descriptor.">readValue&lt;uint8_t&gt;()</a>. </dd></dl>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000008">Deprecated:</a></b></dt><dd>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7" title="Read the value of the remote descriptor.">readValue&lt;uint8_t&gt;()</a>. </dd></dl>
 
 </div>
 </div>
-<a id="a3b6952aa46b3541fb0a8247e4e542257"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3b6952aa46b3541fb0a8247e4e542257">&#9670;&nbsp;</a></span>readValue() <span class="overload">[1/2]</span></h2>
+<a id="a7c7c07e6ccd969de568b5bda72ec52d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c7c07e6ccd969de568b5bda72ec52d7">&#9670;&nbsp;</a></span>readValue() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::string NimBLERemoteDescriptor::readValue </td>
+          <td class="memname"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a> NimBLERemoteDescriptor::readValue </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -306,7 +313,7 @@ template&lt;typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>A template to convert the remote descriptor data to &lt;type&gt;. </p>
+<p>Template to convert the remote descriptor data to &lt;type&gt;. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">T</td><td>The type to convert the data to. </td></tr>
@@ -345,8 +352,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a30bc16403ed53d3b4417c0a01cc4a40f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30bc16403ed53d3b4417c0a01cc4a40f">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[1/3]</span></h2>
+<a id="ab7cab188f311f44d06638434117938e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7cab188f311f44d06638434117938e7">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[1/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -354,8 +361,8 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="memname">bool NimBLERemoteDescriptor::writeValue </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>newValue</em>, </td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>char_s</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -371,20 +378,58 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Write data represented as a string to the BLE Remote Descriptor. </p>
+<p>Write a new value to the remote descriptor from a const char*. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">newValue</td><td>The data to send to the remote descriptor. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>True if we expect a response. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">char_s</td><td>A character string to write to the remote descriptor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>Whether we require a response from the write. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>false if not connected or otherwise cannot perform write. </dd></dl>
+
+</div>
+</div>
+<a id="ab1654a0b1dc86fe042b3d5b983fbd08c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab1654a0b1dc86fe042b3d5b983fbd08c">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[2/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLERemoteDescriptor::writeValue </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>vec</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>response</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Write a new value to a remote descriptor from a std::vector&lt;uint8_t&gt;. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec</td><td>A std::vector&lt;uint8_t&gt; value to write to the remote descriptor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>Whether we require a response from the write. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>false if not connected or otherwise cannot perform write. </dd></dl>
 
 </div>
 </div>
 <a id="a1abc84a09001537dffd13c810a503b9c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1abc84a09001537dffd13c810a503b9c">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[2/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a1abc84a09001537dffd13c810a503b9c">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[3/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -419,19 +464,68 @@ template&lt;typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Convenience template to set the remote descriptor value to &lt;type&gt;val. </p>
+<p>Template to set the remote descriptor value to &lt;type&gt;val. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>The value to write. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>True == request write response. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>True == request write response.</td></tr>
   </table>
   </dd>
 </dl>
+<p>Only used for non-arrays and types without a <code>c_str()</code> method. </p>
+
+</div>
+</div>
+<a id="a1abc84a09001537dffd13c810a503b9c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1abc84a09001537dffd13c810a503b9c">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[4/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLERemoteDescriptor::writeValue </td>
+          <td>(</td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>s</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>response</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Template to set the remote descriptor value to &lt;type&gt;val. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>The value to write. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">response</td><td>True == request write response.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Only used if the &lt;type&gt; has a <code>c_str()</code> method. </p>
 
 </div>
 </div>
 <a id="a0d3fb6424b2c86730e1a292281cd836e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0d3fb6424b2c86730e1a292281cd836e">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[3/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d3fb6424b2c86730e1a292281cd836e">&#9670;&nbsp;</a></span>writeValue() <span class="overload">[5/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -462,7 +556,7 @@ template&lt;typename T &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Write data to the BLE Remote Descriptor. </p>
+<p>Write a new value to a remote descriptor. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>The data to send to the remote descriptor. </td></tr>
@@ -471,7 +565,7 @@ template&lt;typename T &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if successful </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>false if not connected or otherwise cannot perform write. </dd></dl>
 
 </div>
 </div>
