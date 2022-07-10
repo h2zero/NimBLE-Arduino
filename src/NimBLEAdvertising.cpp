@@ -434,15 +434,16 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
     if(m_advParams.conn_mode == BLE_GAP_CONN_MODE_NON) {
         if(!m_scanResp) {
             m_advParams.disc_mode = BLE_GAP_DISC_MODE_NON;
-            m_advData.flags = BLE_HS_ADV_F_BREDR_UNSUP;
+            // non-connectable advertising does not require AD flags.
+            m_advData.flags = 0;
         }
     }
 
     int rc = 0;
 
     if (!m_customAdvData && !m_advDataSet) {
-        //start with 3 bytes for the flags data
-        uint8_t payloadLen = (2 + 1);
+        //start with 3 bytes for the flags data if required
+        uint8_t payloadLen = (m_advData.flags > 0) ? (2 + 1) : 0;
         if(m_advData.mfg_data_len > 0)
             payloadLen += (2 + m_advData.mfg_data_len);
 
