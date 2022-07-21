@@ -97,6 +97,7 @@ class NimBLEDevice {
 public:
     static void             init(const std::string &deviceName);
     static void             deinit(bool clearAll = false);
+    static void             setDeviceName(const std::string &deviceName);
     static bool             getInitialized();
     static NimBLEAddress    getAddress();
     static std::string      toString();
