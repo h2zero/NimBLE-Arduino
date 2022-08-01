@@ -140,7 +140,14 @@ Set the task stack size for the NimBLE core.
 - Default is 4096  
 <br/>
 
-## Extended advertising settings, For use with ESP32C3, ESP32S3, ESP32H2 ONLY!
+`CONFIG_NIMBLE_STACK_USE_MEM_POOLS`
+
+ Enable the use of memory pools for stack operations. This will use slightly more RAM but may provide more stability.
+ 
+- Options: 0 or 1, default is disabled (0)  
+<br/>
+
+### Extended advertising settings, For use with ESP32C3, ESP32S3, ESP32H2 ONLY!
  
 `CONFIG_BT_NIMBLE_EXT_ADV`
 

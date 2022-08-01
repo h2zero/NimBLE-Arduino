@@ -23,7 +23,7 @@ This can be called any time you wish to use BLE functions and does not need to b
 
 <a name="creating-a-server"></a>
 ## Creating a Server
-BLE servers perform 2 tasks, they advertise their existance for clients to find them and they provide services which contain information for the connecting client.  
+BLE servers perform 2 tasks, they advertise their existence for clients to find them and they provide services which contain information for the connecting client.  
 
 After initializing the NimBLE stack we create a server by calling `NimBLEDevice::createServer()`, this will create a server instance and return a pointer to it.  
 
@@ -91,7 +91,7 @@ void app_main(void)
 }
 ```
 
-All that's left to do now is start the sevice, give the characteristic a value and start advertising for clients.  
+All that's left to do now is start the service, give the characteristic a value and start advertising for clients.  
 
 Fist we start the service by calling `NimBLEService::start()`.
 
@@ -146,7 +146,7 @@ After initializing the NimBLE stack we create a scan instance by calling `NimBLE
 
 Once we have created the scan we can start looking for advertising servers.  
 
-To do this we call `NimBLEScan::start(duration)`, the duration parameter is a uint32_t that specifies the number of seconds to scan for,  
+To do this we call `NimBLEScan::start(duration)`, the duration parameter is a uint32_t that specifies the number of milliseconds to scan for,  
 passing 0 will scan forever.  
 
 In this example we will scan for 10 seconds. This is a blocking function (a non blocking overload is also available).  
@@ -162,7 +162,7 @@ void app_main(void)
     NimBLEDevice::init("");
     
     NimBLEScan *pScan = NimBLEDevice::getScan();
-    NimBLEScanResults results = pScan->start(10);
+    NimBLEScanResults results = pScan->start(10 * 1000);
 }
 ```
 <br/>
@@ -214,7 +214,7 @@ for(int i = 0; i < results.getCount(); i++) {
     }
 }
 ```
-As shown, the call to `NimBLEClient::connect` should have it's eturn value tested to make sure it succeeded before proceeding to get data.  
+As shown, the call to `NimBLEClient::connect` should have it's return value tested to make sure it succeeded before proceeding to get data.  
 <br/>
 
 Next we need to access the servers data by asking it for the service and the characteristic we are interested in, then read the characteristic value. 
@@ -222,7 +222,7 @@ Next we need to access the servers data by asking it for the service and the cha
 To do this we call `NimBLEClient::getService`, which takes as a parameter the UUID of the service and returns  
 a pointer an instance to `NimBLERemoteService` or `nullptr` if the service was not found.  
 
-Next we will call `NimBLERemoteService::getCharateristic` which takes as a parameter the UUID of the service and returns  
+Next we will call `NimBLERemoteService::getCharacteristic` which takes as a parameter the UUID of the service and returns  
 a pointer to an instance of `NimBLERemoteCharacteristic` or `nullptr` if not found.  
 
 Finally we will read the characteristic value with `NimBLERemoteCharacteristic::readValue()`.  
@@ -302,7 +302,7 @@ void app_main(void)
     NimBLEDevice::init("");
     
     NimBLEScan *pScan = NimBLEDevice::getScan();
-    NimBLEScanResults results = pScan->start(10);
+    NimBLEScanResults results = pScan->start(10 * 1000);
     
     NimBLEUUID serviceUuid("ABCD");
     

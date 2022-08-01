@@ -39,7 +39,6 @@
 #endif
 
 #include "NimBLEUtils.h"
-#include "NimBLESecurity.h"
 #include "NimBLEAddress.h"
 
 #ifdef ESP_PLATFORM
@@ -97,6 +96,7 @@ class NimBLEDevice {
 public:
     static void             init(const std::string &deviceName);
     static void             deinit(bool clearAll = false);
+    static void             setDeviceName(const std::string &deviceName);
     static bool             getInitialized();
     static NimBLEAddress    getAddress();
     static std::string      toString();
@@ -134,7 +134,6 @@ public:
     static void             setSecurityRespKey(uint8_t init_key);
     static void             setSecurityPasskey(uint32_t pin);
     static uint32_t         getSecurityPasskey();
-    static void             setSecurityCallbacks(NimBLESecurityCallbacks* pCallbacks);
     static int              startSecurity(uint16_t conn_id);
     static int              setMTU(uint16_t mtu);
     static uint16_t         getMTU();
@@ -152,7 +151,7 @@ public:
     static bool                  stopAdvertising();
 #  else
     static NimBLEAdvertising*    getAdvertising();
-    static bool                  startAdvertising();
+    static bool                  startAdvertising(uint32_t duration = 0);
     static bool                  stopAdvertising();
 #  endif
 #endif
@@ -222,7 +221,6 @@ private:
     static std::list <NimBLEClient*>  m_cList;
 #endif
     static std::list <NimBLEAddress>  m_ignoreList;
-    static NimBLESecurityCallbacks*   m_securityCallbacks;
     static uint32_t                   m_passkey;
     static ble_gap_event_listener     m_listener;
     static gap_event_handler          m_customGapHandler;

@@ -373,7 +373,7 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
 
         case BLE_GAP_EVENT_DISCONNECT: {
             // If Host reset tell the device now before returning to prevent
-            // any errors caused by calling host functions before resyncing.
+            // any errors caused by calling host functions before resync.
             switch(event->disconnect.reason) {
                 case BLE_HS_ETIMEOUT_HCI:
                 case BLE_HS_EOS:
@@ -530,14 +530,8 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
             if(rc != 0) {
                 return BLE_ATT_ERR_INVALID_HANDLE;
             }
-            // Compatibility only - Do not use, should be removed the in future
-            if(NimBLEDevice::m_securityCallbacks != nullptr) {
-                NimBLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
-            /////////////////////////////////////////////
-            } else {
-                server->m_pServerCallbacks->onAuthenticationComplete(&desc);
-            }
 
+            server->m_pServerCallbacks->onAuthenticationComplete(&desc);
             return 0;
         } // BLE_GAP_EVENT_ENC_CHANGE
 
@@ -559,13 +553,7 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
             } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
                 NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %" PRIu32, event->passkey.params.numcmp);
                 pkey.action = event->passkey.params.action;
-                // Compatibility only - Do not use, should be removed the in future
-                if(NimBLEDevice::m_securityCallbacks != nullptr) {
-                    pkey.numcmp_accept = NimBLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-                /////////////////////////////////////////////
-                } else {
-                    pkey.numcmp_accept = server->m_pServerCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-                }
+                pkey.numcmp_accept = server->m_pServerCallbacks->onConfirmPIN(event->passkey.params.numcmp);
 
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_NUMCMP; ble_sm_inject_io result: %d", rc);
@@ -583,14 +571,7 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
             } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
                 NIMBLE_LOGD(LOG_TAG, "Enter the passkey");
                 pkey.action = event->passkey.params.action;
-
-                // Compatibility only - Do not use, should be removed the in future
-                if(NimBLEDevice::m_securityCallbacks != nullptr) {
-                    pkey.passkey = NimBLEDevice::m_securityCallbacks->onPassKeyRequest();
-                /////////////////////////////////////////////
-                } else {
-                    pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
-                }
+                pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
 
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_INPUT; ble_sm_inject_io result: %d", rc);
@@ -636,7 +617,7 @@ void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks, bool deleteCa
  * @brief Remove a service from the server.
  *
  * @details Immediately removes access to the service by clients, sends a service changed indication,
- * and removes the service (if applicable) from the advertisments.
+ * and removes the service (if applicable) from the advertisements.
  * The service is not deleted unless the deleteSvc parameter is true, otherwise the service remains
  * available and can be re-added in the future. If desired a removed but not deleted service can
  * be deleted later by calling this method with deleteSvc set to true.
@@ -767,15 +748,16 @@ bool NimBLEServer::stopAdvertising(uint8_t inst_id) {
 } // stopAdvertising
 #endif
 
-#if !CONFIG_BT_NIMBLE_EXT_ADV|| defined(_DOXYGEN_)
+#if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
 /**
  * @brief Start advertising.
+ * @param [in] duration The duration in milliseconds to advertise for, default = forever.
  * @return True if advertising started successfully.
- * @details Start the server advertising its existence.  This is a convenience function and is equivalent to
+ * @details Start the server advertising its existence. This is a convenience function and is equivalent to
  * retrieving the advertising object and invoking start upon it.
  */
-bool NimBLEServer::startAdvertising() {
-    return getAdvertising()->start();
+bool NimBLEServer::startAdvertising(uint32_t duration) {
+    return getAdvertising()->start(duration);
 } // startAdvertising
 #endif
 

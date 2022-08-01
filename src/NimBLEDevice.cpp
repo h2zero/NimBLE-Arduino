@@ -83,7 +83,6 @@ std::list <NimBLEClient*>   NimBLEDevice::m_cList;
 #endif
 std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
 std::vector<NimBLEAddress>  NimBLEDevice::m_whiteList;
-NimBLESecurityCallbacks*    NimBLEDevice::m_securityCallbacks = nullptr;
 uint8_t                     NimBLEDevice::m_own_addr_type = BLE_OWN_ADDR_PUBLIC;
 #ifdef ESP_PLATFORM
 uint16_t                    NimBLEDevice::m_scanDuplicateSize = CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE;
@@ -171,10 +170,11 @@ NimBLEAdvertising* NimBLEDevice::getAdvertising() {
 
 /**
  * @brief Convenience function to begin advertising.
+ * @param [in] duration The duration in milliseconds to advertise for, default = forever.
  * @return True if advertising started successfully.
  */
-bool NimBLEDevice::startAdvertising() {
-    return getAdvertising()->start();
+bool NimBLEDevice::startAdvertising(uint32_t duration) {
+    return getAdvertising()->start(duration);
 } // startAdvertising
 #  endif
 
@@ -253,7 +253,7 @@ bool NimBLEDevice::deleteClient(NimBLEClient* pClient) {
         }
         // Since we set the flag to false the app will not get a callback
         // in the disconnect event so we call it here for good measure.
-        pClient->m_pClientCallbacks->onDisconnect(pClient);
+        pClient->m_pClientCallbacks->onDisconnect(pClient, BLE_ERR_CONN_TERM_LOCAL);
 
     } else if(pClient->m_pTaskData != nullptr) {
         rc = ble_gap_conn_cancel();
@@ -802,7 +802,7 @@ void NimBLEDevice::onSync(void)
     }
 #endif
 
-    // Yield for houskeeping before returning to operations.
+    // Yield for housekeeping before returning to operations.
     // Occasionally triggers exception without.
     taskYIELD();
 
@@ -851,7 +851,7 @@ void NimBLEDevice::init(const std::string &deviceName) {
         esp_err_t errRc = ESP_OK;
 
 #ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
-        // make sure the linker includes esp32-hal-bt.c so ardruino init doesn't release BLE memory.
+        // make sure the linker includes esp32-hal-bt.c so Arduino init doesn't release BLE memory.
         btStarted();
 #endif
 
@@ -963,13 +963,18 @@ void NimBLEDevice::deinit(bool clearAll) {
 #endif
 
             m_ignoreList.clear();
-
-            if(m_securityCallbacks != nullptr) {
-                delete m_securityCallbacks;
-            }
         }
     }
 } // deinit
+
+/**
+ * @brief Set the BLEDevice's name
+ * @param [in] deviceName The device name of the device.
+ */
+/* STATIC */
+void NimBLEDevice::setDeviceName(const std::string &deviceName) {
+    ble_svc_gap_device_name_set(deviceName.c_str());
+} // setDeviceName
 
 
 /**
@@ -1077,17 +1082,6 @@ void NimBLEDevice::setSecurityPasskey(uint32_t pin) {
 uint32_t NimBLEDevice::getSecurityPasskey() {
     return m_passkey;
 } // getSecurityPasskey
-
-
-/**
- * @brief Set callbacks that will be used to handle encryption negotiation events and authentication events
- * @param [in] callbacks Pointer to NimBLESecurityCallbacks class
- * @deprecated For backward compatibility, New code should use client/server callback methods.
- */
-/*STATIC*/
-void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
-    NimBLEDevice::m_securityCallbacks = callbacks;
-} // setSecurityCallbacks
 
 
 #ifdef ESP_PLATFORM

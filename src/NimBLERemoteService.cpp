@@ -165,7 +165,7 @@ std::vector<NimBLERemoteCharacteristic*>* NimBLERemoteService::getCharacteristic
 
 
 /**
- * @brief Callback for Characterisic discovery.
+ * @brief Callback for Characteristic discovery.
  * @return success == 0 or error code.
  */
 int NimBLERemoteService::characteristicDiscCB(uint16_t conn_handle,

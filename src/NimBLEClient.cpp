@@ -157,35 +157,35 @@ size_t NimBLEClient::deleteService(const NimBLEUUID &uuid) {
 
 /**
  * @brief Connect to the BLE Server.
- * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
+ * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(bool deleteAttibutes) {
-    return connect(m_peerAddress, deleteAttibutes);
+bool NimBLEClient::connect(bool deleteAttributes) {
+    return connect(m_peerAddress, deleteAttributes);
 }
 
 /**
  * @brief Connect to an advertising device.
  * @param [in] device The device to connect to.
- * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
+ * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes) {
+bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttributes) {
     NimBLEAddress address(device->getAddress());
-    return connect(address, deleteAttibutes);
+    return connect(address, deleteAttributes);
 }
 
 
 /**
  * @brief Connect to the BLE Server.
  * @param [in] address The address of the server.
- * @param [in] deleteAttibutes If true this will delete any attribute objects this client may already\n
+ * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
  * have created and clears the vectors after successful connection.
  * @return True on success.
  */
-bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
+bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
 
     if(!NimBLEDevice::m_synced) {
@@ -259,7 +259,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
                 break;
 
             case BLE_HS_EALREADY:
-                // Already attemting to connect to this device, cancel the previous
+                // Already attempting to connect to this device, cancel the previous
                 // attempt and report failure here so we don't get 2 connections.
                 NIMBLE_LOGE(LOG_TAG, "Already attempting to connect to %s - cancelling",
                             std::string(m_peerAddress).c_str());
@@ -317,7 +317,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttibutes) {
         NIMBLE_LOGI(LOG_TAG, "Connection established");
     }
 
-    if(deleteAttibutes) {
+    if(deleteAttributes) {
         deleteServices();
     }
 
@@ -390,8 +390,8 @@ int NimBLEClient::disconnect(uint8_t reason) {
         // We use a timer to detect a controller error in the event that it does
         // not inform the stack when disconnection is complete.
         // This is a common error in certain esp-idf versions.
-        // The disconnect timeout time is the supervison timeout time + 1 second.
-        // In the case that the event happenss shortly after the supervision timeout
+        // The disconnect timeout time is the supervision timeout time + 1 second.
+        // In the case that the event happens shortly after the supervision timeout
         // we don't want to prematurely reset the host.
         ble_npl_time_t ticks;
         ble_npl_time_ms_to_ticks((desc.supervision_timeout + 100) * 10, &ticks);
@@ -431,7 +431,7 @@ void NimBLEClient::setConnectPhy(uint8_t mask) {
 
 
 /**
- * @brief Set the connection paramaters to use when connecting to a server.
+ * @brief Set the connection parameters to use when connecting to a server.
  * @param [in] minInterval The minimum connection interval in 1.25ms units.
  * @param [in] maxInterval The maximum connection interval in 1.25ms units.
  * @param [in] latency The number of packets allowed to skip (extends max interval).
@@ -533,10 +533,10 @@ NimBLEConnInfo NimBLEClient::getConnInfo() {
 
 /**
  * @brief Set the timeout to wait for connection attempt to complete.
- * @param [in] time The number of seconds before timeout.
+ * @param [in] time The number of milliseconds before timeout.
  */
-void NimBLEClient::setConnectTimeout(uint8_t time) {
-    m_connectTimeout = (uint32_t)(time * 1000);
+void NimBLEClient::setConnectTimeout(uint32_t time) {
+    m_connectTimeout = time;
 } // setConnectTimeout
 
 
@@ -973,7 +973,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
                         rc, NimBLEUtils::returnCodeToString(rc));
 
             client->m_connEstablished = false;
-            client->m_pClientCallbacks->onDisconnect(client);
+            client->m_pClientCallbacks->onDisconnect(client, rc);
             break;
         } // BLE_GAP_EVENT_DISCONNECT
 
@@ -1113,8 +1113,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
                 if (event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
                     // Key is missing, try deleting.
                     ble_store_util_delete_peer(&desc.peer_id_addr);
-                } else if(NimBLEDevice::m_securityCallbacks != nullptr) {
-                    NimBLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
                 } else {
                     client->m_pClientCallbacks->onAuthenticationComplete(&desc);
                 }
@@ -1150,13 +1148,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
             } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
                 NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %" PRIu32, event->passkey.params.numcmp);
                 pkey.action = event->passkey.params.action;
-                // Compatibility only - Do not use, should be removed the in future
-                if(NimBLEDevice::m_securityCallbacks != nullptr) {
-                    pkey.numcmp_accept = NimBLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-                ////////////////////////////////////////////////////
-                } else {
-                    pkey.numcmp_accept = client->m_pClientCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-                }
+                pkey.numcmp_accept = client->m_pClientCallbacks->onConfirmPIN(event->passkey.params.numcmp);
 
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "ble_sm_inject_io result: %d", rc);
@@ -1174,14 +1166,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
             } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
                 NIMBLE_LOGD(LOG_TAG, "Enter the passkey");
                 pkey.action = event->passkey.params.action;
-
-                // Compatibility only - Do not use, should be removed the in future
-                if(NimBLEDevice::m_securityCallbacks != nullptr) {
-                    pkey.passkey = NimBLEDevice::m_securityCallbacks->onPassKeyRequest();
-                /////////////////////////////////////////////
-                } else {
-                    pkey.passkey = client->m_pClientCallbacks->onPassKeyRequest();
-                }
+                pkey.passkey = client->m_pClientCallbacks->onPassKeyRequest();
 
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "ble_sm_inject_io result: %d", rc);
@@ -1263,7 +1248,7 @@ void NimBLEClientCallbacks::onConnect(NimBLEClient* pClient) {
     NIMBLE_LOGD("NimBLEClientCallbacks", "onConnect: default");
 }
 
-void NimBLEClientCallbacks::onDisconnect(NimBLEClient* pClient) {
+void NimBLEClientCallbacks::onDisconnect(NimBLEClient* pClient, int reason) {
     NIMBLE_LOGD("NimBLEClientCallbacks", "onDisconnect: default");
 }
 
@@ -1276,15 +1261,7 @@ uint32_t NimBLEClientCallbacks::onPassKeyRequest(){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onPassKeyRequest: default: 123456");
     return 123456;
 }
-/*
-void NimBLEClientCallbacks::onPassKeyNotify(uint32_t pass_key){
-    NIMBLE_LOGD("NimBLEClientCallbacks", "onPassKeyNotify: default: %d", pass_key);
-}
 
-bool NimBLEClientCallbacks::onSecurityRequest(){
-    NIMBLE_LOGD("NimBLEClientCallbacks", "onSecurityRequest: default: true");
-    return true;
-}*/
 void NimBLEClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onAuthenticationComplete: default");
 }

@@ -38,9 +38,9 @@ class NimBLEAdvertisedDevice;
  */
 class NimBLEClient {
 public:
-    bool                                        connect(NimBLEAdvertisedDevice* device, bool deleteAttibutes = true);
-    bool                                        connect(const NimBLEAddress &address, bool deleteAttibutes = true);
-    bool                                        connect(bool deleteAttibutes = true);
+    bool                                        connect(NimBLEAdvertisedDevice* device, bool deleteAttributes = true);
+    bool                                        connect(const NimBLEAddress &address, bool deleteAttributes = true);
+    bool                                        connect(bool deleteAttributes = true);
     int                                         disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     NimBLEAddress                               getPeerAddress();
     void                                        setPeerAddress(const NimBLEAddress &address);
@@ -63,7 +63,7 @@ public:
     uint16_t                                    getConnId();
     uint16_t                                    getMTU();
     bool                                        secureConnection();
-    void                                        setConnectTimeout(uint8_t timeout);
+    void                                        setConnectTimeout(uint32_t timeout);
     void                                        setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
                                                                     uint16_t latency, uint16_t timeout,
                                                                     uint16_t scanInterval=16, uint16_t scanWindow=16);
@@ -131,13 +131,13 @@ public:
      * @brief Called when disconnected from the server.
      * @param [in] pClient A pointer to the calling client object.
      */
-    virtual void onDisconnect(NimBLEClient* pClient);
+    virtual void onDisconnect(NimBLEClient* pClient, int reason);
 
     /**
      * @brief Called when server requests to update the connection parameters.
      * @param [in] pClient A pointer to the calling client object.
      * @param [in] params A pointer to the struct containing the connection parameters requested.
-     * @return True to accept the parmeters.
+     * @return True to accept the parameters.
      */
     virtual bool onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params);
 
@@ -146,9 +146,6 @@ public:
      * @return The passkey to be sent to the server.
      */
     virtual uint32_t onPassKeyRequest();
-
-    /*virtual void onPassKeyNotify(uint32_t pass_key);
-    virtual bool onSecurityRequest();*/
 
     /**
      * @brief Called when the pairing procedure is complete.

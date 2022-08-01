@@ -15,7 +15,7 @@ void scanEndedCB(NimBLEScanResults results);
 static NimBLEAdvertisedDevice* advDevice;
 
 static bool doConnect = false;
-static uint32_t scanTime = 0; /** 0 = scan forever */
+static uint32_t scanTime = 0 * 1000; // In milliseconds, 0 = scan forever
 
 
 /**  None of these are required as they will be handled by the library with defaults. **
@@ -32,9 +32,9 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         pClient->updateConnParams(120,120,0,60);
     };
 
-    void onDisconnect(NimBLEClient* pClient) {
-        Serial.print(pClient->getPeerAddress().toString().c_str());
-        Serial.println(" Disconnected - Starting scan");
+    void onDisconnect(NimBLEClient* pClient, int reason) {
+        Serial.printf("%s Disconnected, reason = %d - Starting scan\n",
+                      pClient->getPeerAddress().toString().c_str(), reason);
         NimBLEDevice::getScan()->start(scanTime, scanEndedCB);
     };
 
@@ -169,8 +169,8 @@ bool connectToServer() {
          *  Min interval: 12 * 1.25ms = 15, Max interval: 12 * 1.25ms = 15, 0 latency, 51 * 10ms = 510ms timeout
          */
         pClient->setConnectionParams(12,12,0,51);
-        /** Set how long we are willing to wait for the connection to complete (seconds), default is 30. */
-        pClient->setConnectTimeout(5);
+        /** Set how long we are willing to wait for the connection to complete (milliseconds), default is 30000. */
+        pClient->setConnectTimeout(5 * 1000);
 
 
         if (!pClient->connect(advDevice)) {
@@ -347,7 +347,11 @@ void setup (){
     NimBLEDevice::setSecurityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
 
     /** Optional: set the transmit power, default is 3db */
+#ifdef ESP_PLATFORM
     NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** +9db */
+#else
+    NimBLEDevice::setPower(9); /** +9db */
+#endif
 
     /** Optional: set any devices you don't want to get advertisments from */
     // NimBLEDevice::addIgnored(NimBLEAddress ("aa:bb:cc:dd:ee:ff"));
