@@ -461,8 +461,6 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
                 return 0;
             }
 
-            int status;
-
             if(event->notify_tx.indication) {
                 if(event->notify_tx.status == 0) {
                     return 0; // Indication sent but not yet acknowledged.
