@@ -253,7 +253,7 @@ bool NimBLEDevice::deleteClient(NimBLEClient* pClient) {
         }
         // Since we set the flag to false the app will not get a callback
         // in the disconnect event so we call it here for good measure.
-        pClient->m_pClientCallbacks->onDisconnect(pClient);
+        pClient->m_pClientCallbacks->onDisconnect(pClient, BLE_ERR_CONN_TERM_LOCAL);
 
     } else if(pClient->m_pTaskData != nullptr) {
         rc = ble_gap_conn_cancel();

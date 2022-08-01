@@ -43,7 +43,9 @@ class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient* pclient) {
   }
 
-  void onDisconnect(BLEClient* pclient) {
+  /** onDisconnect now takes a reason parameter to indicate the reason for disconnection
+  void onDisconnect(BLEClient* pclient) { */
+  void onDisconnect(BLEClient* pclient, int reason) {
     connected = false;
     Serial.println("onDisconnect");
   }
