@@ -228,9 +228,9 @@ bool connectToServer() {
                 }
             }
 
-            /** registerForNotify() has been deprecated and replaced with subscribe() / unsubscribe().
-             *  Subscribe parameter defaults are: notifications=true, notifyCallback=nullptr, response=false.
-             *  Unsubscribe parameter defaults are: response=false.
+            /** registerForNotify() has been removed and replaced with subscribe() / unsubscribe().
+             *  Subscribe parameter defaults are: notifications=true, notifyCallback=nullptr.
+             *  Unsubscribe takes no parameters.
              */
             if(pChr->canNotify()) {
                 //if(!pChr->registerForNotify(notifyCB)) {

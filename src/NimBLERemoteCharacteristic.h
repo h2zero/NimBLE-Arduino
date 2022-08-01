@@ -64,21 +64,10 @@ public:
     NimBLEAttValue                                 readValue(time_t *timestamp = nullptr);
     std::string                                    toString();
     NimBLERemoteService*                           getRemoteService();
-
-    uint8_t                                        readUInt8()  __attribute__ ((deprecated("Use template readValue<uint8_t>()")));
-    uint16_t                                       readUInt16() __attribute__ ((deprecated("Use template readValue<uint16_t>()")));
-    uint32_t                                       readUInt32() __attribute__ ((deprecated("Use template readValue<uint32_t>()")));
-    float                                          readFloat()  __attribute__ ((deprecated("Use template readValue<float>()")));
     NimBLEAttValue                                 getValue(time_t *timestamp = nullptr);
-
     bool                                           subscribe(bool notifications = true,
-                                                             notify_callback notifyCallback = nullptr,
-                                                             bool response = true);
-    bool                                           unsubscribe(bool response = true);
-    bool                                           registerForNotify(notify_callback notifyCallback,
-                                                                     bool notifications = true,
-                                                                     bool response = true)
-                                                                     __attribute__ ((deprecated("Use subscribe()/unsubscribe()")));
+                                                             notify_callback notifyCallback = nullptr);
+    bool                                           unsubscribe();
     bool                                           writeValue(const uint8_t* data,
                                                               size_t length,
                                                               bool response = false);
@@ -160,7 +149,7 @@ private:
     friend class      NimBLERemoteDescriptor;
 
     // Private member functions
-    bool              setNotify(uint16_t val, notify_callback notifyCallback = nullptr, bool response = true);
+    bool              setNotify(uint16_t val, notify_callback notifyCallback = nullptr);
     bool              retrieveDescriptors(const NimBLEUUID *uuid_filter = nullptr);
     static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error,
                                struct ble_gatt_attr *attr, void *arg);

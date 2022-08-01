@@ -107,8 +107,13 @@ bool connectToServer() {
       Serial.println(value.c_str());
     }
 
+    /** registerForNotify() has been removed and replaced with subscribe() / unsubscribe().
+     *  Subscribe parameter defaults are: notifications=true, notifyCallback=nullptr.
+     *  Unsubscribe takes no parameters.
+     */
     if(pRemoteCharacteristic->canNotify())
-      pRemoteCharacteristic->registerForNotify(notifyCallback);
+      pRemoteCharacteristic->subscribe(true, notifyCallback);
+      /*pRemoteCharacteristic->registerForNotify(notifyCallback);*/
 
     connected = true;
     return true;
