@@ -385,7 +385,7 @@ void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertiseme
 
 /**
  * @brief Start advertising.
- * @param [in] duration The duration, in seconds, to advertise, 0 == advertise forever.
+ * @param [in] duration The duration, in milliseconds, to advertise, 0 == advertise forever.
  * @param [in] advCompleteCB A pointer to a callback to be invoked when advertising ends.
  * @return True if advertising started successfully.
  */
@@ -422,9 +422,6 @@ bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdv
 
     if(duration == 0){
         duration = BLE_HS_FOREVER;
-    }
-    else{
-        duration = duration*1000; // convert duration to milliseconds
     }
 
     m_advCompCB = advCompleteCB;

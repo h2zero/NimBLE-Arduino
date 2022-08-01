@@ -36,7 +36,7 @@ void setup()
   NimBLEDevice::setSecurityAuth(true, true, true);
   NimBLEDevice::setSecurityIOCap(BLE_HS_IO_KEYBOARD_ONLY);
   NimBLEScan *pScan = NimBLEDevice::getScan();
-  NimBLEScanResults results = pScan->start(5);
+  NimBLEScanResults results = pScan->start(5 * 1000);
 
   NimBLEUUID serviceUuid("ABCD");
 

@@ -17,6 +17,7 @@ For more information on the improvements and additions please refer to the [clas
     * [Remote Services](#remote-services)
     * [Remote characteristics](#remote-characteristics)
     * [Security](#client-security)
+* [Scanning](#scan-api)
 * [General Security](#security-api)
 * [Configuration](#arduino-configuration)
 <br/>
@@ -319,6 +320,11 @@ Also now returns a pointer to `std::vector` instead of `std::map`.
 ### Client Security
 The client will automatically initiate security when the peripheral responds that it's required.
 The default configuration will use "just-works" pairing with no bonding, if you wish to enable bonding see below.
+<br/>
+
+<a name="scan-api"></a>
+### BLE Scan
+The scan API is mostly unchanged from the original except for `NimBLEScan::start`, in which the duration parameter is now in milliseconds instead of seconds.
 <br/>
 
 <a name="security-api"></a>

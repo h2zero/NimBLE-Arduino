@@ -15,7 +15,7 @@ void scanEndedCB(NimBLEScanResults results);
 static NimBLEAdvertisedDevice* advDevice;
 
 static bool doConnect = false;
-static uint32_t scanTime = 0; /** 0 = scan forever */
+static uint32_t scanTime = 0 * 1000; // In milliseconds, 0 = scan forever
 
 
 /**  None of these are required as they will be handled by the library with defaults. **
@@ -169,8 +169,8 @@ bool connectToServer() {
          *  Min interval: 12 * 1.25ms = 15, Max interval: 12 * 1.25ms = 15, 0 latency, 51 * 10ms = 510ms timeout
          */
         pClient->setConnectionParams(12,12,0,51);
-        /** Set how long we are willing to wait for the connection to complete (seconds), default is 30. */
-        pClient->setConnectTimeout(5);
+        /** Set how long we are willing to wait for the connection to complete (milliseconds), default is 30000. */
+        pClient->setConnectTimeout(5 * 1000);
 
 
         if (!pClient->connect(advDevice)) {

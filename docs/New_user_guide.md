@@ -146,7 +146,7 @@ After initializing the NimBLE stack we create a scan instance by calling `NimBLE
 
 Once we have created the scan we can start looking for advertising servers.  
 
-To do this we call `NimBLEScan::start(duration)`, the duration parameter is a uint32_t that specifies the number of seconds to scan for,  
+To do this we call `NimBLEScan::start(duration)`, the duration parameter is a uint32_t that specifies the number of milliseconds to scan for,  
 passing 0 will scan forever.  
 
 In this example we will scan for 10 seconds. This is a blocking function (a non blocking overload is also available).  
@@ -162,7 +162,7 @@ void app_main(void)
     NimBLEDevice::init("");
     
     NimBLEScan *pScan = NimBLEDevice::getScan();
-    NimBLEScanResults results = pScan->start(10);
+    NimBLEScanResults results = pScan->start(10 * 1000);
 }
 ```
 <br/>
@@ -302,7 +302,7 @@ void app_main(void)
     NimBLEDevice::init("");
     
     NimBLEScan *pScan = NimBLEDevice::getScan();
-    NimBLEScanResults results = pScan->start(10);
+    NimBLEScanResults results = pScan->start(10 * 1000);
     
     NimBLEUUID serviceUuid("ABCD");
     
