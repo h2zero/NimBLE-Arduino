@@ -24,7 +24,7 @@ void scanEndedCB(NimBLEScanResults results);
 
 static NimBLEAdvertisedDevice* advDevice;
 static bool doConnect = false;
-static uint32_t scanTime = 10; /* 0 = scan forever */
+static uint32_t scanTime = 10 * 1000; // In milliseconds, 0 = scan forever
 
 /* Define the PHY's to use when connecting to peer devices, can be 1, 2, or all 3 (default).*/
 static uint8_t connectPhys = BLE_GAP_LE_PHY_CODED_MASK | BLE_GAP_LE_PHY_1M_MASK /*| BLE_GAP_LE_PHY_2M_MASK */ ;
@@ -85,8 +85,8 @@ bool connectToServer() {
      */
     pClient->setConnectPhy(connectPhys);
 
-    /** Set how long we are willing to wait for the connection to complete (seconds), default is 30. */
-    pClient->setConnectTimeout(10);
+    /** Set how long we are willing to wait for the connection to complete (milliseconds), default is 30000. */
+    pClient->setConnectTimeout(10 * 1000);
 
     if (!pClient->connect(advDevice)) {
         /* Created a client but failed to connect, don't need to keep it as it has no data */

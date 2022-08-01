@@ -91,7 +91,7 @@ void loop() {
             pAdvertising->setScanFilter(false,true);
         }
         // advertise with whitelist for 30 seconds
-        pAdvertising->start(30, onAdvComplete);
+        pAdvertising->start(30 * 1000, onAdvComplete);
         Serial.println("start advertising");
         oldDeviceConnected = deviceConnected;
     }
