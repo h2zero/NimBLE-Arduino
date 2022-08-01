@@ -1,6 +1,14 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [Unreleased]
+
+### Changed
+- NimBLESecurity class removed.
+
+### Added
+- `NimBLEDevice::setDeviceName` to change the device name after initialization.
+- `NimBLEHIDDevice::batteryLevel` returns the HID device battery level characteristic.
 
 ## [1.4.0] - 2022-07-10
 
