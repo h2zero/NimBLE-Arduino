@@ -287,15 +287,15 @@ Also now returns a pointer to `std::vector` instead of `std::map`.
 ### Remote Characteristics
 `BLERemoteCharacteristic` (`NimBLERemoteCharacteristic`) There have been a few changes to the methods in this class:  
 
-> `BLERemoteCharacteristic::writeValue` (`NimBLERemoteCharacteristic::writeValue`)  
-> `BLERemoteCharacteristic::registerForNotify` (`NimBLERemoteCharacteristic::registerForNotify`)  
+> `BLERemoteCharacteristic::writeValue` (`NimBLERemoteCharacteristic::writeValue`)
 
-Now return true or false to indicate success or failure so you can choose to disconnect or try again.  
+Now returns true or false to indicate success or failure so you can choose to disconnect or try again.  
 <br/>
 
-> `BLERemoteCharacteristic::registerForNotify` (`NimBLERemoteCharacteristic::registerForNotify`)  
+> `BLERemoteCharacteristic::registerForNotify`
 
-Is now **deprecated**.  
+Has been removed.
+
 > `NimBLERemoteCharacteristic::subscribe`  
 > `NimBLERemoteCharacteristic::unsubscribe`  
 

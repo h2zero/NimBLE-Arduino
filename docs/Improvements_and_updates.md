@@ -97,11 +97,11 @@ struct my_struct{
 <br/>
 
 `NimBLERemoteCharacteristic::registerForNotify`  
-Has been **deprecated** as now the internally stored characteristic value is updated when notification/indication is recieved.  
+Has been removed.
 
 `NimBLERemoteCharacteristic::subscribe` and `NimBLERemoteCharacteristic::unsubscribe` have been implemented to replace it.  
-A callback is no longer requred to get the most recent value unless timing is important. Instead, the application can call `NimBLERemoteCharacteristic::getValue` to  
-get the last updated value any time.  
+
+The internally stored characteristic value is now updated when notification/indication is recieved. Making a callback no longer required to get the most recent value unless timing is important. Instead, the application can call `NimBLERemoteCharacteristic::getValue` to get the most recent value any time.  
 <br/>  
 
 The `notifiy_callback` function is now defined as a `std::function` to take advantage of using `std::bind` to specifiy a class member function for the callback.  
