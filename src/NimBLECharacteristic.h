@@ -200,30 +200,13 @@ private:
  */
 class NimBLECharacteristicCallbacks {
 public:
-
-/**
- * @brief An enum to provide the callback the status of the
- * notification/indication, implemented for backward compatibility.
- * @deprecated To be removed in the future as the NimBLE stack return code is also provided.
- */
-    typedef enum {
-        SUCCESS_INDICATE,
-        SUCCESS_NOTIFY,
-        ERROR_INDICATE_DISABLED,
-        ERROR_NOTIFY_DISABLED,
-        ERROR_GATT,
-        ERROR_NO_CLIENT,
-        ERROR_INDICATE_TIMEOUT,
-        ERROR_INDICATE_FAILURE
-    }Status;
-
     virtual      ~NimBLECharacteristicCallbacks();
     virtual void onRead(NimBLECharacteristic* pCharacteristic);
     virtual void onRead(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc);
     virtual void onWrite(NimBLECharacteristic* pCharacteristic);
     virtual void onWrite(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc);
     virtual void onNotify(NimBLECharacteristic* pCharacteristic);
-    virtual void onStatus(NimBLECharacteristic* pCharacteristic, Status s, int code);
+    virtual void onStatus(NimBLECharacteristic* pCharacteristic, int code);
     virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue);
 };
 

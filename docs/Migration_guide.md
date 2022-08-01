@@ -116,6 +116,8 @@ BLECharacteristic *pCharacteristic = pService->createCharacteristic(
 
 `BLECharacteristicCallbacks` (`NimBLECharacteristicCallbacks`) has a new method `NimBLECharacteristicCallbacks::onSubscribe` which is called when a client subscribes to notifications/indications.
 
+`NimBLECharacteristicCallbacks::onStatus` (`NimBLECharacteristicCallbacks::onStatus`) has had the status parameter removed as it was unnecessary since the status code from the BLE stack was also provided. The status code for success is 0 for notifications and BLE_HS_EDONE for indications, any other value is an error.
+
 **Note:** All callback methods have default implementations which allows the application to implement only the methods applicable.
 <br/>
 

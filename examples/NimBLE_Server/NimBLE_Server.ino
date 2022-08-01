@@ -91,13 +91,11 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
     };
 
 
-    /** The status returned in status is defined in NimBLECharacteristic.h.
+    /**
      *  The value returned in code is the NimBLE host return code.
      */
-    void onStatus(NimBLECharacteristic* pCharacteristic, Status status, int code) {
-        String str = ("Notification/Indication status code: ");
-        str += status;
-        str += ", return code: ";
+    void onStatus(NimBLECharacteristic* pCharacteristic, int code) {
+        String str = ("Notification/Indication return code: ");
         str += code;
         str += ", ";
         str += NimBLEUtils::returnCodeToString(code);
