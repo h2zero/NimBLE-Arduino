@@ -32,9 +32,9 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         pClient->updateConnParams(120,120,0,60);
     };
 
-    void onDisconnect(NimBLEClient* pClient) {
-        Serial.print(pClient->getPeerAddress().toString().c_str());
-        Serial.println(" Disconnected - Starting scan");
+    void onDisconnect(NimBLEClient* pClient, int reason) {
+        Serial.printf("%s Disconnected, reason = %d - Starting scan\n",
+                      pClient->getPeerAddress().toString().c_str(), reason);
         NimBLEDevice::getScan()->start(scanTime, scanEndedCB);
     };
 

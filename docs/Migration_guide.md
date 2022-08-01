@@ -16,6 +16,7 @@ For more information on the improvements and additions please refer to the [clas
 * [Client](#client-api)
     * [Remote Services](#remote-services)
     * [Remote characteristics](#remote-characteristics)
+    * [Client Callbacks](#client-callbacks)
     * [Security](#client-security)
 * [General Security](#security-api)
 * [Configuration](#arduino-configuration)
@@ -332,6 +333,13 @@ This method now takes an optional (bool) parameter to indicate if the descriptor
 the currently known database returned (false : default).  
 Also now returns a pointer to `std::vector` instead of `std::map`.  
 <br/>
+
+<a name="client-callbacks"></a>
+### Client callbacks
+
+> `BLEClientCallbacks::onDisconnect` (`NimBLEClientCallbacks::onDisconnect`)
+
+This now takes a second parameter `int reason` which provides the reason code for disconnection.
 
 <a name="client-security"></a>
 ### Client Security
