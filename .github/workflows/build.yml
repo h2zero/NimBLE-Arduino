@@ -93,3 +93,46 @@ jobs:
               version: latest
           fqbn: "h2zero:arm-ble:${{ matrix.variant }}"
           sketch-paths: ${{ matrix.example }}
+
+  build_n-able-pio:
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - "examples/NimBLE_Client"
+          - "examples/NimBLE_Server"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.x"
+      - name: Install platformio
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+      - name: Build esp PIO
+        run: |
+          mkdir -p example/lib
+          rsync -Rr . example/lib/
+          mkdir example/src
+          cat > example/platformio.ini << EOF
+            [env]
+            platform = https://github.com/h2zero/platform-n-able.git#1.0.0
+            framework = arduino
+
+            [env:generic_nrf51822_xxaa
+            board = generic_nrf51822_xxaa
+
+            [env:generic_nrf52832]
+            board = generic_nrf52832
+
+            [env:generic_nrf52833]
+            board = generic_nrf52833
+
+            [env:generic_nrf52840]
+            board = generic_nrf52840
+          EOF
+          cp ${{ matrix.example }}/* example/src/
+          platformio run -d example
