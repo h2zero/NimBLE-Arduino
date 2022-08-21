@@ -286,6 +286,7 @@ std::string NimBLEDescriptor::toString() {
 /**
  * @brief Callback function to support a read request.
  * @param [in] pDescriptor The descriptor that is the source of the event.
+ * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  */
 void NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
     (void)pDescriptor;
@@ -296,6 +297,7 @@ void NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor, NimBLEConn
 /**
  * @brief Callback function to support a write request.
  * @param [in] pDescriptor The descriptor that is the source of the event.
+ * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  */
 void NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
     (void)pDescriptor;

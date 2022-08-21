@@ -584,7 +584,6 @@ bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyC
  * @brief Subscribe for notifications or indications.
  * @param [in] notifications If true, subscribe for notifications, false subscribe for indications.
  * @param [in] notifyCallback A callback to be invoked for a notification.
- * @param [in] response If true, require a write response from the descriptor write operation.
  * If NULL is provided then no callback is performed.
  * @return false if writing to the descriptor failed.
  */
