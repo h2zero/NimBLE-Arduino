@@ -33,7 +33,7 @@ void setup() {
 
   NimBLEDevice::init("");
   pBLEScan = NimBLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pBLEScan->setScanCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setActiveScan(true);
   pBLEScan->setInterval(100);
   pBLEScan->setFilterPolicy(BLE_HCI_SCAN_FILT_NO_WL);
@@ -41,7 +41,7 @@ void setup() {
 }
 
 void loop() {
-  NimBLEScanResults foundDevices = pBLEScan->start(scanTime, false);
+  NimBLEScanResults foundDevices = pBLEScan->getResults(scanTime, false);
   Serial.print("Devices found: ");
   Serial.println(foundDevices.getCount());
   Serial.println("Scan done!");

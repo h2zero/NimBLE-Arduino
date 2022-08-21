@@ -10,8 +10,6 @@
 
 #include <NimBLEDevice.h>
 
-void scanEndedCB(NimBLEScanResults results);
-
 static NimBLEAdvertisedDevice* advDevice;
 
 static bool doConnect = false;
@@ -35,7 +33,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     void onDisconnect(NimBLEClient* pClient, int reason) {
         Serial.printf("%s Disconnected, reason = %d - Starting scan\n",
                       pClient->getPeerAddress().toString().c_str(), reason);
-        NimBLEDevice::getScan()->start(scanTime, scanEndedCB);
+        NimBLEDevice::getScan()->start(scanTime);
     };
 
     /** Called when the peripheral requests a change to the connection parameters.
@@ -84,7 +82,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
 
 /** Define a class to handle the callbacks when advertisments are received */
-class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
+class scanCallbacks: public NimBLEScanCallbacks {
 
     void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
         Serial.print("Advertised Device found: ");
@@ -99,7 +97,12 @@ class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
             /** Ready to connect now */
             doConnect = true;
         }
-    };
+    }
+
+    /** Callback to process the results of the completed scan or restart it */
+    void onScanEnd(NimBLEScanResults results) {
+        Serial.println("Scan Ended");
+    }
 };
 
 
@@ -113,11 +116,6 @@ void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
     str += ", Characteristic = " + std::string(pRemoteCharacteristic->getUUID());
     str += ", Value = " + std::string((char*)pData, length);
     Serial.println(str.c_str());
-}
-
-/** Callback to process the results of the last scan or restart it */
-void scanEndedCB(NimBLEScanResults results){
-    Serial.println("Scan Ended");
 }
 
 
@@ -360,7 +358,7 @@ void setup (){
     NimBLEScan* pScan = NimBLEDevice::getScan();
 
     /** create a callback that gets called when advertisers are found */
-    pScan->setAdvertisedDeviceCallbacks(new AdvertisedDeviceCallbacks());
+    pScan->setScanCallbacks(new scanCallbacks());
 
     /** Set scan interval (how often) and window (how long) in milliseconds */
     pScan->setInterval(45);
@@ -373,7 +371,7 @@ void setup (){
     /** Start scanning for advertisers for the scan time specified (in seconds) 0 = forever
      *  Optional callback for when scanning stops.
      */
-    pScan->start(scanTime, scanEndedCB);
+    pScan->start(scanTime);
 }
 
 
@@ -392,5 +390,5 @@ void loop (){
         Serial.println("Failed to connect, starting scan");
     }
 
-    NimBLEDevice::getScan()->start(scanTime,scanEndedCB);
+    NimBLEDevice::getScan()->start(scanTime);
 }

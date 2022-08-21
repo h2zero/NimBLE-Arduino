@@ -162,7 +162,7 @@ void app_main(void)
     NimBLEDevice::init("");
     
     NimBLEScan *pScan = NimBLEDevice::getScan();
-    NimBLEScanResults results = pScan->start(10 * 1000);
+    NimBLEScanResults results = pScan->getResults(10 * 1000);
 }
 ```
 <br/>

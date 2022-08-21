@@ -31,7 +31,7 @@
 class NimBLEDevice;
 class NimBLEScan;
 class NimBLEAdvertisedDevice;
-class NimBLEAdvertisedDeviceCallbacks;
+class NimBLEScanCallbacks;
 class NimBLEAddress;
 
 /**
@@ -62,10 +62,9 @@ private:
  */
 class NimBLEScan {
 public:
-    bool                start(uint32_t duration, void (*scanCompleteCB)(NimBLEScanResults), bool is_continue = false);
-    NimBLEScanResults   start(uint32_t duration, bool is_continue = false);
+    bool                start(uint32_t duration, bool is_continue = false);
     bool                isScanning();
-    void                setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* pAdvertisedDeviceCallbacks, bool wantDuplicates = false);
+    void                setScanCallbacks(NimBLEScanCallbacks* pScanCallbacks, bool wantDuplicates = false);
     void                setActiveScan(bool active);
     void                setInterval(uint16_t intervalMSecs);
     void                setWindow(uint16_t windowMSecs);
@@ -76,6 +75,7 @@ public:
     bool                stop();
     void                clearResults();
     NimBLEScanResults   getResults();
+    NimBLEScanResults   getResults(uint32_t duration, bool is_continue = false);
     void                setMaxResults(uint8_t maxResults);
     void                erase(const NimBLEAddress &address);
 
@@ -85,18 +85,33 @@ private:
 
     NimBLEScan();
     ~NimBLEScan();
-    static int          handleGapEvent(ble_gap_event*  event, void* arg);
-    void                onHostReset();
-    void                onHostSync();
+    static int  handleGapEvent(ble_gap_event*  event, void* arg);
+    void        onHostReset();
+    void        onHostSync();
 
-    NimBLEAdvertisedDeviceCallbacks*    m_pAdvertisedDeviceCallbacks = nullptr;
-    void                                (*m_scanCompleteCB)(NimBLEScanResults scanResults);
-    ble_gap_disc_params                 m_scan_params;
-    bool                                m_ignoreResults;
-    NimBLEScanResults                   m_scanResults;
-    uint32_t                            m_duration;
-    ble_task_data_t                     *m_pTaskData;
-    uint8_t                             m_maxResults;
+    NimBLEScanCallbacks*  m_pScanCallbacks;
+    ble_gap_disc_params   m_scan_params;
+    bool                  m_ignoreResults;
+    NimBLEScanResults     m_scanResults;
+    uint32_t              m_duration;
+    ble_task_data_t       *m_pTaskData;
+    uint8_t               m_maxResults;
+};
+
+/**
+ * @brief A callback handler for callbacks associated device scanning.
+ */
+class NimBLEScanCallbacks {
+public:
+    virtual ~NimBLEScanCallbacks() {}
+    /**
+     * @brief Called when a new scan result is detected.
+     *
+     * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
+     * device that was found.  During any individual scan, a device will only be detected one time.
+     */
+    virtual void onResult(NimBLEAdvertisedDevice* advertisedDevice) {};
+    virtual void onScanEnd(NimBLEScanResults scanResults) {};
 };
 
 #endif /* CONFIG_BT_ENABLED CONFIG_BT_NIMBLE_ROLE_OBSERVER */
