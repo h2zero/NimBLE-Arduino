@@ -136,3 +136,11 @@ jobs:
           EOF
           cp ${{ matrix.example }}/* example/src/
           platformio run -d example
+  build_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Doxygen Action
+        uses: mattnotmitt/doxygen-action@v1.9.1
+        with:
+          working-directory: 'docs/'
