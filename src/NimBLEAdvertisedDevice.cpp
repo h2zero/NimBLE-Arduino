@@ -33,7 +33,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice() :
 {
     m_advType          = 0;
     m_rssi             = -9999;
-    m_callbackSent     = false;
+    m_callbackSent     = 0;
     m_timestamp        = 0;
     m_advLength        = 0;
 } // NimBLEAdvertisedDevice

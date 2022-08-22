@@ -135,7 +135,12 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                                          event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP));
 
             if (pScan->m_pScanCallbacks) {
-                if (pScan->m_scan_params.filter_duplicates && advertisedDevice->m_callbackSent) {
+                if (advertisedDevice->m_callbackSent == 0 || !pScan->m_scan_params.filter_duplicates) {
+                    advertisedDevice->m_callbackSent = 1;
+                    pScan->m_pScanCallbacks->onDiscovered(advertisedDevice);
+                }
+
+                if (pScan->m_scan_params.filter_duplicates && advertisedDevice->m_callbackSent >= 2) {
                     return 0;
                 }
 
@@ -145,16 +150,16 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                   (advertisedDevice->getAdvType() != BLE_HCI_ADV_TYPE_ADV_IND &&
                    advertisedDevice->getAdvType() != BLE_HCI_ADV_TYPE_ADV_SCAN_IND))
                 {
-                    advertisedDevice->m_callbackSent = true;
+                    advertisedDevice->m_callbackSent = 2;
                     pScan->m_pScanCallbacks->onResult(advertisedDevice);
 
                 // Otherwise, wait for the scan response so we can report the complete data.
                 } else if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
-                    advertisedDevice->m_callbackSent = true;
+                    advertisedDevice->m_callbackSent = 2;
                     pScan->m_pScanCallbacks->onResult(advertisedDevice);
                 }
                 // If not storing results and we have invoked the callback, delete the device.
-                if(pScan->m_maxResults == 0 && advertisedDevice->m_callbackSent) {
+                if(pScan->m_maxResults == 0 && advertisedDevice->m_callbackSent >= 2) {
                     pScan->erase(advertisedAddress);
                 }
             }
@@ -164,16 +169,6 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
         case BLE_GAP_EVENT_DISC_COMPLETE: {
             NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d",
                         event->disc_complete.reason);
-
-            // If a device advertised with scan response available and it was not received
-            // the callback would not have been invoked, so do it here.
-            if(pScan->m_pScanCallbacks) {
-                for(auto &it : pScan->m_scanResults.m_advertisedDevicesVector) {
-                    if(!it->m_callbackSent) {
-                        pScan->m_pScanCallbacks->onResult(it);
-                    }
-                }
-            }
 
             if(pScan->m_maxResults == 0) {
                 pScan->clearResults();
