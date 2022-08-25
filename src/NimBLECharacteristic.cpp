@@ -1,6 +1,11 @@
 /*
  * NimBLECharacteristic.cpp
  *
+ *  Created: on Aug 25, 2022
+ *      Author Gluhovsky
+ *
+ * NimBLECharacteristic.cpp
+ *
  *  Created: on March 3, 2020
  *      Author H2zero
  *
@@ -21,6 +26,15 @@
 #define NULL_HANDLE (0xffff)
 #define NIMBLE_SUB_NOTIFY   0x0001
 #define NIMBLE_SUB_INDICATE 0x0002
+
+// Quick swap, based on std::move
+template<typename T>
+void swap(T& x, T& y)
+{
+  T z = std::move(x);
+    x = std::move(y);
+    y = std::move(z);
+}
 
 static NimBLECharacteristicCallbacks defaultCallback;
 static const char* LOG_TAG = "NimBLECharacteristic";
@@ -512,6 +526,45 @@ void NimBLECharacteristic::notify(const uint8_t* value, size_t length, bool is_n
 
     NIMBLE_LOGD(LOG_TAG, "<< notify");
 } // Notify
+
+/**
+ * @brief Send a notification or indication.
+ * @param[in] value A std::vector<uint8_t> containing the value to send as the notification value.
+ * @param[in] conn_handle A best way to send notifications to specific client - ATT MTU handle of the connection to query.
+ * @param[in] is_notification if true sends a notification, false sends an indication.
+ */
+void NimBLECharacteristic::notify(const std::vector<uint8_t>& value, int16_t conn_handle, bool is_notification) {
+    notify(value.data(), value.size(), conn_handle, is_notification);
+} // notify
+
+
+/**
+ * @brief Send a notification or indication.
+ * @param[in] value A pointer to the data to send.
+ * @param[in] length The length of the data to send.
+ * @param[in] conn_handle A best way to send notifications to specific client - ATT MTU handle of the connection to query.
+ * @param[in] is_notification if true sends a notification, false sends an indication.
+ */
+void NimBLECharacteristic::notify(const uint8_t* value, size_t length, int16_t conn_handle, bool is_notification)
+{
+    if (conn_handle <= 0) {
+        // Send a notification or indication to all clients
+        notify(value, length, is_notification);
+    } else {
+        std::vector<std::pair<uint16_t, uint16_t>> subscribedVec;
+        for (auto &it : m_subscribedVec) {
+            if (it.first == conn_handle)
+                subscribedVec.push_back(it);
+        }
+        // store m_subscribedVec
+        ::swap(subscribedVec, m_subscribedVec);
+        // Send a notification or indication to specific client
+        notify(value, length, is_notification);
+        // restore m_subscribedVec
+        ::swap(subscribedVec, m_subscribedVec);
+        subscribedVec.clear();
+    }
+} // notify
 
 
 /**

@@ -1,4 +1,9 @@
 /*
+ * NimBLECharacteristic.cpp
+ *
+ *  Created: on Aug 25, 2022
+ *      Author Gluhovsky
+ *
  * NimBLECharacteristic.h
  *
  *  Created: on March 3, 2020
@@ -87,6 +92,8 @@ public:
     void              notify(bool is_notification = true);
     void              notify(const uint8_t* value, size_t length, bool is_notification = true);
     void              notify(const std::vector<uint8_t>& value, bool is_notification = true);
+    void              notify(const uint8_t* value, size_t length, int16_t conn_handle, bool is_notification = true);
+    void              notify(const std::vector<uint8_t>& value, int16_t conn_handle, bool is_notification = true);
     size_t            getSubscribedCount();
     void              addDescriptor(NimBLEDescriptor *pDescriptor);
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
