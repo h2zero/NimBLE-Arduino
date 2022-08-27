@@ -1,7 +1,7 @@
 /*
  * NimBLECharacteristic.cpp
  *
- *  Created: on Aug 25, 2022
+ *  Created: on Aug 27, 2022
  *      Author Gluhovsky
  *
  * NimBLECharacteristic.h
@@ -89,11 +89,9 @@ public:
     void              indicate();
     void              indicate(const uint8_t* value, size_t length);
     void              indicate(const std::vector<uint8_t>& value);
-    void              notify(bool is_notification = true);
-    void              notify(const uint8_t* value, size_t length, bool is_notification = true);
-    void              notify(const std::vector<uint8_t>& value, bool is_notification = true);
-    void              notify(const uint8_t* value, size_t length, int16_t conn_handle, bool is_notification = true);
-    void              notify(const std::vector<uint8_t>& value, int16_t conn_handle, bool is_notification = true);
+    void              notify(bool is_notification = true, int16_t conn_handle = (-1));
+    void              notify(const uint8_t* value, size_t length, bool is_notification = true, int16_t conn_handle = (-1));
+    void              notify(const std::vector<uint8_t>& value, bool is_notification = true, int16_t conn_handle = (-1));
     size_t            getSubscribedCount();
     void              addDescriptor(NimBLEDescriptor *pDescriptor);
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid);
