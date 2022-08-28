@@ -54,6 +54,8 @@ extern "C" {
 /** Connection handle not present */
 #define BLE_HS_CONN_HANDLE_NONE     0xffff
 
+#define BLE_HS_CTRL_DATA_HDR_SZ     0x4
+
 /**
  * @brief Bluetooth Host Error Code
  * @defgroup bt_host_err Bluetooth Host Error Code
