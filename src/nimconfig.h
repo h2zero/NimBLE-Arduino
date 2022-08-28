@@ -288,12 +288,16 @@
 #define CONFIG_IDF_TARGET_ESP32 1
 #endif
 
+#if !defined(CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE)
+#define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE 1
+#endif
+
 #if CONFIG_BT_NIMBLE_EXT_ADV || CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV
 #  if defined(CONFIG_IDF_TARGET_ESP32)
 #    error Extended advertising is not supported on ESP32.
 #  endif
 #endif
-#endif
+#endif // ESP_PLATFORM
 
 #if CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV && !CONFIG_BT_NIMBLE_EXT_ADV
 #  error Extended advertising must be enabled to use periodic advertising.
