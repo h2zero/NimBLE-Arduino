@@ -1,11 +1,6 @@
 /*
  * NimBLECharacteristic.cpp
  *
- *  Created: on Aug 27, 2022
- *      Author Gluhovsky
- *
- * NimBLECharacteristic.cpp
- *
  *  Created: on March 3, 2020
  *      Author H2zero
  *
@@ -416,9 +411,9 @@ void NimBLECharacteristic::indicate(const std::vector<uint8_t>& value) {
 /**
  * @brief Send a notification or indication.
  * @param[in] is_notification if true sends a notification, false sends an indication.
- * @param[in] conn_handle Connection handle to send individual notification, or -1 to send notification to all subscribed clients.
+ * @param[in] conn_handle Connection handle to send individual notification, or BLE_HCI_LE_CONN_HANDLE_MAX + 1 to send notification to all subscribed clients.
  */
-void NimBLECharacteristic::notify(bool is_notification, int16_t conn_handle) {
+void NimBLECharacteristic::notify(bool is_notification, uint16_t conn_handle) {
     notify(m_value.data(), m_value.length(), is_notification, conn_handle);
 } // notify
 
@@ -427,9 +422,9 @@ void NimBLECharacteristic::notify(bool is_notification, int16_t conn_handle) {
  * @brief Send a notification or indication.
  * @param[in] value A std::vector<uint8_t> containing the value to send as the notification value.
  * @param[in] is_notification if true sends a notification, false sends an indication.
- * @param[in] conn_handle Connection handle to send individual notification, or -1 to send notification to all subscribed clients.
+ * @param[in] conn_handle Connection handle to send individual notification, or BLE_HCI_LE_CONN_HANDLE_MAX + 1 to send notification to all subscribed clients.
  */
-void NimBLECharacteristic::notify(const std::vector<uint8_t>& value, bool is_notification, int16_t conn_handle) {
+void NimBLECharacteristic::notify(const std::vector<uint8_t>& value, bool is_notification, uint16_t conn_handle) {
     notify(value.data(), value.size(), is_notification, conn_handle);
 } // notify
 
@@ -439,9 +434,9 @@ void NimBLECharacteristic::notify(const std::vector<uint8_t>& value, bool is_not
  * @param[in] value A pointer to the data to send.
  * @param[in] length The length of the data to send.
  * @param[in] is_notification if true sends a notification, false sends an indication.
- * @param[in] conn_handle Connection handle to send individual notification, or -1 to send notification to all subscribed clients.
+ * @param[in] conn_handle Connection handle to send individual notification, or BLE_HCI_LE_CONN_HANDLE_MAX + 1 to send notification to all subscribed clients.
  */
-void NimBLECharacteristic::notify(const uint8_t* value, size_t length, bool is_notification, int16_t conn_handle) {
+void NimBLECharacteristic::notify(const uint8_t* value, size_t length, bool is_notification, uint16_t conn_handle) {
     NIMBLE_LOGD(LOG_TAG, ">> notify: length: %d", length);
 
     if(!(m_properties & NIMBLE_PROPERTY::NOTIFY) &&
@@ -466,7 +461,7 @@ void NimBLECharacteristic::notify(const uint8_t* value, size_t length, bool is_n
 
     for (auto &it : m_subscribedVec) {
         // check if need a specific client
-        if ((conn_handle >= 0) && (it.first != conn_handle)) {
+        if ((conn_handle <= BLE_HCI_LE_CONN_HANDLE_MAX) && (it.first != conn_handle)) {
             continue;
         }
 
