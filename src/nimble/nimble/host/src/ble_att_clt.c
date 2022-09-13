@@ -952,7 +952,7 @@ ble_att_clt_rx_indicate(uint16_t conn_handle, struct os_mbuf **rxom)
 #endif
 
     /* No payload. */
-    ble_gattc_rx_indicate_rsp(conn_handle);
+    ble_gatts_rx_indicate_rsp(conn_handle);
     return 0;
 }
 

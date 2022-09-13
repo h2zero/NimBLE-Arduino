@@ -82,19 +82,25 @@ typedef union {
 
 #define BLE_UUID16_INIT(uuid16)         \
     {                                   \
-        .u.type = BLE_UUID_TYPE_16,     \
+        .u = {                          \
+            .type = BLE_UUID_TYPE_16,   \
+        },                              \
         .value = (uuid16),              \
     }
 
 #define BLE_UUID32_INIT(uuid32)         \
     {                                   \
-        .u.type = BLE_UUID_TYPE_32,     \
+        .u = {                          \
+            .type = BLE_UUID_TYPE_32,   \
+        },                              \
         .value = (uuid32),              \
     }
 
-#define BLE_UUID128_INIT(uuid128...)    \
+#define BLE_UUID128_INIT(uuid128 ...)   \
     {                                   \
-        .u.type = BLE_UUID_TYPE_128,    \
+        .u = {                          \
+            .type = BLE_UUID_TYPE_128,  \
+        },                              \
         .value = { uuid128 },           \
     }
 

@@ -92,6 +92,13 @@ void ble_gap_rx_scan_req_rcvd(const struct ble_hci_ev_le_subev_scan_req_rcvd *ev
 #endif
 void ble_gap_rx_adv_report(struct ble_gap_disc_desc *desc);
 void ble_gap_rx_rd_rem_sup_feat_complete(const struct ble_hci_ev_le_subev_rd_rem_used_feat *ev);
+#if MYNEWT_VAL(BLE_CONN_SUBRATING)
+void ble_gap_rx_subrate_change(const struct ble_hci_ev_le_subev_subrate_change *ev);
+#endif
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+void ble_gap_rx_transmit_power_report(const struct ble_hci_ev_le_subev_transmit_power_report *ev);
+void ble_gap_rx_le_pathloss_threshold(const struct ble_hci_ev_le_subev_path_loss_threshold *ev);
+#endif
 
 struct ble_gap_conn_complete
 {
