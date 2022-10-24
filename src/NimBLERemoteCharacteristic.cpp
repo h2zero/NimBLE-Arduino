@@ -564,7 +564,7 @@ int NimBLERemoteCharacteristic::onReadCB(uint16_t conn_handle,
  * If NULL is provided then no callback is performed.
  * @return false if writing to the descriptor failed.
  */
-bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCallback) {
+bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCallback, bool response) {
     NIMBLE_LOGD(LOG_TAG, ">> setNotify(): %s, %02x", toString().c_str(), val);
 
     m_notifyCallback = notifyCallback;
@@ -576,7 +576,8 @@ bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyC
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< setNotify()");
-    return desc->writeValue((uint8_t *)&val, 2, true);
+
+    return desc->writeValue((uint8_t *)&val, 2, response);
 } // setNotify
 
 
@@ -584,14 +585,15 @@ bool NimBLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyC
  * @brief Subscribe for notifications or indications.
  * @param [in] notifications If true, subscribe for notifications, false subscribe for indications.
  * @param [in] notifyCallback A callback to be invoked for a notification.
+ * @param [in] response If true, require a write response from the descriptor write operation.
  * If NULL is provided then no callback is performed.
  * @return false if writing to the descriptor failed.
  */
-bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback notifyCallback) {
+bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback notifyCallback, bool response) {
     if(notifications) {
-        return setNotify(0x01, notifyCallback);
+        return setNotify(0x01, notifyCallback, response);
     } else {
-        return setNotify(0x02, notifyCallback);
+        return setNotify(0x02, notifyCallback, response);
     }
 } // subscribe
 
@@ -601,8 +603,8 @@ bool NimBLERemoteCharacteristic::subscribe(bool notifications, notify_callback n
  * @param [in] response bool if true, require a write response from the descriptor write operation.
  * @return false if writing to the descriptor failed.
  */
-bool NimBLERemoteCharacteristic::unsubscribe() {
-    return setNotify(0x00, nullptr);
+bool NimBLERemoteCharacteristic::unsubscribe(bool response) {
+    return setNotify(0x00, nullptr, response);
 } // unsubscribe
 
 

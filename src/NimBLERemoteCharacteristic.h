@@ -66,8 +66,9 @@ public:
     NimBLERemoteService*                           getRemoteService();
     NimBLEAttValue                                 getValue(time_t *timestamp = nullptr);
     bool                                           subscribe(bool notifications = true,
-                                                             notify_callback notifyCallback = nullptr);
-    bool                                           unsubscribe();
+                                                             notify_callback notifyCallback = nullptr,
+                                                             bool response = true);
+    bool                                           unsubscribe(bool response = true);
     bool                                           writeValue(const uint8_t* data,
                                                               size_t length,
                                                               bool response = false);
@@ -149,7 +150,7 @@ private:
     friend class      NimBLERemoteDescriptor;
 
     // Private member functions
-    bool              setNotify(uint16_t val, notify_callback notifyCallback = nullptr);
+    bool              setNotify(uint16_t val, notify_callback notifyCallback = nullptr, bool response = true);
     bool              retrieveDescriptors(const NimBLEUUID *uuid_filter = nullptr);
     static int        onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error,
                                struct ble_gatt_attr *attr, void *arg);

@@ -108,8 +108,8 @@ bool connectToServer() {
     }
 
     /** registerForNotify() has been removed and replaced with subscribe() / unsubscribe().
-     *  Subscribe parameter defaults are: notifications=true, notifyCallback=nullptr.
-     *  Unsubscribe takes no parameters.
+     *  Subscribe parameter defaults are: notifications=true, notifyCallback=nullptr, response=true.
+     *  Unsubscribe parameter defaults are: response=true.
      */
     if(pRemoteCharacteristic->canNotify())
       pRemoteCharacteristic->subscribe(true, notifyCallback);
