@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1] - 2022-10-23
+
+### Fixed
+ - Compile warning removed for esp32c3
+ - NimBLEDevice::getPower incorrect value when power level is -3db.
+ - Failed pairing when already in progress.
+
+### Changed
+ - Revert previous change that forced writing with response when subscribing in favor of allowing the application to decide.
+
+### Added
+ - Added NimBLEHIDDevice::batteryLevel.
+ - Added NimBLEDevice::setDeviceName allowing for changing the device name while the BLE stack is active.
+ - CI build tests.
+ - Missing items in CHANGELOG that were not recorded correctly
+
 ## [1.4.0] - 2022-07-10
 
 ### Fixed
