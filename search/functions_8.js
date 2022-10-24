@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['indicate_599',['indicate',['../class_nim_b_l_e_characteristic.html#a2ce9f62ecc3d1644ef4d58efe7a3c434',1,'NimBLECharacteristic::indicate()'],['../class_nim_b_l_e_characteristic.html#a8c1875611a1beb192e6c24dff35d0655',1,'NimBLECharacteristic::indicate(const uint8_t *value, size_t length)'],['../class_nim_b_l_e_characteristic.html#a2e827aba484add48e52c8eebf80b4a78',1,'NimBLECharacteristic::indicate(const std::vector&lt; uint8_t &gt; &amp;value)'],['../class_nim_b_l_e_characteristic.html#af2940e8c314a1ecee1750d20a60c459d',1,'NimBLECharacteristic::indicate(const T &amp;value)']]],
+  ['indicate_599',['indicate',['../class_nim_b_l_e_characteristic.html#a8c1875611a1beb192e6c24dff35d0655',1,'NimBLECharacteristic::indicate(const uint8_t *value, size_t length)'],['../class_nim_b_l_e_characteristic.html#a2e827aba484add48e52c8eebf80b4a78',1,'NimBLECharacteristic::indicate(const std::vector&lt; uint8_t &gt; &amp;value)'],['../class_nim_b_l_e_characteristic.html#af2940e8c314a1ecee1750d20a60c459d',1,'NimBLECharacteristic::indicate(const T &amp;value)'],['../class_nim_b_l_e_characteristic.html#a2ce9f62ecc3d1644ef4d58efe7a3c434',1,'NimBLECharacteristic::indicate()']]],
   ['init_600',['init',['../class_nim_b_l_e_device.html#a674d2e68d4ba0e3f84d7993f9da7d15b',1,'NimBLEDevice']]],
   ['inputreport_601',['inputReport',['../class_nim_b_l_e_h_i_d_device.html#a91cfe81b47cea229e9bbe3c55be33701',1,'NimBLEHIDDevice']]],
   ['isactive_602',['isActive',['../class_nim_b_l_e_ext_advertising.html#a88ebe0b664cf22449e1a4311fc3b9b01',1,'NimBLEExtAdvertising']]],

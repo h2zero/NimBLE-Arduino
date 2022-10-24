@@ -86,65 +86,6 @@ var NAVTREE =
       [ "Check return values", "md__usage_tips.html#autotoc_md50", null ],
       [ "There will be bugs - please report them", "md__usage_tips.html#autotoc_md51", null ]
     ] ],
-    [ "Changelog", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html", [
-      [ "[1.4.0] - 2022-07-10", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md53", [
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md54", null ],
-        [ "Changed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md55", null ],
-        [ "Added", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md56", null ]
-      ] ],
-      [ "[1.3.8] - 2022-04-27", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md57", [
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md58", null ],
-        [ "Changed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md59", null ]
-      ] ],
-      [ "[1.3.7] - 2022-02-15", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md60", [
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md61", null ]
-      ] ],
-      [ "[1.3.6] - 2022-01-18", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md62", [
-        [ "Changed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md63", null ],
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md64", null ]
-      ] ],
-      [ "[1.3.5] - 2022-01-14", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md65", [
-        [ "Added", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md66", null ],
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md67", null ]
-      ] ],
-      [ "[1.3.4] - 2022-01-09", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md68", [
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md69", null ]
-      ] ],
-      [ "[1.3.3] - 2021-11-24", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md70", [
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md71", null ]
-      ] ],
-      [ "[1.3.2] - 2021-11-20", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md72", [
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md73", null ],
-        [ "Added", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md74", null ]
-      ] ],
-      [ "[1.3.1] - 2021-08-04", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md75", [
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md76", null ]
-      ] ],
-      [ "[1.3.0] - 2021-08-02", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md77", [
-        [ "Added", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md78", null ],
-        [ "Changed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md79", null ],
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md80", null ]
-      ] ],
-      [ "[1.2.0] - 2021-02-08", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md81", [
-        [ "Added", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md82", null ],
-        [ "Changed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md83", null ],
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md84", null ]
-      ] ],
-      [ "[1.1.0] - 2021-01-20", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md85", [
-        [ "Added", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md86", null ],
-        [ "Changed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md87", null ],
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md88", null ]
-      ] ],
-      [ "[1.0.2] - 2020-09-13", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md89", [
-        [ "Changed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md90", null ]
-      ] ],
-      [ "[1.0.1] - 2020-09-02", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md91", [
-        [ "Added", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md92", null ],
-        [ "Changed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md93", null ],
-        [ "Fixed", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md94", null ]
-      ] ],
-      [ "[1.0.0] - 2020-08-22", "md__k___users__ryan__documents__platform_i_o__projects__m_e_s_h_lib__nim_b_l_e__arduino__c_h_a_n_g_e_l_o_g.html#autotoc_md95", null ]
-    ] ],
     [ "Deprecated List", "deprecated.html", null ],
     [ "Todo List", "todo.html", null ],
     [ "Classes", "annotated.html", [

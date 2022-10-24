@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.4.0</span>
+   &#160;<span id="projectnumber">1.4.1</span>
    </div>
   </td>
  </tr>
@@ -101,6 +101,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ae95693ce0f5b8e784ea8e10834dd624c"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#ae95693ce0f5b8e784ea8e10834dd624c">deinit</a> (bool clearAll=false)</td></tr>
 <tr class="memdesc:ae95693ce0f5b8e784ea8e10834dd624c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shutdown the NimBLE stack/controller.  <a href="class_nim_b_l_e_device.html#ae95693ce0f5b8e784ea8e10834dd624c">More...</a><br /></td></tr>
 <tr class="separator:ae95693ce0f5b8e784ea8e10834dd624c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0dd47ddcab25136a0adfee6ae76bd9c"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#ae0dd47ddcab25136a0adfee6ae76bd9c">setDeviceName</a> (const std::string &amp;deviceName)</td></tr>
+<tr class="memdesc:ae0dd47ddcab25136a0adfee6ae76bd9c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the BLEDevice's name.  <a href="class_nim_b_l_e_device.html#ae0dd47ddcab25136a0adfee6ae76bd9c">More...</a><br /></td></tr>
+<tr class="separator:ae0dd47ddcab25136a0adfee6ae76bd9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6eda512195c7cbe249a1edbb99510cd"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#ad6eda512195c7cbe249a1edbb99510cd">getInitialized</a> ()</td></tr>
 <tr class="memdesc:ad6eda512195c7cbe249a1edbb99510cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the initialization is complete.  <a href="class_nim_b_l_e_device.html#ad6eda512195c7cbe249a1edbb99510cd">More...</a><br /></td></tr>
 <tr class="separator:ad6eda512195c7cbe249a1edbb99510cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -191,6 +194,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a3c251b1d5c651ab9ef9b4819f79c1629"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#a3c251b1d5c651ab9ef9b4819f79c1629">stopAdvertising</a> ()</td></tr>
 <tr class="memdesc:a3c251b1d5c651ab9ef9b4819f79c1629"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience function to stop all advertising.  <a href="class_nim_b_l_e_device.html#a3c251b1d5c651ab9ef9b4819f79c1629">More...</a><br /></td></tr>
 <tr class="separator:a3c251b1d5c651ab9ef9b4819f79c1629"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad652f03bc10a469b26c5f9c213f005dd"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#ad652f03bc10a469b26c5f9c213f005dd">startAdvertising</a> ()</td></tr>
+<tr class="memdesc:ad652f03bc10a469b26c5f9c213f005dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience function to begin advertising.  <a href="class_nim_b_l_e_device.html#ad652f03bc10a469b26c5f9c213f005dd">More...</a><br /></td></tr>
+<tr class="separator:ad652f03bc10a469b26c5f9c213f005dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af8142995252f486916dbb9de2a5b0c9e"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="class_nim_b_l_e_client.html">NimBLEClient</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#af8142995252f486916dbb9de2a5b0c9e">createClient</a> (<a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> peerAddress=<a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a>(&quot;&quot;))</td></tr>
 <tr class="memdesc:af8142995252f486916dbb9de2a5b0c9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a new client object and maintains a list of all client objects each client can connect to 1 peripheral device.  <a href="class_nim_b_l_e_device.html#af8142995252f486916dbb9de2a5b0c9e">More...</a><br /></td></tr>
 <tr class="separator:af8142995252f486916dbb9de2a5b0c9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1091,6 +1097,40 @@ Checks if it is connected or trying to connect and disconnects/stops it first. <
 
 </div>
 </div>
+<a id="ae0dd47ddcab25136a0adfee6ae76bd9c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0dd47ddcab25136a0adfee6ae76bd9c">&#9670;&nbsp;</a></span>setDeviceName()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEDevice::setDeviceName </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>deviceName</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set the BLEDevice's name. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">deviceName</td><td>The device name of the device. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a7d8203040611e3f82bf4848a9b371e98"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7d8203040611e3f82bf4848a9b371e98">&#9670;&nbsp;</a></span>setMTU()</h2>
 
@@ -1412,8 +1452,36 @@ The available bits are defined as:<ul>
 
 </div>
 </div>
+<a id="ad652f03bc10a469b26c5f9c213f005dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad652f03bc10a469b26c5f9c213f005dd">&#9670;&nbsp;</a></span>startAdvertising() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEDevice::startAdvertising </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Convenience function to begin advertising. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if advertising started successfully. </dd></dl>
+
+</div>
+</div>
 <a id="aea8d74a45689590e965db210c7648e5a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aea8d74a45689590e965db210c7648e5a">&#9670;&nbsp;</a></span>startAdvertising()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aea8d74a45689590e965db210c7648e5a">&#9670;&nbsp;</a></span>startAdvertising() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1461,9 +1529,7 @@ The available bits are defined as:<ul>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if advertising started successfully.</dd>
-<dd>
-True if advertising started successfully. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if advertising started successfully. </dd></dl>
 
 </div>
 </div>

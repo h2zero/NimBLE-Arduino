@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.4.0</span>
+   &#160;<span id="projectnumber">1.4.1</span>
    </div>
   </td>
  </tr>
@@ -123,6 +123,9 @@ or created and later added to services list.  <a href="class_nim_b_l_e_server.ht
 <tr class="memitem:af827ef8988c1584795447a634502f0df"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#af827ef8988c1584795447a634502f0df">stopAdvertising</a> (uint8_t inst_id)</td></tr>
 <tr class="memdesc:af827ef8988c1584795447a634502f0df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience function to stop advertising a data set.  <a href="class_nim_b_l_e_server.html#af827ef8988c1584795447a634502f0df">More...</a><br /></td></tr>
 <tr class="separator:af827ef8988c1584795447a634502f0df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb1e37c174a5b62f6fd674376fac99d0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#adb1e37c174a5b62f6fd674376fac99d0">startAdvertising</a> ()</td></tr>
+<tr class="memdesc:adb1e37c174a5b62f6fd674376fac99d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start advertising.  <a href="class_nim_b_l_e_server.html#adb1e37c174a5b62f6fd674376fac99d0">More...</a><br /></td></tr>
+<tr class="separator:adb1e37c174a5b62f6fd674376fac99d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a4c114b572675e82700604db29e6e25"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a7a4c114b572675e82700604db29e6e25">stopAdvertising</a> ()</td></tr>
 <tr class="memdesc:a7a4c114b572675e82700604db29e6e25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop advertising.  <a href="class_nim_b_l_e_server.html#a7a4c114b572675e82700604db29e6e25">More...</a><br /></td></tr>
 <tr class="separator:a7a4c114b572675e82700604db29e6e25"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -679,8 +682,29 @@ Advertising will need to be restarted by the user after calling this as we must 
 
 </div>
 </div>
+<a id="adb1e37c174a5b62f6fd674376fac99d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb1e37c174a5b62f6fd674376fac99d0">&#9670;&nbsp;</a></span>startAdvertising() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEServer::startAdvertising </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Start advertising. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if advertising started successfully.</dd></dl>
+<p>Start the server advertising its existence. This is a convenience function and is equivalent to retrieving the advertising object and invoking start upon it. </p>
+
+</div>
+</div>
 <a id="a8f4b6c2fc5602f5ec34f963df6a21f75"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8f4b6c2fc5602f5ec34f963df6a21f75">&#9670;&nbsp;</a></span>startAdvertising()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f4b6c2fc5602f5ec34f963df6a21f75">&#9670;&nbsp;</a></span>startAdvertising() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -720,8 +744,6 @@ Advertising will need to be restarted by the user after calling this as we must 
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>True if advertising started successfully.</dd></dl>
-<p>Start the server advertising its existence. This is a convenience function and is equivalent to retrieving the advertising object and invoking start upon it.</p>
 <dl class="section return"><dt>Returns</dt><dd>True if advertising started successfully.</dd></dl>
 <p>Start the server advertising its existence. This is a convenience function and is equivalent to retrieving the advertising object and invoking start upon it. </p>
 

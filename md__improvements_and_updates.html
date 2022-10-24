@@ -26,7 +26,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">NimBLE-Arduino
-   &#160;<span id="projectnumber">1.4.0</span>
+   &#160;<span id="projectnumber">1.4.1</span>
    </div>
   </td>
  </tr>
@@ -163,7 +163,7 @@ Client</h1>
 </div><!-- fragment --><p> <br  />
 </p>
 <p><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ab4f54eabe90a416546b7b3fc3477f49c" title="backward-compatibility method for subscribe/unsubscribe notifications/indications">NimBLERemoteCharacteristic::registerForNotify</a></code> Has been <b>deprecated</b> as now the internally stored characteristic value is updated when notification/indication is received.</p>
-<p><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ad2691a8ea85488c8270f78701352fbb2" title="Subscribe for notifications or indications.">NimBLERemoteCharacteristic::subscribe</a></code> and <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ae2791429ba4a8c310ffc24139a985da6" title="Unsubscribe for notifications or indications.">NimBLERemoteCharacteristic::unsubscribe</a></code> have been implemented to replace it. A callback is no longer required to get the most recent value unless timing is important. Instead, the application can call <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6d0779ffe7e89449121428e7fd6083d8" title="Get the value of the remote characteristic.">NimBLERemoteCharacteristic::getValue</a></code> to get the last updated value any time. <br  />
+<p><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#aa08b2f62376568e1fc833e4ff91e8aa7" title="Subscribe for notifications or indications.">NimBLERemoteCharacteristic::subscribe</a></code> and <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6e331afdbdbc32bf461c9866236a97aa" title="Unsubscribe for notifications or indications.">NimBLERemoteCharacteristic::unsubscribe</a></code> have been implemented to replace it. A callback is no longer required to get the most recent value unless timing is important. Instead, the application can call <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6d0779ffe7e89449121428e7fd6083d8" title="Get the value of the remote characteristic.">NimBLERemoteCharacteristic::getValue</a></code> to get the last updated value any time. <br  />
  <br  />
 </p>
 <p>The <code>notify_callback</code> function is now defined as a <code>std::function</code> to take advantage of using <code>std::bind</code> to specify a class member function for the callback.</p>
