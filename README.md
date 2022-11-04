@@ -5,7 +5,7 @@ Need help? Have questions or suggestions? Join the [![Gitter](https://badges.git
 <br/>
 
 # NimBLE-Arduino
-A fork of the NimBLE stack refactored for compilation in the Ardruino IDE.
+A fork of the NimBLE stack refactored for compilation in the Arduino IDE.
 
 **As of release 1.4.0 Nordic Semiconductor nRF51 and nRF52 series devices are now supported**
 
