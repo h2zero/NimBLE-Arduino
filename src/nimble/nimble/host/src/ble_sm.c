@@ -939,7 +939,7 @@ ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res)
                 ble_sm_exec(proc, res, res->state_arg);
             }
 
-            if (res->app_status != 0) {
+            if (res->app_status != 0 && res->app_status != BLE_HS_EALREADY) {
                 rm = 1;
             }
 
