@@ -156,6 +156,10 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                 // If not storing results and we have invoked the callback, delete the device.
                 if(pScan->m_maxResults == 0 && advertisedDevice->m_callbackSent) {
                     pScan->erase(advertisedAddress);
+                    // Avoid ever increasing memoryuse, esp when scanning indefinitely
+                    if (!pScan->m_scan_params.filter_duplicates) {
+                        pScan->clearDuplicateCache();
+                    }
                 }
             }
 
