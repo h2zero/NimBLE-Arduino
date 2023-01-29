@@ -66,7 +66,11 @@ ble_hs_mbuf_bare_pkt(void)
 struct os_mbuf *
 ble_hs_mbuf_acl_pkt(void)
 {
+#if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
     return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + 1);
+#else
+    return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + BLE_HS_CTRL_DATA_HDR_SZ + 1);
+#endif
 }
 
 /**
@@ -81,7 +85,11 @@ ble_hs_mbuf_acl_pkt(void)
 struct os_mbuf *
 ble_hs_mbuf_l2cap_pkt(void)
 {
+#if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
     return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + BLE_L2CAP_HDR_SZ + 1);
+#else
+    return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + BLE_L2CAP_HDR_SZ + BLE_HS_CTRL_DATA_HDR_SZ + 1);
+#endif
 }
 
 struct os_mbuf *
