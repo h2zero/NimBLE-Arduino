@@ -1771,6 +1771,42 @@ ble_gap_rx_periodic_adv_sync_lost(const struct ble_hci_ev_le_subev_periodic_adv_
 }
 #endif
 
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+void
+ble_gap_rx_le_pathloss_threshold(const struct ble_hci_ev_le_subev_path_loss_threshold *ev)
+{
+    struct ble_gap_event event;
+
+    memset(&event, 0, sizeof event);
+
+    event.type = BLE_GAP_EVENT_PATHLOSS_THRESHOLD;
+    event.pathloss_threshold.conn_handle = le16toh(ev->conn_handle);
+    event.pathloss_threshold.current_path_loss = ev->current_path_loss;
+    event.pathloss_threshold.zone_entered = ev->zone_entered;
+
+    ble_gap_event_listener_call(&event);
+}
+
+void
+ble_gap_rx_transmit_power_report(const struct ble_hci_ev_le_subev_transmit_power_report *ev)
+{
+    struct ble_gap_event event;
+
+    memset(&event, 0, sizeof event);
+
+    event.type = BLE_GAP_EVENT_TRANSMIT_POWER;
+    event.transmit_power.status = ev->status;
+    event.transmit_power.conn_handle = le16toh(ev->conn_handle);
+    event.transmit_power.reason = ev->reason;
+    event.transmit_power.phy = ev->phy;
+    event.transmit_power.transmit_power_level = ev->transmit_power_level;
+    event.transmit_power.transmit_power_level_flag = ev->transmit_power_level_flag;
+    event.transmit_power.delta = ev->delta;
+
+    ble_gap_event_listener_call(&event);
+}
+#endif
+
 #if MYNEWT_VAL(BLE_PERIODIC_ADV_SYNC_TRANSFER)
 static int
 periodic_adv_transfer_disable(uint16_t conn_handle)
@@ -1872,6 +1908,26 @@ ble_gap_rx_periodic_adv_sync_transfer(const struct ble_hci_ev_le_subev_periodic_
     if (cb) {
         cb(&event, cb_arg);
     }
+}
+#endif
+
+#if MYNEWT_VAL(BLE_CONN_SUBRATING)
+void
+ble_gap_rx_subrate_change(const struct ble_hci_ev_le_subev_subrate_change *ev)
+{
+    struct ble_gap_event event;
+
+    memset(&event, 0x0, sizeof event);
+
+    event.type = BLE_GAP_EVENT_SUBRATE_CHANGE;
+    event.subrate_change.status = ev->status;
+    event.subrate_change.conn_handle = le16toh(ev->conn_handle);
+    event.subrate_change.subrate_factor = le16toh(ev->subrate_factor);
+    event.subrate_change.periph_latency = le16toh(ev->periph_latency);
+    event.subrate_change.cont_num = le16toh(ev->cont_num);
+    event.subrate_change.supervision_tmo = le16toh(ev->supervision_tmo);
+
+    ble_gap_event_listener_call(&event);
 }
 #endif
 
@@ -3556,12 +3612,11 @@ ble_gap_periodic_adv_params_tx(uint8_t instance,
 
     /* Fill optional fields if application did not specify them. */
     if (params->itvl_min == 0 && params->itvl_max == 0) {
-        /* TODO defines for those */
-        cmd.min_itvl = htole16(30 / 1.25);   //30 ms
-        cmd.max_itvl = htole16(60 / 1.25);   //150 ms
+        cmd.min_itvl = BLE_GAP_PERIODIC_ITVL_MS(30);
+        cmd.max_itvl = BLE_GAP_PERIODIC_ITVL_MS(60);
 
     } else {
-        cmd.min_itvl = htole16( params->itvl_min);
+        cmd.min_itvl = htole16(params->itvl_min);
         cmd.max_itvl = htole16(params->itvl_max);
     }
 
@@ -4889,6 +4944,46 @@ ble_gap_conn_create_tx(uint8_t own_addr_type, const ble_addr_t *peer_addr,
     cmd.max_ce = htole16(params->max_ce_len);
 
     opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_CREATE_CONN);
+
+    return ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), NULL, 0);
+}
+#endif
+
+#if MYNEWT_VAL(BLE_CONN_SUBRATING)
+int
+ble_gap_set_default_subrate(uint16_t subrate_min, uint16_t subrate_max, uint16_t max_latency,
+                            uint16_t cont_num, uint16_t supervision_tmo)
+{
+    struct ble_hci_le_set_default_subrate_cp cmd;
+    uint16_t opcode;
+
+    cmd.subrate_min = htole16(subrate_min);
+    cmd.subrate_max = htole16(subrate_max);
+    cmd.max_latency = htole16(max_latency);
+    cmd.cont_num = htole16(cont_num);
+    cmd.supervision_tmo = htole16(supervision_tmo);
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_SET_DEFAULT_SUBRATE);
+
+    return ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), NULL, 0);
+}
+
+int
+ble_gap_subrate_req(uint16_t conn_handle, uint16_t subrate_min, uint16_t subrate_max,
+                    uint16_t max_latency, uint16_t cont_num,
+                    uint16_t supervision_tmo)
+{
+    struct ble_hci_le_subrate_req_cp cmd;
+    uint16_t opcode;
+
+    cmd.conn_handle = htole16(conn_handle);
+    cmd.subrate_min = htole16(subrate_min);
+    cmd.subrate_max = htole16(subrate_max);
+    cmd.max_latency = htole16(max_latency);
+    cmd.cont_num = htole16(cont_num);
+    cmd.supervision_tmo = htole16(supervision_tmo);
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_SUBRATE_REQ);
 
     return ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), NULL, 0);
 }
@@ -6558,4 +6653,123 @@ void
 ble_gap_deinit(void)
 {
     ble_npl_mutex_deinit(&preempt_done_mutex);
+}
+
+int
+ble_gap_enh_read_transmit_power_level(uint16_t conn_handle, uint8_t phy, uint8_t *out_status, uint8_t *out_phy ,
+				      uint8_t *out_curr_tx_power_level, uint8_t *out_max_tx_power_level)
+
+{
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+    struct ble_hci_le_enh_read_transmit_power_level_cp cmd;
+    struct ble_hci_le_enh_read_transmit_power_level_rp rsp;
+    uint16_t opcode;
+    int rc;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_ENH_READ_TRANSMIT_POWER_LEVEL);
+
+    cmd.conn_handle = htole16(conn_handle);
+    cmd.phy = phy;
+
+    rc = ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), &rsp, sizeof(rsp));
+
+    if (rc!=0) {
+        return rc;
+    }
+
+    *out_status = rsp.status;
+    *out_phy = rsp.phy;
+    *out_curr_tx_power_level = rsp.curr_tx_power_level;
+    *out_max_tx_power_level = rsp.max_tx_power_level;
+
+    return 0;
+#else
+    return BLE_HS_ENOTSUP;
+#endif
+}
+
+int
+ble_gap_read_remote_transmit_power_level(uint16_t conn_handle,
+				      uint8_t phy)
+{
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+    struct ble_hci_le_read_remote_transmit_power_level_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_READ_REMOTE_TRANSMIT_POWER_LEVEL);
+
+    cmd.conn_handle = htole16(conn_handle);
+    cmd.phy = phy;
+
+    return ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), NULL, 0);
+#else
+    return BLE_HS_ENOTSUP;
+#endif
+}
+
+int
+ble_gap_set_path_loss_reporting_param(uint16_t conn_handle,
+				      uint8_t high_threshold,
+				      uint8_t high_hysteresis,
+				      uint8_t low_threshold,
+				      uint8_t low_hysteresis,
+				      uint16_t min_time_spent)
+{
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+    struct ble_hci_le_set_path_loss_report_param_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_SET_PATH_LOSS_REPORT_PARAM);
+
+    cmd.conn_handle = htole16(conn_handle);
+    cmd.high_threshold = high_threshold;
+    cmd.high_hysteresis = high_hysteresis;
+    cmd.low_threshold = low_threshold;
+    cmd.low_hysteresis = low_hysteresis;
+    cmd.min_time_spent = min_time_spent;
+
+    return ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), NULL, 0);
+#else
+    return BLE_HS_ENOTSUP;
+#endif
+}
+
+int
+ble_gap_set_path_loss_reporting_enable(uint16_t conn_handle,
+				       uint8_t enable)
+{
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+    struct ble_hci_le_set_path_loss_report_enable_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_SET_PATH_LOSS_REPORT_ENABLE);
+
+    cmd.conn_handle = htole16(conn_handle);
+    cmd.enable = enable;
+
+    return ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), NULL, 0);
+#else
+    return BLE_HS_ENOTSUP;
+#endif
+}
+
+int
+ble_gap_set_transmit_power_reporting_enable(uint16_t conn_handle,
+					    uint8_t local_enable,
+					    uint8_t remote_enable)
+{
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+    struct ble_hci_le_set_transmit_power_report_enable_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_SET_TRANS_PWR_REPORT_ENABLE);
+
+    cmd.conn_handle = htole16(conn_handle);
+    cmd.local_enable = local_enable;
+    cmd.remote_enable = remote_enable;
+
+    return ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), NULL, 0);
+#else
+    return BLE_HS_ENOTSUP;
+#endif
 }

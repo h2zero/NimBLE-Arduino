@@ -29,7 +29,12 @@
 #include "ble_hs_resolv_priv.h"
 
 #if CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT
-static uint16_t reattempt_conn[MYNEWT_VAL(BLE_MAX_CONNECTIONS)];
+struct ble_gap_reattempt_ctxt {
+    ble_addr_t peer_addr;
+    uint8_t count;
+};
+
+static struct ble_gap_reattempt_ctxt reattempt_conn[MYNEWT_VAL(BLE_MAX_CONNECTIONS)];
 extern int ble_gap_master_connect_reattempt(uint16_t conn_handle);
 
 #ifdef CONFIG_BT_NIMBLE_MAX_CONN_REATTEMPT
@@ -74,10 +79,16 @@ static ble_hs_hci_evt_le_fn ble_hs_hci_evt_le_periodic_adv_rpt;
 static ble_hs_hci_evt_le_fn ble_hs_hci_evt_le_periodic_adv_sync_lost;
 static ble_hs_hci_evt_le_fn ble_hs_hci_evt_le_scan_req_rcvd;
 static ble_hs_hci_evt_le_fn ble_hs_hci_evt_le_periodic_adv_sync_transfer;
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+static ble_hs_hci_evt_le_fn ble_hs_hci_evt_le_pathloss_threshold;
+static ble_hs_hci_evt_le_fn ble_hs_hci_evt_le_transmit_power_report;
+#endif
+#if MYNEWT_VAL(BLE_CONN_SUBRATING)
+static ble_hs_hci_evt_le_fn ble_hs_hci_evt_le_subrate_change;
+#endif
 
 /* Statistics */
-struct host_hci_stats
-{
+struct host_hci_stats {
     uint32_t events_rxd;
     uint32_t good_acks_rxd;
     uint32_t bad_acks_rxd;
@@ -130,6 +141,13 @@ static ble_hs_hci_evt_le_fn * const ble_hs_hci_evt_le_dispatch[] = {
     [BLE_HCI_LE_SUBEV_ADV_SET_TERMINATED] = ble_hs_hci_evt_le_adv_set_terminated,
     [BLE_HCI_LE_SUBEV_SCAN_REQ_RCVD] = ble_hs_hci_evt_le_scan_req_rcvd,
     [BLE_HCI_LE_SUBEV_PERIODIC_ADV_SYNC_TRANSFER] = ble_hs_hci_evt_le_periodic_adv_sync_transfer,
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+    [BLE_HCI_LE_SUBEV_PATH_LOSS_THRESHOLD] = ble_hs_hci_evt_le_pathloss_threshold,
+    [BLE_HCI_LE_SUBEV_TRANSMIT_POWER_REPORT] = ble_hs_hci_evt_le_transmit_power_report,
+#endif
+#if MYNEWT_VAL(BLE_CONN_SUBRATING)
+    [BLE_HCI_LE_SUBEV_SUBRATE_CHANGE] = ble_hs_hci_evt_le_subrate_change,
+#endif
 };
 
 #define BLE_HS_HCI_EVT_LE_DISPATCH_SZ \
@@ -161,6 +179,22 @@ ble_hs_hci_evt_le_dispatch_find(uint8_t event_code)
     return ble_hs_hci_evt_le_dispatch[event_code];
 }
 
+#if CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT
+static int
+ble_gap_find_reattempt_conn_idx(const struct ble_hs_conn *conn)
+{
+    int i;
+
+    for (i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); i++) {
+        if (memcmp(&reattempt_conn[i].peer_addr, &conn->bhc_peer_addr, sizeof(ble_addr_t)) == 0) {
+            return i;
+        }
+    }
+    /* No matching entry found. Return invalid index */
+    return MYNEWT_VAL(BLE_MAX_CONNECTIONS);
+}
+#endif
+
 #if NIMBLE_BLE_CONNECT
 static int
 ble_hs_hci_evt_disconn_complete(uint8_t event_code, const void *data,
@@ -181,29 +215,54 @@ ble_hs_hci_evt_disconn_complete(uint8_t event_code, const void *data,
     ble_hs_unlock();
 
 #if CONFIG_BT_NIMBLE_ENABLE_CONN_REATTEMPT
-    int rc;
+    if (ev->reason == BLE_ERR_CONN_ESTABLISHMENT) {
+        int rc, i, idx;
 
-    if (ev->reason == BLE_ERR_CONN_ESTABLISHMENT && (conn != NULL)) {
-        BLE_HS_LOG(DEBUG, "Reattempt connection; reason = 0x%x, status = %d,"
-                          " reattempt count = %d ", ev->reason, ev->status,
-                           reattempt_conn[ev->conn_handle]);
-        if (conn->bhc_flags & BLE_HS_CONN_F_MASTER) {
-            if (reattempt_conn[ev->conn_handle] < MAX_REATTEMPT_ALLOWED) {
-                reattempt_conn[ev->conn_handle] += 1;
-                rc = ble_gap_master_connect_reattempt(ev->conn_handle);
-                if (rc != 0) {
-                    BLE_HS_LOG(DEBUG, "Master reconnect attempt failed; rc = %d", rc);
-                }
-            } else {
-                reattempt_conn[ev->conn_handle] = 0;
-            }
+        idx = ble_gap_find_reattempt_conn_idx(conn);
+
+        if (idx == MYNEWT_VAL(BLE_MAX_CONNECTIONS)) {
+            /* This means, no matching addr exists in databse. So create a new one */
+	        for (i = 0; i < MYNEWT_VAL(BLE_MAX_CONNECTIONS); i++) {
+                    if (reattempt_conn[i].count == 0) {
+	                    idx = i;
+		                break;
+	                }
+	        }
         }
-    } else {
-        /* Disconnect completed with some other reason than
-         * BLE_ERR_CONN_ESTABLISHMENT, reset the corresponding reattempt count
-         * */
-        reattempt_conn[ev->conn_handle] = 0;
+
+        if (idx == MYNEWT_VAL(BLE_MAX_CONNECTIONS)) {
+            BLE_HS_LOG(DEBUG, "No space left in array ");
+            goto done;
+        }
+
+        if (conn != NULL) {
+            BLE_HS_LOG(DEBUG, "Reattempt connection; reason = 0x%x, status = %d,"
+                              "reattempt count = %d ", ev->reason, ev->status,
+                               reattempt_conn[idx].count);
+            if (conn->bhc_flags & BLE_HS_CONN_F_MASTER) {
+                if (reattempt_conn[idx].count < MAX_REATTEMPT_ALLOWED) {
+                    reattempt_conn[idx].count += 1;
+                    memcpy(&reattempt_conn[idx].peer_addr, &conn->bhc_peer_addr, BLE_DEV_ADDR_LEN);
+
+                    rc = ble_gap_master_connect_reattempt(ev->conn_handle);
+                    if (rc != 0) {
+                        BLE_HS_LOG(DEBUG, "Master reconnect attempt failed; rc = %d", rc);
+                    }
+                } else {
+                    memset(&reattempt_conn[idx].peer_addr, 0x0, BLE_DEV_ADDR_LEN);
+                    reattempt_conn[idx].count = 0;
+                }
+            }
+        } else {
+            /* Disconnect completed with some other reason than
+            * BLE_ERR_CONN_ESTABLISHMENT, reset the corresponding reattempt count
+            * */
+            memset(&reattempt_conn[idx].peer_addr, 0x0, BLE_DEV_ADDR_LEN);
+            reattempt_conn[idx].count = 0;
+        }
     }
+done:
+
 #endif
 
     ble_gap_rx_disconn_complete(ev);
@@ -709,6 +768,36 @@ ble_hs_hci_evt_le_periodic_adv_sync_lost(uint8_t subevent, const void *data,
     return 0;
 }
 
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+static int
+ble_hs_hci_evt_le_pathloss_threshold(uint8_t subevent, const void *data,
+					     unsigned int len)
+{
+    const struct ble_hci_ev_le_subev_path_loss_threshold *ev = data;
+
+    if (len != sizeof(*ev)) {
+	return BLE_HS_EBADDATA;
+    }
+
+    ble_gap_rx_le_pathloss_threshold(ev);
+    return 0;
+}
+
+static int
+ble_hs_hci_evt_le_transmit_power_report(uint8_t subevent, const void *data,
+					     unsigned int len)
+{
+    const struct ble_hci_ev_le_subev_transmit_power_report *ev = data;
+
+    if (len != sizeof(*ev)) {
+	return BLE_HS_EBADDATA;
+    }
+
+    ble_gap_rx_transmit_power_report(ev);
+    return 0;
+}
+#endif
+
 static int
 ble_hs_hci_evt_le_periodic_adv_sync_transfer(uint8_t subevent, const void *data,
                                              unsigned int len)
@@ -779,6 +868,23 @@ ble_hs_hci_evt_le_scan_req_rcvd(uint8_t subevent, const void *data,
 
     return 0;
 }
+
+#if MYNEWT_VAL(BLE_CONN_SUBRATING)
+static int
+ble_hs_hci_evt_le_subrate_change(uint8_t subevent, const void *data,
+                                 unsigned int len)
+{
+    const struct ble_hci_ev_le_subev_subrate_change *ev = data;
+
+    if (len != sizeof(*ev)) {
+        return BLE_HS_ECONTROLLER;
+    }
+
+    ble_gap_rx_subrate_change(ev);
+
+    return 0;
+}
+#endif
 
 #if NIMBLE_BLE_CONNECT
 static int

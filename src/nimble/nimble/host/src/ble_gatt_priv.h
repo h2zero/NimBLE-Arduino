@@ -125,7 +125,7 @@ void ble_gattc_rx_prep_write_rsp(uint16_t conn_handle, int status,
                                  uint16_t handle, uint16_t offset,
                                  struct os_mbuf **rxom);
 void ble_gattc_rx_exec_write_rsp(uint16_t conn_handle, int status);
-void ble_gattc_rx_indicate_rsp(uint16_t conn_handle);
+void ble_gatts_rx_indicate_rsp(uint16_t conn_handle);
 void ble_gattc_rx_find_info_idata(uint16_t conn_handle,
                                   struct ble_att_find_info_idata *idata);
 void ble_gattc_rx_find_info_complete(uint16_t conn_handle, int status);
