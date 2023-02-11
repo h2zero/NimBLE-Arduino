@@ -45,6 +45,7 @@ public:
 
     NimBLEAddress   getAddress();
     uint8_t         getAdvType();
+    uint8_t         getAdvFlags();
     uint16_t        getAppearance();
     uint16_t        getAdvInterval();
     uint16_t        getMinInterval();
