@@ -48,8 +48,8 @@ public:
     std::vector<NimBLERemoteService*>*          getServices(bool refresh = false);
     std::vector<NimBLERemoteService*>::iterator begin();
     std::vector<NimBLERemoteService*>::iterator end();
-    NimBLERemoteService*                        getService(const char* uuid);
-    NimBLERemoteService*                        getService(const NimBLEUUID &uuid);
+    NimBLERemoteService*                        getService(const char* uuid, uint8_t inst = 0);
+    NimBLERemoteService*                        getService(const NimBLEUUID &uuid, uint8_t inst = 0);
     void                                        deleteServices();
     size_t                                      deleteService(const NimBLEUUID &uuid);
     NimBLEAttValue                              getValue(const NimBLEUUID &serviceUUID, const NimBLEUUID &characteristicUUID);

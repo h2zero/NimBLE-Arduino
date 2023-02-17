@@ -81,64 +81,83 @@ std::vector<NimBLERemoteCharacteristic*>::iterator NimBLERemoteService::end() {
 /**
  * @brief Get the remote characteristic object for the characteristic UUID.
  * @param [in] uuid Remote characteristic uuid.
+ * @param [in] inst The instance number of the characteristic to return.
  * @return A pointer to the remote characteristic object.
  */
-NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* uuid) {
-    return getCharacteristic(NimBLEUUID(uuid));
+NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* uuid, uint8_t inst) {
+    return getCharacteristic(NimBLEUUID(uuid), inst);
 } // getCharacteristic
 
 
 /**
  * @brief Get the characteristic object for the UUID.
  * @param [in] uuid Characteristic uuid.
+ * @param [in] inst The instance number of the characteristic to return.
  * @return A pointer to the characteristic object, or nullptr if not found.
  */
-NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID &uuid) {
-    NIMBLE_LOGD(LOG_TAG, ">> getCharacteristic: uuid: %s", uuid.toString().c_str());
+NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID &uuid, uint8_t inst) {
+    NIMBLE_LOGD(LOG_TAG, ">> getCharacteristic: uuid: %s, inst: %u", uuid.toString().c_str(), inst);
 
+    NimBLERemoteCharacteristic* retChar = nullptr;
+    uint8_t cnt = 0;
     for(auto &it: m_characteristicVector) {
-        if(it->getUUID() == uuid) {
-            NIMBLE_LOGD(LOG_TAG, "<< getCharacteristic: found the characteristic with uuid: %s", uuid.toString().c_str());
-            return it;
+        if (it->getUUID() == uuid && cnt++ == inst) {
+            retChar = it;
         }
     }
 
-    size_t prev_size = m_characteristicVector.size();
-    if(retrieveCharacteristics(&uuid)) {
-        if(m_characteristicVector.size() > prev_size) {
-            return m_characteristicVector.back();
-        }
-
-        // If the request was successful but 16/32 bit uuid not found
-        // try again with the 128 bit uuid.
-        if(uuid.bitSize() == BLE_UUID_TYPE_16 ||
-           uuid.bitSize() == BLE_UUID_TYPE_32)
-        {
-            NimBLEUUID uuid128(uuid);
-            uuid128.to128();
-            if (retrieveCharacteristics(&uuid128)) {
-                if(m_characteristicVector.size() > prev_size) {
-                    return m_characteristicVector.back();
-                }
-            }
-        } else {
-            // If the request was successful but the 128 bit uuid not found
-            // try again with the 16 bit uuid.
-            NimBLEUUID uuid16(uuid);
-            uuid16.to16();
-            // if the uuid was 128 bit but not of the BLE base type this check will fail
-            if (uuid16.bitSize() == BLE_UUID_TYPE_16) {
-                if(retrieveCharacteristics(&uuid16)) {
-                    if(m_characteristicVector.size() > prev_size) {
-                        return m_characteristicVector.back();
+    if (retChar == nullptr && cnt < 2) {
+        if (inst > 0) {
+            cnt = 0;
+            if (retrieveCharacteristics()) {
+                for(auto &it: m_characteristicVector) {
+                    if(it->getUUID() == uuid && cnt++ == inst) {
+                        retChar = it;
                     }
                 }
             }
+        } else {
+            do {
+                size_t prev_size = m_characteristicVector.size();
+                if(retrieveCharacteristics(&uuid)) {
+                    if(m_characteristicVector.size() > prev_size) {
+                        retChar = m_characteristicVector[prev_size];
+                        break;
+                    }
+
+                    NimBLEUUID uuidT(uuid);
+                    // If the request was successful but 16/32 bit uuid not found
+                    // try again with the 128 bit uuid.
+                    if(uuid.bitSize() != BLE_UUID_TYPE_128) {
+                        uuidT.to128();
+                    } else {
+                        // If the request was successful but the 128 bit uuid not found
+                        // try again with the 16 bit uuid.
+                        uuidT.to16();
+                        // if the uuid was 128 bit but not of the BLE base type this check will fail
+                        if (uuidT.bitSize() != BLE_UUID_TYPE_16) {
+                            break;
+                        }
+                    }
+
+                    if (retrieveCharacteristics(&uuidT)) {
+                        if(m_characteristicVector.size() > prev_size) {
+                            retChar = m_characteristicVector[prev_size];
+                            break;
+                        }
+                    }
+                }
+            } while(0);
         }
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<< getCharacteristic: not found");
-    return nullptr;
+    if (retChar != nullptr) {
+        NIMBLE_LOGD(LOG_TAG, "<< getCharacteristic: found the characteristic with uuid: %s", uuid.toString().c_str());
+    } else {
+        NIMBLE_LOGD(LOG_TAG, "<< getCharacteristic: not found");
+    }
+
+    return retChar;
 } // getCharacteristic
 
 

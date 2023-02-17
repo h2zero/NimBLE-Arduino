@@ -54,7 +54,8 @@ public:
     bool                                           canWriteNoResponse();
     std::vector<NimBLERemoteDescriptor*>::iterator begin();
     std::vector<NimBLERemoteDescriptor*>::iterator end();
-    NimBLERemoteDescriptor*                        getDescriptor(const NimBLEUUID &uuid);
+    NimBLERemoteDescriptor*                        getDescriptor(const char* uuid, uint8_t inst = 0);
+    NimBLERemoteDescriptor*                        getDescriptor(const NimBLEUUID &uuid, uint8_t inst = 0);
     std::vector<NimBLERemoteDescriptor*>*          getDescriptors(bool refresh = false);
     void                                           deleteDescriptors();
     size_t                                         deleteDescriptor(const NimBLEUUID &uuid);

@@ -621,64 +621,83 @@ std::vector<NimBLERemoteService*>::iterator NimBLEClient::end() {
 /**
  * @brief Get the service BLE Remote Service instance corresponding to the uuid.
  * @param [in] uuid The UUID of the service being sought.
+ * @param [in] inst The instance number of the service to return.
  * @return A pointer to the service or nullptr if not found.
  */
-NimBLERemoteService* NimBLEClient::getService(const char* uuid) {
-    return getService(NimBLEUUID(uuid));
+NimBLERemoteService* NimBLEClient::getService(const char* uuid, uint8_t inst) {
+    return getService(NimBLEUUID(uuid), inst);
 } // getService
 
 
 /**
  * @brief Get the service object corresponding to the uuid.
  * @param [in] uuid The UUID of the service being sought.
+ * @param [in] inst The instance number of the service to return.
  * @return A pointer to the service or nullptr if not found.
  */
-NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid) {
-    NIMBLE_LOGD(LOG_TAG, ">> getService: uuid: %s", uuid.toString().c_str());
+NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID &uuid, uint8_t inst) {
+    NIMBLE_LOGD(LOG_TAG, ">> getService: uuid: %s, inst: %u", uuid.toString().c_str(), inst);
 
+    NimBLERemoteService* retSvc = nullptr;
+    uint8_t cnt = 0;
     for(auto &it: m_servicesVector) {
-        if(it->getUUID() == uuid) {
-            NIMBLE_LOGD(LOG_TAG, "<< getService: found the service with uuid: %s", uuid.toString().c_str());
-            return it;
+        if (it->getUUID() == uuid && cnt++ == inst) {
+            retSvc = it;
         }
     }
 
-    size_t prev_size = m_servicesVector.size();
-    if(retrieveServices(&uuid)) {
-        if(m_servicesVector.size() > prev_size) {
-            return m_servicesVector.back();
-        }
-
-        // If the request was successful but 16/32 bit uuid not found
-        // try again with the 128 bit uuid.
-        if(uuid.bitSize() == BLE_UUID_TYPE_16 ||
-           uuid.bitSize() == BLE_UUID_TYPE_32)
-        {
-            NimBLEUUID uuid128(uuid);
-            uuid128.to128();
-            if(retrieveServices(&uuid128)) {
-                if(m_servicesVector.size() > prev_size) {
-                    return m_servicesVector.back();
-                }
-            }
-        } else {
-            // If the request was successful but the 128 bit uuid not found
-            // try again with the 16 bit uuid.
-            NimBLEUUID uuid16(uuid);
-            uuid16.to16();
-            // if the uuid was 128 bit but not of the BLE base type this check will fail
-            if (uuid16.bitSize() == BLE_UUID_TYPE_16) {
-                if(retrieveServices(&uuid16)) {
-                    if(m_servicesVector.size() > prev_size) {
-                        return m_servicesVector.back();
+    if (retSvc == nullptr && cnt < 2) {
+        if (inst > 0) {
+            cnt = 0;
+            if (retrieveServices()) {
+                for(auto &it: m_servicesVector) {
+                    if(it->getUUID() == uuid && cnt++ == inst) {
+                        retSvc = it;
                     }
                 }
             }
+        } else {
+            do {
+                size_t prev_size = m_servicesVector.size();
+                if(retrieveServices(&uuid)) {
+                    if(m_servicesVector.size() > prev_size) {
+                        retSvc = m_servicesVector[prev_size];
+                        break;
+                    }
+
+                    NimBLEUUID uuidT(uuid);
+                    // If the request was successful but 16/32 bit uuid not found
+                    // try again with the 128 bit uuid.
+                    if(uuid.bitSize() != BLE_UUID_TYPE_128) {
+                        uuidT.to128();
+                    } else {
+                        // If the request was successful but the 128 bit uuid not found
+                        // try again with the 16 bit uuid.
+                        uuidT.to16();
+                        // if the uuid was 128 bit but not of the BLE base type this check will fail
+                        if (uuidT.bitSize() != BLE_UUID_TYPE_16) {
+                            break;
+                        }
+                    }
+
+                    if (retrieveServices(&uuidT)) {
+                        if(m_servicesVector.size() > prev_size) {
+                            retSvc = m_servicesVector[prev_size];
+                            break;
+                        }
+                    }
+                }
+            } while(0);
         }
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<< getService: not found");
-    return nullptr;
+    if (retSvc != nullptr) {
+        NIMBLE_LOGD(LOG_TAG, "<< getService: found the service with uuid: %s", uuid.toString().c_str());
+    } else {
+        NIMBLE_LOGD(LOG_TAG, "<< getService: not found");
+    }
+
+    return retSvc;
 } // getService
 
 

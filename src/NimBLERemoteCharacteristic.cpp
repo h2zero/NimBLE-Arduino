@@ -302,54 +302,83 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID *uuid_filt
 /**
  * @brief Get the descriptor instance with the given UUID that belongs to this characteristic.
  * @param [in] uuid The UUID of the descriptor to find.
+ * @param [in] inst The instance number of the descriptor to return.
  * @return The Remote descriptor (if present) or null if not present.
  */
-NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID &uuid) {
+NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const char* uuid, uint8_t inst) {
+    return getDescriptor(NimBLEUUID(uuid), inst);
+} // getDescriptor
+
+
+/**
+ * @brief Get the descriptor instance with the given UUID that belongs to this characteristic.
+ * @param [in] uuid The UUID of the descriptor to find.
+ * @param [in] inst The instance number of the descriptor to return.
+ * @return The Remote descriptor (if present) or null if not present.
+ */
+NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID &uuid, uint8_t inst) {
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
 
+    NimBLERemoteDescriptor* retDsc = nullptr;
+    uint8_t cnt = 0;
     for(auto &it: m_descriptorVector) {
-        if(it->getUUID() == uuid) {
-            NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found the descriptor with uuid: %s", uuid.toString().c_str());
-            return it;
+        if (it->getUUID() == uuid && cnt++ == inst) {
+            retDsc = it;
         }
     }
 
-    size_t prev_size = m_descriptorVector.size();
-    if(retrieveDescriptors(&uuid)) {
-        if(m_descriptorVector.size() > prev_size) {
-            return m_descriptorVector.back();
-        }
-
-        // If the request was successful but 16/32 bit uuid not found
-        // try again with the 128 bit uuid.
-        if(uuid.bitSize() == BLE_UUID_TYPE_16 ||
-           uuid.bitSize() == BLE_UUID_TYPE_32)
-        {
-            NimBLEUUID uuid128(uuid);
-            uuid128.to128();
-            if(retrieveDescriptors(&uuid128)) {
-                if(m_descriptorVector.size() > prev_size) {
-                    return m_descriptorVector.back();
-                }
-            }
-        } else {
-            // If the request was successful but the 128 bit uuid not found
-            // try again with the 16 bit uuid.
-            NimBLEUUID uuid16(uuid);
-            uuid16.to16();
-            // if the uuid was 128 bit but not of the BLE base type this check will fail
-            if (uuid16.bitSize() == BLE_UUID_TYPE_16) {
-                if(retrieveDescriptors(&uuid16)) {
-                    if(m_descriptorVector.size() > prev_size) {
-                        return m_descriptorVector.back();
+    if (retDsc == nullptr && cnt < 2) {
+        if (inst > 0) {
+            cnt = 0;
+            if (retrieveDescriptors()) {
+                for(auto &it: m_descriptorVector) {
+                    if(it->getUUID() == uuid && cnt++ == inst) {
+                        retDsc = it;
                     }
                 }
             }
+        } else {
+            do {
+                size_t prev_size = m_descriptorVector.size();
+                if(retrieveDescriptors(&uuid)) {
+                    if(m_descriptorVector.size() > prev_size) {
+                        retDsc = m_descriptorVector[prev_size];
+                        break;
+                    }
+
+                    NimBLEUUID uuidT(uuid);
+                    // If the request was successful but 16/32 bit uuid not found
+                    // try again with the 128 bit uuid.
+                    if(uuid.bitSize() != BLE_UUID_TYPE_128) {
+                        uuidT.to128();
+                    } else {
+                        // If the request was successful but the 128 bit uuid not found
+                        // try again with the 16 bit uuid.
+                        uuidT.to16();
+                        // if the uuid was 128 bit but not of the BLE base type this check will fail
+                        if (uuidT.bitSize() != BLE_UUID_TYPE_16) {
+                            break;
+                        }
+                    }
+
+                    if (retrieveDescriptors(&uuidT)) {
+                        if(m_descriptorVector.size() > prev_size) {
+                            retDsc = m_descriptorVector[prev_size];
+                            break;
+                        }
+                    }
+                }
+            } while(0);
         }
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
-    return nullptr;
+    if (retDsc != nullptr) {
+        NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: found the descriptor with uuid: %s", uuid.toString().c_str());
+    } else {
+        NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: Not found");
+    }
+
+    return retDsc;
 } // getDescriptor
 
 
