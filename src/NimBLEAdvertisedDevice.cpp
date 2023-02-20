@@ -140,12 +140,14 @@ uint16_t NimBLEAdvertisedDevice::getMaxInterval() {
 
 /**
  * @brief Get the manufacturer data.
- * @return The manufacturer data of the advertised device.
+ * @param [in] index The index of the of the manufacturer data set to get.
+ * @return The manufacturer data.
  */
-std::string NimBLEAdvertisedDevice::getManufacturerData() {
+std::string NimBLEAdvertisedDevice::getManufacturerData(uint8_t index) {
     size_t data_loc = 0;
+    index++;
 
-    if(findAdvField(BLE_HS_ADV_TYPE_MFG_DATA, 0, &data_loc) > 0) {
+    if(findAdvField(BLE_HS_ADV_TYPE_MFG_DATA, index, &data_loc) > 0) {
         ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
         if(field->length > 1) {
             return std::string((char*)field->value, field->length - 1);
@@ -154,6 +156,15 @@ std::string NimBLEAdvertisedDevice::getManufacturerData() {
 
     return "";
 } // getManufacturerData
+
+
+/**
+ * @brief Get the count of manufacturer data sets.
+ * @return The number of manufacturer data sets.
+ */
+uint8_t NimBLEAdvertisedDevice::getManufacturerDataCount() {
+    return findAdvField(BLE_HS_ADV_TYPE_MFG_DATA);
+} // getManufacturerDataCount
 
 
 /**

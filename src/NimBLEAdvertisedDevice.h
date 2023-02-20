@@ -49,7 +49,8 @@ public:
     uint16_t        getAdvInterval();
     uint16_t        getMinInterval();
     uint16_t        getMaxInterval();
-    std::string     getManufacturerData();
+    uint8_t         getManufacturerDataCount();
+    std::string     getManufacturerData(uint8_t index = 0);
     std::string     getURI();
 
     /**
