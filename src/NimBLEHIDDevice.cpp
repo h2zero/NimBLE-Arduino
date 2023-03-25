@@ -36,6 +36,12 @@ NimBLEHIDDevice::NimBLEHIDDevice(NimBLEServer* server) {
 	m_pnpCharacteristic = m_deviceInfoService->createCharacteristic((uint16_t) 0x2a50, NIMBLE_PROPERTY::READ);
 
 	/*
+	 * Non-mandatory characteristics for device info service
+	 * Will be created on demand
+	 */
+	m_manufacturerCharacteristic = nullptr;
+
+	/*
 	 * Mandatory characteristics for HID service
 	 */
 	m_hidInfoCharacteristic = m_hidService->createCharacteristic((uint16_t) 0x2a4a, NIMBLE_PROPERTY::READ);
@@ -86,7 +92,10 @@ void NimBLEHIDDevice::startServices() {
  * @brief Create a manufacturer characteristic (this characteristic is optional).
  */
 NimBLECharacteristic* NimBLEHIDDevice::manufacturer() {
-	m_manufacturerCharacteristic = m_deviceInfoService->createCharacteristic((uint16_t) 0x2a29, NIMBLE_PROPERTY::READ);
+	if (m_manufacturerCharacteristic == nullptr) {
+		m_manufacturerCharacteristic = m_deviceInfoService->createCharacteristic((uint16_t)0x2a29, NIMBLE_PROPERTY::READ);
+	}
+
 	return m_manufacturerCharacteristic;
 }
 
@@ -95,7 +104,7 @@ NimBLECharacteristic* NimBLEHIDDevice::manufacturer() {
  * @param [in] name The manufacturer name of this HID device.
  */
 void NimBLEHIDDevice::manufacturer(std::string name) {
-	m_manufacturerCharacteristic->setValue(name);
+	manufacturer()->setValue(name);
 }
 
 /**
@@ -106,7 +115,15 @@ void NimBLEHIDDevice::manufacturer(std::string name) {
  * @param [in] version The produce version number.
  */
 void NimBLEHIDDevice::pnp(uint8_t sig, uint16_t vid, uint16_t pid, uint16_t version) {
-	uint8_t pnp[] = { sig, (uint8_t) (vid >> 8), (uint8_t) vid, (uint8_t) (pid >> 8), (uint8_t) pid, (uint8_t) (version >> 8), (uint8_t) version };
+	uint8_t pnp[] = {
+		sig,
+		((uint8_t *)&vid)[0],
+		((uint8_t *)&vid)[1],
+		((uint8_t *)&pid)[0],
+		((uint8_t *)&pid)[1],
+		((uint8_t *)&version)[0],
+		((uint8_t *)&version)[1]
+		};
 	m_pnpCharacteristic->setValue(pnp, sizeof(pnp));
 }
 
