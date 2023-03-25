@@ -1,1 +1,13 @@
+# Doxygen output
+
 docs/doxydocs
+
+# Arduino's Library development
+
+.development
+
+# Arduino on VSCode
+
+*.svd
+debug.cfg
+debug_custom.json
