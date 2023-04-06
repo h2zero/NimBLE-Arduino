@@ -63,6 +63,25 @@ uint8_t NimBLEAdvertisedDevice::getAdvType() {
 
 
 /**
+ * @brief Get the advertisement flags.
+ * @return The advertisement flags, a bitmask of:
+ * BLE_HS_ADV_F_DISC_LTD (0x01) - limited discoverability
+ * BLE_HS_ADV_F_DISC_GEN (0x02) - general discoverability
+ * BLE_HS_ADV_F_BREDR_UNSUP - BR/EDR not supported
+ */
+uint8_t NimBLEAdvertisedDevice::getAdvFlags() {
+    size_t data_loc = 0;
+
+    if(findAdvField(BLE_HS_ADV_TYPE_FLAGS, 0, &data_loc) > 0) {
+        ble_hs_adv_field *field = (ble_hs_adv_field *)&m_payload[data_loc];
+        if(field->length == BLE_HS_ADV_FLAGS_LEN + 1) {
+            return *field->value;
+        }
+    }
+    return 0;
+} // getAdvFlags
+
+/**
  * @brief Get the appearance.
  *
  * A %BLE device can declare its own appearance.  The appearance is how it would like to be shown to an end user
