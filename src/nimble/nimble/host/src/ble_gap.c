@@ -26,6 +26,14 @@
 #include "ble_hs_priv.h"
 #include "ble_hs_resolv_priv.h"
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 #if MYNEWT
 #include "bsp/bsp.h"
 #else
@@ -1442,6 +1450,16 @@ ble_gap_adv_active_instance(uint8_t instance)
 {
     /* Assume read is atomic; mutex not necessary. */
     return ble_gap_slave[instance].op == BLE_GAP_OP_S_ADV;
+}
+#endif
+
+#if MYNEWT_VAL(BLE_EXT_ADV)
+int ble_gap_ext_adv_active(uint8_t instance)
+{
+    if (instance >= BLE_ADV_INSTANCES) {
+        return 0;
+    }
+    return ble_gap_adv_active_instance(instance);
 }
 #endif
 

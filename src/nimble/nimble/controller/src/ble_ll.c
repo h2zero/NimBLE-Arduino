@@ -242,6 +242,14 @@ OS_TASK_STACK_DEFINE(g_ble_ll_stack, BLE_LL_STACK_SIZE);
 
 #endif /* MYNEWT */
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 /** Our global device address (public) */
 uint8_t g_dev_addr[BLE_DEV_ADDR_LEN];
 

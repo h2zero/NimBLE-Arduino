@@ -90,6 +90,14 @@ ble_uuid16_t BT_UUID_MESH_PROXY_DATA_OUT       = BLE_UUID16_INIT(0x2ade);
 
 #define CLIENT_BUF_SIZE 68
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 static const struct ble_gap_adv_params slow_adv_param = {
 	.conn_mode = (BLE_GAP_CONN_MODE_UND),
 	.disc_mode = (BLE_GAP_DISC_MODE_GEN),
