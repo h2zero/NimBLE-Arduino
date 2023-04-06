@@ -31,6 +31,7 @@
 /**************************/
 
 #include "NimBLEUUID.h"
+#include "NimBLEAddress.h"
 
 #include <vector>
 
@@ -90,7 +91,7 @@ public:
     void addServiceUUID(const NimBLEUUID &serviceUUID);
     void addServiceUUID(const char* serviceUUID);
     void removeServiceUUID(const NimBLEUUID &serviceUUID);
-    bool start(uint32_t duration = 0, void (*advCompleteCB)(NimBLEAdvertising *pAdv) = nullptr);
+    bool start(uint32_t duration = 0, void (*advCompleteCB)(NimBLEAdvertising *pAdv) = nullptr, NimBLEAddress* dirAddr = nullptr);
     bool stop();
     void setAppearance(uint16_t appearance);
     void setName(const std::string &name);
