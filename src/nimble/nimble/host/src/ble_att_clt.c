@@ -707,6 +707,8 @@ ble_att_clt_tx_write_cmd(uint16_t conn_handle, uint16_t handle,
 
     struct ble_att_write_cmd *cmd;
     struct os_mbuf *txom2;
+
+#if MYNEWT_VAL(BLE_HS_DEBUG)
     uint8_t b;
     int rc;
     int i;
@@ -720,7 +722,7 @@ ble_att_clt_tx_write_cmd(uint16_t conn_handle, uint16_t handle,
         assert(rc == 0);
         BLE_HS_LOG(DEBUG, "0x%02x", b);
     }
-
+#endif
 
     cmd = ble_att_cmd_get(BLE_ATT_OP_WRITE_CMD, sizeof(*cmd), &txom2);
     if (cmd == NULL) {
@@ -767,10 +769,17 @@ ble_att_clt_tx_prep_write(uint16_t conn_handle, uint16_t handle,
         goto err;
     }
 
+#if MYNEWT_VAL(BLE_GATT_BLOB_TRANSFER)
+    if (OS_MBUF_PKTLEN(txom) > BLE_ATT_ATTR_MAX_LEN) {
+        rc = BLE_HS_EINVAL;
+        goto err;
+    }
+#else
     if (offset + OS_MBUF_PKTLEN(txom) > BLE_ATT_ATTR_MAX_LEN) {
         rc = BLE_HS_EINVAL;
         goto err;
     }
+#endif
 
     if (OS_MBUF_PKTLEN(txom) >
         ble_att_mtu(conn_handle) - BLE_ATT_PREP_WRITE_CMD_BASE_SZ) {

@@ -47,6 +47,14 @@
 #error LE Coded PHY cannot be enabled on nRF51
 #endif
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 /* XXX: 4) Make sure RF is higher priority interrupt than schedule */
 
 /*

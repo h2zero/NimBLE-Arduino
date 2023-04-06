@@ -34,6 +34,14 @@
 #include "settings.h"
 #include "cfg.h"
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 void (*bt_mesh_app_key_cb_list[1]) (uint16_t app_idx, uint16_t net_idx,
 			enum bt_mesh_key_evt evt);
 

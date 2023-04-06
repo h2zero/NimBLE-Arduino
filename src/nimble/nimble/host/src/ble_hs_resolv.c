@@ -111,17 +111,16 @@ static void
 ble_rpa_peer_dev_rec_clear_all(void)
 {
     uint8_t i;
+    int num_peer_dev_rec = ble_store_num_peer_dev_rec;
 
     /* As NVS record need to be deleted one by one, we loop through
      * peer_records */
-    for (i = 0; i < ble_store_num_peer_dev_rec; i++) {
+    for (i = 0; i < num_peer_dev_rec; i++) {
         ble_store_num_peer_dev_rec--;
-
-        if ((i != ble_store_num_peer_dev_rec) && (ble_store_num_peer_dev_rec != 0)) {
-            memmove(&peer_dev_rec[i], &peer_dev_rec[i + 1],
-                    (ble_store_num_peer_dev_rec - i + 1) * sizeof(struct ble_hs_dev_records ));
-        }
-
+        memmove(&peer_dev_rec[0], &peer_dev_rec[1],
+                ble_store_num_peer_dev_rec * sizeof(struct ble_hs_dev_records));
+        memset(&peer_dev_rec[ble_store_num_peer_dev_rec], 0,
+               sizeof(struct ble_hs_dev_records));
         ble_store_persist_peer_records();
     }
     return;
@@ -230,15 +229,6 @@ ble_rpa_resolv_add_peer_rec(uint8_t *peer_addr)
 {
     struct ble_hs_dev_records *p_dev_rec =
             &peer_dev_rec[ble_store_num_peer_dev_rec];
-    uint8_t idx = 0;
-
-    while (p_dev_rec->rec_used) {
-        p_dev_rec++;
-        idx++;
-        if (idx > MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
-            return BLE_HS_ESTORE_CAP;
-        }
-    }
 
     p_dev_rec->rec_used = 1;
     memcpy(p_dev_rec->pseudo_addr, peer_addr, BLE_DEV_ADDR_LEN);
