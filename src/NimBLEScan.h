@@ -104,13 +104,23 @@ private:
 class NimBLEScanCallbacks {
 public:
     virtual ~NimBLEScanCallbacks() {}
+
     /**
-     * @brief Called when a new scan result is detected.
-     *
-     * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
-     * device that was found.  During any individual scan, a device will only be detected one time.
+     * @brief Called when a new device is discovered, before the scan result is received (if applicable).
+     * @param [in] advertisedDevice The device which was discovered.
+     */
+    virtual void onDiscovered(NimBLEAdvertisedDevice* advertisedDevice) {};
+
+    /**
+     * @brief Called when a new scan result is complete, including scan response data (if applicable).
+     * @param [in] advertisedDevice The device for which the complete result is available.
      */
     virtual void onResult(NimBLEAdvertisedDevice* advertisedDevice) {};
+
+    /**
+     * @brief Called when a scan operation ends.
+     * @param [in] scanResults The results of the scan that ended.
+     */
     virtual void onScanEnd(NimBLEScanResults scanResults) {};
 };
 

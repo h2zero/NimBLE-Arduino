@@ -164,7 +164,7 @@ private:
     uint8_t         m_advType;
     int             m_rssi;
     time_t          m_timestamp;
-    bool            m_callbackSent;
+    uint8_t         m_callbackSent;
     uint8_t         m_advLength;
 #if CONFIG_BT_NIMBLE_EXT_ADV
     bool            m_isLegacyAdv;
