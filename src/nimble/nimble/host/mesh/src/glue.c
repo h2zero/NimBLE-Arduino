@@ -41,6 +41,14 @@ extern uint8_t g_mesh_addr_type;
 static struct ble_gap_adv_params ble_adv_cur_conf[2];
 #endif
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 const char *
 bt_hex(const void *buf, size_t len)
 {

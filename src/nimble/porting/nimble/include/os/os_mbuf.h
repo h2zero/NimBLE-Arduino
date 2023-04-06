@@ -1,4 +1,11 @@
 /*
+ * SPDX-FileCopyrightText: 2015-2022 The Apache Software Foundation (ASF)
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * SPDX-FileContributor: 2019-2022 Espressif Systems (Shanghai) CO LTD
+ */
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -483,7 +490,7 @@ int r_os_mbuf_appendfrom(struct os_mbuf *dst, const struct os_mbuf *src,
  *
  * @return 0 on success, -1 on failure
  */
-int os_mbuf_free(struct os_mbuf *mb);
+int r_os_mbuf_free(struct os_mbuf *mb);
 #define os_mbuf_free r_os_mbuf_free
 
 

@@ -90,6 +90,14 @@ ble_uuid16_t BT_UUID_MESH_PROXY_DATA_OUT       = BLE_UUID16_INIT(0x2ade);
 
 #define CLIENT_BUF_SIZE 68
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 static const struct ble_gap_adv_params slow_adv_param = {
 	.conn_mode = (BLE_GAP_CONN_MODE_UND),
 	.disc_mode = (BLE_GAP_DISC_MODE_GEN),
@@ -999,7 +1007,7 @@ static int proxy_send(uint16_t conn_handle, const void *data, uint16_t len)
 	if (gatt_svc == MESH_GATT_PROXY) {
 		om = ble_hs_mbuf_from_flat(data, len);
 		assert(om);
-		err = ble_gattc_notify_custom(conn_handle, svc_handles.proxy_data_out_h, om);
+		err = ble_gatts_notify_custom(conn_handle, svc_handles.proxy_data_out_h, om);
 		notify_complete();
 	}
 #endif
@@ -1008,7 +1016,7 @@ static int proxy_send(uint16_t conn_handle, const void *data, uint16_t len)
 	if (gatt_svc == MESH_GATT_PROV) {
 		om = ble_hs_mbuf_from_flat(data, len);
 		assert(om);
-		err = ble_gattc_notify_custom(conn_handle, svc_handles.prov_data_out_h, om);
+		err = ble_gatts_notify_custom(conn_handle, svc_handles.prov_data_out_h, om);
 		notify_complete();
 	}
 #endif

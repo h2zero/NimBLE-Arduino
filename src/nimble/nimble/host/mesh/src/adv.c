@@ -40,6 +40,14 @@
 #define ADV_INT_DEFAULT_MS 100
 #define ADV_INT_FAST_MS    20
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 static int32_t adv_int_min =  ADV_INT_DEFAULT_MS;
 
 /* TinyCrypt PRNG consumes a lot of stack space, so we need to have

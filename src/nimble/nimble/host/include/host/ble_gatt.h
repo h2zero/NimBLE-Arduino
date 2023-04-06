@@ -470,6 +470,12 @@ int ble_gattc_write_reliable(uint16_t conn_handle,
  *
  * @return                      0 on success; nonzero on failure.
  */
+int ble_gatts_notify_custom(uint16_t conn_handle, uint16_t att_handle,
+                            struct os_mbuf *om);
+
+/**
+ * Deprecated. Should not be used. Use ble_gatts_notify_custom instead.
+ */
 int ble_gattc_notify_custom(uint16_t conn_handle, uint16_t att_handle,
                             struct os_mbuf *om);
 
@@ -484,6 +490,11 @@ int ble_gattc_notify_custom(uint16_t conn_handle, uint16_t att_handle,
  *                                  notification.
  *
  * @return                      0 on success; nonzero on failure.
+ */
+int ble_gatts_notify(uint16_t conn_handle, uint16_t chr_val_handle);
+
+/**
+ * Deprecated. Should not be used. Use ble_gatts_notify instead.
  */
 int ble_gattc_notify(uint16_t conn_handle, uint16_t chr_val_handle);
 
@@ -501,6 +512,11 @@ int ble_gattc_notify(uint16_t conn_handle, uint16_t chr_val_handle);
  *
  * @return                      0 on success; nonzero on failure.
  */
+int ble_gatts_indicate_custom(uint16_t conn_handle, uint16_t chr_val_handle,
+                              struct os_mbuf *txom);
+/**
+ * Deprecated. Should not be used. Use ble_gatts_indicate_custom instead.
+ */
 int ble_gattc_indicate_custom(uint16_t conn_handle, uint16_t chr_val_handle,
                               struct os_mbuf *txom);
 
@@ -515,6 +531,11 @@ int ble_gattc_indicate_custom(uint16_t conn_handle, uint16_t chr_val_handle,
  *                                  indication.
  *
  * @return                      0 on success; nonzero on failure.
+ */
+int ble_gatts_indicate(uint16_t conn_handle, uint16_t chr_val_handle);
+
+/**
+ * Deprecated. Should not be used. Use ble_gatts_indicate instead.
  */
 int ble_gattc_indicate(uint16_t conn_handle, uint16_t chr_val_handle);
 

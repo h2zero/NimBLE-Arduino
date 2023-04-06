@@ -22,6 +22,14 @@
 #include "nimble/nimble/host/include/host/ble_hs_hci.h"
 #include "ble_hs_priv.h"
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 uint16_t
 ble_hs_hci_util_handle_pb_bc_join(uint16_t handle, uint8_t pb, uint8_t bc)
 {

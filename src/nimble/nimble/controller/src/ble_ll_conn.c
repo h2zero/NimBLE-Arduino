@@ -55,6 +55,14 @@
 extern void bletest_completed_pkt(uint16_t handle);
 #endif
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 /* XXX TODO
  * 1) I think if we are initiating and we already have a connection with
  * a device that we will still try and connect to it. Fix this.

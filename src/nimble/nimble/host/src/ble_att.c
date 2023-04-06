@@ -22,6 +22,15 @@
 #include "ble_hs_priv.h"
 
 #if NIMBLE_BLE_CONNECT
+
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 static uint16_t ble_att_preferred_mtu_val;
 
 /** Dispatch table for incoming ATT requests.  Sorted by op code. */

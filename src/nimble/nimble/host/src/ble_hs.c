@@ -605,11 +605,16 @@ ble_hs_enqueue_hci_event(uint8_t *hci_evt)
     struct ble_npl_event *ev;
 
     ev = os_memblock_get(&ble_hs_hci_ev_pool);
-    if (ev == NULL) {
-        ble_hci_trans_buf_free(hci_evt);
-    } else {
+#if CONFIG_NIMBLE_STACK_USE_MEM_POOLS
+    if (ev && ble_hs_evq->eventq) {
+#else
+    if (ev && ble_hs_evq->q) {
+#endif
         ble_npl_event_init(ev, ble_hs_event_rx_hci_ev, hci_evt);
         ble_npl_eventq_put(ble_hs_evq, ev);
+    } else {
+	/* Either ev is NULL or queue doesn't exist */
+        ble_hci_trans_buf_free(hci_evt);
     }
 }
 
@@ -857,35 +862,36 @@ ble_hs_init(void)
 void
 ble_hs_deinit(void)
 {
-    ble_gatts_stop();
+    ble_hs_flow_deinit();
 
-    ble_npl_callout_deinit(&ble_hs_timer);
+#if BLE_MONITOR
+    ble_monitor_deinit();
+#endif
+
+    ble_hci_trans_cfg_hs(NULL, NULL, NULL, NULL);
 
     ble_npl_mutex_deinit(&ble_hs_mutex);
+
+    ble_mqueue_deinit(&ble_hs_rx_q);
+
+    ble_hs_stop_deinit();
 
     ble_gap_deinit();
 
     ble_hs_hci_deinit();
 
-    ble_hs_flow_stop();
-
-#if NIMBLE_BLE_CONNECT
-    ble_npl_event_deinit(&ble_hs_ev_tx_notifications);
-#endif
-
-    ble_npl_event_deinit(&ble_hs_ev_reset);
+    ble_npl_event_deinit(&ble_hs_ev_start_stage2);
 
     ble_npl_event_deinit(&ble_hs_ev_start_stage1);
 
-    ble_npl_event_deinit(&ble_hs_ev_start_stage2);
+    ble_npl_event_deinit(&ble_hs_ev_reset);
 
-    ble_mqueue_deinit(&ble_hs_rx_q);
-    
-    ble_hs_flow_deinit();
-    
-    ble_hs_stop_deinit();
+#if NIMBLE_BLE_CONNECT
+    ble_npl_event_deinit(&ble_hs_ev_tx_notifications);
 
-#if BLE_MONITOR
-    ble_monitor_deinit();
+    ble_gatts_stop();
 #endif
+
+    ble_npl_callout_deinit(&ble_hs_timer);
+
 }

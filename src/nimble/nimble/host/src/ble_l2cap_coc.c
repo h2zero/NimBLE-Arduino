@@ -40,6 +40,14 @@ static os_membuf_t ble_l2cap_coc_srv_mem[
 
 static struct os_mempool ble_l2cap_coc_srv_pool;
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 static void
 ble_l2cap_coc_dbg_assert_srv_not_inserted(struct ble_l2cap_coc_srv *srv)
 {

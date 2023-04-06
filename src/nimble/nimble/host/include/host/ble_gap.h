@@ -44,6 +44,7 @@ struct hci_conn_update;
 #define BLE_GAP_SCAN_WIN_MS(t)              ((t) * 1000 / BLE_HCI_SCAN_ITVL)
 #define BLE_GAP_CONN_ITVL_MS(t)             ((t) * 1000 / BLE_HCI_CONN_ITVL)
 #define BLE_GAP_SUPERVISION_TIMEOUT_MS(t)   ((t) / 10)
+#define BLE_GAP_PERIODIC_ITVL_MS(t)         ((t) * 1000 / BLE_HCI_PERIODIC_ADV_ITVL)
 
 /** 30 ms. */
 #define BLE_GAP_ADV_FAST_INTERVAL1_MIN      BLE_GAP_ADV_ITVL_MS(30)
@@ -135,6 +136,9 @@ struct hci_conn_update;
 #define BLE_GAP_EVENT_PERIODIC_SYNC_LOST    22
 #define BLE_GAP_EVENT_SCAN_REQ_RCVD         23
 #define BLE_GAP_EVENT_PERIODIC_TRANSFER     24
+#define BLE_GAP_EVENT_PATHLOSS_THRESHOLD    25
+#define BLE_GAP_EVENT_TRANSMIT_POWER        26
+#define BLE_GAP_EVENT_SUBRATE_CHANGE        27
 
 /*** Reason codes for the subscribe GAP event. */
 
@@ -973,6 +977,82 @@ struct ble_gap_event {
             uint8_t adv_clk_accuracy;
         } periodic_transfer;
 #endif
+
+#if MYNEWT_VAL(BLE_POWER_CONTROL)
+        /**
+         * Represents a change in either local transmit power or remote transmit
+         * power. Valid for the following event types:
+         *     o BLE_GAP_EVENT_PATHLOSS_THRESHOLD
+         */
+
+	struct {
+	    /** Connection handle */
+	    uint16_t conn_handle;
+
+	    /** Current Path Loss */
+	    uint8_t current_path_loss;
+
+	    /** Entered Zone */
+	    uint8_t zone_entered;
+	} pathloss_threshold;
+
+        /**
+         * Represents crossing of path loss threshold set via LE Set Path Loss
+         * Reporting Parameter command. Valid for the following event types:
+         *     o BLE_GAP_EVENT_TRANSMIT_POWER
+         */
+
+	struct {
+	    /** BLE_ERR_SUCCESS on success or error code on failure */
+	    uint8_t status;
+
+	    /** Connection Handle */
+	    uint16_t conn_handle;
+
+	    /** Reason indicating why event was sent */
+	    uint8_t reason;
+
+	    /** Advertising PHY */
+	    uint8_t phy;
+
+	    /** Transmit power Level */
+	    uint8_t transmit_power_level;
+
+	    /** Transmit Power Level Flag */
+	    uint8_t transmit_power_level_flag;
+
+	    /** Delta indicating change in transmit Power Level */
+	    uint8_t delta;
+	} transmit_power;
+#endif
+
+#if MYNEWT_VAL(BLE_CONN_SUBRATING)
+        /**
+         * Represents a subrate change event that indicates connection subrate update procedure
+         * has completed and some parameters have changed  Valid for
+         * the following event types:
+         *     o BLE_GAP_EVENT_SUBRATE_CHANGE
+         */
+        struct {
+            /** BLE_ERR_SUCCESS on success or error code on failure */
+            uint8_t status;
+
+            /** Connection Handle */
+            uint16_t conn_handle;
+
+            /** Subrate Factor */
+            uint16_t subrate_factor;
+
+            /** Peripheral Latency */
+            uint16_t periph_latency;
+
+            /** Continuation Number */
+            uint16_t cont_num;
+
+            /** Supervision Timeout */
+            uint16_t supervision_tmo;
+        } subrate_change;
+#endif
     };
 };
 
@@ -1363,6 +1443,18 @@ int ble_gap_ext_adv_remove(uint8_t instance);
  *                      other error code on failure.
  */
 int ble_gap_ext_adv_clear(void);
+
+/**
+ * Indicates whether an advertisement procedure is currently in progress on
+ * the specified Instance
+ *
+ * @param instance            Instance Id
+ *
+ * @return 0 if there is no active advertising procedure for the instance,
+ *         1 otherwise
+ *
+ */
+int ble_gap_ext_adv_active(uint8_t instance);
 #endif
 
 /* Periodic Advertising */
@@ -1373,12 +1465,12 @@ struct ble_gap_periodic_adv_params {
     /** If include TX power in advertising PDU */
     unsigned int include_tx_power:1;
 
-    /** Minimum advertising interval in 0.625ms units, if 0 stack use sane
+    /** Minimum advertising interval in 1.25ms units, if 0 stack use sane
      *  defaults
      */
     uint16_t itvl_min;
 
-    /** Maximum advertising interval in 0.625ms units, if 0 stack use sane
+    /** Maximum advertising interval in 1.25ms units, if 0 stack use sane
      *  defaults
      */
     uint16_t itvl_max;
@@ -2113,6 +2205,45 @@ int ble_gap_set_prefered_default_le_phy(uint8_t tx_phys_mask,
 int ble_gap_set_prefered_le_phy(uint16_t conn_handle, uint8_t tx_phys_mask,
                                 uint8_t rx_phys_mask, uint16_t phy_opts);
 
+#if MYNEWT_VAL(BLE_CONN_SUBRATING)
+/**
+ * Set default subrate
+ *
+ * @param subrate_min       Min subrate factor allowed in request by a peripheral
+ * @param subrate_max       Max subrate factor allowed in request by a peripheral
+ * @param max_latency       Max peripheral latency allowed in units of
+ *                          subrated conn interval.
+ *
+ * @param cont_num          Min number of underlying conn event to remain active
+ *                          after a packet containing PDU with non-zero length field
+ *                          is sent or received in request by a peripheral.
+ *
+ * @param supervision_timeout Max supervision timeout allowed in request by a peripheral
+ */
+int ble_gap_set_default_subrate(uint16_t subrate_min, uint16_t subrate_max, uint16_t max_latency,
+                                uint16_t cont_num, uint16_t supervision_timeout);
+
+/**
+ * Subrate Request
+ *
+ * @param conn_handle       Connection Handle of the ACL.
+ * @param subrate_min       Min subrate factor to be applied
+ * @param subrate_max       Max subrate factor to be applied
+ * @param max_latency       Max peripheral latency allowed in units of
+ *                          subrated conn interval.
+ *
+ * @param cont_num          Min number of underlying conn event to remain active
+ *                          after a packet containing PDU with non-zero length field
+ *                          is sent or received in request by a peripheral.
+ *
+ * @param supervision_timeout  Max supervision timeout allowed for this connection
+ */
+
+int
+ble_gap_subrate_req(uint16_t conn_handle, uint16_t subrate_min, uint16_t subrate_max,
+                        uint16_t max_latency, uint16_t cont_num,
+                        uint16_t supervision_timeout);
+#endif
 /**
  * Event listener structure
  *
@@ -2151,6 +2282,79 @@ int ble_gap_event_listener_register(struct ble_gap_event_listener *listener,
  *                      BLE_HS_ENOENT if listener was not registered
  */
 int ble_gap_event_listener_unregister(struct ble_gap_event_listener *listener);
+
+/**
+ * Enable Set Path Loss Reporting.
+ *
+ * @param conn_handle       Connection handle
+ * @params enable           1: Enable
+ * 			    0: Disable
+ *
+ * @return                   0 on success; nonzero on failure.
+ */
+
+int ble_gap_set_path_loss_reporting_enable(uint16_t conn_handle, uint8_t enable);
+
+/**
+ * Enable Reporting of Transmit Power
+ *
+ * @param conn_handle       Connection handle
+ * @params local_enable     1: Enable local transmit power reports
+ * 			    0: Disable local transmit power reports
+ *
+ * @params remote_enable    1: Enable remote transmit power reports
+ * 			    0: Disable remote transmit power reports
+ *
+ * @return                  0 on success; nonzero on failure.
+ */
+int ble_gap_set_transmit_power_reporting_enable(uint16_t conn_handle,
+                                            uint8_t local_enable,
+                                            uint8_t remote_enable);
+
+/**
+ * LE Enhanced Read Transmit Power Level
+ *
+ * @param conn_handle       Connection handle
+ * @params phy              Advertising Phy
+ *
+ * @params status	    0 on success; nonzero on failure.
+ * @params conn_handle	    Connection handle
+ * @params phy		    Advertising Phy
+ *
+ * @params curr_tx_power_level   Current trasnmit Power Level
+ *
+ * @params mx_tx_power_level     Maximum transmit power level
+ *
+ * @return                  0 on success; nonzero on failure.
+ */
+int ble_gap_enh_read_transmit_power_level(uint16_t conn_handle, uint8_t phy, uint8_t *out_status, uint8_t *out_phy ,
+                                      uint8_t *out_curr_tx_power_level, uint8_t *out_max_tx_power_level);
+
+/**
+ * Read Remote Transmit Power Level
+ *
+ * @param conn_handle       Connection handle
+ * @params phy              Advertising Phy
+ *
+ * @return                  0 on success; nonzero on failure.
+ */
+int ble_gap_read_remote_transmit_power_level(uint16_t conn_handle, uint8_t phy);
+
+/**
+ * Set Path Loss Reproting Param
+ *
+ * @param conn_handle       Connection handle
+ * @params high_threshold   High Threshold value for path loss
+ * @params high_hysteresis  Hysteresis value for high threshold
+ * @params low_threshold    Low Threshold value for path loss
+ * @params low_hysteresis   Hysteresis value for low threshold
+ * @params min_time_spent   Minimum time controller observes the path loss
+ *
+ * @return                  0 on success; nonzero on failure.
+ */
+int ble_gap_set_path_loss_reporting_param(uint16_t conn_handle, uint8_t high_threshold,
+                                      uint8_t high_hysteresis, uint8_t low_threshold,
+                                      uint8_t low_hysteresis, uint16_t min_time_spent);
 
 #ifdef __cplusplus
 }
