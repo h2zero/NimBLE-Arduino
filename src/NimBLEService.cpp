@@ -72,7 +72,6 @@ NimBLEService::~NimBLEService() {
 
 /**
  * @brief Dump details of this BLE GATT service.
- * @return N/A.
  */
 void NimBLEService::dump() {
     NIMBLE_LOGD(LOG_TAG, "Service: uuid:%s, handle: 0x%2x",
