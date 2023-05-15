@@ -12,7 +12,7 @@
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 
 static NimBLEUUID dataUuid(SERVICE_UUID);
-static NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
+static NimBLEAdvertising *pAdvertising = nullptr;
 static uint32_t count = 0;
 
 void setup() {
@@ -20,6 +20,7 @@ void setup() {
   Serial.println("Starting BLE work!");
   
   NimBLEDevice::init("svc data");
+  pAdvertising = NimBLEDevice::getAdvertising();
 }
 
 void loop() {
