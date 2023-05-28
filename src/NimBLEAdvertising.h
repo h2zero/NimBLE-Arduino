@@ -59,6 +59,7 @@ public:
     void setCompleteServices32(const std::vector<NimBLEUUID> &v_uuid);
     void setFlags(uint8_t);
     void setManufacturerData(const std::string &data);
+    void setManufacturerData(const std::vector<uint8_t> &data);
     void setURI(const std::string &uri);
     void setName(const std::string &name);
     void setPartialServices(const NimBLEUUID &uuid);
@@ -96,6 +97,7 @@ public:
     void setAppearance(uint16_t appearance);
     void setName(const std::string &name);
     void setManufacturerData(const std::string &data);
+    void setManufacturerData(const std::vector<uint8_t> &data);
     void setURI(const std::string &uri);
     void setServiceData(const NimBLEUUID &uuid, const std::string &data);
     void setAdvertisementType(uint8_t adv_type);
