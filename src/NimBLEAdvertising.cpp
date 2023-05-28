@@ -157,6 +157,18 @@ void NimBLEAdvertising::setManufacturerData(const std::string &data) {
 
 
 /**
+ * @brief Set the advertised manufacturer data.
+ * @param [in] data The data to advertise.
+ */
+void NimBLEAdvertising::setManufacturerData(const std::vector<uint8_t> &data) {
+    m_mfgData = data;
+    m_advData.mfg_data = &m_mfgData[0];
+    m_advData.mfg_data_len = m_mfgData.size();
+    m_advDataSet = false;
+} // setManufacturerData
+
+
+/**
  * @brief Set the advertised URI.
  * @param [in] uri The URI to advertise.
  */
@@ -825,6 +837,18 @@ void NimBLEAdvertisementData::setManufacturerData(const std::string &data) {
     cdata[0] = data.length() + 1;
     cdata[1] = BLE_HS_ADV_TYPE_MFG_DATA ;  // 0xff
     addData(std::string(cdata, 2) + data);
+} // setManufacturerData
+
+
+/**
+ * @brief Set manufacturer specific data.
+ * @param [in] data The manufacturer data to advertise.
+ */
+void NimBLEAdvertisementData::setManufacturerData(const std::vector<uint8_t> &data) {
+    char cdata[2];
+    cdata[0] = data.size() + 1;
+    cdata[1] = BLE_HS_ADV_TYPE_MFG_DATA ;  // 0xff
+    addData(std::string(cdata, 2) + std::string((char*)&data[0], data.size()));
 } // setManufacturerData
 
 
