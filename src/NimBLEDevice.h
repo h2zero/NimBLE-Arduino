@@ -228,8 +228,10 @@ private:
     static gap_event_handler          m_customGapHandler;
     static uint8_t                    m_own_addr_type;
 #ifdef ESP_PLATFORM
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
     static uint16_t                   m_scanDuplicateSize;
     static uint8_t                    m_scanFilterMode;
+#  endif
 #endif
     static std::vector<NimBLEAddress> m_whiteList;
 };

@@ -1138,6 +1138,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
 
         case BLE_GAP_EVENT_PASSKEY_ACTION: {
             struct ble_sm_io pkey = {0,0};
+            (void)pkey; //warning: variable 'pkey' set but not used [-Wunused-but-set-variable]
 
             if(pClient->m_conn_id != event->passkey.conn_handle)
                 return 0;

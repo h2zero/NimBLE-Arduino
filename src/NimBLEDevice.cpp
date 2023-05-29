@@ -85,8 +85,10 @@ std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
 std::vector<NimBLEAddress>  NimBLEDevice::m_whiteList;
 uint8_t                     NimBLEDevice::m_own_addr_type = BLE_OWN_ADDR_PUBLIC;
 #ifdef ESP_PLATFORM
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
 uint16_t                    NimBLEDevice::m_scanDuplicateSize = CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE;
 uint8_t                     NimBLEDevice::m_scanFilterMode = CONFIG_BTDM_SCAN_DUPL_TYPE;
+#  endif
 #endif
 
 /**
@@ -493,6 +495,7 @@ uint16_t NimBLEDevice::getMTU() {
 
 
 #ifdef ESP_PLATFORM
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
 /**
  * @brief Set the duplicate filter cache size for filtering scanned devices.
  * @param [in] cacheSize The number of advertisements filtered before the cache is reset.\n
@@ -511,6 +514,7 @@ void NimBLEDevice::setScanDuplicateCacheSize(uint16_t cacheSize) {
 
     m_scanDuplicateSize = cacheSize;
 }
+
 
 
 /**
@@ -538,7 +542,8 @@ void NimBLEDevice::setScanFilterMode(uint8_t mode) {
 
     m_scanFilterMode = mode;
 }
-#endif
+#  endif // CONFIG_BTDM_BLE_SCAN_DUPL
+#endif   // ESP_PLATFORM
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 /**
@@ -868,19 +873,21 @@ void NimBLEDevice::init(const std::string &deviceName) {
 
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-#if  defined (CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#  if  defined (CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
         bt_cfg.bluetooth_mode = ESP_BT_MODE_BLE;
-#else
+#  else
         bt_cfg.mode = ESP_BT_MODE_BLE;
         bt_cfg.ble_max_conn = CONFIG_BT_NIMBLE_MAX_CONNECTIONS;
-#endif
+#  endif
+
+#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
         bt_cfg.normal_adv_size = m_scanDuplicateSize;
         bt_cfg.scan_duplicate_type = m_scanFilterMode;
-
+#  endif
         ESP_ERROR_CHECK(esp_bt_controller_init(&bt_cfg));
         ESP_ERROR_CHECK(esp_bt_controller_enable(ESP_BT_MODE_BLE));
         ESP_ERROR_CHECK(esp_nimble_hci_init());
-#endif
+#  endif
 #endif
         nimble_port_init();
 
