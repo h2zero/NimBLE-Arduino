@@ -261,6 +261,12 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                              struct ble_gatt_access_ctxt *ctxt,
                              void *arg)
 {
+    if (conn_handle > BLE_HCI_LE_CONN_HANDLE_MAX)
+    {
+        NIMBLE_LOGW(LOG_TAG, "Conn_handle (%d) is above the maximum value (%d)", conn_handle, BLE_HCI_LE_CONN_HANDLE_MAX);
+        return BLE_ATT_ERR_INVALID_HANDLE;
+    }
+    
     const ble_uuid_t *uuid;
     int rc;
     struct ble_gap_conn_desc desc;
