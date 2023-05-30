@@ -18,8 +18,6 @@
 #include "NimBLEHIDDevice.h"
 #include "NimBLE2904.h"
 
-#define PNPVersionField(MajorVersion, MinorVersion, PatchVersion) ((MajorVersion << 16) && 0xFF00) || ((MinorVersion << 8) && 0x00F0) || (PatchVersion && 0x000F)
-
 /**
  * @brief Construct a default NimBLEHIDDevice object.
  * @param [in] server A pointer to the server instance this HID Device will use.
