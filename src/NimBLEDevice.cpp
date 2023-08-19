@@ -68,6 +68,7 @@ NimBLEServer*   NimBLEDevice::m_pServer = nullptr;
 #endif
 uint32_t        NimBLEDevice::m_passkey = 123456;
 bool            NimBLEDevice::m_synced = false;
+SemaphoreHandle_t m_synced_sem = xSemaphoreCreateBinary();
 #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
 #  if CONFIG_BT_NIMBLE_EXT_ADV
 NimBLEExtAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
@@ -807,6 +808,7 @@ void NimBLEDevice::onSync(void)
     taskYIELD();
 
     m_synced = true;
+    xSemaphoreGive(m_synced_sem);
 
     if(initialized) {
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
@@ -906,6 +908,7 @@ void NimBLEDevice::init(const std::string &deviceName) {
     }
 
     // Wait for host and controller to sync before returning and accepting new tasks
+    xSemaphoreTake(m_synced_sem, portMAX_DELAY);
     while(!m_synced){
         taskYIELD();
     }
