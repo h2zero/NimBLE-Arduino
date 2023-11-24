@@ -86,6 +86,7 @@ private:
     NimBLEScan();
     ~NimBLEScan();
     static int          handleGapEvent(ble_gap_event*  event, void* arg);
+    static void         srTimerCb(ble_npl_event *event);
     void                onHostReset();
     void                onHostSync();
 
@@ -97,6 +98,7 @@ private:
     uint32_t                            m_duration;
     ble_task_data_t                     *m_pTaskData;
     uint8_t                             m_maxResults;
+    ble_npl_callout                     m_srTimer;
 };
 
 #endif /* CONFIG_BT_ENABLED CONFIG_BT_NIMBLE_ROLE_OBSERVER */
