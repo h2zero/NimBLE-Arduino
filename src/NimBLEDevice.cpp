@@ -428,7 +428,19 @@ int NimBLEDevice::getPower(esp_ble_power_type_t powerType) {
 #else
 
 void NimBLEDevice::setPower(int dbm) {
-    ble_phy_txpwr_set(dbm);
+    struct ble_hci_vs_set_tx_pwr_cp cmd;
+    struct ble_hci_vs_set_tx_pwr_rp rsp;
+    int rc;
+
+    cmd.tx_power = dbm;
+    rc = ble_hs_hci_send_vs_cmd(BLE_HCI_OCF_VS_SET_TX_PWR, &cmd, sizeof(cmd), &rsp, sizeof(rsp));
+    if (rc) {
+        NIMBLE_LOGE(LOG_TAG, "failed to set TX power, rc: %04x\n", rc);
+        return;
+    }
+
+    NIMBLE_LOGD(LOG_TAG, "TX power set to %d dBm\n", rsp.tx_power);
+    return;
 }
 
 
