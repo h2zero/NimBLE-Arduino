@@ -459,7 +459,7 @@ void NimBLEScan::onHostSync() {
 
 /**
  * @brief Start scanning and block until scanning has been completed.
- * @param [in] duration The duration in seconds for which to scan.
+ * @param [in] duration The duration in milliseconds for which to scan.
  * @param [in] is_continue Set to true to save previous scan results, false to clear them.
  * @return The scan results.
  */
