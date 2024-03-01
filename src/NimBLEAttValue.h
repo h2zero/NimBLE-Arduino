@@ -24,6 +24,7 @@
 
 #include <string>
 #include <vector>
+#include <ctime>
 
 #ifndef CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
 #    define CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED 0
