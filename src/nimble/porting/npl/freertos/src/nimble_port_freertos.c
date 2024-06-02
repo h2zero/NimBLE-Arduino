@@ -43,6 +43,12 @@ static StaticTask_t hs_xTaskBuffer;
 
 static TaskHandle_t host_task_h = NULL;
 
+UBaseType_t nimble_port_freertos_get_hs_hwm(void) {
+    if (host_task_h == NULL)
+        return 0;
+    return uxTaskGetStackHighWaterMark(host_task_h);
+}
+
 #ifdef ESP_PLATFORM
 /**
  * @brief esp_nimble_enable - Initialize the NimBLE host
@@ -121,14 +127,9 @@ nimble_port_freertos_deinit(void)
 UBaseType_t
 nimble_port_freertos_get_ll_hwm(void)
 {
+    if (ll_task_h == NULL)
+        return 0;
     return uxTaskGetStackHighWaterMark(ll_task_h);
 }
 #endif
-
-UBaseType_t
-nimble_port_freertos_get_hs_hwm(void)
-{
-    return uxTaskGetStackHighWaterMark(host_task_h);
-}
-
 #endif //ESP_PLATFORM
