@@ -172,7 +172,7 @@ public:
     static bool             deleteBond(const NimBLEAddress &address);
     static int              getNumBonds();
     static bool             isBonded(const NimBLEAddress &address);
-    static void             deleteAllBonds();
+    static bool             deleteAllBonds();
     static NimBLEAddress    getBondedAddress(int index);
 #endif
 

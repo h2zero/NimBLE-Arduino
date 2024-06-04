@@ -565,10 +565,16 @@ int NimBLEDevice::getNumBonds() {
 
 /**
  * @brief Deletes all bonding information.
+ * @returns true on success, false on failure.
  */
 /*STATIC*/
-void NimBLEDevice::deleteAllBonds() {
-    ble_store_clear();
+bool NimBLEDevice::deleteAllBonds() {
+    int rc = ble_store_clear();
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to delete all bonds; rc=%d", rc);
+        return false;
+    }
+    return true;
 }
 
 
