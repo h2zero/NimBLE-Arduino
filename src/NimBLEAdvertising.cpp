@@ -400,7 +400,7 @@ void NimBLEAdvertising::setScanResponseData(NimBLEAdvertisementData& advertiseme
  * @param [in] dirAddr The address of a peer to directly advertise to.
  * @return True if advertising started successfully.
  */
-bool NimBLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(NimBLEAdvertising *pAdv), NimBLEAddress* dirAddr) {
+bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, NimBLEAddress* dirAddr) {
     NIMBLE_LOGD(LOG_TAG, ">> Advertising start: customAdvData: %d, customScanResponseData: %d",
                 m_customAdvData, m_customScanResponseData);
 
