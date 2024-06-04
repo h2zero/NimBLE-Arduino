@@ -551,6 +551,66 @@ uint16_t NimBLEClient::getConnId() {
     return m_conn_id;
 } // getConnId
 
+/**
+ * @brief Clear the connection information for this client.
+ * @note This is designed to be used to reset the connection information after
+ *       calling setConnection(), and should not be used to disconnect from a
+ *       peer. To disconnect from a peer, use disconnect().
+ */
+void NimBLEClient::clearConnection() {
+    m_conn_id = BLE_HS_CONN_HANDLE_NONE;
+    m_connEstablished = false;
+    m_peerAddress = NimBLEAddress();
+} // clearConnection
+
+/**
+ * @brief Set the connection information for this client.
+ * @param [in] connInfo The connection information.
+ * @return True on success.
+ * @note Sets the connection established flag to true.
+ * @note If the client is already connected to a peer, this will return false.
+ * @note This is designed to be used when a connection is made outside of the
+ *       NimBLEClient class, such as when a connection is made by the
+ *       NimBLEServer class and the client is passed the connection id. This use
+ *       enables the GATT Server to read the name of the device that has
+ *       connected to it.
+ */
+bool NimBLEClient::setConnection(NimBLEConnInfo &connInfo) {
+    if (isConnected() || m_connEstablished) {
+        NIMBLE_LOGE(LOG_TAG, "Already connected");
+        return false;
+    }
+
+    m_peerAddress = connInfo.getAddress();
+    m_conn_id = connInfo.getConnHandle();
+    m_connEstablished = true;
+
+    return true;
+} // setConnection
+
+/**
+ * @brief Set the connection information for this client.
+ * @param [in] conn_id The connection id.
+ * @note Sets the connection established flag to true.
+ * @note This is designed to be used when a connection is made outside of the
+ *       NimBLEClient class, such as when a connection is made by the
+ *       NimBLEServer class and the client is passed the connection id. This use
+ *       enables the GATT Server to read the name of the device that has
+ *       connected to it.
+ * @note If the client is already connected to a peer, this will return false.
+ * @note This will look up the peer address using the connection id.
+ */
+bool NimBLEClient::setConnection(uint16_t conn_id) {
+    // we weren't provided the peer address, look it up using ble_gap_conn_find
+    NimBLEConnInfo connInfo;
+    int rc = ble_gap_conn_find(m_conn_id, &connInfo.m_desc);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Connection info not found");
+        return false;
+    }
+
+    return setConnection(connInfo);
+} // setConnection
 
 /**
  * @brief Retrieve the address of the peer.
