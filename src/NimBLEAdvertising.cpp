@@ -96,8 +96,8 @@ void NimBLEAdvertising::addServiceUUID(const char* serviceUUID) {
 
 
 /**
- * @brief Add a service uuid to exposed list of services.
- * @param [in] serviceUUID The UUID of the service to expose.
+ * @brief Remove a service UUID from the advertisment.
+ * @param [in] serviceUUID The UUID of the service to remove.
  */
 void NimBLEAdvertising::removeServiceUUID(const NimBLEUUID &serviceUUID) {
     for(auto it = m_serviceUUIDs.begin(); it != m_serviceUUIDs.end(); ++it) {
@@ -108,6 +108,15 @@ void NimBLEAdvertising::removeServiceUUID(const NimBLEUUID &serviceUUID) {
     }
     m_advDataSet = false;
 } // addServiceUUID
+
+
+/**
+ * @brief Remove all service UUIDs from the advertisment.
+ */
+void NimBLEAdvertising::removeServices() {
+    std::vector<NimBLEUUID>().swap(m_serviceUUIDs);
+    m_advDataSet = false;
+} // removeServices
 
 
 /**
@@ -135,7 +144,7 @@ void NimBLEAdvertising::addTxPower() {
  * @param [in] name The name to advertise.
  */
 void NimBLEAdvertising::setName(const std::string &name) {
-    m_name.assign(name.begin(), name.end());
+    std::vector<uint8_t>(name.begin(), name.end()).swap(m_name);
     m_advData.name = &m_name[0];
     m_advData.name_len = m_name.size();
     m_advDataSet = false;
@@ -147,7 +156,7 @@ void NimBLEAdvertising::setName(const std::string &name) {
  * @param [in] data The data to advertise.
  */
 void NimBLEAdvertising::setManufacturerData(const std::string &data) {
-    m_mfgData.assign(data.begin(), data.end());
+    std::vector<uint8_t>(data.begin(), data.end()).swap(m_mfgData);
     m_advData.mfg_data = &m_mfgData[0];
     m_advData.mfg_data_len = m_mfgData.size();
     m_advDataSet = false;
@@ -171,7 +180,7 @@ void NimBLEAdvertising::setManufacturerData(const std::vector<uint8_t> &data) {
  * @param [in] uri The URI to advertise.
  */
 void NimBLEAdvertising::setURI(const std::string &uri) {
-    m_uri.assign(uri.begin(), uri.end());
+    std::vector<uint8_t>(uri.begin(), uri.end()).swap(m_uri);
     m_advData.uri = &m_uri[0];
     m_advData.uri_len = m_uri.size();
     m_advDataSet = false;
@@ -187,7 +196,8 @@ void NimBLEAdvertising::setURI(const std::string &uri) {
 void NimBLEAdvertising::setServiceData(const NimBLEUUID &uuid, const std::string &data) {
     switch (uuid.bitSize()) {
         case 16: {
-            m_svcData16.assign((uint8_t*)&uuid.getNative()->u16.value, (uint8_t*)&uuid.getNative()->u16.value + 2);
+            std::vector<uint8_t>((uint8_t*)&uuid.getNative()->u16.value,
+                                 (uint8_t*)&uuid.getNative()->u16.value + 2).swap(m_svcData16);
             m_svcData16.insert(m_svcData16.end(), data.begin(), data.end());
             m_advData.svc_data_uuid16 = (uint8_t*)&m_svcData16[0];
             m_advData.svc_data_uuid16_len = (data.length() > 0) ? m_svcData16.size() : 0;
@@ -195,7 +205,8 @@ void NimBLEAdvertising::setServiceData(const NimBLEUUID &uuid, const std::string
         }
 
         case 32: {
-            m_svcData32.assign((uint8_t*)&uuid.getNative()->u32.value, (uint8_t*)&uuid.getNative()->u32.value + 4);
+            std::vector<uint8_t>((uint8_t*)&uuid.getNative()->u32.value,
+                                 (uint8_t*)&uuid.getNative()->u32.value + 4).swap(m_svcData32);
             m_svcData32.insert(m_svcData32.end(), data.begin(), data.end());
             m_advData.svc_data_uuid32 = (uint8_t*)&m_svcData32[0];
             m_advData.svc_data_uuid32_len = (data.length() > 0) ? m_svcData32.size() : 0;
@@ -203,7 +214,8 @@ void NimBLEAdvertising::setServiceData(const NimBLEUUID &uuid, const std::string
         }
 
         case 128: {
-            m_svcData128.assign(uuid.getNative()->u128.value, uuid.getNative()->u128.value + 16);
+            std::vector<uint8_t>(uuid.getNative()->u128.value,
+                                 uuid.getNative()->u128.value + 16).swap(m_svcData128);
             m_svcData128.insert(m_svcData128.end(), data.begin(), data.end());
             m_advData.svc_data_uuid128 = (uint8_t*)&m_svcData128[0];
             m_advData.svc_data_uuid128_len = (data.length() > 0) ? m_svcData128.size() : 0;

@@ -98,6 +98,7 @@ public:
     void addServiceUUID(const char* serviceUUID);
     void removeServiceUUID(const NimBLEUUID &serviceUUID);
     bool start(uint32_t duration = 0, advCompleteCB_t advCompleteCB = nullptr, NimBLEAddress* dirAddr = nullptr);
+    void removeServices();
     bool stop();
     void setAppearance(uint16_t appearance);
     void setName(const std::string &name);
