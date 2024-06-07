@@ -136,6 +136,8 @@ public:
     static void             setSecurityPasskey(uint32_t pin);
     static uint32_t         getSecurityPasskey();
     static int              startSecurity(uint16_t conn_id);
+    static bool             injectConfirmPIN(const NimBLEConnInfo& peerInfo, bool accept);
+    static bool             injectPassKey(const NimBLEConnInfo& peerInfo, uint32_t pin);
     static int              setMTU(uint16_t mtu);
     static uint16_t         getMTU();
     static bool             isIgnored(const NimBLEAddress &address);

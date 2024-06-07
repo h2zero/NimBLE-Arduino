@@ -383,18 +383,23 @@ The security callback methods are now incorporated in the `NimBLEServerCallbacks
 
 The callback methods are:
 
-> `bool onConfirmPIN(uint32_t pin)`
+> `bool onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pin)`
 
-Receives the pin when using numeric comparison authentication, `return true;` to accept.  
+Receives the pin when using numeric comparison authentication.
+Call `NimBLEDevice::injectConfirmPIN(connInfo, true);` to accept or `NimBLEDevice::injectConfirmPIN(connInfo, false);` to reject.
 <br/>
 
-> `uint32_t onPassKeyRequest()`
+> `void onPassKeyEntry(const NimBLEConnInfo& connInfo)`
 
-For server callback; return the passkey expected from the client.
-For client callback; return the passkey to send to the server.  
+Client callback; client should respond with the passkey (pin) by calling `NimBLEDevice::injectPassKey(connInfo, 123456);`
 <br/>
 
-> `void onAuthenticationComplete(NimBLEConnInfo& connInfo)`
+> `uint32_t onPassKeyDisplay()`
+
+Server callback; should return the passkey (pin) expected from the client.
+<br/>
+
+> `void onAuthenticationComplete(const NimBLEConnInfo& connInfo)`
 
 Authentication complete, success or failed information is available from the `NimBLEConnInfo` methods.  
 <br/>

@@ -12,9 +12,9 @@
 
 class ClientCallbacks : public NimBLEClientCallbacks
 {
-  uint32_t onPassKeyRequest()
+  uint32_t onPassKeyEntry()
   {
-    Serial.println("Client Passkey Request");
+    Serial.println("Client Passkey Entry");
     /** return the passkey to send to the server */
     /** Change this to be different from NimBLE_Secure_Server if you want to test what happens on key mismatch */
     return 123456;
