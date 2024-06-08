@@ -69,6 +69,8 @@ public:
     NimBLEService*         getServiceByHandle(uint16_t handle);
     int                    disconnect(uint16_t connID,
                                       uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
+    int                    disconnect(const NimBLEConnInfo &connInfo,
+                                      uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     void                   updateConnParams(uint16_t conn_handle,
                                             uint16_t minInterval, uint16_t maxInterval,
                                             uint16_t latency, uint16_t timeout);

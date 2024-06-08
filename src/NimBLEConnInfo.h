@@ -22,7 +22,7 @@ public:
     /** @brief Gets the ID address of the connected peer */
     NimBLEAddress    getIdAddress() const    { return NimBLEAddress(m_desc.peer_id_addr); }
 
-    /** @brief Gets the connection handle of the connected peer */
+    /** @brief Gets the connection handle (also known as the connection id) of the connected peer */
     uint16_t         getConnHandle() const   { return m_desc.conn_handle; }
 
     /** @brief Gets the connection interval for this connection (in 1.25ms units) */

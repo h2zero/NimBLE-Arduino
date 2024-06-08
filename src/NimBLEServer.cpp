@@ -252,6 +252,15 @@ int NimBLEServer::disconnect(uint16_t connId, uint8_t reason) {
     return rc;
 } // disconnect
 
+/**
+ * @brief Disconnect the specified client with optional reason.
+ * @param [in] connInfo Connection of the client to disconnect.
+ * @param [in] reason code for disconnecting.
+ * @return NimBLE host return code.
+ */
+int NimBLEServer::disconnect(const NimBLEConnInfo &connInfo, uint8_t reason) {
+    return disconnect(connInfo.getConnHandle(), reason);
+} // disconnect
 
 #if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
 /**
