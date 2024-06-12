@@ -53,6 +53,6 @@ public:
     bool             isAuthenticated() const { return (m_desc.sec_state.authenticated == 1); }
 
     /** @brief Gets the key size used to encrypt the connection */
-    uint8_t          getSecKeySize()       { return m_desc.sec_state.key_size; }
+    uint8_t          getSecKeySize() const   { return m_desc.sec_state.key_size; }
 };
 #endif
