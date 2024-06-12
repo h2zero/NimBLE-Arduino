@@ -691,6 +691,7 @@ bool NimBLEDevice::whiteListAdd(const NimBLEAddress & address) {
     int rc = ble_gap_wl_set(&wlVec[0], wlVec.size());
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Failed adding to whitelist rc=%d", rc);
+        m_whiteList.pop_back();
         return false;
     }
 
