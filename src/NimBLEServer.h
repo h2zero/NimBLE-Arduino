@@ -173,6 +173,12 @@ public:
      * about the peer connection parameters.
      */
     virtual void onAuthenticationComplete(const NimBLEConnInfo& connInfo);
+
+    /**
+     * @brief Called when the peer identity address is resolved.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     */
+    virtual void onIdentity(const NimBLEConnInfo& connInfo);
 }; // NimBLEServerCallbacks
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */

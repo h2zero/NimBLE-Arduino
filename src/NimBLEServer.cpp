@@ -528,6 +528,16 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
             return 0;
         } // BLE_GAP_EVENT_ENC_CHANGE
 
+        case BLE_GAP_EVENT_IDENTITY_RESOLVED: {
+            rc = ble_gap_conn_find(event->identity_resolved.conn_handle, &peerInfo.m_desc);
+            if(rc != 0) {
+                return BLE_ATT_ERR_INVALID_HANDLE;
+            }
+
+            pServer->m_pServerCallbacks->onIdentity(peerInfo);
+            return 0;
+        } // BLE_GAP_EVENT_IDENTITY_RESOLVED
+
         case BLE_GAP_EVENT_PASSKEY_ACTION: {
             struct ble_sm_io pkey = {0,0};
 
@@ -863,6 +873,10 @@ void NimBLEServerCallbacks::onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_
     NIMBLE_LOGD("NimBLEServerCallbacks", "onConfirmPIN: default: true");
     NimBLEDevice::injectConfirmPIN(connInfo, true);
 } // onConfirmPIN
+
+void NimBLEServerCallbacks::onIdentity(const NimBLEConnInfo& connInfo){
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onIdentity: default");
+} // onIdentity
 
 void NimBLEServerCallbacks::onAuthenticationComplete(const NimBLEConnInfo& connInfo){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onAuthenticationComplete: default");

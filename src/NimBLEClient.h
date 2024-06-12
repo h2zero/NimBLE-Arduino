@@ -164,6 +164,12 @@ public:
      * @param [in] pin The pin to compare with the server.
      */
     virtual void onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pin);
+
+    /**
+     * @brief Called when the peer identity address is resolved.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
+     */
+    virtual void onIdentity(const NimBLEConnInfo& connInfo);
 };
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */

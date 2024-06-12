@@ -1189,6 +1189,19 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
             break;
         } //BLE_GAP_EVENT_ENC_CHANGE
 
+        case BLE_GAP_EVENT_IDENTITY_RESOLVED: {
+            NimBLEConnInfo peerInfo;
+            rc = ble_gap_conn_find(event->identity_resolved.conn_handle, &peerInfo.m_desc);
+            if (rc != 0) {
+                NIMBLE_LOGE(LOG_TAG, "Connection info not found");
+                rc = 0;
+                break;
+            }
+
+            pClient->m_pClientCallbacks->onIdentity(peerInfo);
+            break;
+        } // BLE_GAP_EVENT_IDENTITY_RESOLVED
+
         case BLE_GAP_EVENT_MTU: {
             if(pClient->m_conn_id != event->mtu.conn_handle){
                 return 0;
@@ -1325,6 +1338,10 @@ void NimBLEClientCallbacks::onPassKeyEntry(const NimBLEConnInfo& connInfo){
 void NimBLEClientCallbacks::onAuthenticationComplete(const NimBLEConnInfo& connInfo){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onAuthenticationComplete: default");
 }
+
+void NimBLEClientCallbacks::onIdentity(const NimBLEConnInfo& connInfo){
+    NIMBLE_LOGD("NimBLEClientCallbacks", "onIdentity: default");
+} // onIdentity
 
 void NimBLEClientCallbacks::onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pin){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onConfirmPIN: default: true");
