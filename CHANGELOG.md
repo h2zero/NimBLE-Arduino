@@ -1,6 +1,31 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [unreleased]
+
+### Fixed
+ - `CONFIG_BT_NIMBLE_NVS_PERSIST` value not being used to enable/disable persistance.
+ - Set service handle in `NimBLEService::getHandle` function if not set already.
+ - NimBLE_service_data_advertiser example updated to initialize the advertising pointer after stack initialization.
+ - Unhandled exception on `NimBLECharacteristic::handleGapEvent` when the connection handle is invalid.
+ - `NimBLEHIDDevice::pnp` now correctly sets the byte order.
+ - `NimBLEEddystoneTLM` now correctly sets/gets negative temperatures.
+ - Adding to the whitelist will now allow the device to be added again if the previous attempts failed.
+ - The IPC calls added to esp_nimble_hci have been removed to prevent IPC stack crashing.
+
+### Added
+ - `NimBLEAdvertisedDevice` new method: `getAdvFlags`, to read the flags advertised.
+ - `NimBLEAdvertising::setManufacturerData` new overload method that accepts a vector of `uint8_t`.
+ - `NimBLEAdvertisementData::setManufacturerData` new overload method that accepts a vector of `uint8_t`.
+ - `NimBLEAdvertisedDevice` new method: `getPayloadByType`, to get data from generic data types advertised.
+
+### Changed
+ - `NimBLEAdvertisedDevice::getManufacturerData`, now takes an index value parameter to use when there is more than 1 instance of manufacturer data.
+ - `NimBLEAdvertising` directed peer address parameter to advertising start.
+ - Update NimBLE core to esp-nimble @0fc6282
+ - Can now create more than 255 Characteristics/Descriptors in a service.
+ - `nimble_port_freertos_get_hs_hwm` function is now available to the application to get the core task stack usage.
+ - changed default pairing keys shared to include ID key which is now needed by iOS
 
 ## [1.4.1] - 2022-10-23
 
