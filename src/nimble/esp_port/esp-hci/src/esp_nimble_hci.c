@@ -51,7 +51,7 @@ static struct os_mempool ble_hci_evt_lo_pool;
 static os_membuf_t *ble_hci_evt_lo_buf;
 
 static SemaphoreHandle_t vhci_send_sem;
-const static char *TAG = "NimBLE";
+const static char *LOG_TAG = "NimBLE";
 
 int os_msys_buf_alloc(void);
 void os_msys_buf_free(void);
@@ -77,7 +77,7 @@ int ble_hci_trans_hs_cmd_tx(uint8_t *cmd)
     *cmd = BLE_HCI_UART_H4_CMD;
     len = BLE_HCI_CMD_HDR_LEN + cmd[3] + 1;
     if (!esp_vhci_host_check_send_available()) {
-        ESP_LOGD(TAG, "Controller not ready to receive packets");
+        ESP_LOGD(LOG_TAG, "Controller not ready to receive packets");
     }
 
     if (xSemaphoreTake(vhci_send_sem, NIMBLE_VHCI_TIMEOUT_MS / portTICK_PERIOD_MS) == pdTRUE) {
@@ -113,7 +113,7 @@ int ble_hci_trans_hs_acl_tx(struct os_mbuf *om)
     }
 
     if (!esp_vhci_host_check_send_available()) {
-        ESP_LOGD(TAG, "Controller not ready to receive packets");
+        ESP_LOGD(LOG_TAG, "Controller not ready to receive packets");
     }
 
     len = 1 + OS_MBUF_PKTLEN(om);
@@ -249,11 +249,11 @@ static void ble_hci_rx_acl(uint8_t *data, uint16_t len)
     m = ble_hci_trans_acl_buf_alloc();
 
     if (!m) {
-        ESP_LOGE(TAG, "%s failed to allocate ACL buffers; increase ACL_BUF_COUNT", __func__);
+        ESP_LOGE(LOG_TAG, "%s failed to allocate ACL buffers; increase ACL_BUF_COUNT", __func__);
         return;
     }
     if ((rc = os_mbuf_append(m, data, len)) != 0) {
-        ESP_LOGE(TAG, "%s failed to os_mbuf_append; rc = %d", __func__, rc);
+        ESP_LOGE(LOG_TAG, "%s failed to os_mbuf_append; rc = %d", __func__, rc);
         os_mbuf_free_chain(m);
         return;
     }
@@ -338,7 +338,7 @@ static int host_rcv_pkt(uint8_t *data, uint16_t len)
         assert(totlen <= UINT8_MAX + BLE_HCI_EVENT_HDR_LEN);
 
         if (totlen > MYNEWT_VAL(BLE_HCI_EVT_BUF_SIZE)) {
-            ESP_LOGE(TAG, "Received HCI data length at host (%d) exceeds maximum configured HCI event buffer size (%d).",
+            ESP_LOGE(LOG_TAG, "Received HCI data length at host (%d) exceeds maximum configured HCI event buffer size (%d).",
                      totlen, MYNEWT_VAL(BLE_HCI_EVT_BUF_SIZE));
             ble_hs_sched_reset(BLE_HS_ECONTROLLER);
             return 0;
