@@ -112,8 +112,6 @@ void NimBLEAdvertising::removeServiceUUID(const NimBLEUUID &serviceUUID) {
 
 /**
  * @brief Set the device appearance in the advertising data.
- * The codes for distinct appearances can be found here:\n
- * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.gap.appearance.xml.
  * @param [in] appearance The appearance of the device in the advertising data.
  */
 void NimBLEAdvertising::setAppearance(uint16_t appearance) {
@@ -803,9 +801,6 @@ void NimBLEAdvertisementData::addData(char * data, size_t length) {
 /**
  * @brief Set the appearance.
  * @param [in] appearance The appearance code value.
- *
- * See also:
- * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.gap.appearance.xml
  */
 void NimBLEAdvertisementData::setAppearance(uint16_t appearance) {
     char cdata[2];

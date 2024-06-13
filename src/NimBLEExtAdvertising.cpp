@@ -623,9 +623,6 @@ void NimBLEExtAdvertisement::addData(const uint8_t * data, size_t length) {
 /**
  * @brief Set the appearance.
  * @param [in] appearance The appearance code value.
- *
- * See also:
- * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.gap.appearance.xml
  */
 void NimBLEExtAdvertisement::setAppearance(uint16_t appearance) {
     char cdata[2];
