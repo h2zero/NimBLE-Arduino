@@ -878,9 +878,11 @@ void NimBLEDevice::init(const std::string &deviceName) {
 
         ESP_ERROR_CHECK(errRc);
 
+#if CONFIG_IDF_TARGET_ESP32
         esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
+#endif
 
-#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0) | !defined(CONFIG_NIMBLE_CPP_IDF)
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 #  if  defined (CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
         bt_cfg.bluetooth_mode = ESP_BT_MODE_BLE;
@@ -942,13 +944,13 @@ void NimBLEDevice::deinit(bool clearAll) {
     int ret = nimble_port_stop();
     if (ret == 0) {
         nimble_port_deinit();
-#ifdef ESP_PLATFORM
-#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+#ifdef CONFIG_NIMBLE_CPP_IDF
+# if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
         ret = esp_nimble_hci_and_controller_deinit();
         if (ret != ESP_OK) {
             NIMBLE_LOGE(LOG_TAG, "esp_nimble_hci_and_controller_deinit() failed with error: %d", ret);
         }
-#endif
+# endif
 #endif
         initialized = false;
         m_synced = false;
