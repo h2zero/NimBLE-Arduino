@@ -53,7 +53,7 @@ esp_err_t esp_nimble_hci_init(void);
  *
  * int ret = esp_nimble_hci_and_controller_init();
  * if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "esp_nimble_hci_and_controller_init() failed with error: %d", ret);
+        ESP_LOGE(LOG_TAG, "esp_nimble_hci_and_controller_init() failed with error: %d", ret);
  *      return;
  * }
  *
@@ -103,7 +103,7 @@ esp_err_t esp_nimble_hci_deinit(void);
  *
  *      ret = esp_nimble_hci_and_controller_deinit();
  *      if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "esp_nimble_hci_and_controller_deinit() failed with error: %d", ret);
+            ESP_LOGE(LOG_TAG, "esp_nimble_hci_and_controller_deinit() failed with error: %d", ret);
  *      }
  * }
  * @endcode
