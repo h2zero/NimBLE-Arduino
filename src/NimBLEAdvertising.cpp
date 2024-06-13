@@ -1064,4 +1064,12 @@ std::string NimBLEAdvertisementData::getPayload() {
     return m_payload;
 } // getPayload
 
+
+/**
+ * @brief Clear the advertisement data for reuse.
+ */
+void NimBLEAdvertisementData::clearData() {
+    m_payload.clear();
+}
+
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER  && !CONFIG_BT_NIMBLE_EXT_ADV */

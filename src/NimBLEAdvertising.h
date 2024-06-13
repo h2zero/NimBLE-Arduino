@@ -76,6 +76,7 @@ public:
     void addTxPower();
     void setPreferredParams(uint16_t min, uint16_t max);
     std::string getPayload();               // Retrieve the current advert payload.
+    void clearData();                       // Clear the advertisement data.
 
 private:
     friend class NimBLEAdvertising;
