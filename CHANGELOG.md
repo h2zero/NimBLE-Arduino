@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
  - `NimBLEEddystoneTLM` now correctly sets/gets negative temperatures.
  - Adding to the whitelist will now allow the device to be added again if the previous attempts failed.
  - The IPC calls added to esp_nimble_hci have been removed to prevent IPC stack crashing.
+ - Espressif log tag renamed from "TAG" to "LOG_TAG" to avoid conflict with Arduino core definition.
 
 ### Added
  - `NimBLEAdvertisedDevice` new method: `getAdvFlags`, to read the flags advertised.
