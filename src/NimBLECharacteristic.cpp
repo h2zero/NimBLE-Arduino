@@ -266,7 +266,7 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
         NIMBLE_LOGW(LOG_TAG, "Conn_handle (%d) is above the maximum value (%d)", conn_handle, BLE_HCI_LE_CONN_HANDLE_MAX);
         return BLE_ATT_ERR_INVALID_HANDLE;
     }
-    
+
     const ble_uuid_t *uuid;
     int rc;
     NimBLEConnInfo peerInfo;
@@ -279,8 +279,7 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
     if(ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0){
         switch(ctxt->op) {
             case BLE_GATT_ACCESS_OP_READ_CHR: {
-                rc = ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
-                assert(rc == 0);
+                ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
 
                  // If the packet header is only 8 bytes this is a follow up of a long read
                  // so we don't want to call the onRead() callback again.
@@ -316,8 +315,8 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                     len += next->om_len;
                     next = SLIST_NEXT(next, om_next);
                 }
-                rc = ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
-                assert(rc == 0);
+
+                ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
                 pCharacteristic->setValue(buf, len);
                 pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, peerInfo);
                 return 0;
