@@ -23,11 +23,12 @@
 #include <assert.h>
 #include <stddef.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#include "nimble/porting/nimble/include/os/os_cputime.h"
 #include "../include/controller/ble_phy.h"
 #include "../include/controller/ble_ll.h"
 #include "../include/controller/ble_ll_sched.h"
 #include "../include/controller/ble_ll_rfmgmt.h"
+#include "../include/controller/ble_ll_tmr.h"
+#include "ble_ll_priv.h"
 
 #if MYNEWT_VAL(BLE_LL_RFMGMT_ENABLE_TIME) > 0
 
@@ -41,7 +42,7 @@ struct ble_ll_rfmgmt_data {
     enum ble_ll_rfmgmt_state state;
     uint16_t ticks_to_enabled;
 
-    struct hal_timer timer;
+    struct ble_ll_tmr timer;
     bool timer_scheduled;
     uint32_t timer_scheduled_at;
 
@@ -64,8 +65,9 @@ ble_ll_rfmgmt_enable(void)
 
     if (g_ble_ll_rfmgmt_data.state == RFMGMT_STATE_OFF) {
         g_ble_ll_rfmgmt_data.state = RFMGMT_STATE_ENABLING;
-        g_ble_ll_rfmgmt_data.enabled_at = os_cputime_get32();
+        g_ble_ll_rfmgmt_data.enabled_at = ble_ll_tmr_get();
         ble_phy_rfclk_enable();
+        BLE_LL_DEBUG_GPIO(RFMGMT, 1);
     }
 }
 
@@ -75,6 +77,7 @@ ble_ll_rfmgmt_disable(void)
     OS_ASSERT_CRITICAL();
 
     if (g_ble_ll_rfmgmt_data.state != RFMGMT_STATE_OFF) {
+        BLE_LL_DEBUG_GPIO(RFMGMT, 0);
         ble_phy_rfclk_disable();
         g_ble_ll_rfmgmt_data.state = RFMGMT_STATE_OFF;
     }
@@ -99,7 +102,7 @@ ble_ll_rfmgmt_timer_reschedule(void)
         enable_at = rfmgmt->enable_sched_at;
     } else {
         rfmgmt->timer_scheduled = false;
-        os_cputime_timer_stop(&rfmgmt->timer);
+        ble_ll_tmr_stop(&rfmgmt->timer);
         return;
     }
 
@@ -116,7 +119,7 @@ ble_ll_rfmgmt_timer_reschedule(void)
         }
 
         rfmgmt->timer_scheduled = false;
-        os_cputime_timer_stop(&rfmgmt->timer);
+        ble_ll_tmr_stop(&rfmgmt->timer);
     }
 
     /*
@@ -126,14 +129,14 @@ ble_ll_rfmgmt_timer_reschedule(void)
      * such case it's absolutely harmless since we already have clock enabled
      * and this will do nothing.
      */
-    if (CPUTIME_LEQ(enable_at, os_cputime_get32())) {
+    if (CPUTIME_LEQ(enable_at, ble_ll_tmr_get())) {
         ble_ll_rfmgmt_enable();
         return;
     }
 
     rfmgmt->timer_scheduled = true;
     rfmgmt->timer_scheduled_at = enable_at;
-    os_cputime_timer_start(&rfmgmt->timer, enable_at);
+    ble_ll_tmr_start(&rfmgmt->timer, enable_at);
 }
 
 static void
@@ -154,7 +157,7 @@ ble_ll_rfmgmt_release_ev(struct ble_npl_event *ev)
 
     OS_ENTER_CRITICAL(sr);
 
-    now = os_cputime_get32();
+    now = ble_ll_tmr_get();
 
     can_disable = true;
     lls = ble_ll_state_get();
@@ -189,7 +192,7 @@ ble_ll_rfmgmt_ticks_to_enabled(void)
         rem_ticks = rfmgmt->ticks_to_enabled;
         break;
     case RFMGMT_STATE_ENABLING:
-        now = os_cputime_get32();
+        now = ble_ll_tmr_get();
         if (CPUTIME_LT(now, rfmgmt->enabled_at + rfmgmt->ticks_to_enabled)) {
             rem_ticks = rfmgmt->enabled_at + rfmgmt->ticks_to_enabled - now;
             break;
@@ -214,13 +217,15 @@ ble_ll_rfmgmt_init(void)
 {
     struct ble_ll_rfmgmt_data *rfmgmt = &g_ble_ll_rfmgmt_data;
 
+    BLE_LL_DEBUG_GPIO_INIT(RFMGMT);
+
     rfmgmt->state = RFMGMT_STATE_OFF;
 
     rfmgmt->ticks_to_enabled =
-            ble_ll_usecs_to_ticks_round_up(MYNEWT_VAL(BLE_LL_RFMGMT_ENABLE_TIME));
+            ble_ll_tmr_u2t_up(MYNEWT_VAL(BLE_LL_RFMGMT_ENABLE_TIME));
 
     rfmgmt->timer_scheduled = false;
-    os_cputime_timer_init(&rfmgmt->timer, ble_ll_rfmgmt_timer_exp, NULL);
+    ble_ll_tmr_init(&rfmgmt->timer, ble_ll_rfmgmt_timer_exp, NULL);
 
     ble_npl_event_init(&rfmgmt->release_ev, ble_ll_rfmgmt_release_ev, NULL);
 }
@@ -232,7 +237,7 @@ ble_ll_rfmgmt_reset(void)
 
     rfmgmt->timer_scheduled = false;
     rfmgmt->timer_scheduled_at = 0;
-    os_cputime_timer_stop(&rfmgmt->timer);
+    ble_ll_tmr_stop(&rfmgmt->timer);
 
     ble_npl_eventq_remove(&g_ble_ll_data.ll_evq, &rfmgmt->release_ev);
 
@@ -309,7 +314,7 @@ ble_ll_rfmgmt_enable_now(void)
     ble_ll_rfmgmt_enable();
 
     if (rfmgmt->state == RFMGMT_STATE_ENABLED) {
-        enabled_at = os_cputime_get32();
+        enabled_at = ble_ll_tmr_get();
     } else {
         enabled_at = rfmgmt->enabled_at + rfmgmt->ticks_to_enabled + 1;
     }

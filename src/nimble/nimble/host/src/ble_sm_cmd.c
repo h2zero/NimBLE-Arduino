@@ -63,6 +63,8 @@ ble_sm_tx(uint16_t conn_handle, struct os_mbuf *txom)
                                          &conn, &chan);
     if (rc == 0) {
         rc = ble_l2cap_tx(conn, chan, txom);
+    } else {
+        os_mbuf_free_chain(txom);
     }
 
     return rc;

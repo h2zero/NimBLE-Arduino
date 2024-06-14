@@ -624,8 +624,13 @@ ble_sm_sc_public_key_rx(uint16_t conn_handle, struct os_mbuf **om,
     proc = ble_sm_proc_find(conn_handle, BLE_SM_PROC_STATE_PUBLIC_KEY, -1,
                             NULL);
     if (proc == NULL) {
+        /**
+         * Unexpected public key information received
+         * Recommended action: Ignore
+         */
         res->app_status = BLE_HS_ENOENT;
         res->sm_err = BLE_SM_ERR_UNSPECIFIED;
+        res->out_of_order = 1;
     } else {
         memcpy(&proc->pub_key_peer, cmd, sizeof(*cmd));
         rc = ble_sm_alg_gen_dhkey(proc->pub_key_peer.x,
@@ -850,7 +855,12 @@ ble_sm_sc_dhkey_check_rx(uint16_t conn_handle, struct os_mbuf **om,
     proc = ble_sm_proc_find(conn_handle, BLE_SM_PROC_STATE_DHKEY_CHECK, -1,
                             NULL);
     if (proc == NULL) {
+        /**
+         * Unexpected DHKey check values received
+         * Recommended action: Ignore
+         */
         res->app_status = BLE_HS_ENOENT;
+        res->out_of_order = 1;
     } else {
         ble_sm_dhkey_check_process(proc, cmd, res);
     }

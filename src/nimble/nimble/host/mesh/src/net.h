@@ -25,6 +25,19 @@
 				    CONFIG_BT_MESH_IVU_DIVIDER)
 #define BT_MESH_IVU_TIMEOUT        K_HOURS(BT_MESH_IVU_HOURS)
 
+/* Minimum valid Mesh Network PDU length. The Network headers
+ * themselves take up 9 bytes. After that there is a minimum of 1 byte
+ * payload for both CTL=1 and CTL=0 PDUs (smallest OpCode is 1 byte). CTL=1
+ * PDUs must use a 64-bit (8 byte) NetMIC, whereas CTL=0 PDUs have at least
+ * a 32-bit (4 byte) NetMIC and AppMIC giving again a total of 8 bytes.
+ */
+#define BT_MESH_NET_MIN_PDU_LEN (BT_MESH_NET_HDR_LEN + 1 + 8)
+/* Maximum valid Mesh Network PDU length. The longest packet can either be a
+ * transport control message (CTL=1) of 12 bytes + 8 bytes of NetMIC, or an
+ * access message (CTL=0) of 16 bytes + 4 bytes of NetMIC.
+ */
+#define BT_MESH_NET_MAX_PDU_LEN (BT_MESH_NET_HDR_LEN + 16 + 4)
+
 struct bt_mesh_net_cred;
 
 struct bt_mesh_node {
@@ -61,7 +74,7 @@ struct bt_mesh_friend {
 
 	uint16_t sub_list[FRIEND_SUB_LIST_SIZE];
 
-	struct k_delayed_work timer;
+	struct k_work_delayable timer;
 
 	struct bt_mesh_friend_seg {
 		struct net_buf_slist_t queue;
@@ -83,7 +96,7 @@ struct bt_mesh_friend {
 		uint32_t start;                  /* Clear Procedure start */
 		uint16_t frnd;                   /* Previous Friend's address */
 		uint16_t repeat_sec;             /* Repeat timeout in seconds */
-		struct k_delayed_work timer;  /* Repeat timer */
+		struct k_work_delayable timer;  /* Repeat timer */
 	} clear;
 };
 
@@ -147,7 +160,7 @@ struct bt_mesh_lpn {
 	uint16_t adv_duration;
 
 	/* Next LPN related action timer */
-	struct k_delayed_work timer;
+	struct k_work_delayable timer;
 
 	/* Subscribed groups */
 	uint16_t groups[LPN_GROUPS];
@@ -170,17 +183,6 @@ enum {
 	BT_MESH_IVU_INITIATOR,   /* IV Update initiated by us */
 	BT_MESH_IVU_TEST,        /* IV Update test mode */
 	BT_MESH_IVU_PENDING,     /* Update blocked by SDU in progress */
-
-	/* pending storage actions, must reside within first 32 flags */
-	BT_MESH_RPL_PENDING,
-	BT_MESH_KEYS_PENDING,
-	BT_MESH_NET_PENDING,
-	BT_MESH_IV_PENDING,
-	BT_MESH_SEQ_PENDING,
-	BT_MESH_HB_PUB_PENDING,
-	BT_MESH_CFG_PENDING,
-	BT_MESH_MOD_PENDING,
-	BT_MESH_VA_PENDING,
 
 	/* Feature flags */
 	BT_MESH_RELAY,
@@ -219,7 +221,7 @@ struct bt_mesh_net {
 	uint8_t default_ttl;
 
 	/* Timer to track duration in current IV Update state */
-	struct k_delayed_work ivu_timer;
+	struct k_work_delayable ivu_timer;
 
 	uint8_t dev_key[16];
 };
@@ -269,7 +271,12 @@ extern struct bt_mesh_net bt_mesh;
 
 static inline void *net_buf_user_data(const struct os_mbuf *buf)
 {
-	return (void *)buf->om_data;
+    /* In Zephyr at the end of net_buf (which is ported as os_mbuf) is place
+     * for user_data, which is array of octets, just like os_mbuf's om_data. Let's just
+     * use last octets (starting at start of om_data + total size of data mbuf can hold -
+     * intended user_data size) of om_data as Zephyr's user_data.
+     */
+    return (void *)(buf->om_data + buf->om_omp->omp_databuf_len - MYNEWT_VAL(BLE_MESH_NET_BUF_USER_DATA_SIZE));
 }
 
 int bt_mesh_net_create(uint16_t idx, uint8_t flags, const uint8_t key[16],
@@ -296,7 +303,11 @@ uint32_t bt_mesh_next_seq(void);
 void bt_mesh_net_init(void);
 void bt_mesh_net_header_parse(struct os_mbuf *buf,
 			      struct bt_mesh_net_rx *rx);
-
+void bt_mesh_net_pending_net_store(void);
+void bt_mesh_net_pending_iv_store(void);
+void bt_mesh_net_pending_seq_store(void);
+void bt_mesh_net_clear(void);
+void bt_mesh_net_settings_commit(void);
 
 static inline void send_cb_finalize(const struct bt_mesh_send_cb *cb,
 				    void *cb_data)

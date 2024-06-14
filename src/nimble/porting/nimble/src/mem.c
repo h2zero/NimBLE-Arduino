@@ -20,10 +20,7 @@
 #include <stdlib.h>
 #include "../include/os/os.h"
 #include "../include/mem/mem.h"
-
-#ifdef ESP_PLATFORM
 #include "nimble/esp_port/port/include/esp_nimble_mem.h"
-#endif
 
 /**
  * Generic mempool allocation function.  Used with basic and extended mempools.

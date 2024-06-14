@@ -22,21 +22,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <errno.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/porting/nimble/include/os/os_cputime.h"
 #include "nimble/nimble/include/nimble/ble.h"
-#include "nimble/nimble/include/nimble/nimble_opt.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
-#include "nimble/nimble/include/nimble/ble_hci_trans.h"
-
-#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
-#include "nimble/nimble/drivers/nrf51/include/ble/xcvr.h"
-#elif defined(ARDUINO_ARCH_NRF5) && defined(NRF52_SERIES)
-#include "nimble/nimble/drivers/nrf52/include/ble/xcvr.h"
-#endif
-
+#include "nimble/nimble/transport/include/nimble/transport.h"
 #include "../include/controller/ble_ll.h"
+#include "../include/controller/ble_ll_conn.h"
 #include "../include/controller/ble_ll_hci.h"
 #include "../include/controller/ble_ll_scan.h"
 #include "../include/controller/ble_ll_whitelist.h"
@@ -46,13 +40,18 @@
 #include "../include/controller/ble_ll_adv.h"
 #include "../include/controller/ble_ll_trace.h"
 #include "../include/controller/ble_ll_rfmgmt.h"
+#include "../include/controller/ble_ll_tmr.h"
 #include "../include/controller/ble_phy.h"
-#include "../include/controller/ble_hw.h"
 #include "../include/controller/ble_ll_utils.h"
 #include "ble_ll_conn_priv.h"
+#include "ble_ll_ctrl_priv.h"
 
 #if (BLETEST_THROUGHPUT_TEST == 1)
 extern void bletest_completed_pkt(uint16_t handle);
+#endif
+
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+struct ble_ll_conn_sm *g_ble_ll_conn_css_ref;
 #endif
 
 #ifndef min
@@ -79,8 +78,8 @@ extern void bletest_completed_pkt(uint16_t handle);
  * 2) Make sure we check incoming data packets for size and all that. You
  * know, supported octets and all that. For both rx and tx.
  *
- * 3) Make sure we are setting the schedule end time properly for both slave
- * and master. We should just set this to the end of the connection event.
+ * 3) Make sure we are setting the schedule end time properly for both peripheral
+ * and central. We should just set this to the end of the connection event.
  * We might want to guarantee a IFS time as well since the next event needs
  * to be scheduled prior to the start of the event to account for the time it
  * takes to get a frame ready (which is pretty much the IFS time).
@@ -100,15 +99,15 @@ extern void bletest_completed_pkt(uint16_t handle);
  *
  * 8) Right now I use a fixed definition for required slots. CHange this.
  *
- * 10) See what connection state machine elements are purely master and
- * purely slave. We can make a union of them.
+ * 10) See what connection state machine elements are purely central and
+ * purely peripheral. We can make a union of them.
  *
  * 11) Not sure I am dealing with the connection terminate timeout perfectly.
  * I may extend a connection event too long although if it is always in terms
  * of connection events I am probably fine. Checking at end that the next
  * connection event will occur past terminate timeould would be fine.
  *
- * 12) When a slave receives a data packet in a connection it has to send a
+ * 12) When a peripheral receives a data packet in a connection it has to send a
  * response. Well, it should. If this packet will overrun the next scheduled
  * event, what should we do? Transmit anyway? Not transmit? For now, we just
  * transmit.
@@ -134,6 +133,11 @@ extern void bletest_completed_pkt(uint16_t handle);
  *  1) The current connection event has not ended but a schedule item starts
  */
 
+/* Global LL connection parameters */
+struct ble_ll_conn_global_params g_ble_ll_conn_params;
+
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+
 /* This is a dummy structure we use for the empty PDU */
 struct ble_ll_empty_pdu
 {
@@ -147,19 +151,19 @@ struct ble_ll_empty_pdu
     #error "Maximum # of connections is 254"
 #endif
 
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
 /* Global connection complete event. Used when initiating */
 uint8_t *g_ble_ll_conn_comp_ev;
-
-/* Global LL connection parameters */
-struct ble_ll_conn_global_params g_ble_ll_conn_params;
+#endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_SYNC_TRANSFER)
 /* Global default sync transfer params */
 struct ble_ll_conn_sync_transfer_params g_ble_ll_conn_sync_transfer_params;
 #endif
 
-/* Pointer to connection state machine we are trying to create */
-struct ble_ll_conn_sm *g_ble_ll_conn_create_sm;
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+struct ble_ll_conn_create_sm g_ble_ll_conn_create_sm;
+#endif
 
 /* Pointer to current connection */
 struct ble_ll_conn_sm *g_ble_ll_conn_cur_sm;
@@ -182,8 +186,8 @@ STATS_SECT_START(ble_ll_conn_stats)
     STATS_SECT_ENTRY(no_free_conn_sm)
     STATS_SECT_ENTRY(rx_data_pdu_no_conn)
     STATS_SECT_ENTRY(rx_data_pdu_bad_aa)
-    STATS_SECT_ENTRY(slave_rxd_bad_conn_req_params)
-    STATS_SECT_ENTRY(slave_ce_failures)
+    STATS_SECT_ENTRY(periph_rxd_bad_conn_req_params)
+    STATS_SECT_ENTRY(periph_ce_failures)
     STATS_SECT_ENTRY(data_pdu_rx_dup)
     STATS_SECT_ENTRY(data_pdu_txg)
     STATS_SECT_ENTRY(data_pdu_txf)
@@ -215,8 +219,8 @@ STATS_NAME_START(ble_ll_conn_stats)
     STATS_NAME(ble_ll_conn_stats, no_free_conn_sm)
     STATS_NAME(ble_ll_conn_stats, rx_data_pdu_no_conn)
     STATS_NAME(ble_ll_conn_stats, rx_data_pdu_bad_aa)
-    STATS_NAME(ble_ll_conn_stats, slave_rxd_bad_conn_req_params)
-    STATS_NAME(ble_ll_conn_stats, slave_ce_failures)
+    STATS_NAME(ble_ll_conn_stats, periph_rxd_bad_conn_req_params)
+    STATS_NAME(ble_ll_conn_stats, periph_ce_failures)
     STATS_NAME(ble_ll_conn_stats, data_pdu_rx_dup)
     STATS_NAME(ble_ll_conn_stats, data_pdu_txg)
     STATS_NAME(ble_ll_conn_stats, data_pdu_txf)
@@ -313,7 +317,7 @@ ble_ll_conn_cth_flow_error_fn(struct ble_npl_event *ev)
     struct ble_hci_ev_command_complete *hci_ev_cp;
     uint16_t opcode;
 
-    hci_ev = (void *)ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+    hci_ev = ble_transport_alloc_evt(0);
     if (!hci_ev) {
         /* Not much we can do anyway... */
         return;
@@ -392,7 +396,7 @@ ble_ll_conn_cth_flow_process_cmd(const uint8_t *cmdbuf)
          * case we can simply ignore command for that connection since credits
          * are returned by LL already.
          */
-        connsm = ble_ll_conn_find_active_conn(cp->h[i].handle);
+        connsm = ble_ll_conn_find_by_handle(cp->h[i].handle);
         if (connsm) {
             ble_ll_conn_cth_flow_free_credit(connsm, cp->h[i].count);
         }
@@ -400,61 +404,155 @@ ble_ll_conn_cth_flow_process_cmd(const uint8_t *cmdbuf)
 }
 #endif
 
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
-/**
- * Checks to see if we should start a PHY update procedure
- *
- * If current phy is not one of the preferred we need to start control
- * procedure.
- *
- * XXX: we could also decide to change the PHY if RSSI is really good
- * and we are currently at 1Mbps or lower data rate and we could use
- * a higher data rate.
- *
- * @param connsm
- * @return 0: success; -1: no phy update procedure started
- */
-int
-ble_ll_conn_chk_phy_upd_start(struct ble_ll_conn_sm *csm)
+
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+static uint16_t g_ble_ll_conn_css_next_slot = BLE_LL_CONN_CSS_NO_SLOT;
+
+void
+ble_ll_conn_css_set_next_slot(uint16_t slot_idx)
 {
+    g_ble_ll_conn_css_next_slot = slot_idx;
+}
+
+uint16_t
+ble_ll_conn_css_get_next_slot(void)
+{
+    struct ble_ll_conn_sm *connsm;
+    uint16_t slot_idx = 0;
+
+    if (g_ble_ll_conn_css_next_slot != BLE_LL_CONN_CSS_NO_SLOT) {
+        return g_ble_ll_conn_css_next_slot;
+    }
+
+    /* CSS connections are sorted in active conn list so just need to find 1st
+     * free value.
+     */
+    SLIST_FOREACH(connsm, &g_ble_ll_conn_active_list, act_sle) {
+        if ((connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) &&
+            (connsm->css_slot_idx != slot_idx) &&
+            (connsm->css_slot_idx_pending != slot_idx)) {
+            break;
+        }
+        slot_idx++;
+    }
+
+    if (slot_idx >= ble_ll_sched_css_get_period_slots()) {
+        slot_idx = BLE_LL_CONN_CSS_NO_SLOT;
+    }
+
+    return slot_idx;
+}
+
+int
+ble_ll_conn_css_is_slot_busy(uint16_t slot_idx)
+{
+    struct ble_ll_conn_sm *connsm;
+
+    SLIST_FOREACH(connsm, &g_ble_ll_conn_active_list, act_sle) {
+        if ((connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) &&
+            ((connsm->css_slot_idx == slot_idx) ||
+             (connsm->css_slot_idx_pending == slot_idx))) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int
+ble_ll_conn_css_move(struct ble_ll_conn_sm *connsm, uint16_t slot_idx)
+{
+    int16_t slot_diff;
+    uint32_t offset;
     int rc;
 
-    /* If no host preferences or  */
-    if (((csm->phy_data.host_pref_tx_phys_mask == 0) &&
-         (csm->phy_data.host_pref_rx_phys_mask == 0)) ||
-        ((csm->phy_data.host_pref_tx_phys_mask & CONN_CUR_TX_PHY_MASK(csm)) &&
-         (csm->phy_data.host_pref_rx_phys_mask & CONN_CUR_RX_PHY_MASK(csm)))) {
-        rc = -1;
+    /* Assume connsm and slot_idx are valid */
+    BLE_LL_ASSERT(connsm->conn_state != BLE_LL_CONN_STATE_IDLE);
+    BLE_LL_ASSERT(connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL);
+    BLE_LL_ASSERT((slot_idx < ble_ll_sched_css_get_period_slots()) ||
+                  (slot_idx != BLE_LL_CONN_CSS_NO_SLOT));
+
+    slot_diff = slot_idx - connsm->css_slot_idx;
+
+    if (slot_diff > 0) {
+        offset = slot_diff * ble_ll_sched_css_get_slot_us() /
+                  BLE_LL_CONN_ITVL_USECS;
     } else {
-        csm->phy_data.req_pref_tx_phys_mask = csm->phy_data.host_pref_tx_phys_mask;
-        csm->phy_data.req_pref_rx_phys_mask = csm->phy_data.host_pref_rx_phys_mask;
-        ble_ll_ctrl_proc_start(csm, BLE_LL_CTRL_PROC_PHY_UPDATE);
-        rc = 0;
+        offset = (ble_ll_sched_css_get_period_slots() + slot_diff) *
+                 ble_ll_sched_css_get_slot_us() / BLE_LL_CONN_ITVL_USECS;
+    }
+
+    if (offset >= 0xffff) {
+        return -1;
+    }
+
+    rc = ble_ll_conn_move_anchor(connsm, offset);
+    if (!rc) {
+        connsm->css_slot_idx_pending = slot_idx;
     }
 
     return rc;
 }
 #endif
 
-static void
-ble_ll_conn_calc_itvl_ticks(struct ble_ll_conn_sm *connsm)
+struct ble_ll_conn_sm *
+ble_ll_conn_find_by_peer_addr(const uint8_t *addr, uint8_t addr_type)
 {
-    uint32_t ticks;
-    uint32_t usecs;
+    struct ble_ll_conn_sm *connsm;
 
-    /*
-     * Precalculate the number of ticks and remaining microseconds for
-     * the connection interval
-     */
-    usecs = connsm->conn_itvl * BLE_LL_CONN_ITVL_USECS;
-    ticks = os_cputime_usecs_to_ticks(usecs);
-    connsm->conn_itvl_usecs = (uint8_t)(usecs -
-                                        os_cputime_ticks_to_usecs(ticks));
-    if (connsm->conn_itvl_usecs == 31) {
-        connsm->conn_itvl_usecs = 0;
-        ++ticks;
+    SLIST_FOREACH(connsm, &g_ble_ll_conn_active_list, act_sle) {
+        if (!memcmp(&connsm->peer_addr, addr, BLE_DEV_ADDR_LEN) &&
+            !((connsm->peer_addr_type ^ addr_type) & 1)) {
+            return connsm;
+        }
     }
-    connsm->conn_itvl_ticks = ticks;
+
+    return NULL;
+}
+
+#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+static inline int
+ble_ll_conn_phy_should_update(uint8_t pref_mask, uint8_t curr_mask)
+{
+#if MYNEWT_VAL(BLE_LL_CONN_PHY_PREFER_2M)
+    /* Should change to 2M if preferred, but not active */
+    if ((pref_mask & BLE_PHY_MASK_2M) && (curr_mask != BLE_PHY_MASK_2M)) {
+        return 1;
+    }
+#endif
+
+    /* Should change to active phy is not preferred */
+    if ((curr_mask & pref_mask) == 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int
+ble_ll_conn_phy_update_if_needed(struct ble_ll_conn_sm *connsm)
+{
+    if (!ble_ll_conn_phy_should_update(connsm->phy_data.pref_mask_tx,
+                                       CONN_CUR_TX_PHY_MASK(connsm)) &&
+        !ble_ll_conn_phy_should_update(connsm->phy_data.pref_mask_rx,
+                                       CONN_CUR_RX_PHY_MASK(connsm))) {
+        return -1;
+    }
+
+    connsm->phy_data.pref_mask_tx_req = connsm->phy_data.pref_mask_tx;
+    connsm->phy_data.pref_mask_rx_req = connsm->phy_data.pref_mask_rx;
+
+    ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_PHY_UPDATE, NULL);
+
+    return 0;
+}
+#endif
+
+void
+ble_ll_conn_itvl_to_ticks(uint32_t itvl, uint32_t *itvl_ticks,
+                          uint8_t *itvl_usecs)
+{
+    *itvl_ticks = ble_ll_tmr_u2t_r(itvl * BLE_LL_CONN_ITVL_USECS, itvl_usecs);
 }
 
 /**
@@ -463,6 +561,7 @@ ble_ll_conn_calc_itvl_ticks(struct ble_ll_conn_sm *connsm)
  *
  * @return uint8_t*
  */
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
 static uint8_t *
 ble_ll_init_get_conn_comp_ev(void)
 {
@@ -474,6 +573,7 @@ ble_ll_init_get_conn_comp_ev(void)
 
     return evbuf;
 }
+#endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
 /**
@@ -507,7 +607,7 @@ ble_ll_conn_is_lru(struct ble_ll_conn_sm *s1, struct ble_ll_conn_sm *s2)
     int rc;
 
     /* Set time that we last serviced the schedule */
-    if (CPUTIME_LT(s1->last_scheduled, s2->last_scheduled)) {
+    if (LL_TMR_LT(s1->last_scheduled, s2->last_scheduled)) {
         rc = 1;
     } else {
         rc = 0;
@@ -530,7 +630,7 @@ ble_ll_conn_get_ce_end_time(void)
     if (g_ble_ll_conn_cur_sm) {
         ce_end_time = g_ble_ll_conn_cur_sm->ce_end_time;
     } else {
-        ce_end_time = os_cputime_get32();
+        ce_end_time = ble_ll_tmr_get();
     }
     return ce_end_time;
 }
@@ -582,7 +682,7 @@ ble_ll_conn_current_sm_over(struct ble_ll_conn_sm *connsm)
  * @return struct ble_ll_conn_sm*
  */
 struct ble_ll_conn_sm *
-ble_ll_conn_find_active_conn(uint16_t handle)
+ble_ll_conn_find_by_handle(uint16_t handle)
 {
     struct ble_ll_conn_sm *connsm;
 
@@ -658,8 +758,8 @@ ble_ll_conn_calc_dci(struct ble_ll_conn_sm *conn, uint16_t latency)
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CSA2)
     if (CONN_F_CSA2_SUPP(conn)) {
-        return ble_ll_utils_calc_dci_csa2(conn->event_cntr, conn->channel_id,
-                                          conn->num_used_chans, conn->chanmap);
+        return ble_ll_utils_dci_csa2(conn->event_cntr, conn->channel_id,
+                                     conn->num_used_chans, conn->chanmap);
     }
 #endif
 
@@ -689,66 +789,8 @@ ble_ll_conn_wfr_timer_exp(void)
     STATS_INC(ble_ll_conn_stats, wfr_expirations);
 }
 
-void
-ble_ll_conn_reset_pending_aux_conn_rsp(void)
-{
-#if !MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    return;
-#endif
-    struct ble_ll_conn_sm *connsm;
-
-    connsm = g_ble_ll_conn_create_sm;
-    if (!connsm) {
-        return;
-    }
-
-    if (CONN_F_AUX_CONN_REQ(connsm)) {
-        STATS_INC(ble_ll_stats, aux_conn_rsp_err);
-        CONN_F_CONN_REQ_TXD(connsm) = 0;
-        CONN_F_AUX_CONN_REQ(connsm) = 0;
-        ble_ll_sched_rmv_elem(&connsm->conn_sch);
-        return;
-    }
-
-    return;
-}
-
-bool
-ble_ll_conn_init_pending_aux_conn_rsp(void)
-{
-#if !MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    return false;
-#endif
-    struct ble_ll_conn_sm *connsm;
-
-    connsm = g_ble_ll_conn_create_sm;
-    if (!connsm) {
-        return false;
-    }
-
-    return CONN_F_AUX_CONN_REQ(connsm);
-}
-
-void
-ble_ll_conn_init_wfr_timer_exp(void)
-{
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    struct ble_ll_conn_sm *connsm;
-
-    connsm = g_ble_ll_conn_create_sm;
-    if (!connsm) {
-        return;
-    }
-
-    ble_ll_conn_reset_pending_aux_conn_rsp();
-    connsm->inita_identity_used = 0;
-
-    ble_ll_scan_interrupted(connsm->scansm);
-
-#endif
-}
 /**
- * Callback for slave when it transmits a data pdu and the connection event
+ * Callback for peripheral when it transmits a data pdu and the connection event
  * ends after the transmission.
  *
  * Context: Interrupt
@@ -776,9 +818,10 @@ ble_ll_conn_start_rx_encrypt(void *arg)
     ble_phy_encrypt_enable(connsm->enc_data.rx_pkt_cntr,
                            connsm->enc_data.iv,
                            connsm->enc_data.enc_block.cipher_text,
-                           !CONN_IS_MASTER(connsm));
+                           !CONN_IS_CENTRAL(connsm));
 }
 
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
 static void
 ble_ll_conn_start_rx_unencrypt(void *arg)
 {
@@ -788,6 +831,7 @@ ble_ll_conn_start_rx_unencrypt(void *arg)
     CONN_F_ENCRYPTED(connsm) = 0;
     ble_phy_encrypt_disable();
 }
+#endif
 
 static void
 ble_ll_conn_txend_encrypt(void *arg)
@@ -799,6 +843,7 @@ ble_ll_conn_txend_encrypt(void *arg)
     ble_ll_conn_current_sm_over(connsm);
 }
 
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
 static void
 ble_ll_conn_rxend_unencrypt(void *arg)
 {
@@ -808,6 +853,7 @@ ble_ll_conn_rxend_unencrypt(void *arg)
     CONN_F_ENCRYPTED(connsm) = 0;
     ble_ll_conn_current_sm_over(connsm);
 }
+#endif
 
 static void
 ble_ll_conn_continue_rx_encrypt(void *arg)
@@ -816,7 +862,7 @@ ble_ll_conn_continue_rx_encrypt(void *arg)
 
     connsm = (struct ble_ll_conn_sm *)arg;
     ble_phy_encrypt_set_pkt_cntr(connsm->enc_data.rx_pkt_cntr,
-                                 !CONN_IS_MASTER(connsm));
+                                 !CONN_IS_CENTRAL(connsm));
 }
 #endif
 
@@ -839,27 +885,22 @@ ble_ll_conn_continue_rx_encrypt(void *arg)
 static uint32_t
 ble_ll_conn_get_next_sched_time(struct ble_ll_conn_sm *connsm)
 {
-#if MYNEWT_VAL(BLE_LL_STRICT_CONN_SCHEDULING)
-    uint32_t ce_end;
-    ce_end = connsm->ce_end_time;
-#else
     uint32_t ce_end;
     uint32_t next_sched_time;
+    uint8_t rem_us;
 
     /* Calculate time at which next connection event will start */
     /* NOTE: We dont care if this time is tick short. */
     ce_end = connsm->anchor_point + connsm->conn_itvl_ticks -
         g_ble_ll_sched_offset_ticks;
-    if ((connsm->anchor_point_usecs + connsm->conn_itvl_usecs) >= 31) {
-        ++ce_end;
-    }
+    rem_us = connsm->anchor_point_usecs;
+    ble_ll_tmr_add_u(&ce_end, &rem_us, connsm->conn_itvl_usecs);
 
     if (ble_ll_sched_next_time(&next_sched_time)) {
-        if (CPUTIME_LT(next_sched_time, ce_end)) {
+        if (LL_TMR_LT(next_sched_time, ce_end)) {
             ce_end = next_sched_time;
         }
     }
-#endif
 
     return ce_end;
 }
@@ -918,6 +959,18 @@ ble_ll_conn_chk_csm_flags(struct ble_ll_conn_sm *connsm)
         }
     }
 #endif
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if (connsm->csmflags.cfbit.subrate_ind_txd) {
+        ble_ll_conn_subrate_set(connsm, &connsm->subrate_trans);
+        connsm->subrate_trans.subrate_factor = 0;
+        ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_SUBRATE_UPDATE);
+        connsm->csmflags.cfbit.subrate_ind_txd = 0;
+        connsm->csmflags.cfbit.subrate_host_req = 0;
+    }
+#endif /* BLE_LL_CTRL_SUBRATE_IND */
+#endif /* BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE */
 }
 
 /**
@@ -932,7 +985,7 @@ ble_ll_conn_chk_csm_flags(struct ble_ll_conn_sm *connsm)
 static uint16_t
 ble_ll_conn_adjust_pyld_len(struct ble_ll_conn_sm *connsm, uint16_t pyld_len)
 {
-    uint16_t phy_max_tx_octets;
+    uint16_t max_pyld_len;
     uint16_t ret;
 
 #if (BLE_LL_BT5_PHY_SUPPORTED == 1)
@@ -940,27 +993,33 @@ ble_ll_conn_adjust_pyld_len(struct ble_ll_conn_sm *connsm, uint16_t pyld_len)
 
     if (connsm->phy_tx_transition) {
         phy_mode = ble_ll_phy_to_phy_mode(connsm->phy_tx_transition,
-                                          connsm->phy_data.phy_options);
+                                          connsm->phy_data.pref_opts);
     } else {
         phy_mode = connsm->phy_data.tx_phy_mode;
     }
 
-    phy_max_tx_octets = ble_ll_pdu_max_tx_octets_get(connsm->eff_max_tx_time,
-                                                     phy_mode);
+    max_pyld_len = ble_ll_pdu_max_tx_octets_get(connsm->eff_max_tx_time,
+                                                phy_mode);
 
 #else
-    phy_max_tx_octets = ble_ll_pdu_max_tx_octets_get(connsm->eff_max_tx_time,
-                                                     BLE_PHY_MODE_1M);
+    max_pyld_len = ble_ll_pdu_max_tx_octets_get(connsm->eff_max_tx_time,
+                                                BLE_PHY_MODE_1M);
 #endif
 
     ret = pyld_len;
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
+    if (CONN_F_ENCRYPTED(connsm)) {
+        max_pyld_len -= BLE_LL_DATA_MIC_LEN;
+    }
+#endif
 
     if (ret > connsm->eff_max_tx_octets) {
         ret = connsm->eff_max_tx_octets;
     }
 
-    if (ret > phy_max_tx_octets) {
-        ret = phy_max_tx_octets;
+    if (ret > max_pyld_len) {
+        ret = max_pyld_len;
     }
 
     return ret;
@@ -974,8 +1033,8 @@ ble_ll_conn_tx_pdu(struct ble_ll_conn_sm *connsm)
     uint8_t hdr_byte;
     uint8_t end_transition;
     uint8_t cur_txlen;
-    uint8_t next_txlen;
-    uint8_t cur_offset;
+    uint16_t next_txlen;
+    uint16_t cur_offset;
     uint16_t pktlen;
     uint32_t next_event_time;
     uint32_t ticks;
@@ -1035,9 +1094,9 @@ ble_ll_conn_tx_pdu(struct ble_ll_conn_sm *connsm)
          * LL_ENC_RSP is sent.
          */
         if (((connsm->enc_data.enc_state > CONN_ENC_S_ENCRYPTED) &&
-             CONN_IS_MASTER(connsm)) ||
+             CONN_IS_CENTRAL(connsm)) ||
             ((connsm->enc_data.enc_state > CONN_ENC_S_ENC_RSP_TO_BE_SENT) &&
-             CONN_IS_SLAVE(connsm))) {
+             CONN_IS_PERIPHERAL(connsm))) {
             if (!ble_ll_ctrl_enc_allowed_pdu_tx(pkthdr)) {
                 CONN_F_EMPTY_PDU_TXD(connsm) = 1;
                 goto conn_tx_pdu;
@@ -1045,12 +1104,12 @@ ble_ll_conn_tx_pdu(struct ble_ll_conn_sm *connsm)
 
             /*
              * We will allow a next packet if it itself is allowed or we are
-             * a slave and we are sending the START_ENC_RSP. The master has
-             * to wait to receive the START_ENC_RSP from the slave before
+             * a peripheral and we are sending the START_ENC_RSP. The central has
+             * to wait to receive the START_ENC_RSP from the peripheral before
              * packets can be let go.
              */
             if (nextpkthdr && !ble_ll_ctrl_enc_allowed_pdu_tx(nextpkthdr)
-                && ((connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) ||
+                && (CONN_IS_CENTRAL(connsm) ||
                     !ble_ll_ctrl_is_start_enc_rsp(m))) {
                 nextpkthdr = NULL;
             }
@@ -1073,6 +1132,7 @@ ble_ll_conn_tx_pdu(struct ble_ll_conn_sm *connsm)
         pktlen = pkthdr->omp_len;
         if (llid == BLE_LL_LLID_CTRL) {
             cur_txlen = pktlen;
+            ble_ll_ctrl_tx_start(connsm, m);
         } else {
             cur_txlen = ble_ll_conn_adjust_pyld_len(connsm, pktlen);
         }
@@ -1097,7 +1157,7 @@ ble_ll_conn_tx_pdu(struct ble_ll_conn_sm *connsm)
                 /* We will allow a next packet if it itself is allowed */
                 pkthdr = OS_MBUF_PKTHDR(connsm->cur_tx_pdu);
                 if (nextpkthdr && !ble_ll_ctrl_enc_allowed_pdu_tx(nextpkthdr)
-                    && ((connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) ||
+                    && (CONN_IS_CENTRAL(connsm) ||
                         !ble_ll_ctrl_is_start_enc_rsp(connsm->cur_tx_pdu))) {
                     nextpkthdr = NULL;
                 }
@@ -1136,7 +1196,7 @@ ble_ll_conn_tx_pdu(struct ble_ll_conn_sm *connsm)
          *  -> wait IFS, send the next frame.
          *  -> wait IFS, receive a maximum size frame.
          *
-         *  For slave:
+         *  For peripheral:
          *  -> wait IFS, send current frame.
          *  -> wait IFS, receive maximum size frame.
          *  -> wait IFS, send next frame.
@@ -1144,11 +1204,10 @@ ble_ll_conn_tx_pdu(struct ble_ll_conn_sm *connsm)
         if ((cur_offset + cur_txlen) < pktlen) {
             next_txlen = pktlen - (cur_offset + cur_txlen);
         } else {
-            if (nextpkthdr->omp_len > connsm->eff_max_tx_octets) {
-                next_txlen = connsm->eff_max_tx_octets;
-            } else {
-                next_txlen = nextpkthdr->omp_len;
-            }
+            next_txlen = connsm->eff_max_tx_octets;
+        }
+        if (next_txlen > connsm->eff_max_tx_octets) {
+            next_txlen = connsm->eff_max_tx_octets;
         }
 
         /*
@@ -1167,12 +1226,14 @@ ble_ll_conn_tx_pdu(struct ble_ll_conn_sm *connsm)
             ble_ll_pdu_tx_time_get(next_txlen, tx_phy_mode) +
             ble_ll_pdu_tx_time_get(cur_txlen, tx_phy_mode);
 
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+        if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
             ticks += (BLE_LL_IFS + connsm->eff_max_rx_time);
         }
+#endif
 
-        ticks = os_cputime_usecs_to_ticks(ticks);
-        if (CPUTIME_LT(os_cputime_get32() + ticks, next_event_time)) {
+        ticks = ble_ll_tmr_u2t(ticks);
+        if (LL_TMR_LT(ble_ll_tmr_get() + ticks, next_event_time)) {
             md = 1;
         }
     }
@@ -1212,20 +1273,20 @@ conn_tx_pdu:
     ble_hdr->txinfo.hdr_byte = hdr_byte;
 
     /*
-     * If we are a slave, check to see if this transmission will end the
+     * If we are a peripheral, check to see if this transmission will end the
      * connection event. We will end the connection event if we have
      * received a valid frame with the more data bit set to 0 and we dont
      * have more data.
      *
-     * XXX: for a slave, we dont check to see if we can:
-     *  -> wait IFS, rx frame from master (either big or small).
+     * XXX: for a peripheral, we dont check to see if we can:
+     *  -> wait IFS, rx frame from central (either big or small).
      *  -> wait IFS, send empty pdu or next pdu.
      *
      *  We could do this. Now, we just keep going and hope that we dont
      *  overrun next scheduled item.
      */
     if ((connsm->csmflags.cfbit.terminate_ind_rxd) ||
-        ((connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) && (md == 0) &&
+        (CONN_IS_PERIPHERAL(connsm) && (md == 0) &&
          (connsm->cons_rxd_bad_crc == 0) &&
          ((connsm->last_rxd_hdr_byte & BLE_LL_DATA_HDR_MD_MASK) == 0) &&
          !ble_ll_ctrl_is_terminate_ind(hdr_byte, m->om_data[0]))) {
@@ -1250,7 +1311,7 @@ conn_tx_pdu:
 
     if (is_ctrl && (opcode == BLE_LL_CTRL_START_ENC_RSP)) {
         /*
-         * Both master and slave send the START_ENC_RSP encrypted and receive
+         * Both central and peripheral send the START_ENC_RSP encrypted and receive
          * encrypted
          */
         CONN_F_ENCRYPTED(connsm) = 1;
@@ -1258,10 +1319,10 @@ conn_tx_pdu:
         ble_phy_encrypt_enable(connsm->enc_data.tx_pkt_cntr,
                                connsm->enc_data.iv,
                                connsm->enc_data.enc_block.cipher_text,
-                               CONN_IS_MASTER(connsm));
+                               CONN_IS_CENTRAL(connsm));
     } else if (is_ctrl && (opcode == BLE_LL_CTRL_START_ENC_REQ)) {
         /*
-         * Only the slave sends this and it gets sent unencrypted but
+         * Only the peripheral sends this and it gets sent unencrypted but
          * we receive encrypted
          */
         CONN_F_ENCRYPTED(connsm) = 0;
@@ -1275,33 +1336,43 @@ conn_tx_pdu:
         }
     } else if (is_ctrl && (opcode == BLE_LL_CTRL_PAUSE_ENC_RSP)) {
         /*
-         * The slave sends the PAUSE_ENC_RSP encrypted. The master sends
+         * The peripheral sends the PAUSE_ENC_RSP encrypted. The central sends
          * it unencrypted (note that link was already set unencrypted).
          */
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
+        switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+        case BLE_LL_CONN_ROLE_CENTRAL:
+            CONN_F_ENCRYPTED(connsm) = 0;
+            connsm->enc_data.enc_state = CONN_ENC_S_PAUSED;
+            connsm->enc_data.tx_encrypted = 0;
+            ble_phy_encrypt_disable();
+            break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+        case BLE_LL_CONN_ROLE_PERIPHERAL:
             CONN_F_ENCRYPTED(connsm) = 1;
             connsm->enc_data.tx_encrypted = 1;
             ble_phy_encrypt_enable(connsm->enc_data.tx_pkt_cntr,
                                    connsm->enc_data.iv,
                                    connsm->enc_data.enc_block.cipher_text,
-                                   CONN_IS_MASTER(connsm));
+                                   CONN_IS_CENTRAL(connsm));
             if (txend_func == NULL) {
                 txend_func = ble_ll_conn_start_rx_unencrypt;
             } else {
                 txend_func = ble_ll_conn_rxend_unencrypt;
             }
-        } else {
-            CONN_F_ENCRYPTED(connsm) = 0;
-            connsm->enc_data.enc_state = CONN_ENC_S_PAUSED;
-            connsm->enc_data.tx_encrypted = 0;
-            ble_phy_encrypt_disable();
+            break;
+#endif
+        default:
+            BLE_LL_ASSERT(0);
+            break;
         }
     } else {
         /* If encrypted set packet counter */
         if (CONN_F_ENCRYPTED(connsm)) {
             connsm->enc_data.tx_encrypted = 1;
             ble_phy_encrypt_set_pkt_cntr(connsm->enc_data.tx_pkt_cntr,
-                                         CONN_IS_MASTER(connsm));
+                                         CONN_IS_CENTRAL(connsm));
             if (txend_func == NULL) {
                 txend_func = ble_ll_conn_continue_rx_encrypt;
             }
@@ -1351,7 +1422,9 @@ static int
 ble_ll_conn_event_start_cb(struct ble_ll_sched_item *sch)
 {
     int rc;
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
     uint32_t usecs;
+#endif
     uint32_t start;
     struct ble_ll_conn_sm *connsm;
 
@@ -1392,7 +1465,9 @@ ble_ll_conn_event_start_cb(struct ble_ll_sched_item *sch)
     ble_phy_mode_set(connsm->phy_data.tx_phy_mode, connsm->phy_data.rx_phy_mode);
 #endif
 
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+    switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CONN_ROLE_CENTRAL:
         /* Set start time of transmission */
         start = sch->start_time + g_ble_ll_sched_offset_ticks;
         rc = ble_phy_tx_set_start_time(start, sch->remainder);
@@ -1418,7 +1493,10 @@ ble_ll_conn_event_start_cb(struct ble_ll_sched_item *sch)
             STATS_INC(ble_ll_conn_stats, conn_ev_late);
             rc = BLE_LL_SCHED_STATE_DONE;
         }
-    } else {
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    case BLE_LL_CONN_ROLE_PERIPHERAL:
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
         if (CONN_F_ENCRYPTED(connsm)) {
             ble_phy_encrypt_enable(connsm->enc_data.rx_pkt_cntr,
@@ -1430,23 +1508,23 @@ ble_ll_conn_event_start_cb(struct ble_ll_sched_item *sch)
         }
 #endif
 
-        /* XXX: what is this really for the slave? */
+        /* XXX: what is this really for the peripheral? */
         start = sch->start_time + g_ble_ll_sched_offset_ticks;
         rc = ble_phy_rx_set_start_time(start, sch->remainder);
         if (rc) {
             /* End the connection event as we have no more buffers */
-            STATS_INC(ble_ll_conn_stats, slave_ce_failures);
+            STATS_INC(ble_ll_conn_stats, periph_ce_failures);
             rc = BLE_LL_SCHED_STATE_DONE;
         } else {
             /*
-             * Set flag that tells slave to set last anchor point if a packet
+             * Set flag that tells peripheral to set last anchor point if a packet
              * has been received.
              */
-            connsm->csmflags.cfbit.slave_set_last_anchor = 1;
+            connsm->csmflags.cfbit.periph_set_last_anchor = 1;
 
             /*
              * Set the wait for response time. The anchor point is when we
-             * expect the master to start transmitting. Worst-case, we expect
+             * expect the central to start transmitting. Worst-case, we expect
              * to hear a reply within the anchor point plus:
              *  -> current tx window size
              *  -> current window widening amount (includes +/- 16 usec jitter)
@@ -1468,12 +1546,17 @@ ble_ll_conn_event_start_cb(struct ble_ll_sched_item *sch)
              * 2) The address rx time and jitter is accounted for in the
              * phy function
              */
-            usecs = connsm->slave_cur_tx_win_usecs + 61 +
-                (2 * connsm->slave_cur_window_widening);
+            usecs = connsm->periph_cur_tx_win_usecs + 61 +
+                    (2 * connsm->periph_cur_window_widening);
             ble_phy_wfr_enable(BLE_PHY_WFR_ENABLE_RX, 0, usecs);
             /* Set next wakeup time to connection event end time */
             rc = BLE_LL_SCHED_STATE_RUNNING;
         }
+        break;
+#endif
+    default:
+        BLE_LL_ASSERT(0);
+        break;
     }
 
     if (rc == BLE_LL_SCHED_STATE_DONE) {
@@ -1484,15 +1567,15 @@ ble_ll_conn_event_start_cb(struct ble_ll_sched_item *sch)
     }
 
     /* Set time that we last serviced the schedule */
-    connsm->last_scheduled = os_cputime_get32();
+    connsm->last_scheduled = ble_ll_tmr_get();
     return rc;
 }
 
 /**
  * Called to determine if the device is allowed to send the next pdu in the
- * connection event. This will always return 'true' if we are a slave. If we
- * are a master, we must be able to send the next fragment and get a minimum
- * sized response from the slave.
+ * connection event. This will always return 'true' if we are a peripheral. If we
+ * are a central, we must be able to send the next fragment and get a minimum
+ * sized response from the peripheral.
  *
  * Context: Interrupt context (rx end isr).
  *
@@ -1505,8 +1588,9 @@ static int
 ble_ll_conn_can_send_next_pdu(struct ble_ll_conn_sm *connsm, uint32_t begtime,
                               uint32_t add_usecs)
 {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     int rc;
-    uint8_t rem_bytes;
+    uint16_t rem_bytes;
     uint32_t ticks;
     uint32_t usecs;
     uint32_t next_sched_time;
@@ -1523,7 +1607,7 @@ ble_ll_conn_can_send_next_pdu(struct ble_ll_conn_sm *connsm, uint32_t begtime,
 #endif
 
     rc = 1;
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
         /* Get next scheduled item time */
         next_sched_time = ble_ll_conn_get_next_sched_time(connsm);
 
@@ -1553,13 +1637,16 @@ ble_ll_conn_can_send_next_pdu(struct ble_ll_conn_sm *connsm, uint32_t begtime,
         usecs += (BLE_LL_IFS * 2) + connsm->eff_max_rx_time;
 
         ticks = (uint32_t)(next_sched_time - begtime);
-        allowed_usecs = os_cputime_ticks_to_usecs(ticks);
+        allowed_usecs = ble_ll_tmr_t2u(ticks);
         if ((usecs + add_usecs) >= allowed_usecs) {
             rc = 0;
         }
     }
 
     return rc;
+#else
+    return 1;
+#endif
 }
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_PING)
@@ -1580,24 +1667,8 @@ ble_ll_conn_auth_pyld_timer_cb(struct ble_npl_event *ev)
 
     connsm = (struct ble_ll_conn_sm *)ble_npl_event_get_arg(ev);
     ble_ll_auth_pyld_tmo_event_send(connsm);
-    ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_LE_PING);
+    ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_LE_PING, NULL);
     ble_ll_conn_auth_pyld_timer_start(connsm);
-}
-
-void
-ble_ll_conn_rd_features_timer_cb(struct ble_npl_event *ev)
-{
-    struct ble_ll_conn_sm *connsm;
-
-    connsm = (struct ble_ll_conn_sm *)ble_npl_event_get_arg(ev);
-
-    if (!connsm->csmflags.cfbit.pending_hci_rd_features ||
-                                        !connsm->csmflags.cfbit.rxd_features) {
-        return;
-    }
-
-    ble_ll_hci_ev_rd_rem_used_feat(connsm, BLE_ERR_SUCCESS);
-    connsm->csmflags.cfbit.pending_hci_rd_features = 0;
 }
 
 /**
@@ -1616,12 +1687,13 @@ ble_ll_conn_auth_pyld_timer_start(struct ble_ll_conn_sm *connsm)
 }
 #endif
 
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
 static void
-ble_ll_conn_master_common_init(struct ble_ll_conn_sm *connsm)
+ble_ll_conn_central_common_init(struct ble_ll_conn_sm *connsm)
 {
 
-    /* Set master role */
-    connsm->conn_role = BLE_LL_CONN_ROLE_MASTER;
+    /* Set central role */
+    connsm->conn_role = BLE_LL_CONN_ROLE_CENTRAL;
 
     /* Set default ce parameters */
 
@@ -1631,15 +1703,22 @@ ble_ll_conn_master_common_init(struct ble_ll_conn_sm *connsm)
      */
     connsm->tx_win_size = BLE_LL_CONN_TX_WIN_MIN + 1;
     connsm->tx_win_off = 0;
-    connsm->master_sca = BLE_LL_SCA_ENUM;
+    connsm->central_sca = BLE_LL_SCA_ENUM;
 
     /* Hop increment is a random value between 5 and 16. */
     connsm->hop_inc = (ble_ll_rand() % 12) + 5;
 
     /* Set channel map to map requested by host */
-    connsm->num_used_chans = g_ble_ll_conn_params.num_used_chans;
-    memcpy(connsm->chanmap, g_ble_ll_conn_params.master_chan_map,
-           BLE_LL_CONN_CHMAP_LEN);
+    connsm->num_used_chans = g_ble_ll_data.chan_map_num_used;
+    memcpy(connsm->chanmap, g_ble_ll_data.chan_map, BLE_LL_CHAN_MAP_LEN);
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    connsm->acc_subrate_min = g_ble_ll_conn_params.acc_subrate_min;
+    connsm->acc_subrate_max = g_ble_ll_conn_params.acc_subrate_max;
+    connsm->acc_max_latency = g_ble_ll_conn_params.acc_max_latency;
+    connsm->acc_cont_num = g_ble_ll_conn_params.acc_cont_num;
+    connsm->acc_supervision_tmo = g_ble_ll_conn_params.acc_supervision_tmo;
+#endif
 
     /*  Calculate random access address and crc initialization value */
     connsm->access_addr = ble_ll_utils_calc_access_addr();
@@ -1650,7 +1729,7 @@ ble_ll_conn_master_common_init(struct ble_ll_conn_sm *connsm)
 }
 /**
  * Called when a create connection command has been received. This initializes
- * a connection state machine in the master role.
+ * a connection state machine in the central role.
  *
  * NOTE: Must be called before the state machine is started
  *
@@ -1658,56 +1737,26 @@ ble_ll_conn_master_common_init(struct ble_ll_conn_sm *connsm)
  * @param hcc
  */
 void
-ble_ll_conn_master_init(struct ble_ll_conn_sm *connsm,
-                        struct hci_create_conn *hcc)
+ble_ll_conn_central_init(struct ble_ll_conn_sm *connsm,
+                         struct ble_ll_conn_create_scan *cc_scan,
+                         struct ble_ll_conn_create_params *cc_params)
 {
 
-    ble_ll_conn_master_common_init(connsm);
+    ble_ll_conn_central_common_init(connsm);
 
-    /* Set slave latency and supervision timeout */
-    connsm->slave_latency = hcc->conn_latency;
-    connsm->supervision_tmo = hcc->supervision_timeout;
+    connsm->own_addr_type = cc_scan->own_addr_type;
+    memcpy(&connsm->peer_addr, &cc_scan->peer_addr, BLE_DEV_ADDR_LEN);
+    connsm->peer_addr_type = cc_scan->peer_addr_type;
 
-    /* Set own address type and peer address if needed */
-    connsm->own_addr_type = hcc->own_addr_type;
-    if (hcc->filter_policy == 0) {
-        memcpy(&connsm->peer_addr, &hcc->peer_addr, BLE_DEV_ADDR_LEN);
-        connsm->peer_addr_type = hcc->peer_addr_type;
-    }
-
-    /* XXX: for now, just make connection interval equal to max */
-    connsm->conn_itvl = hcc->conn_itvl_max;
-
-    /* Check the min/max CE lengths are less than connection interval */
-    if (hcc->min_ce_len > (connsm->conn_itvl * 2)) {
-        connsm->min_ce_len = connsm->conn_itvl * 2;
-    } else {
-        connsm->min_ce_len = hcc->min_ce_len;
-    }
-
-    if (hcc->max_ce_len > (connsm->conn_itvl * 2)) {
-        connsm->max_ce_len = connsm->conn_itvl * 2;
-    } else {
-        connsm->max_ce_len = hcc->max_ce_len;
-    }
+    connsm->conn_itvl = cc_params->conn_itvl;
+    connsm->conn_itvl_ticks = cc_params->conn_itvl_ticks;
+    connsm->conn_itvl_usecs = cc_params->conn_itvl_usecs;
+    connsm->periph_latency = cc_params->conn_latency;
+    connsm->supervision_tmo = cc_params->supervision_timeout;
+    connsm->min_ce_len = cc_params->min_ce_len;
+    connsm->max_ce_len = cc_params->max_ce_len;
 }
-
-static void
-ble_ll_update_max_tx_octets_phy_mode(struct ble_ll_conn_sm *connsm)
-{
-    uint32_t usecs;
-
-    usecs = connsm->eff_max_tx_time;
-
-    connsm->max_tx_octets_phy_mode[BLE_PHY_MODE_1M] =
-            ble_ll_pdu_max_tx_octets_get(usecs, BLE_PHY_MODE_1M);
-    connsm->max_tx_octets_phy_mode[BLE_PHY_MODE_2M] =
-            ble_ll_pdu_max_tx_octets_get(usecs, BLE_PHY_MODE_2M);
-    connsm->max_tx_octets_phy_mode[BLE_PHY_MODE_CODED_125KBPS] =
-            ble_ll_pdu_max_tx_octets_get(usecs, BLE_PHY_MODE_CODED_125KBPS);
-    connsm->max_tx_octets_phy_mode[BLE_PHY_MODE_CODED_500KBPS] =
-            ble_ll_pdu_max_tx_octets_get(usecs, BLE_PHY_MODE_CODED_500KBPS);
-}
+#endif
 
 #if (BLE_LL_BT5_PHY_SUPPORTED == 1)
 
@@ -1745,7 +1794,7 @@ ble_ll_conn_init_phy(struct ble_ll_conn_sm *connsm, int phy)
         connsm->rem_max_tx_time = BLE_LL_CONN_SUPP_TIME_MIN_CODED;
         connsm->rem_max_rx_time = BLE_LL_CONN_SUPP_TIME_MIN_CODED;
         /* Assume peer does support coded */
-        connsm->remote_features[0] |= (BLE_LL_FEAT_LE_CODED_PHY >> 8);
+        ble_ll_conn_rem_feature_add(connsm, BLE_LL_FEAT_LE_CODED_PHY);
     } else {
         connsm->max_tx_time = conngp->conn_init_max_tx_time_uncoded;
         connsm->max_rx_time = BLE_LL_CONN_SUPP_TIME_MAX_UNCODED;
@@ -1758,64 +1807,27 @@ ble_ll_conn_init_phy(struct ble_ll_conn_sm *connsm, int phy)
     connsm->rem_max_rx_octets = BLE_LL_CONN_SUPP_BYTES_MIN;
     connsm->eff_max_tx_octets = BLE_LL_CONN_SUPP_BYTES_MIN;
     connsm->eff_max_rx_octets = BLE_LL_CONN_SUPP_BYTES_MIN;
-
-    ble_ll_update_max_tx_octets_phy_mode(connsm);
 }
 
 #endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-
-void
-ble_ll_conn_ext_master_init(struct ble_ll_conn_sm *connsm,
-                        struct hci_ext_create_conn *hcc)
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+static void
+ble_ll_conn_create_set_params(struct ble_ll_conn_sm *connsm, uint8_t phy)
 {
+    struct ble_ll_conn_create_params *cc_params;
 
-    ble_ll_conn_master_common_init(connsm);
+    cc_params = &g_ble_ll_conn_create_sm.params[phy - 1];
 
-    /* Set own address type and peer address if needed */
-    connsm->own_addr_type = hcc->own_addr_type;
-    if (hcc->filter_policy == 0) {
-        memcpy(&connsm->peer_addr, &hcc->peer_addr, BLE_DEV_ADDR_LEN);
-        connsm->peer_addr_type = hcc->peer_addr_type;
-    }
+    connsm->periph_latency = cc_params->conn_latency;
+    connsm->supervision_tmo = cc_params->supervision_timeout;
 
-    connsm->initial_params = *hcc;
+    connsm->conn_itvl = cc_params->conn_itvl;
+    connsm->conn_itvl_ticks = cc_params->conn_itvl_ticks;
+    connsm->conn_itvl_usecs = cc_params->conn_itvl_usecs;
 }
-
-void
-ble_ll_conn_ext_set_params(struct ble_ll_conn_sm *connsm,
-                           struct hci_ext_conn_params *hcc_params, int phy)
-{
-    /* Set slave latency and supervision timeout */
-    connsm->slave_latency = hcc_params->conn_latency;
-    connsm->supervision_tmo = hcc_params->supervision_timeout;
-
-    /* XXX: for now, just make connection interval equal to max */
-    connsm->conn_itvl = hcc_params->conn_itvl_max;
-
-
-    /* Check the min/max CE lengths are less than connection interval */
-    if (hcc_params->min_ce_len > (connsm->conn_itvl * 2)) {
-        connsm->min_ce_len = connsm->conn_itvl * 2;
-    } else {
-        connsm->min_ce_len = hcc_params->min_ce_len;
-    }
-
-    if (hcc_params->max_ce_len > (connsm->conn_itvl * 2)) {
-        connsm->max_ce_len = connsm->conn_itvl * 2;
-    } else {
-        connsm->max_ce_len = hcc_params->max_ce_len;
-    }
-
-    ble_ll_conn_calc_itvl_ticks(connsm);
-
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
-    ble_ll_conn_init_phy(connsm, phy);
 #endif
-}
-
-
 #endif
 
 static void
@@ -1842,7 +1854,7 @@ ble_ll_conn_set_csa(struct ble_ll_conn_sm *connsm, bool chsel)
 /**
  * Create a new connection state machine. This is done once per
  * connection when the HCI command "create connection" is issued to the
- * controller or when a slave receives a connect request.
+ * controller or when a peripheral receives a connect request.
  *
  * Context: Link Layer task
  *
@@ -1852,6 +1864,10 @@ void
 ble_ll_conn_sm_new(struct ble_ll_conn_sm *connsm)
 {
     struct ble_ll_conn_global_params *conn_params;
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+    struct ble_ll_conn_sm *connsm_css_prev = NULL;
+    struct ble_ll_conn_sm *connsm_css;
+#endif
 
     /* Reset following elements */
     connsm->csmflags.conn_flags = 0;
@@ -1866,8 +1882,14 @@ ble_ll_conn_sm_new(struct ble_ll_conn_sm *connsm)
     connsm->sub_vers_nr = 0;
     connsm->reject_reason = BLE_ERR_SUCCESS;
     connsm->conn_rssi = BLE_LL_CONN_UNKNOWN_RSSI;
-    connsm->rpa_index = -1;
     connsm->inita_identity_used = 0;
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    connsm->subrate_base_event = 0;
+    connsm->subrate_factor = 1;
+    connsm->cont_num = 0;
+    connsm->last_pdu_event = 0;
+#endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_SYNC_TRANSFER)
     connsm->sync_transfer_sync_timeout = g_ble_ll_conn_sync_transfer_params.sync_timeout_us;
@@ -1881,11 +1903,11 @@ ble_ll_conn_sm_new(struct ble_ll_conn_sm *connsm)
     connsm->phy_data.cur_rx_phy = BLE_PHY_1M;
     connsm->phy_data.tx_phy_mode = BLE_PHY_MODE_1M;
     connsm->phy_data.rx_phy_mode = BLE_PHY_MODE_1M;
-    connsm->phy_data.req_pref_tx_phys_mask = 0;
-    connsm->phy_data.req_pref_rx_phys_mask = 0;
-    connsm->phy_data.host_pref_tx_phys_mask = g_ble_ll_data.ll_pref_tx_phys;
-    connsm->phy_data.host_pref_rx_phys_mask = g_ble_ll_data.ll_pref_rx_phys;
-    connsm->phy_data.phy_options = 0;
+    connsm->phy_data.pref_mask_tx_req = 0;
+    connsm->phy_data.pref_mask_rx_req = 0;
+    connsm->phy_data.pref_mask_tx = g_ble_ll_data.ll_pref_tx_phys;
+    connsm->phy_data.pref_mask_rx = g_ble_ll_data.ll_pref_rx_phys;
+    connsm->phy_data.pref_opts = 0;
     connsm->phy_tx_transition = 0;
 #endif
 
@@ -1930,8 +1952,6 @@ ble_ll_conn_sm_new(struct ble_ll_conn_sm *connsm)
     connsm->host_req_max_tx_time = 0;
 #endif
 
-    ble_ll_update_max_tx_octets_phy_mode(connsm);
-
     /* Reset encryption data */
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
     memset(&connsm->enc_data, 0, sizeof(struct ble_ll_conn_enc_data));
@@ -1947,10 +1967,36 @@ ble_ll_conn_sm_new(struct ble_ll_conn_sm *connsm)
                     connsm);
 #endif
 
-    ble_ll_conn_calc_itvl_ticks(connsm);
-
     /* Add to list of active connections */
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+        /* We will insert sorted by css_slot_idx to make finding free slot
+         * easier.
+         */
+        SLIST_FOREACH(connsm_css, &g_ble_ll_conn_active_list, act_sle) {
+            if ((connsm_css->conn_role == BLE_LL_CONN_ROLE_CENTRAL) &&
+                (connsm_css->css_slot_idx > connsm->css_slot_idx)) {
+                if (connsm_css_prev) {
+                    SLIST_INSERT_AFTER(connsm_css_prev, connsm, act_sle);
+                }
+                break;
+            }
+            connsm_css_prev = connsm_css;
+        }
+
+        if (!connsm_css_prev) {
+            /* List was empty or need to insert before 1st connection */
+            SLIST_INSERT_HEAD(&g_ble_ll_conn_active_list, connsm, act_sle);
+        } else if (!connsm_css) {
+            /* Insert at the end of list */
+            SLIST_INSERT_AFTER(connsm_css_prev, connsm, act_sle);
+        }
+    } else {
+        SLIST_INSERT_HEAD(&g_ble_ll_conn_active_list, connsm, act_sle);
+    }
+#else
     SLIST_INSERT_HEAD(&g_ble_ll_conn_active_list, connsm, act_sle);
+#endif
 }
 
 void
@@ -1983,8 +2029,6 @@ ble_ll_conn_update_eff_data_len(struct ble_ll_conn_sm *connsm)
     if (eff_time != connsm->eff_max_tx_time) {
         connsm->eff_max_tx_time = eff_time;
         send_event = 1;
-
-        ble_ll_update_max_tx_octets_phy_mode(connsm);
     }
     eff_bytes = min(connsm->rem_max_tx_octets, connsm->max_rx_octets);
     if (eff_bytes != connsm->eff_max_rx_octets) {
@@ -2042,6 +2086,20 @@ ble_ll_conn_end(struct ble_ll_conn_sm *connsm, uint8_t ble_err)
     /* Remove from the active connection list */
     SLIST_REMOVE(&g_ble_ll_conn_active_list, connsm, ble_ll_conn_sm, act_sle);
 
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+    /* If current connection was reference for CSS, we need to find another
+     * one. It does not matter which one we'll pick.
+     */
+    if (connsm == g_ble_ll_conn_css_ref) {
+        SLIST_FOREACH(g_ble_ll_conn_css_ref, &g_ble_ll_conn_active_list,
+                      act_sle) {
+            if (g_ble_ll_conn_css_ref->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+                break;
+            }
+        }
+    }
+#endif
+
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_CTRL_TO_HOST_FLOW_CONTROL)
     ble_ll_conn_cth_flow_free_credit(connsm, connsm->cth_flow_pending);
 #endif
@@ -2067,16 +2125,6 @@ ble_ll_conn_end(struct ble_ll_conn_sm *connsm, uint8_t ble_err)
 
     /* Make sure events off queue */
     ble_npl_eventq_remove(&g_ble_ll_data.ll_evq, &connsm->conn_ev_end);
-
-#if MYNEWT_VAL(BLE_LL_STRICT_CONN_SCHEDULING)
-    /* Remove from occupied periods */
-    OS_ENTER_CRITICAL(sr);
-    BLE_LL_ASSERT(g_ble_ll_sched_data.sch_num_occ_periods > 0);
-    BLE_LL_ASSERT(g_ble_ll_sched_data.sch_occ_period_mask & connsm->period_occ_mask);
-    --g_ble_ll_sched_data.sch_num_occ_periods;
-    g_ble_ll_sched_data.sch_occ_period_mask &= ~connsm->period_occ_mask;
-    OS_EXIT_CRITICAL(sr);
-#endif
 
     /* Connection state machine is now idle */
     connsm->conn_state = BLE_LL_CONN_STATE_IDLE;
@@ -2126,27 +2174,46 @@ void
 ble_ll_conn_get_anchor(struct ble_ll_conn_sm *connsm, uint16_t conn_event,
                        uint32_t *anchor, uint8_t *anchor_usecs)
 {
-    uint32_t ticks;
     uint32_t itvl;
 
     itvl = (connsm->conn_itvl * BLE_LL_CONN_ITVL_USECS);
 
+    *anchor = connsm->anchor_point;
+    *anchor_usecs = connsm->anchor_point_usecs;
+
     if ((int16_t)(conn_event - connsm->event_cntr) < 0) {
         itvl *= connsm->event_cntr - conn_event;
-        ticks = os_cputime_usecs_to_ticks(itvl);
-        *anchor = connsm->anchor_point - ticks;
+        ble_ll_tmr_sub(anchor, anchor_usecs, itvl);
     } else {
         itvl *= conn_event - connsm->event_cntr;
-        ticks = os_cputime_usecs_to_ticks(itvl);
-        *anchor = connsm->anchor_point + ticks;
+        ble_ll_tmr_add(anchor, anchor_usecs, itvl);
+    }
+}
+#endif
+
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+int
+ble_ll_conn_move_anchor(struct ble_ll_conn_sm *connsm, uint16_t offset)
+{
+    struct ble_ll_conn_params cp = { };
+
+    BLE_LL_ASSERT(connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL);
+
+    if (IS_PENDING_CTRL_PROC(connsm, BLE_LL_CTRL_PROC_CONN_PARAM_REQ) ||
+        IS_PENDING_CTRL_PROC(connsm, BLE_LL_CTRL_PROC_CONN_UPDATE)) {
+        return -1;
     }
 
-    *anchor_usecs = connsm->anchor_point_usecs;
-    *anchor_usecs += (itvl - os_cputime_ticks_to_usecs(ticks));
-    if (*anchor_usecs >= 31) {
-        (*anchor)++;
-        *anchor_usecs -= 31;
-    }
+    /* Keep parameters, we just want to move anchor */
+    cp.interval_max = connsm->conn_itvl;
+    cp.interval_min = connsm->conn_itvl;
+    cp.latency = connsm->periph_latency;
+    cp.timeout = connsm->supervision_tmo;
+    cp.offset0 = offset;
+
+    ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_CONN_UPDATE, &cp);
+
+    return 0;
 }
 #endif
 
@@ -2162,13 +2229,27 @@ ble_ll_conn_get_anchor(struct ble_ll_conn_sm *connsm, uint16_t conn_event,
 static int
 ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
 {
-    uint16_t latency;
-    uint32_t itvl;
+    uint32_t conn_itvl_us;
+    uint32_t ce_duration;
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
     uint32_t cur_ww;
     uint32_t max_ww;
+#endif
     struct ble_ll_conn_upd_req *upd;
-    uint32_t ticks;
+    uint8_t skip_anchor_calc = 0;
     uint32_t usecs;
+    uint8_t use_periph_latency;
+    uint16_t base_event_cntr;
+    uint16_t next_event_cntr;
+    uint8_t next_is_subrated;
+    uint16_t subrate_factor;
+    uint16_t event_cntr_diff;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    struct ble_ll_conn_subrate_params *cstp;
+    uint16_t trans_next_event_cntr;
+    uint16_t subrate_conn_upd_event_cntr;
+#endif
+
 
     /* XXX: deal with connection request procedure here as well */
     ble_ll_conn_chk_csm_flags(connsm);
@@ -2178,13 +2259,29 @@ ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
         ble_ll_ctrl_terminate_start(connsm);
     }
 
-    if (CONN_F_TERMINATE_STARTED(connsm) && (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE)) {
+    if (CONN_F_TERMINATE_STARTED(connsm) && CONN_IS_PERIPHERAL(connsm)) {
         /* Some of the devices waits whole connection interval to ACK our
          * TERMINATE_IND sent as a Slave. Since we are here it means we are still waiting for ACK.
          * Make sure we catch it in next connection event.
          */
-        connsm->slave_latency = 0;
+        connsm->periph_latency = 0;
     }
+
+    next_is_subrated = 1;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    base_event_cntr = connsm->subrate_base_event;
+    subrate_factor = connsm->subrate_factor;
+
+    if ((connsm->cont_num > 0) &&
+        (connsm->event_cntr + 1 == connsm->subrate_base_event +
+                                   connsm->subrate_factor) &&
+        (connsm->event_cntr - connsm->last_pdu_event < connsm->cont_num)) {
+        next_is_subrated = 0;
+    }
+#else
+    base_event_cntr = connsm->event_cntr;
+    subrate_factor = 1;
+#endif
 
     /*
      * XXX: TODO Probably want to add checks to see if we need to start
@@ -2193,39 +2290,115 @@ ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
      */
 
     /*
-     * XXX TODO: I think this is technically incorrect. We can allow slave
+     * XXX TODO: I think this is technically incorrect. We can allow peripheral
      * latency if we are doing one of these updates as long as we
-     * know that the master has received the ACK to the PDU that set
+     * know that the central has received the ACK to the PDU that set
      * the instant
      */
     /* Set event counter to the next connection event that we will tx/rx in */
-    itvl = connsm->conn_itvl * BLE_LL_CONN_ITVL_USECS;
-    latency = 1;
-    if (connsm->csmflags.cfbit.allow_slave_latency      &&
-        !connsm->csmflags.cfbit.conn_update_sched       &&
-        !CONN_F_PHY_UPDATE_SCHED(connsm)                &&
-        !connsm->csmflags.cfbit.chanmap_update_scheduled) {
-        if (connsm->csmflags.cfbit.pkt_rxd) {
-            latency += connsm->slave_latency;
-            itvl = itvl * latency;
+
+    use_periph_latency = next_is_subrated &&
+                         connsm->csmflags.cfbit.allow_periph_latency &&
+                         !connsm->csmflags.cfbit.conn_update_sched &&
+                         !connsm->csmflags.cfbit.phy_update_sched &&
+                         !connsm->csmflags.cfbit.chanmap_update_scheduled &&
+                         connsm->csmflags.cfbit.pkt_rxd;
+
+    if (next_is_subrated) {
+        next_event_cntr = base_event_cntr + subrate_factor;
+        if (use_periph_latency) {
+            next_event_cntr += subrate_factor * connsm->periph_latency;
+        }
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+        /* If we are in subrate transition mode, we should also listen on
+         * subrated connection events based on new parameters.
+         */
+        if (connsm->csmflags.cfbit.subrate_trans) {
+            BLE_LL_ASSERT(CONN_IS_CENTRAL(connsm));
+
+            cstp = &connsm->subrate_trans;
+            trans_next_event_cntr = cstp->subrate_base_event;
+            while (INT16_LTE(trans_next_event_cntr, connsm->event_cntr)) {
+                trans_next_event_cntr += cstp->subrate_factor;
+            }
+            cstp->subrate_base_event = trans_next_event_cntr;
+
+            if (INT16_LT(trans_next_event_cntr, next_event_cntr)) {
+                next_event_cntr = trans_next_event_cntr;
+                next_is_subrated = 0;
+            }
+        }
+#endif
+    } else {
+        next_event_cntr = connsm->event_cntr + 1;
+    }
+
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    /* If connection update is scheduled, peripheral shall listen at instant
+     * and one connection event before instant regardless of subrating.
+     */
+    if (CONN_IS_PERIPHERAL(connsm) &&
+        connsm->csmflags.cfbit.conn_update_sched &&
+        (connsm->subrate_factor > 1)) {
+        subrate_conn_upd_event_cntr = connsm->conn_update_req.instant - 1;
+        if (connsm->event_cntr == subrate_conn_upd_event_cntr) {
+            subrate_conn_upd_event_cntr++;
+        }
+
+        if (INT16_GT(next_event_cntr, subrate_conn_upd_event_cntr)) {
+            next_event_cntr = subrate_conn_upd_event_cntr;
+            next_is_subrated = 0;
         }
     }
-    connsm->event_cntr += latency;
 
-    /* Set next connection event start time */
-    /* We can use pre-calculated values for one interval if latency is 1. */
-    if (latency == 1) {
-        connsm->anchor_point += connsm->conn_itvl_ticks;
-        connsm->anchor_point_usecs += connsm->conn_itvl_usecs;
-    } else {
-        uint32_t ticks;
-        ticks = os_cputime_usecs_to_ticks(itvl);
-        connsm->anchor_point += ticks;
-        connsm->anchor_point_usecs += (itvl - os_cputime_ticks_to_usecs(ticks));
+    /* Set next connection event as a subrate base event if that connection
+     * event is a subrated event, this simplifies calculations later.
+     * Note that according to spec base event should only be changed on
+     * wrap-around, but since we only use this value internally we can use any
+     * valid value.
+     */
+    if (next_is_subrated ||
+        (connsm->subrate_base_event +
+         connsm->subrate_factor == next_event_cntr)) {
+        connsm->subrate_base_event = next_event_cntr;
     }
-    if (connsm->anchor_point_usecs >= 31) {
-        ++connsm->anchor_point;
-        connsm->anchor_point_usecs -= 31;
+#endif
+
+    event_cntr_diff = next_event_cntr - connsm->event_cntr;
+    BLE_LL_ASSERT(event_cntr_diff > 0);
+
+    connsm->event_cntr = next_event_cntr;
+
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+        connsm->css_period_idx += event_cntr_diff;
+
+        /* If this is non-reference connection, we set anchor from reference
+         * instead of calculating manually.
+         */
+        if (g_ble_ll_conn_css_ref != connsm) {
+            ble_ll_sched_css_set_conn_anchor(connsm);
+            skip_anchor_calc = 1;
+        }
+    }
+#endif
+
+    if (!skip_anchor_calc) {
+        /* Calculate next anchor point for connection.
+         * We can use pre-calculated values for one interval if latency is 1.
+         */
+        if (event_cntr_diff == 1) {
+            connsm->anchor_point += connsm->conn_itvl_ticks;
+            ble_ll_tmr_add_u(&connsm->anchor_point, &connsm->anchor_point_usecs,
+                             connsm->conn_itvl_usecs);
+        } else {
+            conn_itvl_us = connsm->conn_itvl * BLE_LL_CONN_ITVL_USECS;
+
+            ble_ll_tmr_add(&connsm->anchor_point, &connsm->anchor_point_usecs,
+                           conn_itvl_us * event_cntr_diff);
+        }
     }
 
     /*
@@ -2239,37 +2412,51 @@ ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
 
         /* Set flag so we send connection update event */
         upd = &connsm->conn_update_req;
-        if ((connsm->conn_role == BLE_LL_CONN_ROLE_MASTER)  ||
-            ((connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) &&
+        if (CONN_IS_CENTRAL(connsm) ||
+            (CONN_IS_PERIPHERAL(connsm) &&
              IS_PENDING_CTRL_PROC(connsm, BLE_LL_CTRL_PROC_CONN_PARAM_REQ)) ||
-            (connsm->conn_itvl != upd->interval)            ||
-            (connsm->slave_latency != upd->latency)         ||
+            (connsm->conn_itvl != upd->interval) ||
+            (connsm->periph_latency != upd->latency) ||
             (connsm->supervision_tmo != upd->timeout)) {
             connsm->csmflags.cfbit.host_expects_upd_event = 1;
         }
 
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+        if (connsm->conn_itvl != upd->interval) {
+            connsm->subrate_base_event = connsm->event_cntr;
+            connsm->subrate_factor = 1;
+            connsm->cont_num = 0;
+        }
+#endif
+
         connsm->supervision_tmo = upd->timeout;
-        connsm->slave_latency = upd->latency;
+        connsm->periph_latency = upd->latency;
         connsm->tx_win_size = upd->winsize;
-        connsm->slave_cur_tx_win_usecs =
+        connsm->periph_cur_tx_win_usecs =
             connsm->tx_win_size * BLE_LL_CONN_TX_WIN_USECS;
         connsm->tx_win_off = upd->winoffset;
         connsm->conn_itvl = upd->interval;
-        ble_ll_conn_calc_itvl_ticks(connsm);
+
+        ble_ll_conn_itvl_to_ticks(connsm->conn_itvl, &connsm->conn_itvl_ticks,
+                                  &connsm->conn_itvl_usecs);
+
         if (upd->winoffset != 0) {
             usecs = upd->winoffset * BLE_LL_CONN_ITVL_USECS;
-            ticks = os_cputime_usecs_to_ticks(usecs);
-            connsm->anchor_point += ticks;
-            usecs = usecs - os_cputime_ticks_to_usecs(ticks);
-            connsm->anchor_point_usecs += usecs;
-            if (connsm->anchor_point_usecs >= 31) {
-                ++connsm->anchor_point;
-                connsm->anchor_point_usecs -= 31;
-            }
+            ble_ll_tmr_add(&connsm->anchor_point, &connsm->anchor_point_usecs,
+                           usecs);
         }
 
         /* Reset the starting point of the connection supervision timeout */
         connsm->last_rxd_pdu_cputime = connsm->anchor_point;
+
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+        if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+            BLE_LL_ASSERT(connsm->css_slot_idx_pending !=
+                          BLE_LL_CONN_CSS_NO_SLOT);
+            connsm->css_slot_idx = connsm->css_slot_idx_pending;
+            connsm->css_slot_idx_pending = BLE_LL_CONN_CSS_NO_SLOT;
+        }
+#endif
 
         /* Reset update scheduled flag */
         connsm->csmflags.cfbit.conn_update_sched = 0;
@@ -2288,12 +2475,12 @@ ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
         ((int16_t)(connsm->chanmap_instant - connsm->event_cntr) <= 0)) {
 
         /* XXX: there is a chance that the control packet is still on
-         * the queue of the master. This means that we never successfully
+         * the queue of the central. This means that we never successfully
          * transmitted update request. Would end up killing connection
-           on slave side. Could ignore it or see if still enqueued. */
+           on peripheral side. Could ignore it or see if still enqueued. */
         connsm->num_used_chans =
             ble_ll_utils_calc_num_used_chans(connsm->req_chanmap);
-        memcpy(connsm->chanmap, connsm->req_chanmap, BLE_LL_CONN_CHMAP_LEN);
+        memcpy(connsm->chanmap, connsm->req_chanmap, BLE_LL_CHAN_MAP_LEN);
 
         connsm->csmflags.cfbit.chanmap_update_scheduled = 0;
 
@@ -2312,14 +2499,14 @@ ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
             connsm->phy_data.cur_tx_phy = connsm->phy_data.new_tx_phy;
             connsm->phy_data.tx_phy_mode =
                                 ble_ll_phy_to_phy_mode(connsm->phy_data.cur_tx_phy,
-                                                   connsm->phy_data.phy_options);
+                                                   connsm->phy_data.pref_opts);
         }
 
         if (connsm->phy_data.new_rx_phy) {
             connsm->phy_data.cur_rx_phy = connsm->phy_data.new_rx_phy;
             connsm->phy_data.rx_phy_mode =
                                 ble_ll_phy_to_phy_mode(connsm->phy_data.cur_rx_phy,
-                                                   connsm->phy_data.phy_options);
+                                                   connsm->phy_data.pref_opts);
         }
 
         /* Clear flags and set flag to send event at next instant */
@@ -2340,8 +2527,8 @@ ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
          */
         if (((connsm->phy_data.cur_tx_phy == BLE_PHY_CODED) ||
              (connsm->phy_data.cur_rx_phy == BLE_PHY_CODED)) &&
-            !(connsm->remote_features[0] & (BLE_LL_FEAT_LE_CODED_PHY >> 8))) {
-            connsm->remote_features[0] |= (BLE_LL_FEAT_LE_CODED_PHY >> 8);
+            !ble_ll_conn_rem_feature_check(connsm, BLE_LL_FEAT_LE_CODED_PHY)) {
+            ble_ll_conn_rem_feature_add(connsm, BLE_LL_FEAT_LE_CODED_PHY);
             connsm->max_rx_time = BLE_LL_CONN_SUPP_TIME_MAX_CODED;
             ble_ll_ctrl_initiate_dle(connsm);
         }
@@ -2350,7 +2537,7 @@ ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
 #endif
 
     /* Calculate data channel index of next connection event */
-    connsm->data_chan_index = ble_ll_conn_calc_dci(connsm, latency);
+    connsm->data_chan_index = ble_ll_conn_calc_dci(connsm, event_cntr_diff);
 
     /*
      * If we are trying to terminate connection, check if next wake time is
@@ -2364,29 +2551,30 @@ ble_ll_conn_next_event(struct ble_ll_conn_sm *connsm)
     }
 
     /*
-     * Calculate ce end time. For a slave, we need to add window widening and
-     * the transmit window if we still have one.
+     * Calculate ce end time. For a peripgheral, we need to add window widening
+     * and the transmit window if we still have one.
      */
-#if MYNEWT_VAL(BLE_LL_STRICT_CONN_SCHEDULING)
-    itvl = g_ble_ll_sched_data.sch_ticks_per_period;
-#else
-    itvl = MYNEWT_VAL(BLE_LL_CONN_INIT_SLOTS) * BLE_LL_SCHED_32KHZ_TICKS_PER_SLOT;
-#endif
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
+    ce_duration = ble_ll_tmr_u2t(MYNEWT_VAL(BLE_LL_CONN_INIT_SLOTS) *
+                                 BLE_LL_SCHED_USECS_PER_SLOT);
+
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
 
         cur_ww = ble_ll_utils_calc_window_widening(connsm->anchor_point,
                                                    connsm->last_anchor_point,
-                                                   connsm->master_sca);
+                                                   connsm->central_sca);
         max_ww = (connsm->conn_itvl * (BLE_LL_CONN_ITVL_USECS/2)) - BLE_LL_IFS;
         if (cur_ww >= max_ww) {
             return -1;
         }
         cur_ww += BLE_LL_JITTER_USECS;
-        connsm->slave_cur_window_widening = cur_ww;
-        itvl += os_cputime_usecs_to_ticks(cur_ww + connsm->slave_cur_tx_win_usecs);
+        connsm->periph_cur_window_widening = cur_ww;
+        ce_duration += ble_ll_tmr_u2t(cur_ww +
+                                      connsm->periph_cur_tx_win_usecs);
     }
-    itvl -= g_ble_ll_sched_offset_ticks;
-    connsm->ce_end_time = connsm->anchor_point + itvl;
+#endif
+    ce_duration -= g_ble_ll_sched_offset_ticks;
+    connsm->ce_end_time = connsm->anchor_point + ce_duration;
 
     return 0;
 }
@@ -2410,9 +2598,12 @@ static int
 ble_ll_conn_created(struct ble_ll_conn_sm *connsm, struct ble_mbuf_hdr *rxhdr)
 {
     int rc;
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     uint8_t *evbuf;
-    uint32_t endtime;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
     uint32_t usecs;
+#endif
 
     /* XXX: TODO this assumes we received in 1M phy */
 
@@ -2423,7 +2614,7 @@ ble_ll_conn_created(struct ble_ll_conn_sm *connsm, struct ble_mbuf_hdr *rxhdr)
     connsm->csmflags.cfbit.pkt_rxd = 0;
 
     /* Consider time created the last scheduled time */
-    connsm->last_scheduled = os_cputime_get32();
+    connsm->last_scheduled = ble_ll_tmr_get();
 
     /*
      * Set the last rxd pdu time since this is where we want to start the
@@ -2432,12 +2623,13 @@ ble_ll_conn_created(struct ble_ll_conn_sm *connsm, struct ble_mbuf_hdr *rxhdr)
     connsm->last_rxd_pdu_cputime = connsm->last_scheduled;
 
     /*
-     * Set first connection event time. If slave the endtime is the receive end
+     * Set first connection event time. If peripheral the endtime is the receive end
      * time of the connect request. The actual connection starts 1.25 msecs plus
      * the transmit window offset from the end of the connection request.
      */
     rc = 1;
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
         /*
          * With a 32.768 kHz crystal we dont care about the remaining usecs
          * when setting last anchor point. The only thing last anchor is used
@@ -2467,30 +2659,20 @@ ble_ll_conn_created(struct ble_ll_conn_sm *connsm, struct ble_mbuf_hdr *rxhdr)
         }
 
         /* Anchor point is cputime. */
-        endtime = os_cputime_usecs_to_ticks(usecs);
-        connsm->anchor_point = rxhdr->beg_cputime + endtime;
-        connsm->anchor_point_usecs = usecs - os_cputime_ticks_to_usecs(endtime);
-        if (connsm->anchor_point_usecs == 31) {
-            ++connsm->anchor_point;
-            connsm->anchor_point_usecs = 0;
-        }
+        connsm->anchor_point = rxhdr->beg_cputime;
+        connsm->anchor_point_usecs = 0;
+        ble_ll_tmr_add(&connsm->anchor_point, &connsm->anchor_point_usecs,
+                       usecs);
 
-        connsm->slave_cur_tx_win_usecs =
+        connsm->periph_cur_tx_win_usecs =
             connsm->tx_win_size * BLE_LL_CONN_TX_WIN_USECS;
-#if MYNEWT_VAL(BLE_LL_STRICT_CONN_SCHEDULING)
         connsm->ce_end_time = connsm->anchor_point +
-            g_ble_ll_sched_data.sch_ticks_per_period +
-            os_cputime_usecs_to_ticks(connsm->slave_cur_tx_win_usecs) + 1;
-
-#else
-        connsm->ce_end_time = connsm->anchor_point +
-            (MYNEWT_VAL(BLE_LL_CONN_INIT_SLOTS) * BLE_LL_SCHED_32KHZ_TICKS_PER_SLOT)
-            + os_cputime_usecs_to_ticks(connsm->slave_cur_tx_win_usecs) + 1;
-#endif
-        connsm->slave_cur_window_widening = BLE_LL_JITTER_USECS;
+                              ble_ll_tmr_u2t(MYNEWT_VAL(BLE_LL_CONN_INIT_SLOTS) *
+                                             BLE_LL_SCHED_USECS_PER_SLOT +
+                                             connsm->periph_cur_tx_win_usecs) + 1;
 
         /* Start the scheduler for the first connection event */
-        while (ble_ll_sched_slave_new(connsm)) {
+        while (ble_ll_sched_conn_periph_new(connsm)) {
             if (ble_ll_conn_next_event(connsm)) {
                 STATS_INC(ble_ll_conn_stats, cant_set_sched);
                 rc = 0;
@@ -2498,10 +2680,11 @@ ble_ll_conn_created(struct ble_ll_conn_sm *connsm, struct ble_mbuf_hdr *rxhdr)
             }
         }
     }
+#endif
 
     /* Send connection complete event to inform host of connection */
     if (rc) {
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if (BLE_LL_BT5_PHY_SUPPORTED == 1) && MYNEWT_VAL(BLE_LL_CONN_PHY_INIT_UPDATE)
         /*
          * If we have default phy preferences and they are different than
          * the current PHY's in use, start update procedure.
@@ -2510,13 +2693,13 @@ ble_ll_conn_created(struct ble_ll_conn_sm *connsm, struct ble_mbuf_hdr *rxhdr)
          * XXX: should we attempt to start this without knowing if
          * the other side can support it?
          */
-        if (!ble_ll_conn_chk_phy_upd_start(connsm)) {
+        if (!ble_ll_conn_phy_update_if_needed(connsm)) {
             CONN_F_CTRLR_PHY_UPDATE(connsm) = 1;
         }
 #endif
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
-            ble_ll_adv_send_conn_comp_ev(connsm, rxhdr);
-        } else {
+        switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+        case BLE_LL_CONN_ROLE_CENTRAL:
             evbuf = ble_ll_init_get_conn_comp_ev();
             ble_ll_conn_comp_event_send(connsm, BLE_ERR_SUCCESS, evbuf, NULL);
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CSA2)
@@ -2526,12 +2709,23 @@ ble_ll_conn_created(struct ble_ll_conn_sm *connsm, struct ble_mbuf_hdr *rxhdr)
             /*
              * Initiate features exchange
              *
-             * XXX we do this only as a master as it was observed that sending
-             * LL_SLAVE_FEATURE_REQ after connection breaks some recent iPhone
-             * models; for slave just assume master will initiate features xchg
+             * XXX we do this only as a central as it was observed that sending
+             * LL_PERIPH_FEATURE_REQ after connection breaks some recent iPhone
+             * models; for peripheral just assume central will initiate features xchg
              * if it has some additional features to use.
              */
-            ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_FEATURE_XCHG);
+            ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_FEATURE_XCHG,
+                                   NULL);
+            break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+        case BLE_LL_CONN_ROLE_PERIPHERAL:
+            ble_ll_adv_send_conn_comp_ev(connsm, rxhdr);
+            break;
+#endif
+        default:
+            BLE_LL_ASSERT(0);
+            break;
         }
     }
 
@@ -2604,7 +2798,7 @@ ble_ll_conn_event_end(struct ble_npl_event *ev)
      * usecs to 0 since we dont need to listen in the transmit window.
      */
     if (connsm->csmflags.cfbit.pkt_rxd) {
-        connsm->slave_cur_tx_win_usecs = 0;
+        connsm->periph_cur_tx_win_usecs = 0;
     }
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_PING)
@@ -2671,7 +2865,7 @@ ble_ll_conn_event_end(struct ble_npl_event *ev)
         ble_err = BLE_ERR_CONN_SPVN_TMO;
     }
     /* XXX: Convert to ticks to usecs calculation instead??? */
-    tmo = os_cputime_usecs_to_ticks(tmo);
+    tmo = ble_ll_tmr_u2t(tmo);
     if ((int32_t)(connsm->anchor_point - connsm->last_rxd_pdu_cputime) >= tmo) {
         ble_ll_conn_end(connsm, ble_err);
         return;
@@ -2700,18 +2894,15 @@ ble_ll_conn_event_end(struct ble_npl_event *ev)
 
  * @param txoffset      The tx window offset for this connection
  */
-static void
-ble_ll_conn_connect_ind_prepare(struct ble_ll_conn_sm *connsm,
+void
+ble_ll_conn_prepare_connect_ind(struct ble_ll_conn_sm *connsm,
                                 struct ble_ll_scan_pdu_data *pdu_data,
-                                uint8_t adva_type, uint8_t *adva,
-                                uint8_t inita_type, uint8_t *inita,
-                                int rpa_index, uint8_t channel)
+                                struct ble_ll_scan_addr_data *addrd,
+                                uint8_t channel)
 {
     uint8_t hdr;
     uint8_t *addr;
-
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-    int is_rpa;
     struct ble_ll_resolv_entry *rl;
 #endif
 
@@ -2724,19 +2915,45 @@ ble_ll_conn_connect_ind_prepare(struct ble_ll_conn_sm *connsm,
     }
 #endif
 
-    if (adva_type) {
+    if (addrd->adva_type) {
         /* Set random address */
         hdr |= BLE_ADV_PDU_HDR_RXADD_MASK;
     }
 
-    if (inita) {
-        memcpy(pdu_data->inita, inita, BLE_DEV_ADDR_LEN);
-        if (inita_type) {
+    if (addrd->targeta) {
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
+        if (addrd->targeta_resolved) {
+            if (connsm->own_addr_type > BLE_OWN_ADDR_RANDOM) {
+                /* If TargetA was resolved we should reply with a different RPA
+                 * in InitA (see Core 5.3, Vol 6, Part B, 6.4).
+                 */
+                BLE_LL_ASSERT(addrd->rpa_index >= 0);
+                rl = &g_ble_ll_resolv_list[addrd->rpa_index];
+                hdr |= BLE_ADV_PDU_HDR_TXADD_RAND;
+                ble_ll_resolv_get_priv_addr(rl, 1, pdu_data->inita);
+            } else {
+                /* Host does not want us to use RPA so use identity */
+                if ((connsm->own_addr_type & 1) == 0) {
+                    memcpy(pdu_data->inita, g_dev_addr, BLE_DEV_ADDR_LEN);
+                } else {
+                    hdr |= BLE_ADV_PDU_HDR_TXADD_RAND;
+                    memcpy(pdu_data->inita, g_random_addr, BLE_DEV_ADDR_LEN);
+                }
+            }
+        } else {
+            memcpy(pdu_data->inita, addrd->targeta, BLE_DEV_ADDR_LEN);
+            if (addrd->targeta_type) {
+                hdr |= BLE_ADV_PDU_HDR_TXADD_RAND;
+            }
+        }
+#else
+        memcpy(pdu_data->inita, addrd->targeta, BLE_DEV_ADDR_LEN);
+        if (addrd->targeta_type) {
             hdr |= BLE_ADV_PDU_HDR_TXADD_RAND;
         }
+#endif
     } else {
         /* Get pointer to our device address */
-        connsm = g_ble_ll_conn_create_sm;
         if ((connsm->own_addr_type & 1) == 0) {
             addr = g_dev_addr;
         } else {
@@ -2746,27 +2963,13 @@ ble_ll_conn_connect_ind_prepare(struct ble_ll_conn_sm *connsm,
 
     /* XXX: do this ahead of time? Calculate the local rpa I mean */
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-        if (connsm->own_addr_type > BLE_HCI_ADV_OWN_ADDR_RANDOM) {
-            rl = NULL;
-            is_rpa = ble_ll_is_rpa(adva, adva_type);
-            if (is_rpa) {
-                if (rpa_index >= 0) {
-                    rl = &g_ble_ll_resolv_list[rpa_index];
-                }
-            } else {
-                /* we look for RL entry to generate local RPA regardless if
-                 * resolving is enabled or not (as this is is for local RPA
-                 * not peer RPA)
-                 */
-                 rl = ble_ll_resolv_list_find(adva, adva_type);
-            }
-
-            /*
-             * If peer in on resolving list, we use RPA generated with Local IRK
-             * from resolving list entry. In other case, we need to use our identity
-             * address (see  Core 5.0, Vol 6, Part B, section 6.4).
+        if ((connsm->own_addr_type > BLE_HCI_ADV_OWN_ADDR_RANDOM) &&
+            (addrd->rpa_index >= 0)) {
+            /* We are using RPA and advertiser was on our resolving list, so
+             * we'll use RPA to reply (see Core 5.3, Vol 6, Part B, 6.4).
              */
-            if (rl && rl->rl_has_local) {
+            rl = &g_ble_ll_resolv_list[addrd->rpa_index];
+            if (rl->rl_has_local) {
                 hdr |= BLE_ADV_PDU_HDR_TXADD_RAND;
                 ble_ll_resolv_get_priv_addr(rl, 1, pdu_data->inita);
                 addr = NULL;
@@ -2781,115 +2984,13 @@ ble_ll_conn_connect_ind_prepare(struct ble_ll_conn_sm *connsm,
         }
     }
 
-    memcpy(pdu_data->adva, adva, BLE_DEV_ADDR_LEN);
+    memcpy(pdu_data->adva, addrd->adva, BLE_DEV_ADDR_LEN);
 
     pdu_data->hdr_byte = hdr;
 }
 
-/* Returns true if the address matches the connection peer address having in
- * mind privacy mode
- */
-static int
-ble_ll_conn_is_peer_adv(uint8_t addr_type, uint8_t *adva, int index)
-{
-    int rc;
-    uint8_t *peer_addr = NULL;
-    struct ble_ll_conn_sm *connsm;
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-    struct ble_ll_resolv_entry *rl;
-#endif
-
-    /* XXX: Deal with different types of random addresses here! */
-    connsm = g_ble_ll_conn_create_sm;
-    if (!connsm) {
-        return 0;
-    }
-
-    switch (connsm->peer_addr_type) {
-    /* Fall-through intentional */
-    case BLE_HCI_CONN_PEER_ADDR_PUBLIC:
-    case BLE_HCI_CONN_PEER_ADDR_RANDOM:
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-        if (ble_ll_addr_is_id(adva, addr_type)) {
-                /* Peer uses its identity address. Let's verify privacy mode.
-                 *
-                 * Note: Core Spec 5.0 Vol 6, Part B
-                 * If the Host has added the peer device to the resolving list
-                 * with an all-zero peer IRK, the Controller shall only accept
-                 * the peer's identity address.
-                 */
-            if (ble_ll_resolv_enabled()) {
-                rl = ble_ll_resolv_list_find(adva, addr_type);
-                if (rl && (rl->rl_priv_mode == BLE_HCI_PRIVACY_NETWORK) &&
-                    rl->rl_has_peer) {
-                    return 0;
-                }
-            }
-        }
-
-        /* Check if peer uses RPA. If so and it match, use it as controller
-         * supports privacy mode
-         */
-        if ((index >= 0) &&
-                (g_ble_ll_resolv_list[index].rl_addr_type == connsm->peer_addr_type)) {
-            peer_addr = g_ble_ll_resolv_list[index].rl_identity_addr;
-        }
-#endif
-        /*
-         * If we are here it means we don't know the device, lets
-         * check if type is what we are looking for and later
-         * if address matches
-         */
-        if ((connsm->peer_addr_type == addr_type) && !peer_addr) {
-            peer_addr = adva;
-        }
-
-        break;
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-    case BLE_HCI_CONN_PEER_ADDR_PUBLIC_IDENT:
-        if ((index < 0) ||
-            (g_ble_ll_resolv_list[index].rl_addr_type != 0)) {
-            return 0;
-        }
-        peer_addr = g_ble_ll_resolv_list[index].rl_identity_addr;
-        break;
-    case BLE_HCI_CONN_PEER_ADDR_RANDOM_IDENT:
-        if ((index < 0) ||
-            (g_ble_ll_resolv_list[index].rl_addr_type != 1)) {
-            return 0;
-        }
-        peer_addr = g_ble_ll_resolv_list[index].rl_identity_addr;
-        break;
-#endif
-    default:
-        peer_addr = NULL;
-        break;
-    }
-
-    rc = 0;
-    if (peer_addr) {
-        if (!memcmp(peer_addr, connsm->peer_addr, BLE_DEV_ADDR_LEN)) {
-            rc = 1;
-        }
-    }
-
-    return rc;
-}
-
-static void
-ble_ll_conn_connect_ind_txend_to_standby(void *arg)
-{
-    ble_ll_state_set(BLE_LL_STATE_STANDBY);
-}
-
-static void
-ble_ll_conn_connect_ind_txend_to_init(void *arg)
-{
-    ble_ll_state_set(BLE_LL_STATE_INITIATING);
-}
-
-static uint8_t
-ble_ll_conn_connect_ind_tx_pducb(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
+uint8_t
+ble_ll_conn_tx_connect_ind_pducb(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
 {
     struct ble_ll_conn_sm *connsm;
     struct ble_ll_scan_pdu_data *pdu_data;
@@ -2913,38 +3014,14 @@ ble_ll_conn_connect_ind_tx_pducb(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_by
     dptr[7] = connsm->tx_win_size;
     put_le16(dptr + 8, connsm->tx_win_off);
     put_le16(dptr + 10, connsm->conn_itvl);
-    put_le16(dptr + 12, connsm->slave_latency);
+    put_le16(dptr + 12, connsm->periph_latency);
     put_le16(dptr + 14, connsm->supervision_tmo);
-    memcpy(dptr + 16, &connsm->chanmap, BLE_LL_CONN_CHMAP_LEN);
-    dptr[21] = connsm->hop_inc | (connsm->master_sca << 5);
+    memcpy(dptr + 16, &connsm->chanmap, BLE_LL_CHAN_MAP_LEN);
+    dptr[21] = connsm->hop_inc | (connsm->central_sca << 5);
 
     *hdr_byte = pdu_data->hdr_byte;
 
     return 34;
-}
-
-/**
- * Send a connection requestion to an advertiser
- *
- * Context: Interrupt
- *
- * @param addr_type Address type of advertiser
- * @param adva Address of advertiser
- */
-int
-ble_ll_conn_connect_ind_send(struct ble_ll_conn_sm *connsm, uint8_t end_trans)
-{
-    int rc;
-
-    if (end_trans == BLE_PHY_TRANSITION_NONE) {
-        ble_phy_set_txend_cb(ble_ll_conn_connect_ind_txend_to_standby, NULL);
-    } else {
-        ble_phy_set_txend_cb(ble_ll_conn_connect_ind_txend_to_init, NULL);
-    }
-
-    rc = ble_phy_tx(ble_ll_conn_connect_ind_tx_pducb, connsm, end_trans);
-
-    return rc;
 }
 
 /**
@@ -2966,581 +3043,140 @@ ble_ll_conn_event_halt(void)
     }
 }
 
-/**
- * Process a received PDU while in the initiating state.
- *
- * Context: Link Layer task.
- *
- * @param pdu_type
- * @param rxbuf
- * @param ble_hdr
- */
-void
-ble_ll_init_rx_pkt_in(uint8_t pdu_type, uint8_t *rxbuf,
-                      struct ble_mbuf_hdr *ble_hdr)
-{
-    uint8_t addr_type;
-    uint8_t *addr;
-    uint8_t *adv_addr;
-    uint8_t *inita;
-    uint8_t inita_type;
-    struct ble_ll_conn_sm *connsm;
-    int ext_adv_mode = -1;
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    struct ble_ll_aux_data *aux_data = NULL;
-
-     if (ble_hdr->rxinfo.user_data) {
-         /* aux_data just a local helper, no need to ref
-          * as ble_hdr->rxinfo.user_data is unref in the end of this function
-          */
-         aux_data = ble_hdr->rxinfo.user_data;
-     }
-#endif
-
-    /* Get the connection state machine we are trying to create */
-    connsm = g_ble_ll_conn_create_sm;
-    if (!connsm) {
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-        if (aux_data) {
-            ble_ll_scan_aux_data_unref(ble_hdr->rxinfo.user_data);
-            ble_hdr->rxinfo.user_data = NULL;
-        }
-#endif
-        return;
-    }
-
-    if (!BLE_MBUF_HDR_CRC_OK(ble_hdr)) {
-        goto scan_continue;
-    }
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    if (BLE_MBUF_HDR_AUX_INVALID(ble_hdr)) {
-        goto scan_continue;
-    }
-
-    if (pdu_type == BLE_ADV_PDU_TYPE_ADV_EXT_IND) {
-        if (BLE_MBUF_HDR_WAIT_AUX(ble_hdr)) {
-            /* Just continue scanning. We are waiting for AUX */
-            if (!ble_ll_sched_aux_scan(ble_hdr, connsm->scansm, aux_data)) {
-                /* ref for aux ptr in the scheduler */
-                ble_ll_scan_aux_data_unref(ble_hdr->rxinfo.user_data);
-                ble_hdr->rxinfo.user_data = NULL;
-                ble_ll_scan_chk_resume();
-                return;
-            }
-            goto scan_continue;
-        }
-    }
-
-    if (CONN_F_AUX_CONN_REQ(connsm)) {
-        if (pdu_type != BLE_ADV_PDU_TYPE_AUX_CONNECT_RSP) {
-            /* Wait for connection response, in this point of time aux is NULL */
-            BLE_LL_ASSERT(ble_hdr->rxinfo.user_data == NULL);
-            return;
-        }
-    }
-#endif
-
-    /* If we have sent a connect request, we need to enter CONNECTION state */
-    if (connsm && CONN_F_CONN_REQ_TXD(connsm)) {
-        /* Set address of advertiser to which we are connecting. */
-
-        if (ble_ll_scan_adv_decode_addr(pdu_type, rxbuf, ble_hdr,
-                                        &adv_addr, &addr_type,
-                                        &inita, &inita_type, &ext_adv_mode)) {
-            /* Something got wrong, keep trying to connect */
-            goto scan_continue;
-        }
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-        /*
-         * Did we resolve this address? If so, set correct peer address
-         * and peer address type.
-         */
-        if (connsm->rpa_index >= 0) {
-            addr_type = g_ble_ll_resolv_list[connsm->rpa_index].rl_addr_type + 2;
-            addr = g_ble_ll_resolv_list[connsm->rpa_index].rl_identity_addr;
-        } else {
-            addr = adv_addr;
-        }
-#else
-        addr = adv_addr;
-#endif
-
-        if (connsm->rpa_index >= 0) {
-            connsm->peer_addr_type = addr_type;
-            memcpy(connsm->peer_addr, addr, BLE_DEV_ADDR_LEN);
-
-            ble_ll_scan_set_peer_rpa(adv_addr);
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-            /* Update resolving list with current peer RPA */
-            ble_ll_resolv_set_peer_rpa(connsm->rpa_index, rxbuf + BLE_LL_PDU_HDR_LEN);
-            if (ble_ll_is_rpa(inita, inita_type)) {
-                ble_ll_resolv_set_local_rpa(connsm->rpa_index, inita);
-            }
-
-#endif
-        } else if (ble_ll_scan_whitelist_enabled()) {
-            /* if WL is used we need to store peer addr also if it was not
-             * resolved
-             */
-            connsm->peer_addr_type = addr_type;
-            memcpy(connsm->peer_addr, addr, BLE_DEV_ADDR_LEN);
-        }
-
-        /* Connection has been created. Stop scanning */
-        g_ble_ll_conn_create_sm = NULL;
-        ble_ll_scan_sm_stop(0);
-
-        /* For AUX Connect CSA2 is mandatory. Otherwise we need to check bit
-         * mask
-         */
-        if (ble_hdr->rxinfo.channel < BLE_PHY_NUM_DATA_CHANS) {
-            ble_ll_conn_set_csa(connsm, 1);
-        } else {
-            ble_ll_conn_set_csa(connsm, rxbuf[0] & BLE_ADV_PDU_HDR_CHSEL_MASK);
-        }
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
-        /* Lets take last used phy */
-        ble_ll_conn_init_phy(connsm, ble_hdr->rxinfo.phy);
-#endif
-        if (aux_data) {
-            ble_ll_scan_aux_data_unref(ble_hdr->rxinfo.user_data);
-            ble_hdr->rxinfo.user_data = NULL;
-        }
-#endif
-        ble_ll_conn_created(connsm, NULL);
-        return;
-    }
-
-scan_continue:
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    /* Drop last reference and keep continue to connect */
-    if (aux_data) {
-        ble_ll_scan_aux_data_unref(ble_hdr->rxinfo.user_data);
-        ble_hdr->rxinfo.user_data = NULL;
-    }
-#endif
-    ble_ll_scan_chk_resume();
-}
-
-/**
- * Called when a receive PDU has started and we are in the initiating state.
- *
- * Context: Interrupt
- *
- * @param pdu_type
- * @param ble_hdr
- *
- * @return int
- *  0: we will not attempt to reply to this frame
- *  1: we may send a response to this frame.
- */
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
 int
-ble_ll_init_rx_isr_start(uint8_t pdu_type, struct ble_mbuf_hdr *ble_hdr)
+ble_ll_conn_send_connect_req(struct os_mbuf *rxpdu,
+                             struct ble_ll_scan_addr_data *addrd,
+                             uint8_t ext)
 {
     struct ble_ll_conn_sm *connsm;
+    struct ble_mbuf_hdr *rxhdr;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+    uint8_t phy;
+#endif
+    int rc;
 
-    connsm = g_ble_ll_conn_create_sm;
-    if (!connsm) {
-        return 0;
-    }
-
-    if ((pdu_type == BLE_ADV_PDU_TYPE_ADV_IND) ||
-        (pdu_type == BLE_ADV_PDU_TYPE_ADV_DIRECT_IND ||
-         pdu_type == BLE_ADV_PDU_TYPE_AUX_CONNECT_RSP)) {
-        return 1;
-    }
+    connsm = g_ble_ll_conn_create_sm.connsm;
+    rxhdr = BLE_MBUF_HDR_PTR(rxpdu);
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    if (pdu_type == BLE_ADV_PDU_TYPE_ADV_EXT_IND &&
-                                                connsm->scansm->ext_scanning) {
-        if (connsm->scansm->cur_aux_data) {
-            STATS_INC(ble_ll_stats, aux_received);
-        }
+    if (ext) {
+#if BLE_LL_BT5_PHY_SUPPORTED
+        phy = rxhdr->rxinfo.phy;
+#else
+        phy = BLE_PHY_1M;
+#endif
+        ble_ll_conn_create_set_params(connsm, phy);
+    }
+#endif
 
-        ble_hdr->rxinfo.flags |= BLE_MBUF_HDR_F_EXT_ADV;
-        return 1;
+    if (ble_ll_sched_conn_central_new(connsm, rxhdr, 0)) {
+        return -1;
+    }
+
+    ble_ll_conn_prepare_connect_ind(connsm, ble_ll_scan_get_pdu_data(), addrd,
+                                    rxhdr->rxinfo.channel);
+
+    ble_phy_set_txend_cb(NULL, NULL);
+    rc = ble_phy_tx(ble_ll_conn_tx_connect_ind_pducb, connsm,
+                    ext ? BLE_PHY_TRANSITION_TX_RX : BLE_PHY_TRANSITION_NONE);
+    if (rc) {
+        ble_ll_conn_send_connect_req_cancel();
+        return -1;
+    }
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV) && BLE_LL_BT5_PHY_SUPPORTED
+    if (ext) {
+        ble_ll_conn_init_phy(connsm, phy);
     }
 #endif
 
     return 0;
 }
 
-/**
- * Called when a receive PDU has ended and we are in the initiating state.
- *
- * Context: Interrupt
- *
- * @param rxpdu
- * @param crcok
- * @param ble_hdr
- *
- * @return int
- *       < 0: Disable the phy after reception.
- *      == 0: Success. Do not disable the PHY.
- *       > 0: Do not disable PHY as that has already been done.
- */
-int
-ble_ll_init_rx_isr_end(uint8_t *rxbuf, uint8_t crcok,
-                       struct ble_mbuf_hdr *ble_hdr)
+void
+ble_ll_conn_send_connect_req_cancel(void)
 {
-    int rc;
-    int resolved;
-    int chk_wl;
-    int index;
-    uint8_t pdu_type;
-    uint8_t adv_addr_type;
-    uint8_t peer_addr_type;
-    uint8_t *adv_addr = NULL;
-    uint8_t *peer;
-    uint8_t *init_addr = NULL;
-    uint8_t init_addr_type;
-    uint8_t pyld_len;
-    uint8_t inita_is_rpa;
-    uint8_t conn_req_end_trans;
-    struct os_mbuf *rxpdu;
     struct ble_ll_conn_sm *connsm;
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-    struct ble_ll_resolv_entry *rl;
-#endif
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    struct ble_ll_scan_sm *scansm;
-    uint8_t phy;
-#endif
-    int ext_adv_mode = -1;
 
-    /* Get connection state machine to use if connection to be established */
-    connsm = g_ble_ll_conn_create_sm;
-    /* This could happen if connection init was cancelled while isr end was
-     * already pending
-     */
-    if (!connsm) {
-        ble_ll_state_set(BLE_LL_STATE_STANDBY);
-        return -1;
-    }
+    connsm = g_ble_ll_conn_create_sm.connsm;
 
-    rc = -1;
-    pdu_type = rxbuf[0] & BLE_ADV_PDU_HDR_TYPE_MASK;
-    pyld_len = rxbuf[1];
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    scansm = connsm->scansm;
-    if (scansm->cur_aux_data) {
-        ble_hdr->rxinfo.user_data = scansm->cur_aux_data;
-        scansm->cur_aux_data = NULL;
-    }
-#endif
-
-    if (!crcok) {
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-        /* Invalid packet - make sure we do not wait for AUX_CONNECT_RSP */
-        ble_ll_conn_reset_pending_aux_conn_rsp();
-#endif
-
-        /* Ignore this packet */
-        goto init_rx_isr_exit;
-    }
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    /* If we sent AUX_CONNECT_REQ, we only expect AUX_CONNECT_RSP here */
-    if (CONN_F_AUX_CONN_REQ(connsm)) {
-        if (pdu_type != BLE_ADV_PDU_TYPE_AUX_CONNECT_RSP) {
-            STATS_INC(ble_ll_stats, aux_conn_rsp_err);
-            CONN_F_CONN_REQ_TXD(connsm) = 0;
-            CONN_F_AUX_CONN_REQ(connsm) = 0;
-            ble_ll_sched_rmv_elem(&connsm->conn_sch);
-        }
-        goto init_rx_isr_exit;
-    }
-#endif
-
-    inita_is_rpa = 0;
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    if (pdu_type == BLE_ADV_PDU_TYPE_ADV_EXT_IND) {
-        if (!scansm->ext_scanning) {
-            goto init_rx_isr_exit;
-        }
-
-        rc = ble_ll_scan_update_aux_data(ble_hdr, rxbuf, NULL);
-        if (rc < 0) {
-            /* No memory or broken packet */
-            ble_hdr->rxinfo.flags |= BLE_MBUF_HDR_F_AUX_INVALID;
-            goto init_rx_isr_exit;
-        }
-    }
-#endif
-
-    /* Lets get addresses from advertising report*/
-    if (ble_ll_scan_adv_decode_addr(pdu_type, rxbuf, ble_hdr,
-                                    &adv_addr, &adv_addr_type,
-                                    &init_addr, &init_addr_type,
-                                    &ext_adv_mode)) {
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-        ble_hdr->rxinfo.flags |= BLE_MBUF_HDR_F_AUX_INVALID;
-#endif
-        goto init_rx_isr_exit;
-    }
-
-    switch (pdu_type) {
-    case BLE_ADV_PDU_TYPE_ADV_IND:
-        break;
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    case BLE_ADV_PDU_TYPE_ADV_EXT_IND:
-        rc = -1;
-
-        /* If this is not connectable adv mode, lets skip it */
-        if (!(ext_adv_mode & BLE_LL_EXT_ADV_MODE_CONN)) {
-            goto init_rx_isr_exit;
-        }
-
-        if (!adv_addr) {
-            ble_hdr->rxinfo.flags |= BLE_MBUF_HDR_F_AUX_PTR_WAIT;
-            goto init_rx_isr_exit;
-        }
-
-        if (!init_addr) {
-            break;
-        }
-        /* if there is direct address lets fall down and check it.*/
-        // no break
-#endif
-    case BLE_ADV_PDU_TYPE_ADV_DIRECT_IND:
-        inita_is_rpa = (uint8_t)ble_ll_is_rpa(init_addr, init_addr_type);
-        if (!inita_is_rpa) {
-
-            /* Resolving will be done later. Check if identity InitA matches */
-            if (!ble_ll_is_our_devaddr(init_addr, init_addr_type)) {
-                goto init_rx_isr_exit;
-            }
-        }
-#if !MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-        else {
-            /* If privacy is off - reject RPA InitA*/
-            goto init_rx_isr_exit;
-        }
-#endif
-
-        break;
-    default:
-        goto init_rx_isr_exit;
-    }
-
-    /* Should we send a connect request? */
-    index = -1;
-    peer = adv_addr;
-    peer_addr_type = adv_addr_type;
-
-    resolved = 0;
-    chk_wl = ble_ll_scan_whitelist_enabled();
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-    if (ble_ll_is_rpa(adv_addr, adv_addr_type) && ble_ll_resolv_enabled()) {
-        index = ble_hw_resolv_list_match();
-        if (index >= 0) {
-            rl = &g_ble_ll_resolv_list[index];
-
-            ble_hdr->rxinfo.flags |= BLE_MBUF_HDR_F_RESOLVED;
-            connsm->rpa_index = index;
-            peer = rl->rl_identity_addr;
-            peer_addr_type = rl->rl_addr_type;
-            resolved = 1;
-
-            /* Assure privacy */
-            if ((rl->rl_priv_mode == BLE_HCI_PRIVACY_NETWORK) && init_addr &&
-                !inita_is_rpa && rl->rl_has_local) {
-                goto init_rx_isr_exit;
-            }
-
-            /*
-             * If the InitA is a RPA, we must see if it resolves based on the
-             * identity address of the resolved ADVA.
-             */
-            if (init_addr && inita_is_rpa) {
-                if (!ble_ll_resolv_rpa(init_addr,
-                                       g_ble_ll_resolv_list[index].rl_local_irk)) {
-                    goto init_rx_isr_exit;
-                }
-
-                /* Core Specification Vol 6, Part B, Section 6.4:
-                 * "The Link Layer should not set the InitA field to the same
-                 * value as the TargetA field in the received advertising PDU."
-                 *
-                 * We update the received PDU directly here, so ble_ll_init_rx_pkt_in
-                 * can process it as is.
-                 */
-                memcpy(init_addr, rl->rl_local_rpa, BLE_DEV_ADDR_LEN);
-            }
-
-        } else {
-            if (chk_wl) {
-                goto init_rx_isr_exit;
-            }
-
-            /* Could not resolved InitA */
-            if (init_addr && inita_is_rpa) {
-                goto init_rx_isr_exit;
-            }
-        }
-    } else if (init_addr) {
-
-        /* If resolving is off and InitA is RPA we reject advertising */
-        if (inita_is_rpa && !ble_ll_resolv_enabled()) {
-            goto init_rx_isr_exit;
-        }
-
-        /* Let's see if we have IRK with that peer.*/
-        rl = ble_ll_resolv_list_find(adv_addr, adv_addr_type);
-
-        /* Lets make sure privacy mode is correct together with InitA in case it
-         * is identity address
-         */
-        if (rl && !inita_is_rpa &&
-           (rl->rl_priv_mode == BLE_HCI_PRIVACY_NETWORK) &&
-           rl->rl_has_local) {
-            goto init_rx_isr_exit;
-        }
-
-        /*
-         * If the InitA is a RPA, we must see if it resolves based on the
-         * identity address of the resolved ADVA.
-         */
-        if (inita_is_rpa) {
-            if (!rl || !ble_ll_resolv_rpa(init_addr, rl->rl_local_irk)) {
-                goto init_rx_isr_exit;
-            }
-
-            /* Core Specification Vol 6, Part B, Section 6.4:
-             * "The Link Layer should not set the InitA field to the same
-             * value as the TargetA field in the received advertising PDU."
-             *
-             * We update the received PDU directly here, so ble_ll_init_rx_pkt_in
-             * can process it as is.
-             */
-            memcpy(init_addr, rl->rl_local_rpa, BLE_DEV_ADDR_LEN);
-        }
-    } else if (!ble_ll_is_rpa(adv_addr, adv_addr_type)) {
-        /* undirected with ID address, assure privacy if on RL */
-        rl = ble_ll_resolv_list_find(adv_addr, adv_addr_type);
-        if (rl && (rl->rl_priv_mode == BLE_HCI_PRIVACY_NETWORK) &&
-            rl->rl_has_peer) {
-            goto init_rx_isr_exit;
-        }
-    }
-#endif
-
-    /* Check filter policy */
-    if (chk_wl) {
-        if (!ble_ll_whitelist_match(peer, peer_addr_type, resolved)) {
-            goto init_rx_isr_exit;
-        }
-    } else {
-        /* Must match the connection address */
-        if (!ble_ll_conn_is_peer_adv(adv_addr_type, adv_addr, index)) {
-            goto init_rx_isr_exit;
-        }
-    }
-    ble_hdr->rxinfo.flags |= BLE_MBUF_HDR_F_DEVMATCH;
-
-    /* For CONNECT_IND we don't go into RX state */
-    conn_req_end_trans = BLE_PHY_TRANSITION_NONE;
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    /* Check if we should send AUX_CONNECT_REQ and wait for AUX_CONNECT_RSP */
-    if (ble_hdr->rxinfo.channel < BLE_PHY_NUM_DATA_CHANS) {
-        conn_req_end_trans = BLE_PHY_TRANSITION_TX_RX;
-    }
-
-    if (connsm->scansm->ext_scanning) {
-            phy = ble_hdr->rxinfo.phy;
-
-            /* Update connection state machine with appropriate parameters for
-             * certain PHY
-             */
-            ble_ll_conn_ext_set_params(connsm,
-                                       &connsm->initial_params.params[phy - 1],
-                                       phy);
-
-    }
-#endif
-
-    /* Schedule new connection */
-    if (ble_ll_sched_master_new(connsm, ble_hdr, pyld_len)) {
-        STATS_INC(ble_ll_conn_stats, cant_set_sched);
-        goto init_rx_isr_exit;
-    }
-
-    /* Prepare data for connect request */
-    ble_ll_conn_connect_ind_prepare(connsm,
-                                    ble_ll_scan_get_pdu_data(),
-                                    adv_addr_type, adv_addr,
-                                    init_addr_type, init_addr,
-                                    index, ble_hdr->rxinfo.channel);
-
-    /* Setup to transmit the connect request */
-    rc = ble_ll_conn_connect_ind_send(connsm, conn_req_end_trans);
-    if (rc) {
-        ble_ll_sched_rmv_elem(&connsm->conn_sch);
-        goto init_rx_isr_exit;
-    }
-
-    if (init_addr && !inita_is_rpa) {
-        connsm->inita_identity_used = 1;
-    }
-
-    CONN_F_CONN_REQ_TXD(connsm) = 1;
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-    if (ble_hdr->rxinfo.channel < BLE_PHY_NUM_DATA_CHANS) {
-        /* Lets wait for AUX_CONNECT_RSP */
-        CONN_F_AUX_CONN_REQ(connsm) = 1;
-        /* Keep aux data until we get scan response */
-        scansm->cur_aux_data = ble_hdr->rxinfo.user_data;
-        ble_hdr->rxinfo.user_data = NULL;
-        STATS_INC(ble_ll_stats, aux_conn_req_tx);
-    }
-#endif
-
-    STATS_INC(ble_ll_conn_stats, conn_req_txd);
-
-init_rx_isr_exit:
-
-    /*
-     * We have to restart receive if we cant hand up pdu. We return 0 so that
-     * the phy does not get disabled.
-     */
-    rxpdu = ble_ll_rxpdu_alloc(pyld_len + BLE_LL_PDU_HDR_LEN);
-    if (rxpdu == NULL) {
-        /*
-         * XXX: possible allocate the PDU when we start initiating?
-         * I cannot say I like this solution, but if we cannot allocate a PDU
-         * to hand up to the LL, we need to remove the connection we just
-         * scheduled since the connection state machine will not get processed
-         * by link layer properly. For now, just remove it from the scheduler
-         */
-        if (CONN_F_CONN_REQ_TXD(connsm) == 1) {
-            CONN_F_CONN_REQ_TXD(connsm) = 0;
-            CONN_F_AUX_CONN_REQ(connsm) = 0;
-            ble_ll_sched_rmv_elem(&connsm->conn_sch);
-        }
-        ble_phy_restart_rx();
-        rc = 0;
-    } else {
-        ble_phy_rxpdu_copy(rxbuf, rxpdu);
-        ble_ll_rx_pdu_in(rxpdu);
-    }
-
-    if (rc) {
-        ble_ll_state_set(BLE_LL_STATE_STANDBY);
-    }
-
-    return rc;
+    ble_ll_sched_rmv_elem(&connsm->conn_sch);
 }
+
+static void
+ble_ll_conn_central_start(uint8_t phy, uint8_t csa,
+                          struct ble_ll_scan_addr_data *addrd, uint8_t *targeta)
+{
+    struct ble_ll_conn_sm *connsm;
+
+    connsm = g_ble_ll_conn_create_sm.connsm;
+    g_ble_ll_conn_create_sm.connsm = NULL;
+
+    connsm->peer_addr_type = addrd->adv_addr_type;
+    memcpy(connsm->peer_addr, addrd->adv_addr, 6);
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
+    if (addrd->adva_resolved) {
+        BLE_LL_ASSERT(addrd->rpa_index >= 0);
+        connsm->peer_addr_resolved = 1;
+        ble_ll_resolv_set_peer_rpa(addrd->rpa_index, addrd->adva);
+        ble_ll_scan_set_peer_rpa(addrd->adva);
+    } else {
+        connsm->peer_addr_resolved = 0;
+    }
+
+    if (addrd->targeta_resolved) {
+        BLE_LL_ASSERT(addrd->rpa_index >= 0);
+        BLE_LL_ASSERT(targeta);
+    }
+#endif
+
+    ble_ll_conn_set_csa(connsm, csa);
+#if BLE_LL_BT5_PHY_SUPPORTED
+    ble_ll_conn_init_phy(connsm, phy);
+#endif
+    ble_ll_conn_created(connsm, NULL);
+}
+
+void
+ble_ll_conn_created_on_legacy(struct os_mbuf *rxpdu,
+                              struct ble_ll_scan_addr_data *addrd,
+                              uint8_t *targeta)
+{
+    uint8_t *rxbuf;
+    uint8_t csa;
+
+    rxbuf = rxpdu->om_data;
+    csa = rxbuf[0] & BLE_ADV_PDU_HDR_CHSEL_MASK;
+
+    ble_ll_conn_central_start(BLE_PHY_1M, csa, addrd, targeta);
+}
+#endif
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+void
+ble_ll_conn_created_on_aux(struct os_mbuf *rxpdu,
+                           struct ble_ll_scan_addr_data *addrd,
+                           uint8_t *targeta)
+{
+#if BLE_LL_BT5_PHY_SUPPORTED
+    struct ble_mbuf_hdr *rxhdr;
+#endif
+    uint8_t phy;
+
+#if BLE_LL_BT5_PHY_SUPPORTED
+    rxhdr = BLE_MBUF_HDR_PTR(rxpdu);
+    phy = rxhdr->rxinfo.phy;
+#else
+    phy = BLE_PHY_1M;
+#endif
+
+    ble_ll_conn_central_start(phy, 1, addrd, targeta);
+}
+#endif
+#endif /* BLE_LL_CFG_FEAT_LL_EXT_ADV */
 
 /**
  * Function called when a timeout has occurred for a connection. There are
@@ -3615,8 +3251,8 @@ ble_ll_conn_rx_isr_start(struct ble_mbuf_hdr *rxhdr, uint32_t aa)
         connsm->conn_state = BLE_LL_CONN_STATE_ESTABLISHED;
 
         /* Set anchor point (and last) if 1st rxd frame in connection event */
-        if (connsm->csmflags.cfbit.slave_set_last_anchor) {
-            connsm->csmflags.cfbit.slave_set_last_anchor = 0;
+        if (connsm->csmflags.cfbit.periph_set_last_anchor) {
+            connsm->csmflags.cfbit.periph_set_last_anchor = 0;
             connsm->last_anchor_point = rxhdr->beg_cputime;
             connsm->anchor_point = connsm->last_anchor_point;
             connsm->anchor_point_usecs = rxhdr->rem_usecs;
@@ -3650,7 +3286,7 @@ ble_ll_conn_rx_data_pdu(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr)
     /* XXX: there is a chance that the connection was thrown away and
        re-used before processing packets here. Fix this. */
     /* We better have a connection state machine */
-    connsm = ble_ll_conn_find_active_conn(hdr->rxinfo.handle);
+    connsm = ble_ll_conn_find_by_handle(hdr->rxinfo.handle);
     if (!connsm) {
        STATS_INC(ble_ll_conn_stats, no_conn_sm);
        goto conn_rx_data_pdu_end;
@@ -3664,6 +3300,19 @@ ble_ll_conn_rx_data_pdu(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr)
     hdr_byte = rxbuf[0];
     acl_len = rxbuf[1];
     llid = hdr_byte & BLE_LL_DATA_HDR_LLID_MASK;
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    connsm->last_pdu_event = connsm->event_cntr;
+#endif
+
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
+    if (BLE_MBUF_HDR_MIC_FAILURE(hdr)) {
+        STATS_INC(ble_ll_conn_stats, mic_failures);
+        ble_ll_conn_timeout(connsm, BLE_ERR_CONN_TERM_MIC);
+        goto conn_rx_data_pdu_end;
+    }
+#endif
 
     /*
      * Check that the LLID and payload length are reasonable.
@@ -3681,9 +3330,9 @@ ble_ll_conn_rx_data_pdu(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr)
      * Reference: Core 5.0, Vol 6, Part B, 5.1.3.1
      */
     if ((connsm->enc_data.enc_state > CONN_ENC_S_PAUSE_ENC_RSP_WAIT &&
-         CONN_IS_MASTER(connsm)) ||
+         CONN_IS_CENTRAL(connsm)) ||
         (connsm->enc_data.enc_state >= CONN_ENC_S_ENC_RSP_TO_BE_SENT &&
-         CONN_IS_SLAVE(connsm))) {
+         CONN_IS_PERIPHERAL(connsm))) {
         if (!ble_ll_ctrl_enc_allowed_pdu_rx(rxpdu)) {
             ble_ll_conn_timeout(connsm, BLE_ERR_CONN_TERM_MIC);
             goto conn_rx_data_pdu_end;
@@ -3707,14 +3356,16 @@ ble_ll_conn_rx_data_pdu(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr)
     connsm->conn_rssi = hdr->rxinfo.rssi;
 
     /*
-     * If we are a slave, we can only start to use slave latency
-     * once we have received a NESN of 1 from the master
+     * If we are a peripheral, we can only start to use peripheral latency
+     * once we have received a NESN of 1 from the central
      */
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
         if (hdr_byte & BLE_LL_DATA_HDR_NESN_MASK) {
-            connsm->csmflags.cfbit.allow_slave_latency = 1;
+            connsm->csmflags.cfbit.allow_periph_latency = 1;
         }
     }
+#endif
 
     /*
      * Discard the received PDU if the sequence number is the same
@@ -3733,18 +3384,6 @@ ble_ll_conn_rx_data_pdu(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr)
     if ((llid == BLE_LL_LLID_DATA_FRAG) && (acl_len == 0)) {
         goto conn_rx_data_pdu_end;
     }
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
-    /*
-     * XXX: should we check to see if we are in a state where we
-     * might expect to get an encrypted PDU?
-     */
-    if (BLE_MBUF_HDR_MIC_FAILURE(hdr)) {
-        STATS_INC(ble_ll_conn_stats, mic_failures);
-        ble_ll_conn_timeout(connsm, BLE_ERR_CONN_TERM_MIC);
-        goto conn_rx_data_pdu_end;
-    }
-#endif
 
     if (llid == BLE_LL_LLID_CTRL) {
         /* Process control frame */
@@ -3765,7 +3404,7 @@ ble_ll_conn_rx_data_pdu(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr)
         acl_hdr = (llid << 12) | connsm->conn_handle;
         put_le16(rxbuf, acl_hdr);
         put_le16(rxbuf + 2, acl_len);
-        ble_hci_trans_ll_acl_tx(rxpdu);
+        ble_transport_to_hs_acl(rxpdu);
     }
 
     /* NOTE: we dont free the mbuf since we handed it off! */
@@ -3773,6 +3412,12 @@ ble_ll_conn_rx_data_pdu(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr)
 
     /* Free buffer */
 conn_rx_data_pdu_end:
+#if MYNEWT_VAL(BLE_TRANSPORT_INT_FLOW_CTL)
+    if (hdr->rxinfo.flags & BLE_MBUF_HDR_F_CONN_CREDIT_INT) {
+        ble_transport_int_flow_ctl_put();
+    }
+#endif
+
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_CTRL_TO_HOST_FLOW_CONTROL)
     /* Need to give credit back if we allocated one for this PDU */
     if (hdr->rxinfo.flags & BLE_MBUF_HDR_F_CONN_CREDIT) {
@@ -3806,7 +3451,7 @@ ble_ll_conn_rx_isr_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr)
     uint8_t conn_sn;
     uint8_t conn_nesn;
     uint8_t reply;
-    uint8_t rem_bytes;
+    uint16_t rem_bytes;
     uint8_t opcode = 0;
     uint8_t rx_pyld_len;
     uint32_t begtime;
@@ -3833,6 +3478,19 @@ ble_ll_conn_rx_isr_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr)
         alloc_rxpdu = false;
     }
 
+#if MYNEWT_VAL(BLE_TRANSPORT_INT_FLOW_CTL)
+    /* Do not alloc PDU if there are no free buffers in transport. We'll nak
+     * this PDU in LL.
+     */
+    if (alloc_rxpdu && BLE_LL_LLID_IS_DATA(hdr_byte) && (rx_pyld_len > 0)) {
+        if (ble_transport_int_flow_ctl_get()) {
+            rxhdr->rxinfo.flags |= BLE_MBUF_HDR_F_CONN_CREDIT_INT;
+        } else {
+            alloc_rxpdu = false;
+        }
+    }
+#endif
+
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_CTRL_TO_HOST_FLOW_CONTROL)
     /*
      * If flow control is enabled, we need to have credit available for each
@@ -3845,6 +3503,9 @@ ble_ll_conn_rx_isr_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr)
         if (ble_ll_conn_cth_flow_alloc_credit(connsm)) {
             rxhdr->rxinfo.flags |= BLE_MBUF_HDR_F_CONN_CREDIT;
         } else {
+#if MYNEWT_VAL(BLE_TRANSPORT_INT_FLOW_CTL)
+            ble_transport_int_flow_ctl_put();
+#endif
             alloc_rxpdu = false;
         }
     }
@@ -3887,7 +3548,7 @@ ble_ll_conn_rx_isr_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr)
     /*
      * Check the packet CRC. A connection event can continue even if the
      * received PDU does not pass the CRC check. If we receive two consecutive
-     * CRC errors we end the conection event.
+     * CRC errors we end the connection event.
      */
     if (!BLE_MBUF_HDR_CRC_OK(rxhdr)) {
         /*
@@ -3898,11 +3559,21 @@ ble_ll_conn_rx_isr_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr)
         if (connsm->cons_rxd_bad_crc >= 2) {
             reply = 0;
         } else {
-            if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+            switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+            case BLE_LL_CONN_ROLE_CENTRAL:
                 reply = CONN_F_LAST_TXD_MD(connsm);
-            } else {
-                /* A slave always responds with a packet */
+                break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+            case BLE_LL_CONN_ROLE_PERIPHERAL:
+                /* A peripheral always responds with a packet */
                 reply = 1;
+                break;
+#endif
+            default:
+                BLE_LL_ASSERT(0);
+                break;
             }
         }
     } else {
@@ -3910,18 +3581,7 @@ ble_ll_conn_rx_isr_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr)
         connsm->cons_rxd_bad_crc = 0;
 
         /* Set last valid received pdu time (resets supervision timer) */
-        connsm->last_rxd_pdu_cputime = begtime +
-                                        os_cputime_usecs_to_ticks(add_usecs);
-
-        /*
-         * Check for valid LLID before proceeding. We have seen some weird
-         * things with the PHY where the CRC is OK but we dont have a valid
-         * LLID. This should really never happen but if it does we will just
-         * bail. An error stat will get incremented at the LL.
-         */
-        if ((hdr_byte & BLE_LL_DATA_HDR_LLID_MASK) == 0) {
-            goto conn_exit;
-        }
+        connsm->last_rxd_pdu_cputime = begtime + ble_ll_tmr_u2t(add_usecs);
 
         /* Set last received header byte */
         connsm->last_rxd_hdr_byte = hdr_byte;
@@ -4016,7 +3676,7 @@ ble_ll_conn_rx_isr_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr)
 
 #if (BLE_LL_BT5_PHY_SUPPORTED == 1)
                         if (BLE_LL_LLID_IS_CTRL(hdr_byte) &&
-                            (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) &&
+                            CONN_IS_PERIPHERAL(connsm) &&
                             (opcode == BLE_LL_CTRL_PHY_UPDATE_IND)) {
                             connsm->phy_tx_transition =
                                     ble_ll_ctrl_phy_tx_transition_get(rxbuf[3]);
@@ -4041,11 +3701,21 @@ chk_rx_terminate_ind:
             connsm->rxd_disconnect_reason = rxbuf[3];
         }
 
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+        switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+        case BLE_LL_CONN_ROLE_CENTRAL:
             reply = CONN_F_LAST_TXD_MD(connsm) || (hdr_byte & BLE_LL_DATA_HDR_MD_MASK);
-        } else {
-            /* A slave always replies */
+            break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+        case BLE_LL_CONN_ROLE_PERIPHERAL:
+            /* A peripheral always replies */
             reply = 1;
+            break;
+#endif
+        default:
+            BLE_LL_ASSERT(0);
+            break;
         }
     }
 
@@ -4089,7 +3759,7 @@ conn_exit:
  */
 void
 ble_ll_conn_enqueue_pkt(struct ble_ll_conn_sm *connsm, struct os_mbuf *om,
-                        uint8_t hdr_byte, uint8_t length)
+                        uint8_t hdr_byte, uint16_t length)
 {
     os_sr_t sr;
     struct os_mbuf_pkthdr *pkthdr;
@@ -4133,9 +3803,11 @@ ble_ll_conn_enqueue_pkt(struct ble_ll_conn_sm *connsm, struct os_mbuf *om,
                 lifo = 1;
                 break;
             case BLE_LL_CTRL_PAUSE_ENC_RSP:
-                if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+                if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
                     lifo = 1;
                 }
+#endif
                 break;
             case BLE_LL_CTRL_ENC_REQ:
             case BLE_LL_CTRL_ENC_RSP:
@@ -4185,7 +3857,7 @@ ble_ll_conn_tx_pkt_in(struct os_mbuf *om, uint16_t handle, uint16_t length)
 
     /* See if we have an active matching connection handle */
     conn_handle = handle & 0x0FFF;
-    connsm = ble_ll_conn_find_active_conn(conn_handle);
+    connsm = ble_ll_conn_find_by_handle(conn_handle);
     if (connsm) {
         /* Construct LL header in buffer (NOTE: pb already checked) */
         pb = handle & 0x3000;
@@ -4206,7 +3878,7 @@ ble_ll_conn_tx_pkt_in(struct os_mbuf *om, uint16_t handle, uint16_t length)
         os_mbuf_free_chain(om);
     }
 }
-
+#endif
 /**
  * Called to set the global channel mask that we use for all connections.
  *
@@ -4216,31 +3888,34 @@ ble_ll_conn_tx_pkt_in(struct os_mbuf *om, uint16_t handle, uint16_t length)
 void
 ble_ll_conn_set_global_chanmap(uint8_t num_used_chans, const uint8_t *chanmap)
 {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     struct ble_ll_conn_sm *connsm;
-    struct ble_ll_conn_global_params *conn_params;
+#endif
 
     /* Do nothing if same channel map */
-    conn_params = &g_ble_ll_conn_params;
-    if (!memcmp(conn_params->master_chan_map, chanmap, BLE_LL_CONN_CHMAP_LEN)) {
+    if (!memcmp(g_ble_ll_data.chan_map, chanmap, BLE_LL_CHAN_MAP_LEN)) {
         return;
     }
 
     /* Change channel map and cause channel map update procedure to start */
-    conn_params->num_used_chans = num_used_chans;
-    memcpy(conn_params->master_chan_map, chanmap, BLE_LL_CONN_CHMAP_LEN);
+    g_ble_ll_data.chan_map_num_used = num_used_chans;
+    memcpy(g_ble_ll_data.chan_map, chanmap, BLE_LL_CHAN_MAP_LEN);
 
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     /* Perform channel map update */
     SLIST_FOREACH(connsm, &g_ble_ll_conn_active_list, act_sle) {
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
-            ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_CHAN_MAP_UPD);
+        if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+            ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_CHAN_MAP_UPD, NULL);
         }
     }
+#endif
 }
 
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
 /**
  * Called when a device has received a connect request while advertising and
  * the connect request has passed the advertising filter policy and is for
- * us. This will start a connection in the slave role assuming that we dont
+ * us. This will start a connection in the peripheral role assuming that we dont
  * already have a connection with this device and that the connect request
  * parameters are valid.
  *
@@ -4250,9 +3925,10 @@ ble_ll_conn_set_global_chanmap(uint8_t num_used_chans, const uint8_t *chanmap)
  *
  * @return 0: connection not started; 1 connecton started
  */
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
 int
-ble_ll_conn_slave_start(uint8_t *rxbuf, uint8_t pat, struct ble_mbuf_hdr *rxhdr,
-                        bool force_csa2)
+ble_ll_conn_periph_start(uint8_t *rxbuf, uint8_t pat, struct ble_mbuf_hdr *rxhdr,
+                         bool force_csa2)
 {
     int rc;
     uint32_t temp;
@@ -4295,26 +3971,27 @@ ble_ll_conn_slave_start(uint8_t *rxbuf, uint8_t pat, struct ble_mbuf_hdr *rxhdr,
     connsm->tx_win_size = dptr[7];
     connsm->tx_win_off = get_le16(dptr + 8);
     connsm->conn_itvl = get_le16(dptr + 10);
-    connsm->slave_latency = get_le16(dptr + 12);
+    connsm->periph_latency = get_le16(dptr + 12);
     connsm->supervision_tmo = get_le16(dptr + 14);
-    memcpy(&connsm->chanmap, dptr + 16, BLE_LL_CONN_CHMAP_LEN);
+    memcpy(&connsm->chanmap, dptr + 16, BLE_LL_CHAN_MAP_LEN);
     connsm->hop_inc = dptr[21] & 0x1F;
-    connsm->master_sca = dptr[21] >> 5;
+    connsm->central_sca = dptr[21] >> 5;
 
     /* Error check parameters */
     if ((connsm->tx_win_off > connsm->conn_itvl) ||
         (connsm->conn_itvl < BLE_HCI_CONN_ITVL_MIN) ||
         (connsm->conn_itvl > BLE_HCI_CONN_ITVL_MAX) ||
         (connsm->tx_win_size < BLE_LL_CONN_TX_WIN_MIN) ||
-        (connsm->slave_latency > BLE_LL_CONN_SLAVE_LATENCY_MAX)) {
-        goto err_slave_start;
+        (connsm->periph_latency > BLE_LL_CONN_PERIPH_LATENCY_MAX) ||
+        (connsm->hop_inc < 5) || (connsm->hop_inc > 16)) {
+        goto err_periph_start;
     }
 
     /* Slave latency cannot cause a supervision timeout */
-    temp = (connsm->slave_latency + 1) * (connsm->conn_itvl * 2) *
-            BLE_LL_CONN_ITVL_USECS;
+    temp = (connsm->periph_latency + 1) * (connsm->conn_itvl * 2) *
+           BLE_LL_CONN_ITVL_USECS;
     if ((connsm->supervision_tmo * 10000) <= temp ) {
-        goto err_slave_start;
+        goto err_periph_start;
     }
 
     /*
@@ -4326,7 +4003,7 @@ ble_ll_conn_slave_start(uint8_t *rxbuf, uint8_t pat, struct ble_mbuf_hdr *rxhdr,
         temp = 8;
     }
     if (connsm->tx_win_size > temp) {
-        goto err_slave_start;
+        goto err_periph_start;
     }
 
     /* Set the address of device that we are connecting with */
@@ -4336,11 +4013,14 @@ ble_ll_conn_slave_start(uint8_t *rxbuf, uint8_t pat, struct ble_mbuf_hdr *rxhdr,
     /* Calculate number of used channels; make sure it meets min requirement */
     connsm->num_used_chans = ble_ll_utils_calc_num_used_chans(connsm->chanmap);
     if (connsm->num_used_chans < 2) {
-        goto err_slave_start;
+        goto err_periph_start;
     }
 
+    ble_ll_conn_itvl_to_ticks(connsm->conn_itvl, &connsm->conn_itvl_ticks,
+                              &connsm->conn_itvl_usecs);
+
     /* Start the connection state machine */
-    connsm->conn_role = BLE_LL_CONN_ROLE_SLAVE;
+    connsm->conn_role = BLE_LL_CONN_ROLE_PERIPHERAL;
     ble_ll_conn_sm_new(connsm);
 
 #if (BLE_LL_BT5_PHY_SUPPORTED == 1)
@@ -4360,11 +4040,160 @@ ble_ll_conn_slave_start(uint8_t *rxbuf, uint8_t pat, struct ble_mbuf_hdr *rxhdr,
     }
     return rc;
 
-err_slave_start:
+err_periph_start:
     STAILQ_INSERT_TAIL(&g_ble_ll_conn_free_list, connsm, free_stqe);
-    STATS_INC(ble_ll_conn_stats, slave_rxd_bad_conn_req_params);
+    STATS_INC(ble_ll_conn_stats, periph_rxd_bad_conn_req_params);
     return 0;
 }
+#endif
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+int
+ble_ll_conn_subrate_req_hci(struct ble_ll_conn_sm *connsm,
+                            struct ble_ll_conn_subrate_req_params *srp)
+{
+    uint32_t t1, t2;
+
+    if ((srp->subrate_min < 0x0001) || (srp->subrate_min > 0x01f4) ||
+        (srp->subrate_max < 0x0001) || (srp->subrate_max > 0x01f4) ||
+        (srp->max_latency > 0x01f3) || (srp->cont_num > 0x01f3) ||
+        (srp->supervision_tmo < 0x000a) || (srp->supervision_tmo > 0x0c80)) {
+        return -EINVAL;
+    }
+
+    if (srp->subrate_max * (srp->max_latency + 1) > 500) {
+        return -EINVAL;
+    }
+
+    t1 = connsm->conn_itvl * srp->subrate_max * (srp->max_latency + 1) *
+         BLE_LL_CONN_ITVL_USECS;
+    t2 = srp->supervision_tmo * BLE_HCI_CONN_SPVN_TMO_UNITS * 1000 / 2;
+    if (t1 > t2) {
+        return -EINVAL;
+    }
+
+    if (srp->subrate_max < srp->subrate_min) {
+        return -EINVAL;
+    }
+
+    if (srp->cont_num >= srp->subrate_max) {
+        return -EINVAL;
+    }
+
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if ((connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) &&
+        !ble_ll_conn_rem_feature_check(connsm,
+                                       BLE_LL_FEAT_CONN_SUBRATING_HOST)) {
+        return -ENOTSUP;
+    }
+#endif
+
+    if (connsm->cur_ctrl_proc == BLE_LL_CTRL_PROC_CONN_PARAM_REQ) {
+        return -EBUSY;
+    }
+
+    switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CONN_ROLE_CENTRAL:
+        connsm->subrate_trans.subrate_factor = srp->subrate_max;
+        connsm->subrate_trans.subrate_base_event = connsm->event_cntr;
+        connsm->subrate_trans.periph_latency = srp->max_latency;
+        connsm->subrate_trans.cont_num = srp->cont_num;
+        connsm->subrate_trans.supervision_tmo = srp->supervision_tmo;
+        connsm->csmflags.cfbit.subrate_host_req = 1;
+        ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_SUBRATE_UPDATE, NULL);
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    case BLE_LL_CONN_ROLE_PERIPHERAL:
+        connsm->subrate_req = *srp;
+        connsm->csmflags.cfbit.subrate_host_req = 1;
+        ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_SUBRATE_REQ, NULL);
+        break;
+#endif
+    default:
+        BLE_LL_ASSERT(0);
+    }
+
+
+    return 0;
+}
+
+int
+ble_ll_conn_subrate_req_llcp(struct ble_ll_conn_sm *connsm,
+                             struct ble_ll_conn_subrate_req_params *srp)
+{
+    BLE_LL_ASSERT(connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL);
+
+    if ((srp->subrate_min < 0x0001) || (srp->subrate_min > 0x01f4) ||
+        (srp->subrate_max < 0x0001) || (srp->subrate_max > 0x01f4) ||
+        (srp->max_latency > 0x01f3) || (srp->cont_num > 0x01f3) ||
+        (srp->supervision_tmo < 0x000a) || (srp->supervision_tmo > 0x0c80)) {
+        return -EINVAL;
+    }
+
+    if (connsm->cur_ctrl_proc == BLE_LL_CTRL_PROC_CONN_PARAM_REQ) {
+        return -EBUSY;
+    }
+
+    if ((srp->max_latency > connsm->acc_max_latency) ||
+        (srp->supervision_tmo > connsm->acc_supervision_tmo) ||
+        (srp->subrate_max < connsm->acc_subrate_min) ||
+        (srp->subrate_min > connsm->acc_subrate_max) ||
+        ((connsm->conn_itvl * BLE_LL_CONN_ITVL_USECS * srp->subrate_min *
+          (srp->max_latency + 1)) * 2 >= srp->supervision_tmo *
+                                         BLE_HCI_CONN_SPVN_TMO_UNITS * 1000)) {
+        return -EINVAL;
+    }
+
+    connsm->subrate_trans.subrate_factor = min(connsm->acc_subrate_max,
+                                               srp->subrate_max);
+    connsm->subrate_trans.subrate_base_event = connsm->event_cntr;
+    connsm->subrate_trans.periph_latency = min(connsm->acc_max_latency,
+                                               srp->max_latency);
+    connsm->subrate_trans.cont_num = min(max(connsm->acc_cont_num,
+                                             srp->cont_num),
+                                         connsm->subrate_trans.subrate_factor - 1);
+    connsm->subrate_trans.supervision_tmo = min(connsm->supervision_tmo,
+                                                srp->supervision_tmo);
+
+    ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_SUBRATE_UPDATE, NULL);
+
+    return 0;
+}
+
+void
+ble_ll_conn_subrate_set(struct ble_ll_conn_sm *connsm,
+                        struct ble_ll_conn_subrate_params *sp)
+{
+    int16_t event_cntr_diff;
+    int16_t subrate_events_diff;
+    uint8_t send_ev;
+
+    /* Assume parameters were checked by caller */
+
+    send_ev = connsm->csmflags.cfbit.subrate_host_req ||
+              (connsm->subrate_factor != sp->subrate_factor) ||
+              (connsm->periph_latency != sp->periph_latency) ||
+              (connsm->cont_num != sp->cont_num) ||
+              (connsm->supervision_tmo != sp->supervision_tmo);
+
+    connsm->subrate_factor = sp->subrate_factor;
+    connsm->subrate_base_event = sp->subrate_base_event;
+    connsm->periph_latency = sp->periph_latency;
+    connsm->cont_num = sp->cont_num;
+    connsm->supervision_tmo = sp->supervision_tmo;
+
+    /* Let's update subrate base event to "latest" one */
+    event_cntr_diff = connsm->event_cntr - connsm->subrate_base_event;
+    subrate_events_diff = event_cntr_diff / connsm->subrate_factor;
+    connsm->subrate_base_event += connsm->subrate_factor * subrate_events_diff;
+
+    if (send_ev) {
+        ble_ll_hci_ev_subrate_change(connsm, 0);
+    }
+}
+#endif
 
 #define MAX_TIME_UNCODED(_maxbytes) \
         ble_ll_pdu_tx_time_get(_maxbytes + BLE_LL_DATA_MIC_LEN, \
@@ -4395,14 +4224,16 @@ ble_ll_conn_module_reset(void)
         ble_ll_conn_end(connsm, BLE_ERR_SUCCESS);
     }
 
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     /* Free the global connection complete event if there is one */
     if (g_ble_ll_conn_comp_ev) {
-        ble_hci_trans_buf_free(g_ble_ll_conn_comp_ev);
+        ble_transport_free(g_ble_ll_conn_comp_ev);
         g_ble_ll_conn_comp_ev = NULL;
     }
 
     /* Reset connection we are attempting to create */
-    g_ble_ll_conn_create_sm = NULL;
+    g_ble_ll_conn_create_sm.connsm = NULL;
+#endif
 
     /* Now go through and end all the connections */
     while (1) {
@@ -4444,10 +4275,13 @@ ble_ll_conn_module_reset(void)
     conn_params->sugg_tx_octets = BLE_LL_CONN_SUPP_BYTES_MIN;
     conn_params->sugg_tx_time = BLE_LL_CONN_SUPP_TIME_MIN;
 
-    /* Mask in all channels by default */
-    conn_params->num_used_chans = BLE_PHY_NUM_DATA_CHANS;
-    memset(conn_params->master_chan_map, 0xff, BLE_LL_CONN_CHMAP_LEN - 1);
-    conn_params->master_chan_map[4] = 0x1f;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    conn_params->acc_subrate_min = 0x0001;
+    conn_params->acc_subrate_max = 0x0001;
+    conn_params->acc_max_latency = 0x0000;
+    conn_params->acc_cont_num = 0x0000;
+    conn_params->acc_supervision_tmo = 0x0c80;
+#endif
 
     /* Reset statistics */
     STATS_RESET(ble_ll_conn_stats);
@@ -4474,7 +4308,7 @@ ble_ll_conn_module_init(void)
     uint16_t i;
     struct ble_ll_conn_sm *connsm;
 
-    /* Initialize list of active conections */
+    /* Initialize list of active connections */
     SLIST_INIT(&g_ble_ll_conn_active_list);
     STAILQ_INIT(&g_ble_ll_conn_free_list);
 
@@ -4493,6 +4327,9 @@ ble_ll_conn_module_init(void)
         /* Initialize fixed schedule elements */
         connsm->conn_sch.sched_type = BLE_LL_SCHED_TYPE_CONN;
         connsm->conn_sch.cb_arg = connsm;
+
+        ble_ll_ctrl_init_conn_sm(connsm);
+
         ++connsm;
     }
 
@@ -4512,4 +4349,5 @@ ble_ll_conn_module_init(void)
     ble_ll_conn_module_reset();
 }
 
+#endif
 #endif

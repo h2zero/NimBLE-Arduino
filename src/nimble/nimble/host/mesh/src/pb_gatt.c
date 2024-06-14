@@ -6,31 +6,39 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#define MESH_LOG_MODULE BLE_MESH_PROV_LOG
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #if MYNEWT_VAL(BLE_MESH)
+
+#define MESH_LOG_MODULE BLE_MESH_PROV_LOG
 
 #include "../include/mesh/mesh.h"
 #include "prov.h"
 #include "net.h"
 #include "proxy.h"
 #include "adv.h"
-#include "prov.h"
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "pb_gatt_srv.h"
+
+#if MYNEWT_VAL(BLE_MESH_PB_GATT)
+struct prov_bearer_send_cb {
+	prov_bearer_send_complete_t cb;
+	void *cb_data;
+};
 
 struct prov_link {
 	uint16_t conn_handle;
 	const struct prov_bearer_cb *cb;
 	void *cb_data;
+	struct prov_bearer_send_cb comp;
 	struct {
 		uint8_t  id;        /* Transaction ID */
 		uint8_t  prev_id;   /* Previous Transaction ID */
 		uint8_t  seg;       /* Bit-field of unreceived segments */
 		uint8_t  last_seg;  /* Last segment (to check length) */
 		uint8_t  fcs;       /* Expected FCS value */
-		struct os_mbuf *buf;
 	} rx;
-	struct k_delayed_work prot_timer;
+	struct k_work_delayable prot_timer;
 };
 
 static struct prov_link link;
@@ -39,9 +47,8 @@ static void reset_state(void)
 {
 	link.conn_handle = BLE_HS_CONN_HANDLE_NONE;
 
-	k_delayed_work_cancel(&link.prot_timer);
-
-	link.rx.buf = bt_mesh_proxy_get_buf();
+	/* If this fails, the protocol timeout handler will exit early. */
+	(void)k_work_cancel_delayable(&link.prot_timer);
 }
 
 static void link_closed(enum prov_bearer_link_status status)
@@ -57,6 +64,11 @@ static void link_closed(enum prov_bearer_link_status status)
 
 static void protocol_timeout(struct ble_npl_event *work)
 {
+	if (!link.conn_handle) {
+		/* Already disconnected */
+		return;
+	}
+
 	BT_DBG("Protocol timeout");
 
 	link_closed(PROV_BEARER_LINK_STATUS_TIMEOUT);
@@ -76,7 +88,7 @@ int bt_mesh_pb_gatt_recv(uint16_t conn_handle, struct os_mbuf *buf)
 		return -EINVAL;
 	}
 
-	k_delayed_work_submit(&link.prot_timer, PROTOCOL_TIMEOUT);
+	k_work_reschedule(&link.prot_timer, PROTOCOL_TIMEOUT);
 
 	link.cb->recv(&pb_gatt, link.cb_data, buf);
 
@@ -92,7 +104,7 @@ int bt_mesh_pb_gatt_open(uint16_t conn_handle)
 	}
 
 	link.conn_handle = conn_handle;
-	k_delayed_work_submit(&link.prot_timer, PROTOCOL_TIMEOUT);
+	k_work_reschedule(&link.prot_timer, PROTOCOL_TIMEOUT);
 
 	link.cb->link_opened(&pb_gatt, link.cb_data);
 
@@ -118,7 +130,7 @@ int bt_mesh_pb_gatt_close(uint16_t conn_handle)
 
 static int link_accept(const struct prov_bearer_cb *cb, void *cb_data)
 {
-	bt_mesh_proxy_prov_enable();
+	(void)bt_mesh_pb_gatt_enable();
 	bt_mesh_adv_update();
 
 	link.cb = cb;
@@ -134,9 +146,12 @@ static int buf_send(struct os_mbuf *buf, prov_bearer_send_complete_t cb,
 		return -ENOTCONN;
 	}
 
-	k_delayed_work_submit(&link.prot_timer, PROTOCOL_TIMEOUT);
+	link.comp.cb = cb;
+	link.comp.cb_data = cb_data;
 
-	return bt_mesh_proxy_send(link.conn_handle, BT_MESH_PROXY_PROV, buf);
+	k_work_reschedule(&link.prot_timer, PROTOCOL_TIMEOUT);
+
+	return bt_mesh_pb_gatt_send(link.conn_handle, buf);
 }
 
 static void clear_tx(void)
@@ -146,7 +161,7 @@ static void clear_tx(void)
 
 void pb_gatt_init(void)
 {
-	k_delayed_work_init(&link.prot_timer, protocol_timeout);
+	k_work_init_delayable(&link.prot_timer, protocol_timeout);
 }
 
 void pb_gatt_reset(void)
@@ -159,5 +174,6 @@ const struct prov_bearer pb_gatt = {
 	.send = buf_send,
 	.clear_tx = clear_tx,
 };
+#endif
 
 #endif /* MYNEWT_VAL(BLE_MESH) */

@@ -24,10 +24,7 @@ extern "C" {
 /** Mesh Configuration Client Model Context */
 struct bt_mesh_cfg_cli {
 	struct bt_mesh_model *model;
-
-	struct k_sem          op_sync;
-	uint32_t                 op_pending;
-	void                 *op_param;
+	struct bt_mesh_msg_ack_ctx ack_ctx;
 };
 
 extern const struct bt_mesh_model_op bt_mesh_cfg_cli_op[];
@@ -40,9 +37,15 @@ extern const struct bt_mesh_model_cb bt_mesh_cfg_cli_cb;
 int bt_mesh_cfg_node_reset(uint16_t net_idx, uint16_t addr, bool *status);
 
 int bt_mesh_cfg_comp_data_get(uint16_t net_idx, uint16_t addr, uint8_t page,
-			      uint8_t *status, struct os_mbuf *comp);
+			      uint8_t *rsp, struct os_mbuf *comp);
 
 int bt_mesh_cfg_beacon_get(uint16_t net_idx, uint16_t addr, uint8_t *status);
+
+int bt_mesh_cfg_krp_get(uint16_t net_idx, uint16_t addr, uint16_t key_net_idx,
+			uint8_t *status, uint8_t *phase);
+
+int bt_mesh_cfg_krp_set(uint16_t net_idx, uint16_t addr, uint16_t key_net_idx,
+			uint8_t transition, uint8_t *status, uint8_t *phase);
 
 int bt_mesh_cfg_beacon_set(uint16_t net_idx, uint16_t addr, uint8_t val, uint8_t *status);
 
@@ -156,7 +159,8 @@ int bt_mesh_cfg_mod_app_get_vnd(uint16_t net_idx, uint16_t addr, uint16_t elem_a
 #define BT_MESH_PUB_PERIOD_10MIN(steps) (((steps) & BIT_MASK(6)) | (3 << 6))
 
 struct bt_mesh_cfg_mod_pub {
-	uint16_t  addr;
+	uint16_t addr;
+	const uint8_t *uuid;
 	uint16_t  app_idx;
 	bool   cred_flag;
 	uint8_t   ttl;
@@ -265,8 +269,71 @@ int bt_mesh_cfg_hb_pub_set(uint16_t net_idx, uint16_t addr,
 int bt_mesh_cfg_hb_pub_get(uint16_t net_idx, uint16_t addr,
 			   struct bt_mesh_cfg_hb_pub *pub, uint8_t *status);
 
+int bt_mesh_cfg_mod_sub_del_all(uint16_t net_idx, uint16_t addr,
+				uint16_t elem_addr, uint16_t mod_id,
+				uint8_t *status);
+
+int bt_mesh_cfg_mod_sub_del_all_vnd(uint16_t net_idx, uint16_t addr,
+				    uint16_t elem_addr, uint16_t mod_id,
+				    uint16_t cid, uint8_t *status);
+
+int bt_mesh_cfg_net_key_update(uint16_t net_idx, uint16_t addr,
+			       uint16_t key_net_idx, const uint8_t net_key[16],
+			       uint8_t *status);
+
+int bt_mesh_cfg_app_key_update(uint16_t net_idx, uint16_t addr,
+			       uint16_t key_net_idx, uint16_t key_app_idx,
+			       const uint8_t app_key[16], uint8_t *status);
+
+int bt_mesh_cfg_node_identity_set(uint16_t net_idx, uint16_t addr,
+				  uint16_t key_net_idx, uint8_t new_identity,
+				  uint8_t *status, uint8_t *identity);
+
+int bt_mesh_cfg_node_identity_get(uint16_t net_idx, uint16_t addr,
+				  uint16_t key_net_idx, uint8_t *status,
+				  uint8_t *identity);
+
+int bt_mesh_cfg_lpn_timeout_get(uint16_t net_idx, uint16_t addr,
+				uint16_t unicast_addr, int32_t *polltimeout);
+
 int32_t bt_mesh_cfg_cli_timeout_get(void);
 void bt_mesh_cfg_cli_timeout_set(int32_t timeout);
+
+struct bt_mesh_comp_p0 {
+	/** Company ID */
+	uint16_t cid;
+	/** Product ID */
+	uint16_t pid;
+	/** Version ID */
+	uint16_t vid;
+	/** Replay protection list size */
+	uint16_t crpl;
+	/** Supported features, see @ref BT_MESH_FEAT_SUPPORTED. */
+	uint16_t feat;
+
+	struct os_mbuf *_buf;
+};
+
+struct bt_mesh_comp_p0_elem {
+	/** Element location */
+	uint16_t loc;
+	/** The number of SIG models in this element */
+	size_t nsig;
+	/** The number of vendor models in this element */
+	size_t nvnd;
+
+	uint8_t *_buf;
+};
+
+int bt_mesh_comp_p0_get(struct bt_mesh_comp_p0 *comp,
+	struct os_mbuf *buf);
+
+struct bt_mesh_comp_p0_elem *bt_mesh_comp_p0_elem_pull(const struct bt_mesh_comp_p0 *comp,
+	struct bt_mesh_comp_p0_elem *elem);
+
+uint16_t bt_mesh_comp_p0_elem_mod(struct bt_mesh_comp_p0_elem *elem, int idx);
+
+struct bt_mesh_mod_id_vnd bt_mesh_comp_p0_elem_mod_vnd(struct bt_mesh_comp_p0_elem *elem, int idx);
 
 #ifdef __cplusplus
 }

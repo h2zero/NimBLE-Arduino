@@ -150,6 +150,7 @@
 **********************************/
 
 /* This section should not be altered */
+
 #ifndef CONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_CENTRAL
 #endif
@@ -234,7 +235,7 @@
 #define CONFIG_BT_NIMBLE_ACL_BUF_COUNT 12
 
 /** @brief ACL Buffer size */
-#define CONFIG_BT_NIMBLE_ACL_BUF_SIZE 255
+#define  CONFIG_BT_NIMBLE_TRANSPORT_ACL_SIZE 255
 
 /** @brief HCI Event Buffer size */
 #if CONFIG_BT_NIMBLE_EXT_ADV || CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV
@@ -265,6 +266,10 @@
 
 #ifndef CONFIG_BT_NIMBLE_ENABLED
 #define CONFIG_BT_NIMBLE_ENABLED 1
+#endif
+
+#ifndef CONFIG_BT_CONTROLLER_ENABLED
+#define CONFIG_BT_CONTROLLER_ENABLED 1
 #endif
 
 #ifdef ESP_PLATFORM

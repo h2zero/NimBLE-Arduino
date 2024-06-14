@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <stdio.h>
 #include "nimble/porting/nimble/include/os/os_mbuf.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "ble_hs_priv.h"

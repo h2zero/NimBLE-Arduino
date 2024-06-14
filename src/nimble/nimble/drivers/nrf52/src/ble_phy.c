@@ -22,8 +22,16 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <hal/nrf_radio.h>
+#include <hal/nrf_ccm.h>
+#include <hal/nrf_aar.h>
+#include <hal/nrf_timer.h>
+#include <hal/nrf_ppi.h>
+#include <hal/nrf_rtc.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
+/* Keep os_cputime explicitly to enable build on non-Mynewt platforms */
+#include "nimble/porting/nimble/include/os/os_cputime.h"
 #include "../include/ble/xcvr.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
@@ -31,7 +39,8 @@
 #include "nimble/nimble/controller/include/controller/ble_phy.h"
 #include "nimble/nimble/controller/include/controller/ble_phy_trace.h"
 #include "nimble/nimble/controller/include/controller/ble_ll.h"
-#include "nrf.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_plna.h"
+#include "nrfx.h"
 #if MYNEWT
 #include "mcu/nrf52_clock.h"
 #include "mcu/cmsis_nvic.h"
@@ -41,8 +50,9 @@
 #endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY)
-#if !MYNEWT_VAL_CHOICE(MCU_TARGET, nRF52840) && !MYNEWT_VAL_CHOICE(MCU_TARGET, nRF52811)
-#error LE Coded PHY can only be enabled on nRF52811 or nRF52840
+#if !MYNEWT_VAL_CHOICE(MCU_TARGET, nRF52840) && !MYNEWT_VAL_CHOICE(MCU_TARGET, nRF52811) && \
+    !MYNEWT_VAL_CHOICE(MCU_TARGET, nRF52833) && !MYNEWT_VAL_CHOICE(MCU_TARGET, nRF52820)
+#error LE Coded PHY can only be enabled on nRF52811, nRF52840, nRF52833 or nRF52820
 #endif
 #endif
 
@@ -50,8 +60,8 @@
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-#ifndef max
-#define max(a, b) ((a) > (b) ? (a) : (b))
+#if BABBLESIM
+extern void tm_tick(void);
 #endif
 
 /*
@@ -59,9 +69,11 @@
  *       using PPI somewhere else.
  *
  * Pre-programmed channels: CH20, CH21, CH23, CH25, CH31
- * Regular channels: CH4, CH5 and optionally CH17, CH18, CH19
+ * Regular channels: CH4, CH5 and optionally CH6, CH7, CH17, CH18, CH19
  *  - CH4 = cancel wfr timer on address match
  *  - CH5 = disable radio on wfr timer expiry
+ *  - CH6 = PA/LNA control (enable)
+ *  - CH7 = PA/LNA control (disable)
  *  - CH17 = (optional) gpio debug for radio ramp-up
  *  - CH18 = (optional) gpio debug for wfr timer RX enabled
  *  - CH19 = (optional) gpio debug for wfr timer radio disabled
@@ -170,6 +182,29 @@ static const uint16_t g_ble_phy_mode_pkt_start_off[BLE_PHY_NUM_MODE] = {
 /* Radio ramp-up times in usecs (fast mode) */
 #define BLE_PHY_T_TXENFAST      (XCVR_TX_RADIO_RAMPUP_USECS)
 #define BLE_PHY_T_RXENFAST      (XCVR_RX_RADIO_RAMPUP_USECS)
+
+#if BABBLESIM
+/* delay between EVENTS_READY and start of tx */
+static const uint8_t g_ble_phy_t_txdelay[BLE_PHY_NUM_MODE] = {
+    [BLE_PHY_MODE_1M] = 1,
+    [BLE_PHY_MODE_2M] = 1,
+};
+/* delay between EVENTS_END and end of txd packet */
+static const uint8_t g_ble_phy_t_txenddelay[BLE_PHY_NUM_MODE] = {
+    [BLE_PHY_MODE_1M] = 1,
+    [BLE_PHY_MODE_2M] = 1,
+};
+/* delay between rxd access address (w/ TERM1 for coded) and EVENTS_ADDRESS */
+static const uint8_t g_ble_phy_t_rxaddrdelay[BLE_PHY_NUM_MODE] = {
+    [BLE_PHY_MODE_1M] = 9,
+    [BLE_PHY_MODE_2M] = 5,
+};
+/* delay between end of rxd packet and EVENTS_END */
+static const uint8_t g_ble_phy_t_rxenddelay[BLE_PHY_NUM_MODE] = {
+    [BLE_PHY_MODE_1M] = 9,
+    [BLE_PHY_MODE_2M] = 5,
+};
+#else
 /* delay between EVENTS_READY and start of tx */
 static const uint8_t g_ble_phy_t_txdelay[BLE_PHY_NUM_MODE] = {
     [BLE_PHY_MODE_1M] = 4,
@@ -198,6 +233,7 @@ static const uint8_t g_ble_phy_t_rxenddelay[BLE_PHY_NUM_MODE] = {
     [BLE_PHY_MODE_CODED_125KBPS] = 27,
     [BLE_PHY_MODE_CODED_500KBPS] = 22
 };
+#endif
 
 /* Statistics */
 STATS_SECT_START(ble_phy_stats)
@@ -287,6 +323,28 @@ struct nrf_ccm_data
 struct nrf_ccm_data g_nrf_ccm_data;
 #endif
 
+static int g_ble_phy_gpiote_idx;
+
+#if MYNEWT_VAL(BLE_LL_PA) || MYNEWT_VAL(BLE_LL_LNA)
+
+#define PLNA_SINGLE_GPIO \
+        (!MYNEWT_VAL(BLE_LL_PA) || !MYNEWT_VAL(BLE_LL_LNA) || \
+         (MYNEWT_VAL(BLE_LL_PA_GPIO) == MYNEWT_VAL(BLE_LL_LNA_GPIO)))
+
+#if PLNA_SINGLE_GPIO
+static uint8_t plna_idx;
+#else
+#if MYNEWT_VAL(BLE_LL_PA)
+static uint8_t plna_pa_idx;
+#endif
+#if MYNEWT_VAL(BLE_LL_LNA)
+static uint8_t plna_lna_idx;
+#endif
+#endif
+
+#endif
+
+#ifndef BABBLESIM
 static void
 ble_phy_apply_errata_102_106_107(void)
 {
@@ -297,6 +355,7 @@ ble_phy_apply_errata_102_106_107(void)
     *(volatile uint32_t *)0x40001774 = ((*(volatile uint32_t *)0x40001774) &
                          0xfffffffe) | 0x01000000;
 }
+#endif
 
 #if (BLE_LL_BT5_PHY_SUPPORTED == 1)
 
@@ -410,6 +469,36 @@ ble_phy_mode_set(uint8_t tx_phy_mode, uint8_t rx_phy_mode)
 }
 #endif
 
+static void
+ble_phy_plna_enable_pa(void)
+{
+#if MYNEWT_VAL(BLE_LL_PA)
+    ble_ll_plna_pa_enable();
+
+#if !PLNA_SINGLE_GPIO
+    NRF_PPI->CH[6].TEP = (uint32_t) &(NRF_GPIOTE->TASKS_SET[plna_pa_idx]);
+    NRF_PPI->CH[7].TEP = (uint32_t) &(NRF_GPIOTE->TASKS_CLR[plna_pa_idx]);
+#endif
+
+    NRF_PPI->CHENSET = PPI_CHEN_CH6_Msk | PPI_CHEN_CH7_Msk;
+#endif
+}
+
+static void
+ble_phy_plna_enable_lna(void)
+{
+#if MYNEWT_VAL(BLE_LL_LNA)
+    ble_ll_plna_lna_enable();
+
+#if !PLNA_SINGLE_GPIO
+    NRF_PPI->CH[6].TEP = (uint32_t) &(NRF_GPIOTE->TASKS_SET[plna_lna_idx]);
+    NRF_PPI->CH[7].TEP = (uint32_t) &(NRF_GPIOTE->TASKS_CLR[plna_lna_idx]);
+#endif
+
+    NRF_PPI->CHENSET = PPI_CHEN_CH6_Msk | PPI_CHEN_CH7_Msk;
+#endif
+}
+
 int
 ble_phy_get_cur_phy(void)
 {
@@ -481,6 +570,11 @@ ble_phy_rxpdu_copy(uint8_t *dptr, struct os_mbuf *rxpdu)
         rem_len -= copy_len;
         block_rem_len -= copy_len;
 
+#if BABBLESIM
+        memcpy(dst, src, copy_len);
+        dst += copy_len;
+        src += copy_len;
+#else
         __asm__ volatile (".syntax unified              \n"
                           "   mov  r4, %[len]           \n"
                           "   b    2f                   \n"
@@ -495,6 +589,7 @@ ble_phy_rxpdu_copy(uint8_t *dptr, struct os_mbuf *rxpdu)
                           :
                           : "r3", "r4", "memory"
                          );
+#endif
 
         if ((rem_len < 4) && (block_rem_len >= rem_len)) {
             break;
@@ -507,6 +602,10 @@ ble_phy_rxpdu_copy(uint8_t *dptr, struct os_mbuf *rxpdu)
 
     /* Copy remaining bytes, if any, to last mbuf */
     om->om_len += rem_len;
+
+#if BABBLESIM
+    memcpy(dst, src, rem_len);
+#else
     __asm__ volatile (".syntax unified              \n"
                       "   b    2f                   \n"
                       "1: ldrb r3, [%[src], %[len]] \n"
@@ -517,6 +616,7 @@ ble_phy_rxpdu_copy(uint8_t *dptr, struct os_mbuf *rxpdu)
                       : [dst] "r" (dst), [src] "r" (src)
                       : "r3", "memory"
                      );
+#endif
 
     /* Copy header */
     memcpy(BLE_MBUF_HDR_PTR(rxpdu), &g_ble_phy_data.rxhdr,
@@ -541,6 +641,9 @@ nrf_wait_disabled(void)
             while (NRF_RADIO->STATE == state) {
                 /* If this fails, something is really wrong. Should last
                  * no more than 6 usecs */
+#if BABBLESIM
+                tm_tick();
+#endif
             }
         }
     }
@@ -612,17 +715,17 @@ ble_phy_set_start_time(uint32_t cputime, uint8_t rem_usecs, bool tx)
     }
 
     /* Clear and set TIMER0 to fire off at proper time */
-    NRF_TIMER0->TASKS_CLEAR = 1;
-    NRF_TIMER0->CC[0] = rem_usecs;
+    nrf_timer_task_trigger(NRF_TIMER0, NRF_TIMER_TASK_CLEAR);
+    nrf_timer_cc_set(NRF_TIMER0, 0, rem_usecs);
     NRF_TIMER0->EVENTS_COMPARE[0] = 0;
 
     /* Set RTC compare to start TIMER0 */
     NRF_RTC0->EVENTS_COMPARE[0] = 0;
-    NRF_RTC0->CC[0] = next_cc;
-    NRF_RTC0->EVTENSET = RTC_EVTENSET_COMPARE0_Msk;
+    nrf_rtc_cc_set(NRF_RTC0, 0, next_cc);
+    nrf_rtc_event_enable(NRF_RTC0, RTC_EVTENSET_COMPARE0_Msk);
 
     /* Enable PPI */
-    NRF_PPI->CHENSET = PPI_CHEN_CH31_Msk;
+    nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH31_Msk);
 
     /* Store the cputime at which we set the RTC */
     g_ble_phy_data.phy_start_cputime = cputime;
@@ -642,8 +745,8 @@ ble_phy_set_start_now(void)
      * Set TIMER0 to fire immediately. We can't set CC to 0 as compare will not
      * occur in such case.
      */
-    NRF_TIMER0->TASKS_CLEAR = 1;
-    NRF_TIMER0->CC[0] = 1;
+    nrf_timer_task_trigger(NRF_TIMER0, NRF_TIMER_TASK_CLEAR);
+    nrf_timer_cc_set(NRF_TIMER0, 0, 1);
     NRF_TIMER0->EVENTS_COMPARE[0] = 0;
 
     /*
@@ -654,12 +757,11 @@ ble_phy_set_start_now(void)
      */
     now = os_cputime_get32();
     NRF_RTC0->EVENTS_COMPARE[0] = 0;
-    NRF_RTC0->CC[0] = now + 3;
-    NRF_RTC0->EVTENSET = RTC_EVTENSET_COMPARE0_Msk;
+    nrf_rtc_cc_set(NRF_RTC0, 0, now + 3);
+    nrf_rtc_event_enable(NRF_RTC0, RTC_EVTENSET_COMPARE0_Msk);
 
     /* Enable PPI */
-    NRF_PPI->CHENSET = PPI_CHEN_CH31_Msk;
-
+    nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH31_Msk);
     /*
      * Store the cputime at which we set the RTC
      *
@@ -679,7 +781,7 @@ ble_phy_set_start_now(void)
 /**
  * Function is used to set PPI so that we can time out waiting for a reception
  * to occur. This happens for two reasons: we have sent a packet and we are
- * waiting for a respons (txrx should be set to ENABLE_TXRX) or we are
+ * waiting for a response (txrx should be set to ENABLE_TXRX) or we are
  * starting a connection event and we are a slave and we are waiting for the
  * master to send us a packet (txrx should be set to ENABLE_RX).
  *
@@ -713,17 +815,6 @@ ble_phy_wfr_enable(int txrx, uint8_t tx_phy_mode, uint32_t wfr_usecs)
          * by waiting 1 usec more.
          */
         end_time += 1;
-#if MYNEWT_VAL(BLE_PHY_CODED_RX_IFS_EXTRA_MARGIN) > 0
-        if ((phy == BLE_PHY_MODE_CODED_125KBPS) ||
-                                    (phy == BLE_PHY_MODE_CODED_500KBPS)) {
-            /*
-             * Some controllers exceed T_IFS when transmitting on coded phy
-             * so let's wait a bit longer to be able to talk to them if this
-             * workaround is enabled.
-             */
-            end_time += MYNEWT_VAL(BLE_PHY_CODED_RX_IFS_EXTRA_MARGIN);
-        }
-#endif
     } else {
         /*
          * RX shall start no later than wfr_usecs after RX enabled.
@@ -745,14 +836,11 @@ ble_phy_wfr_enable(int txrx, uint8_t tx_phy_mode, uint32_t wfr_usecs)
     end_time += g_ble_phy_t_rxaddrdelay[phy];
 
     /* wfr_secs is the time from rxen until timeout */
-    NRF_TIMER0->CC[3] = end_time;
+    nrf_timer_cc_set(NRF_TIMER0, 3, end_time);
     NRF_TIMER0->EVENTS_COMPARE[3] = 0;
 
     /* Enable wait for response PPI */
-    NRF_PPI->CHENSET = (PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk);
-
-    /* Enable the disabled interrupt so we time out on events compare */
-    NRF_RADIO->INTENSET = RADIO_INTENSET_DISABLED_Msk;
+    nrf_ppi_channels_enable(NRF_PPI, (PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk));
 
     /*
      * It may happen that if CPU is halted for a brief moment (e.g. during flash
@@ -766,10 +854,10 @@ ble_phy_wfr_enable(int txrx, uint8_t tx_phy_mode, uint32_t wfr_usecs)
      * CC[1] is only used as a reference on RX start, we do not need it here so
      * it can be used to read TIMER0 counter.
      */
-    NRF_TIMER0->TASKS_CAPTURE[1] = 1;
+    nrf_timer_task_trigger(NRF_TIMER0, NRF_TIMER_TASK_CAPTURE1);
     if (NRF_TIMER0->CC[1] > NRF_TIMER0->CC[3]) {
-        NRF_PPI->CHENCLR = PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk;
-        NRF_RADIO->TASKS_DISABLE = 1;
+        nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk);
+        nrf_radio_task_trigger(NRF_RADIO, NRF_RADIO_TASK_DISABLE);
     }
 }
 
@@ -822,8 +910,8 @@ ble_phy_rx_xcvr_setup(void)
         NRF_CCM->SHORTS = 0;
         NRF_CCM->EVENTS_ERROR = 0;
         NRF_CCM->EVENTS_ENDCRYPT = 0;
-        NRF_CCM->TASKS_KSGEN = 1;
-        NRF_PPI->CHENSET = PPI_CHEN_CH25_Msk;
+        nrf_ccm_task_trigger(NRF_CCM, NRF_CCM_TASK_KSGEN);
+        nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH25_Msk);
     } else {
         NRF_RADIO->PACKETPTR = (uint32_t)dptr;
     }
@@ -847,7 +935,7 @@ ble_phy_rx_xcvr_setup(void)
 #endif
 
     /* Turn off trigger TXEN on output compare match and AAR on bcmatch */
-    NRF_PPI->CHENCLR = PPI_CHEN_CH20_Msk | PPI_CHEN_CH23_Msk;
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH20_Msk | PPI_CHEN_CH23_Msk);
 
     /* Reset the rx started flag. Used for the wait for response */
     g_ble_phy_data.phy_rx_started = 0;
@@ -869,7 +957,7 @@ ble_phy_rx_xcvr_setup(void)
 #endif
 
     /* I want to know when 1st byte received (after address) */
-    NRF_RADIO->BCC = 8 + g_ble_phy_data.phy_bcc_offset; /* in bits */
+    nrf_radio_bcc_set(NRF_RADIO, 8 + g_ble_phy_data.phy_bcc_offset); /* in bits */
     NRF_RADIO->EVENTS_ADDRESS = 0;
     NRF_RADIO->EVENTS_DEVMATCH = 0;
     NRF_RADIO->EVENTS_BCMATCH = 0;
@@ -881,7 +969,8 @@ ble_phy_rx_xcvr_setup(void)
                         RADIO_SHORTS_ADDRESS_RSSISTART_Msk |
                         RADIO_SHORTS_DISABLED_RSSISTOP_Msk;
 
-    NRF_RADIO->INTENSET = RADIO_INTENSET_ADDRESS_Msk;
+    nrf_radio_int_enable(NRF_RADIO, RADIO_INTENSET_ADDRESS_Msk |
+                         RADIO_INTENSET_DISABLED_Msk);
 }
 
 /**
@@ -895,7 +984,6 @@ ble_phy_tx_end_isr(void)
     uint8_t was_encrypted;
     uint8_t transition;
     uint32_t rx_time;
-    uint32_t wfr_time;
 
     /* Store PHY on which we've just transmitted smth */
     tx_phy_mode = g_ble_phy_data.phy_cur_phy_mode;
@@ -906,13 +994,6 @@ ble_phy_tx_end_isr(void)
 
     /* Better be in TX state! */
     assert(g_ble_phy_data.phy_state == BLE_PHY_STATE_TX);
-
-    /* Clear events and clear interrupt on disabled event */
-    NRF_RADIO->EVENTS_DISABLED = 0;
-    NRF_RADIO->INTENCLR = RADIO_INTENCLR_DISABLED_Msk;
-    NRF_RADIO->EVENTS_END = 0;
-    wfr_time = NRF_RADIO->SHORTS;
-    (void)wfr_time;
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
     /*
@@ -953,18 +1034,20 @@ ble_phy_tx_end_isr(void)
         /* Start listening a bit earlier due to allowed active clock accuracy */
         rx_time -= 2;
 
-        NRF_TIMER0->CC[0] = rx_time;
+        nrf_timer_cc_set(NRF_TIMER0, 0, rx_time);
         NRF_TIMER0->EVENTS_COMPARE[0] = 0;
-        NRF_PPI->CHENSET = PPI_CHEN_CH21_Msk;
+        nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH21_Msk);
+
+        ble_phy_plna_enable_lna();
     } else {
         /*
          * XXX: not sure we need to stop the timer here all the time. Or that
          * it should be stopped here.
          */
-        NRF_TIMER0->TASKS_STOP = 1;
+        nrf_timer_task_trigger(NRF_TIMER0, NRF_TIMER_TASK_STOP);
         NRF_TIMER0->TASKS_SHUTDOWN = 1;
-        NRF_PPI->CHENCLR = PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk |
-                           PPI_CHEN_CH20_Msk | PPI_CHEN_CH31_Msk;
+        nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk |
+                                 PPI_CHEN_CH20_Msk | PPI_CHEN_CH31_Msk);
         assert(transition == BLE_PHY_TRANSITION_NONE);
     }
 }
@@ -1003,12 +1086,8 @@ ble_phy_rx_end_isr(void)
     uint32_t tx_time;
     struct ble_mbuf_hdr *ble_hdr;
 
-    /* Clear events and clear interrupt */
-    NRF_RADIO->EVENTS_END = 0;
-    NRF_RADIO->INTENCLR = RADIO_INTENCLR_END_Msk;
-
     /* Disable automatic RXEN */
-    NRF_PPI->CHENCLR = PPI_CHEN_CH21_Msk;
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH21_Msk);
 
     /* Set RSSI and CRC status flag in header */
     ble_hdr = &g_ble_phy_data.rxhdr;
@@ -1084,9 +1163,11 @@ ble_phy_rx_end_isr(void)
     /* Adjust for delay between EVENT_READY and actual TX start time */
     tx_time -= g_ble_phy_t_txdelay[g_ble_phy_data.phy_cur_phy_mode];
 
-    NRF_TIMER0->CC[0] = tx_time;
+    nrf_timer_cc_set(NRF_TIMER0, 0, tx_time);
     NRF_TIMER0->EVENTS_COMPARE[0] = 0;
-    NRF_PPI->CHENSET = PPI_CHEN_CH20_Msk;
+    nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH20_Msk);
+
+    ble_phy_plna_enable_pa();
 
     /*
      * XXX: Hack warning!
@@ -1100,9 +1181,9 @@ ble_phy_rx_end_isr(void)
      *
      * Note: CC[3] is used only for wfr which we do not need here.
      */
-    NRF_TIMER0->TASKS_CAPTURE[3] = 1;
+    nrf_timer_task_trigger(NRF_TIMER0, NRF_TIMER_TASK_CAPTURE3);
     if (NRF_TIMER0->CC[3] > NRF_TIMER0->CC[0]) {
-        NRF_PPI->CHENCLR = PPI_CHEN_CH20_Msk;
+        nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH20_Msk);
         g_ble_phy_data.phy_transition_late = 1;
     }
 
@@ -1137,10 +1218,10 @@ ble_phy_rx_start_isr(void)
 
     /* Clear events and clear interrupt */
     NRF_RADIO->EVENTS_ADDRESS = 0;
+    nrf_radio_int_disable(NRF_RADIO, RADIO_INTENCLR_ADDRESS_Msk);
 
-    /* Clear wfr timer channels and DISABLED interrupt */
-    NRF_RADIO->INTENCLR = RADIO_INTENCLR_DISABLED_Msk | RADIO_INTENCLR_ADDRESS_Msk;
-    NRF_PPI->CHENCLR = PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk;
+    /* Clear wfr timer channels */
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk);
 
     /* Initialize the ble mbuf header */
     ble_hdr = &g_ble_phy_data.rxhdr;
@@ -1196,10 +1277,14 @@ ble_phy_rx_start_isr(void)
          * something is wrong!
          */
         if (state == RADIO_STATE_STATE_Disabled) {
-            NRF_RADIO->INTENCLR = NRF_RADIO_IRQ_MASK_ALL;
+            nrf_radio_int_disable(NRF_RADIO, NRF_RADIO_IRQ_MASK_ALL);
             NRF_RADIO->SHORTS = 0;
             return false;
         }
+
+#if BABBLESIM
+        tm_tick();
+#endif
     }
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
@@ -1218,9 +1303,9 @@ ble_phy_rx_start_isr(void)
 
         /* Trigger AAR after last bit of AdvA is received */
         NRF_RADIO->EVENTS_BCMATCH = 0;
-        NRF_PPI->CHENSET = PPI_CHEN_CH23_Msk;
-        NRF_RADIO->BCC = (BLE_LL_PDU_HDR_LEN + adva_offset + BLE_DEV_ADDR_LEN) * 8 +
-                         g_ble_phy_data.phy_bcc_offset;
+        nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH23_Msk);
+        nrf_radio_bcc_set(NRF_RADIO, (BLE_LL_PDU_HDR_LEN + adva_offset +
+            BLE_DEV_ADDR_LEN) * 8 + g_ble_phy_data.phy_bcc_offset);
     }
 #endif
 
@@ -1231,7 +1316,6 @@ ble_phy_rx_start_isr(void)
     if (rc >= 0) {
         /* Set rx started flag and enable rx end ISR */
         g_ble_phy_data.phy_rx_started = 1;
-        NRF_RADIO->INTENSET = RADIO_INTENSET_END_Msk;
     } else {
         /* Disable PHY */
         ble_phy_disable();
@@ -1252,7 +1336,7 @@ ble_phy_isr(void)
     os_trace_isr_enter();
 
     /* Read irq register to determine which interrupts are enabled */
-    irq_en = NRF_RADIO->INTENCLR;
+    irq_en = NRF_RADIO->INTENSET;
 
     /*
      * NOTE: order of checking is important! Possible, if things get delayed,
@@ -1277,27 +1361,43 @@ ble_phy_isr(void)
         }
     }
 
-    /* Check for disabled event. This only happens for transmits now */
+    /* Handle disabled event. This is enabled for both TX and RX. On RX, we
+     * need to check phy_rx_started flag to make sure we actually were receiving
+     * a PDU, otherwise this is due to wfr.
+     */
     if ((irq_en & RADIO_INTENCLR_DISABLED_Msk) && NRF_RADIO->EVENTS_DISABLED) {
-        if (g_ble_phy_data.phy_state == BLE_PHY_STATE_RX) {
-            NRF_RADIO->EVENTS_DISABLED = 0;
-            ble_ll_wfr_timer_exp(NULL);
-        } else if (g_ble_phy_data.phy_state == BLE_PHY_STATE_IDLE) {
-            assert(0);
-        } else {
+        BLE_LL_ASSERT(NRF_RADIO->EVENTS_END ||
+                      ((g_ble_phy_data.phy_state == BLE_PHY_STATE_RX) &&
+                       !g_ble_phy_data.phy_rx_started));
+        NRF_RADIO->EVENTS_END = 0;
+        NRF_RADIO->EVENTS_DISABLED = 0;
+        nrf_radio_int_disable(NRF_RADIO, RADIO_INTENCLR_DISABLED_Msk);
+
+        switch (g_ble_phy_data.phy_state) {
+        case BLE_PHY_STATE_RX:
+#if MYNEWT_VAL(BLE_LL_LNA)
+            NRF_PPI->CHENCLR = PPI_CHEN_CH6_Msk | PPI_CHEN_CH7_Msk;
+            ble_ll_plna_lna_disable();
+#endif
+            if (g_ble_phy_data.phy_rx_started) {
+                ble_phy_rx_end_isr();
+            } else {
+                ble_ll_wfr_timer_exp(NULL);
+            }
+            break;
+        case BLE_PHY_STATE_TX:
+#if MYNEWT_VAL(BLE_LL_PA)
+            NRF_PPI->CHENCLR = PPI_CHEN_CH6_Msk | PPI_CHEN_CH7_Msk;
+            ble_ll_plna_pa_disable();
+#endif
             ble_phy_tx_end_isr();
+            break;
+        default:
+            BLE_LL_ASSERT(0);
         }
     }
 
-    /* Receive packet end (we dont enable this for transmit) */
-    if ((irq_en & RADIO_INTENCLR_END_Msk) && NRF_RADIO->EVENTS_END) {
-        ble_phy_rx_end_isr();
-    }
-
     g_ble_phy_data.phy_transition_late = 0;
-
-    /* Ensures IRQ is cleared */
-    irq_en = NRF_RADIO->SHORTS;
 
     /* Count # of interrupts */
     STATS_INC(ble_phy_stats, phy_isrs);
@@ -1306,12 +1406,16 @@ ble_phy_isr(void)
 }
 
 #if MYNEWT_VAL(BLE_PHY_DBG_TIME_TXRXEN_READY_PIN) >= 0 || \
-        MYNEWT_VAL(BLE_PHY_DBG_TIME_ADDRESS_END_PIN) >= 0 || \
-        MYNEWT_VAL(BLE_PHY_DBG_TIME_WFR_PIN) >= 0
-static inline void
-ble_phy_dbg_time_setup_gpiote(int index, int pin)
+    MYNEWT_VAL(BLE_PHY_DBG_TIME_ADDRESS_END_PIN) >= 0 || \
+    MYNEWT_VAL(BLE_PHY_DBG_TIME_WFR_PIN) >= 0 || \
+    MYNEWT_VAL(BLE_LL_PA) || \
+    MYNEWT_VAL(BLE_LL_LNA)
+static int
+ble_phy_gpiote_configure(int pin)
 {
     NRF_GPIO_Type *port;
+
+    g_ble_phy_gpiote_idx--;
 
 #if NRF52840_XXAA
     port = pin > 31 ? NRF_P1 : NRF_P0;
@@ -1324,7 +1428,7 @@ ble_phy_dbg_time_setup_gpiote(int index, int pin)
     port->DIRSET = (1 << pin);
     port->OUTCLR = (1 << pin);
 
-    NRF_GPIOTE->CONFIG[index] =
+    NRF_GPIOTE->CONFIG[g_ble_phy_gpiote_idx] =
                         (GPIOTE_CONFIG_MODE_Task << GPIOTE_CONFIG_MODE_Pos) |
                         ((pin & 0x1F) << GPIOTE_CONFIG_PSEL_Pos) |
 #if NRF52840_XXAA
@@ -1332,13 +1436,17 @@ ble_phy_dbg_time_setup_gpiote(int index, int pin)
 #else
                         0;
 #endif
+
+    BLE_LL_ASSERT(g_ble_phy_gpiote_idx >= 0);
+
+    return g_ble_phy_gpiote_idx;
 }
 #endif
 
 static void
 ble_phy_dbg_time_setup(void)
 {
-    int gpiote_idx __attribute__((unused)) = 8;
+    int idx __attribute__((unused));
 
     /*
      * We setup GPIOTE starting from last configuration index to minimize risk
@@ -1347,44 +1455,42 @@ ble_phy_dbg_time_setup(void)
      */
 
 #if MYNEWT_VAL(BLE_PHY_DBG_TIME_TXRXEN_READY_PIN) >= 0
-    ble_phy_dbg_time_setup_gpiote(--gpiote_idx,
-                              MYNEWT_VAL(BLE_PHY_DBG_TIME_TXRXEN_READY_PIN));
+    idx = ble_phy_gpiote_configure(MYNEWT_VAL(BLE_PHY_DBG_TIME_TXRXEN_READY_PIN));
 
-    NRF_PPI->CH[17].EEP = (uint32_t)&(NRF_RADIO->EVENTS_READY);
-    NRF_PPI->CH[17].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_CLR[gpiote_idx]);
-    NRF_PPI->CHENSET = PPI_CHEN_CH17_Msk;
+    nrf_ppi_channel_endpoint_setup(NRF_PPI, 17, (uint32_t)&(NRF_RADIO->EVENTS_READY),
+                                   (uint32_t)&(NRF_GPIOTE->TASKS_CLR[idx]));
+    nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH17_Msk);
 
     /* CH[20] and PPI CH[21] are on to trigger TASKS_TXEN or TASKS_RXEN */
-    NRF_PPI->FORK[20].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_SET[gpiote_idx]);
-    NRF_PPI->FORK[21].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_SET[gpiote_idx]);
+    nrf_ppi_fork_endpoint_setup(NRF_PPI, 20, (uint32_t)&(NRF_GPIOTE->TASKS_SET[idx]));
+    nrf_ppi_fork_endpoint_setup(NRF_PPI, 21, (uint32_t)&(NRF_GPIOTE->TASKS_SET[idx]));
 #endif
 
 #if MYNEWT_VAL(BLE_PHY_DBG_TIME_ADDRESS_END_PIN) >= 0
-    ble_phy_dbg_time_setup_gpiote(--gpiote_idx,
-                              MYNEWT_VAL(BLE_PHY_DBG_TIME_ADDRESS_END_PIN));
+    idx = ble_phy_gpiote_configure(MYNEWT_VAL(BLE_PHY_DBG_TIME_ADDRESS_END_PIN));
 
     /* CH[26] and CH[27] are always on for EVENT_ADDRESS and EVENT_END */
-    NRF_PPI->FORK[26].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_SET[gpiote_idx]);
-    NRF_PPI->FORK[27].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_CLR[gpiote_idx]);
+    nrf_ppi_fork_endpoint_setup(NRF_PPI, 26, (uint32_t)&(NRF_GPIOTE->TASKS_SET[idx]));
+    nrf_ppi_fork_endpoint_setup(NRF_PPI, 27, (uint32_t)&(NRF_GPIOTE->TASKS_CLR[idx]));
 #endif
 
 #if MYNEWT_VAL(BLE_PHY_DBG_TIME_WFR_PIN) >= 0
-    ble_phy_dbg_time_setup_gpiote(--gpiote_idx,
-                              MYNEWT_VAL(BLE_PHY_DBG_TIME_WFR_PIN));
+    idx = ble_phy_gpiote_configure(MYNEWT_VAL(BLE_PHY_DBG_TIME_WFR_PIN));
 
 #if NRF52840_XXAA
-    NRF_PPI->CH[18].EEP = (uint32_t)&(NRF_RADIO->EVENTS_RXREADY);
+    nrf_ppi_channel_endpoint_setup(NRF_PPI, 18, (uint32_t)&(NRF_RADIO->EVENTS_RXREADY),
+                                   (uint32_t)&(NRF_GPIOTE->TASKS_SET[idx]));
 #else
-    NRF_PPI->CH[18].EEP = (uint32_t)&(NRF_RADIO->EVENTS_READY);
+    nrf_ppi_channel_endpoint_setup(NRF_PPI, 18, (uint32_t)&(NRF_RADIO->EVENTS_READY),
+                                   (uint32_t)&(NRF_GPIOTE->TASKS_SET[idx]));
 #endif
-    NRF_PPI->CH[18].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_SET[gpiote_idx]);
-    NRF_PPI->CH[19].EEP = (uint32_t)&(NRF_RADIO->EVENTS_DISABLED);
-    NRF_PPI->CH[19].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_CLR[gpiote_idx]);
-    NRF_PPI->CHENSET = PPI_CHEN_CH18_Msk | PPI_CHEN_CH19_Msk;
+    nrf_ppi_channel_endpoint_setup(NRF_PPI, 19, (uint32_t)&(NRF_RADIO->EVENTS_DISABLED),
+                                   (uint32_t)&(NRF_GPIOTE->TASKS_CLR[idx]));
+    nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH18_Msk | PPI_CHEN_CH19_Msk);
 
     /* CH[4] and CH[5] are always on for wfr */
-    NRF_PPI->FORK[4].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_CLR[gpiote_idx]);
-    NRF_PPI->FORK[5].TEP = (uint32_t)&(NRF_GPIOTE->TASKS_CLR[gpiote_idx]);
+    nrf_ppi_fork_endpoint_setup(NRF_PPI, 4, (uint32_t)&(NRF_GPIOTE->TASKS_CLR[idx]));
+    nrf_ppi_fork_endpoint_setup(NRF_PPI, 5, (uint32_t)&(NRF_GPIOTE->TASKS_CLR[idx]));
 #endif
 }
 
@@ -1400,6 +1506,8 @@ ble_phy_init(void)
 {
     int rc;
 
+    g_ble_phy_gpiote_idx = 8;
+
     /* Default phy to use is 1M */
     g_ble_phy_data.phy_cur_phy_mode = BLE_PHY_MODE_1M;
     g_ble_phy_data.phy_tx_phy_mode = BLE_PHY_MODE_1M;
@@ -1411,11 +1519,11 @@ ble_phy_init(void)
     g_ble_phy_data.phy_chan = BLE_PHY_NUM_CHANS;
 
     /* Toggle peripheral power to reset (just in case) */
-    NRF_RADIO->POWER = 0;
-    NRF_RADIO->POWER = 1;
+    nrf_radio_power_set(NRF_RADIO, false);
+    nrf_radio_power_set(NRF_RADIO, true);
 
     /* Disable all interrupts */
-    NRF_RADIO->INTENCLR = NRF_RADIO_IRQ_MASK_ALL;
+    nrf_radio_int_disable(NRF_RADIO, NRF_RADIO_IRQ_MASK_ALL);
 
     /* Set configuration registers */
     NRF_RADIO->MODE = RADIO_MODE_MODE_Ble_1Mbit;
@@ -1445,10 +1553,10 @@ ble_phy_init(void)
     NRF_RADIO->TIFS = BLE_LL_IFS;
 
     /* Captures tx/rx start in timer0 cc 1 and tx/rx end in timer0 cc 2 */
-    NRF_PPI->CHENSET = PPI_CHEN_CH26_Msk | PPI_CHEN_CH27_Msk;
+    nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH26_Msk | PPI_CHEN_CH27_Msk);
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
-    NRF_CCM->INTENCLR = 0xffffffff;
+    nrf_ccm_int_disable(NRF_CCM, 0xffffffff);
     NRF_CCM->SHORTS = CCM_SHORTS_ENDKSGEN_CRYPT_Msk;
     NRF_CCM->EVENTS_ERROR = 0;
     memset(g_nrf_encrypt_scratchpad, 0, sizeof(g_nrf_encrypt_scratchpad));
@@ -1457,7 +1565,7 @@ ble_phy_init(void)
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
     g_ble_phy_data.phy_aar_scratch = 0;
     NRF_AAR->IRKPTR = (uint32_t)&g_nrf_irk_list[0];
-    NRF_AAR->INTENCLR = 0xffffffff;
+    nrf_aar_int_disable(NRF_AAR, 0xffffffff);
     NRF_AAR->EVENTS_END = 0;
     NRF_AAR->EVENTS_RESOLVED = 0;
     NRF_AAR->EVENTS_NOTRESOLVED = 0;
@@ -1465,7 +1573,7 @@ ble_phy_init(void)
 #endif
 
     /* TIMER0 setup for PHY when using RTC */
-    NRF_TIMER0->TASKS_STOP = 1;
+    nrf_timer_task_trigger(NRF_TIMER0, NRF_TIMER_TASK_STOP);
     NRF_TIMER0->TASKS_SHUTDOWN = 1;
     NRF_TIMER0->BITMODE = 3;    /* 32-bit timer */
     NRF_TIMER0->MODE = 0;       /* Timer mode */
@@ -1478,10 +1586,33 @@ ble_phy_init(void)
      * Channel 5: TIMER0 CC[3] to TASKS_DISABLE on radio. This is the wait
      *            for response timer.
      */
-    NRF_PPI->CH[4].EEP = (uint32_t)&(NRF_RADIO->EVENTS_ADDRESS);
-    NRF_PPI->CH[4].TEP = (uint32_t)&(NRF_TIMER0->TASKS_CAPTURE[3]);
-    NRF_PPI->CH[5].EEP = (uint32_t)&(NRF_TIMER0->EVENTS_COMPARE[3]);
-    NRF_PPI->CH[5].TEP = (uint32_t)&(NRF_RADIO->TASKS_DISABLE);
+    nrf_ppi_channel_endpoint_setup(NRF_PPI, NRF_PPI_CHANNEL4,
+        (uint32_t)&(NRF_RADIO->EVENTS_ADDRESS),
+        (uint32_t)&(NRF_TIMER0->TASKS_CAPTURE[3]));
+    nrf_ppi_channel_endpoint_setup(NRF_PPI, NRF_PPI_CHANNEL5,
+        (uint32_t)&(NRF_TIMER0->EVENTS_COMPARE[3]),
+        (uint32_t)&(NRF_RADIO->TASKS_DISABLE));
+
+#if MYNEWT_VAL(BLE_LL_PA) || MYNEWT_VAL(BLE_LL_LNA)
+#if PLNA_SINGLE_GPIO
+    plna_idx = ble_phy_gpiote_configure(MYNEWT_VAL(BLE_LL_PA_GPIO));
+    NRF_PPI->CH[6].TEP = (uint32_t) &(NRF_GPIOTE->TASKS_SET[plna_idx]);
+    NRF_PPI->CH[7].TEP = (uint32_t) &(NRF_GPIOTE->TASKS_CLR[plna_idx]);
+#else
+#if MYNEWT_VAL(BLE_LL_PA)
+    plna_pa_idx = ble_phy_gpiote_configure(MYNEWT_VAL(BLE_LL_PA_GPIO));
+    NRF_GPIOTE->TASKS_CLR[plna_pa_idx] = 1;
+#endif
+#if MYNEWT_VAL(BLE_LL_LNA)
+    plna_lna_idx = ble_phy_gpiote_configure(MYNEWT_VAL(BLE_LL_LNA_GPIO));
+    NRF_GPIOTE->TASKS_CLR[plna_lna_idx] = 1;
+#endif
+#endif
+
+    NRF_PPI->CH[6].EEP = (uint32_t)&(NRF_RADIO->EVENTS_READY);
+    NRF_PPI->CH[7].EEP = (uint32_t)&(NRF_RADIO->EVENTS_DISABLED);
+    NRF_PPI->CHENCLR = PPI_CHEN_CH6_Msk | PPI_CHEN_CH7_Msk;
+#endif
 
     /* Set isr in vector table and enable interrupt */
 #ifndef RIOT_VERSION
@@ -1538,7 +1669,7 @@ ble_phy_rx(void)
     }
 
     /* Make sure all interrupts are disabled */
-    NRF_RADIO->INTENCLR = NRF_RADIO_IRQ_MASK_ALL;
+    nrf_radio_int_disable(NRF_RADIO, NRF_RADIO_IRQ_MASK_ALL);
 
     /* Clear events prior to enabling receive */
     NRF_RADIO->EVENTS_END = 0;
@@ -1588,8 +1719,8 @@ ble_phy_encrypt_set_pkt_cntr(uint64_t pkt_counter, int dir)
 void
 ble_phy_encrypt_disable(void)
 {
-    NRF_PPI->CHENCLR = PPI_CHEN_CH25_Msk;
-    NRF_CCM->TASKS_STOP = 1;
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH25_Msk);
+    nrf_ccm_task_trigger(NRF_CCM, NRF_CCM_TASK_STOP);
     NRF_CCM->EVENTS_ERROR = 0;
     NRF_CCM->ENABLE = CCM_ENABLE_ENABLE_Disabled;
 
@@ -1635,7 +1766,7 @@ ble_phy_tx_set_start_time(uint32_t cputime, uint8_t rem_usecs)
 
     /* XXX: This should not be necessary, but paranoia is good! */
     /* Clear timer0 compare to RXEN since we are transmitting */
-    NRF_PPI->CHENCLR = PPI_CHEN_CH21_Msk;
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH21_Msk);
 
     if (ble_phy_set_start_time(cputime, rem_usecs, true) != 0) {
         STATS_INC(ble_phy_stats, tx_late);
@@ -1643,9 +1774,12 @@ ble_phy_tx_set_start_time(uint32_t cputime, uint8_t rem_usecs)
         rc = BLE_PHY_ERR_TX_LATE;
     } else {
         /* Enable PPI to automatically start TXEN */
-        NRF_PPI->CHENSET = PPI_CHEN_CH20_Msk;
+        nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH20_Msk);
         rc = 0;
+
+        ble_phy_plna_enable_pa();
     }
+
     return rc;
 }
 
@@ -1676,7 +1810,7 @@ ble_phy_rx_set_start_time(uint32_t cputime, uint8_t rem_usecs)
 
     /* XXX: This should not be necessary, but paranoia is good! */
     /* Clear timer0 compare to TXEN since we are transmitting */
-    NRF_PPI->CHENCLR = PPI_CHEN_CH20_Msk;
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH20_Msk);
 
     if (ble_phy_set_start_time(cputime, rem_usecs, false) != 0) {
         STATS_INC(ble_phy_stats, rx_late);
@@ -1688,7 +1822,9 @@ ble_phy_rx_set_start_time(uint32_t cputime, uint8_t rem_usecs)
     }
 
     /* Enable PPI to automatically start RXEN */
-    NRF_PPI->CHENSET = PPI_CHEN_CH21_Msk;
+    nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH21_Msk);
+
+    ble_phy_plna_enable_lna();
 
     /* Start rx */
     rc = ble_phy_rx();
@@ -1734,8 +1870,8 @@ ble_phy_tx(ble_phy_tx_pducb_t pducb, void *pducb_arg, uint8_t end_trans)
      * paranoid, and if you are going to clear one, might as well clear them
      * all.
      */
-    NRF_PPI->CHENCLR = PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk | PPI_CHEN_CH23_Msk |
-                       PPI_CHEN_CH25_Msk;
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk |
+                             PPI_CHEN_CH23_Msk | PPI_CHEN_CH25_Msk);
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
     if (g_ble_phy_data.phy_encrypted) {
@@ -1771,7 +1907,7 @@ ble_phy_tx(ble_phy_tx_pducb_t pducb, void *pducb_arg, uint8_t end_trans)
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
     /* Start key-stream generation and encryption (via short) */
     if (g_ble_phy_data.phy_encrypted) {
-        NRF_CCM->TASKS_KSGEN = 1;
+        nrf_ccm_task_trigger(NRF_CCM, NRF_CCM_TASK_KSGEN);
     }
 #endif
 
@@ -1785,7 +1921,7 @@ ble_phy_tx(ble_phy_tx_pducb_t pducb, void *pducb_arg, uint8_t end_trans)
     /* Enable shortcuts for transmit start/end. */
     shortcuts = RADIO_SHORTS_END_DISABLE_Msk | RADIO_SHORTS_READY_START_Msk;
     NRF_RADIO->SHORTS = shortcuts;
-    NRF_RADIO->INTENSET = RADIO_INTENSET_DISABLED_Msk;
+    nrf_radio_int_enable(NRF_RADIO, RADIO_INTENSET_DISABLED_Msk);
 
     /* Set the PHY transition */
     g_ble_phy_data.phy_transition = end_trans;
@@ -1846,9 +1982,31 @@ ble_phy_txpwr_set(int dbm)
  */
 int ble_phy_txpower_round(int dbm)
 {
-    /* TODO this should be per nRF52XXX */
-
     /* "Rail" power level if outside supported range */
+#ifdef RADIO_TXPOWER_TXPOWER_Pos8dBm
+    if (dbm >= (int8_t)RADIO_TXPOWER_TXPOWER_Pos8dBm) {
+        return (int8_t)RADIO_TXPOWER_TXPOWER_Pos8dBm;
+    }
+#endif
+
+#ifdef RADIO_TXPOWER_TXPOWER_Pos7dBm
+    if (dbm >= (int8_t)RADIO_TXPOWER_TXPOWER_Pos7dBm) {
+        return (int8_t)RADIO_TXPOWER_TXPOWER_Pos7dBm;
+    }
+#endif
+
+#ifdef RADIO_TXPOWER_TXPOWER_Pos6dBm
+    if (dbm >= (int8_t)RADIO_TXPOWER_TXPOWER_Pos6dBm) {
+        return (int8_t)RADIO_TXPOWER_TXPOWER_Pos6dBm;
+    }
+#endif
+
+#ifdef RADIO_TXPOWER_TXPOWER_Pos5dBm
+    if (dbm >= (int8_t)RADIO_TXPOWER_TXPOWER_Pos5dBm) {
+        return (int8_t)RADIO_TXPOWER_TXPOWER_Pos5dBm;
+    }
+#endif
+
     if (dbm >= (int8_t)RADIO_TXPOWER_TXPOWER_Pos4dBm) {
         return (int8_t)RADIO_TXPOWER_TXPOWER_Pos4dBm;
     }
@@ -1897,8 +2055,9 @@ ble_phy_set_access_addr(uint32_t access_addr)
 
     g_ble_phy_data.phy_access_address = access_addr;
 
+#ifndef BABBLESIM
     ble_phy_apply_errata_102_106_107();
-
+#endif
     return 0;
 }
 
@@ -1965,9 +2124,9 @@ ble_phy_setchan(uint8_t chan, uint32_t access_addr, uint32_t crcinit)
 static void
 ble_phy_stop_usec_timer(void)
 {
-    NRF_TIMER0->TASKS_STOP = 1;
+    nrf_timer_task_trigger(NRF_TIMER0, NRF_TIMER_TASK_STOP);
     NRF_TIMER0->TASKS_SHUTDOWN = 1;
-    NRF_RTC0->EVTENCLR = RTC_EVTENSET_COMPARE0_Msk;
+    nrf_rtc_event_disable(NRF_RTC0, RTC_EVTENSET_COMPARE0_Msk);
 }
 
 /**
@@ -1981,12 +2140,13 @@ ble_phy_stop_usec_timer(void)
 static void
 ble_phy_disable_irq_and_ppi(void)
 {
-    NRF_RADIO->INTENCLR = NRF_RADIO_IRQ_MASK_ALL;
+    nrf_radio_int_disable(NRF_RADIO, NRF_RADIO_IRQ_MASK_ALL);
     NRF_RADIO->SHORTS = 0;
-    NRF_RADIO->TASKS_DISABLE = 1;
-    NRF_PPI->CHENCLR = PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk | PPI_CHEN_CH20_Msk |
-          PPI_CHEN_CH21_Msk | PPI_CHEN_CH23_Msk |
-          PPI_CHEN_CH25_Msk | PPI_CHEN_CH31_Msk;
+    nrf_radio_task_trigger(NRF_RADIO, NRF_RADIO_TASK_DISABLE);
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH4_Msk | PPI_CHEN_CH5_Msk |
+        PPI_CHEN_CH20_Msk | PPI_CHEN_CH21_Msk | PPI_CHEN_CH23_Msk |
+        PPI_CHEN_CH25_Msk | PPI_CHEN_CH31_Msk);
+    nrf_ppi_channels_disable(NRF_PPI, PPI_CHEN_CH6_Msk | PPI_CHEN_CH7_Msk);
     NVIC_ClearPendingIRQ(RADIO_IRQn);
     g_ble_phy_data.phy_state = BLE_PHY_STATE_IDLE;
 }
@@ -1999,7 +2159,7 @@ ble_phy_restart_rx(void)
 
     ble_phy_set_start_now();
     /* Enable PPI to automatically start RXEN */
-    NRF_PPI->CHENSET = PPI_CHEN_CH21_Msk;
+    nrf_ppi_channels_enable(NRF_PPI, PPI_CHEN_CH21_Msk);
 
     ble_phy_rx();
 }
@@ -2111,7 +2271,7 @@ ble_phy_rfclk_enable(void)
 #if MYNEWT || ARDUINO
     nrf52_clock_hfxo_request();
 #else
-    NRF_CLOCK->TASKS_HFCLKSTART = 1;
+    nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTART);
 #endif
 }
 
@@ -2121,7 +2281,7 @@ ble_phy_rfclk_disable(void)
 #if MYNEWT || ARDUINO
     nrf52_clock_hfxo_release();
 #else
-    NRF_CLOCK->TASKS_HFCLKSTOP = 1;
+    nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTOP);
 #endif
 }
 

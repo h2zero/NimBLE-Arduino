@@ -20,8 +20,11 @@
 #ifndef H_BLE_SVC_GAP_
 #define H_BLE_SVC_GAP_
 
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include <inttypes.h>
-
+#if MYNEWT_VAL(ENC_ADV_DATA)
+#include "nimble/nimble/host/include/nimble/host/ble_ead.h"
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,6 +34,10 @@ extern "C" {
 #define BLE_SVC_GAP_CHR_UUID16_APPEARANCE                   0x2a01
 #define BLE_SVC_GAP_CHR_UUID16_PERIPH_PREF_CONN_PARAMS      0x2a04
 #define BLE_SVC_GAP_CHR_UUID16_CENTRAL_ADDRESS_RESOLUTION   0x2aa6
+
+#if MYNEWT_VAL(ENC_ADV_DATA)
+#define BLE_SVC_GAP_CHR_UUID16_KEY_MATERIAL                 0x2B88
+#endif
 
 #define BLE_SVC_GAP_APPEARANCE_GEN_UNKNOWN                         0
 #define BLE_SVC_GAP_APPEARANCE_GEN_COMPUTER                        128
@@ -45,6 +52,9 @@ const char *ble_svc_gap_device_name(void);
 int ble_svc_gap_device_name_set(const char *name);
 uint16_t ble_svc_gap_device_appearance(void);
 int ble_svc_gap_device_appearance_set(uint16_t appearance);
+#if MYNEWT_VAL(ENC_ADV_DATA)
+int ble_svc_gap_device_key_material_set(uint8_t *session_key, uint8_t *iv);
+#endif
 
 void ble_svc_gap_init(void);
 

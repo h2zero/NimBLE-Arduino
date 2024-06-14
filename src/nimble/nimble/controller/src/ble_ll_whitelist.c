@@ -41,6 +41,9 @@
 #if (MYNEWT_VAL(BLE_LL_WHITELIST_SIZE) < BLE_HW_WHITE_LIST_SIZE)
 #define BLE_LL_WHITELIST_SIZE       MYNEWT_VAL(BLE_LL_WHITELIST_SIZE)
 #else
+#ifndef BLE_HW_WHITE_LIST_SIZE
+#define BLE_HW_WHITE_LIST_SIZE 0
+#endif
 #define BLE_LL_WHITELIST_SIZE       BLE_HW_WHITE_LIST_SIZE
 #endif
 
@@ -56,8 +59,6 @@ struct ble_ll_whitelist_entry g_ble_ll_whitelist[BLE_LL_WHITELIST_SIZE];
 static int
 ble_ll_whitelist_chg_allowed(void)
 {
-    int rc;
-
     /*
      * This command is not allowed if:
      *  -> advertising uses the whitelist and we are currently advertising.
@@ -65,11 +66,19 @@ ble_ll_whitelist_chg_allowed(void)
      *  -> initiating uses whitelist and a LE create connection command is in
      *     progress
      */
-    rc = 1;
-    if (!ble_ll_adv_can_chg_whitelist() || !ble_ll_scan_can_chg_whitelist()) {
-        rc = 0;
+#if MYNEWT_VAL(BLE_LL_ROLE_BROADCASTER)
+    if (ble_ll_adv_can_chg_whitelist()) {
+        return 1;
     }
-    return rc;
+#endif
+
+#if MYNEWT_VAL(BLE_LL_ROLE_OBSERVER)
+    if (ble_ll_scan_can_chg_whitelist()) {
+        return 1;
+    }
+#endif
+
+    return 0;
 }
 
 /**

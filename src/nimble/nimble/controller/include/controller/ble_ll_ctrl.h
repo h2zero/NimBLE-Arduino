@@ -41,7 +41,9 @@ extern "C" {
 #define BLE_LL_CTRL_PROC_PHY_UPDATE     (9)
 #define BLE_LL_CTRL_PROC_SCA_UPDATE     (10)
 #define BLE_LL_CTRL_PROC_CIS_CREATE     (11)
-#define BLE_LL_CTRL_PROC_NUM            (12)
+#define BLE_LL_CTRL_PROC_SUBRATE_REQ    (12)
+#define BLE_LL_CTRL_PROC_SUBRATE_UPDATE (13)
+#define BLE_LL_CTRL_PROC_NUM            (14)
 #define BLE_LL_CTRL_PROC_IDLE           (255)
 
 /* Checks if a particular control procedure is running */
@@ -70,7 +72,7 @@ extern "C" {
 #define BLE_LL_CTRL_PAUSE_ENC_RSP       (0x0B)
 #define BLE_LL_CTRL_VERSION_IND         (0x0C)
 #define BLE_LL_CTRL_REJECT_IND          (0x0D)
-#define BLE_LL_CTRL_SLAVE_FEATURE_REQ   (0x0E)
+#define BLE_LL_CTRL_PERIPH_FEATURE_REQ   (0x0E)
 #define BLE_LL_CTRL_CONN_PARM_REQ       (0x0F)
 #define BLE_LL_CTRL_CONN_PARM_RSP       (0x10)
 #define BLE_LL_CTRL_REJECT_IND_EXT      (0x11)
@@ -91,9 +93,16 @@ extern "C" {
 #define BLE_LL_CTRL_CIS_RSP             (0x20)
 #define BLE_LL_CTRL_CIS_IND             (0x21)
 #define BLE_LL_CTRL_CIS_TERMINATE_IND   (0x22)
+#define BLE_LL_CTRL_POWER_CONTROL_REQ   (0x23)
+#define BLE_LL_CTRL_POWER_CONTROL_RSP   (0x24)
+#define BLE_LL_CTRL_POWER_CHANGE_IND    (0x25)
+#define BLE_LL_CTRL_SUBRATE_REQ         (0x26)
+#define BLE_LL_CTRL_SUBRATE_IND         (0x27)
+#define BLE_LL_CTRL_CHAN_REPORTING_IND  (0x28)
+#define BLE_LL_CTRL_CHAN_STATUS_IND     (0x29)
 
 /* Maximum opcode value */
-#define BLE_LL_CTRL_OPCODES             (BLE_LL_CTRL_CIS_TERMINATE_IND + 1)
+#define BLE_LL_CTRL_OPCODES             (BLE_LL_CTRL_CHAN_STATUS_IND + 1)
 
 extern const uint8_t g_ble_ll_ctrl_pkt_lengths[BLE_LL_CTRL_OPCODES];
 
@@ -198,7 +207,7 @@ struct ble_ll_version_ind
  * LL control slave feature req
  *  -> 8 bytes of data containing features supported by device.
  */
-#define BLE_LL_CTRL_SLAVE_FEATURE_REQ_LEN   (8)
+#define BLE_LL_CTRL_PERIPH_FEATURE_REQ_LEN   (8)
 
 /* LL control connection param req and connection param rsp */
 struct ble_ll_conn_params
@@ -275,9 +284,18 @@ struct ble_ll_len_req
 #define BLE_LL_CTRL_CIS_IND_LEN         (15)
 #define BLE_LL_CTRL_CIS_TERMINATE_LEN   (3)
 
+#define BLE_LL_CTRL_POWER_CONTROL_REQ_LEN       (3)
+#define BLE_LL_CTRL_POWER_CONTROL_RSP_LEN       (4)
+#define BLE_LL_CTRL_POWER_CHANGE_IND_LEN        (4)
+#define BLE_LL_CTRL_SUBRATE_REQ_LEN             (10)
+#define BLE_LL_CTRL_SUBRATE_IND_LEN             (10)
+#define BLE_LL_CTRL_CHAN_REPORTING_IND_LEN      (3)
+#define BLE_LL_CTRL_CHAN_STATUS_IND_LEN         (10)
+
 /* API */
 struct ble_ll_conn_sm;
-void ble_ll_ctrl_proc_start(struct ble_ll_conn_sm *connsm, int ctrl_proc);
+void ble_ll_ctrl_proc_start(struct ble_ll_conn_sm *connsm, int ctrl_proc,
+                            void *data);
 void ble_ll_ctrl_proc_stop(struct ble_ll_conn_sm *connsm, int ctrl_proc);
 int ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om);
 void ble_ll_ctrl_chk_proc_start(struct ble_ll_conn_sm *connsm);
@@ -291,6 +309,7 @@ int ble_ll_ctrl_reject_ind_send(struct ble_ll_conn_sm *connsm,
 int ble_ll_ctrl_start_enc_send(struct ble_ll_conn_sm *connsm);
 int ble_ll_ctrl_enc_allowed_pdu_rx(struct os_mbuf *rxpdu);
 int ble_ll_ctrl_enc_allowed_pdu_tx(struct os_mbuf_pkthdr *pkthdr);
+int ble_ll_ctrl_tx_start(struct ble_ll_conn_sm *connsm, struct os_mbuf *txpdu);
 int ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm);
 int ble_ll_ctrl_is_start_enc_rsp(struct os_mbuf *txpdu);
 
@@ -315,7 +334,9 @@ int ble_ll_hci_ev_phy_update(struct ble_ll_conn_sm *connsm, uint8_t status);
 void ble_ll_calc_session_key(struct ble_ll_conn_sm *connsm);
 void ble_ll_ctrl_phy_update_proc_complete(struct ble_ll_conn_sm *connsm);
 void ble_ll_ctrl_initiate_dle(struct ble_ll_conn_sm *connsm);
-void ble_ll_hci_ev_send_vendor_err(const char *file, uint32_t line);
+void ble_ll_hci_ev_send_vs_assert(const char *file, uint32_t line);
+void ble_ll_hci_ev_send_vs_llcp_trace(uint8_t type, uint16_t handle, uint16_t count,
+                                      void *pdu, size_t length);
 
 uint8_t ble_ll_ctrl_phy_tx_transition_get(uint8_t phy_mask);
 uint8_t ble_ll_ctrl_phy_from_phy_mask(uint8_t phy_mask);
@@ -323,6 +344,10 @@ uint8_t ble_ll_ctrl_phy_from_phy_mask(uint8_t phy_mask);
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_SCA_UPDATE)
 void ble_ll_hci_ev_sca_update(struct ble_ll_conn_sm *connsm,
                               uint8_t status, uint8_t peer_sca);
+#endif
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+void ble_ll_hci_ev_subrate_change(struct ble_ll_conn_sm *connsm, uint8_t status);
 #endif
 
 #ifdef __cplusplus

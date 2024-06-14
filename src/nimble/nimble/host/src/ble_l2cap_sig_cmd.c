@@ -21,6 +21,7 @@
 #include "ble_hs_priv.h"
 
 #if NIMBLE_BLE_CONNECT
+/* this function consumes tx os_mbuf */
 int
 ble_l2cap_sig_tx(uint16_t conn_handle, struct os_mbuf *txom)
 {
@@ -33,6 +34,8 @@ ble_l2cap_sig_tx(uint16_t conn_handle, struct os_mbuf *txom)
                                          &conn, &chan);
     if (rc == 0) {
         rc = ble_l2cap_tx(conn, chan, txom);
+    } else {
+        os_mbuf_free_chain(txom);
     }
     ble_hs_unlock();
 

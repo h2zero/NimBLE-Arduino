@@ -40,7 +40,7 @@ ble_hs_startup_read_sup_f_tx(void)
     /* for now we don't use it outside of init sequence so check this here
      * LE Supported (Controller) byte 4, bit 6
      */
-    if (!(rsp.features & 0x0000006000000000)) {
+    if (!(le64toh(rsp.features) & 0x0000006000000000)) {
         BLE_HS_LOG(ERROR, "Controller doesn't support LE\n");
         return BLE_HS_ECONTROLLER;
     }
@@ -86,6 +86,7 @@ ble_hs_startup_le_read_sup_f_tx(void)
     return 0;
 }
 
+#if MYNEWT_VAL(BLE_ROLE_CENTRAL) || MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 static int
 ble_hs_startup_le_read_buf_sz_tx(uint16_t *out_pktlen, uint8_t *out_max_pkts)
 {
@@ -155,6 +156,7 @@ ble_hs_startup_read_buf_sz(void)
 
     return 0;
 }
+#endif
 
 static int
 ble_hs_startup_read_bd_addr(void)
@@ -363,10 +365,12 @@ ble_hs_startup_go(void)
         return rc;
     }
 
+#if MYNEWT_VAL(BLE_ROLE_CENTRAL) || MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
     rc = ble_hs_startup_read_buf_sz();
     if (rc != 0) {
         return rc;
     }
+#endif
 
     rc = ble_hs_startup_le_read_sup_f_tx();
     if (rc != 0) {
@@ -377,6 +381,8 @@ ble_hs_startup_go(void)
     if (rc != 0) {
         return rc;
     }
+
+    ble_hs_pvcy_set_default_irk();
 
     ble_hs_pvcy_set_our_irk(NULL);
 

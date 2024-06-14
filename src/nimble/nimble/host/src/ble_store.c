@@ -306,6 +306,140 @@ ble_store_key_from_value_sec(struct ble_store_key_sec *out_key,
     out_key->idx = 0;
 }
 
+#if MYNEWT_VAL(ENC_ADV_DATA)
+int
+ble_store_read_ead(const struct ble_store_key_ead *key,
+                   struct ble_store_value_ead *out_value)
+{
+    union ble_store_value *store_value;
+    union ble_store_key *store_key;
+    int rc;
+
+    store_key = (void *)key;
+    store_value = (void *)out_value;
+    rc = ble_store_read(BLE_STORE_OBJ_TYPE_ENC_ADV_DATA, store_key, store_value);
+    return rc;
+}
+
+int
+ble_store_write_ead(const struct ble_store_value_ead *value)
+{
+    union ble_store_value *store_value;
+    int rc;
+
+    store_value = (void *)value;
+    rc = ble_store_write(BLE_STORE_OBJ_TYPE_ENC_ADV_DATA, store_value);
+    return rc;
+}
+
+int
+ble_store_delete_ead(const struct ble_store_key_ead *key)
+{
+    union ble_store_key *store_key;
+    int rc;
+
+    store_key = (void *)key;
+    rc = ble_store_delete(BLE_STORE_OBJ_TYPE_ENC_ADV_DATA, store_key);
+    return rc;
+}
+
+void
+ble_store_key_from_value_ead(struct ble_store_key_ead *out_key,
+                             const struct ble_store_value_ead *value)
+{
+    out_key->peer_addr = value->peer_addr;
+    out_key->idx = 0;
+}
+#endif
+// local irk
+int
+ble_store_read_local_irk(const struct ble_store_key_local_irk *key,
+                   struct ble_store_value_local_irk *out_value)
+{
+    union ble_store_value *store_value;
+    union ble_store_key *store_key;
+    int rc;
+
+    store_key = (void *)key;
+    store_value = (void *)out_value;
+    rc = ble_store_read(BLE_STORE_OBJ_TYPE_LOCAL_IRK, store_key, store_value);
+    return rc;
+}
+
+int
+ble_store_write_local_irk(const struct ble_store_value_local_irk *value)
+{
+    union ble_store_value *store_value;
+    int rc;
+
+    store_value = (void *)value;
+    rc = ble_store_write(BLE_STORE_OBJ_TYPE_LOCAL_IRK, store_value);
+    return rc;
+}
+
+int
+ble_store_delete_local_irk(const struct ble_store_key_local_irk *key)
+{
+    union ble_store_key *store_key;
+    int rc;
+
+    store_key = (void *)key;
+    rc = ble_store_delete(BLE_STORE_OBJ_TYPE_LOCAL_IRK, store_key);
+    return rc;
+}
+
+void
+ble_store_key_from_value_local_irk(struct ble_store_key_local_irk *out_key,
+                             const struct ble_store_value_local_irk *value)
+{
+    out_key->addr = value->addr;
+    out_key->idx = 0;
+}
+
+//
+int
+ble_store_read_rpa_rec(const struct ble_store_key_rpa_rec *key,
+                   struct ble_store_value_rpa_rec *out_value)
+{
+    union ble_store_value *store_value;
+    union ble_store_key *store_key;
+    int rc;
+
+    store_key = (void *)key;
+    store_value = (void *)out_value;
+    rc = ble_store_read(BLE_STORE_OBJ_TYPE_PEER_ADDR, store_key, store_value);
+    return rc;
+}
+
+int
+ble_store_write_rpa_rec(const struct ble_store_value_rpa_rec *value)
+{
+    union ble_store_value *store_value;
+    int rc;
+
+    store_value = (void *)value;
+    rc = ble_store_write(BLE_STORE_OBJ_TYPE_PEER_ADDR, store_value);
+    return rc;
+}
+
+int
+ble_store_delete_rpa_rec(const struct ble_store_key_rpa_rec *key)
+{
+    union ble_store_key *store_key;
+    int rc;
+
+    store_key = (void *)key;
+    rc = ble_store_delete(BLE_STORE_OBJ_TYPE_PEER_ADDR, store_key);
+    return rc;
+}
+void
+ble_store_key_from_value_rpa_rec(struct ble_store_key_rpa_rec *out_key,
+                             const struct ble_store_value_rpa_rec *value)
+{
+    out_key->peer_rpa_addr = value->peer_rpa_addr;
+    out_key->idx = 0;
+}
+
 void
 ble_store_key_from_value(int obj_type,
                          union ble_store_key *out_key,
@@ -320,6 +454,18 @@ ble_store_key_from_value(int obj_type,
     case BLE_STORE_OBJ_TYPE_CCCD:
         ble_store_key_from_value_cccd(&out_key->cccd, &value->cccd);
         break;
+#if MYNEWT_VAL(ENC_ADV_DATA)
+    case BLE_STORE_OBJ_TYPE_ENC_ADV_DATA:
+        ble_store_key_from_value_ead(&out_key->ead, &value->ead);
+        break;
+#endif
+    case BLE_STORE_OBJ_TYPE_PEER_ADDR:
+         ble_store_key_from_value_rpa_rec(&out_key->rpa_rec, &value->rpa_rec);
+         break;
+
+   case BLE_STORE_OBJ_TYPE_LOCAL_IRK:
+        ble_store_key_from_value_local_irk(&out_key->local_irk, &value->local_irk);
+         break;
 
     default:
         BLE_HS_DBG_ASSERT(0);
@@ -350,6 +496,21 @@ ble_store_iterate(int obj_type,
             key.cccd.peer_addr = *BLE_ADDR_ANY;
             pidx = &key.cccd.idx;
             break;
+#if MYNEWT_VAL(ENC_ADV_DATA)
+        case BLE_STORE_OBJ_TYPE_ENC_ADV_DATA:
+            key.ead.peer_addr = *BLE_ADDR_ANY;
+            pidx = &key.ead.idx;
+            break;
+#endif
+        case BLE_STORE_OBJ_TYPE_PEER_ADDR:
+            key.rpa_rec.peer_rpa_addr = *BLE_ADDR_ANY;
+            pidx = &key.rpa_rec.idx;
+            break;
+        case BLE_STORE_OBJ_TYPE_LOCAL_IRK:
+            key.local_irk.addr = *BLE_ADDR_ANY;
+            pidx = &key.local_irk.idx;
+            break;
+
         default:
             BLE_HS_DBG_ASSERT(0);
             return BLE_HS_EINVAL;
@@ -394,6 +555,11 @@ ble_store_clear(void)
         BLE_STORE_OBJ_TYPE_OUR_SEC,
         BLE_STORE_OBJ_TYPE_PEER_SEC,
         BLE_STORE_OBJ_TYPE_CCCD,
+        BLE_STORE_OBJ_TYPE_PEER_ADDR,
+        BLE_STORE_OBJ_TYPE_LOCAL_IRK,
+#if MYNEWT_VAL(ENC_ADV_DATA)
+        BLE_STORE_OBJ_TYPE_ENC_ADV_DATA,
+#endif
     };
     union ble_store_key key;
     int obj_type;

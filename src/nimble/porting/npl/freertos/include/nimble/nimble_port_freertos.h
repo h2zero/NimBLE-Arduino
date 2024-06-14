@@ -22,7 +22,6 @@
 
 #include "nimble/nimble/include/nimble/nimble_npl.h"
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-
 #ifdef ESP_PLATFORM
 #include "esp_err.h"
 #endif
@@ -46,7 +45,8 @@ esp_err_t esp_nimble_enable(void *host_task);
  * @return esp_err_t
  */
 esp_err_t esp_nimble_disable(void);
-#endif
+
+#endif // ESP_PLATFORM
 
 void nimble_port_freertos_init(TaskFunction_t host_task_fn);
 void nimble_port_freertos_deinit(void);
@@ -58,10 +58,10 @@ void npl_freertos_funcs_deinit(void);
 int npl_freertos_mempool_init(void);
 struct npl_funcs_t * npl_freertos_funcs_get(void);
 #endif
-
 #ifndef ESP_PLATFORM
 UBaseType_t nimble_port_freertos_get_ll_hwm(void);
 #endif
+UBaseType_t nimble_port_freertos_get_hs_hwm(void);
 
 #ifdef __cplusplus
 }

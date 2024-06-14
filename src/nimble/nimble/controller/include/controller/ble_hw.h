@@ -94,12 +94,6 @@ void ble_hw_resolv_list_rmv(int index);
 /* Returns the size of the whitelist in HW */
 uint8_t ble_hw_resolv_list_size(void);
 
-/* Enable the resolving list */
-void ble_hw_resolv_list_enable(void);
-
-/* Disables resolving list devices */
-void ble_hw_resolv_list_disable(void);
-
 /* Returns index of resolved address; -1 if not resolved */
 int ble_hw_resolv_list_match(void);
 

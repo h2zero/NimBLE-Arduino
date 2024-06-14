@@ -25,9 +25,9 @@
 #include <stdint.h>
 #include <string.h>
 #include "ble_hs_priv.h"
-#include "../include/host/ble_hs_id.h"
-#include "../../include/nimble/ble.h"
-#include "../../include/nimble/nimble_opt.h"
+#include "nimble/nimble/host/include/host/ble_hs_id.h"
+#include "nimble/nimble/include/nimble/ble.h"
+#include "nimble/nimble/include/nimble/nimble_opt.h"
 #include "ble_hs_resolv_priv.h"
 #include "../store/config/include/store/config/ble_store_config.h"
 #include "../store/config/src/ble_store_config_priv.h"
@@ -181,6 +181,7 @@ is_rpa_resolvable_by_peer_rec(struct ble_hs_dev_records *p_dev_rec, uint8_t *pee
     return false;
 }
 
+#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
 static void
 ble_rpa_replace_id_with_rand_addr(uint8_t *addr_type, uint8_t *peer_addr)
 {
@@ -218,6 +219,7 @@ ble_rpa_replace_id_with_rand_addr(uint8_t *addr_type, uint8_t *peer_addr)
     }
     return;
 }
+#endif
 
 /* Add peer to peer device records.
  *
@@ -325,7 +327,7 @@ ble_rpa_replace_peer_params_with_rl(uint8_t *peer_addr, uint8_t *addr_type,
  *
  * @return uint8_t
  */
-static uint8_t
+uint8_t
 is_ble_hs_resolv_enabled(void)
 {
     return g_ble_hs_resolv_data.addr_res_enabled;
@@ -493,17 +495,18 @@ is_irk_nonzero(uint8_t *irk)
 static int
 ble_hs_is_on_resolv_list(uint8_t *addr, uint8_t addr_type)
 {
+#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
     int i;
     struct ble_hs_resolv_entry *rl = &g_ble_hs_resolv_list[1];
 
     for (i = 1; i < g_ble_hs_resolv_data.rl_cnt; ++i) {
-        if ((rl->rl_addr_type == addr_type) &&
-                (!memcmp(rl->rl_identity_addr, addr, BLE_DEV_ADDR_LEN))) {
+        if ((!memcmp(rl->rl_identity_addr, addr, BLE_DEV_ADDR_LEN)) || (!memcmp(rl->rl_peer_rpa, addr, BLE_DEV_ADDR_LEN))) {
             return i;
         }
         ++rl;
     }
 
+#endif
     return 0;
 }
 
@@ -517,6 +520,7 @@ ble_hs_is_on_resolv_list(uint8_t *addr, uint8_t addr_type)
 struct ble_hs_resolv_entry *
 ble_hs_resolv_list_find(uint8_t *addr)
 {
+#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
     int i;
     struct ble_hs_resolv_entry *rl = &g_ble_hs_resolv_list[1];
 
@@ -534,6 +538,7 @@ ble_hs_resolv_list_find(uint8_t *addr)
         }
         ++rl;
     }
+#endif
     return NULL;
 }
 
@@ -614,12 +619,15 @@ ble_hs_resolv_list_add(uint8_t *cmdbuf)
 int
 ble_hs_resolv_list_rmv(uint8_t addr_type, uint8_t *ident_addr)
 {
-    int position, rc = BLE_HS_ENOENT;
+    int rc = BLE_HS_ENOENT;
+
+#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
+    int position;
 
     /* Remove from IRK records */
     position = ble_hs_is_on_resolv_list(ident_addr, addr_type);
-    if (position) {
 
+    if (position) {
         memmove(&g_ble_hs_resolv_list[position],
                 &g_ble_hs_resolv_list[position + 1],
                 (g_ble_hs_resolv_data.rl_cnt - position) * sizeof (struct
@@ -633,6 +641,7 @@ ble_hs_resolv_list_rmv(uint8_t addr_type, uint8_t *ident_addr)
      * peer_address to its latest received OTA address, this helps when existing bond at
      * peer side is removed */
     ble_rpa_replace_id_with_rand_addr(&addr_type, ident_addr);
+#endif
 
     return rc;
 }
@@ -729,6 +738,25 @@ ble_hs_resolv_set_rpa_tmo(uint16_t tmo_secs)
     return 0;
 }
 
+struct ble_hs_resolv_entry *
+ble_hs_resolv_rpa_addr(uint8_t *addr, uint8_t addr_type) {
+#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
+    int i;
+    struct ble_hs_resolv_entry *rl = &g_ble_hs_resolv_list[1];
+
+    for (i = 1; i < g_ble_hs_resolv_data.rl_cnt; ++i) {
+        if(ble_hs_resolv_rpa(addr, rl->rl_peer_irk) == 0) {
+            memcpy(g_ble_hs_resolv_list[i].rl_peer_rpa, addr, BLE_DEV_ADDR_LEN);
+            g_ble_hs_resolv_list[i].rl_addr_type = addr_type;
+            return rl;
+        }
+
+        ++rl;
+    }
+#endif
+    return NULL;
+}
+
 /**
  * Resolve a Resolvable Private Address
  *
@@ -783,4 +811,9 @@ void ble_hs_resolv_init(void)
                          NULL);
 }
 
+void ble_hs_resolv_deinit(void)
+{
+    ble_npl_callout_stop(&g_ble_hs_resolv_data.rpa_timer);
+    ble_npl_callout_deinit(&g_ble_hs_resolv_data.rpa_timer);
+}
 #endif  /* if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY) */
