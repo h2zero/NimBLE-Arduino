@@ -21,6 +21,7 @@
 #define H_BLE_SVC_GATT_
 
 #include <inttypes.h>
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,7 +30,19 @@ extern "C" {
 struct ble_hs_cfg;
 
 #define BLE_SVC_GATT_CHR_SERVICE_CHANGED_UUID16     0x2a05
+#define BLE_SVC_GATT_CHR_SERVER_SUPPORTED_FEAT_UUID16   0x2b3a
+#define BLE_SVC_GATT_CHR_CLIENT_SUPPORTED_FEAT_UUID16   0x2b29
 
+#if MYNEWT_VAL(BLE_GATT_CACHING)
+#define BLE_SVC_GATT_CHR_DATABASE_HASH_UUID16               0x2b2a
+
+uint16_t ble_svc_gatt_changed_handle(void);
+uint16_t ble_svc_gatt_hash_handle(void);
+uint16_t ble_svc_gatt_csf_handle(void);
+uint8_t ble_svc_gatt_get_csfs(void);
+#endif
+
+uint8_t ble_svc_gatt_get_local_cl_supported_feat(void);
 void ble_svc_gatt_changed(uint16_t start_handle, uint16_t end_handle);
 void ble_svc_gatt_init(void);
 

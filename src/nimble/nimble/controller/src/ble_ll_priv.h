@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+extern int8_t g_ble_ll_tx_power;
+
 #ifdef MYNEWT
 
 #include "syscfg/syscfg.h"

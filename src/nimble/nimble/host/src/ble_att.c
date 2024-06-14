@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include "ble_hs_priv.h"
+#include "../include/host/ble_att.h"
 
 #if NIMBLE_BLE_CONNECT
 
@@ -68,7 +69,12 @@ static const struct ble_att_rx_dispatch_entry ble_att_rx_dispatch[] = {
     { BLE_ATT_OP_NOTIFY_REQ,           ble_att_svr_rx_notify },
     { BLE_ATT_OP_INDICATE_REQ,         ble_att_svr_rx_indicate },
     { BLE_ATT_OP_INDICATE_RSP,         ble_att_clt_rx_indicate },
+    { BLE_ATT_OP_READ_MULT_VAR_REQ,    ble_att_svr_rx_read_mult_var },
+    { BLE_ATT_OP_READ_MULT_VAR_RSP,    ble_att_clt_rx_read_mult_var },
     { BLE_ATT_OP_WRITE_CMD,            ble_att_svr_rx_write_no_rsp },
+#ifdef ESP_PLATFORM
+    { BLE_ATT_OP_SIGNED_WRITE_CMD,     ble_att_svr_rx_signed_write },
+#endif
 };
 
 #define BLE_ATT_RX_DISPATCH_SZ \

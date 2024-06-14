@@ -72,6 +72,12 @@ int ble_ll_resolv_local_addr_rd(const uint8_t *cmdbuf, uint8_t len,
 struct ble_ll_resolv_entry *
 ble_ll_resolv_list_find(const uint8_t *addr, uint8_t addr_type);
 
+static inline int8_t
+ble_ll_resolv_get_idx(struct ble_ll_resolv_entry *rl)
+{
+    return rl - g_ble_ll_resolv_list;
+}
+
 /* Returns true if address resolution is enabled */
 uint8_t ble_ll_resolv_enabled(void);
 

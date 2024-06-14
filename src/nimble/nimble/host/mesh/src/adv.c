@@ -15,7 +15,6 @@
 #include "../include/mesh/mesh.h"
 #include "nimble/nimble/host/include/host/ble_hs_adv.h"
 #include "nimble/nimble/host/include/host/ble_gap.h"
-#include "nimble/nimble/include/nimble/hci_common.h"
 #include "../include/mesh/porting.h"
 #include "nimble/porting/nimble/include/nimble/nimble_port.h"
 #include "adv.h"
@@ -25,21 +24,16 @@
 #include "prov.h"
 #include "proxy.h"
 
-/* Convert from ms to 0.625ms units */
-#define ADV_SCAN_UNIT(_ms) ((_ms) * 8 / 5)
-
 /* Window and Interval are equal for continuous scanning */
-#define MESH_SCAN_INTERVAL_MS 30
-#define MESH_SCAN_WINDOW_MS   30
-#define MESH_SCAN_INTERVAL    ADV_SCAN_UNIT(MESH_SCAN_INTERVAL_MS)
-#define MESH_SCAN_WINDOW      ADV_SCAN_UNIT(MESH_SCAN_WINDOW_MS)
+#define MESH_SCAN_INTERVAL    BT_MESH_ADV_SCAN_UNIT(BT_MESH_SCAN_INTERVAL_MS)
+#define MESH_SCAN_WINDOW      BT_MESH_ADV_SCAN_UNIT(BT_MESH_SCAN_WINDOW_MS)
 
-/* Pre-5.0 controllers enforce a minimum interval of 100ms
- * whereas 5.0+ controllers can go down to 20ms.
- */
-#define ADV_INT_DEFAULT_MS 100
-#define ADV_INT_FAST_MS    20
-
+const uint8_t bt_mesh_adv_type[BT_MESH_ADV_TYPES] = {
+	[BT_MESH_ADV_PROV]   = BT_DATA_MESH_PROV,
+	[BT_MESH_ADV_DATA]   = BT_DATA_MESH_MESSAGE,
+	[BT_MESH_ADV_BEACON] = BT_DATA_MESH_BEACON,
+	[BT_MESH_ADV_URI]    = BT_DATA_URI,
+};
 #ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
@@ -48,171 +42,21 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
-static int32_t adv_int_min =  ADV_INT_DEFAULT_MS;
-
-/* TinyCrypt PRNG consumes a lot of stack space, so we need to have
- * an increased call stack whenever it's used.
- */
-#if MYNEWT
-OS_TASK_STACK_DEFINE(g_blemesh_stack, MYNEWT_VAL(BLE_MESH_ADV_STACK_SIZE));
-struct os_task adv_task;
-#else
-static TaskHandle_t adv_task_h;
-#endif
-
-static struct ble_npl_eventq adv_queue;
 extern uint8_t g_mesh_addr_type;
-static int adv_initialized = false;
-
-static os_membuf_t adv_buf_mem[OS_MEMPOOL_SIZE(
-		MYNEWT_VAL(BLE_MESH_ADV_BUF_COUNT),
-		BT_MESH_ADV_DATA_SIZE + BT_MESH_MBUF_HEADER_SIZE)];
 
 struct os_mbuf_pool adv_os_mbuf_pool;
-static struct os_mempool adv_buf_mempool;
+struct ble_npl_eventq bt_mesh_adv_queue;
+
+os_membuf_t adv_buf_mem[OS_MEMPOOL_SIZE(
+        MYNEWT_VAL(BLE_MESH_ADV_BUF_COUNT),
+        BT_MESH_ADV_DATA_SIZE + BT_MESH_MBUF_HEADER_SIZE)];
+struct os_mempool adv_buf_mempool;
 
 static struct bt_mesh_adv adv_pool[CONFIG_BT_MESH_ADV_BUF_COUNT];
 
 static struct bt_mesh_adv *adv_alloc(int id)
 {
 	return &adv_pool[id];
-}
-
-static inline void adv_send_start(uint16_t duration, int err,
-				  const struct bt_mesh_send_cb *cb,
-				  void *cb_data)
-{
-	if (cb && cb->start) {
-		cb->start(duration, err, cb_data);
-	}
-}
-
-static inline void adv_send_end(int err, const struct bt_mesh_send_cb *cb,
-				void *cb_data)
-{
-	if (cb && cb->end) {
-		cb->end(err, cb_data);
-	}
-}
-
-static inline void adv_send(struct os_mbuf *buf)
-{
-	static const uint8_t adv_type[] = {
-		[BT_MESH_ADV_PROV]   = BLE_HS_ADV_TYPE_MESH_PROV,
-		[BT_MESH_ADV_DATA]   = BLE_HS_ADV_TYPE_MESH_MESSAGE,
-		[BT_MESH_ADV_BEACON] = BLE_HS_ADV_TYPE_MESH_BEACON,
-		[BT_MESH_ADV_URI]    = BLE_HS_ADV_TYPE_URI,
-}	;
-
-	const struct bt_mesh_send_cb *cb = BT_MESH_ADV(buf)->cb;
-	void *cb_data = BT_MESH_ADV(buf)->cb_data;
-	struct ble_gap_adv_params param = { 0 };
-	uint16_t duration, adv_int;
-	struct bt_data ad;
-	int err;
-
-	adv_int = max(adv_int_min,
-		      BT_MESH_TRANSMIT_INT(BT_MESH_ADV(buf)->xmit));
-#if MYNEWT_VAL(BLE_CONTROLLER)
-	duration = ((BT_MESH_TRANSMIT_COUNT(BT_MESH_ADV(buf)->xmit) + 1) *
-				(adv_int + 10));
-#else
-	duration = (MESH_SCAN_WINDOW_MS +
-		    ((BT_MESH_TRANSMIT_COUNT(BT_MESH_ADV(buf)->xmit) + 1) *
-		     (adv_int + 10)));
-#endif
-
-	BT_DBG("type %u om_len %u: %s", BT_MESH_ADV(buf)->type,
-	       buf->om_len, bt_hex(buf->om_data, buf->om_len));
-	BT_DBG("count %u interval %ums duration %ums",
-	       BT_MESH_TRANSMIT_COUNT(BT_MESH_ADV(buf)->xmit) + 1, adv_int,
-	       duration);
-
-	ad.type = adv_type[BT_MESH_ADV(buf)->type];
-	ad.data_len = buf->om_len;
-	ad.data = buf->om_data;
-
-	param.itvl_min = ADV_SCAN_UNIT(adv_int);
-	param.itvl_max = param.itvl_min;
-	param.conn_mode = BLE_GAP_CONN_MODE_NON;
-
-	err = bt_le_adv_start(&param, &ad, 1, NULL, 0);
-	net_buf_unref(buf);
-	adv_send_start(duration, err, cb, cb_data);
-	if (err) {
-		BT_ERR("Advertising failed: err %d", err);
-		return;
-	}
-
-	BT_DBG("Advertising started. Sleeping %u ms", duration);
-
-	k_sleep(K_MSEC(duration));
-
-	err = bt_le_adv_stop(false);
-	adv_send_end(err, cb, cb_data);
-	if (err) {
-		BT_ERR("Stopping advertising failed: err %d", err);
-		return;
-	}
-
-	BT_DBG("Advertising stopped");
-}
-
-void
-mesh_adv_thread(void *args)
-{
-	static struct ble_npl_event *ev;
-	struct os_mbuf *buf;
-#if (MYNEWT_VAL(BLE_MESH_PROXY))
-	int32_t timeout;
-#endif
-
-	BT_DBG("started");
-
-	while (1) {
-#if (MYNEWT_VAL(BLE_MESH_PROXY))
-		ev = ble_npl_eventq_get(&adv_queue, 0);
-		while (!ev) {
-			timeout = bt_mesh_proxy_adv_start();
-			BT_DBG("Proxy Advertising up to %d ms", (int) timeout);
-
-			// FIXME: should we redefine K_SECONDS macro instead in glue?
-			if (timeout != K_FOREVER) {
-				timeout = ble_npl_time_ms_to_ticks32(timeout);
-			}
-
-			ev = ble_npl_eventq_get(&adv_queue, timeout);
-			bt_mesh_proxy_adv_stop();
-		}
-#else
-		ev = ble_npl_eventq_get(&adv_queue, BLE_NPL_TIME_FOREVER);
-#endif
-
-		if (!ev || !ble_npl_event_get_arg(ev)) {
-			continue;
-		}
-
-		buf = ble_npl_event_get_arg(ev);
-
-		/* busy == 0 means this was canceled */
-		if (BT_MESH_ADV(buf)->busy) {
-			BT_MESH_ADV(buf)->busy = 0;
-			adv_send(buf);
-		} else {
-			net_buf_unref(buf);
-		}
-
-		/* os_sched(NULL); */
-	}
-}
-
-void bt_mesh_adv_update(void)
-{
-	static struct ble_npl_event ev = { };
-
-	BT_DBG("");
-
-	ble_npl_eventq_put(&adv_queue, &ev);
 }
 
 struct os_mbuf *bt_mesh_adv_create_from_pool(struct os_mbuf_pool *pool,
@@ -264,7 +108,8 @@ void bt_mesh_adv_send(struct os_mbuf *buf, const struct bt_mesh_send_cb *cb,
 	BT_MESH_ADV(buf)->cb_data = cb_data;
 	BT_MESH_ADV(buf)->busy = 1;
 
-	net_buf_put(&adv_queue, net_buf_ref(buf));
+	net_buf_put(&bt_mesh_adv_queue, net_buf_ref(buf));
+	bt_mesh_adv_buf_ready();
 }
 
 static void bt_mesh_scan_cb(const bt_addr_le_t *addr, int8_t rssi,
@@ -316,48 +161,6 @@ static void bt_mesh_scan_cb(const bt_addr_le_t *addr, int8_t rssi,
 		net_buf_simple_restore(buf, &state);
 		net_buf_simple_pull_mem(buf, len);
 	}
-}
-
-void bt_mesh_adv_init(void)
-{
-	int rc;
-
-	/* Advertising should only be initialized once. Calling
-	 * os_task init the second time will result in an assert. */
-	if (adv_initialized) {
-		return;
-	}
-
-	rc = os_mempool_init(&adv_buf_mempool, MYNEWT_VAL(BLE_MESH_ADV_BUF_COUNT),
-			     BT_MESH_ADV_DATA_SIZE + BT_MESH_MBUF_HEADER_SIZE,
-			     adv_buf_mem, "adv_buf_pool");
-	assert(rc == 0);
-
-	rc = os_mbuf_pool_init(&adv_os_mbuf_pool, &adv_buf_mempool,
-			       BT_MESH_ADV_DATA_SIZE + BT_MESH_MBUF_HEADER_SIZE,
-			       MYNEWT_VAL(BLE_MESH_ADV_BUF_COUNT));
-	assert(rc == 0);
-
-	ble_npl_eventq_init(&adv_queue);
-
-#if MYNEWT
-	os_task_init(&adv_task, "mesh_adv", mesh_adv_thread, NULL,
-	             MYNEWT_VAL(BLE_MESH_ADV_TASK_PRIO), OS_WAIT_FOREVER,
-	             g_blemesh_stack, MYNEWT_VAL(BLE_MESH_ADV_STACK_SIZE));
-#elif ESP_PLATFORM
-    xTaskCreatePinnedToCore(mesh_adv_thread, "mesh_adv", 2768,
-            NULL, (configMAX_PRIORITIES - 5), &adv_task_h, NIMBLE_CORE);
-#else
-    xTaskCreate(mesh_adv_thread, "mesh_adv", MYNEWT_VAL(BLE_MESH_ADV_STACK_SIZE),
-            NULL, MYNEWT_VAL(BLE_MESH_ADV_TASK_PRIO), &adv_task_h);
-#endif
-
-	/* For BT5 controllers we can have fast advertising interval */
-	if (ble_hs_hci_get_hci_version() >= BLE_HCI_VER_BCS_5_0) {
-	    adv_int_min = ADV_INT_FAST_MS;
-	}
-
-	adv_initialized = true;
 }
 
 int

@@ -25,8 +25,7 @@ extern "C" {
 #endif
 
 /* Time per BLE scheduler slot */
-#define BLE_LL_SCHED_USECS_PER_SLOT         (1250)
-#define BLE_LL_SCHED_32KHZ_TICKS_PER_SLOT   (41)    /* 1 tick = 30.517 usecs */
+#define BLE_LL_SCHED_USECS_PER_SLOT   (1250)
 
 /*
  * Worst case time needed for scheduled advertising item. This is the longest
@@ -67,10 +66,10 @@ extern uint8_t g_ble_ll_sched_offset_ticks;
 #define BLE_LL_SCHED_TYPE_ADV       (1)
 #define BLE_LL_SCHED_TYPE_SCAN      (2)
 #define BLE_LL_SCHED_TYPE_CONN      (3)
-#define BLE_LL_SCHED_TYPE_AUX_SCAN  (4)
 #define BLE_LL_SCHED_TYPE_DTM       (5)
 #define BLE_LL_SCHED_TYPE_PERIODIC  (6)
 #define BLE_LL_SCHED_TYPE_SYNC      (7)
+#define BLE_LL_SCHED_TYPE_SCAN_AUX  (8)
 
 /* Return values for schedule callback. */
 #define BLE_LL_SCHED_STATE_RUNNING  (0)
@@ -80,39 +79,6 @@ extern uint8_t g_ble_ll_sched_offset_ticks;
 struct ble_ll_sched_item;
 typedef int (*sched_cb_func)(struct ble_ll_sched_item *sch);
 typedef void (*sched_remove_cb_func)(struct ble_ll_sched_item *sch);
-/*
- * Strict connection scheduling (for the master) is different than how
- * connections are normally scheduled. With strict connection scheduling we
- * introduce the concept of a "period". A period is a collection of slots. Each
- * slot is 1.25 msecs in length. The number of slots in a period is determined
- * by the syscfg value BLE_LL_CONN_INIT_SLOTS. A collection of periods is called
- * an epoch. The length of an epoch is determined by the number of connections
- * (BLE_MAX_CONNECTIONS plus BLE_LL_ADD_STRICT_SCHED_PERIODS). Connections
- * will be scheduled at period boundaries. Any scanning/initiating/advertising
- * will be done in unused periods, if possible.
- */
-#if MYNEWT_VAL(BLE_LL_STRICT_CONN_SCHEDULING)
-#define BLE_LL_SCHED_PERIODS    (MYNEWT_VAL(BLE_MAX_CONNECTIONS) + \
-                                 MYNEWT_VAL(BLE_LL_ADD_STRICT_SCHED_PERIODS))
-
-struct ble_ll_sched_obj
-{
-    uint8_t sch_num_occ_periods;
-    uint32_t sch_occ_period_mask;
-    uint32_t sch_ticks_per_period;
-    uint32_t sch_ticks_per_epoch;
-    uint32_t sch_epoch_start;
-};
-
-extern struct ble_ll_sched_obj g_ble_ll_sched_data;
-
-/*
- * XXX: TODO:
- * -> How do we know epoch start is up to date? Not wrapped?
- * -> for now, only do this with no more than 32 connections.
- * -> Do not let initiating occur if no empty sched slots
- */
-#endif
 
 /*
  * Schedule item
@@ -144,11 +110,11 @@ void ble_ll_sched_rmv_elem_type(uint8_t type, sched_remove_cb_func remove_cb);
 
 /* Schedule a new master connection */
 struct ble_ll_conn_sm;
-int ble_ll_sched_master_new(struct ble_ll_conn_sm *connsm,
-                            struct ble_mbuf_hdr *ble_hdr, uint8_t pyld_len);
+int ble_ll_sched_conn_central_new(struct ble_ll_conn_sm *connsm,
+                                  struct ble_mbuf_hdr *ble_hdr, uint8_t pyld_len);
 
 /* Schedule a new slave connection */
-int ble_ll_sched_slave_new(struct ble_ll_conn_sm *connsm);
+int ble_ll_sched_conn_periph_new(struct ble_ll_conn_sm *connsm);
 
 struct ble_ll_adv_sm;
 typedef void ble_ll_sched_adv_new_cb(struct ble_ll_adv_sm *advsm,
@@ -159,8 +125,7 @@ int ble_ll_sched_adv_new(struct ble_ll_sched_item *sch,
                          ble_ll_sched_adv_new_cb cb, void *arg);
 
 /* Schedule periodic advertising event */
-int ble_ll_sched_periodic_adv(struct ble_ll_sched_item *sch, uint32_t *start,
-                              bool after_overlap);
+int ble_ll_sched_periodic_adv(struct ble_ll_sched_item *sch, bool first_event);
 
 int ble_ll_sched_sync_reschedule(struct ble_ll_sched_item *sch,
                                  uint32_t anchor_point,
@@ -171,7 +136,7 @@ int ble_ll_sched_sync(struct ble_ll_sched_item *sch,
                       int8_t phy_mode);
 
 /* Reschedule an advertising event */
-int ble_ll_sched_adv_reschedule(struct ble_ll_sched_item *sch, uint32_t *start,
+int ble_ll_sched_adv_reschedule(struct ble_ll_sched_item *sch,
                                 uint32_t max_delay_ticks);
 
 /* Reschedule and advertising pdu */
@@ -199,7 +164,8 @@ int ble_ll_sched_aux_scan(struct ble_mbuf_hdr *ble_hdr,
                           struct ble_ll_scan_sm *scansm,
                           struct ble_ll_aux_data *aux_scan);
 
-int ble_ll_sched_scan_req_over_aux_ptr(uint32_t chan, uint8_t phy_mode);
+int ble_ll_sched_scan_aux(struct ble_ll_sched_item *sch, uint32_t pdu_time,
+                          uint8_t pdu_time_rem, uint32_t offset_us);
 #endif
 
 /* Stop the scheduler */
@@ -207,6 +173,37 @@ void ble_ll_sched_stop(void);
 
 #if MYNEWT_VAL(BLE_LL_DTM)
 int ble_ll_sched_dtm(struct ble_ll_sched_item *sch);
+#endif
+
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+#if !MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED_FIXED)
+void ble_ll_sched_css_set_params(uint32_t slot_us, uint32_t period_slots);
+#endif
+void ble_ll_sched_css_set_conn_anchor(struct ble_ll_conn_sm *connsm);
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED_FIXED)
+static inline uint32_t
+ble_ll_sched_css_get_slot_us(void)
+{
+    return MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED_SLOT_US);
+}
+
+static inline uint32_t
+ble_ll_sched_css_get_period_slots(void)
+{
+    return MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED_PERIOD_SLOTS);
+}
+
+static inline uint32_t
+ble_ll_sched_css_get_conn_interval_us(void)
+{
+    return ble_ll_sched_css_get_period_slots() *
+           ble_ll_sched_css_get_slot_us() / 1250;
+}
+#else
+uint32_t ble_ll_sched_css_get_slot_us(void);
+uint32_t ble_ll_sched_css_get_period_slots(void);
+uint32_t ble_ll_sched_css_get_conn_interval_us(void);
+#endif
 #endif
 
 #ifdef __cplusplus

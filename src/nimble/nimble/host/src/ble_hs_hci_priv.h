@@ -104,7 +104,7 @@ int ble_hs_hci_util_read_rssi(uint16_t conn_handle, int8_t *out_rssi);
 int ble_hs_hci_util_set_random_addr(const uint8_t *addr);
 int ble_hs_hci_util_data_hdr_strip(struct os_mbuf *om,
                                    struct hci_data_hdr *out_hdr);
-int ble_hs_hci_evt_process(const struct ble_hci_ev *ev);
+int ble_hs_hci_evt_process(struct ble_hci_ev *ev);
 
 int ble_hs_hci_cmd_send_buf(uint16_t opcode, const void *buf, uint8_t buf_len);
 int ble_hs_hci_set_buf_sz(uint16_t pktlen, uint16_t max_pkts);
@@ -118,6 +118,15 @@ int ble_hs_hci_acl_tx(struct ble_hs_conn *conn, struct os_mbuf **om);
 
 int ble_hs_hci_frag_num_mbufs(void);
 int ble_hs_hci_frag_num_mbufs_free(void);
+
+int ble_hs_hci_util_set_data_addr_change(uint8_t adv_handle, uint8_t change_reason);
+
+int ble_hs_hci_dtm_tx_start(uint8_t tx_chan, uint8_t test_data_len, uint8_t payload);
+int ble_hs_hci_dtm_rx_start(uint8_t rx_chan);
+int ble_hs_hci_dtm_enh_rx_start(uint8_t rx_chan, uint8_t index, uint8_t phy);
+int ble_hs_hci_dtm_enh_tx_start(uint8_t tx_chan, uint8_t test_data_len,
+		                uint8_t payload, uint8_t phy);
+int ble_hs_hci_dtm_stop(void);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,11 @@
 /*
+ * SPDX-FileCopyrightText: 2015-2023 The Apache Software Foundation (ASF)
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * SPDX-FileContributor: 2019-2022 Espressif Systems (Shanghai) CO LTD
+ */
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,14 +27,15 @@
 #ifndef H_BLE_HCI_COMMON_
 #define H_BLE_HCI_COMMON_
 
-#include "ble.h"
+#include "nimble/nimble/include/nimble/ble.h"
+#include "nimble/nimble/transport/include/nimble/transport.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define BLE_HCI_MAX_DATA_LEN (MYNEWT_VAL(BLE_HCI_EVT_BUF_SIZE) - \
-                              sizeof(struct ble_hci_ev))
+#define BLE_HCI_MAX_DATA_LEN    (MYNEWT_VAL(BLE_TRANSPORT_EVT_SIZE) - \
+                                 sizeof(struct ble_hci_ev))
 
 /* Generic command header */
 struct ble_hci_cmd {
@@ -482,20 +490,20 @@ struct ble_hci_le_rd_resolv_list_size_rp {
 } __attribute__((packed));
 
 #define BLE_HCI_OCF_LE_RD_PEER_RESOLV_ADDR          (0x002B)
-struct ble_hci_le_rd_peer_recolv_addr_cp {
+struct ble_hci_le_rd_peer_resolv_addr_cp {
     uint8_t peer_addr_type;
     uint8_t peer_id_addr[6];
 } __attribute__((packed));
-struct ble_hci_le_rd_peer_recolv_addr_rp {
+struct ble_hci_le_rd_peer_resolv_addr_rp {
     uint8_t rpa[6];
 } __attribute__((packed));
 
 #define BLE_HCI_OCF_LE_RD_LOCAL_RESOLV_ADDR         (0x002C)
-struct ble_hci_le_rd_local_recolv_addr_cp {
+struct ble_hci_le_rd_local_resolv_addr_cp {
     uint8_t peer_addr_type;
     uint8_t peer_id_addr[6];
 } __attribute__((packed));
-struct ble_hci_le_rd_local_recolv_addr_rp {
+struct ble_hci_le_rd_local_resolv_addr_rp {
     uint8_t rpa[6];
 } __attribute__((packed));
 
@@ -708,6 +716,7 @@ struct ble_hci_le_ext_create_conn_cp {
 
 #define BLE_HCI_LE_PERIODIC_ADV_CREATE_SYNC_OPT_FILTER      0x01
 #define BLE_HCI_LE_PERIODIC_ADV_CREATE_SYNC_OPT_DISABLED    0x02
+#define BLE_HCI_LE_PERIODIC_ADV_CREATE_SYNC_OPT_DUPLICATES  0x04
 
 #define BLE_HCI_OCF_LE_PERIODIC_ADV_CREATE_SYNC          (0x0044)
 struct ble_hci_le_periodic_adv_create_sync_cp {
@@ -1067,7 +1076,6 @@ struct ble_hci_le_enh_read_transmit_power_level_cp {
     uint8_t phy;
 } __attribute__((packed));
 struct ble_hci_le_enh_read_transmit_power_level_rp {
-    uint8_t status;
     uint16_t conn_handle;
     uint8_t phy;
     uint8_t curr_tx_power_level;
@@ -1103,6 +1111,12 @@ struct ble_hci_le_set_transmit_power_report_enable_cp {
     uint8_t remote_enable;
 } __attribute__((packed));
 
+#define BLE_HCI_OCF_LE_SET_DATA_ADDR_CHANGE	         (0x007C)
+struct ble_hci_le_set_data_addr_change_cp {
+    uint8_t adv_handle;
+    uint8_t change_reason;
+} __attribute__((packed));
+
 #define BLE_HCI_OCF_LE_SET_DEFAULT_SUBRATE               (0x007D)
 struct ble_hci_le_set_default_subrate_cp {
     uint16_t subrate_min;
@@ -1122,11 +1136,60 @@ struct ble_hci_le_subrate_req_cp {
     uint16_t supervision_tmo;
 } __attribute__((packed));
 
-/* --- Vendor specific commands (OGF 0x00FF) */
-#define BLE_HCI_OCF_VS_RD_STATIC_ADDR                 (0x0001)
+/* --- Vendor specific commands (OGF 0x003F) */
+/* Read Random Static Address */
+#define BLE_HCI_OCF_VS_RD_STATIC_ADDR                   (MYNEWT_VAL(BLE_HCI_VS_OCF_OFFSET) + (0x0001))
 struct ble_hci_vs_rd_static_addr_rp {
     uint8_t addr[6];
 } __attribute__((packed));
+
+/* Set default transmit power. Actual selected TX power is returned
+ * in reply. Setting 0xff restores controller reset default.
+ */
+#define BLE_HCI_OCF_VS_SET_TX_PWR                       (MYNEWT_VAL(BLE_HCI_VS_OCF_OFFSET) + (0x0002))
+struct ble_hci_vs_set_tx_pwr_cp {
+    int8_t tx_power;
+} __attribute__((packed));
+struct ble_hci_vs_set_tx_pwr_rp {
+    int8_t tx_power;
+} __attribute__((packed));
+
+#define BLE_HCI_OCF_VS_CSS                              (0x0003)
+struct ble_hci_vs_css_cp {
+    uint8_t opcode;
+} __attribute__((packed));
+#define BLE_HCI_VS_CSS_OP_CONFIGURE                     0x01
+struct ble_hci_vs_css_configure_cp {
+    uint8_t opcode;
+    uint32_t slot_us;
+    uint32_t period_slots;
+} __attribute__((packed));
+#define BLE_HCI_VS_CSS_OP_SET_NEXT_SLOT                 0x02
+struct ble_hci_vs_css_set_next_slot_cp {
+    uint8_t opcode;
+    uint16_t slot_idx;
+} __attribute__((packed));
+#define BLE_HCI_VS_CSS_OP_SET_CONN_SLOT                 0x03
+struct ble_hci_vs_css_set_conn_slot_cp {
+    uint8_t opcode;
+    uint16_t conn_handle;
+    uint16_t slot_idx;
+} __attribute__((packed));
+
+#define BLE_HCI_OCF_VS_DUPLICATE_EXCEPTION_LIST         (MYNEWT_VAL(BLE_HCI_VS_OCF_OFFSET) + (0x0108))
+struct ble_hci_vs_duplicate_exception_list_cp {
+    uint8_t operation;
+    uint32_t type;
+    uint8_t device_info[6];
+} __attribute__((packed));
+
+#define BLE_HCI_OCF_VS_LEGACY_ADV_CLEAR                 (MYNEWT_VAL(BLE_HCI_VS_OCF_OFFSET) + (0x010C))
+
+#if SOC_BLE_POWER_CONTROL_SUPPORTED
+#define BLE_HCI_OCF_VS_PCL_SET_RSSI                     (MYNEWT_VAL(BLE_HCI_VS_OCF_OFFSET) + (0x0111))
+#endif
+
+#define BLE_HCI_OCF_VS_SET_CHAN_SELECT                  (MYNEWT_VAL(BLE_HCI_VS_OCF_OFFSET) + (0x0112))
 
 /* Command Specific Definitions */
 /* --- Set controller to host flow control (OGF 0x03, OCF 0x0031) --- */
@@ -1215,11 +1278,13 @@ struct ble_hci_vs_rd_static_addr_rp {
 
 /* Scan interval and scan window timing */
 #define BLE_HCI_SCAN_ITVL                   (625)           /* usecs */
-#define BLE_HCI_SCAN_ITVL_MIN               (4)             /* units */
-#define BLE_HCI_SCAN_ITVL_MAX               (16384)         /* units */
+#define BLE_HCI_SCAN_ITVL_MIN               (0x0004)        /* units */
+#define BLE_HCI_SCAN_ITVL_MAX               (0x4000)        /* units */
+#define BLE_HCI_SCAN_ITVL_MAX_EXT           (0xffff)        /* units */
 #define BLE_HCI_SCAN_ITVL_DEF               (16)            /* units */
-#define BLE_HCI_SCAN_WINDOW_MIN             (4)             /* units */
-#define BLE_HCI_SCAN_WINDOW_MAX             (16384)         /* units */
+#define BLE_HCI_SCAN_WINDOW_MIN             (0x0004)        /* units */
+#define BLE_HCI_SCAN_WINDOW_MAX             (0x4000)        /* units */
+#define BLE_HCI_SCAN_WINDOW_MAX_EXT         (0xffff)        /* units */
 #define BLE_HCI_SCAN_WINDOW_DEF             (16)            /* units */
 
 /*
@@ -1513,8 +1578,8 @@ struct ble_hci_ev_auth_pyld_tmo {
 
 #define BLE_HCI_EVCODE_SAM_STATUS_CHG       (0x58)
 
-#define BLE_HCI_EVCODE_VENDOR_DEBUG         (0xFF)
-struct ble_hci_ev_vendor_debug {
+#define BLE_HCI_EVCODE_VS_DEBUG             (0xFF)
+struct ble_hci_ev_vs_debug {
     uint8_t id;
     uint8_t data[0];
 } __attribute__((packed));
@@ -1850,9 +1915,9 @@ struct ble_hci_ev_le_subev_transmit_power_report {
     uint16_t conn_handle;
     uint8_t  reason;
     uint8_t  phy;
-    uint8_t  transmit_power_level;
+    int8_t  transmit_power_level;
     uint8_t  transmit_power_level_flag;
-    uint8_t delta;
+    int8_t delta;
 } __attribute__((packed));
 
 #define BLE_HCI_LE_SUBEV_BIGINFO_ADV_REPORT         (0x22)
@@ -1883,6 +1948,11 @@ struct ble_hci_ev_le_subev_subrate_change {
     uint16_t cont_num;
     uint16_t supervision_tmo;
 } __attribute__((packed));
+
+#if (BLE_ADV_REPORT_FLOW_CONTROL == TRUE)
+// LE vendor hci event
+#define BLE_HCI_LE_SUBEV_DISCARD_REPORT_EVT      0XF0
+#endif // (BLE_ADV_REPORT_FLOW_CONTROL == TRUE)
 
 /* Data buffer overflow event */
 #define BLE_HCI_EVENT_ACL_BUF_OVERFLOW      (0x01)
@@ -1952,7 +2022,9 @@ struct ble_hci_ev_le_subev_subrate_change {
 #elif MYNEWT_VAL(BLE_VERSION) == 52
 #define BLE_HCI_VER_BCS BLE_HCI_VER_BCS_5_2
 #define BLE_LMP_VER_BCS BLE_LMP_VER_BCS_5_2
-
+#elif MYNEWT_VAL(BLE_VERSION) == 53
+#define BLE_HCI_VER_BCS BLE_HCI_VER_BCS_5_3
+#define BLE_LMP_VER_BCS BLE_LMP_VER_BCS_5_3
 #endif
 
 #define BLE_HCI_DATA_HDR_SZ                 4

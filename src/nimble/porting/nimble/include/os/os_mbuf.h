@@ -140,11 +140,11 @@ struct os_mqueue {
 
 /** Get a packet header pointer given an mbuf pointer */
 #define OS_MBUF_PKTHDR(__om) ((struct os_mbuf_pkthdr *)     \
-    ((uint8_t *)&(__om)->om_data + sizeof(struct os_mbuf)))
+    (void *)((uint8_t *)&(__om)->om_data + sizeof(struct os_mbuf)))
 
 /** Given a mbuf packet header pointer, return a pointer to the mbuf */
 #define OS_MBUF_PKTHDR_TO_MBUF(__hdr)   \
-     (struct os_mbuf *)((uint8_t *)(__hdr) - sizeof(struct os_mbuf))
+     (struct os_mbuf *)(void *)((uint8_t *)(__hdr) - sizeof(struct os_mbuf))
 
 /**
  * Gets the length of an entire mbuf chain.  The specified mbuf must have a
@@ -244,7 +244,7 @@ _os_mbuf_trailingspace(struct os_mbuf *om)
 #define OS_MBUF_TRAILINGSPACE(__om) _os_mbuf_trailingspace(__om)
 
 
-#if SOC_ESP_NIMBLE_CONTROLLER
+#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
 /**
  * Initializes an mqueue.  An mqueue is a queue of mbufs that ties to a
  * particular task's event queue.  Mqueues form a helper API around a common

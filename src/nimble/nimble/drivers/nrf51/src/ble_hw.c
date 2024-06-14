@@ -476,13 +476,8 @@ ble_hw_resolv_list_size(void)
 int
 ble_hw_resolv_list_match(void)
 {
-    uint32_t index;
-
-    if (NRF_AAR->EVENTS_END) {
-        if (NRF_AAR->EVENTS_RESOLVED) {
-            index = NRF_AAR->STATUS;
-            return (int)index;
-        }
+    if (NRF_AAR->ENABLE && NRF_AAR->EVENTS_END && NRF_AAR->EVENTS_RESOLVED) {
+        return (int)NRF_AAR->STATUS;
     }
 
     return -1;

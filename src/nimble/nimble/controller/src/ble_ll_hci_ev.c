@@ -17,14 +17,13 @@
  * under the License.
  */
 #ifndef ESP_PLATFORM
- 
+
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
-#include "nimble/nimble/include/nimble/ble_hci_trans.h"
 #include "../include/controller/ble_ll.h"
 #include "../include/controller/ble_ll_hci.h"
 #include "../include/controller/ble_ll_ctrl.h"
@@ -46,7 +45,7 @@ ble_ll_hci_ev_datalen_chg(struct ble_ll_conn_sm *connsm)
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_DATA_LEN_CHG)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -78,7 +77,7 @@ ble_ll_hci_ev_rem_conn_parm_req(struct ble_ll_conn_sm *connsm,
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_REM_CONN_PARM_REQ)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -109,7 +108,7 @@ ble_ll_hci_ev_conn_update(struct ble_ll_conn_sm *connsm, uint8_t status)
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_CONN_UPD_COMPLETE)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -119,7 +118,7 @@ ble_ll_hci_ev_conn_update(struct ble_ll_conn_sm *connsm, uint8_t status)
             ev->status = status;
             ev->conn_handle = htole16(connsm->conn_handle);
             ev->conn_itvl = htole16(connsm->conn_itvl);
-            ev->conn_latency = htole16(connsm->slave_latency);
+            ev->conn_latency = htole16(connsm->periph_latency);
             ev->supervision_timeout = htole16(connsm->supervision_tmo);
 
             ble_ll_hci_event_send(hci_ev);
@@ -137,7 +136,7 @@ ble_ll_hci_ev_encrypt_chg(struct ble_ll_conn_sm *connsm, uint8_t status)
 
     if (CONN_F_ENC_CHANGE_SENT(connsm) == 0) {
         if (ble_ll_hci_is_event_enabled(BLE_HCI_EVCODE_ENCRYPT_CHG)) {
-            hci_ev = (void *)ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+            hci_ev = ble_transport_alloc_evt(0);
             if (hci_ev) {
                 hci_ev->opcode = BLE_HCI_EVCODE_ENCRYPT_CHG;
                 hci_ev->length = sizeof(*ev_enc_chf);
@@ -156,7 +155,7 @@ ble_ll_hci_ev_encrypt_chg(struct ble_ll_conn_sm *connsm, uint8_t status)
     }
 
     if (ble_ll_hci_is_event_enabled(BLE_HCI_EVCODE_ENC_KEY_REFRESH)) {
-        hci_ev = (void *)ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_ENC_KEY_REFRESH;
             hci_ev->length = sizeof(*ev_key_refresh);
@@ -183,7 +182,7 @@ ble_ll_hci_ev_ltk_req(struct ble_ll_conn_sm *connsm)
     int rc;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_LT_KEY_REQ)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -217,7 +216,7 @@ ble_ll_hci_ev_rd_rem_used_feat(struct ble_ll_conn_sm *connsm, uint8_t status)
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_RD_REM_USED_FEAT)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -241,7 +240,7 @@ ble_ll_hci_ev_rd_rem_ver(struct ble_ll_conn_sm *connsm, uint8_t status)
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_event_enabled(BLE_HCI_EVCODE_RD_REM_VER_INFO_CMP)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_RD_REM_VER_INFO_CMP;
             hci_ev->length = sizeof(*ev);
@@ -274,7 +273,7 @@ ble_ll_hci_ev_hw_err(uint8_t hw_err)
 
     rc = 0;
     if (ble_ll_hci_is_event_enabled(BLE_HCI_EVCODE_HW_ERROR)) {
-        hci_ev = (void *)ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_HW_ERROR;
             hci_ev->length = sizeof(*ev);
@@ -297,7 +296,7 @@ ble_ll_hci_ev_databuf_overflow(void)
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_event_enabled(BLE_HCI_EVCODE_DATA_BUF_OVERFLOW)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_DATA_BUF_OVERFLOW;
             hci_ev->length = sizeof(*ev);
@@ -323,7 +322,7 @@ ble_ll_hci_ev_le_csa(struct ble_ll_conn_sm *connsm)
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_CHAN_SEL_ALG)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -352,7 +351,7 @@ ble_ll_hci_ev_send_scan_req_recv(uint8_t adv_handle, const uint8_t *peer,
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_SCAN_REQ_RCVD)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -381,7 +380,7 @@ ble_ll_hci_ev_send_scan_timeout(void)
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_SCAN_TIMEOUT)) {
-        hci_ev = (void *)ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -408,7 +407,7 @@ ble_ll_hci_ev_send_adv_set_terminated(uint8_t status, uint8_t adv_handle,
     struct ble_hci_ev *hci_ev;
 
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_ADV_SET_TERMINATED)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -442,7 +441,7 @@ ble_ll_hci_ev_phy_update(struct ble_ll_conn_sm *connsm, uint8_t status)
 
     rc = 0;
     if (ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_PHY_UPDATE_COMPLETE)) {
-        hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+        hci_ev = ble_transport_alloc_evt(0);
         if (hci_ev) {
             hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
             hci_ev->length = sizeof(*ev);
@@ -475,7 +474,7 @@ ble_ll_hci_ev_sca_update(struct ble_ll_conn_sm *connsm, uint8_t status,
         return;
     }
 
-    hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+    hci_ev = ble_transport_alloc_evt(0);
     if (!hci_ev) {
         return;
     }
@@ -494,10 +493,42 @@ ble_ll_hci_ev_sca_update(struct ble_ll_conn_sm *connsm, uint8_t status,
 
 #endif
 
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
 void
-ble_ll_hci_ev_send_vendor_err(const char *file, uint32_t line)
+ble_ll_hci_ev_subrate_change(struct ble_ll_conn_sm *connsm, uint8_t status)
 {
-    struct ble_hci_ev_vendor_debug *ev;
+    struct ble_hci_ev_le_subev_subrate_change *ev;
+    struct ble_hci_ev *hci_ev;
+
+    if (!ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_SUBRATE_CHANGE)) {
+        return;
+    }
+
+    hci_ev = ble_transport_alloc_evt(0);
+    if (!hci_ev) {
+        return;
+    }
+
+    hci_ev->opcode = BLE_HCI_EVCODE_LE_META;
+    hci_ev->length = sizeof(*ev);
+    ev = (void *)hci_ev->data;
+
+    ev->subev_code = BLE_HCI_LE_SUBEV_SUBRATE_CHANGE;
+    ev->status = status;
+    ev->conn_handle = htole16(connsm->conn_handle);
+    ev->subrate_factor = htole16(connsm->subrate_factor);
+    ev->periph_latency = htole16(connsm->periph_latency);
+    ev->cont_num = htole16(connsm->cont_num);
+    ev->supervision_tmo = htole16(connsm->supervision_tmo);
+
+    ble_ll_hci_event_send(hci_ev);
+}
+#endif
+
+void
+ble_ll_hci_ev_send_vs_assert(const char *file, uint32_t line)
+{
+    struct ble_hci_ev_vs_debug *ev;
     struct ble_hci_ev *hci_ev;
     unsigned int str_len;
     bool skip = true;
@@ -510,9 +541,9 @@ ble_ll_hci_ev_send_vendor_err(const char *file, uint32_t line)
      */
     max_len = BLE_HCI_MAX_DATA_LEN - sizeof(*ev) - 6;
 
-    hci_ev = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_EVT_HI);
+    hci_ev = ble_transport_alloc_evt(0);
     if (hci_ev) {
-        hci_ev->opcode = BLE_HCI_EVCODE_VENDOR_DEBUG;
+        hci_ev->opcode = BLE_HCI_EVCODE_VS_DEBUG;
         hci_ev->length = sizeof(*ev);
         ev = (void *) hci_ev->data;
 
@@ -554,4 +585,32 @@ ble_ll_hci_ev_send_vendor_err(const char *file, uint32_t line)
     }
 }
 
+#if MYNEWT_VAL(BLE_LL_HCI_LLCP_TRACE)
+void
+ble_ll_hci_ev_send_vs_llcp_trace(uint8_t type, uint16_t handle, uint16_t count,
+                                 void *pdu, size_t length)
+{
+    struct ble_hci_ev_vs_debug *ev;
+    struct ble_hci_ev *hci_ev;
+
+    hci_ev = ble_transport_alloc_evt(1);
+    if (hci_ev) {
+        hci_ev->opcode = BLE_HCI_EVCODE_VS_DEBUG;
+        hci_ev->length = sizeof(*ev) + 8 + length;
+        ev = (void *) hci_ev->data;
+
+        ev->id = 0x17;
+        ev->data[0] = type;
+        put_le16(&ev->data[1], handle);
+        put_le16(&ev->data[3], count);
+        ev->data[5] = 0;
+        ev->data[6] = 0;
+        ev->data[7] = 0;
+        memcpy(&ev->data[8], pdu, length);
+
+        ble_ll_hci_event_send(hci_ev);
+    }
+}
+
+#endif
 #endif

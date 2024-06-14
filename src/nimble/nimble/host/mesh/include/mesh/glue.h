@@ -62,6 +62,19 @@
 extern "C" {
 #endif
 
+#define SETTINGS_MAX_DIR_DEPTH	8	/* max depth of settings tree */
+
+/** Key size used in Bluetooth's ECC domain. */
+#define BT_ECC_KEY_SIZE            32
+	/** Length of a Bluetooth ECC public key coordinate. */
+#define BT_PUB_KEY_COORD_LEN       (BT_ECC_KEY_SIZE)
+	/** Length of a Bluetooth ECC public key. */
+#define BT_PUB_KEY_LEN             (2 * (BT_PUB_KEY_COORD_LEN))
+	/** Length of a Bluetooth ECC private key. */
+#define BT_PRIV_KEY_LEN            (BT_ECC_KEY_SIZE)
+	/** Length of a Bluetooth Diffie-Hellman key. */
+#define BT_DH_KEY_LEN              (BT_ECC_KEY_SIZE)
+
 /** @brief Helper to declare elements of bt_data arrays
  *
  *  This macro is mainly for creating an array of struct bt_data
@@ -154,6 +167,10 @@ extern "C" {
 #else
 #define ASSERT_NOT_CHAIN(om) (void)(om)
 #endif
+
+#define CHECKIF(expr) \
+	__ASSERT_NO_MSG(!(expr));   \
+	if (0)
 
 #define __packed    __attribute__((__packed__))
 
@@ -252,11 +269,18 @@ static inline void net_buf_simple_reset(struct os_mbuf *om)
     net_buf_simple_init(om, 0);
 }
 
+struct bt_le_ext_adv_start_param {
+	uint16_t timeout;
+
+	uint8_t  num_events;
+};
+
 void net_buf_put(struct ble_npl_eventq *fifo, struct os_mbuf *buf);
 void * net_buf_ref(struct os_mbuf *om);
 void net_buf_unref(struct os_mbuf *om);
 uint16_t net_buf_simple_pull_le16(struct os_mbuf *om);
 uint16_t net_buf_simple_pull_be16(struct os_mbuf *om);
+uint32_t net_buf_simple_pull_le24(struct os_mbuf *om);
 uint32_t net_buf_simple_pull_be32(struct os_mbuf *om);
 uint32_t net_buf_simple_pull_le32(struct os_mbuf *om);
 uint8_t net_buf_simple_pull_u8(struct os_mbuf *om);
@@ -322,15 +346,84 @@ struct bt_pub_key_cb {
      *
      *  @param key The local public key, or NULL in case of no key.
      */
-    void (*func)(const uint8_t key[64]);
+    void (*func)(const uint8_t key[BT_PUB_KEY_LEN]);
 
     struct bt_pub_key_cb *_next;
 };
 
-typedef void (*bt_dh_key_cb_t)(const uint8_t key[32]);
-int bt_dh_key_gen(const uint8_t remote_pk[64], bt_dh_key_cb_t cb);
+/** LE Advertising Parameters. */
+struct bt_le_adv_param {
+	/**
+	 * @brief Local identity.
+	 *
+	 * @note When extended advertising @kconfig{CONFIG_BT_EXT_ADV} is not
+	 *       enabled or not supported by the controller it is not possible
+	 *       to scan and advertise simultaneously using two different
+	 *       random addresses.
+	 */
+	uint8_t  id;
+
+	/**
+	 * @brief Advertising Set Identifier, valid range 0x00 - 0x0f.
+	 *
+	 * @note Requires @ref BT_LE_ADV_OPT_EXT_ADV
+	 **/
+	uint8_t  sid;
+
+	/**
+	 * @brief Secondary channel maximum skip count.
+	 *
+	 * Maximum advertising events the advertiser can skip before it must
+	 * send advertising data on the secondary advertising channel.
+	 *
+	 * @note Requires @ref BT_LE_ADV_OPT_EXT_ADV
+	 */
+	uint8_t  secondary_max_skip;
+
+	/** Bit-field of advertising options */
+	uint32_t options;
+
+	/** Minimum Advertising Interval (N * 0.625 milliseconds)
+	 * Minimum Advertising Interval shall be less than or equal to the
+	 * Maximum Advertising Interval. The Minimum Advertising Interval and
+	 * Maximum Advertising Interval should not be the same value (as stated
+	 * in Bluetooth Core Spec 5.2, section 7.8.5)
+	 * Range: 0x0020 to 0x4000
+	 */
+	uint32_t interval_min;
+
+	/** Maximum Advertising Interval (N * 0.625 milliseconds)
+	 * Minimum Advertising Interval shall be less than or equal to the
+	 * Maximum Advertising Interval. The Minimum Advertising Interval and
+	 * Maximum Advertising Interval should not be the same value (as stated
+	 * in Bluetooth Core Spec 5.2, section 7.8.5)
+	 * Range: 0x0020 to 0x4000
+	 */
+	uint32_t interval_max;
+
+	/**
+	 * @brief Directed advertising to peer
+	 *
+	 * When this parameter is set the advertiser will send directed
+	 * advertising to the remote device.
+	 *
+	 * The advertising type will either be high duty cycle, or low duty
+	 * cycle if the BT_LE_ADV_OPT_DIR_MODE_LOW_DUTY option is enabled.
+	 * When using @ref BT_LE_ADV_OPT_EXT_ADV then only low duty cycle is
+	 * allowed.
+	 *
+	 * In case of connectable high duty cycle if the connection could not
+	 * be established within the timeout the connected() callback will be
+	 * called with the status set to @ref BT_HCI_ERR_ADV_TIMEOUT.
+	 */
+	const bt_addr_le_t *peer;
+};
+
+typedef void (*bt_dh_key_cb_t)(const uint8_t key[BT_DH_KEY_LEN]);
+int bt_dh_key_gen(const uint8_t remote_pk[BT_PUB_KEY_LEN], bt_dh_key_cb_t cb);
 int bt_pub_key_gen(struct bt_pub_key_cb *new_cb);
 uint8_t *bt_pub_key_get(void);
+void bt_conn_get_info(struct ble_hs_conn *conn, struct ble_gap_conn_desc *desc);
 int bt_rand(void *buf, size_t len);
 const char * bt_hex(const void *buf, size_t len);
 int bt_encrypt_be(const uint8_t *key, const uint8_t *plaintext, uint8_t *enc_data);
@@ -344,24 +437,28 @@ void bt_mesh_register_gatt(void);
 int bt_le_adv_start(const struct ble_gap_adv_params *param,
                     const struct bt_data *ad, size_t ad_len,
                     const struct bt_data *sd, size_t sd_len);
-int bt_le_adv_stop(bool proxy);
 
-struct k_delayed_work {
+int bt_le_adv_stop(void);
+
+struct k_work_delayable {
     struct ble_npl_callout work;
 };
 
 void k_work_init(struct ble_npl_callout *work, ble_npl_event_fn handler);
-void k_delayed_work_init(struct k_delayed_work *w, ble_npl_event_fn *f);
-void k_delayed_work_cancel(struct k_delayed_work *w);
-bool k_delayed_work_pending(struct k_delayed_work *w);
-void k_delayed_work_submit(struct k_delayed_work *w, uint32_t ms);
+void k_work_init_delayable(struct k_work_delayable *w, ble_npl_event_fn *f);
+void k_work_cancel_delayable(struct k_work_delayable *w);
+bool k_work_delayable_is_pending(struct k_work_delayable *w);
+void k_work_reschedule(struct k_work_delayable *w, uint32_t ms);
 int64_t k_uptime_get(void);
 uint32_t k_uptime_get_32(void);
+int64_t k_uptime_delta(int64_t *reftime);
 void k_sleep(int32_t duration);
 void k_work_submit(struct ble_npl_callout *w);
 void k_work_add_arg(struct ble_npl_callout *w, void *arg);
-void k_delayed_work_add_arg(struct k_delayed_work *w, void *arg);
-uint32_t k_delayed_work_remaining_get(struct k_delayed_work *w);
+void k_work_add_arg_delayable(struct k_work_delayable *w, void *arg);
+ble_npl_time_t k_work_delayable_remaining_get(struct k_work_delayable *w);
+void k_work_schedule(struct k_work_delayable *w, uint32_t ms);
+uint32_t k_ticks_to_ms_floor32(ble_npl_time_t ticks);
 
 static inline void net_buf_simple_save(struct os_mbuf *buf,
                        struct net_buf_simple_state *state)
@@ -369,6 +466,8 @@ static inline void net_buf_simple_save(struct os_mbuf *buf,
     state->offset = net_buf_simple_headroom(buf);
     state->len = buf->om_len;
 }
+
+void net_buf_simple_clone(const struct os_mbuf *original, struct os_mbuf *clone);
 
 static inline void net_buf_simple_restore(struct os_mbuf *buf,
                                           struct net_buf_simple_state *state)
@@ -422,13 +521,15 @@ static inline unsigned int find_msb_set(uint32_t op)
 #define CONFIG_BT_MESH_PROVISIONER            BLE_MESH_PROVISIONER
 #define CONFIG_BT_MESH_PROV_DEVICE            BLE_MESH_PROV_DEVICE
 #define CONFIG_BT_MESH_CDB                    BLE_MESH_CDB
+#define CONFIG_BT_MESH_DEBUG_CFG              BLE_MESH_DEBUG_CFG
+#define CONFIG_BT_MESH_DEBUG_ADV              BLE_MESH_DEBUG_ADV
 
 /* Above flags are used with IS_ENABLED macro */
 #define IS_ENABLED(config) MYNEWT_VAL(config)
 
 #define CONFIG_BT_MESH_LPN_GROUPS                MYNEWT_VAL(BLE_MESH_LPN_GROUPS)
 #define CONFIG_BT_MESH_ADV_BUF_COUNT             MYNEWT_VAL(BLE_MESH_ADV_BUF_COUNT)
-#define CONFIG_BT_MESH_SEG_BUFS                  MYNEWT_VAL(BLE_MESH_SEG_BUFS )
+#define CONFIG_BT_MESH_SEG_BUFS                  MYNEWT_VAL(BLE_MESH_SEG_BUFS)
 #define CONFIG_BT_MESH_FRIEND_QUEUE_SIZE         MYNEWT_VAL(BLE_MESH_FRIEND_QUEUE_SIZE)
 #define CONFIG_BT_MESH_FRIEND_RECV_WIN           MYNEWT_VAL(BLE_MESH_FRIEND_RECV_WIN)
 #define CONFIG_BT_MESH_LPN_POLL_TIMEOUT          MYNEWT_VAL(BLE_MESH_LPN_POLL_TIMEOUT)
@@ -441,6 +542,7 @@ static inline unsigned int find_msb_set(uint32_t op)
 #define CONFIG_BT_MESH_APP_KEY_COUNT             MYNEWT_VAL(BLE_MESH_APP_KEY_COUNT)
 #define CONFIG_BT_MESH_SUBNET_COUNT              MYNEWT_VAL(BLE_MESH_SUBNET_COUNT)
 #define CONFIG_BT_MESH_STORE_TIMEOUT             MYNEWT_VAL(BLE_MESH_STORE_TIMEOUT)
+#define CONFIG_BT_MESH_IV_UPDATE_SEQ_LIMIT       MYNEWT_VAL(BLE_MESH_IV_UPDATE_SEQ_LIMIT)
 #define CONFIG_BT_MESH_IVU_DIVIDER               MYNEWT_VAL(BLE_MESH_IVU_DIVIDER)
 #define CONFIG_BT_DEVICE_NAME                    MYNEWT_VAL(BLE_MESH_DEVICE_NAME)
 #define CONFIG_BT_RX_SEG_MAX                     MYNEWT_VAL(BLE_MESH_RX_SEG_MAX)
@@ -448,6 +550,7 @@ static inline unsigned int find_msb_set(uint32_t op)
 #define CONFIG_BT_MESH_RX_SEG_MAX                MYNEWT_VAL(BLE_MESH_RX_SEG_MAX)
 #define CONFIG_BT_MESH_RX_SEG_MSG_COUNT          MYNEWT_VAL(BLE_MESH_RX_SEG_MSG_COUNT)
 #define CONFIG_BT_MESH_LABEL_COUNT               MYNEWT_VAL(BLE_MESH_LABEL_COUNT)
+#define CONFIG_BT_MESH_MODEL_VND_MSG_CID_FORCE   MYNEWT_VAL(BLE_MESH_MODEL_VND_MSG_CID_FORCE)
 #define CONFIG_BT_MESH_NODE_COUNT                MYNEWT_VAL(BLE_MESH_CDB_NODE_COUNT)
 #define CONFIG_BT_GATT_PROXY_ENABLED             MYNEWT_VAL(BLE_MESH_GATT_PROXY_ENABLED)
 #define CONFIG_BT_MESH_DEFAULT_TTL               MYNEWT_VAL(BLE_MESH_DEFAULT_TTL)
@@ -460,6 +563,7 @@ static inline unsigned int find_msb_set(uint32_t op)
 #define CONFIG_BT_MESH_RELAY                     MYNEWT_VAL(BLE_MESH_RELAY)
 #define CONFIG_BT_MESH_RELAY_RETRANSMIT_COUNT    MYNEWT_VAL(BLE_MESH_RELAY_RETRANSMIT_COUNT)
 #define CONFIG_BT_MESH_GATT_PROXY_ENABLED        MYNEWT_VAL(BLE_MESH_GATT_PROXY_ENABLED)
+#define CONFIG_BT_MESH_PROXY_MSG_LEN             MYNEWT_VAL(BLE_MESH_PROXY_MSG_LEN)
 
 #define printk console_printf
 
@@ -488,6 +592,10 @@ static inline void k_sem_give(struct k_sem *sem)
 	ble_npl_sem_release(sem);
 }
 
+static inline void k_sem_reset(struct k_sem *sem)
+{
+	ble_npl_sem_init(sem, 0);
+}
 /* Helpers to access the storage array, since we don't have access to its
  * type at this point anymore.
  */
@@ -542,7 +650,7 @@ settings_load(void)
 
 #endif /* MYNEWT_VAL(MYNEWT_VAL_BLE_MESH_SETTINGS) */
 
-#define BUILD_ASSERT(cond) _Static_assert(cond, "")
+#define BUILD_ASSERT(cond, msg) _Static_assert(cond, msg)
 
 
 /* Memory slabs/blocks */

@@ -37,7 +37,7 @@ struct bt_mesh_subnet {
 	uint8_t  beacons_last;       /* Number of beacons during last
 				      * observation window
 				      */
-	uint8_t  beacons_cur;        /* Number of beaconds observed during
+	uint8_t  beacons_cur;        /* Number of beacons observed during
 				      * currently ongoing window.
 				      */
 
@@ -194,4 +194,13 @@ bt_mesh_subnet_has_new_key(const struct bt_mesh_subnet *sub)
 	return sub->kr_phase != BT_MESH_KR_NORMAL;
 }
 
+/** @brief Store the Subnet information in persistent storage.
+ *
+ * @param net_idx Network index to store.
+ */
+void bt_mesh_subnet_store(uint16_t net_idx);
+
+/** @brief Store the pending Subnets in persistent storage. */
+void bt_mesh_subnet_pending_store(void);
+void bt_mesh_net_key_init(void);
 #endif /* _BLUETOOTH_MESH_SUBNET_H_ */

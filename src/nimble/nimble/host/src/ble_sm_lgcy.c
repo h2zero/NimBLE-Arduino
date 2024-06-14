@@ -36,7 +36,7 @@
 #define IOACT_INPUT BLE_SM_IOACT_INPUT
 #define IOACT_DISP  BLE_SM_IOACT_DISP
 
-/* This is the initiator passkey action action dpeneding on the io
+/* This is the initiator passkey action action depending on the io
  * capabilties of both parties
  */
 static const uint8_t ble_sm_lgcy_init_ioa[5 /*resp*/ ][5 /*init*/ ] =

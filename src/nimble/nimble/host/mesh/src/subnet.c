@@ -6,12 +6,12 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#define MESH_LOG_MODULE BLE_MESH_NET_KEYS_LOG
-
 #if MYNEWT_VAL(BLE_MESH)
 
-#include "nimble/porting/nimble/include/log/log.h"
+#include <stdlib.h>
+#define MESH_LOG_MODULE BLE_MESH_NET_KEYS_LOG
 
+#include "nimble/porting/nimble/include/log/log.h"
 #include "crypto.h"
 #include "adv.h"
 #include "../include/mesh/mesh.h"
@@ -27,6 +27,26 @@
 #include "rpl.h"
 #include "settings.h"
 #include "prov.h"
+
+/* Tracking of what storage changes are pending for Net Keys. We track this in
+ * a separate array here instead of within the respective bt_mesh_subnet
+ * struct itselve, since once a key gets deleted its struct becomes invalid
+ * and may be reused for other keys.
+ */
+struct net_key_update {
+	uint16_t key_idx:12,    /* NetKey Index */
+		 valid:1,       /* 1 if this entry is valid, 0 if not */
+		 clear:1;       /* 1 if key needs clearing, 0 if storing */
+};
+
+/* NetKey storage information */
+struct net_key_val {
+	uint8_t kr_flag:1,
+		kr_phase:7;
+	uint8_t val[2][16];
+} __packed;
+
+static struct net_key_update net_key_updates[CONFIG_BT_MESH_SUBNET_COUNT];
 
 #ifdef CONFIG_BT_MESH_GATT_PROXY
 void (*bt_mesh_subnet_cb_list[5]) (struct bt_mesh_subnet *sub,
@@ -53,6 +73,91 @@ static void subnet_evt(struct bt_mesh_subnet *sub, enum bt_mesh_key_evt evt)
 	}
 }
 
+static void clear_net_key(uint16_t net_idx)
+{
+#if MYNEWT_VAL(BLE_MESH_SETTINGS)
+	char path[20];
+	int err;
+
+	BT_DBG("NetKeyIndex 0x%03x", net_idx);
+
+	snprintk(path, sizeof(path), "bt_mesh/NetKey/%x", net_idx);
+	err = settings_save_one(path, NULL);
+	if (err) {
+		BT_ERR("Failed to clear NetKeyIndex 0x%03x", net_idx);
+	} else {
+		BT_DBG("Cleared NetKeyIndex 0x%03x", net_idx);
+	}
+#endif
+}
+
+static void store_subnet(uint16_t net_idx)
+{
+#if MYNEWT_VAL(BLE_MESH_SETTINGS)
+	const struct bt_mesh_subnet *sub;
+	struct net_key_val key;
+	char buf[BT_SETTINGS_SIZE(sizeof(struct net_key_val))];
+	char path[20];
+	char *str;
+	int err;
+
+	sub = bt_mesh_subnet_get(net_idx);
+	if (!sub) {
+		BT_WARN("NetKeyIndex 0x%03x not found", net_idx);
+		return;
+	}
+
+	BT_DBG("NetKeyIndex 0x%03x", net_idx);
+
+	snprintk(path, sizeof(path), "bt_mesh/NetKey/%x", net_idx);
+
+	memcpy(&key.val[0], sub->keys[0].net, 16);
+	memcpy(&key.val[1], sub->keys[1].net, 16);
+	key.kr_flag = 0U; /* Deprecated */
+	key.kr_phase = sub->kr_phase;
+
+	str = settings_str_from_bytes(&key, sizeof(key), buf, sizeof(buf));
+	if (!str) {
+		BT_ERR("Unable to encode AppKey as value");
+		return;
+	}
+
+	err = settings_save_one(path, str);
+	if (err) {
+		BT_ERR("Failed to store NetKey");
+	} else {
+		BT_DBG("Stored NetKey");
+	}
+#endif
+}
+
+#if MYNEWT_VAL(BLE_MESH_SETTINGS)
+static struct net_key_update *net_key_update_find(uint16_t key_idx,
+						  struct net_key_update **free_slot)
+{
+	struct net_key_update *match;
+	int i;
+
+	match = NULL;
+	*free_slot = NULL;
+
+	for (i = 0; i < ARRAY_SIZE(net_key_updates); i++) {
+		struct net_key_update *update = &net_key_updates[i];
+
+		if (!update->valid) {
+			*free_slot = update;
+			continue;
+		}
+
+		if (update->key_idx == key_idx) {
+			match = update;
+		}
+	}
+
+	return match;
+}
+#endif
+
 uint8_t bt_mesh_net_flags(struct bt_mesh_subnet *sub)
 {
 	uint8_t flags = 0x00;
@@ -67,6 +172,46 @@ uint8_t bt_mesh_net_flags(struct bt_mesh_subnet *sub)
 
 	return flags;
 }
+
+static void update_subnet_settings(uint16_t net_idx, bool store)
+{
+#if MYNEWT_VAL(BLE_MESH_SETTINGS)
+	struct net_key_update *update, *free_slot;
+	uint8_t clear = store ? 0U : 1U;
+
+	BT_DBG("NetKeyIndex 0x%03x", net_idx);
+
+	update = net_key_update_find(net_idx, &free_slot);
+	if (update) {
+		update->clear = clear;
+		bt_mesh_settings_store_schedule(
+			BT_MESH_SETTINGS_NET_KEYS_PENDING);
+		return;
+	}
+
+	if (!free_slot) {
+		if (store) {
+			store_subnet(net_idx);
+		} else {
+			clear_net_key(net_idx);
+		}
+		return;
+	}
+
+	free_slot->valid = 1U;
+	free_slot->key_idx = net_idx;
+	free_slot->clear = clear;
+
+	bt_mesh_settings_store_schedule(BT_MESH_SETTINGS_NET_KEYS_PENDING);
+#endif
+}
+
+#if MYNEWT_VAL(BLE_MESH_SETTINGS)
+void bt_mesh_subnet_store(uint16_t net_idx)
+{
+	update_subnet_settings(net_idx, true);
+}
+#endif
 
 static void key_refresh(struct bt_mesh_subnet *sub, uint8_t new_phase)
 {
@@ -99,7 +244,7 @@ static void key_refresh(struct bt_mesh_subnet *sub, uint8_t new_phase)
 
 	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
 		BT_DBG("Storing Updated NetKey persistently");
-		bt_mesh_store_subnet(sub->net_idx);
+		bt_mesh_subnet_store(sub->net_idx);
 	}
 }
 
@@ -141,7 +286,7 @@ static struct bt_mesh_subnet *subnet_alloc(uint16_t net_idx)
 static void subnet_del(struct bt_mesh_subnet *sub)
 {
 	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
-		bt_mesh_clear_subnet(sub->net_idx);
+		update_subnet_settings(sub->net_idx, false);
 	}
 
 	bt_mesh_net_loopback_clear(sub->net_idx);
@@ -244,7 +389,7 @@ uint8_t bt_mesh_subnet_add(uint16_t net_idx, const uint8_t key[16])
 
 	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
 		BT_DBG("Storing NetKey persistently");
-		bt_mesh_store_subnet(sub->net_idx);
+		bt_mesh_subnet_store(sub->net_idx);
 	}
 
 	return STATUS_SUCCESS;
@@ -667,4 +812,77 @@ bool bt_mesh_net_cred_find(struct bt_mesh_net_rx *rx, struct os_mbuf *in,
 	return false;
 }
 
+#if MYNEWT_VAL(BLE_MESH_SETTINGS)
+static int net_key_set(int argc, char **argv, char *val)
+{
+	struct net_key_val key;
+	int len, err;
+	uint16_t net_idx;
+
+	BT_DBG("argv[0] %s val %s", argv[0], val ? val : "(null)");
+
+	net_idx = strtol(argv[0], NULL, 16);
+
+	len = sizeof(key);
+	err = settings_bytes_from_str(val, &key, &len);
+	if (err) {
+		BT_ERR("Failed to decode value %s (err %d)", val, err);
+		return err;
+	}
+
+	if (len != sizeof(key)) {
+		BT_ERR("Unexpected value length (%d != %zu)", len, sizeof(key));
+		return -EINVAL;
+	}
+
+	BT_DBG("NetKeyIndex 0x%03x recovered from storage", net_idx);
+
+	return bt_mesh_subnet_set(
+		net_idx, key.kr_phase, key.val[0],
+		(key.kr_phase != BT_MESH_KR_NORMAL) ? key.val[1] : NULL);
+}
+#endif
+
+void bt_mesh_subnet_pending_store(void)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(net_key_updates); i++) {
+		struct net_key_update *update = &net_key_updates[i];
+
+		if (!update->valid) {
+			continue;
+		}
+
+		if (update->clear) {
+			clear_net_key(update->key_idx);
+		} else {
+			store_subnet(update->key_idx);
+		}
+
+		update->valid = 0U;
+	}
+}
+
+#if MYNEWT_VAL(BLE_MESH_SETTINGS)
+static struct conf_handler bt_mesh_net_key_conf_handler = {
+	.ch_name = "bt_mesh",
+	.ch_get = NULL,
+	.ch_set = net_key_set,
+	.ch_commit = NULL,
+	.ch_export = NULL,
+};
+#endif
+
+void bt_mesh_net_key_init(void)
+{
+#if MYNEWT_VAL(BLE_MESH_SETTINGS)
+	int rc;
+
+	rc = conf_register(&bt_mesh_net_key_conf_handler);
+
+	SYSINIT_PANIC_ASSERT_MSG(rc == 0,
+				 "Failed to register bt_mesh_net_key conf");
+#endif
+}
 #endif /* MYNEWT_VAL(BLE_MESH) */

@@ -18,7 +18,6 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#include "nimble/nimble/include/nimble/ble_hci_trans.h"
 #include "ble_hs_priv.h"
 
 #if MYNEWT_VAL(BLE_HS_FLOW_CTRL)
@@ -41,7 +40,7 @@ static ble_npl_event_fn ble_hs_flow_event_cb;
 static struct ble_npl_event ble_hs_flow_ev;
 
 /* Connection handle associated with each mbuf in ACL pool */
-static uint16_t ble_hs_flow_mbuf_conn_handle[ MYNEWT_VAL(BLE_ACL_BUF_COUNT) ];
+static uint16_t ble_hs_flow_mbuf_conn_handle[ MYNEWT_VAL(BLE_TRANSPORT_ACL_FROM_LL_COUNT) ];
 
 static inline int
 ble_hs_flow_mbuf_index(const struct os_mbuf *om)
@@ -136,7 +135,7 @@ ble_hs_flow_inc_completed_pkts(struct ble_hs_conn *conn)
     conn->bhc_completed_pkts++;
     ble_hs_flow_num_completed_pkts++;
 
-    if (ble_hs_flow_num_completed_pkts > MYNEWT_VAL(BLE_ACL_BUF_COUNT)) {
+    if (ble_hs_flow_num_completed_pkts > MYNEWT_VAL(BLE_TRANSPORT_ACL_FROM_LL_COUNT)) {
         ble_hs_sched_reset(BLE_HS_ECONTROLLER);
         return;
     }
@@ -144,7 +143,8 @@ ble_hs_flow_inc_completed_pkts(struct ble_hs_conn *conn)
     /* If the number of free buffers is at or below the configured threshold,
      * send an immediate number-of-copmleted-packets event.
      */
-    num_free = MYNEWT_VAL(BLE_ACL_BUF_COUNT) - ble_hs_flow_num_completed_pkts;
+    num_free = MYNEWT_VAL(BLE_TRANSPORT_ACL_FROM_LL_COUNT) -
+               ble_hs_flow_num_completed_pkts;
     if (num_free <= MYNEWT_VAL(BLE_HS_FLOW_CTRL_THRESH)) {
         ble_npl_eventq_put(ble_hs_evq_get(), &ble_hs_flow_ev);
         ble_npl_callout_stop(&ble_hs_flow_timer);
@@ -230,17 +230,14 @@ ble_hs_flow_startup(void)
 #if MYNEWT_VAL(BLE_HS_FLOW_CTRL)
     struct ble_hci_cb_ctlr_to_host_fc_cp enable_cmd;
     struct ble_hci_cb_host_buf_size_cp buf_size_cmd = {
-            .acl_data_len = htole16(MYNEWT_VAL(BLE_ACL_BUF_SIZE)),
-            .acl_num = htole16(MYNEWT_VAL(BLE_ACL_BUF_COUNT)),
+            .acl_data_len = htole16(MYNEWT_VAL(BLE_TRANSPORT_ACL_SIZE)),
+            .acl_num = htole16(MYNEWT_VAL(BLE_TRANSPORT_ACL_FROM_LL_COUNT)),
     };
     int rc;
 
     /* Remove previous event from queue, if any*/
     ble_npl_eventq_remove(ble_hs_evq_get(), &ble_hs_flow_ev);
-   
 
-    /* Assume failure. */
-    ble_hci_trans_set_acl_free_cb(NULL, NULL);
 
 #if MYNEWT_VAL(SELFTEST)
     ble_npl_callout_stop(&ble_hs_flow_timer);
@@ -268,9 +265,13 @@ ble_hs_flow_startup(void)
 
     /* Flow control successfully enabled. */
     ble_hs_flow_num_completed_pkts = 0;
+#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
     ble_hci_trans_set_acl_free_cb(ble_hs_flow_acl_free, NULL);
-    /* Stop flow control timer, if not already */
-    ble_npl_callout_stop(&ble_hs_flow_timer);
+#else
+    ble_transport_register_put_acl_from_ll_cb(ble_hs_flow_acl_free);
+#endif
+    ble_npl_callout_init(&ble_hs_flow_timer, ble_hs_evq_get(),
+                         ble_hs_flow_event_cb, NULL);
 #endif
 
     return 0;

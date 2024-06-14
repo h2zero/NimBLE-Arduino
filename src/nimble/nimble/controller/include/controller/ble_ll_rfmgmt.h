@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include "ble_ll_tmr.h"
+
 void ble_ll_rfmgmt_init(void);
 
 #if MYNEWT_VAL(BLE_LL_RFMGMT_ENABLE_TIME) > 0
@@ -51,7 +53,7 @@ static inline void ble_ll_rfmgmt_reset(void) { }
 static inline void ble_ll_rfmgmt_scan_changed(bool e, uint32_t n) { }
 static inline void ble_ll_rfmgmt_sched_changed(struct ble_ll_sched_item *f) { }
 static inline void ble_ll_rfmgmt_release(void) { }
-static inline uint32_t ble_ll_rfmgmt_enable_now(void) { return 0; }
+static inline uint32_t ble_ll_rfmgmt_enable_now(void) { return ble_ll_tmr_get(); }
 static inline bool ble_ll_rfmgmt_is_enabled(void) { return true; }
 
 #endif

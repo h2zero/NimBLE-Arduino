@@ -28,7 +28,8 @@ extern "C" {
 
 #define SYSINIT_ASSERT_ACTIVE()
 
-#define SYSINIT_PANIC_ASSERT(rc)        assert(rc);
+#define SYSINIT_PANIC_ASSERT(rc)            assert(rc)
+#define SYSINIT_PANIC_ASSERT_MSG(rc, msg)   assert(rc)
 
 #ifdef __cplusplus
 }

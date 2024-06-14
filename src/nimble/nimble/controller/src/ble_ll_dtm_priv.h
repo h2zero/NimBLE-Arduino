@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "nimble/ble.h"
+#include "nimble/nimble/include/nimble/ble.h"
 
 int ble_ll_hci_dtm_tx_test(const uint8_t *cmdbuf, uint8_t len);
 int ble_ll_hci_dtm_tx_test_v2(const uint8_t *cmdbuf, uint8_t len);

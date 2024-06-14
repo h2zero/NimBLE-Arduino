@@ -34,6 +34,10 @@
 #include "trng/trng.h"
 #endif
 
+#if BABBLESIM
+extern void tm_tick(void);
+#endif
+
 #if MYNEWT_VAL(TRNG)
 static struct trng_dev *g_trng;
 #else
@@ -117,6 +121,9 @@ ble_ll_rand_data_get(uint8_t *buf, uint8_t len)
             while ((g_ble_ll_rnum_data.rnd_size < len) &&
                    (g_ble_ll_rnum_data.rnd_size < MYNEWT_VAL(BLE_LL_RNG_BUFSIZE))) {
                 /* Spin here */
+#if BABBLESIM
+                tm_tick();
+#endif
             }
         }
     }

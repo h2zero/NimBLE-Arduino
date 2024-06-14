@@ -32,7 +32,7 @@
 #define NIMBLE_HS_STACK_SIZE (CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE / 4)
 #endif
 
-#if (CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C2)
+#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
 #define NIMBLE_LL_STACK_SIZE CONFIG_BT_LE_CONTROLLER_TASK_STACK_SIZE
 #endif
 
@@ -57,6 +57,9 @@ esp_err_t nimble_port_init(void);
 */
 esp_err_t nimble_port_deinit(void);
 
+void nimble_port_run(void);
+int nimble_port_stop(void);
+
 
 /**
  * @brief esp_nimble_init - Initialize the NimBLE host stack
@@ -71,13 +74,18 @@ esp_err_t esp_nimble_init(void);
  * @return esp_err_t
  */
 esp_err_t esp_nimble_deinit(void);
+
 #else
+
 void nimble_port_init(void);
-void nimble_port_deinit(void);
-#endif // ESP_PLATFORM
 
 void nimble_port_run(void);
+
 int nimble_port_stop(void);
+
+void nimble_port_deinit(void);
+
+#endif //ESP_PLATFORM
 
 struct ble_npl_eventq *nimble_port_get_dflt_eventq(void);
 

@@ -44,6 +44,7 @@
 #include "ble_store.h"
 #include "ble_uuid.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
+#include "ble_esp_hs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -367,19 +368,13 @@ void ble_hs_evq_set(struct ble_npl_eventq *evq);
 void ble_hs_init(void);
 
 /**
- * Deinitializes the NimBLE host. This function must be called after the
- * NimBLE host stop procedure is complete.
- */
-void ble_hs_deinit(void);
-
-/**
  * @brief Called when the system is shutting down.  Stops the BLE host.
  *
  * @param reason                The reason for the shutdown.  One of the
  *                                  HAL_RESET_[...] codes or an
  *                                  implementation-defined value.
  *
- * @return                      SYSDOWN_IN_PROGRESS. 
+ * @return                      SYSDOWN_IN_PROGRESS.
  */
 int ble_hs_shutdown(int reason);
 

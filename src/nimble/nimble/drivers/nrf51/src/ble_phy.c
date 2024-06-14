@@ -24,6 +24,8 @@
 #include <assert.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
+/* Keep os_cputime explicitly to enable build on non-Mynewt platforms */
+#include "nimble/porting/nimble/include/os/os_cputime.h"
 #include "../include/ble/xcvr.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
@@ -49,10 +51,6 @@
 
 #ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
-
-#ifndef max
-#define max(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 /* XXX: 4) Make sure RF is higher priority interrupt than schedule */
@@ -418,7 +416,7 @@ ble_phy_set_start_time(uint32_t cputime, uint8_t rem_usecs)
 /**
  * Function is used to set PPI so that we can time out waiting for a reception
  * to occur. This happens for two reasons: we have sent a packet and we are
- * waiting for a respons (txrx should be set to ENABLE_TXRX) or we are
+ * waiting for a response (txrx should be set to ENABLE_TXRX) or we are
  * starting a connection event and we are a slave and we are waiting for the
  * master to send us a packet (txrx should be set to ENABLE_RX).
  *
@@ -1367,7 +1365,7 @@ ble_phy_setchan(uint8_t chan, uint32_t access_addr, uint32_t crcinit)
         NRF_RADIO->RXADDRESSES = (1 << 1);
         NRF_RADIO->CRCINIT = crcinit;
     } else {
-        /* Logical adddress 0 preconfigured */
+        /* Logical address 0 preconfigured */
         NRF_RADIO->TXADDRESS = 0;
         NRF_RADIO->RXADDRESSES = (1 << 0);
         NRF_RADIO->CRCINIT = BLE_LL_CRCINIT_ADV;

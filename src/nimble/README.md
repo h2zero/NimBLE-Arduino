@@ -19,7 +19,9 @@
 #
 -->
 
+  
 <img src="http://mynewt.apache.org/img/logo.svg" width="250" alt="Apache Mynewt">
+
 
 ## Overview
 
@@ -27,14 +29,14 @@ Apache NimBLE is an open-source Bluetooth 5.1 stack (both Host & Controller)
 that completely replaces the proprietary SoftDevice on Nordic chipsets. It is
 part of [Apache Mynewt project](https://github.com/apache/mynewt-core).
 
-Features highlight:
-  - Support for 251 byte packet size
+Feature highlight:
+  - Support for 251 byte packet size.
   - Support for all 4 roles concurrently - Broadcaster, Observer, Peripheral and Central
   - Support for up to 32 simultaneous connections.
   - Legacy and SC (secure connections) SMP support (pairing and bonding).
   - Advertising Extensions.
   - Periodic Advertising.
-  - Coded (aka Long Range) and 2M PHYs.
+  - Coded (a.k.a. Long Range) and 2M PHYs.
   - Bluetooth Mesh.
 
 ## Supported hardware
