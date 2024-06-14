@@ -10,27 +10,8 @@
 #include "../include/mesh/mesh.h"
 #include "subnet.h"
 
-/** Mesh Application. */
-struct bt_mesh_app_key {
-	uint16_t net_idx;
-	uint16_t app_idx;
-	bool updated;
-	struct bt_mesh_app_cred {
-		uint8_t id;
-		uint8_t val[16];
-	} keys[2];
-};
-
 /** @brief Reset the app keys module. */
 void bt_mesh_app_keys_reset(void);
-
-/** @brief Get the application key with the given AppIdx.
- *
- *  @param app_idx App index.
- *
- *  @return The matching application, or NULL if the application isn't known.
- */
-struct bt_mesh_app_key *bt_mesh_app_key_get(uint16_t app_idx);
 
 /** @brief Initialize a new application key with the given parameters.
  *
@@ -78,9 +59,10 @@ uint16_t bt_mesh_app_key_find(bool dev_key, uint8_t aid,
 					const uint8_t key[16], void *cb_data),
 			      void *cb_data);
 
-struct bt_mesh_app_key *app_get(uint16_t app_idx);
-
 extern void (*bt_mesh_app_key_cb_list[1]) (uint16_t app_idx, uint16_t net_idx,
 			enum bt_mesh_key_evt evt);
 
+/** @brief Store pending application keys in persistent storage. */
+void bt_mesh_app_key_pending_store(void);
+void bt_mesh_app_key_init(void);
 #endif /* _BT_MESH_APP_KEYS_H_ */

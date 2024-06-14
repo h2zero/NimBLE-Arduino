@@ -83,9 +83,6 @@ typedef void (*ble_phy_tx_end_func)(void *arg);
 /* Initialize the PHY */
 int ble_phy_init(void);
 
-/* Reset the PHY */
-int ble_phy_reset(void);
-
 /* Set the PHY channel */
 int ble_phy_setchan(uint8_t chan, uint32_t access_addr, uint32_t crcinit);
 
@@ -164,7 +161,7 @@ uint32_t ble_phy_access_addr_get(void);
 
 /* Enable encryption */
 void ble_phy_encrypt_enable(uint64_t pkt_counter, uint8_t *iv, uint8_t *key,
-                            uint8_t is_master);
+                            uint8_t is_central);
 
 /* Disable encryption */
 void ble_phy_encrypt_disable(void);
@@ -201,6 +198,11 @@ void ble_phy_resolv_list_disable(void);
 #define BLE_PHY_MASK_1M             (BLE_HCI_LE_PHY_1M_PREF_MASK)
 #define BLE_PHY_MASK_2M             (BLE_HCI_LE_PHY_2M_PREF_MASK)
 #define BLE_PHY_MASK_CODED          (BLE_HCI_LE_PHY_CODED_PREF_MASK)
+
+/* PHY indices (for a zero-based array) */
+#define BLE_PHY_IDX_1M              (0)
+#define BLE_PHY_IDX_2M              (1)
+#define BLE_PHY_IDX_CODED           (2)
 
 #if (MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_2M_PHY) || MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY))
 uint32_t ble_phy_mode_pdu_start_off(int phy);

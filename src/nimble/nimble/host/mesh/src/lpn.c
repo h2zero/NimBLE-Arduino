@@ -150,6 +150,24 @@ static inline void group_clear(atomic_t *target, atomic_t *source)
 
 static void clear_friendship(bool force, bool disable);
 
+static int32_t poll_timeout(struct bt_mesh_lpn *lpn)
+{
+	/* If we're waiting for segment acks keep polling at high freq */
+	if (bt_mesh_tx_in_progress()) {
+		return min(POLL_TIMEOUT_MAX(lpn), K_SECONDS(1));
+	}
+
+	if (lpn->poll_timeout < POLL_TIMEOUT_MAX(lpn)) {
+		lpn->poll_timeout *= 2;
+		lpn->poll_timeout = min(lpn->poll_timeout,
+					POLL_TIMEOUT_MAX(lpn));
+	}
+
+	BT_DBG("Poll Timeout is %ums", (unsigned) lpn->poll_timeout);
+
+	return lpn->poll_timeout;
+}
+
 static void friend_clear_sent(int err, void *user_data)
 {
 	struct bt_mesh_lpn *lpn = &bt_mesh.lpn;
@@ -166,7 +184,7 @@ static void friend_clear_sent(int err, void *user_data)
 	}
 
 	lpn_set_state(BT_MESH_LPN_CLEAR);
-	k_delayed_work_submit(&lpn->timer, FRIEND_REQ_TIMEOUT);
+	k_work_reschedule(&lpn->timer, FRIEND_REQ_TIMEOUT);
 }
 
 static const struct bt_mesh_send_cb clear_sent_cb = {
@@ -213,7 +231,8 @@ static void clear_friendship(bool force, bool disable)
 
 	bt_mesh_rx_reset();
 
-	k_delayed_work_cancel(&lpn->timer);
+	lpn_set_state(BT_MESH_LPN_DISABLED);
+	k_work_cancel_delayable(&lpn->timer);
 
 	if (lpn->clear_success) {
 		lpn->old_friend = BT_MESH_ADDR_UNASSIGNED;
@@ -231,7 +250,7 @@ static void clear_friendship(bool force, bool disable)
 	lpn->recv_win = 0;
 	lpn->queue_size = 0;
 	lpn->disable = 0;
-	lpn->sent_req = 0;
+	lpn->sent_req = 0U;
 	lpn->established = 0;
 	lpn->clear_success = 0;
 	lpn->sub = NULL;
@@ -248,13 +267,12 @@ static void clear_friendship(bool force, bool disable)
 
 	bt_mesh_hb_feature_changed(BT_MESH_FEAT_LOW_POWER);
 
-	if (disable) {
+	if (!disable) {
 		lpn_set_state(BT_MESH_LPN_DISABLED);
+		k_work_reschedule(&lpn->timer, FRIEND_REQ_RETRY_TIMEOUT);
 		return;
 	}
 
-	lpn_set_state(BT_MESH_LPN_ENABLED);
-	k_delayed_work_submit(&lpn->timer, FRIEND_REQ_RETRY_TIMEOUT);
 }
 
 static void friend_req_sent(uint16_t duration, int err, void *user_data)
@@ -269,10 +287,10 @@ static void friend_req_sent(uint16_t duration, int err, void *user_data)
 	lpn->adv_duration = duration;
 
 	if (IS_ENABLED(CONFIG_BT_MESH_LPN_ESTABLISHMENT)) {
-		k_delayed_work_submit(&lpn->timer, FRIEND_REQ_WAIT);
+		k_work_reschedule(&lpn->timer, FRIEND_REQ_WAIT);
 		lpn_set_state(BT_MESH_LPN_REQ_WAIT);
 	} else {
-		k_delayed_work_submit(&lpn->timer,
+		k_work_reschedule(&lpn->timer,
 				      duration + FRIEND_REQ_TIMEOUT);
 		lpn_set_state(BT_MESH_LPN_WAIT_OFFER);
 	}
@@ -333,7 +351,7 @@ static void req_sent(uint16_t duration, int err, void *user_data)
 
 	if (err) {
 		BT_ERR("Sending request failed (err %d)", err);
-		lpn->sent_req = 0;
+		lpn->sent_req = 0U;
 		group_zero(lpn->pending);
 		return;
 	}
@@ -346,11 +364,11 @@ static void req_sent(uint16_t duration, int err, void *user_data)
 		/* We start scanning a bit early to elimitate risk of missing
 		 * response data due to HCI and other latencies.
 		 */
-		k_delayed_work_submit(&lpn->timer,
+		k_work_reschedule(&lpn->timer,
 				      LPN_RECV_DELAY - SCAN_LATENCY);
 	} else {
 		lpn_set_state(BT_MESH_LPN_WAIT_UPDATE);
-		k_delayed_work_submit(&lpn->timer,
+		k_work_reschedule(&lpn->timer,
 				      LPN_RECV_DELAY + duration +
 				      lpn->recv_win);
 	}
@@ -443,7 +461,7 @@ int bt_mesh_lpn_set(bool enable)
 	} else {
 		if (IS_ENABLED(CONFIG_BT_MESH_LPN_AUTO) &&
 		    lpn->state == BT_MESH_LPN_TIMER) {
-			k_delayed_work_cancel(&lpn->timer);
+			k_work_cancel_delayable(&lpn->timer);
 			lpn_set_state(BT_MESH_LPN_DISABLED);
 		} else {
 			bt_mesh_lpn_disable(false);
@@ -461,11 +479,14 @@ static void friend_response_received(struct bt_mesh_lpn *lpn)
 		lpn->fsn++;
 	}
 
-	k_delayed_work_cancel(&lpn->timer);
 	bt_mesh_scan_disable();
 	lpn_set_state(BT_MESH_LPN_ESTABLISHED);
 	lpn->req_attempts = 0;
-	lpn->sent_req = 0;
+	lpn->sent_req = 0U;
+
+	int32_t timeout = poll_timeout(lpn);
+
+	k_work_reschedule(&lpn->timer, K_MSEC(timeout));
 }
 
 void bt_mesh_lpn_msg_received(struct bt_mesh_net_rx *rx)
@@ -474,7 +495,19 @@ void bt_mesh_lpn_msg_received(struct bt_mesh_net_rx *rx)
 
 	if (lpn->state == BT_MESH_LPN_TIMER) {
 		BT_DBG("Restarting establishment timer");
-		k_delayed_work_submit(&lpn->timer, LPN_AUTO_TIMEOUT);
+		k_work_reschedule(&lpn->timer, LPN_AUTO_TIMEOUT);
+		return;
+	}
+
+	if (lpn->state != BT_MESH_LPN_WAIT_UPDATE) {
+		return;
+	}
+
+	/* If the message was a Friend control message, it's possible that a
+	 * Poll was already queued for sending. In this case, we're already in
+	 * a different state.
+	 */
+	if (lpn->state != BT_MESH_LPN_WAIT_UPDATE) {
 		return;
 	}
 
@@ -547,7 +580,6 @@ int bt_mesh_lpn_friend_offer(struct bt_mesh_net_rx *rx,
 		}
 	}
 	/* TODO: Add offer acceptance criteria check */
-	k_delayed_work_cancel(&lpn->timer);
 
 	lpn->recv_win = msg->recv_win;
 	lpn->queue_size = msg->queue_size;
@@ -732,7 +764,7 @@ static void update_timeout(struct bt_mesh_lpn *lpn)
 		BT_WARN("No response from Friend during ReceiveWindow");
 		bt_mesh_scan_disable();
 		lpn_set_state(BT_MESH_LPN_ESTABLISHED);
-		k_delayed_work_submit(&lpn->timer, POLL_RETRY_TIMEOUT);
+		k_work_reschedule(&lpn->timer, POLL_RETRY_TIMEOUT);
 	} else {
 		if (IS_ENABLED(CONFIG_BT_MESH_LPN_ESTABLISHMENT)) {
 			bt_mesh_scan_disable();
@@ -740,7 +772,7 @@ static void update_timeout(struct bt_mesh_lpn *lpn)
 
 		if (lpn->req_attempts < REQ_ATTEMPTS(lpn)) {
 			BT_WARN("Retrying first Friend Poll");
-			lpn->sent_req = 0;
+			lpn->sent_req = 0U;
 			if (send_friend_poll() == 0) {
 				return;
 			}
@@ -777,7 +809,7 @@ static void lpn_timeout(struct ble_npl_event *work)
 		break;
 	case BT_MESH_LPN_REQ_WAIT:
 		bt_mesh_scan_enable();
-		k_delayed_work_submit(&lpn->timer,
+		k_work_reschedule(&lpn->timer,
 				      lpn->adv_duration + FRIEND_REQ_SCAN);
 		lpn_set_state(BT_MESH_LPN_WAIT_OFFER);
 		break;
@@ -789,13 +821,13 @@ static void lpn_timeout(struct ble_npl_event *work)
 		lpn->lpn_counter++;
 		lpn_set_state(BT_MESH_LPN_ENABLED);
 		lpn->sent_req = 0U;
-		k_delayed_work_submit(&lpn->timer, FRIEND_REQ_RETRY_TIMEOUT);
+		k_work_reschedule(&lpn->timer, FRIEND_REQ_RETRY_TIMEOUT);
 		break;
 	case BT_MESH_LPN_ESTABLISHED:
 		if (lpn->req_attempts < REQ_ATTEMPTS(lpn)) {
 			uint8_t req = lpn->sent_req;
 
-			lpn->sent_req = 0;
+			lpn->sent_req = 0U;
 
 			if (!req || req == TRANS_CTL_OP_FRIEND_POLL) {
 				send_friend_poll();
@@ -812,7 +844,7 @@ static void lpn_timeout(struct ble_npl_event *work)
 		clear_friendship(false, false);
 		break;
 	case BT_MESH_LPN_RECV_DELAY:
-		k_delayed_work_submit(&lpn->timer,
+		k_work_reschedule(&lpn->timer,
 				      lpn->adv_duration + SCAN_LATENCY +
 				      lpn->recv_win);
 		bt_mesh_scan_enable();
@@ -856,24 +888,6 @@ void bt_mesh_lpn_group_del(uint16_t *groups, size_t group_count)
 	}
 
 	sub_update(TRANS_CTL_OP_FRIEND_SUB_REM);
-}
-
-static int32_t poll_timeout(struct bt_mesh_lpn *lpn)
-{
-	/* If we're waiting for segment acks keep polling at high freq */
-	if (bt_mesh_tx_in_progress()) {
-		return min(POLL_TIMEOUT_MAX(lpn), K_SECONDS(1));
-	}
-
-	if (lpn->poll_timeout < POLL_TIMEOUT_MAX(lpn)) {
-		lpn->poll_timeout *= 2;
-		lpn->poll_timeout = min(lpn->poll_timeout,
-					POLL_TIMEOUT_MAX(lpn));
-	}
-
-	BT_DBG("Poll Timeout is %ums", (unsigned) lpn->poll_timeout);
-
-	return lpn->poll_timeout;
 }
 
 int bt_mesh_lpn_friend_sub_cfm(struct bt_mesh_net_rx *rx,
@@ -934,12 +948,6 @@ int bt_mesh_lpn_friend_sub_cfm(struct bt_mesh_net_rx *rx,
 		send_friend_poll();
 	}
 
-	if (!lpn->sent_req) {
-		int32_t timeout = poll_timeout(lpn);
-
-		k_delayed_work_submit(&lpn->timer, K_MSEC(timeout));
-	}
-
 	return 0;
 }
 
@@ -974,7 +982,7 @@ int bt_mesh_lpn_friend_update(struct bt_mesh_net_rx *rx,
 
 	if (!lpn->established) {
 		/* This is normally checked on the transport layer, however
-		 * in this state we're also still accepting master
+		 * in this state we're also still accepting flooding
 		 * credentials so we need to ensure the right ones (Friend
 		 * Credentials) were used for this message.
 		 */
@@ -1020,12 +1028,6 @@ int bt_mesh_lpn_friend_update(struct bt_mesh_net_rx *rx,
 	if (msg->md) {
 		BT_DBG("Requesting for more messages");
 		send_friend_poll();
-	}
-
-	if (!lpn->sent_req) {
-		int32_t timeout = poll_timeout(lpn);
-
-		k_delayed_work_submit(&lpn->timer, K_MSEC(timeout));
 	}
 
 	return 0;
@@ -1075,9 +1077,7 @@ int bt_mesh_lpn_init(void)
 
 	BT_DBG("");
 
-	lpn->groups_changed = 0;
-
-	k_delayed_work_init(&lpn->timer, lpn_timeout);
+	k_work_init_delayable(&lpn->timer, lpn_timeout);
 
 	if (lpn->state == BT_MESH_LPN_ENABLED) {
 		if (IS_ENABLED(CONFIG_BT_MESH_LPN_ESTABLISHMENT)) {
@@ -1093,7 +1093,7 @@ int bt_mesh_lpn_init(void)
 		if (IS_ENABLED(CONFIG_BT_MESH_LPN_AUTO)) {
 			BT_DBG("Waiting %u ms for messages", LPN_AUTO_TIMEOUT);
 			lpn_set_state(BT_MESH_LPN_TIMER);
-			k_delayed_work_submit(&lpn->timer, LPN_AUTO_TIMEOUT);
+			k_work_reschedule(&lpn->timer, LPN_AUTO_TIMEOUT);
 		}
 	}
 

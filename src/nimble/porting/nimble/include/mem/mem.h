@@ -28,7 +28,7 @@ struct os_mempool;
 struct os_mbuf_pool;
 
 
-#if SOC_ESP_NIMBLE_CONTROLLER
+#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
 int r_mem_malloc_mempool(struct os_mempool *mempool, uint16_t num_blocks,
                        uint32_t block_size, char *name, void **out_buf);
 #define mem_malloc_mempool r_mem_malloc_mempool
@@ -88,7 +88,7 @@ int mem_init_mbuf_pool(void *mem, struct os_mempool *mempool,
 typedef struct os_mbuf *mem_frag_alloc_fn(uint16_t frag_size, void *arg);
 
 
-#if SOC_ESP_NIMBLE_CONTROLLER
+#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
 struct os_mbuf *r_mem_split_frag(struct os_mbuf **om, uint16_t max_frag_sz,
                                mem_frag_alloc_fn *alloc_cb, void *cb_arg);
 #define mem_split_frag r_mem_split_frag

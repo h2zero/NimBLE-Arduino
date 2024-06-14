@@ -933,7 +933,6 @@ void NimBLEDevice::init(const std::string &deviceName) {
     initialized = true; // Set the initialization flag to ensure we are only initialized once.
 } // init
 
-
 /**
  * @brief Shutdown the NimBLE stack/controller.
  * @param [in] clearAll If true, deletes all server/advertising/scan/client objects after deinitializing.

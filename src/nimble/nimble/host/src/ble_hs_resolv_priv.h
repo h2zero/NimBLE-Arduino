@@ -35,6 +35,7 @@ struct ble_hs_resolv_entry {
     uint8_t rl_pseudo_id[BLE_DEV_ADDR_LEN];
     uint8_t rl_local_rpa[BLE_DEV_ADDR_LEN];
     uint8_t rl_peer_rpa[BLE_DEV_ADDR_LEN];
+    uint8_t rl_isrpa;
 };
 
 #if MYNEWT_VAL(BLE_STORE_CONFIG_PERSIST)
@@ -78,6 +79,10 @@ void ble_hs_resolv_nrpa_disable(void);
 /* Finds 'addr' in resolving list. Doesnt check if address resolution enabled */
 struct ble_hs_resolv_entry *
 ble_hs_resolv_list_find(uint8_t *addr);
+
+/* Resolve a Resolvable Private Address and maintain mapping of RPA */
+struct ble_hs_resolv_entry *
+ble_hs_resolv_rpa_addr(uint8_t *addr, uint8_t addr_type);
 
 /* Returns true if host based RPA (privacy) is enabled */
 bool ble_host_rpa_enabled(void);

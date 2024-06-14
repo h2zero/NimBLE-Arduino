@@ -22,10 +22,9 @@
 #include <stdio.h>
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/porting/nimble/include/mem/mem.h"
-#include "nimble/nimble/include/nimble/ble_hci_trans.h"
-#include "nimble/nimble/host/include/host/ble_monitor.h"
 #include "ble_hs_priv.h"
-#include "ble_monitor_priv.h"
+
+#include "nimble/nimble/transport/include/nimble/transport.h"
 
 #define BLE_HCI_CMD_TIMEOUT_MS  2000
 
@@ -46,6 +45,7 @@ static uint8_t ble_hs_hci_version;
     (BLE_ACL_MAX_PKT_SIZE +             \
      BLE_HCI_DATA_HDR_SZ +              \
      sizeof (struct os_mbuf_pkthdr) +   \
+     sizeof (struct ble_mbuf_hdr) +     \
      sizeof (struct os_mbuf))
 #else
 #define BLE_HS_HCI_FRAG_DATABUF_SIZE    \
@@ -53,6 +53,7 @@ static uint8_t ble_hs_hci_version;
       BLE_HCI_DATA_HDR_SZ +             \
       BLE_HS_CTRL_DATA_HDR_SZ +         \
       sizeof (struct os_mbuf_pkthdr) +  \
+      sizeof (struct ble_mbuf_hdr) +    \
       sizeof (struct os_mbuf))
 #endif
 
@@ -269,8 +270,7 @@ ble_hs_hci_wait_for_ack(void)
     if (ble_hs_hci_phony_ack_cb == NULL) {
         rc = BLE_HS_ETIMEOUT_HCI;
     } else {
-        ble_hs_hci_ack =
-            (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_CMD);
+        ble_hs_hci_ack = ble_transport_alloc_cmd();
         BLE_HS_DBG_ASSERT(ble_hs_hci_ack != NULL);
         rc = ble_hs_hci_phony_ack_cb((void *)ble_hs_hci_ack, 260);
     }
@@ -280,12 +280,6 @@ ble_hs_hci_wait_for_ack(void)
     switch (rc) {
     case 0:
         BLE_HS_DBG_ASSERT(ble_hs_hci_ack != NULL);
-
-#if BLE_MONITOR
-        ble_monitor_send(BLE_MONITOR_OPCODE_EVENT_PKT, (void *) ble_hs_hci_ack,
-                         sizeof(*ble_hs_hci_ack) + ble_hs_hci_ack->length);
-#endif
-
         break;
     case OS_TIMEOUT:
         rc = BLE_HS_ETIMEOUT_HCI;
@@ -331,12 +325,14 @@ ble_hs_hci_cmd_tx(uint16_t opcode, const void *cmd, uint8_t cmd_len,
 
     rc = ble_hs_hci_wait_for_ack();
     if (rc != 0) {
+        BLE_HS_LOG(INFO, "HCI wait for ack returned %d \n", rc);
         ble_hs_sched_reset(rc);
         goto done;
     }
 
     rc = ble_hs_hci_process_ack(opcode, rsp, rsp_len, &ack);
     if (rc != 0) {
+        BLE_HS_LOG(INFO, "HCI process ack returned %d \n", rc);
         ble_hs_sched_reset(rc);
         goto done;
     }
@@ -345,13 +341,14 @@ ble_hs_hci_cmd_tx(uint16_t opcode, const void *cmd, uint8_t cmd_len,
 
     /* on success we should always get full response */
     if (!rc && (ack.bha_params_len != rsp_len)) {
+        BLE_HS_LOG(INFO, "Received status %d \n", rc);
         ble_hs_sched_reset(rc);
         goto done;
     }
 
 done:
     if (ble_hs_hci_ack != NULL) {
-        ble_hci_trans_buf_free((uint8_t *) ble_hs_hci_ack);
+        ble_transport_free((uint8_t *) ble_hs_hci_ack);
         ble_hs_hci_ack = NULL;
     }
 
@@ -359,12 +356,26 @@ done:
     return rc;
 }
 
+#if MYNEWT_VAL(BLE_HCI_VS)
+int
+ble_hs_hci_send_vs_cmd(uint16_t ocf, const void *cmdbuf, uint8_t cmdlen,
+                       void *rspbuf, uint8_t rsplen)
+{
+    int rc;
+
+    rc = ble_hs_hci_cmd_tx(BLE_HCI_OP(BLE_HCI_OGF_VENDOR, ocf),
+                           cmdbuf, cmdlen, rspbuf, rsplen);
+
+    return rc;
+}
+#endif
+
 static void
 ble_hs_hci_rx_ack(uint8_t *ack_ev)
 {
     if (ble_npl_sem_get_count(&ble_hs_hci_sem) > 0) {
         /* This ack is unexpected; ignore it. */
-        ble_hci_trans_buf_free(ack_ev);
+        ble_transport_free(ack_ev);
         return;
     }
     BLE_HS_DBG_ASSERT(ble_hs_hci_ack == NULL);
@@ -389,6 +400,17 @@ ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
     switch (ev->opcode) {
     case BLE_HCI_EVCODE_COMMAND_COMPLETE:
         enqueue = (cmd_complete->opcode == BLE_HCI_OPCODE_NOP);
+
+	/* Check for BLE transmit opcodes which come in command complete */
+	switch(cmd_complete->opcode) {
+	    case BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_RX_TEST):
+	    case BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_TX_TEST):
+	    case BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_TEST_END):
+	    case BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_RX_TEST_V2):
+	    case BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_TX_TEST_V2):
+	        enqueue = 1;
+	        break;
+	}
         break;
     case BLE_HCI_EVCODE_COMMAND_STATUS:
         enqueue = (cmd_status->opcode == BLE_HCI_OPCODE_NOP);
@@ -407,7 +429,7 @@ ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
     return 0;
 }
 
-#if !(SOC_ESP_NIMBLE_CONTROLLER)
+#if !(SOC_ESP_NIMBLE_CONTROLLER) || !(CONFIG_BT_CONTROLLER_ENABLED)
 /**
  * Calculates the largest ACL payload that the controller can accept.
  */
@@ -432,7 +454,11 @@ ble_hs_hci_frag_alloc(uint16_t frag_size, void *arg)
     struct os_mbuf *om;
 
     /* Prefer the dedicated one-element fragment pool. */
+#if MYNEWT_VAL(BLE_CONTROLLER)
+    om = os_mbuf_get_pkthdr(&ble_hs_hci_frag_mbuf_pool, sizeof(struct ble_mbuf_hdr));
+#else
     om = os_mbuf_get_pkthdr(&ble_hs_hci_frag_mbuf_pool, 0);
+#endif
     if (om != NULL) {
 #if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
         om->om_data += BLE_HCI_DATA_HDR_SZ;
@@ -526,7 +552,7 @@ ble_hs_hci_acl_tx_now(struct ble_hs_conn *conn, struct os_mbuf **om)
 
     /* Send fragments until the entire packet has been sent. */
     while (txom != NULL && ble_hs_hci_avail_pkts > 0) {
-#if SOC_ESP_NIMBLE_CONTROLLER
+#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
         frag = mem_split_frag(&txom, BLE_ACL_MAX_PKT_SIZE, ble_hs_hci_frag_alloc, NULL);
 #else
         frag = mem_split_frag(&txom, ble_hs_hci_max_acl_payload_sz(), ble_hs_hci_frag_alloc, NULL);

@@ -220,8 +220,6 @@ ble_hs_id_addr(uint8_t id_addr_type, const uint8_t **out_id_addr,
     const uint8_t *id_addr;
     int nrpa;
 
-    BLE_HS_DBG_ASSERT(ble_hs_locked_by_cur_task());
-
     switch (id_addr_type) {
     case BLE_ADDR_PUBLIC:
         id_addr = ble_hs_id_pub;

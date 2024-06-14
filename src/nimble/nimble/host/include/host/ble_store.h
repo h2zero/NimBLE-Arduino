@@ -32,6 +32,12 @@ extern "C" {
 #define BLE_STORE_OBJ_TYPE_CCCD              3
 #define BLE_STORE_OBJ_TYPE_PEER_DEV_REC      4
 
+#if MYNEWT_VAL(ENC_ADV_DATA)
+#define BLE_STORE_OBJ_TYPE_ENC_ADV_DATA      5
+#endif
+#define BLE_STORE_OBJ_TYPE_PEER_ADDR         6
+
+#define BLE_STORE_OBJ_TYPE_LOCAL_IRK        7
 /** Failed to persist record; insufficient storage capacity. */
 #define BLE_STORE_EVENT_OVERFLOW        1
 
@@ -71,6 +77,7 @@ struct ble_store_key_sec {
  */
 struct ble_store_value_sec {
     ble_addr_t peer_addr;
+    uint16_t bond_count;
 
     uint8_t key_size;
     uint16_t ediv;
@@ -83,6 +90,7 @@ struct ble_store_value_sec {
 
     uint8_t csrk[16];
     uint8_t csrk_present:1;
+    uint32_t sign_counter;
 
     unsigned authenticated:1;
     uint8_t sc:1;
@@ -121,6 +129,54 @@ struct ble_store_value_cccd {
     unsigned value_changed:1;
 };
 
+#if MYNEWT_VAL(ENC_ADV_DATA)
+/**
+ * Used as a key for lookups of encrypted advertising data. This struct corresponds
+ * to the BLE_STORE_OBJ_TYPE_ENC_ADV_DATA store object type.
+ */
+struct ble_store_key_ead {
+    /**
+     * Key by peer identity address;
+     * peer_addr=BLE_ADDR_NONE means don't key off peer.
+     */
+    ble_addr_t peer_addr;
+
+    /** Number of results to skip; 0 means retrieve the first match. */
+    uint8_t idx;
+};
+
+/**
+ * Represents a stored encrypted advertising data. This struct corresponds
+ * to the BLE_STORE_OBJ_TYPE_ENC_ADV_DATA store object type.
+ */
+struct ble_store_value_ead {
+    ble_addr_t peer_addr;
+    unsigned km_present:1;
+    struct key_material *km;
+};
+#endif
+
+struct ble_store_key_local_irk {
+    ble_addr_t addr;
+
+    uint8_t idx;
+};
+
+struct ble_store_value_local_irk {
+     ble_addr_t addr;
+
+     uint8_t irk[16];
+};
+
+struct ble_store_key_rpa_rec{
+    ble_addr_t peer_rpa_addr;
+    uint8_t idx;
+};
+struct ble_store_value_rpa_rec{
+    ble_addr_t peer_rpa_addr;
+    ble_addr_t peer_addr;
+};
+
 /**
  * Used as a key for store lookups.  This union must be accompanied by an
  * object type code to indicate which field is valid.
@@ -128,6 +184,11 @@ struct ble_store_value_cccd {
 union ble_store_key {
     struct ble_store_key_sec sec;
     struct ble_store_key_cccd cccd;
+#if MYNEWT_VAL(ENC_ADV_DATA)
+    struct ble_store_key_ead ead;
+#endif
+    struct ble_store_key_rpa_rec rpa_rec;
+    struct ble_store_key_local_irk local_irk;
 };
 
 /**
@@ -137,6 +198,11 @@ union ble_store_key {
 union ble_store_value {
     struct ble_store_value_sec sec;
     struct ble_store_value_cccd cccd;
+#if MYNEWT_VAL(ENC_ADV_DATA)
+    struct ble_store_value_ead ead;
+#endif
+   struct ble_store_value_rpa_rec rpa_rec;
+   struct ble_store_value_local_irk local_irk;
 };
 
 struct ble_store_status_event {
@@ -271,7 +337,31 @@ void ble_store_key_from_value_sec(struct ble_store_key_sec *out_key,
                                   const struct ble_store_value_sec *value);
 void ble_store_key_from_value_cccd(struct ble_store_key_cccd *out_key,
                                    const struct ble_store_value_cccd *value);
+#if MYNEWT_VAL(ENC_ADV_DATA)
+int ble_store_read_ead(const struct ble_store_key_ead *key,
+                       struct ble_store_value_ead *out_value);
+int ble_store_write_ead(const struct ble_store_value_ead *value);
+int ble_store_delete_ead(const struct ble_store_key_ead *key);
+void ble_store_key_from_value_ead(struct ble_store_key_ead *out_key,
+                                  const struct ble_store_value_ead *value);
+#endif
+/* irk store*/
+int ble_store_read_local_irk(const struct ble_store_key_local_irk *key,
+                       struct ble_store_value_local_irk *out_value);
+int ble_store_write_local_irk(const struct ble_store_value_local_irk *value);
+int ble_store_delete_local_irk(const struct ble_store_key_local_irk *key);
+void ble_store_key_from_value_local_irk(struct ble_store_key_local_irk *out_key,
+                                  const struct ble_store_value_local_irk *value);
 
+/*irk store */
+/* rpa mapping*/
+int ble_store_read_rpa_rec(const struct ble_store_key_rpa_rec *key,
+                       struct ble_store_value_rpa_rec *out_value);
+int ble_store_write_rpa_rec(const struct ble_store_value_rpa_rec *value);
+int ble_store_delete_rpa_rec(const struct ble_store_key_rpa_rec *key);
+void ble_store_key_from_value_rpa_rec(struct ble_store_key_rpa_rec *out_key,
+                                  const struct ble_store_value_rpa_rec *value);
+/* rpa mapping*/
 void ble_store_key_from_value(int obj_type,
                               union ble_store_key *out_key,
                               const union ble_store_value *value);

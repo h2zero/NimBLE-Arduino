@@ -29,9 +29,7 @@ struct bt_mesh_health_cli {
 			       uint8_t test_id, uint16_t cid, uint8_t *faults,
 			       size_t fault_count);
 
-	struct k_sem          op_sync;
-	uint32_t                 op_pending;
-	void                 *op_param;
+	struct bt_mesh_msg_ack_ctx ack_ctx;
 };
 
 extern const struct bt_mesh_model_op bt_mesh_health_cli_op[];

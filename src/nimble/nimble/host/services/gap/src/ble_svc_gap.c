@@ -41,6 +41,13 @@ static char ble_svc_gap_name[BLE_SVC_GAP_NAME_MAX_LEN + 1] =
         MYNEWT_VAL(BLE_SVC_GAP_DEVICE_NAME);
 static uint16_t ble_svc_gap_appearance = MYNEWT_VAL(BLE_SVC_GAP_APPEARANCE);
 
+#if MYNEWT_VAL(ENC_ADV_DATA)
+static struct key_material km = {
+    .session_key = {0},
+    .iv = {0},
+};
+#endif
+
 #if NIMBLE_BLE_CONNECT
 static int
 ble_svc_gap_access(uint16_t conn_handle, uint16_t attr_handle,
@@ -83,6 +90,12 @@ static const struct ble_gatt_svc_def ble_svc_gap_defs[] = {
 #if MYNEWT_VAL(BLE_SVC_GAP_CENTRAL_ADDRESS_RESOLUTION) >= 0
             /*** Characteristic: Central Address Resolution. */
             .uuid = BLE_UUID16_DECLARE(BLE_SVC_GAP_CHR_UUID16_CENTRAL_ADDRESS_RESOLUTION),
+            .access_cb = ble_svc_gap_access,
+            .flags = BLE_GATT_CHR_F_READ,
+        }, {
+#endif
+#if MYNEWT_VAL(ENC_ADV_DATA)
+            .uuid = BLE_UUID16_DECLARE(BLE_SVC_GAP_CHR_UUID16_KEY_MATERIAL),
             .access_cb = ble_svc_gap_access,
             .flags = BLE_GATT_CHR_F_READ,
         }, {
@@ -235,6 +248,14 @@ ble_svc_gap_access(uint16_t conn_handle, uint16_t attr_handle,
         return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
 #endif
 
+#if MYNEWT_VAL(ENC_ADV_DATA)
+    case BLE_SVC_GAP_CHR_UUID16_KEY_MATERIAL:
+        rc = os_mbuf_append(ctxt->om, &(km.session_key), sizeof(km.session_key));
+        rc = os_mbuf_append(ctxt->om, &(km.iv), sizeof(km.iv));
+
+        return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+#endif
+
     default:
         assert(0);
         return BLE_ATT_ERR_UNLIKELY;
@@ -283,6 +304,16 @@ ble_svc_gap_set_chr_changed_cb(ble_svc_gap_chr_changed_fn *cb)
 {
     ble_svc_gap_chr_changed_cb_fn = cb;
 }
+
+#if MYNEWT_VAL(ENC_ADV_DATA)
+int
+ble_svc_gap_device_key_material_set(uint8_t *session_key, uint8_t *iv)
+{
+    memcpy(&km.session_key, session_key, BLE_EAD_KEY_SIZE);
+    memcpy(&km.iv, iv, BLE_EAD_IV_SIZE);
+    return 0;
+}
+#endif
 
 void
 ble_svc_gap_init(void)

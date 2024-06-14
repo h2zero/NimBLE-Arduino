@@ -30,6 +30,7 @@
 extern "C" {
 #endif
 
+struct ble_ll_scan_addr_data;
 struct ble_ll_sync_sm;
 
 int ble_ll_sync_create(const uint8_t *cmdbuf, uint8_t len);
@@ -48,8 +49,7 @@ void ble_ll_sync_periodic_ind(struct ble_ll_conn_sm *connsm,
                               uint16_t max_skip, uint32_t sync_timeout);
 void ble_ll_sync_transfer_disconnected(struct ble_ll_conn_sm *connsm);
 
-void ble_ll_sync_info_event(const uint8_t *addr, uint8_t addr_type,
-                            int rpa_index, uint8_t sid,
+void ble_ll_sync_info_event(struct ble_ll_scan_addr_data *addrd, uint8_t sid,
                             struct ble_mbuf_hdr *rxhdr,
                             const uint8_t *syncinfo);
 

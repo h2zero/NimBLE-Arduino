@@ -87,6 +87,24 @@ int ble_hs_hci_read_chan_map(uint16_t conn_handle, uint8_t *out_chan_map);
  */
 int ble_hs_hci_set_chan_class(const uint8_t *chan_map);
 
+#if MYNEWT_VAL(BLE_HCI_VS)
+/**
+ * Send an arbitrary HCI command to the controller.
+ *
+ * The command has to be a vendor-specific command, i.e. OGF=0x3f is always
+ * assumed.
+ *
+ * @param ocf     OCF for vendor-specific HCI command
+ * @param cmdbuf  command buffer
+ * @param cmdlen  length of command buffer
+ * @param rspbuf  response buffer
+ * @param rsplen  length of response buffer
+ * @return  0 on success, error code on failure
+ */
+int ble_hs_hci_send_vs_cmd(uint16_t ocf, const void *cmdbuf, uint8_t cmdlen,
+                           void *rspbuf, uint8_t rsplen);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -30,6 +30,8 @@
 #include <inttypes.h>
 #include "ble_att.h"
 #include "ble_uuid.h"
+#include "ble_esp_gatt.h"
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,6 +46,8 @@ struct ble_hs_cfg;
 
 #define BLE_GATT_SVC_UUID16                             0x1801
 #define BLE_GATT_DSC_CLT_CFG_UUID16                     0x2902
+#define BLE_GATT_DSC_CLT_PRE_FMT16                      0x2904
+#define BLE_GATT_DSC_CLT_AGG_FMT16                      0x2905
 
 #define BLE_GATT_CHR_PROP_BROADCAST                     0x01
 #define BLE_GATT_CHR_PROP_READ                          0x02
@@ -78,6 +82,204 @@ struct ble_hs_cfg;
 #define BLE_GATT_SVC_TYPE_END                           0
 #define BLE_GATT_SVC_TYPE_PRIMARY                       1
 #define BLE_GATT_SVC_TYPE_SECONDARY                     2
+
+/**
+ * Client Presentation Format
+ * GATT Format Types
+ * Ref: Assigned Numbers Specification
+ */
+#define BLE_GATT_CHR_FORMAT_BOOLEAN                     0x01
+#define BLE_GATT_CHR_FORMAT_UINT2                       0x02
+#define BLE_GATT_CHR_FORMAT_UINT4                       0x03
+#define BLE_GATT_CHR_FORMAT_UINT8                       0x04
+#define BLE_GATT_CHR_FORMAT_UINT12                      0x05
+#define BLE_GATT_CHR_FORMAT_UINT16                      0x06
+#define BLE_GATT_CHR_FORMAT_UINT24                      0x07
+#define BLE_GATT_CHR_FORMAT_UINT32                      0x08
+#define BLE_GATT_CHR_FORMAT_UINT48                      0x09
+#define BLE_GATT_CHR_FORMAT_UINT64                      0x0A
+#define BLE_GATT_CHR_FORMAT_UINT128                     0x0B
+#define BLE_GATT_CHR_FORMAT_SINT8                       0x0C
+#define BLE_GATT_CHR_FORMAT_SINT12                      0x0D
+#define BLE_GATT_CHR_FORMAT_SINT16                      0x0E
+#define BLE_GATT_CHR_FORMAT_SINT24                      0x0F
+#define BLE_GATT_CHR_FORMAT_SINT32                      0x10
+#define BLE_GATT_CHR_FORMAT_SINT48                      0x11
+#define BLE_GATT_CHR_FORMAT_SINT64                      0x12
+#define BLE_GATT_CHR_FORMAT_SINT128                     0x13
+#define BLE_GATT_CHR_FORMAT_FLOAT32                     0x14
+#define BLE_GATT_CHR_FORMAT_FLOAT64                     0x15
+#define BLE_GATT_CHR_FORMAT_MEDFLOAT16                  0x16
+#define BLE_GATT_CHR_FORMAT_MEDFLOAT32                  0x17
+#define BLE_GATT_CHR_FORMAT_UINT16_2                    0x18
+#define BLE_GATT_CHR_FORMAT_UTF8S                       0x19
+#define BLE_GATT_CHR_FORMAT_UTF16S                      0x1A
+#define BLE_GATT_CHR_FORMAT_STRUCT                      0x1B
+#define BLE_GATT_CHR_FORMAT_MEDASN1                     0x1C
+
+/**
+ * Client Presentation Format
+ * GATT Unit UUIDs
+ * Ref: Assigned Numbers Specification
+ */
+#define BLE_GATT_CHR_UNIT_UNITLESS                              0x2700 /* Unitless */
+#define BLE_GATT_CHR_UNIT_METRE                                 0x2701 /* Length */
+#define BLE_GATT_CHR_UNIT_KILOGRAM                              0x2702 /* Mass */
+#define BLE_GATT_CHR_UNIT_SECOND                                0x2703 /* Time */
+#define BLE_GATT_CHR_UNIT_AMPERE                                0x2704 /* Electric Current */
+#define BLE_GATT_CHR_UNIT_KELVIN                                0x2705 /* Thermodynamic Temperature */
+#define BLE_GATT_CHR_UNIT_MOLE                                  0x2706 /* Amount Of Substance */
+#define BLE_GATT_CHR_UNIT_CANDELA                               0x2707 /* Luminous Intensity */
+#define BLE_GATT_CHR_UNIT_SQUARE_METRES                         0x2710 /* Area */
+#define BLE_GATT_CHR_UNIT_CUBIC_METRES                          0x2711 /* Volume */
+#define BLE_GATT_CHR_UNIT_METRES_PER_SECOND                     0x2712 /* Velocity */
+#define BLE_GATT_CHR_UNIT_METRES_PER_SECOND_SQUARED             0x2713 /* Acceleration */
+#define BLE_GATT_CHR_UNIT_RECIPROCAL_METRE                      0x2714 /* Wavenumber */
+#define BLE_GATT_CHR_UNIT_KILOGRAM_PER_CUBIC_METRE_DENSITY      0x2715 /* Density */
+#define BLE_GATT_CHR_UNIT_KILOGRAM_PER_SQUARE_METRE             0x2716 /* Surface Density */
+#define BLE_GATT_CHR_UNIT_CUBIC_METRE_PER_KILOGRAM              0x2717 /* Specific Volume */
+#define BLE_GATT_CHR_UNIT_AMPERE_PER_SQUARE_METRE               0x2718 /* Current Density */
+#define BLE_GATT_CHR_UNIT_AMPERE_PER_METRE                      0x2719 /* Magnetic Field Strength */
+#define BLE_GATT_CHR_UNIT_MOLE_PER_CUBIC_METRE                  0x271A /* Amount Concentration */
+#define BLE_GATT_CHR_UNIT_KILOGRAM_PER_CUBIC_METRE_MASS_CONC    0x271B /* Mass Concentration */
+#define BLE_GATT_CHR_UNIT_CANDELA_PER_SQUARE_METRE              0x271C /* Luminance */
+#define BLE_GATT_CHR_UNIT_REFRACTIVE_INDEX                      0x271D /* Refractive Index */
+#define BLE_GATT_CHR_UNIT_RELATIVE_PERMEABILITY                 0x271E /* Relative Permeability */
+#define BLE_GATT_CHR_UNIT_RADIAN                                0x2720 /* Plane Angle */
+#define BLE_GATT_CHR_UNIT_STERADIAN                             0x2721 /* Solid Angle */
+#define BLE_GATT_CHR_UNIT_HERTZ                                 0x2722 /* Frequency */
+#define BLE_GATT_CHR_UNIT_NEWTON                                0x2723 /* Force */
+#define BLE_GATT_CHR_UNIT_PASCAL                                0x2724 /* Pressure */
+#define BLE_GATT_CHR_UNIT_JOULE                                 0x2725 /* Energy */
+#define BLE_GATT_CHR_UNIT_WATT                                  0x2726 /* Power */
+#define BLE_GATT_CHR_UNIT_COULOMB                               0x2727 /* Electric Charge */
+#define BLE_GATT_CHR_UNIT_VOLT                                  0x2728 /* Electric Potential Difference */
+#define BLE_GATT_CHR_UNIT_FARAD                                 0x2729 /* Capacitance */
+#define BLE_GATT_CHR_UNIT_OHM                                   0x272A /* Electric Resistance */
+#define BLE_GATT_CHR_UNIT_SIEMENS                               0x272B /* Electric Conductance */
+#define BLE_GATT_CHR_UNIT_WEBER                                 0x272C /* Magnetic Flux */
+#define BLE_GATT_CHR_UNIT_TESLA                                 0x272D /* Magnetic Flux Density */
+#define BLE_GATT_CHR_UNIT_HENRY                                 0x272E /* Inductance */
+#define BLE_GATT_CHR_UNIT_DEGREE_CELSIUS                        0x272F /* celsius Temperature */
+#define BLE_GATT_CHR_UNIT_LUMEN                                 0x2730 /* Luminous Flux */
+#define BLE_GATT_CHR_UNIT_LUX                                   0x2731 /* Illuminance */
+#define BLE_GATT_CHR_UNIT_BECQUEREL                             0x2732 /* Activity Referred To A Radionuclide */
+#define BLE_GATT_CHR_UNIT_GRAY                                  0x2733 /* Absorbed Dose */
+#define BLE_GATT_CHR_UNIT_SIEVERT                               0x2734 /* Dose Equivalent */
+#define BLE_GATT_CHR_UNIT_KATAL                                 0x2735 /* Catalytic Activity */
+#define BLE_GATT_CHR_UNIT_PASCAL_SECOND                         0x2740 /* Dynamic Viscosity */
+#define BLE_GATT_CHR_UNIT_NEWTON_METRE                          0x2741 /* Moment Of Force */
+#define BLE_GATT_CHR_UNIT_NEWTON_PER_METRE                      0x2742 /* Surface Tension */
+#define BLE_GATT_CHR_UNIT_RADIAN_PER_SECOND                     0x2743 /* Angular Velocity */
+#define BLE_GATT_CHR_UNIT_RADIAN_PER_SECOND_SQUARED             0x2744 /* Angular Acceleration */
+#define BLE_GATT_CHR_UNIT_WATT_PER_SQUARE_METRE_HEAT            0x2745 /* Heat Flux Density */
+#define BLE_GATT_CHR_UNIT_JOULE_PER_KELVIN                      0x2746 /* Heat Capacity */
+#define BLE_GATT_CHR_UNIT_JOULE_PER_KILOGRAM_KELVIN             0x2747 /* Specific Heat Capacity */
+#define BLE_GATT_CHR_UNIT_JOULE_PER_KILOGRAM                    0x2748 /* Specific Energy */
+#define BLE_GATT_CHR_UNIT_WATT_PER_METRE_KELVIN                 0x2749 /* Thermal Conductivity */
+#define BLE_GATT_CHR_UNIT_JOULE_PER_CUBIC_METRE                 0x274A /* Energy Density */
+#define BLE_GATT_CHR_UNIT_VOLT_PER_METRE                        0x274B /* Electric Field Strength */
+#define BLE_GATT_CHR_UNIT_COULOMB_PER_CUBIC_METRE               0x274C /* Electric Charge Density */
+#define BLE_GATT_CHR_UNIT_COULOMB_PER_SQUARE_METRE_CHARGE       0x274D /* Surface Charge Density */
+#define BLE_GATT_CHR_UNIT_COULOMB_PER_SQUARE_METRE_FLUX         0x274E /* Electric Flux Density */
+#define BLE_GATT_CHR_UNIT_FARAD_PER_METRE                       0x274F /* Permittivity */
+#define BLE_GATT_CHR_UNIT_HENRY_PER_METRE                       0x2750 /* Permeability */
+#define BLE_GATT_CHR_UNIT_JOULE_PER_MOLE                        0x2751 /* Molar Energy */
+#define BLE_GATT_CHR_UNIT_JOULE_PER_MOLE_KELVIN                 0x2752 /* Molar Entropy */
+#define BLE_GATT_CHR_UNIT_COULOMB_PER_KILOGRAM                  0x2753 /* Exposure */
+#define BLE_GATT_CHR_UNIT_GRAY_PER_SECOND                       0x2754 /* Absorbed Dose Rate */
+#define BLE_GATT_CHR_UNIT_WATT_PER_STERADIAN                    0x2755 /* Radiant Intensity */
+#define BLE_GATT_CHR_UNIT_WATT_PER_SQUARE_METRE_STERADIAN       0x2756 /* Radiance */
+#define BLE_GATT_CHR_UNIT_KATAL_PER_CUBIC_METRE                 0x2757 /* Catalytic Activity Concentration */
+#define BLE_GATT_CHR_UNIT_MINUTE                                0x2760 /* Time */
+#define BLE_GATT_CHR_UNIT_HOUR                                  0x2761 /* Time */
+#define BLE_GATT_CHR_UNIT_DAY                                   0x2762 /* Time */
+#define BLE_GATT_CHR_UNIT_DEGREE                                0x2763 /* Plane Angle */
+#define BLE_GATT_CHR_UNIT_MINUTE_ANGLE                          0x2764 /* Plane Angle */
+#define BLE_GATT_CHR_UNIT_SECOND_ANGLE                          0x2765 /* Plane Angle */
+#define BLE_GATT_CHR_UNIT_HECTARE                               0x2766 /* Area */
+#define BLE_GATT_CHR_UNIT_LITRE                                 0x2767 /* Volume */
+#define BLE_GATT_CHR_UNIT_TONNE                                 0x2768 /* Mass */
+#define BLE_GATT_CHR_UNIT_BAR                                   0x2780 /* Pressure */
+#define BLE_GATT_CHR_UNIT_MILLIMETRE_OF_MERCURY                 0x2781 /* Pressure */
+#define BLE_GATT_CHR_UNIT_ANGSTROM                              0x2782 /* Length */
+#define BLE_GATT_CHR_UNIT_NAUTICAL_MILE                         0x2783 /* Length */
+#define BLE_GATT_CHR_UNIT_BARN                                  0x2784 /* Area */
+#define BLE_GATT_CHR_UNIT_KNOT                                  0x2785 /* Velocity */
+#define BLE_GATT_CHR_UNIT_NEPER                                 0x2786 /* Logarithmic Radio Quantity */
+#define BLE_GATT_CHR_UNIT_BEL                                   0x2787 /* Logarithmic Radio Quantity */
+#define BLE_GATT_CHR_UNIT_YARD                                  0x27A0 /* Length */
+#define BLE_GATT_CHR_UNIT_PARSEC                                0x27A1 /* Length */
+#define BLE_GATT_CHR_UNIT_INCH                                  0x27A2 /* Length */
+#define BLE_GATT_CHR_UNIT_FOOT                                  0x27A3 /* Length */
+#define BLE_GATT_CHR_UNIT_MILE                                  0x27A4 /* Length */
+#define BLE_GATT_CHR_UNIT_POUND_FORCE_PER_SQUARE_INCH           0x27A5 /* Pressure */
+#define BLE_GATT_CHR_UNIT_KILOMETRE_PER_HOUR                    0x27A6 /* Velocity */
+#define BLE_GATT_CHR_UNIT_MILE_PER_HOUR                         0x27A7 /* Velocity */
+#define BLE_GATT_CHR_UNIT_REVOLUTION_PER_MINUTE                 0x27A8 /* Angular Velocity */
+#define BLE_GATT_CHR_UNIT_GRAM_CALORIE                          0x27A9 /* Energy */
+#define BLE_GATT_CHR_UNIT_KILOGRAM_CALORIE                      0x27AA /* Energy */
+#define BLE_GATT_CHR_UNIT_KILOWATT_HOUR                         0x27AB /* Energy */
+#define BLE_GATT_CHR_UNIT_DEGREE_FAHRENHEIT                     0x27AC /* Thermodynamic Temperature */
+#define BLE_GATT_CHR_UNIT_PERCENTAGE                            0x27AD /* Percentage */
+#define BLE_GATT_CHR_UNIT_PER_MILLE                             0x27AE /* Per Mille */
+#define BLE_GATT_CHR_UNIT_BEATS_PER_MINUTE                      0x27AF /* Period */
+#define BLE_GATT_CHR_UNIT_AMPERE_HOURS                          0x27B0 /* Electric Charge */
+#define BLE_GATT_CHR_UNIT_MILLIGRAM_PER_DECILITRE               0x27B1 /* Mass Density */
+#define BLE_GATT_CHR_UNIT_MILLIMOLE_PER_LITRE                   0x27B2 /* Mass Density */
+#define BLE_GATT_CHR_UNIT_YEAR                                  0x27B3 /* Time */
+#define BLE_GATT_CHR_UNIT_MONTH                                 0x27B4 /* Time */
+#define BLE_GATT_CHR_UNIT_COUNT_PER_CUBIC_METRE                 0x27B5 /* Concentration */
+#define BLE_GATT_CHR_UNIT_WATT_PER_SQUARE_METRE_IRRADIANCE      0x27B6 /* Irradiance */
+#define BLE_GATT_CHR_UNIT_PER_KILOGRAM_PER_MINUTE               0x27B7 /* Milliliter */
+#define BLE_GATT_CHR_UNIT_POUND                                 0x27B8 /* Mass */
+#define BLE_GATT_CHR_UNIT_METABOLIC_EQUIVALENT                  0x27B9 /* Metabolic Equivalent */
+#define BLE_GATT_CHR_UNIT_PER_MINUTE_STEP                       0x27BA /* Step */
+#define BLE_GATT_CHR_UNIT_PER_MINUTE_STROKE                     0x27BC /* Stroke */
+#define BLE_GATT_CHR_UNIT_KILOMETRE_PER_MINUTE                  0x27BD /* Pace */
+#define BLE_GATT_CHR_UNIT_LUMEN_PER_WATT                        0x27BE /* Luminous Efficacy */
+#define BLE_GATT_CHR_UNIT_LUMEN_HOUR                            0x27BF /* Luminous Energy */
+#define BLE_GATT_CHR_UNIT_LUX_HOUR                              0x27C0 /* Luminous Exposure */
+#define BLE_GATT_CHR_UNIT_GRAM_PER_SECOND                       0x27C1 /* Mass Flow */
+#define BLE_GATT_CHR_UNIT_LITRE_PER_SECOND                      0x27C2 /* Volume Flow */
+#define BLE_GATT_CHR_UNIT_DECIBEL                               0x27C3 /* Sound Pressure */
+#define BLE_GATT_CHR_UNIT_PARTS_PER_MILLION                     0x27C4 /* Concentration */
+#define BLE_GATT_CHR_UNIT_PARTS_PER_BILLION                     0x27C5 /* Concentration */
+#define BLE_GATT_CHR_UNIT_MILLIGRAM_PER_DECILITRE_PER_MINUTE    0x27C6 /* Mass Density Rate */
+#define BLE_GATT_CHR_UNIT_KILOVOLT_AMPERE_HOUR                  0x27C7 /* Electrical Apparent Energy */
+#define BLE_GATT_CHR_UNIT_VOLT_AMPERE                           0x27C8 /* Electrical Apparent Power */
+
+/**
+ * Client Presentation Format
+ * GATT Name Space
+ * Ref: Assigned Numbers Specification
+ */
+#define BLE_GATT_CHR_NAMESPACE_BT_SIG                   0x01
+
+/**
+ * Client Presentation Format
+ * GATT Description for Name Space BT_SIG
+ * Ref: Assigned Numbers Specification
+ */
+#define BLE_GATT_CHR_BT_SIG_DESC_UNKNOWN                0x0000
+/** 0x0001 - 0x00FF represent themselves. See Ref for more info */
+#define BLE_GATT_CHR_BT_SIG_DESC_FRONT                  0x0100
+#define BLE_GATT_CHR_BT_SIG_DESC_BACK                   0x0101
+#define BLE_GATT_CHR_BT_SIG_DESC_TOP                    0x0102
+#define BLE_GATT_CHR_BT_SIG_DESC_BOTTOM                 0x0103
+#define BLE_GATT_CHR_BT_SIG_DESC_UPPER                  0x0104
+#define BLE_GATT_CHR_BT_SIG_DESC_LOWER                  0x0105
+#define BLE_GATT_CHR_BT_SIG_DESC_MAIN                   0x0106
+#define BLE_GATT_CHR_BT_SIG_DESC_BACKUP                 0x0107
+#define BLE_GATT_CHR_BT_SIG_DESC_AUXILIARY              0x0108
+#define BLE_GATT_CHR_BT_SIG_DESC_SUPPLEMENTARY          0x0109
+#define BLE_GATT_CHR_BT_SIG_DESC_FLASH                  0x010A
+#define BLE_GATT_CHR_BT_SIG_DESC_INSIDE                 0x010B
+#define BLE_GATT_CHR_BT_SIG_DESC_OUTSIDE                0x010C
+#define BLE_GATT_CHR_BT_SIG_DESC_LEFT                   0x010D
+#define BLE_GATT_CHR_BT_SIG_DESC_RIGHT                  0x010E
+#define BLE_GATT_CHR_BT_SIG_DESC_INTERNAL               0x010F
+#define BLE_GATT_CHR_BT_SIG_DESC_EXTERNAL               0x0110
 
 /*** @client. */
 struct ble_gatt_error {
@@ -126,6 +328,17 @@ typedef int ble_gatt_attr_fn(uint16_t conn_handle,
                              const struct ble_gatt_error *error,
                              struct ble_gatt_attr *attr,
                              void *arg);
+
+/**
+ * The host will free the attribute mbuf automatically after the callback is
+ * executed.  The application can take ownership of the mbuf and prevent it
+ * from being freed by assigning NULL to attr->om.
+ */
+typedef int ble_gatt_attr_mult_fn(uint16_t conn_handle,
+                                  const struct ble_gatt_error *error,
+                                  struct ble_gatt_attr *attrs,
+                                  uint8_t num_attrs,
+                                  void *arg);
 
 /**
  * The host will free the attribute mbufs automatically after the callback is
@@ -343,6 +556,10 @@ int ble_gattc_read_mult(uint16_t conn_handle, const uint16_t *handles,
                         uint8_t num_handles, ble_gatt_attr_fn *cb,
                         void *cb_arg);
 
+int ble_gattc_read_mult_var(uint16_t conn_handle, const uint16_t *handles,
+                            uint8_t num_handles, ble_gatt_attr_mult_fn *cb,
+                            void *cb_arg);
+
 /**
  * Initiates GATT procedure: Write Without Response.  This function consumes
  * the supplied mbuf regardless of the outcome.
@@ -373,6 +590,21 @@ int ble_gattc_write_no_rsp(uint16_t conn_handle, uint16_t attr_handle,
  */
 int ble_gattc_write_no_rsp_flat(uint16_t conn_handle, uint16_t attr_handle,
                                 const void *data, uint16_t data_len);
+
+/**
+ * Initiates GATT procedure: Signed Write. This function consumes the
+ * supplied mbuf regardless of the outcome.
+ *
+ * @param conn_handle       The connection over which to execute the
+ *                              procedure.
+ * @param attr_handle       The handle of the characteristic value to write
+ *                              to.
+ * @param txom              The value to write to the characteristic.
+ *
+ * @return                  0 on success; nonzero on failure.
+ */
+int ble_gattc_signed_write(uint16_t conn_handle, uint16_t attr_handle,
+                           struct os_mbuf * txom);
 
 /**
  * Initiates GATT procedure: Write Characteristic Value.  This function
@@ -583,6 +815,9 @@ struct ble_gatt_chr_def {
      * attribute handle.
      */
     uint16_t *val_handle;
+
+    /** Client Presentation Format Descriptors */
+    struct ble_gatt_cpfd *cpfd;
 };
 
 struct ble_gatt_svc_def {
@@ -632,6 +867,40 @@ struct ble_gatt_dsc_def {
 
     /** Optional argument for callback. */
     void *arg;
+};
+
+/**
+ * Client Presentation Format Descriptor
+ * Defines the format of the Characteristic Value.
+ *
+ * +-------------+------------+
+ * | Field Name  | Value Size |
+ * +-------------+------------+
+ * | Format      | 1 octet    |
+ * | Exponent    | 1 octet    |
+ * | Unit        | 2 octets   |
+ * | Name Space  | 1 octet    |
+ * | Description | 2 octets   |
+ * +-------------+------------+
+ */
+struct ble_gatt_cpfd {
+    /**
+     * Format of the value of this characteristic. e.g. UINT32
+     * Cannot be 0x00. 0x00 represents CPFD array is ended.
+     */
+    uint8_t format;
+
+    /** Exponent field. Multiplies the value to 10^exponent. Type: sint8 */
+    int8_t exponent;
+
+    /** The unit of this characteristic. e.g. meters per second */
+    uint16_t unit;
+
+    /** The name space of the description. */
+    uint8_t name_space;
+
+    /** The description of this characteristic. Depends on name space. */
+    uint16_t description;
 };
 
 /**
@@ -762,6 +1031,18 @@ struct ble_gatt_register_ctxt {
 typedef void ble_gatt_register_fn(struct ble_gatt_register_ctxt *ctxt,
                                   void *arg);
 
+#if MYNEWT_VAL(BLE_DYNAMIC_SERVICE)
+struct ble_gatts_clt_cfg {
+    STAILQ_ENTRY(ble_gatts_clt_cfg) next;
+    uint16_t chr_val_handle;
+    uint8_t flags;
+    uint8_t allowed;
+};
+
+/** A cached array of handles for the configurable characteristics. */
+STAILQ_HEAD(ble_gatts_clt_cfg_list, ble_gatts_clt_cfg);
+#endif
+
 /**
  * Queues a set of service definitions for registration.  All services queued
  * in this manner get registered when ble_gatts_start() is called.
@@ -776,6 +1057,31 @@ typedef void ble_gatt_register_fn(struct ble_gatt_register_ctxt *ctxt,
  */
 int ble_gatts_add_svcs(const struct ble_gatt_svc_def *svcs);
 
+#if MYNEWT_VAL(BLE_DYNAMIC_SERVICE)
+/**
+ * Adds a set of services for registration.  All services added
+ * in this manner get registered immidietely.
+ *
+ * @param svcs                  An array of service definitions to queue for
+ *                                  registration.  This array must be
+ *                                  terminated with an entry whose 'type'
+ *                                  equals 0.
+ *
+ * @return                      0 on success;
+ *                              BLE_HS_ENOMEM on heap exhaustion.
+ */
+int ble_gatts_add_dynamic_svcs(const struct ble_gatt_svc_def *svcs);
+/**
+ * Deletes a service with corresponding uuid.  All services deleted
+ * in this manner will be deleted immidietely.
+ *
+ * @param uuid                  uuid of the service to be deleted.
+ *
+ * @return                      0 on success;
+ *                              BLE_HS_ENOENT on invalid uuid.
+ */
+int ble_gatts_delete_svc(const ble_uuid_t *uuid);
+#endif
 /**
  * Set visibility of local GATT service. Invisible services are not removed
  * from database but are not discoverable by peer devices. Service Changed
@@ -907,10 +1213,52 @@ int ble_gatts_reset(void);
 int ble_gatts_start(void);
 
 /**
- * Resets the GATT configuration parameters and deallocates the memory of attributes.
+ * Saves Client Supported Features for specified connection.
+ *
+ * @param conn_handle           Connection handle identifying connection for
+ *                              which Client Supported Features should be saved
+ * @param om                    The mbuf chain to set value from.
+ *
+ * @return                      0 on success;
+ *                              BLE_HS_ENOTCONN if no matching connection
+ *                              was found
+ *                              BLE_HS_EINVAL if supplied buffer is empty or
+ *                              if any Client Supported Feature was
+ *                              attempted to be disabled.
+ *                              A BLE host core return code on unexpected
+ *                              error.
  *
  */
-void ble_gatts_stop(void);
+int ble_gatts_peer_cl_sup_feat_update(uint16_t conn_handle,
+                                      struct os_mbuf *om);
+
+/**
+ * Gets Client Supported Features for specified connection.
+ *
+ * @param conn_handle           Connection handle identifying connection for
+ *                              which Client Supported Features should be saved
+ * @param out_supported_feat    Client supported features to be returned.
+ *
+ * @return                      0 on success;
+ *                              BLE_HS_ENOTCONN if no matching connection
+ *                              was found
+ *                              BLE_HS_EINVAL if supplied buffer is empty or
+ *                              if any Client Supported Feature was
+ *                              attempted to be disabled.
+ *                              A BLE host core return code on unexpected
+ *                              error.
+ *
+ */
+int ble_gatts_peer_cl_sup_feat_get(uint16_t conn_handle, uint8_t *out_supported_feat, uint8_t len);
+
+#if MYNEWT_VAL(BLE_GATT_CACHING)
+int ble_gatts_calculate_hash(uint8_t *out_hash_key);
+#endif
+
+/**
+ *  Returns the current number of configured characteristics
+ */
+int ble_gatts_get_cfgable_chrs(void);
 
 #ifdef __cplusplus
 }

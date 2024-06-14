@@ -353,6 +353,20 @@ struct ble_att_write_cmd {
     uint8_t value[0];
 } __attribute__((packed));
 
+/**
+ * | Parameter                          | Size (octets)     |
+ * +------------------------------------+-------------------+
+ * | Attribute Opcode                   | 1                 |
+ * | Attribute Handle                   | 2                 |
+ * | Attribute Value                    | 0 to (ATT_MTU-15) |
+ * | Authentication Signature           | 12                |
+ */
+#define BLE_ATT_SIGNED_WRITE_CMD_BASE_SZ 15
+#define BLE_ATT_SIGNED_WRITE_DATA_OFFSET 3
+struct ble_att_signed_write_cmd {
+    uint16_t handle;
+} __attribute__((packed));
+
 void ble_att_error_rsp_parse(const void *payload, int len,
                              struct ble_att_error_rsp *rsp);
 void ble_att_error_rsp_write(void *payload, int len,

@@ -25,6 +25,7 @@
 #include "nimble/nimble/host/include/host/ble_att.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -145,6 +146,15 @@ int ble_att_svr_register(const ble_uuid_t *uuid, uint8_t flags,
                          uint8_t min_key_size, uint16_t *handle_id,
                          ble_att_svr_access_fn *cb, void *cb_arg);
 
+#if MYNEWT_VAL(BLE_DYNAMIC_SERVICE)
+int ble_att_svr_deregister(uint16_t start_handle, uint16_t end_group_handle);
+#endif
+#if MYNEWT_VAL(BLE_GATT_CACHING)
+int ble_att_get_database_size(int *out_size);
+int ble_att_fill_database_info(uint8_t *out_data);
+#endif
+
+
 struct ble_att_svr_entry {
     STAILQ_ENTRY(ble_att_svr_entry) ha_next;
 
@@ -195,11 +205,16 @@ int ble_att_svr_rx_read(uint16_t conn_handle,
                         struct os_mbuf **rxom);
 int ble_att_svr_rx_read_blob(uint16_t conn_handle,
                              struct os_mbuf **rxom);
+int ble_att_svr_rx_read_mult_var(uint16_t conn_handle,
+                                 struct os_mbuf **rxom);
 int ble_att_svr_rx_read_mult(uint16_t conn_handle,
                              struct os_mbuf **rxom);
 int ble_att_svr_rx_write(uint16_t conn_handle,
                          struct os_mbuf **rxom);
 int ble_att_svr_rx_write_no_rsp(uint16_t conn_handle, struct os_mbuf **rxom);
+#ifdef ESP_PLATFORM
+int ble_att_svr_rx_signed_write(uint16_t conn_handle, struct os_mbuf **rxom);
+#endif
 int ble_att_svr_rx_prep_write(uint16_t conn_handle,
                               struct os_mbuf **rxom);
 int ble_att_svr_rx_exec_write(uint16_t conn_handle,
@@ -260,8 +275,9 @@ int ble_att_clt_tx_read_blob(uint16_t conn_handle, uint16_t handle,
                              uint16_t offset);
 int ble_att_clt_rx_read_blob(uint16_t conn_handle, struct os_mbuf **rxom);
 int ble_att_clt_tx_read_mult(uint16_t conn_handle,
-                             const uint16_t *handles, int num_handles);
+                             const uint16_t *handles, int num_handles, bool variable);
 int ble_att_clt_rx_read_mult(uint16_t conn_handle, struct os_mbuf **rxom);
+int ble_att_clt_rx_read_mult_var(uint16_t conn_handle, struct os_mbuf **rxom);
 int ble_att_clt_tx_read_type(uint16_t conn_handle, uint16_t start_handle,
                              uint16_t end_handle, const ble_uuid_t *uuid);
 int ble_att_clt_rx_read_type(uint16_t conn_handle, struct os_mbuf **rxom);
@@ -286,6 +302,9 @@ int ble_att_clt_tx_prep_write(uint16_t conn_handle, uint16_t handle,
                               uint16_t offset, struct os_mbuf *txom);
 int ble_att_clt_rx_prep_write(uint16_t conn_handle, struct os_mbuf **rxom);
 int ble_att_clt_tx_exec_write(uint16_t conn_handle, uint8_t flags);
+int ble_att_clt_tx_signed_write_cmd(uint16_t conn_handle, uint16_t handle,
+                                    uint8_t * csrk, uint32_t counter,
+                                    struct os_mbuf * txom);
 int ble_att_clt_rx_exec_write(uint16_t conn_handle, struct os_mbuf **rxom);
 int ble_att_clt_rx_write(uint16_t conn_handle, struct os_mbuf **rxom);
 int ble_att_clt_tx_notify(uint16_t conn_handle, uint16_t handle,

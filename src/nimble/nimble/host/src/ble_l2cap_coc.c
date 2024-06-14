@@ -206,6 +206,17 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
         }
 
         sdu_len = get_le16((*om)->om_data);
+
+        /* We should receive payload of size sdu_len + 2 bytes of sdu_len field */
+        if (om_total > sdu_len + 2) {
+            BLE_HS_LOG(ERROR, "Payload larger than expected (%d>%d)\n",
+                       om_total, sdu_len + 2);
+            /* Disconnect peer with invalid behaviour */
+            rx->sdu = NULL;
+            rx->data_offset = 0;
+            ble_l2cap_disconnect(chan);
+            return BLE_HS_EBADDATA;
+        }
         if (sdu_len > rx->mtu) {
             BLE_HS_LOG(INFO, "error: sdu_len > rx->mtu (%d>%d)\n",
                        sdu_len, rx->mtu);
@@ -235,6 +246,15 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
     } else {
         BLE_HS_LOG(DEBUG, "Continuation...received %d\n", (*om)->om_len);
 
+        if (OS_MBUF_PKTLEN(rx->sdu) + (*om)->om_len > rx->data_offset) {
+            /* Disconnect peer with invalid behaviour */
+            BLE_HS_LOG(ERROR, "Payload larger than expected (%d>%d)\n",
+                       OS_MBUF_PKTLEN(rx->sdu) + (*om)->om_len, rx->data_offset);
+            rx->sdu = NULL;
+            rx->data_offset = 0;
+            ble_l2cap_disconnect(chan);
+            return BLE_HS_EBADDATA;
+        }
         rc  = os_mbuf_appendfrom(rx->sdu, *om, 0, om_total);
         if (rc != 0) {
             /* FIXME: need to handle it better */

@@ -17,10 +17,11 @@
  * under the License.
  */
 #ifndef ESP_PLATFORM
- 
+
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
+#include <errno.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
@@ -31,7 +32,18 @@
 #include "../include/controller/ble_ll_trace.h"
 #include "../include/controller/ble_hw.h"
 #include "../include/controller/ble_ll_sync.h"
+#include "../include/controller/ble_ll_tmr.h"
 #include "ble_ll_conn_priv.h"
+
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
 
 /* To use spec sample data for testing */
 #undef BLE_LL_ENCRYPT_USE_TEST_DATA
@@ -97,7 +109,7 @@ const uint8_t g_ble_ll_ctrl_pkt_lengths[BLE_LL_CTRL_OPCODES] =
     BLE_LL_CTRL_PAUSE_ENC_RSP_LEN,
     BLE_LL_CTRL_VERSION_IND_LEN,
     BLE_LL_CTRL_REJ_IND_LEN,
-    BLE_LL_CTRL_SLAVE_FEATURE_REQ_LEN,
+    BLE_LL_CTRL_PERIPH_FEATURE_REQ_LEN,
     BLE_LL_CTRL_CONN_PARAMS_LEN,
     BLE_LL_CTRL_CONN_PARAMS_LEN,
     BLE_LL_CTRL_REJECT_IND_EXT_LEN,
@@ -117,7 +129,14 @@ const uint8_t g_ble_ll_ctrl_pkt_lengths[BLE_LL_CTRL_OPCODES] =
     BLE_LL_CTRL_CIS_REQ_LEN,
     BLE_LL_CTRL_CIS_RSP_LEN,
     BLE_LL_CTRL_CIS_IND_LEN,
-    BLE_LL_CTRL_CIS_TERMINATE_LEN
+    BLE_LL_CTRL_CIS_TERMINATE_LEN,
+    BLE_LL_CTRL_POWER_CONTROL_REQ_LEN,
+    BLE_LL_CTRL_POWER_CONTROL_RSP_LEN,
+    BLE_LL_CTRL_POWER_CHANGE_IND_LEN,
+    BLE_LL_CTRL_SUBRATE_REQ_LEN,
+    BLE_LL_CTRL_SUBRATE_IND_LEN,
+    BLE_LL_CTRL_CHAN_REPORTING_IND_LEN,
+    BLE_LL_CTRL_CHAN_STATUS_IND_LEN,
 };
 
 /**
@@ -303,7 +322,7 @@ ble_ll_ctrl_conn_param_pdu_proc(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
         if ((connsm->conn_itvl >= req->interval_min) &&
             (connsm->conn_itvl <= req->interval_max) &&
             (connsm->supervision_tmo == req->timeout) &&
-            (connsm->slave_latency == req->latency)) {
+            (connsm->periph_latency == req->latency)) {
             indicate = 0;
             goto conn_parm_req_do_indicate;
         }
@@ -311,15 +330,14 @@ ble_ll_ctrl_conn_param_pdu_proc(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
 
     /*
      * A change has been requested. Is it within the values specified by
-     * the host? Note that for a master we will not be processing a
-     * connect param request from a slave if we are currently trying to
+     * the host? Note that for a central we will not be processing a
+     * connect param request from a peripheral if we are currently trying to
      * update the connection parameters. This means that the previous
-     * check is all we need for a master (when receiving a request).
+     * check is all we need for a central (when receiving a request).
      */
-    if ((connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) ||
-        (opcode == BLE_LL_CTRL_CONN_PARM_RSP)) {
+    if (CONN_IS_PERIPHERAL(connsm) || (opcode == BLE_LL_CTRL_CONN_PARM_RSP)) {
         /*
-         * Not sure what to do about the slave. It is possible that the
+         * Not sure what to do about the peripheral. It is possible that the
          * current connection parameters are not the same ones as the local host
          * has provided? Not sure what to do here. Do we need to remember what
          * host sent us? For now, I will assume that we need to remember what
@@ -396,12 +414,17 @@ ble_ll_ctrl_conn_upd_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld,
 
     /*
      * Set instant. We set the instant to the current event counter plus
-     * the amount of slave latency as the slave may not be listening
+     * the amount of peripheral latency as the peripheral may not be listening
      * at every connection interval and we are not sure when the connect
      * request will actually get sent. We add one more event plus the
      * minimum as per the spec of 6 connection events.
      */
-    instant = connsm->event_cntr + connsm->slave_latency + 6 + 1;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    instant = connsm->subrate_base_event + 6 * connsm->subrate_factor *
+                                           (connsm->periph_latency + 1);
+#else
+    instant = connsm->event_cntr + connsm->periph_latency + 6 + 1;
+#endif
 
     /*
      * XXX: This should change in the future, but for now we will just
@@ -484,19 +507,20 @@ ble_ll_ctrl_proc_unk_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr, uint8_t *
     case BLE_LL_CTRL_CONN_UPDATE_IND:
         ctrl_proc = BLE_LL_CTRL_PROC_CONN_UPDATE;
         break;
-    case BLE_LL_CTRL_SLAVE_FEATURE_REQ:
+    case BLE_LL_CTRL_PERIPH_FEATURE_REQ:
         ctrl_proc = BLE_LL_CTRL_PROC_FEATURE_XCHG;
-        BLE_LL_CONN_CLEAR_FEATURE(connsm, BLE_LL_FEAT_SLAVE_INIT);
+        BLE_LL_CONN_CLEAR_FEATURE(connsm, BLE_LL_FEAT_PERIPH_INIT);
         break;
     case BLE_LL_CTRL_CONN_PARM_REQ:
         BLE_LL_CONN_CLEAR_FEATURE(connsm, BLE_LL_FEAT_CONN_PARM_REQ);
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+        if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
             ble_ll_ctrl_conn_upd_make(connsm, rspdata, NULL);
             connsm->reject_reason = BLE_ERR_SUCCESS;
             return BLE_LL_CTRL_CONN_UPDATE_IND;
         }
+#endif
         /* Else falls through. */
-        /* note: fall-through intentional */
     case BLE_LL_CTRL_CONN_PARM_RSP:
         ctrl_proc = BLE_LL_CTRL_PROC_CONN_PARAM_REQ;
         break;
@@ -562,11 +586,6 @@ ble_ll_ctrl_proc_rsp_timer_cb(struct ble_npl_event *ev)
 static void
 ble_ll_ctrl_start_rsp_timer(struct ble_ll_conn_sm *connsm)
 {
-    ble_npl_callout_init(&connsm->ctrl_proc_rsp_timer,
-                    &g_ble_ll_data.ll_evq,
-                    ble_ll_ctrl_proc_rsp_timer_cb,
-                    connsm);
-
     /* Re-start timer. Control procedure timeout is 40 seconds */
     ble_npl_callout_reset(&connsm->ctrl_proc_rsp_timer,
                      ble_npl_time_ms_to_ticks32(BLE_LL_CTRL_PROC_TIMEOUT_MS));
@@ -669,7 +688,7 @@ ble_ll_ctrl_phy_update_proc_complete(struct ble_ll_conn_sm *connsm)
     /* Must check if we need to start host procedure */
     if (chk_host_phy) {
         if (CONN_F_HOST_PHY_UPDATE(connsm)) {
-            if (ble_ll_conn_chk_phy_upd_start(connsm)) {
+            if (ble_ll_conn_phy_update_if_needed(connsm)) {
                 CONN_F_HOST_PHY_UPDATE(connsm) = 0;
             } else {
                 chk_proc_stop = 0;
@@ -682,6 +701,7 @@ ble_ll_ctrl_phy_update_proc_complete(struct ble_ll_conn_sm *connsm)
     }
 }
 
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
 /**
  *
  *  There is probably a better way for the controller to choose which PHY use.
@@ -719,48 +739,51 @@ ble_ll_ctrl_find_new_phy(uint8_t phy_mask_prefs)
  * @param connsm Pointer to connection state machine
  * @param dptr Pointer to PHY_REQ or PHY_RSP data.
  * @param ctrdata: Pointer to where CtrData of UPDATE_IND pdu starts
- * @param slave_req flag denoting if slave requested this. 0: no 1:yes
+ * @param periph_req flag denoting if peripheral requested this. 0: no 1:yes
  */
+
 static void
 ble_ll_ctrl_phy_update_ind_make(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
-                                uint8_t *ctrdata, int slave_req)
+                                uint8_t *ctrdata, int periph_req)
 {
     uint8_t m_to_s;
     uint8_t s_to_m;
     uint8_t tx_phys;
     uint8_t rx_phys;
     uint16_t instant;
-    uint8_t is_slave_sym = 0;
+    uint8_t is_periph_sym = 0;
 
     /* Get preferences from PDU */
     tx_phys = dptr[0];
     rx_phys = dptr[1];
 
-    /* If we are master, check if slave requested symmetric PHY */
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
-        is_slave_sym = tx_phys == rx_phys;
-        is_slave_sym &= __builtin_popcount(tx_phys) == 1;
+    /* If we are central, check if peripheral requested symmetric PHY */
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+        is_periph_sym = tx_phys == rx_phys;
+        is_periph_sym &= __builtin_popcount(tx_phys) == 1;
     }
+#endif
 
     /* Get m_to_s and s_to_m masks */
-    if (slave_req) {
-        m_to_s = connsm->phy_data.host_pref_tx_phys_mask & rx_phys;
-        s_to_m = connsm->phy_data.host_pref_rx_phys_mask & tx_phys;
+    if (periph_req) {
+        m_to_s = connsm->phy_data.pref_mask_tx & rx_phys;
+        s_to_m = connsm->phy_data.pref_mask_rx & tx_phys;
     } else {
-        m_to_s = connsm->phy_data.req_pref_tx_phys_mask & rx_phys;
-        s_to_m = connsm->phy_data.req_pref_rx_phys_mask & tx_phys;
+        m_to_s = connsm->phy_data.pref_mask_tx_req & rx_phys;
+        s_to_m = connsm->phy_data.pref_mask_rx_req & tx_phys;
     }
 
-    if (is_slave_sym) {
+    if (is_periph_sym) {
         /*
          * If either s_to_m or m_to_s is 0, it means for at least one direction
          * requested PHY is not our preferred one so make sure we keep current
          * PHY in both directions
          *
          * Core 5.2, Vol 6, PartB, 5.1.10
-         *     If the slave specified a single PHY in both the TX_PHYS and
-         *     RX_PHYS fields and both fields are the same, the master shall
-         *     either select the PHY specified by the slave for both directions
+         *     If the peripheral specified a single PHY in both the TX_PHYS and
+         *     RX_PHYS fields and both fields are the same, the central shall
+         *     either select the PHY specified by the peripheral for both directions
          *     or shall leave both directions unchanged.
          */
         if ((s_to_m == 0) || (m_to_s == 0)) {
@@ -804,7 +827,7 @@ ble_ll_ctrl_phy_update_ind_make(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
         instant = 0;
     } else {
         /* Determine instant we will use. 6 more is minimum */
-        instant = connsm->event_cntr + connsm->slave_latency + 6 + 1;
+        instant = connsm->event_cntr + connsm->periph_latency + 6 + 1;
         connsm->phy_instant = instant;
         CONN_F_PHY_UPDATE_SCHED(connsm) = 1;
 
@@ -826,6 +849,7 @@ ble_ll_ctrl_phy_update_ind_make(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
     ctrdata[1] = s_to_m;
     put_le16(ctrdata + 2, instant);
 }
+#endif
 
 /**
  * Create a LL_PHY_REQ or LL_PHY_RSP pdu
@@ -836,17 +860,8 @@ ble_ll_ctrl_phy_update_ind_make(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
 static void
 ble_ll_ctrl_phy_req_rsp_make(struct ble_ll_conn_sm *connsm, uint8_t *ctrdata)
 {
-    /* If no preference we use current phy */
-    if (connsm->phy_data.host_pref_tx_phys_mask == 0) {
-        ctrdata[0] = CONN_CUR_TX_PHY_MASK(connsm);
-    } else {
-        ctrdata[0] = connsm->phy_data.host_pref_tx_phys_mask;
-    }
-    if (connsm->phy_data.host_pref_rx_phys_mask == 0) {
-        ctrdata[1] = CONN_CUR_RX_PHY_MASK(connsm);
-    } else {
-        ctrdata[1] = connsm->phy_data.host_pref_rx_phys_mask;
-    }
+    ctrdata[0] = connsm->phy_data.pref_mask_tx;
+    ctrdata[1] = connsm->phy_data.pref_mask_rx;
 }
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_SCA_UPDATE)
@@ -880,7 +895,9 @@ ble_ll_ctrl_rx_phy_req(struct ble_ll_conn_sm *connsm, uint8_t *req,
     err = ble_ll_ctrl_proc_with_instant_initiated(connsm,
                                                   BLE_LL_CTRL_PROC_PHY_UPDATE);
 
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+    switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CONN_ROLE_CENTRAL:
         if (err) {
             ble_ll_ctrl_rej_ext_ind_make(BLE_LL_CTRL_PHY_REQ, err, rsp);
             rsp_opcode = BLE_LL_CTRL_REJECT_IND_EXT;
@@ -893,7 +910,10 @@ ble_ll_ctrl_rx_phy_req(struct ble_ll_conn_sm *connsm, uint8_t *req,
             ble_ll_ctrl_phy_update_ind_make(connsm, req, rsp, 1);
             rsp_opcode = BLE_LL_CTRL_PHY_UPDATE_IND;
         }
-    } else {
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    case BLE_LL_CONN_ROLE_PERIPHERAL:
         /* XXX: deal with other control procedures that we need to stop */
         if (err) {
             if (connsm->cur_ctrl_proc == BLE_LL_CTRL_PROC_PHY_UPDATE) {
@@ -911,7 +931,7 @@ ble_ll_ctrl_rx_phy_req(struct ble_ll_conn_sm *connsm, uint8_t *req,
         /* XXX: TODO: if we started another procedure with an instant
          * why are we doing this? Need to look into this.*/
 
-        /* Respond to master's phy update procedure */
+        /* Respond to central's phy update procedure */
         CONN_F_PEER_PHY_UPDATE(connsm) = 1;
         ble_ll_ctrl_phy_req_rsp_make(connsm, rsp);
         rsp_opcode = BLE_LL_CTRL_PHY_RSP;
@@ -921,7 +941,13 @@ ble_ll_ctrl_rx_phy_req(struct ble_ll_conn_sm *connsm, uint8_t *req,
         /* Start response timer */
         connsm->cur_ctrl_proc = BLE_LL_CTRL_PROC_PHY_UPDATE;
         ble_ll_ctrl_start_rsp_timer(connsm);
+        break;
+#endif
+    default:
+        BLE_LL_ASSERT(0);
+        break;
     }
+
     return rsp_opcode;
 }
 
@@ -941,7 +967,10 @@ ble_ll_ctrl_rx_phy_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
     uint8_t rsp_opcode;
 
     rsp_opcode = BLE_ERR_MAX;
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+
+    switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CONN_ROLE_CENTRAL:
         if (connsm->cur_ctrl_proc == BLE_LL_CTRL_PROC_PHY_UPDATE) {
             ble_ll_ctrl_phy_update_ind_make(connsm, dptr, rsp, 0);
             ble_npl_callout_stop(&connsm->ctrl_proc_rsp_timer);
@@ -954,11 +983,19 @@ ble_ll_ctrl_rx_phy_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
          *
          * XXX: TODO count some stat?
          */
-    } else {
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    case BLE_LL_CONN_ROLE_PERIPHERAL:
         rsp_opcode = BLE_LL_CTRL_UNKNOWN_RSP;
+        break;
+#endif
+    default:
+        BLE_LL_ASSERT(0);
+        break;
     }
 
-    /* NOTE: slave should never receive one of these */
+    /* NOTE: peripheral should never receive one of these */
 
     return rsp_opcode;
 }
@@ -966,7 +1003,7 @@ ble_ll_ctrl_rx_phy_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
 /**
  * Called when a LL_PHY_UPDATE_IND pdu is received
  *
- * NOTE: slave is the only device that should receive this.
+ * NOTE: peripheral is the only device that should receive this.
  *
  * @param connsm
  * @param dptr
@@ -984,9 +1021,11 @@ ble_ll_ctrl_rx_phy_update_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     uint16_t instant;
     uint16_t delta;
 
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
         return BLE_LL_CTRL_UNKNOWN_RSP;
     }
+#endif
 
     /*
      * Reception stops the procedure response timer but does not
@@ -1012,8 +1051,8 @@ ble_ll_ctrl_rx_phy_update_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     } else {
         no_change = 0;
         /*
-         * NOTE: from the slaves perspective, the m to s phy is the one
-         * that the slave will receive on; s to m is the one it will
+         * NOTE: from the peripherals perspective, the m to s phy is the one
+         * that the peripheral will receive on; s to m is the one it will
          * transmit on
          */
         new_rx_phy = ble_ll_ctrl_phy_from_phy_mask(new_m_to_s_mask);
@@ -1085,7 +1124,12 @@ static uint8_t
 ble_ll_ctrl_rx_sca_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
                        uint8_t *rsp)
 {
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
+        connsm->central_sca = dptr[0];
+    }
+
     ble_ll_ctrl_sca_req_rsp_make(connsm, rsp);
+
     return BLE_LL_CTRL_CLOCK_ACCURACY_RSP;
 }
 
@@ -1103,11 +1147,138 @@ ble_ll_ctrl_rx_sca_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     if (connsm->cur_ctrl_proc != BLE_LL_CTRL_PROC_SCA_UPDATE) {
         return BLE_LL_CTRL_UNKNOWN_RSP;
     }
+
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
+        connsm->central_sca = dptr[0];
+    }
+
     ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_SCA_UPDATE);
     ble_ll_hci_ev_sca_update(connsm, BLE_ERR_SUCCESS, dptr[0]);
+
     return BLE_ERR_MAX;
 }
 
+#endif
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+static void
+ble_ll_ctrl_subrate_req_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld,
+                             struct ble_ll_conn_subrate_req_params *srp)
+{
+    put_le16(pyld + 0, srp->subrate_min);
+    put_le16(pyld + 2, srp->subrate_max);
+    put_le16(pyld + 4, srp->max_latency);
+    put_le16(pyld + 6, srp->cont_num);
+    put_le16(pyld + 8, srp->supervision_tmo);
+}
+
+static void
+ble_ll_ctrl_subrate_ind_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld,
+                             struct ble_ll_conn_subrate_params *sp)
+{
+    put_le16(pyld + 0, sp->subrate_factor);
+    put_le16(pyld + 2, sp->subrate_base_event);
+    put_le16(pyld + 4, sp->periph_latency);
+    put_le16(pyld + 6, sp->cont_num);
+    put_le16(pyld + 8, sp->supervision_tmo);
+}
+
+static uint8_t
+ble_ll_ctrl_rx_subrate_req(struct ble_ll_conn_sm *connsm, uint8_t *req,
+                           uint8_t *rsp)
+{
+    struct ble_ll_conn_subrate_req_params params;
+    struct ble_ll_conn_subrate_req_params *srp = &params;
+    uint8_t err;
+    int rc;
+
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
+        return BLE_LL_CTRL_UNKNOWN_RSP;
+    }
+#endif
+
+    if ((ble_ll_read_supp_features() & BLE_LL_FEAT_CONN_SUBRATING_HOST) == 0) {
+        ble_ll_ctrl_rej_ext_ind_make(BLE_LL_CTRL_SUBRATE_REQ,
+                                     BLE_ERR_UNSUPP_REM_FEATURE, rsp);
+        return BLE_LL_CTRL_REJECT_IND_EXT;
+    }
+
+    srp->subrate_min = get_le16(req + 0);
+    srp->subrate_max = get_le16(req + 2);
+    srp->max_latency = get_le16(req + 4);
+    srp->cont_num = get_le16(req + 6);
+    srp->supervision_tmo = get_le16(req + 8);
+
+    rc = ble_ll_conn_subrate_req_llcp(connsm, srp);
+    if (rc < 0) {
+        if (rc == -EINVAL) {
+            err = BLE_ERR_INV_LMP_LL_PARM;
+        } else if (rc == -ENOTSUP) {
+            err = BLE_ERR_UNSUPP_REM_FEATURE;
+        } else if (rc == -EBUSY) {
+            err = BLE_ERR_DIFF_TRANS_COLL;
+        } else {
+            err = BLE_ERR_UNSPECIFIED;
+        }
+
+        ble_ll_ctrl_rej_ext_ind_make(BLE_LL_CTRL_SUBRATE_REQ, err, rsp);
+
+        return BLE_LL_CTRL_REJECT_IND_EXT;
+    }
+
+    return BLE_ERR_MAX;
+}
+
+static uint8_t
+ble_ll_ctrl_rx_subrate_ind(struct ble_ll_conn_sm *connsm, uint8_t *req,
+                           uint8_t *rsp)
+{
+    struct ble_ll_conn_subrate_params params;
+    struct ble_ll_conn_subrate_params *sp = &params;
+    uint32_t t1, t2;
+
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+        return BLE_LL_CTRL_UNKNOWN_RSP;
+    }
+#endif
+
+    sp->subrate_factor = get_le16(req + 0);
+    sp->subrate_base_event = get_le16(req + 2);
+    sp->periph_latency = get_le16(req + 4);
+    sp->cont_num = get_le16(req + 6);
+    sp->supervision_tmo = get_le16(req + 8);
+
+    /* This is probably not really useful since we shall apply new parameters
+     * immediately after receiving LL_SUBRATE_IND and central shall apply those
+     * parameters after receiving ack which it already did, so it's too late
+     * here to do anything useful. Let's just send LL_REJECT_EXT_IND anyway just
+     * for debugging purposes and reset to subrate factor of 1 and no latency,
+     * perhaps we can find some connection event from central and send our PDU.
+     */
+    t1 = connsm->conn_itvl * sp->subrate_factor * (sp->periph_latency + 1) *
+         BLE_LL_CONN_ITVL_USECS;
+    t2 = sp->supervision_tmo * BLE_HCI_CONN_SPVN_TMO_UNITS * 1000 / 2;
+    if ((sp->subrate_factor < 1) || (sp->subrate_factor > 500) ||
+        (sp->cont_num > sp->subrate_factor - 1) ||
+        (sp->subrate_factor * (sp->periph_latency + 1) > 500) || (t1 >= t2)) {
+
+        sp->subrate_factor = 1;
+        sp->subrate_base_event = connsm->event_cntr;
+        sp->periph_latency = 0;
+        sp->cont_num = 0;
+        sp->supervision_tmo = connsm->supervision_tmo;
+
+        return BLE_ERR_MAX;
+    }
+
+    ble_ll_conn_subrate_set(connsm, sp);
+    ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_SUBRATE_REQ);
+    connsm->csmflags.cfbit.subrate_host_req = 0;
+
+    return BLE_ERR_MAX;
+}
 #endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ISO)
@@ -1196,7 +1367,7 @@ ble_ll_calc_session_key(struct ble_ll_conn_sm *connsm)
  * XXX: the current code may actually allow some control pdu's to be sent
  * in states where they shouldnt. I dont expect those states to occur so I
  * dont try to check for them but we could do more... for example there are
- * different PDUs allowed for master/slave and TX/RX
+ * different PDUs allowed for central/peripheral and TX/RX
  *
  * @param llid
  * @param opcode
@@ -1355,7 +1526,7 @@ ble_ll_ctrl_cis_create(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
  *      IVm     (4)
  *
  * The random number and encrypted diversifier come from the host command.
- * Controller generates master portion of SDK and IV.
+ * Controller generates central portion of SDK and IV.
  *
  * NOTE: this function does not set the LL data pdu header nor does it
  * set the opcode in the buffer.
@@ -1385,7 +1556,7 @@ ble_ll_ctrl_enc_req_make(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
 }
 
 /**
- * Called when LL_ENC_RSP is received by the master.
+ * Called when LL_ENC_RSP is received by the central.
  *
  * Context: Link Layer Task.
  *
@@ -1393,7 +1564,7 @@ ble_ll_ctrl_enc_req_make(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
  *      SKDs (8)
  *      IVs  (4)
  *
- *  The master now has the long term key (from the start encrypt command)
+ *  The central now has the long term key (from the start encrypt command)
  *  and the SKD (stored in the plain text encryption block). From this the
  *  sessionKey is generated.
  *
@@ -1419,7 +1590,7 @@ ble_ll_ctrl_rx_enc_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
 
 /**
  * Called when we have received a LL control encryption request PDU. This
- * should only be received by a slave.
+ * should only be received by a peripheral.
  *
  * The LL_ENC_REQ PDU format is:
  *      Rand    (8)
@@ -1431,7 +1602,7 @@ ble_ll_ctrl_rx_enc_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
  * but it could be a reject ind. Note that the caller of this function
  * will send the REJECT_IND_EXT if supported by remote.
  *
- * NOTE: if this is received by a master we will silently discard the PDU
+ * NOTE: if this is received by a central we will silently discard the PDU
  * (denoted by return BLE_ERR_MAX).
  *
  * @param connsm
@@ -1442,9 +1613,11 @@ static uint8_t
 ble_ll_ctrl_rx_enc_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
                        uint8_t *rspdata)
 {
-    if (connsm->conn_role != BLE_LL_CONN_ROLE_SLAVE) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
         return BLE_LL_CTRL_UNKNOWN_RSP;
     }
+#endif
 
     connsm->enc_data.enc_state = CONN_ENC_S_ENC_RSP_TO_BE_SENT;
 
@@ -1485,17 +1658,29 @@ ble_ll_ctrl_rx_start_enc_req(struct ble_ll_conn_sm *connsm)
 {
     int rc;
 
-    /* Only master should receive start enc request */
+    /* Only central should receive start enc request */
     rc = BLE_ERR_MAX;
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+
+    switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CONN_ROLE_CENTRAL:
         /* We only want to send a START_ENC_RSP if we havent yet */
         if (connsm->enc_data.enc_state == CONN_ENC_S_START_ENC_REQ_WAIT) {
             connsm->enc_data.enc_state = CONN_ENC_S_START_ENC_RSP_WAIT;
             rc = BLE_LL_CTRL_START_ENC_RSP;
         }
-    } else {
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    case BLE_LL_CONN_ROLE_PERIPHERAL:
         rc = BLE_LL_CTRL_UNKNOWN_RSP;
+        break;
+#endif
+    default:
+        BLE_LL_ASSERT(0);
+        break;
     }
+
     return rc;
 }
 
@@ -1510,7 +1695,7 @@ ble_ll_ctrl_rx_pause_enc_req(struct ble_ll_conn_sm *connsm)
      * ignore it...
      */
     rc = BLE_ERR_MAX;
-    if ((connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) &&
+    if (CONN_IS_PERIPHERAL(connsm) &&
         (connsm->enc_data.enc_state == CONN_ENC_S_ENCRYPTED)) {
         rc = BLE_LL_CTRL_PAUSE_ENC_RSP;
     } else {
@@ -1533,16 +1718,28 @@ ble_ll_ctrl_rx_pause_enc_rsp(struct ble_ll_conn_sm *connsm)
 {
     int rc;
 
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+    switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CONN_ROLE_CENTRAL:
         rc = BLE_LL_CTRL_PAUSE_ENC_RSP;
-    } else if (connsm->enc_data.enc_state == CONN_ENC_S_PAUSE_ENC_RSP_WAIT) {
-        /* Master sends back unencrypted LL_PAUSE_ENC_RSP.
-         * From this moment encryption is paused.
-         */
-        rc = BLE_ERR_MAX;
-        connsm->enc_data.enc_state = CONN_ENC_S_PAUSED;
-    } else {
-        rc = BLE_LL_CTRL_UNKNOWN_RSP;
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    case BLE_LL_CONN_ROLE_PERIPHERAL:
+        if (connsm->enc_data.enc_state == CONN_ENC_S_PAUSE_ENC_RSP_WAIT) {
+                /* Master sends back unencrypted LL_PAUSE_ENC_RSP.
+                 * From this moment encryption is paused.
+                 */
+                rc = BLE_ERR_MAX;
+                connsm->enc_data.enc_state = CONN_ENC_S_PAUSED;
+            } else {
+                rc = BLE_LL_CTRL_UNKNOWN_RSP;
+            }
+        break;
+#endif
+    default:
+        BLE_LL_ASSERT(0);
+        break;
     }
 
     return rc;
@@ -1567,9 +1764,9 @@ ble_ll_ctrl_rx_start_enc_rsp(struct ble_ll_conn_sm *connsm)
         return BLE_ERR_MAX;
     }
 
-    /* If master, we are done. Stop control procedure and sent event to host */
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
-
+    switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CONN_ROLE_CENTRAL:
         ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_ENCRYPT);
 
         /* We are encrypted */
@@ -1578,19 +1775,27 @@ ble_ll_ctrl_rx_start_enc_rsp(struct ble_ll_conn_sm *connsm)
         ble_ll_conn_auth_pyld_timer_start(connsm);
 #endif
         rc = BLE_ERR_MAX;
-    } else {
-        /* Procedure has completed but slave needs to send START_ENC_RSP */
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    case BLE_LL_CONN_ROLE_PERIPHERAL:
+        /* Procedure has completed but peripheral needs to send START_ENC_RSP */
         rc = BLE_LL_CTRL_START_ENC_RSP;
 
         /* Stop timer if it was started when sending START_ENC_REQ */
         if (connsm->cur_ctrl_proc == BLE_LL_CTRL_PROC_ENCRYPT) {
             ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_ENCRYPT);
         }
+        break;
+#endif
+    default:
+        BLE_LL_ASSERT(0);
+        break;
     }
 
     /*
      * XXX: for now, a Slave sends this event when it receivest the
-     * START_ENC_RSP from the master. It might be technically incorrect
+     * START_ENC_RSP from the central. It might be technically incorrect
      * to send it before we transmit our own START_ENC_RSP.
      */
     ble_ll_hci_ev_encrypt_chg(connsm, BLE_ERR_SUCCESS);
@@ -1673,12 +1878,12 @@ static void
 ble_ll_ctrl_chanmap_req_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld)
 {
     /* Copy channel map that host desires into request */
-    memcpy(pyld, g_ble_ll_conn_params.master_chan_map, BLE_LL_CONN_CHMAP_LEN);
-    memcpy(connsm->req_chanmap, pyld, BLE_LL_CONN_CHMAP_LEN);
+    memcpy(pyld, g_ble_ll_data.chan_map, BLE_LL_CHAN_MAP_LEN);
+    memcpy(connsm->req_chanmap, pyld, BLE_LL_CHAN_MAP_LEN);
 
     /* Place instant into request */
-    connsm->chanmap_instant = connsm->event_cntr + connsm->slave_latency + 6 + 1;
-    put_le16(pyld + BLE_LL_CONN_CHMAP_LEN, connsm->chanmap_instant);
+    connsm->chanmap_instant = connsm->event_cntr + connsm->periph_latency + 6 + 1;
+    put_le16(pyld + BLE_LL_CHAN_MAP_LEN, connsm->chanmap_instant);
 
     /* Set scheduled flag */
     connsm->csmflags.cfbit.chanmap_update_scheduled = 1;
@@ -1700,14 +1905,24 @@ ble_ll_ctrl_conn_param_reply(struct ble_ll_conn_sm *connsm, uint8_t *rsp,
 {
     uint8_t rsp_opcode;
 
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
-        /* Create a connection parameter response */
-        ble_ll_ctrl_conn_param_pdu_make(connsm, rsp + 1, req);
-        rsp_opcode = BLE_LL_CTRL_CONN_PARM_RSP;
-    } else {
+    switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CONN_ROLE_CENTRAL:
         /* Create a connection update pdu */
         ble_ll_ctrl_conn_upd_make(connsm, rsp + 1, req);
         rsp_opcode = BLE_LL_CTRL_CONN_UPDATE_IND;
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    case BLE_LL_CONN_ROLE_PERIPHERAL:
+        /* Create a connection parameter response */
+        ble_ll_ctrl_conn_param_pdu_make(connsm, rsp + 1, req);
+        rsp_opcode = BLE_LL_CTRL_CONN_PARM_RSP;
+        break;
+#endif
+    default:
+        BLE_LL_ASSERT(0);
+        break;
     }
 
     return rsp_opcode;
@@ -1740,14 +1955,24 @@ ble_ll_ctrl_rx_reject_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
     switch (connsm->cur_ctrl_proc) {
     case BLE_LL_CTRL_PROC_CONN_PARAM_REQ:
         if (opcode == BLE_LL_CTRL_REJECT_IND_EXT) {
-            /* As a master we should send connection update indication in this point */
-            if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+            switch (connsm->conn_role) {
+        #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+            case BLE_LL_CONN_ROLE_CENTRAL:
+                /* As a central we should send connection update indication in this point */
                 rsp_opcode = BLE_LL_CTRL_CONN_UPDATE_IND;
                 ble_ll_ctrl_conn_upd_make(connsm, rspdata, NULL);
                 connsm->reject_reason = BLE_ERR_SUCCESS;
-            } else {
+                break;
+        #endif
+        #if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+            case BLE_LL_CONN_ROLE_PERIPHERAL:
                 ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_CONN_PARAM_REQ);
                 ble_ll_hci_ev_conn_update(connsm, ble_error);
+                break;
+        #endif
+            default:
+                BLE_LL_ASSERT(0);
+                break;
             }
         }
         break;
@@ -1777,6 +2002,13 @@ ble_ll_ctrl_rx_reject_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
         ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_SCA_UPDATE);
         break;
 #endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    case BLE_LL_CTRL_PROC_SUBRATE_REQ:
+        ble_ll_hci_ev_subrate_change(connsm, ble_error);
+        ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_SUBRATE_UPDATE);
+        break;
+#endif
+
     default:
         break;
     }
@@ -1799,10 +2031,12 @@ ble_ll_ctrl_rx_conn_update(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     uint16_t conn_events;
     struct ble_ll_conn_upd_req *reqdata;
 
-    /* Only a slave should receive this */
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+    /* Only a peripheral should receive this */
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
         return BLE_LL_CTRL_UNKNOWN_RSP;
     }
+#endif
 
     /* Retrieve parameters */
     reqdata = &connsm->conn_update_req;
@@ -1861,7 +2095,7 @@ ble_ll_ctrl_initiate_dle(struct ble_ll_conn_sm *connsm)
         return;
     }
 
-    ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_DATA_LEN_UPD);
+    ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_DATA_LEN_UPD, NULL);
 }
 
 static void
@@ -1880,7 +2114,7 @@ ble_ll_ctrl_update_features(struct ble_ll_conn_sm *connsm, uint8_t *feat)
          * LE Coded PHY. However, once we know that peer does support it we can
          * update those values to ones applicable for coded PHY.
          */
-        if (connsm->remote_features[0] & (BLE_LL_FEAT_LE_CODED_PHY >> 8)) {
+        if (ble_ll_conn_rem_feature_check(connsm, BLE_LL_FEAT_LE_CODED_PHY)) {
             if (connsm->host_req_max_tx_time) {
                 connsm->max_tx_time = max(connsm->max_tx_time,
                                           connsm->host_req_max_tx_time);
@@ -1897,7 +2131,7 @@ ble_ll_ctrl_update_features(struct ble_ll_conn_sm *connsm, uint8_t *feat)
 }
 
 /**
- * Called when we receive a feature request or a slave initiated feature
+ * Called when we receive a feature request or a peripheral initiated feature
  * request.
  *
  *
@@ -1917,16 +2151,16 @@ ble_ll_ctrl_rx_feature_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
     uint64_t our_feat;
 
     /*
-     * Only accept slave feature requests if we are a master and feature
-     * requests if we are a slave.
+     * Only accept peripheral feature requests if we are a central and feature
+     * requests if we are a peripheral.
      */
-    if (opcode ==  BLE_LL_CTRL_SLAVE_FEATURE_REQ) {
-        if (connsm->conn_role != BLE_LL_CONN_ROLE_MASTER) {
+    if (opcode == BLE_LL_CTRL_PERIPH_FEATURE_REQ) {
+        if (!CONN_IS_CENTRAL(connsm)) {
             return BLE_LL_CTRL_UNKNOWN_RSP;
         }
     } else {
         /* XXX: not sure this is correct but do it anyway */
-        if (connsm->conn_role != BLE_LL_CONN_ROLE_SLAVE) {
+        if (!CONN_IS_PERIPHERAL(connsm)) {
             return BLE_LL_CTRL_UNKNOWN_RSP;
         }
     }
@@ -2007,7 +2241,17 @@ ble_ll_ctrl_rx_conn_param_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
         return BLE_ERR_MAX;
     }
 
-    /* XXX: remember to deal with this on the master: if the slave has
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+    /* Reject any attempts to change connection parameters by peripheral */
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+        rsp_opcode = BLE_LL_CTRL_REJECT_IND_EXT;
+        rspbuf[1] = BLE_LL_CTRL_CONN_PARM_REQ;
+        rspbuf[2] = BLE_ERR_UNSUPPORTED;
+        return rsp_opcode;
+    }
+#endif
+
+    /* XXX: remember to deal with this on the central: if the peripheral has
      * initiated a procedure we may have received its connection parameter
      * update request and have signaled the host with an event. If that
      * is the case, we will need to drop the host command when we get it
@@ -2017,38 +2261,49 @@ ble_ll_ctrl_rx_conn_param_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
      * be pending (a connection update) that will cause collisions and the
        behavior below. */
     /*
-     * Check for procedure collision (Vol 6 PartB 5.3). If we are a slave
-     * and we receive a request we "consider the slave initiated
+     * Check for procedure collision (Vol 6 PartB 5.3). If we are a peripheral
+     * and we receive a request we "consider the peripheral initiated
      * procedure as complete". This means send a connection update complete
      * event (with error).
      *
-     * If a master, we send reject with a
+     * If a central, we send reject with a
      * transaction collision error code.
      */
     if (IS_PENDING_CTRL_PROC(connsm, BLE_LL_CTRL_PROC_CONN_PARAM_REQ)) {
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
-            ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_CONN_PARAM_REQ);
-            ble_ll_hci_ev_conn_update(connsm, BLE_ERR_LMP_COLLISION);
-        } else {
-            /* The master sends reject ind ext w/error code 0x23 */
+        switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+        case BLE_LL_CONN_ROLE_CENTRAL:
+            /* The central sends reject ind ext w/error code 0x23 */
             rsp_opcode = BLE_LL_CTRL_REJECT_IND_EXT;
             rspbuf[1] = BLE_LL_CTRL_CONN_PARM_REQ;
             rspbuf[2] = BLE_ERR_LMP_COLLISION;
             return rsp_opcode;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+        case BLE_LL_CONN_ROLE_PERIPHERAL:
+            ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_CONN_PARAM_REQ);
+            ble_ll_hci_ev_conn_update(connsm, BLE_ERR_LMP_COLLISION);
+            break;
+#endif
+        default:
+            BLE_LL_ASSERT(0);
+            break;
         }
     }
 
     /*
-     * If we are a master and we currently performing a channel map
+     * If we are a central and we currently performing a channel map
      * update procedure we need to return an error
      */
-    if ((connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) &&
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if ((connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) &&
         (connsm->csmflags.cfbit.chanmap_update_scheduled)) {
         rsp_opcode = BLE_LL_CTRL_REJECT_IND_EXT;
         rspbuf[1] = BLE_LL_CTRL_CONN_PARM_REQ;
         rspbuf[2] = BLE_ERR_DIFF_TRANS_COLL;
         return rsp_opcode;
     }
+#endif
 
     /* Process the received connection parameter request */
     rsp_opcode = ble_ll_ctrl_conn_param_pdu_proc(connsm, dptr, rspbuf,
@@ -2062,15 +2317,17 @@ ble_ll_ctrl_rx_conn_param_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
 {
     uint8_t rsp_opcode;
 
-    /* A slave should never receive this response */
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
+    /* A peripheral should never receive this response */
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
         return BLE_LL_CTRL_UNKNOWN_RSP;
     }
+#endif
 
     /*
-     * This case should never happen! It means that the slave initiated a
-     * procedure and the master initiated one as well. If we do get in this
-     * state just clear the awaiting reply. The slave will hopefully stop its
+     * This case should never happen! It means that the peripheral initiated a
+     * procedure and the central initiated one as well. If we do get in this
+     * state just clear the awaiting reply. The peripheral will hopefully stop its
      * procedure when we reply.
      */
     if (connsm->csmflags.cfbit.awaiting_host_reply) {
@@ -2139,18 +2396,20 @@ ble_ll_ctrl_rx_chanmap_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     uint16_t instant;
     uint16_t conn_events;
 
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
         return BLE_LL_CTRL_UNKNOWN_RSP;
     }
+#endif
 
     /* If instant is in the past, we have to end the connection */
-    instant = get_le16(dptr + BLE_LL_CONN_CHMAP_LEN);
+    instant = get_le16(dptr + BLE_LL_CHAN_MAP_LEN);
     conn_events = (instant - connsm->event_cntr) & 0xFFFF;
     if (conn_events >= 32767) {
         ble_ll_conn_timeout(connsm, BLE_ERR_INSTANT_PASSED);
     } else {
         connsm->chanmap_instant = instant;
-        memcpy(connsm->req_chanmap, dptr, BLE_LL_CONN_CHMAP_LEN);
+        memcpy(connsm->req_chanmap, dptr, BLE_LL_CHAN_MAP_LEN);
         connsm->csmflags.cfbit.chanmap_update_scheduled = 1;
     }
 
@@ -2170,7 +2429,7 @@ ble_ll_ctrl_rx_chanmap_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
  * @param ctrl_proc
  */
 static struct os_mbuf *
-ble_ll_ctrl_proc_init(struct ble_ll_conn_sm *connsm, int ctrl_proc)
+ble_ll_ctrl_proc_init(struct ble_ll_conn_sm *connsm, int ctrl_proc, void *data)
 {
     uint8_t len;
     uint8_t opcode;
@@ -2189,17 +2448,27 @@ ble_ll_ctrl_proc_init(struct ble_ll_conn_sm *connsm, int ctrl_proc)
         switch (ctrl_proc) {
         case BLE_LL_CTRL_PROC_CONN_UPDATE:
             opcode = BLE_LL_CTRL_CONN_UPDATE_IND;
-            ble_ll_ctrl_conn_upd_make(connsm, ctrdata, NULL);
+            ble_ll_ctrl_conn_upd_make(connsm, ctrdata, data);
             break;
         case BLE_LL_CTRL_PROC_CHAN_MAP_UPD:
             opcode = BLE_LL_CTRL_CHANNEL_MAP_REQ;
             ble_ll_ctrl_chanmap_req_make(connsm, ctrdata);
             break;
         case BLE_LL_CTRL_PROC_FEATURE_XCHG:
-            if (connsm->conn_role == BLE_LL_CONN_ROLE_MASTER) {
+            switch (connsm->conn_role) {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+            case BLE_LL_CONN_ROLE_CENTRAL:
                 opcode = BLE_LL_CTRL_FEATURE_REQ;
-            } else {
-                opcode = BLE_LL_CTRL_SLAVE_FEATURE_REQ;
+                break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+            case BLE_LL_CONN_ROLE_PERIPHERAL:
+                opcode = BLE_LL_CTRL_PERIPH_FEATURE_REQ;
+                break;
+#endif
+            default:
+                BLE_LL_ASSERT(0);
+                break;
             }
             put_le64(ctrdata, ble_ll_read_supp_features());
             break;
@@ -2251,6 +2520,21 @@ ble_ll_ctrl_proc_init(struct ble_ll_conn_sm *connsm, int ctrl_proc)
             opcode = BLE_LL_CTRL_CIS_REQ;
             ble_ll_ctrl_cis_create(connsm, ctrdata);
             break;
+#endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
+        case BLE_LL_CTRL_PROC_SUBRATE_REQ:
+            opcode = BLE_LL_CTRL_SUBRATE_REQ;
+            ble_ll_ctrl_subrate_req_make(connsm, ctrdata, &connsm->subrate_req);
+            break;
+#endif
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+        case BLE_LL_CTRL_PROC_SUBRATE_UPDATE:
+            opcode = BLE_LL_CTRL_SUBRATE_IND;
+            ble_ll_ctrl_subrate_ind_make(connsm, ctrdata,
+                                         &connsm->subrate_trans);
+            break;
+#endif
 #endif
         default:
             BLE_LL_ASSERT(0);
@@ -2328,14 +2612,13 @@ ble_ll_ctrl_terminate_start(struct ble_ll_conn_sm *connsm)
     BLE_LL_ASSERT(connsm->disconnect_reason != 0);
 
     ctrl_proc = BLE_LL_CTRL_PROC_TERMINATE;
-    om = ble_ll_ctrl_proc_init(connsm, ctrl_proc);
+    om = ble_ll_ctrl_proc_init(connsm, ctrl_proc, NULL);
     if (om) {
         CONN_F_TERMINATE_STARTED(connsm) = 1;
 
         /* Set terminate "timeout" */
         usecs = connsm->supervision_tmo * BLE_HCI_CONN_SPVN_TMO_UNITS * 1000;
-        connsm->terminate_timeout = os_cputime_get32() +
-            os_cputime_usecs_to_ticks(usecs);
+        connsm->terminate_timeout = ble_ll_tmr_get() + ble_ll_tmr_u2t(usecs);
     }
 }
 
@@ -2349,7 +2632,8 @@ ble_ll_ctrl_terminate_start(struct ble_ll_conn_sm *connsm)
  * @param connsm Pointer to connection state machine.
  */
 void
-ble_ll_ctrl_proc_start(struct ble_ll_conn_sm *connsm, int ctrl_proc)
+ble_ll_ctrl_proc_start(struct ble_ll_conn_sm *connsm, int ctrl_proc,
+                       void *data)
 {
     struct os_mbuf *om;
 
@@ -2358,7 +2642,7 @@ ble_ll_ctrl_proc_start(struct ble_ll_conn_sm *connsm, int ctrl_proc)
     om = NULL;
     if (connsm->cur_ctrl_proc == BLE_LL_CTRL_PROC_IDLE) {
         /* Initiate the control procedure. */
-        om = ble_ll_ctrl_proc_init(connsm, ctrl_proc);
+        om = ble_ll_ctrl_proc_init(connsm, ctrl_proc, data);
         if (om) {
             /* Set the current control procedure */
             connsm->cur_ctrl_proc = ctrl_proc;
@@ -2425,7 +2709,7 @@ ble_ll_ctrl_chk_proc_start(struct ble_ll_conn_sm *connsm)
                     ble_ll_hci_ev_rd_rem_ver(connsm, BLE_ERR_SUCCESS);
                     CLR_PENDING_CTRL_PROC(connsm, i);
                 } else {
-                    ble_ll_ctrl_proc_start(connsm, i);
+                    ble_ll_ctrl_proc_start(connsm, i, NULL);
                     break;
                 }
             }
@@ -2439,7 +2723,7 @@ ble_ll_ctrl_chk_proc_start(struct ble_ll_conn_sm *connsm)
  * NOTE: this function uses the received PDU for the response in some cases. If
  * the received PDU is not used it needs to be freed here.
  *
- * XXX: may want to check, for both master and slave, whether the control
+ * XXX: may want to check, for both central and peripheral, whether the control
  * pdu should be received by that role. Might make for less code...
  * Context: Link Layer
  *
@@ -2449,8 +2733,8 @@ ble_ll_ctrl_chk_proc_start(struct ble_ll_conn_sm *connsm)
 int
 ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om)
 {
-    uint32_t features;
-    uint32_t feature;
+    uint64_t features;
+    uint64_t feature;
     uint8_t len;
     uint8_t opcode;
     uint8_t rsp_opcode;
@@ -2475,6 +2759,12 @@ ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om)
     dptr = om->om_data;
     len = dptr[1];
     opcode = dptr[2];
+
+#if MYNEWT_VAL(BLE_LL_HCI_LLCP_TRACE)
+    ble_ll_hci_ev_send_vs_llcp_trace(0x03, connsm->conn_handle,
+                                     connsm->event_cntr,
+                                     &dptr[2], len);
+#endif
 
     /*
      * rspbuf points to first byte of response. The response buffer does not
@@ -2516,8 +2806,8 @@ ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om)
     case BLE_LL_CTRL_LENGTH_REQ:
         feature = BLE_LL_FEAT_DATA_LEN_EXT;
         break;
-    case BLE_LL_CTRL_SLAVE_FEATURE_REQ:
-        feature = BLE_LL_FEAT_SLAVE_INIT;
+    case BLE_LL_CTRL_PERIPH_FEATURE_REQ:
+        feature = BLE_LL_FEAT_PERIPH_INIT;
         break;
     case BLE_LL_CTRL_CONN_PARM_REQ:
     case BLE_LL_CTRL_CONN_PARM_RSP:
@@ -2539,6 +2829,10 @@ ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om)
         break;
     case BLE_LL_CTRL_PERIODIC_SYNC_IND:
         feature = BLE_LL_FEAT_SYNC_TRANS_RECV;
+        break;
+    case BLE_LL_CTRL_SUBRATE_REQ:
+    case BLE_LL_CTRL_SUBRATE_IND:
+        feature = BLE_LL_FEAT_CONN_SUBRATING;
         break;
     default:
         feature = 0;
@@ -2626,7 +2920,7 @@ ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om)
     case BLE_LL_CTRL_VERSION_IND:
         rsp_opcode = ble_ll_ctrl_rx_version_ind(connsm, dptr, rspdata);
         break;
-    case BLE_LL_CTRL_SLAVE_FEATURE_REQ:
+    case BLE_LL_CTRL_PERIPH_FEATURE_REQ:
         rsp_opcode = ble_ll_ctrl_rx_feature_req(connsm, dptr, rspbuf, opcode);
         break;
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
@@ -2706,6 +3000,14 @@ ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om)
         rsp_opcode = ble_ll_ctrl_rx_periodic_sync_ind(connsm, dptr);
         break;
 #endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    case BLE_LL_CTRL_SUBRATE_REQ:
+        rsp_opcode = ble_ll_ctrl_rx_subrate_req(connsm, dptr, rspdata);
+        break;
+    case BLE_LL_CTRL_SUBRATE_IND:
+        rsp_opcode = ble_ll_ctrl_rx_subrate_ind(connsm, dptr, rspdata);
+        break;
+#endif
     default:
         /* Nothing to do here */
         break;
@@ -2730,7 +3032,7 @@ ll_ctrl_send_rsp:
         if (restart_encryption) {
             /* XXX: what happens if this fails? Meaning we cant allocate
                mbuf? */
-            ble_ll_ctrl_proc_init(connsm, BLE_LL_CTRL_PROC_ENCRYPT);
+            ble_ll_ctrl_proc_init(connsm, BLE_LL_CTRL_PROC_ENCRYPT, NULL);
         }
 #endif
     }
@@ -2789,6 +3091,21 @@ ble_ll_ctrl_reject_ind_send(struct ble_ll_conn_sm *connsm, uint8_t rej_opcode,
     return rc;
 }
 
+int
+ble_ll_ctrl_tx_start(struct ble_ll_conn_sm *connsm, struct os_mbuf *txpdu)
+{
+    uint8_t opcode;
+
+    opcode = txpdu->om_data[0];
+    switch (opcode) {
+    case BLE_LL_CTRL_SUBRATE_IND:
+        connsm->csmflags.cfbit.subrate_trans = 1;
+        break;
+    }
+
+    return 0;
+}
+
 /**
  * Called when a Link Layer Control pdu has been transmitted successfully.
  * This is called when we have a received a PDU during the ISR.
@@ -2805,6 +3122,12 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
     int rc;
     uint8_t opcode;
 
+#if MYNEWT_VAL(BLE_LL_HCI_LLCP_TRACE)
+    ble_ll_hci_ev_send_vs_llcp_trace(0x04, connsm->conn_handle,
+                                     connsm->event_cntr,
+                                     txpdu->om_data, txpdu->om_len);
+#endif
+
     rc = 0;
     opcode = txpdu->om_data[0];
     switch (opcode) {
@@ -2815,7 +3138,7 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
     case BLE_LL_CTRL_REJECT_IND_EXT:
         if (connsm->cur_ctrl_proc == BLE_LL_CTRL_PROC_CONN_PARAM_REQ) {
             /* If rejecting opcode is BLE_LL_CTRL_PROC_CONN_PARAM_REQ and
-             * reason is LMP collision that means we are master on the link and
+             * reason is LMP collision that means we are central on the link and
              * peer wanted to start procedure which we already started.
              * Let's wait for response and do not close procedure. */
             if (txpdu->om_data[1] == BLE_LL_CTRL_CONN_PARM_REQ &&
@@ -2845,8 +3168,9 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
         connsm->enc_data.enc_state = CONN_ENC_S_LTK_REQ_WAIT;
         connsm->csmflags.cfbit.send_ltk_req = 1;
         break;
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
     case BLE_LL_CTRL_START_ENC_RSP:
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
+        if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
             connsm->enc_data.enc_state = CONN_ENC_S_ENCRYPTED;
             if (CONN_F_LE_PING_SUPP(connsm)) {
                 ble_ll_conn_auth_pyld_timer_start(connsm);
@@ -2854,21 +3178,35 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
         }
         break;
     case BLE_LL_CTRL_PAUSE_ENC_RSP:
-        if (connsm->conn_role == BLE_LL_CONN_ROLE_SLAVE) {
+        if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
             connsm->enc_data.enc_state = CONN_ENC_S_PAUSE_ENC_RSP_WAIT;
         }
         break;
 #endif
+#endif
 #if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
     case BLE_LL_CTRL_PHY_REQ:
-        connsm->phy_tx_transition =
-                    ble_ll_ctrl_phy_tx_transition_get(connsm->phy_data.req_pref_tx_phys_mask);
+        if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
+            connsm->phy_tx_transition =
+                    ble_ll_ctrl_phy_tx_transition_get(
+                            connsm->phy_data.pref_mask_tx_req);
+        }
         break;
+#endif
     case BLE_LL_CTRL_PHY_UPDATE_IND:
         connsm->phy_tx_transition =
                     ble_ll_ctrl_phy_tx_transition_get(txpdu->om_data[2]);
         break;
 #endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_LL_CTRL_SUBRATE_IND:
+        connsm->csmflags.cfbit.subrate_trans = 0;
+        connsm->csmflags.cfbit.subrate_ind_txd = 1;
+        break;
+#endif /* BLE_LL_CTRL_SUBRATE_IND */
+#endif /* BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE */
     default:
         break;
     }
@@ -2876,4 +3214,13 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
     os_mbuf_free_chain(txpdu);
     return rc;
 }
+
+void
+ble_ll_ctrl_init_conn_sm(struct ble_ll_conn_sm *connsm)
+{
+    ble_npl_callout_init(&connsm->ctrl_proc_rsp_timer, &g_ble_ll_data.ll_evq,
+                         ble_ll_ctrl_proc_rsp_timer_cb, connsm);
+}
+
+#endif
 #endif

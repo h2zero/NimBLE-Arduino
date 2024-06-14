@@ -24,7 +24,6 @@
 #include "ble_hs_priv.h"
 #include "nimble/nimble/host/include/host/ble_att.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
-#include "ble_hs_priv.h"
 
 #if NIMBLE_BLE_CONNECT
 void *

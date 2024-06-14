@@ -275,3 +275,86 @@ ble_hs_hci_set_chan_class(const uint8_t *chan_map)
                                         BLE_HCI_OCF_LE_SET_HOST_CHAN_CLASS),
                              &cmd, sizeof(cmd), NULL, 0);
 }
+
+int
+ble_hs_hci_util_set_data_addr_change(uint8_t adv_handle, uint8_t change_reason)
+{
+    struct ble_hci_le_set_data_addr_change_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_SET_DATA_ADDR_CHANGE);
+
+    cmd.adv_handle = adv_handle;
+    cmd.change_reason = change_reason;
+
+    return ble_hs_hci_cmd_tx(opcode, &cmd, sizeof(cmd), NULL, 0);
+}
+
+int
+ble_hs_hci_dtm_tx_start(const uint8_t tx_chan, const uint8_t test_data_len,
+		        const uint8_t payload)
+{
+    struct ble_hci_le_tx_test_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_TX_TEST);
+
+    cmd.tx_chan = tx_chan;
+    cmd.test_data_len = test_data_len;
+    cmd.payload = payload;
+
+    return ble_hs_hci_cmd_tx_no_rsp(opcode, &cmd, sizeof(cmd));
+}
+
+int
+ble_hs_hci_dtm_rx_start(const uint8_t rx_chan)
+{
+    struct ble_hci_le_rx_test_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_RX_TEST);
+
+    cmd.rx_chan = rx_chan;
+
+    return ble_hs_hci_cmd_tx_no_rsp(opcode, &cmd, sizeof(cmd));
+}
+
+int
+ble_hs_hci_dtm_stop(void)
+{
+    return ble_hs_hci_cmd_tx_no_rsp(BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_TEST_END),
+		           NULL, 0);
+}
+
+int
+ble_hs_hci_dtm_enh_tx_start(const uint8_t tx_chan, const uint8_t test_data_len,
+		            const uint8_t payload, const uint8_t phy)
+{
+    struct ble_hci_le_tx_test_v2_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_TX_TEST_V2);
+
+    cmd.tx_chan = tx_chan;
+    cmd.test_data_len = test_data_len;
+    cmd.payload = payload;
+    cmd.phy = phy;
+
+    return ble_hs_hci_cmd_tx_no_rsp(opcode, &cmd, sizeof(cmd));
+}
+
+int
+ble_hs_hci_dtm_enh_rx_start(const uint8_t rx_chan, const uint8_t index,
+			    const uint8_t phy)
+{
+    struct ble_hci_le_rx_test_v2_cp cmd;
+    uint16_t opcode;
+
+    opcode = BLE_HCI_OP(BLE_HCI_OGF_LE, BLE_HCI_OCF_LE_RX_TEST_V2);
+
+    cmd.rx_chan = rx_chan;
+    cmd.index = index;
+    cmd.phy = phy;
+
+    return ble_hs_hci_cmd_tx_no_rsp(opcode, &cmd, sizeof(cmd));
+}
