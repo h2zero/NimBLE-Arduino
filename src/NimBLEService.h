@@ -44,7 +44,7 @@ public:
     uint16_t              getHandle();
     std::string           toString();
     void                  dump();
-
+    bool                  isStarted() { return m_pSvcDef != nullptr; }
     bool                  start();
 
     NimBLECharacteristic* createCharacteristic(const char* uuid,
