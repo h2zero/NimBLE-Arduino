@@ -13,12 +13,16 @@ All notable changes to this project will be documented in this file.
  - Adding to the whitelist will now allow the device to be added again if the previous attempts failed.
  - The IPC calls added to esp_nimble_hci have been removed to prevent IPC stack crashing.
  - Espressif log tag renamed from "TAG" to "LOG_TAG" to avoid conflict with Arduino core definition.
+ - Removed broken links in docs
 
 ### Added
  - `NimBLEAdvertisedDevice` new method: `getAdvFlags`, to read the flags advertised.
  - `NimBLEAdvertising::setManufacturerData` new overload method that accepts a vector of `uint8_t`.
  - `NimBLEAdvertisementData::setManufacturerData` new overload method that accepts a vector of `uint8_t`.
  - `NimBLEAdvertisedDevice` new method: `getPayloadByType`, to get data from generic data types advertised.
+ - `NimBLEService` new method: `isStarted`, checks if the service has been started.
+ - `NimBLEAdvertising` new method: `removeServices` removes all service UUID's from the advertisement.
+ - `NimBLEAdvertisementData` new method: `clearData` sets all data to NULL to reuse the instance.
 
 ### Changed
  - `NimBLEAdvertisedDevice::getManufacturerData`, now takes an index value parameter to use when there is more than 1 instance of manufacturer data.
@@ -27,6 +31,10 @@ All notable changes to this project will be documented in this file.
  - Can now create more than 255 Characteristics/Descriptors in a service.
  - `nimble_port_freertos_get_hs_hwm` function is now available to the application to get the core task stack usage.
  - changed default pairing keys shared to include ID key which is now needed by iOS
+ - Removed abort in server start when a service is not found, logs a warning message instead.
+ - `NimBLEAdvertising::start` on complete callback is now a std::function to allow the use of std::bind to class methods
+ - `NimBLEAdvertising` setXXX methods will now properly clear the previous data before setting the new values.
+ - Removed asserts in `NimBLECharacteristic` event handler when conn_handle is invalid, sends a NULL conn info to the callback instead. 
 
 ## [1.4.1] - 2022-10-23
 
