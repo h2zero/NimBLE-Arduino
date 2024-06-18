@@ -5,6 +5,33 @@
 When commands are sent to the stack from a different core they can experience delays in execution.  
 This library detects this and invokes the esp32 IPC to reroute these commands through the correct core but this also increases overhead.  
 Therefore it is highly recommended to create tasks for BLE to run on the same core, the macro `CONFIG_BT_NIMBLE_PINNED_TO_CORE` can be used to set the core.
+
+Here is an example of how to do this:
+```
+void BLETask(void* param) {
+  for(;;) {
+    ..BLE STUFF GOES HERE..
+    delay(1); // always delay in the loop to allow other tasks to run
+  }
+  vTaskDelete(NULL); // should never get here
+}
+
+void setup() {
+  ...YOUR INIT CODE...
+  xTaskCreatePinnedToCore(
+     BLETask, /* Function to implement the task */
+     "BLETask", /* Name of the task */
+     4096, /* Stack size in bytes */
+     NULL, /* Task input parameter */
+     2, /* Priority of the task (set higher than loop) */
+     nullptr, /* Task handle. */
+     CONFIG_BT_NIMBLE_PINNED_TO_CORE); /* Core where main nimble task runs */
+}
+
+void loop() {
+  delay(1);
+}
+```
 <br/>  
 
 ## Do not delete client instances unless necessary or unused

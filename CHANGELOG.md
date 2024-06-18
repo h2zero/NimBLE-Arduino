@@ -1,7 +1,8 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-## [unreleased]
+
+## [1.4.2] 2024-06-17
 
 ### Fixed
  - `CONFIG_BT_NIMBLE_NVS_PERSIST` value not being used to enable/disable persistance.
