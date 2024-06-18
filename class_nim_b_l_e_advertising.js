@@ -6,12 +6,14 @@ var class_nim_b_l_e_advertising =
     [ "addTxPower", "class_nim_b_l_e_advertising.html#ac4ff0af45d1f7ed5bc208612852bc43a", null ],
     [ "advCompleteCB", "class_nim_b_l_e_advertising.html#a4de7bf016a086a2d3f6f14ae134678f2", null ],
     [ "isAdvertising", "class_nim_b_l_e_advertising.html#ac257ab68520a244cb6494d793f9b6c2a", null ],
+    [ "removeServices", "class_nim_b_l_e_advertising.html#a79f926f083c1cfb07dad6a673405dd47", null ],
     [ "removeServiceUUID", "class_nim_b_l_e_advertising.html#a725437c00152ff57ef1e21bdf7be980d", null ],
     [ "reset", "class_nim_b_l_e_advertising.html#a545b505ea76396c33133d41a78fad5b8", null ],
     [ "setAdvertisementData", "class_nim_b_l_e_advertising.html#af7083f58717b7e76d90d367f00a0ef08", null ],
     [ "setAdvertisementType", "class_nim_b_l_e_advertising.html#a68d54f11b47b9993322efec1d07c3519", null ],
     [ "setAppearance", "class_nim_b_l_e_advertising.html#aa0d30dfb57670cc8180e17dffddad416", null ],
     [ "setManufacturerData", "class_nim_b_l_e_advertising.html#a1eff592870a47b0f62b0f0894efadbd4", null ],
+    [ "setManufacturerData", "class_nim_b_l_e_advertising.html#a2b7d641e2b04d76297510c1118d75ee7", null ],
     [ "setMaxInterval", "class_nim_b_l_e_advertising.html#aab512576d8873fbbb631bac8ada19530", null ],
     [ "setMaxPreferred", "class_nim_b_l_e_advertising.html#a3382cdf80f5ae46a52e3b9159f8e1b66", null ],
     [ "setMinInterval", "class_nim_b_l_e_advertising.html#a16bd135cab3f06bc0ba81c2aec19cbbc", null ],
@@ -22,6 +24,6 @@ var class_nim_b_l_e_advertising =
     [ "setScanResponseData", "class_nim_b_l_e_advertising.html#a04a51a0c639a70295a9b671f73b34358", null ],
     [ "setServiceData", "class_nim_b_l_e_advertising.html#a994e43e9e4ace6ce64c57e57d0575781", null ],
     [ "setURI", "class_nim_b_l_e_advertising.html#a6495d7c9ad80a8c2a5edf974705f8103", null ],
-    [ "start", "class_nim_b_l_e_advertising.html#aeeee5a131b42a4f76010751f4c182e4f", null ],
+    [ "start", "class_nim_b_l_e_advertising.html#a89722f418bb530e0cb0fc5bea083f00b", null ],
     [ "stop", "class_nim_b_l_e_advertising.html#a3ab772936ace18c9a7e509740aa59800", null ]
 ];

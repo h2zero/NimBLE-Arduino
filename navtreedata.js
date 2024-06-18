@@ -49,7 +49,6 @@ var NAVTREE =
     ] ],
     [ "Migrating from Bluedroid to NimBLE", "md__migration_guide.html", [
       [ "General Information", "md__migration_guide.html#autotoc_md20", [
-        [ "Extended advertising settings, For use with ESP32C3, ESP32S3, ESP32H2 ONLY!", "md__command_line_config.html#autotoc_md4", null ],
         [ "Header Files", "md__migration_guide.html#autotoc_md21", null ],
         [ "Class Names", "md__migration_guide.html#autotoc_md22", null ],
         [ "BLE Addresses", "md__migration_guide.html#autotoc_md23", null ]
@@ -107,8 +106,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_h_i_d_keyboard_types_8h_source.html",
-"class_nim_b_l_e_client.html#a668d476de250055a106a9f46bb7719f3",
-"class_nim_b_l_e_security.html#ab2be50284a325ec8937abdab0baafd4b"
+"class_nim_b_l_e_client.html#a1f9d4ad6d3d03b819bfad82d1f39b684",
+"class_nim_b_l_e_scan_results.html#ac2356f6c1b8384ebc061d4b7953a9374"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
