@@ -12,9 +12,9 @@ jobs:
           - "examples/NimBLE_Server"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Install platformio
@@ -56,9 +56,9 @@ jobs:
           - esp32s3
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build arduino-esp32
-        uses: arduino/compile-sketches@v1.1.0
+        uses: arduino/compile-sketches@v1.1.1
         with:
           cli-version: latest
           platforms: |
@@ -82,9 +82,9 @@ jobs:
           - Generic_nRF52840
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build n-able Arduino
-        uses: arduino/compile-sketches@v1.1.0
+        uses: arduino/compile-sketches@v1.1.1
         with:
           cli-version: latest
           platforms: |
@@ -103,9 +103,9 @@ jobs:
           - "examples/NimBLE_Server"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Install platformio
@@ -139,7 +139,7 @@ jobs:
   build_docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Doxygen Action
         uses: mattnotmitt/doxygen-action@v1.9.5
         with:
