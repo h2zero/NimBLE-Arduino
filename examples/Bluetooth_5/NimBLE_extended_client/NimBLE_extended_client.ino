@@ -6,15 +6,11 @@
  *  Created: on April 2 2022
  *      Author: H2zero
  *
-*/
-
-/****************************************************
- * For use with ESP32C3, ESP32S3, ESP32H2 ONLY!     *
- /**************************************************/
+ */
 
 #include <NimBLEDevice.h>
 #if !CONFIG_BT_NIMBLE_EXT_ADV
-#  error Must enable extended advertising, see nimconfig.h file.
+# error Must enable extended advertising, see nimconfig.h file.
 #endif
 
 void scanEndedCB(NimBLEScanResults results);
@@ -23,32 +19,27 @@ void scanEndedCB(NimBLEScanResults results);
 #define CHARACTERISTIC_UUID "1234"
 
 static NimBLEAdvertisedDevice* advDevice;
-static bool doConnect = false;
-static uint32_t scanTime = 10; /* 0 = scan forever */
+static bool                    doConnect = false;
+static uint32_t                scanTime  = 10; /* 0 = scan forever */
 
 /* Define the PHY's to use when connecting to peer devices, can be 1, 2, or all 3 (default).*/
-static uint8_t connectPhys = BLE_GAP_LE_PHY_CODED_MASK | BLE_GAP_LE_PHY_1M_MASK /*| BLE_GAP_LE_PHY_2M_MASK */ ;
+static uint8_t connectPhys = BLE_GAP_LE_PHY_CODED_MASK | BLE_GAP_LE_PHY_1M_MASK /*| BLE_GAP_LE_PHY_2M_MASK */;
 
 /* Define a class to handle the callbacks for client connection events */
 class ClientCallbacks : public NimBLEClientCallbacks {
-    void onConnect(NimBLEClient* pClient) {
-        Serial.printf("Connected\n");
-    };
+    void onConnect(NimBLEClient* pClient) override { Serial.printf("Connected\n"); }
 
-    void onDisconnect(NimBLEClient* pClient) {
+    void onDisconnect(NimBLEClient* pClient) override {
         Serial.printf("%s Disconnected - Starting scan\n", pClient->getPeerAddress().toString().c_str());
         NimBLEDevice::getScan()->start(scanTime, scanEndedCB);
-    };
+    }
 };
 
-
 /* Define a class to handle the callbacks when advertisements are received */
-class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
-
-    void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
+class AdvertisedDeviceCallbacks : public NimBLEAdvertisedDeviceCallbacks {
+    void onResult(NimBLEAdvertisedDevice* advertisedDevice) override {
         Serial.printf("Advertised Device found: %s\n", advertisedDevice->toString().c_str());
-        if(advertisedDevice->isAdvertisingService(NimBLEUUID("ABCD")))
-        {
+        if (advertisedDevice->isAdvertisingService(NimBLEUUID("ABCD"))) {
             Serial.printf("Found Our Service\n");
             /* Ready to connect now */
             doConnect = true;
@@ -57,18 +48,16 @@ class AdvertisedDeviceCallbacks: public NimBLEAdvertisedDeviceCallbacks {
             /* stop scan before connecting */
             NimBLEDevice::getScan()->stop();
         }
-    };
+    }
 };
 
-
 /* Callback to process the results of the last scan or restart it */
-void scanEndedCB(NimBLEScanResults results){
+void scanEndedCB(NimBLEScanResults results) {
     Serial.printf("Scan Ended\n");
     if (!doConnect) { /* Don't start the scan while connecting */
         NimBLEDevice::getScan()->start(scanTime, scanEndedCB);
     }
 }
-
 
 /* Handles the provisioning of clients and connects / interfaces with the server */
 bool connectToServer() {
@@ -95,12 +84,10 @@ bool connectToServer() {
         return false;
     }
 
-    Serial.printf("Connected to: %s RSSI: %d\n",
-           pClient->getPeerAddress().toString().c_str(),
-           pClient->getRssi());
+    Serial.printf("Connected to: %s RSSI: %d\n", pClient->getPeerAddress().toString().c_str(), pClient->getRssi());
 
-    /* Now we can read/write/subscribe the charateristics of the services we are interested in */
-    NimBLERemoteService* pSvc = nullptr;
+    /* Now we can read/write/subscribe the characteristics of the services we are interested in */
+    NimBLERemoteService*        pSvc = nullptr;
     NimBLERemoteCharacteristic* pChr = nullptr;
 
     pSvc = pClient->getService(SERVICE_UUID);
@@ -125,7 +112,7 @@ bool connectToServer() {
     return true;
 }
 
-void setup () {
+void setup() {
     Serial.begin(115200);
     Serial.printf("Starting NimBLE Client\n");
 
@@ -153,7 +140,7 @@ void setup () {
     Serial.printf("Scanning for peripherals\n");
 }
 
-void loop () {
+void loop() {
     /* Loop here until we find a device we want to connect to */
     if (doConnect) {
         /* Found a device we want to connect to, do it now */

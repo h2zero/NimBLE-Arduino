@@ -10,7 +10,7 @@
  *  Created: on April 9 2022
  *      Author: H2zero
  *
-*/
+ */
 
 /****************************************************
  * For use with ESP32C3, ESP32S3, ESP32H2 ONLY!     *
@@ -18,7 +18,7 @@
 
 #include <NimBLEDevice.h>
 #if !CONFIG_BT_NIMBLE_EXT_ADV
-#  error Must enable extended advertising, see nimconfig.h file.
+# error Must enable extended advertising, see nimconfig.h file.
 #endif
 
 #include "esp_sleep.h"
@@ -40,25 +40,24 @@ static uint8_t primaryPhy = BLE_HCI_LE_PHY_CODED;
  */
 static uint8_t secondaryPhy = BLE_HCI_LE_PHY_1M;
 
-
 /* Handler class for server events */
-class ServerCallbacks: public NimBLEServerCallbacks {
-    void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
+class ServerCallbacks : public NimBLEServerCallbacks {
+    void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) override {
         Serial.printf("Client connected: %s\n", NimBLEAddress(desc->peer_ota_addr).toString().c_str());
-    };
+    }
 
-    void onDisconnect(NimBLEServer* pServer) {
+    void onDisconnect(NimBLEServer* pServer) override {
         Serial.printf("Client disconnected\n");
         // if still advertising we won't sleep yet.
         if (!pServer->getAdvertising()->isAdvertising()) {
             Serial.printf("Sleeping for %u seconds\n", sleepTime);
             esp_deep_sleep_start();
         }
-    };
+    }
 };
 
 /* Callback class to handle advertising events */
-class advCallbacks: public NimBLEExtAdvertisingCallbacks {
+class advCallbacks : public NimBLEExtAdvertisingCallbacks {
     void onStopped(NimBLEExtAdvertising* pAdv, int reason, uint8_t inst_id) {
         /* Check the reason advertising stopped, don't sleep if client is connecting */
         Serial.printf("Advertising instance %u stopped\n", inst_id);
@@ -91,20 +90,18 @@ class advCallbacks: public NimBLEExtAdvertisingCallbacks {
     }
 };
 
-void setup () {
+void setup() {
     Serial.begin(115200);
 
     NimBLEDevice::init("Multi advertiser");
 
     /* Create a server for our legacy advertiser */
-    NimBLEServer *pServer = NimBLEDevice::createServer();
+    NimBLEServer* pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(new ServerCallbacks);
 
-    NimBLEService *pService = pServer->createService(SERVICE_UUID);
-    NimBLECharacteristic *pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID,
-                                                                           NIMBLE_PROPERTY::READ |
-                                                                           NIMBLE_PROPERTY::WRITE |
-                                                                           NIMBLE_PROPERTY::NOTIFY);
+    NimBLEService*        pService        = pServer->createService(SERVICE_UUID);
+    NimBLECharacteristic* pCharacteristic = pService->createCharacteristic(
+        CHARACTERISTIC_UUID, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY);
 
     pCharacteristic->setValue("Hello World");
 
@@ -158,9 +155,8 @@ void setup () {
      * We will set the extended scannable data on instance 0 and the legacy data on instance 1.
      * Note that the legacy scan response data needs to be set to the same instance (1).
      */
-    if (pAdvertising->setInstanceData( 0, extScannable )  &&
-        pAdvertising->setInstanceData( 1, legacyConnectable ) &&
-        pAdvertising->setScanResponseData( 1, legacyScanResponse )) {
+    if (pAdvertising->setInstanceData(0, extScannable) && pAdvertising->setInstanceData(1, legacyConnectable) &&
+        pAdvertising->setScanResponseData(1, legacyScanResponse)) {
         /*
          * `NimBLEExtAdvertising::start` takes the advertisement instance ID to start
          * and a duration in milliseconds or a max number of advertisements to send (or both).
@@ -177,5 +173,4 @@ void setup () {
     esp_sleep_enable_timer_wakeup(sleepTime * 1000000);
 }
 
-void loop(){
-}
+void loop() {}
