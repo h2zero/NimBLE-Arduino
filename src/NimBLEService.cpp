@@ -434,4 +434,13 @@ NimBLEServer* NimBLEService::getServer() {
     return NimBLEDevice::getServer();
 }// getServer
 
+
+/**
+ * @brief Checks if the service has been started.
+ * @return True if the service has been started.
+ */
+bool NimBLEService::isStarted() {
+    return m_pSvcDef != nullptr;
+}
+
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
