@@ -12,16 +12,14 @@
  *
 */
 
-/****************************************************
- * For use with ESP32C3, ESP32S3, ESP32H2 ONLY!     *
- /**************************************************/
-
 #include "NimBLEDevice.h"
 #if !CONFIG_BT_NIMBLE_EXT_ADV
 #  error Must enable extended advertising, see nimconfig.h file.
 #endif
 
+#ifdef ESP_PLATFORM
 #include "esp_sleep.h"
+#endif
 
 #define SERVICE_UUID        "ABCD"
 #define CHARACTERISTIC_UUID "1234"
@@ -49,7 +47,11 @@ class ServerCallbacks: public NimBLEServerCallbacks {
 
     void onDisconnect(NimBLEServer* pServer) {
         Serial.printf("Client disconnected - sleeping for %u seconds\n", sleepSeconds);
+#ifdef ESP_PLATFORM
         esp_deep_sleep_start();
+#else
+    systemRestart(); // nRF platforms restart then sleep via delay in setup.
+#endif
     };
 };
 
@@ -63,18 +65,24 @@ class advertisingCallbacks: public NimBLEExtAdvertisingCallbacks {
                 printf("Client connecting\n");
                 return;
             case BLE_HS_ETIMEOUT:
-                printf("Time expired - sleeping for %u seconds\n", sleepSeconds);
+                printf("Time expired - sleeping for %" PRIu32 "seconds\n", sleepSeconds);
                 break;
             default:
                 break;
         }
-
+#ifdef ESP_PLATFORM
         esp_deep_sleep_start();
+#else
+        systemRestart(); // nRF platforms restart then sleep via delay in setup.
+#endif
     }
 };
 
 void setup () {
     Serial.begin(115200);
+#ifndef ESP_PLATFORM
+    delay(sleepSeconds * 1000); // system ON sleep mode for nRF platforms to simulate the esp deep sleep with timer wakeup
+#endif
 
     NimBLEDevice::init("Extended advertiser");
 
@@ -143,7 +151,9 @@ void setup () {
         Serial.printf("Failed to register advertisment data\n");
     }
 
+#ifdef ESP_PLATFORM
     esp_sleep_enable_timer_wakeup(sleepSeconds * 1000000);
+#endif
 }
 
 void loop () {

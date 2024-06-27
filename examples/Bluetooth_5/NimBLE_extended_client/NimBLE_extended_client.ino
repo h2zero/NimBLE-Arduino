@@ -8,9 +8,6 @@
  *
 */
 
-/****************************************************
- * For use with ESP32C3, ESP32S3, ESP32H2 ONLY!     *
- /**************************************************/
 
 #include <NimBLEDevice.h>
 #if !CONFIG_BT_NIMBLE_EXT_ADV
