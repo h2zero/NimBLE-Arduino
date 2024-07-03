@@ -299,7 +299,7 @@ size_t NimBLEDevice::getClientListSize() {
 /**
  * @brief Get a reference to a client by connection ID.
  * @param [in] conn_id The client connection ID to search for.
- * @return A pointer to the client object with the spcified connection ID.
+ * @return A pointer to the client object with the specified connection ID or nullptr.
  */
 /* STATIC */
 NimBLEClient* NimBLEDevice::getClientByID(uint16_t conn_id) {
@@ -308,7 +308,7 @@ NimBLEClient* NimBLEDevice::getClientByID(uint16_t conn_id) {
             return (*it);
         }
     }
-    assert(0);
+
     return nullptr;
 } // getClientByID
 
@@ -818,7 +818,10 @@ void NimBLEDevice::onSync(void)
 
     /* Make sure we have proper identity address set (public preferred) */
     int rc = ble_hs_util_ensure_addr(0);
-    assert(rc == 0);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "error ensuring address; rc=%d", rc);
+        return;
+    }
 
 #ifndef ESP_PLATFORM
     rc = ble_hs_id_infer_auto(m_own_addr_type, &m_own_addr_type);
@@ -930,7 +933,9 @@ void NimBLEDevice::init(const std::string &deviceName) {
 
         // Set the device name.
         rc = ble_svc_gap_device_name_set(deviceName.c_str());
-        assert(rc == 0);
+        if (rc != 0) {
+            NIMBLE_LOGE(LOG_TAG, "ble_svc_gap_device_name_set() failed; rc=%d", rc);
+        }
 
         ble_store_config_init();
 
@@ -1259,10 +1264,10 @@ void NimBLEDevice::setCustomGapHandler(gap_event_handler handler) {
     int rc = ble_gap_event_listener_register(&m_listener, m_customGapHandler, NULL);
     if(rc == BLE_HS_EALREADY){
         NIMBLE_LOGI(LOG_TAG, "Already listening to GAP events.");
+    } else if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gap_event_listener_register: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
-    else{
-        assert(rc == 0);
-    }
+
 } // setCustomGapHandler
 
 #endif // CONFIG_BT_ENABLED
