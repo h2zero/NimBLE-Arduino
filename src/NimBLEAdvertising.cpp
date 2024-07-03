@@ -501,7 +501,7 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
                                                    (m_advData.num_uuids16 + 1) * sizeof(ble_uuid16_t))))
                 {
                     NIMBLE_LOGC(LOG_TAG, "Error, no mem");
-                    abort();
+                    return false;
                 }
                 memcpy((void*)&m_advData.uuids16[m_advData.num_uuids16],
                        &it.getNative()->u16, sizeof(ble_uuid16_t));
@@ -520,7 +520,7 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
                                                    (m_advData.num_uuids32 + 1) * sizeof(ble_uuid32_t))))
                 {
                     NIMBLE_LOGC(LOG_TAG, "Error, no mem");
-                    abort();
+                    return false;
                 }
                 memcpy((void*)&m_advData.uuids32[m_advData.num_uuids32],
                        &it.getNative()->u32, sizeof(ble_uuid32_t));
@@ -539,7 +539,7 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
                               (m_advData.num_uuids128 + 1) * sizeof(ble_uuid128_t))))
                 {
                     NIMBLE_LOGC(LOG_TAG, "Error, no mem");
-                    abort();
+                    return false;
                 }
                 memcpy((void*)&m_advData.uuids128[m_advData.num_uuids128],
                        &it.getNative()->u128, sizeof(ble_uuid128_t));
