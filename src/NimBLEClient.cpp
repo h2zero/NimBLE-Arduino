@@ -458,9 +458,6 @@ void NimBLEClient::setConnectionParams(uint16_t minInterval, uint16_t maxInterva
     // These are not used by NimBLE at this time - Must leave at defaults
     //m_pConnParams->min_ce_len = minConnTime;     // Minimum length of connection event in 0.625ms units
     //m_pConnParams->max_ce_len = maxConnTime;     // Maximum length of connection event in 0.625ms units
-
-    int rc = NimBLEUtils::checkConnParams(&m_pConnParams);
-    assert(rc == 0 && "Invalid Connection parameters");
 } // setConnectionParams
 
 
