@@ -55,7 +55,14 @@ NimBLEDescriptor::NimBLEDescriptor(NimBLEUUID uuid, uint16_t properties, uint16_
     m_pCharacteristic    = pCharacteristic;
     m_pCallbacks         = &defaultCallbacks;           // No initial callback.
     m_properties         = 0;
-    m_removed            = 0;
+
+    // Check if this is the client configuration descriptor and set to removed if true.
+    if (uuid == NimBLEUUID((uint16_t)0x2902)) {
+        NIMBLE_LOGW(LOG_TAG, "Manually created 2902 descriptor has no functionality; please remove.");
+        m_removed = 1;
+    } else {
+        m_removed = 0;
+    }
 
     if (properties & BLE_GATT_CHR_F_READ) {             // convert uint16_t properties to uint8_t
         m_properties |= BLE_ATT_F_READ;

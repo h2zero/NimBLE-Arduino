@@ -87,9 +87,7 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint3
  */
 NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID &uuid, uint32_t properties, uint16_t max_len) {
     NimBLEDescriptor* pDescriptor = nullptr;
-    if(uuid == NimBLEUUID(uint16_t(0x2902))) {
-        assert(0 && "0x2902 descriptors cannot be manually created");
-    } else if (uuid == NimBLEUUID(uint16_t(0x2904))) {
+    if (uuid == NimBLEUUID(uint16_t(0x2904))) {
         pDescriptor = new NimBLE2904(this);
     } else {
         pDescriptor = new NimBLEDescriptor(uuid, properties, max_len, this);
