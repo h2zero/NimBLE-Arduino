@@ -162,7 +162,7 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
 
     const ble_uuid_t *uuid;
     int rc;
-    NimBLEConnInfo peerInfo;
+    NimBLEConnInfo peerInfo{};
     NimBLEDescriptor* pDescriptor = (NimBLEDescriptor*)arg;
 
     NIMBLE_LOGD(LOG_TAG, "Descriptor %s %s event", pDescriptor->getUUID().toString().c_str(),
@@ -172,12 +172,12 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
     if(ble_uuid_cmp(uuid, &pDescriptor->getUUID().getNative()->u) == 0){
         switch(ctxt->op) {
             case BLE_GATT_ACCESS_OP_READ_DSC: {
-                rc = ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
-                assert(rc == 0);
+                ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
 
                  // If the packet header is only 8 bytes this is a follow up of a long read
                  // so we don't want to call the onRead() callback again.
                 if(ctxt->om->om_pkthdr_len > 8 ||
+                   conn_handle == BLE_HS_CONN_HANDLE_NONE ||
                    pDescriptor->m_value.size() <= (ble_att_mtu(peerInfo.getConnHandle()) - 3)) {
                     pDescriptor->m_pCallbacks->onRead(pDescriptor, peerInfo);
                 }
@@ -189,11 +189,9 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
             }
 
             case BLE_GATT_ACCESS_OP_WRITE_DSC: {
-                rc = ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
-                assert(rc == 0);
+                ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
 
                 uint16_t att_max_len = pDescriptor->m_value.max_size();
-
                 if (ctxt->om->om_len > att_max_len) {
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }

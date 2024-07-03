@@ -282,6 +282,7 @@ int NimBLECharacteristic::handleGapEvent(uint16_t conn_handle, uint16_t attr_han
                  // If the packet header is only 8 bytes this is a follow up of a long read
                  // so we don't want to call the onRead() callback again.
                 if(ctxt->om->om_pkthdr_len > 8 ||
+                   conn_handle == BLE_HS_CONN_HANDLE_NONE ||
                    pCharacteristic->m_value.size() <= (ble_att_mtu(peerInfo.m_desc.conn_handle) - 3)) {
                     pCharacteristic->m_pCallbacks->onRead(pCharacteristic, peerInfo);
                 }
