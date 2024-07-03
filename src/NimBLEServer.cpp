@@ -192,9 +192,8 @@ void NimBLEServer::start() {
 
     int rc = ble_gatts_start();
     if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc,
-                            NimBLEUtils::returnCodeToString(rc));
-        abort();
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        return;
     }
 
 #if CONFIG_NIMBLE_CPP_LOG_LEVEL >= 4
