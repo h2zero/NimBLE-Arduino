@@ -111,7 +111,7 @@ NimBLEClient::~NimBLEClient() {
  */
 void NimBLEClient::dcTimerCb(ble_npl_event *event) {
  /*   NimBLEClient *pClient = (NimBLEClient*)event->arg;
-    NIMBLE_LOGC(LOG_TAG, "Timed out disconnecting from %s - resetting host",
+    NIMBLE_LOGE(LOG_TAG, "Timed out disconnecting from %s - resetting host",
                 std::string(pClient->getPeerAddress()).c_str());
  */
     ble_hs_sched_reset(BLE_HS_ECONTROLLER);
@@ -189,7 +189,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) 
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
 
     if(!NimBLEDevice::m_synced) {
-        NIMBLE_LOGC(LOG_TAG, "Host reset, wait for sync.");
+        NIMBLE_LOGE(LOG_TAG, "Host reset, wait for sync.");
         return false;
     }
 
@@ -1002,7 +1002,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
                 case BLE_HS_ETIMEOUT_HCI:
                 case BLE_HS_ENOTSYNCED:
                 case BLE_HS_EOS:
-                    NIMBLE_LOGC(LOG_TAG, "Disconnect - host reset, rc=%d", rc);
+                    NIMBLE_LOGE(LOG_TAG, "Disconnect - host reset, rc=%d", rc);
                     NimBLEDevice::onReset(rc);
                     break;
                 default:

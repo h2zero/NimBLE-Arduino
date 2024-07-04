@@ -790,7 +790,7 @@ void NimBLEDevice::onReset(int reason)
 
     m_synced = false;
 
-    NIMBLE_LOGC(LOG_TAG, "Resetting state; reason=%d, %s", reason,
+    NIMBLE_LOGE(LOG_TAG, "Resetting state; reason=%d, %s", reason,
                         NimBLEUtils::returnCodeToString(reason));
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)

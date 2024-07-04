@@ -341,7 +341,7 @@ int NimBLEExtAdvertising::handleGapEvent(struct ble_gap_event *event, void *arg)
                 case BLE_HS_EOS:
                 case BLE_HS_ECONTROLLER:
                 case BLE_HS_ENOTSYNCED:
-                    NIMBLE_LOGC(LOG_TAG, "host reset, rc = %d", event->adv_complete.reason);
+                    NIMBLE_LOGE(LOG_TAG, "host reset, rc = %d", event->adv_complete.reason);
                     NimBLEDevice::onReset(event->adv_complete.reason);
                     return 0;
                 default:

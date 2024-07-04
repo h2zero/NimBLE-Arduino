@@ -500,7 +500,7 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
                 if(nullptr == (m_advData.uuids16 = (ble_uuid16_t*)realloc((void*)m_advData.uuids16,
                                                    (m_advData.num_uuids16 + 1) * sizeof(ble_uuid16_t))))
                 {
-                    NIMBLE_LOGC(LOG_TAG, "Error, no mem");
+                    NIMBLE_LOGE(LOG_TAG, "Error, no mem");
                     return false;
                 }
                 memcpy((void*)&m_advData.uuids16[m_advData.num_uuids16],
@@ -519,7 +519,7 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
                 if(nullptr == (m_advData.uuids32 = (ble_uuid32_t*)realloc((void*)m_advData.uuids32,
                                                    (m_advData.num_uuids32 + 1) * sizeof(ble_uuid32_t))))
                 {
-                    NIMBLE_LOGC(LOG_TAG, "Error, no mem");
+                    NIMBLE_LOGE(LOG_TAG, "Error, no mem");
                     return false;
                 }
                 memcpy((void*)&m_advData.uuids32[m_advData.num_uuids32],
@@ -538,7 +538,7 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
                 if(nullptr == (m_advData.uuids128 = (ble_uuid128_t*)realloc((void*)m_advData.uuids128,
                               (m_advData.num_uuids128 + 1) * sizeof(ble_uuid128_t))))
                 {
-                    NIMBLE_LOGC(LOG_TAG, "Error, no mem");
+                    NIMBLE_LOGE(LOG_TAG, "Error, no mem");
                     return false;
                 }
                 memcpy((void*)&m_advData.uuids128[m_advData.num_uuids128],
@@ -772,7 +772,7 @@ int NimBLEAdvertising::handleGapEvent(struct ble_gap_event *event, void *arg) {
             case BLE_HS_EOS:
             case BLE_HS_ECONTROLLER:
             case BLE_HS_ENOTSYNCED:
-                NIMBLE_LOGC(LOG_TAG, "host reset, rc=%d", event->adv_complete.reason);
+                NIMBLE_LOGE(LOG_TAG, "host reset, rc=%d", event->adv_complete.reason);
                 NimBLEDevice::onReset(event->adv_complete.reason);
                 return 0;
             default:

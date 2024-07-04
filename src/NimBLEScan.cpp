@@ -359,7 +359,7 @@ bool NimBLEScan::start(uint32_t duration, bool is_continue) {
         case BLE_HS_EOS:
         case BLE_HS_ECONTROLLER:
         case BLE_HS_ENOTSYNCED:
-            NIMBLE_LOGC(LOG_TAG, "Unable to scan - Host Reset");
+            NIMBLE_LOGE(LOG_TAG, "Unable to scan - Host Reset");
             break;
 
         default:

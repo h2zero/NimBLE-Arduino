@@ -516,7 +516,7 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
                 case BLE_HS_EOS:
                 case BLE_HS_ECONTROLLER:
                 case BLE_HS_ENOTSYNCED:
-                    NIMBLE_LOGC(LOG_TAG, "Disconnect - host reset, rc=%d", event->disconnect.reason);
+                    NIMBLE_LOGE(LOG_TAG, "Disconnect - host reset, rc=%d", event->disconnect.reason);
                     NimBLEDevice::onReset(event->disconnect.reason);
                     break;
                 default:
