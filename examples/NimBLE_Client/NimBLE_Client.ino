@@ -129,7 +129,7 @@ bool connectToServer() {
     NimBLEClient* pClient = nullptr;
 
     /** Check if we have a client we should reuse first **/
-    if(NimBLEDevice::getClientListSize()) {
+    if(NimBLEDevice::getCreatedClientCount()) {
         /** Special case when we already know this device, we send false as the
          *  second argument in connect() to prevent refreshing the service database.
          *  This saves considerable time and power.
@@ -152,7 +152,7 @@ bool connectToServer() {
 
     /** No client to reuse? Create a new one. */
     if(!pClient) {
-        if(NimBLEDevice::getClientListSize() >= NIMBLE_MAX_CONNECTIONS) {
+        if(NimBLEDevice::getCreatedClientCount() >= NIMBLE_MAX_CONNECTIONS) {
             Serial.println("Max clients reached - no more connections available");
             return false;
         }
