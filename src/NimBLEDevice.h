@@ -45,9 +45,7 @@
 #  include "esp_bt.h"
 #endif
 
-#include <map>
 #include <string>
-#include <list>
 
 #define BLEDevice                       NimBLEDevice
 #define BLEClient                       NimBLEClient
@@ -166,8 +164,7 @@ public:
     static NimBLEClient*    getClientByID(uint16_t conn_id);
     static NimBLEClient*    getClientByPeerAddress(const NimBLEAddress &peer_addr);
     static NimBLEClient*    getDisconnectedClient();
-    static size_t           getClientListSize();
-    static std::list<NimBLEClient*>* getClientList();
+    static size_t           getCreatedClientCount();
 #endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
@@ -221,21 +218,22 @@ private:
 #  endif
 #endif
 
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-    static std::list <NimBLEClient*>  m_cList;
-#endif
-    static std::list <NimBLEAddress>  m_ignoreList;
+    static std::vector<NimBLEAddress> m_ignoreList;
     static uint32_t                   m_passkey;
     static ble_gap_event_listener     m_listener;
     static gap_event_handler          m_customGapHandler;
     static uint8_t                    m_own_addr_type;
+    static std::vector<NimBLEAddress> m_whiteList;
 #ifdef ESP_PLATFORM
 #  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
     static uint16_t                   m_scanDuplicateSize;
     static uint8_t                    m_scanFilterMode;
 #  endif
 #endif
-    static std::vector<NimBLEAddress> m_whiteList;
+
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+    static std::array<NimBLEClient*, NIMBLE_MAX_CONNECTIONS>  m_pClients;
+#endif
 };
 
 

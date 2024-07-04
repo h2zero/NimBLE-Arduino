@@ -78,12 +78,13 @@ NimBLEAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
 #  endif
 #endif
 
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+std::array<NimBLEClient*, NIMBLE_MAX_CONNECTIONS> NimBLEDevice::m_pClients{nullptr};
+#endif
+
 gap_event_handler           NimBLEDevice::m_customGapHandler = nullptr;
 ble_gap_event_listener      NimBLEDevice::m_listener;
-#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-std::list <NimBLEClient*>   NimBLEDevice::m_cList;
-#endif
-std::list <NimBLEAddress>   NimBLEDevice::m_ignoreList;
+std::vector <NimBLEAddress> NimBLEDevice::m_ignoreList;
 std::vector<NimBLEAddress>  NimBLEDevice::m_whiteList;
 uint8_t                     NimBLEDevice::m_own_addr_type = BLE_OWN_ADDR_PUBLIC;
 #ifdef ESP_PLATFORM
@@ -213,18 +214,23 @@ NimBLEScan* NimBLEDevice::getScan() {
  * each client can connect to 1 peripheral device.
  * @param [in] peerAddress An optional peer address that is copied to the new client
  * object, allows for calling NimBLEClient::connect(bool) without a device or address parameter.
- * @return A reference to the new client object.
+ * @return A reference to the new client object, or nullptr on error.
  */
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 /* STATIC */
 NimBLEClient* NimBLEDevice::createClient(NimBLEAddress peerAddress) {
-    if(m_cList.size() >= NIMBLE_MAX_CONNECTIONS) {
-        NIMBLE_LOGW(LOG_TAG,"Number of clients exceeds Max connections. Cur=%d Max=%d",
-                    m_cList.size(), NIMBLE_MAX_CONNECTIONS);
+    if (getCreatedClientCount() == NIMBLE_MAX_CONNECTIONS) {
+        NIMBLE_LOGE(LOG_TAG,"Unable to create client; already at max: %d",NIMBLE_MAX_CONNECTIONS);
+        return nullptr;
     }
 
     NimBLEClient* pClient = new NimBLEClient(peerAddress);
-    m_cList.push_back(pClient);
+    for (auto& clt : m_pClients) {
+        if (clt == nullptr) {
+            clt = pClient;
+            break;
+        }
+    }
 
     return pClient;
 } // createClient
@@ -269,21 +275,15 @@ bool NimBLEDevice::deleteClient(NimBLEClient* pClient) {
         }
     }
 
-    m_cList.remove(pClient);
-    delete pClient;
+    for (auto& clt : m_pClients) {
+        if (clt == pClient) {
+            delete pClient;
+            clt = nullptr;
+        }
+    }
 
     return true;
 } // deleteClient
-
-
-/**
- * @brief Get the list of created client objects.
- * @return A pointer to the list of clients.
- */
-/* STATIC */
-std::list<NimBLEClient*>* NimBLEDevice::getClientList() {
-    return &m_cList;
-} // getClientList
 
 
 /**
@@ -291,9 +291,16 @@ std::list<NimBLEClient*>* NimBLEDevice::getClientList() {
  * @return Number of client objects created.
  */
 /* STATIC */
-size_t NimBLEDevice::getClientListSize() {
-    return m_cList.size();
-} // getClientList
+size_t NimBLEDevice::getCreatedClientCount() {
+    auto count = 0;
+    for (auto clt : m_pClients) {
+        if (clt != nullptr) {
+            count++;
+        }
+    }
+
+    return count;
+} // getCreatedClientCount
 
 
 /**
@@ -303,9 +310,9 @@ size_t NimBLEDevice::getClientListSize() {
  */
 /* STATIC */
 NimBLEClient* NimBLEDevice::getClientByID(uint16_t conn_id) {
-    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
-        if((*it)->getConnId() == conn_id) {
-            return (*it);
+    for(auto clt : m_pClients) {
+        if(clt != nullptr && clt->getConnId() == conn_id) {
+            return clt;
         }
     }
 
@@ -316,30 +323,32 @@ NimBLEClient* NimBLEDevice::getClientByID(uint16_t conn_id) {
 /**
  * @brief Get a reference to a client by peer address.
  * @param [in] peer_addr The address of the peer to search for.
- * @return A pointer to the client object with the peer address.
+ * @return A pointer to the client object with the peer address or nullptr.
  */
 /* STATIC */
 NimBLEClient* NimBLEDevice::getClientByPeerAddress(const NimBLEAddress &peer_addr) {
-    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
-        if((*it)->getPeerAddress().equals(peer_addr)) {
-            return (*it);
+    for(auto clt : m_pClients) {
+        if(clt != nullptr && clt->getPeerAddress() == peer_addr) {
+            return clt;
         }
     }
+
     return nullptr;
 } // getClientPeerAddress
 
 
 /**
  * @brief Finds the first disconnected client in the list.
- * @return A pointer to the first client object that is not connected to a peer.
+ * @return A pointer to the first client object that is not connected to a peer or nullptr.
  */
 /* STATIC */
 NimBLEClient* NimBLEDevice::getDisconnectedClient() {
-    for(auto it = m_cList.cbegin(); it != m_cList.cend(); ++it) {
-        if(!(*it)->isConnected()) {
-            return (*it);
+    for(auto clt : m_pClients) {
+        if(clt != nullptr && !clt->isConnected()) {
+            return clt;
         }
     }
+
     return nullptr;
 } // getDisconnectedClient
 
@@ -994,12 +1003,10 @@ void NimBLEDevice::deinit(bool clearAll) {
 #endif
 
 #if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-            for(auto &it : m_cList) {
-                deleteClient(it);
-                m_cList.clear();
+            for(auto clt : m_pClients) {
+                deleteClient(clt);
             }
 #endif
-
             m_ignoreList.clear();
         }
     }
