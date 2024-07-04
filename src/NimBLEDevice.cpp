@@ -1270,4 +1270,16 @@ void NimBLEDevice::setCustomGapHandler(gap_event_handler handler) {
 
 } // setCustomGapHandler
 
+#if CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED || __DOXYGEN__
+/**
+ * @brief Debug assert - weak function.
+ * @param [in] file The file where the assert occurred.
+ * @param [in] line The line number where the assert occurred.
+ */
+void nimble_cpp_assert(const char *file, unsigned line) {
+    NIMBLE_LOGC("", "Assertion failed at %s:%u\n", file, line);
+    abort();
+}
+#endif // CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED
+
 #endif // CONFIG_BT_ENABLED
