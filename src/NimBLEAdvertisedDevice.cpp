@@ -302,7 +302,7 @@ NimBLEAddress NimBLEAdvertisedDevice::getTargetAddress(uint8_t index) {
         }
     }
 
-    return NimBLEAddress("");
+    return NimBLEAddress{};
 }
 
 

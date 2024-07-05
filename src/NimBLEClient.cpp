@@ -199,16 +199,14 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) 
         return false;
     }
 
-    ble_addr_t peerAddr_t;
-    memcpy(&peerAddr_t.val, address.getNative(),6);
-    peerAddr_t.type = address.getType();
-    if(ble_gap_conn_find_by_addr(&peerAddr_t, NULL) == 0) {
+    const ble_addr_t* peerAddr = address.getBase();
+    if(ble_gap_conn_find_by_addr(peerAddr, NULL) == 0) {
         NIMBLE_LOGE(LOG_TAG, "A connection to %s already exists",
                     address.toString().c_str());
         return false;
     }
 
-    if(address == NimBLEAddress("")) {
+    if(address.isNull()) {
         NIMBLE_LOGE(LOG_TAG, "Invalid peer address;(NULL)");
         return false;
     } else {
@@ -227,7 +225,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) 
     do {
 #if CONFIG_BT_NIMBLE_EXT_ADV
         rc = ble_gap_ext_connect(NimBLEDevice::m_own_addr_type,
-                                 &peerAddr_t,
+                                 peerAddr,
                                  m_connectTimeout,
                                  m_phyMask,
                                  &m_pConnParams,
@@ -237,7 +235,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) 
                                  this);
 
 #else
-        rc = ble_gap_connect(NimBLEDevice::m_own_addr_type, &peerAddr_t,
+        rc = ble_gap_connect(NimBLEDevice::m_own_addr_type, peerAddr,
                              m_connectTimeout, &m_pConnParams,
                              NimBLEClient::handleGapEvent, this);
 #endif
@@ -557,7 +555,7 @@ uint16_t NimBLEClient::getConnId() {
 void NimBLEClient::clearConnection() {
     m_conn_id = BLE_HS_CONN_HANDLE_NONE;
     m_connEstablished = false;
-    m_peerAddress = NimBLEAddress();
+    m_peerAddress = NimBLEAddress{};
 } // clearConnection
 
 /**
