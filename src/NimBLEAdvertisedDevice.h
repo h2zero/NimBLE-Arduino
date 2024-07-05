@@ -162,7 +162,7 @@ private:
     uint8_t findAdvField(uint8_t type, uint8_t index = 0, size_t * data_loc = nullptr);
     size_t  findServiceData(uint8_t index, uint8_t* bytes);
 
-    NimBLEAddress   m_address = NimBLEAddress("");
+    NimBLEAddress   m_address;
     uint8_t         m_advType;
     int             m_rssi;
     time_t          m_timestamp;

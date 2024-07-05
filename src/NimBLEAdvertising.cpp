@@ -643,15 +643,9 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
         m_advDataSet = true;
     }
 
-    ble_addr_t peerAddr;
-    if (dirAddr != nullptr) {
-        memcpy(&peerAddr.val, dirAddr->getNative(), 6);
-        peerAddr.type = dirAddr->getType();
-    }
-
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type,
-                           (dirAddr != nullptr) ? &peerAddr : NULL,
+                           (dirAddr != nullptr) ? dirAddr->getBase() : NULL,
                            duration,
                            &m_advParams,
                            (pServer != nullptr) ? NimBLEServer::handleGapEvent :

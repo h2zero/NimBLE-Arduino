@@ -56,6 +56,8 @@
 
 #include "NimBLELog.h"
 
+#include <algorithm>
+
 static const char* LOG_TAG = "NimBLEDevice";
 
 /**
@@ -465,7 +467,7 @@ int NimBLEDevice::getPower() {
  */
 /* STATIC*/
 NimBLEAddress NimBLEDevice::getAddress() {
-    ble_addr_t addr = {BLE_ADDR_PUBLIC, 0};
+    ble_addr_t addr{};
 
     if(BLE_HS_ENOADDR == ble_hs_id_copy_addr(BLE_ADDR_PUBLIC, addr.val, NULL)) {
         NIMBLE_LOGD(LOG_TAG, "Public address not found, checking random");
@@ -608,16 +610,7 @@ bool NimBLEDevice::deleteAllBonds() {
  */
 /*STATIC*/
 bool NimBLEDevice::deleteBond(const NimBLEAddress &address) {
-    ble_addr_t delAddr;
-    memcpy(&delAddr.val, address.getNative(),6);
-    delAddr.type = address.getType();
-
-    int rc = ble_gap_unpair(&delAddr);
-    if (rc != 0) {
-        return false;
-    }
-
-    return true;
+    return ble_gap_unpair(address.getBase()) == 0;
 }
 
 
@@ -694,26 +687,14 @@ bool NimBLEDevice::onWhiteList(const NimBLEAddress & address) {
  */
 /*STATIC*/
 bool NimBLEDevice::whiteListAdd(const NimBLEAddress & address) {
-    if (NimBLEDevice::onWhiteList(address)) {
-        return true;
-    }
-
-    m_whiteList.push_back(address);
-    std::vector<ble_addr_t> wlVec;
-    wlVec.reserve(m_whiteList.size());
-
-    for (auto &it : m_whiteList) {
-        ble_addr_t wlAddr;
-        memcpy(&wlAddr.val, it.getNative(), 6);
-        wlAddr.type = it.getType();
-        wlVec.push_back(wlAddr);
-    }
-
-    int rc = ble_gap_wl_set(&wlVec[0], wlVec.size());
-    if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "Failed adding to whitelist rc=%d", rc);
-        m_whiteList.pop_back();
-        return false;
+    if (!NimBLEDevice::onWhiteList(address)) {
+        m_whiteList.push_back(address);
+        int rc = ble_gap_wl_set(reinterpret_cast<ble_addr_t*>(&m_whiteList[0]), m_whiteList.size());
+        if (rc != 0) {
+            NIMBLE_LOGE(LOG_TAG, "Failed adding to whitelist rc=%d", rc);
+            m_whiteList.pop_back();
+            return false;
+        }
     }
 
     return true;
@@ -727,33 +708,14 @@ bool NimBLEDevice::whiteListAdd(const NimBLEAddress & address) {
  */
 /*STATIC*/
 bool NimBLEDevice::whiteListRemove(const NimBLEAddress & address) {
-    if (!NimBLEDevice::onWhiteList(address)) {
-        return true;
-    }
-
-    std::vector<ble_addr_t> wlVec;
-    wlVec.reserve(m_whiteList.size());
-
-    for (auto &it : m_whiteList) {
-        if (it != address) {
-            ble_addr_t wlAddr;
-            memcpy(&wlAddr.val, it.getNative(), 6);
-            wlAddr.type = it.getType();
-            wlVec.push_back(wlAddr);
-        }
-    }
-
-    int rc = ble_gap_wl_set(&wlVec[0], wlVec.size());
-    if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "Failed removing from whitelist rc=%d", rc);
-        return false;
-    }
-
-    // Don't remove from the list unless NimBLE returned success
-    for (auto it = m_whiteList.begin(); it < m_whiteList.end(); ++it) {
-        if ((*it) == address) {
-            m_whiteList.erase(it);
-            break;
+    auto it = std::find(m_whiteList.begin(), m_whiteList.end(), address);
+    if (it != m_whiteList.end()) {
+        m_whiteList.erase(it);
+        int rc = ble_gap_wl_set(reinterpret_cast<ble_addr_t*>(&m_whiteList[0]), m_whiteList.size());
+        if (rc != 0) {
+            m_whiteList.push_back(address);
+            NIMBLE_LOGE(LOG_TAG, "Failed removing from whitelist rc=%d", rc);
+            return false;
         }
     }
 

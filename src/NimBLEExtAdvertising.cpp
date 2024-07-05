@@ -100,12 +100,8 @@ bool NimBLEExtAdvertising::setInstanceData(uint8_t inst_id, NimBLEExtAdvertiseme
             if (rc != 0) {
                 NIMBLE_LOGE(LOG_TAG, "Invalid advertisement data: rc = %d", rc);
             } else {
-                if (adv.m_advAddress != NimBLEAddress("")) {
-                    ble_addr_t addr;
-                    memcpy(&addr.val, adv.m_advAddress.getNative(), 6);
-                    // Custom advertising address must be random.
-                    addr.type = BLE_OWN_ADDR_RANDOM;
-                    rc = ble_gap_ext_adv_set_addr(inst_id, &addr);
+                if (!adv.m_advAddress.isNull()) {
+                    rc = ble_gap_ext_adv_set_addr(inst_id, adv.m_advAddress.getBase());
                 }
 
                 if (rc != 0) {
@@ -388,7 +384,7 @@ void NimBLEExtAdvertisingCallbacks::onScanRequest(NimBLEExtAdvertising *pAdv,
  * * BLE_HCI_LE_PHY_CODED
  */
 NimBLEExtAdvertisement::NimBLEExtAdvertisement(uint8_t priPhy, uint8_t secPhy)
-:   m_advAddress("")
+:   m_advAddress{}
 {
     memset (&m_params, 0, sizeof(m_params));
     m_params.own_addr_type = NimBLEDevice::m_own_addr_type;
@@ -493,10 +489,7 @@ void NimBLEExtAdvertisement::setScanFilter(bool scanRequestWhitelistOnly, bool c
  * @param [in] addr The address of the peer to direct the advertisements.
  */
 void NimBLEExtAdvertisement::setDirectedPeer(const NimBLEAddress & addr) {
-    ble_addr_t peerAddr;
-    memcpy(&peerAddr.val, addr.getNative(), 6);
-    peerAddr.type = addr.getType();
-    m_params.peer = peerAddr;
+    m_params.peer = *addr.getBase();
 } // setDirectedPeer
 
 

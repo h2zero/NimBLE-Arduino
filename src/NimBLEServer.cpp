@@ -28,6 +28,7 @@
 #endif
 
 #include <limits.h>
+#include <algorithm>
 
 #define NIMBLE_SERVER_GET_PEER_NAME_ON_CONNECT_CB 0
 #define NIMBLE_SERVER_GET_PEER_NAME_ON_AUTH_CB 1
@@ -324,12 +325,8 @@ NimBLEConnInfo NimBLEServer::getPeerInfo(size_t index) {
  * @param [in] address The address of the peer.
  */
 NimBLEConnInfo NimBLEServer::getPeerInfo(const NimBLEAddress& address) {
-    ble_addr_t peerAddr;
-    memcpy(&peerAddr.val, address.getNative(),6);
-    peerAddr.type = address.getType();
-
     NimBLEConnInfo peerInfo;
-    int rc = ble_gap_conn_find_by_addr(&peerAddr, &peerInfo.m_desc);
+    int rc = ble_gap_conn_find_by_addr(address.getBase(), &peerInfo.m_desc);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Peer info not found");
     }
