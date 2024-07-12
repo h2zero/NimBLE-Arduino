@@ -67,7 +67,7 @@ void setup() {
 
     BLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);
-    pAdvertising->setScanResponse(true);
+    pAdvertising->enableScanResponse(true);
 
     pAdvertising->start();
     Serial.println("Advertising started, connect with your phone.");

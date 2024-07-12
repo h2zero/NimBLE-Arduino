@@ -118,7 +118,7 @@ void setup() {
   // Start advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(false);
+  pAdvertising->enableScanResponse(false);
   /** Note, this could be left out as that is the default value */
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
 
