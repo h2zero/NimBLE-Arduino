@@ -75,8 +75,8 @@
  */
  // #define CONFIG_NIMBLE_CPP_LOG_LEVEL 0
 
-/** @brief Un-comment to enable the debug asserts in NimBLE CPP wrapper.\n
-//#define CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED 1
+/** @brief Un-comment to enable the debug asserts in NimBLE CPP wrapper.*/
+// #define CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED 1
 
 /** @brief Un-comment to see NimBLE host return codes as text debug log messages.
  *  Uses approx. 7kB of flash memory.
