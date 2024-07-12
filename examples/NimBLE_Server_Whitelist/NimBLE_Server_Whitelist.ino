@@ -71,7 +71,7 @@ void setup() {
   // Start advertising
   NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(false);
+  pAdvertising->enableScanResponse(false);
   pAdvertising->start();
   Serial.println("Waiting a client connection to notify...");
 }

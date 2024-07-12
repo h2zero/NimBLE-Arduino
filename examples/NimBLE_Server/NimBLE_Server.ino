@@ -227,7 +227,7 @@ void setup() {
     /** If your device is battery powered you may consider setting scan response
      *  to false as it will extend battery life at the expense of less data sent.
      */
-    pAdvertising->setScanResponse(true);
+    pAdvertising->enableScanResponse(true);
     pAdvertising->start();
 
     Serial.println("Advertising Started");
