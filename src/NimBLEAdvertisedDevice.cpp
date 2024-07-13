@@ -320,7 +320,7 @@ std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID& uuid) const
 
     while (data_loc < pl_size) {
         const ble_hs_adv_field* field = reinterpret_cast<const ble_hs_adv_field*>(&m_payload[data_loc]);
-        if (bytes == uuid_bytes && NimBLEUUID(field->value, bytes, false) == uuid) {
+        if (bytes == uuid_bytes && NimBLEUUID(field->value, bytes) == uuid) {
             const char* field_data = reinterpret_cast<const char*>(field->value + bytes);
             return std::string(field_data, field->length - bytes - 1);
         }
@@ -344,7 +344,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceDataUUID(uint8_t index) const {
     if (data_loc != ULONG_MAX) {
         const ble_hs_adv_field* field = reinterpret_cast<const ble_hs_adv_field*>(&m_payload[data_loc]);
         if (field->length >= bytes) {
-            return NimBLEUUID(field->value, bytes, false);
+            return NimBLEUUID(field->value, bytes);
         }
     }
 
@@ -436,7 +436,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID(uint8_t index) const {
         }
 
         if (field->length > uuid_bytes * index) {
-            return NimBLEUUID(field->value + uuid_bytes * (index - 1), uuid_bytes, false);
+            return NimBLEUUID(field->value + uuid_bytes * (index - 1), uuid_bytes);
         }
     }
 

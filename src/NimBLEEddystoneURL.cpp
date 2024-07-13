@@ -172,7 +172,11 @@ void NimBLEEddystoneURL::setData(const std::string &data) {
  * @param [in] l_uuid The UUID.
  */
 void NimBLEEddystoneURL::setUUID(const NimBLEUUID &l_uuid) {
-    beaconUUID = l_uuid.getNative()->u16.value;
+    if (l_uuid.bitSize() != 16) {
+        NIMBLE_LOGE(LOG_TAG, "UUID must be 16 bits");
+        return;
+    }
+    beaconUUID = *reinterpret_cast<const uint16_t*>(l_uuid.getValue());
 } // setUUID
 
 

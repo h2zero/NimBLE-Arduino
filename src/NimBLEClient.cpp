@@ -814,7 +814,7 @@ bool NimBLEClient::retrieveServices(const NimBLEUUID *uuid_filter) {
     if(uuid_filter == nullptr) {
         rc = ble_gattc_disc_all_svcs(m_conn_id, NimBLEClient::serviceDiscoveredCB, &taskData);
     } else {
-        rc = ble_gattc_disc_svc_by_uuid(m_conn_id, &uuid_filter->getNative()->u,
+        rc = ble_gattc_disc_svc_by_uuid(m_conn_id, uuid_filter->getBase(),
                                         NimBLEClient::serviceDiscoveredCB, &taskData);
     }
 
