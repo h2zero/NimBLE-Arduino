@@ -761,21 +761,9 @@ void NimBLEExtAdvertisement::setServices(const bool complete, const uint8_t size
     for(auto &it : v_uuid){
         if(it.bitSize() != size) {
             NIMBLE_LOGE(LOG_TAG, "Service UUID(%d) invalid", size);
-            return;
+            continue;
         } else {
-            switch(size) {
-                case 16:
-                    uuids += std::string((char*)&it.getNative()->u16.value, 2);
-                    break;
-                case 32:
-                    uuids += std::string((char*)&it.getNative()->u32.value, 4);
-                    break;
-                case 128:
-                    uuids += std::string((char*)&it.getNative()->u128.value, 16);
-                    break;
-                default:
-                    return;
-            }
+            uuids += std::string(reinterpret_cast<const char*>(it.getValue()), size / 8);
         }
     }
 
@@ -789,35 +777,30 @@ void NimBLEExtAdvertisement::setServices(const bool complete, const uint8_t size
  * @param [in] data The data to be associated with the service data advertised.
  */
 void NimBLEExtAdvertisement::setServiceData(const NimBLEUUID &uuid, const std::string &data) {
-    char cdata[2];
-    switch (uuid.bitSize()) {
-        case 16: {
+    uint8_t size = uuid.bitSize() / 8;
+    char cdata[2] = {1 + size, BLE_HS_ADV_TYPE_SVC_DATA_UUID16};
+    switch (size) {
+        case 2: {
             // [Len] [0x16] [UUID16] data
-            cdata[0] = data.length() + 3;
-            cdata[1] = BLE_HS_ADV_TYPE_SVC_DATA_UUID16;  // 0x16
-            addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->u16.value, 2) + data);
             break;
         }
-
-        case 32: {
-            // [Len] [0x20] [UUID32] data
-            cdata[0] = data.length() + 5;
-            cdata[1] = BLE_HS_ADV_TYPE_SVC_DATA_UUID32; // 0x20
-            addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->u32.value, 4) + data);
-            break;
-        }
-
-        case 128: {
+        case 16: {
             // [Len] [0x21] [UUID128] data
-            cdata[0] = data.length() + 17;
             cdata[1] = BLE_HS_ADV_TYPE_SVC_DATA_UUID128;  // 0x21
-            addData(std::string(cdata, 2) + std::string((char*) &uuid.getNative()->u128.value, 16) + data);
+            break;
+        }
+
+        case 4: {
+            // [Len] [0x20] [UUID32] data
+            cdata[1] = BLE_HS_ADV_TYPE_SVC_DATA_UUID32; // 0x20
             break;
         }
 
         default:
             return;
     }
+
+    addData(std::string(cdata, 2) + std::string(reinterpret_cast<const char*>(uuid.getValue()), size) + data);
 } // setServiceData
 
 

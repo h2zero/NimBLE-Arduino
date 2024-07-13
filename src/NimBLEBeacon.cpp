@@ -79,7 +79,7 @@ uint16_t NimBLEBeacon::getMinor() {
  * @return The UUID advertised.
  */
 NimBLEUUID NimBLEBeacon::getProximityUUID() {
-    return NimBLEUUID(m_beaconData.proximityUUID, 16, true);
+    return NimBLEUUID(m_beaconData.proximityUUID, 16).reverseByteOrder();
 }
 
 
@@ -140,9 +140,7 @@ void NimBLEBeacon::setMinor(uint16_t minor) {
 void NimBLEBeacon::setProximityUUID(const NimBLEUUID &uuid) {
     NimBLEUUID temp_uuid = uuid;
     temp_uuid.to128();
-    std::reverse_copy(temp_uuid.getNative()->u128.value,
-                      temp_uuid.getNative()->u128.value + 16,
-                      m_beaconData.proximityUUID);
+    std::reverse_copy(temp_uuid.getValue(), temp_uuid.getValue() + 16, m_beaconData.proximityUUID);
 } // setProximityUUID
 
 

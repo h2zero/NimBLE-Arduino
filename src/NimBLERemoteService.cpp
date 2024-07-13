@@ -228,7 +228,7 @@ bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID *uuid_filter)
         rc = ble_gattc_disc_chrs_by_uuid(m_pClient->getConnId(),
                              m_startHandle,
                              m_endHandle,
-                             &uuid_filter->getNative()->u,
+                             uuid_filter->getBase(),
                              NimBLERemoteService::characteristicDiscCB,
                              &taskData);
     }

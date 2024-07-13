@@ -160,7 +160,7 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t conn_handle,
     switch (rc) {
         case 0: {
             if (uuid_filter != nullptr) {
-                if (ble_uuid_cmp(&uuid_filter->getNative()->u, &dsc->uuid.u) != 0) {
+                if (ble_uuid_cmp(uuid_filter->getBase(), &dsc->uuid.u) != 0) {
                     return 0;
                 } else {
                     rc = BLE_HS_EDONE;

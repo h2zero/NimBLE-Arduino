@@ -169,7 +169,7 @@ int NimBLEDescriptor::handleGapEvent(uint16_t conn_handle, uint16_t attr_handle,
                                     ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC ? "Read" : "Write");
 
     uuid = ctxt->chr->uuid;
-    if(ble_uuid_cmp(uuid, &pDescriptor->getUUID().getNative()->u) == 0){
+    if(ble_uuid_cmp(uuid, pDescriptor->getUUID().getBase()) == 0){
         switch(ctxt->op) {
             case BLE_GATT_ACCESS_OP_READ_DSC: {
                 ble_gap_conn_find(conn_handle, &peerInfo.m_desc);

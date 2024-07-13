@@ -219,7 +219,7 @@ void NimBLEServer::start() {
     // with Notify / Indicate capabilities for event handling
     for(auto &svc : m_svcVec) {
         if(svc->m_removed == 0) {
-            rc = ble_gatts_find_svc(&svc->getUUID().getNative()->u, &svc->m_handle);
+            rc = ble_gatts_find_svc(svc->getUUID().getBase(), &svc->m_handle);
             if(rc != 0) {
                 NIMBLE_LOGW(LOG_TAG, "GATT Server started without service: %s, Service %s",
                             svc->getUUID().toString().c_str(), svc->isStarted() ? "missing" : "not started");
@@ -412,7 +412,7 @@ std::string NimBLEServer::getPeerNameInternal(uint16_t conn_handle, TaskHandle_t
     int rc = ble_gattc_read_by_uuid(conn_handle,
                                     1,
                                     0xffff,
-                                    ((ble_uuid_t*)&uuid),
+                                    &uuid.u,
                                     NimBLEServer::peerNameCB,
                                     taskData);
     if (rc != 0) {
