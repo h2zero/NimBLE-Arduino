@@ -291,7 +291,7 @@ bool NimBLEUUID::operator==(const NimBLEUUID& rhs) const {
         return this->getValue() == rhs.getValue();
     }
 
-    return memcmp(this->getValue(), rhs.getValue(), 16);
+    return memcmp(this->getValue(), rhs.getValue(), 16) == 0;
 } // operator==
 
 /**
