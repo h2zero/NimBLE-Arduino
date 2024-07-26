@@ -15,6 +15,8 @@
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 #include "NimBLEClient.h"
+#include "NimBLERemoteService.h"
+#include "NimBLERemoteCharacteristic.h"
 #include "NimBLEDevice.h"
 #include "NimBLELog.h"
 
@@ -333,10 +335,10 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) 
  * Called automatically when a characteristic or descriptor requires encryption or authentication to access it.
  * @return True on success.
  */
-bool NimBLEClient::secureConnection() {
+bool NimBLEClient::secureConnection() const {
     NIMBLE_LOGD(LOG_TAG, ">> secureConnection()");
     TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-    ble_task_data_t taskData = {this, cur_task, 0, nullptr};
+    ble_task_data_t taskData = {const_cast<NimBLEClient*>(this), cur_task, 0, nullptr};
 
     int retryCount = 1;
 
@@ -542,7 +544,7 @@ void NimBLEClient::setConnectTimeout(uint32_t time) {
  * @brief Get the connection id for this client.
  * @return The connection id.
  */
-uint16_t NimBLEClient::getConnId() {
+uint16_t NimBLEClient::getConnId() const {
     return m_conn_id;
 } // getConnId
 
@@ -610,7 +612,7 @@ bool NimBLEClient::setConnection(uint16_t conn_id) {
 /**
  * @brief Retrieve the address of the peer.
  */
-NimBLEAddress NimBLEClient::getPeerAddress() {
+NimBLEAddress NimBLEClient::getPeerAddress() const {
     return m_peerAddress;
 } // getPeerAddress
 
@@ -776,7 +778,7 @@ bool NimBLEClient::discoverAttributes() {
             return false;
         }
 
-        for(auto chr: svc->m_characteristicVector) {
+        for(auto chr: svc->m_vChars) {
             if (!chr->retrieveDescriptors()) {
                 return false;
             }
@@ -792,7 +794,7 @@ bool NimBLEClient::discoverAttributes() {
  * Here we ask the server for its set of services and wait until we have received them all.
  * @return true on success otherwise false if an error occurred
  */
-bool NimBLEClient::retrieveServices(const NimBLEUUID *uuid_filter) {
+bool NimBLEClient::retrieveServices(const NimBLEUUID *uuidFilter) {
 /**
  * Design
  * ------
@@ -811,10 +813,10 @@ bool NimBLEClient::retrieveServices(const NimBLEUUID *uuid_filter) {
     TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
     ble_task_data_t taskData = {this, cur_task, 0, nullptr};
 
-    if(uuid_filter == nullptr) {
+    if(uuidFilter == nullptr) {
         rc = ble_gattc_disc_all_svcs(m_conn_id, NimBLEClient::serviceDiscoveredCB, &taskData);
     } else {
-        rc = ble_gattc_disc_svc_by_uuid(m_conn_id, uuid_filter->getBase(),
+        rc = ble_gattc_disc_svc_by_uuid(m_conn_id, uuidFilter->getBase(),
                                         NimBLEClient::serviceDiscoveredCB, &taskData);
     }
 
@@ -972,7 +974,7 @@ NimBLERemoteCharacteristic* NimBLEClient::getCharacteristic(const uint16_t handl
  * @brief Get the current mtu of this connection.
  * @returns The MTU value.
  */
-uint16_t NimBLEClient::getMTU() {
+uint16_t NimBLEClient::getMTU() const {
     return ble_att_mtu(m_conn_id);
 } // getMTU
 
@@ -1086,7 +1088,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event *event, void *arg) {
                     continue;
                 }
 
-                auto cVector = &it->m_characteristicVector;
+                auto cVector = &it->m_vChars;
                 NIMBLE_LOGD(LOG_TAG, "checking service %s for handle: %d",
                             it->getUUID().toString().c_str(),
                             event->notify_rx.attr_handle);
@@ -1325,20 +1327,20 @@ bool NimBLEClientCallbacks::onConnParamsUpdateRequest(NimBLEClient* pClient, con
     return true;
 }
 
-void NimBLEClientCallbacks::onPassKeyEntry(const NimBLEConnInfo& connInfo){
+void NimBLEClientCallbacks::onPassKeyEntry(NimBLEConnInfo& connInfo){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onPassKeyEntry: default: 123456");
     NimBLEDevice::injectPassKey(connInfo, 123456);
 } //onPassKeyEntry
 
-void NimBLEClientCallbacks::onAuthenticationComplete(const NimBLEConnInfo& connInfo){
+void NimBLEClientCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onAuthenticationComplete: default");
 }
 
-void NimBLEClientCallbacks::onIdentity(const NimBLEConnInfo& connInfo){
+void NimBLEClientCallbacks::onIdentity(NimBLEConnInfo& connInfo){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onIdentity: default");
 } // onIdentity
 
-void NimBLEClientCallbacks::onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pin){
+void NimBLEClientCallbacks::onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onConfirmPIN: default: true");
     NimBLEDevice::injectConfirmPIN(connInfo, true);
 }

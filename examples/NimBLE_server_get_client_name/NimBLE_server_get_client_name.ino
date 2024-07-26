@@ -28,7 +28,7 @@ class ServerCallbacks : public NimBLEServerCallbacks {
     }
 
     // Same as before but now includes the name parameter
-    void onAuthenticationComplete(const NimBLEConnInfo& connInfo, const std::string& name) override {
+    void onAuthenticationComplete(NimBLEConnInfo& connInfo, const std::string& name) override {
         if (!connInfo.isEncrypted()) {
             NimBLEDevice::getServer()->disconnect(connInfo.getConnHandle());
             Serial.println("Encrypt connection failed - disconnecting client");

@@ -26,6 +26,12 @@ static const uint8_t ble_base_uuid[] = {
     0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /**
+ * @brief Create a UUID from the native UUID.
+ * @param [in] uuid The native UUID.
+ */
+NimBLEUUID::NimBLEUUID(const ble_uuid_any_t& uuid) : m_uuid{uuid} {}
+
+/**
  * @brief Create a UUID from a string.
  *
  * Create a UUID from a string.  There will be two possible stories here. Either
@@ -323,4 +329,4 @@ NimBLEUUID::operator std::string() const {
     return ble_uuid_to_str(&m_uuid.u, buf);
 } // operator std::string
 
-#endif /* CONFIG_BT_ENABLED */
+# endif /* CONFIG_BT_ENABLED */

@@ -23,15 +23,14 @@
 #include "NimBLEConnInfo.h"
 #include "NimBLEAttValue.h"
 #include "NimBLEAdvertisedDevice.h"
-#include "NimBLERemoteService.h"
 
 #include <vector>
 #include <string>
 
 class NimBLERemoteService;
 class NimBLERemoteCharacteristic;
-class NimBLEClientCallbacks;
 class NimBLEAdvertisedDevice;
+class NimBLEClientCallbacks;
 
 /**
  * @brief A model of a %BLE client.
@@ -42,7 +41,7 @@ public:
     bool                                        connect(const NimBLEAddress &address, bool deleteAttributes = true);
     bool                                        connect(bool deleteAttributes = true);
     int                                         disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
-    NimBLEAddress                               getPeerAddress();
+    NimBLEAddress                               getPeerAddress() const;
     void                                        setPeerAddress(const NimBLEAddress &address);
     int                                         getRssi();
     std::vector<NimBLERemoteService*>*          getServices(bool refresh = false);
@@ -60,12 +59,12 @@ public:
     void                                        setClientCallbacks(NimBLEClientCallbacks *pClientCallbacks,
                                                                    bool deleteCallbacks = true);
     std::string                                 toString();
-    uint16_t                                    getConnId();
+    uint16_t                                    getConnId() const;
     void                                        clearConnection();
     bool                                        setConnection(NimBLEConnInfo &conn_info);
     bool                                        setConnection(uint16_t conn_id);
-    uint16_t                                    getMTU();
-    bool                                        secureConnection();
+    uint16_t                                    getMTU() const;
+    bool                                        secureConnection() const;
     void                                        setConnectTimeout(uint32_t timeout);
     void                                        setConnectionParams(uint16_t minInterval, uint16_t maxInterval,
                                                                     uint16_t latency, uint16_t timeout,
@@ -93,17 +92,17 @@ private:
                                                 const struct ble_gatt_svc *service,
                                                 void *arg);
     static void             dcTimerCb(ble_npl_event *event);
-    bool                    retrieveServices(const NimBLEUUID *uuid_filter = nullptr);
+    bool                    retrieveServices(const NimBLEUUID *uuidFilter = nullptr);
 
-    NimBLEAddress           m_peerAddress;
-    int                     m_lastErr;
-    uint16_t                m_conn_id;
-    bool                    m_connEstablished;
-    bool                    m_deleteCallbacks;
-    int32_t                 m_connectTimeout;
-    NimBLEClientCallbacks*  m_pClientCallbacks;
-    ble_task_data_t*        m_pTaskData;
-    ble_npl_callout         m_dcTimer;
+    NimBLEAddress            m_peerAddress;
+    mutable int              m_lastErr;
+    uint16_t                 m_conn_id;
+    bool                     m_connEstablished;
+    bool                     m_deleteCallbacks;
+    int32_t                  m_connectTimeout;
+    NimBLEClientCallbacks*   m_pClientCallbacks;
+    mutable ble_task_data_t* m_pTaskData;
+    ble_npl_callout          m_dcTimer;
 #if CONFIG_BT_NIMBLE_EXT_ADV
     uint8_t                 m_phyMask;
 #endif
@@ -149,27 +148,27 @@ public:
      * @brief Called when server requests a passkey for pairing.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
      */
-    virtual void onPassKeyEntry(const NimBLEConnInfo& connInfo);
+    virtual void onPassKeyEntry(NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when the pairing procedure is complete.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.\n
      * This can be used to check the status of the connection encryption/pairing.
      */
-    virtual void onAuthenticationComplete(const NimBLEConnInfo& connInfo);
+    virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when using numeric comparision for pairing.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
      * @param [in] pin The pin to compare with the server.
      */
-    virtual void onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pin);
+    virtual void onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin);
 
     /**
      * @brief Called when the peer identity address is resolved.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
      */
-    virtual void onIdentity(const NimBLEConnInfo& connInfo);
+    virtual void onIdentity(NimBLEConnInfo& connInfo);
 };
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */

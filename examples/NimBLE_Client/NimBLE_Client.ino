@@ -56,7 +56,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 
     /********************* Security handled here **********************
     ****** Note: these are the same return values as defaults ********/
-    void onPassKeyEntry(const NimBLEConnInfo& connInfo){
+    void onPassKeyEntry(NimBLEConnInfo& connInfo){
         Serial.println("Server Passkey Entry");
         /** This should prompt the user to enter the passkey displayed
          * on the peer device.
@@ -64,14 +64,14 @@ class ClientCallbacks : public NimBLEClientCallbacks {
         NimBLEDevice::injectPassKey(connInfo, 123456);
     };
 
-    void onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pass_key){
+    void onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pass_key){
         Serial.print("The passkey YES/NO number: ");Serial.println(pass_key);
         /** Inject false if passkeys don't match. */
         NimBLEDevice::injectConfirmPIN(connInfo, true);
     };
 
     /** Pairing process complete, we can check the results in connInfo */
-    void onAuthenticationComplete(const NimBLEConnInfo& connInfo){
+    void onAuthenticationComplete(NimBLEConnInfo& connInfo){
         if(!connInfo.isEncrypted()) {
             Serial.println("Encrypt connection failed - disconnecting");
             /** Find the client with the connection handle provided in desc */
@@ -112,7 +112,7 @@ void notifyCB(NimBLERemoteCharacteristic* pRemoteCharacteristic, uint8_t* pData,
     std::string str = (isNotify == true) ? "Notification" : "Indication";
     str += " from ";
     /** NimBLEAddress and NimBLEUUID have std::string operators */
-    str += std::string(pRemoteCharacteristic->getRemoteService()->getClient()->getPeerAddress());
+    str += std::string(pRemoteCharacteristic->getClient()->getPeerAddress());
     str += ": Service = " + std::string(pRemoteCharacteristic->getRemoteService()->getUUID());
     str += ", Characteristic = " + std::string(pRemoteCharacteristic->getUUID());
     str += ", Value = " + std::string((char*)pData, length);

@@ -31,7 +31,7 @@
 #endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-#include "NimBLEClient.h"
+class NimBLEClient;
 #endif
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
@@ -46,6 +46,7 @@
 #endif
 
 #include <string>
+#include <array>
 
 #define BLEDevice                       NimBLEDevice
 #define BLEClient                       NimBLEClient
@@ -236,6 +237,12 @@ private:
 #endif
 };
 
+#if defined( CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#include "NimBLEClient.h"
+#include "NimBLERemoteService.h"
+#include "NimBLERemoteCharacteristic.h"
+#include "NimBLERemoteDescriptor.h"
+#endif
 
 #endif // CONFIG_BT_ENABLED
 #endif // MAIN_NIMBLEDEVICE_H_
