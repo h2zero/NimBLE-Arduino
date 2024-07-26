@@ -54,8 +54,11 @@
 #  include "esp32-hal-bt.h"
 #endif
 
-#include "NimBLELog.h"
+#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#include "NimBLEClient.h"
+#endif
 
+#include "NimBLELog.h"
 #include <algorithm>
 
 static const char* LOG_TAG = "NimBLEDevice";

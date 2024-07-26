@@ -61,7 +61,7 @@ NimBLEServer::NimBLEServer() {
  * @brief Destructor: frees all resources / attributes created.
  */
 NimBLEServer::~NimBLEServer() {
-    for(auto &it : m_svcVec) {
+    for(const auto &it : m_svcVec) {
         delete it;
     }
 
@@ -218,7 +218,7 @@ void NimBLEServer::start() {
     // Get the assigned service handles and build a vector of characteristics
     // with Notify / Indicate capabilities for event handling
     for(auto &svc : m_svcVec) {
-        if(svc->m_removed == 0) {
+        if(svc->getRemoved() == 0) {
             rc = ble_gatts_find_svc(svc->getUUID().getBase(), &svc->m_handle);
             if(rc != 0) {
                 NIMBLE_LOGW(LOG_TAG, "GATT Server started without service: %s, Service %s",
@@ -227,12 +227,19 @@ void NimBLEServer::start() {
             }
         }
 
-        for(auto &chr : svc->m_chrVec) {
+        for(auto &chr : svc->m_vChars) {
             // if Notify / Indicate is enabled but we didn't create the descriptor
             // we do it now.
             if((chr->m_properties & BLE_GATT_CHR_F_INDICATE) ||
                 (chr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
                 m_notifyChrVec.push_back(chr);
+            }
+
+            for (auto &desc : chr->m_vDescriptors) {
+                ble_gatts_find_dsc(svc->getUUID().getBase(),
+                chr->getUUID().getBase(),
+                desc->getUUID().getBase(),
+                &desc->m_handle);
             }
         }
     }
@@ -561,7 +568,7 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
                         }
                     }
 
-                    it->setSubscribe(event);
+                    it->setSubscribe(event, peerInfo);
                     break;
                 }
             }
@@ -721,6 +728,68 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
 
 
 /**
+ * @brief STATIC callback to handle events from the NimBLE stack.
+ */
+int NimBLEServer::handleGattEvent(uint16_t conn_handle, uint16_t attr_handle,
+                                  struct ble_gatt_access_ctxt *ctxt, void *arg) {
+    NIMBLE_LOGD(LOG_TAG, "Gatt %s event", (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR ||
+                ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC) ? "Read" : "Write");
+    auto pAtt = static_cast<NimBLELocalValueAttribute*>(arg);
+    const auto& val = pAtt->getAttVal();
+    NimBLEConnInfo peerInfo{};
+    ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
+
+    switch(ctxt->op) {
+        case BLE_GATT_ACCESS_OP_READ_DSC:
+        case BLE_GATT_ACCESS_OP_READ_CHR: {
+            // If the packet header is only 8 bytes this is a follow up of a long read
+            // so we don't want to call the onRead() callback again.
+            if(ctxt->om->om_pkthdr_len > 8 ||
+                conn_handle == BLE_HS_CONN_HANDLE_NONE ||
+                val.size() <= (ble_att_mtu(conn_handle) - 3)) {
+                pAtt->readEvent(peerInfo);
+            }
+
+            ble_npl_hw_enter_critical();
+            int rc = os_mbuf_append(ctxt->om, val.data(), val.size());
+            ble_npl_hw_exit_critical(0);
+            return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+        }
+
+        case BLE_GATT_ACCESS_OP_WRITE_DSC:
+        case BLE_GATT_ACCESS_OP_WRITE_CHR: {
+            uint16_t att_max_len = val.max_size();
+            if (ctxt->om->om_len > att_max_len) {
+                return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+            }
+
+            uint8_t buf[att_max_len];
+            uint16_t len = ctxt->om->om_len;
+            memcpy(buf, ctxt->om->om_data,len);
+
+            os_mbuf *next;
+            next = SLIST_NEXT(ctxt->om, om_next);
+            while(next != NULL){
+                if((len + next->om_len) > att_max_len) {
+                    return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+                }
+                memcpy(&buf[len], next->om_data, next->om_len);
+                len += next->om_len;
+                next = SLIST_NEXT(next, om_next);
+            }
+
+            pAtt->writeEvent(buf, len, peerInfo);
+            return 0;
+        }
+
+        default:
+            break;
+    }
+
+    return BLE_ATT_ERR_UNLIKELY;
+} // handleGattEvent
+
+/**
  * @brief Set the server callbacks.
  *
  * As a %BLE server operates, it will generate server level events such as a new client connecting or a previous client
@@ -762,7 +831,7 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
     // Check if the service was already removed and if so check if this
     // is being called to delete the object and do so if requested.
     // Otherwise, ignore the call and return.
-    if(service->m_removed > 0) {
+    if(service->getRemoved() > 0) {
         if(deleteSvc) {
             for(auto it = m_svcVec.begin(); it != m_svcVec.end(); ++it) {
                 if ((*it) == service) {
@@ -781,7 +850,7 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
         return;
     }
 
-    service->m_removed = deleteSvc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE;
+    service->setRemoved(deleteSvc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE);
     serviceChanged();
 #if !CONFIG_BT_NIMBLE_EXT_ADV
     NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
@@ -805,12 +874,12 @@ void NimBLEServer::addService(NimBLEService* service) {
 
     // If adding a service that was not removed add it and return.
     // Else reset GATT and send service changed notification.
-    if(service->m_removed == 0) {
+    if(service->getRemoved() == 0) {
         m_svcVec.push_back(service);
         return;
     }
 
-    service->m_removed = 0;
+    service->setRemoved(0);
     serviceChanged();
 }
 
@@ -829,8 +898,8 @@ void NimBLEServer::resetGATT() {
     ble_svc_gatt_init();
 
     for(auto it = m_svcVec.begin(); it != m_svcVec.end(); ) {
-        if ((*it)->m_removed > 0) {
-            if ((*it)->m_removed == NIMBLE_ATT_REMOVE_DELETE) {
+        if ((*it)->getRemoved() > 0) {
+            if ((*it)->getRemoved() == NIMBLE_ATT_REMOVE_DELETE) {
                 delete *it;
                 it = m_svcVec.erase(it);
             } else {
@@ -1004,20 +1073,20 @@ uint32_t NimBLEServerCallbacks::onPassKeyDisplay(){
     return 123456;
 } //onPassKeyDisplay
 
-void NimBLEServerCallbacks::onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pin){
+void NimBLEServerCallbacks::onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onConfirmPIN: default: true");
     NimBLEDevice::injectConfirmPIN(connInfo, true);
 } // onConfirmPIN
 
-void NimBLEServerCallbacks::onIdentity(const NimBLEConnInfo& connInfo){
+void NimBLEServerCallbacks::onIdentity(NimBLEConnInfo& connInfo){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onIdentity: default");
 } // onIdentity
 
-void NimBLEServerCallbacks::onAuthenticationComplete(const NimBLEConnInfo& connInfo){
+void NimBLEServerCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onAuthenticationComplete: default");
 } // onAuthenticationComplete
 
-void NimBLEServerCallbacks::onAuthenticationComplete(const NimBLEConnInfo& connInfo, const std::string& name){
+void NimBLEServerCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo, const std::string& name){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onAuthenticationComplete: default");
 } // onAuthenticationComplete
 

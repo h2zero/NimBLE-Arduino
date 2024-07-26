@@ -18,10 +18,8 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
-#define NIMBLE_ATT_REMOVE_HIDE 1
-#define NIMBLE_ATT_REMOVE_DELETE 2
-
-#define onMtuChanged onMTUChange
+class NimBLEServer;
+class NimBLEServerCallbacks;
 
 #include "NimBLEUtils.h"
 #include "NimBLEAddress.h"
@@ -31,13 +29,13 @@
 #include "NimBLEAdvertising.h"
 #endif
 #include "NimBLEService.h"
+#include "NimBLECharacteristic.h"
 #include "NimBLEConnInfo.h"
 
+#define NIMBLE_ATT_REMOVE_HIDE 1
+#define NIMBLE_ATT_REMOVE_DELETE 2
 
-class NimBLEService;
-class NimBLECharacteristic;
-class NimBLEServerCallbacks;
-
+#define onMtuChanged onMTUChange
 
 /**
  * @brief The model of a %BLE server.
@@ -123,6 +121,9 @@ private:
     bool                   setIndicateWait(uint16_t conn_handle);
     void                   clearIndicateWait(uint16_t conn_handle);
 
+    static int             handleGattEvent(uint16_t conn_handle, uint16_t attr_handle,
+                                           struct ble_gatt_access_ctxt *ctxt, void *arg);
+
 }; // NimBLEServer
 
 
@@ -182,14 +183,14 @@ public:
      * Should be passed back to NimBLEDevice::injectConfirmPIN
      * @param [in] pin The pin to compare with the client.
      */
-    virtual void onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pin);
+    virtual void onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin);
 
     /**
      * @brief Called when the pairing procedure is complete.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
      * about the peer connection parameters.
      */
-    virtual void onAuthenticationComplete(const NimBLEConnInfo& connInfo);
+    virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo);
 
     /**
      * @brief Called when the pairing procedure is complete.
@@ -197,13 +198,13 @@ public:
      * @param [in] name The name of the connected peer device.
      * about the peer connection parameters.
      */
-    virtual void onAuthenticationComplete(const NimBLEConnInfo& connInfo, const std::string& name);
+    virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo, const std::string& name);
 
     /**
      * @brief Called when the peer identity address is resolved.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
      */
-    virtual void onIdentity(const NimBLEConnInfo& connInfo);
+    virtual void onIdentity(NimBLEConnInfo& connInfo);
 }; // NimBLEServerCallbacks
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */

@@ -192,12 +192,7 @@ class NimBLEAttValue {
         return setValue(reinterpret_cast<const uint8_t*>(s), len);
     }
 
-    /**
-     * @brief Get a pointer to the value buffer with timestamp.
-     * @param[in] timestamp A pointer to a time_t variable to store the timestamp.
-     * @returns A pointer to the internal value buffer.
-     */
-    const uint8_t* getValue(time_t* timestamp = nullptr) const {
+    const NimBLEAttValue& getValue(time_t* timestamp = nullptr) const {
         if (timestamp != nullptr) {
 # if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
             *timestamp = m_timestamp;
@@ -205,7 +200,7 @@ class NimBLEAttValue {
             *timestamp = 0;
 # endif
         }
-        return m_attr_value;
+        return *this;
     }
 
     /**
@@ -271,7 +266,15 @@ class NimBLEAttValue {
         if (!skipSizeCheck && size() < sizeof(T)) {
             return T();
         }
-        return *(reinterpret_cast<const T*>(getValue(timestamp)));
+        if (timestamp != nullptr) {
+# if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
+            *timestamp = m_timestamp;
+# else
+            *timestamp = 0;
+# endif
+        }
+
+        return *(reinterpret_cast<const T*>(m_attr_value));
     }
 
     /*********************** Operators ************************/

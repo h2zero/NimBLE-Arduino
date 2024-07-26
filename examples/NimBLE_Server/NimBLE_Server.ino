@@ -45,13 +45,13 @@ class ServerCallbacks: public NimBLEServerCallbacks {
         return 123456;
     };
 
-    void onConfirmPIN(const NimBLEConnInfo& connInfo, uint32_t pass_key) {
+    void onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pass_key) {
         Serial.print("The passkey YES/NO number: ");Serial.println(pass_key);
         /** Inject false if passkeys don't match. */
         NimBLEDevice::injectConfirmPIN(connInfo, true);
     };
 
-    void onAuthenticationComplete(const NimBLEConnInfo& connInfo) {
+    void onAuthenticationComplete(NimBLEConnInfo& connInfo) {
         /** Check that encryption was successful, if not we disconnect the client */
         if(!connInfo.isEncrypted()) {
             NimBLEDevice::getServer()->disconnect(connInfo.getConnHandle());
@@ -241,7 +241,7 @@ void loop() {
         if(pSvc) {
             NimBLECharacteristic* pChr = pSvc->getCharacteristic("F00D");
             if(pChr) {
-                pChr->notify(true);
+                pChr->notify();
             }
         }
     }
