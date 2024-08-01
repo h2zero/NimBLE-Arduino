@@ -272,6 +272,10 @@ const NimBLEUUID& NimBLEUUID::reverseByteOrder() {
  * @brief Convenience operator to check if this UUID is equal to another.
  */
 bool NimBLEUUID::operator==(const NimBLEUUID& rhs) const {
+    if (!this->bitSize() || !rhs.bitSize()) {
+        return false;
+    }
+
     if (this->bitSize() != rhs.bitSize()) {
         uint8_t uuid128[sizeof(ble_base_uuid)];
         memcpy(uuid128, &ble_base_uuid, sizeof(ble_base_uuid));
@@ -287,11 +291,19 @@ bool NimBLEUUID::operator==(const NimBLEUUID& rhs) const {
         }
     }
 
-    if (this->bitSize() != BLE_UUID_TYPE_128) {
-        return this->getValue() == rhs.getValue();
+    if (this->bitSize() == BLE_UUID_TYPE_16) {
+        return *reinterpret_cast<const uint16_t*>(this->getValue()) == *reinterpret_cast<const uint16_t*>(rhs.getValue());
     }
 
-    return memcmp(this->getValue(), rhs.getValue(), 16) == 0;
+    if (this->bitSize() == BLE_UUID_TYPE_32) {
+        return *reinterpret_cast<const uint32_t*>(this->getValue()) == *reinterpret_cast<const uint32_t*>(rhs.getValue());
+    }
+
+    if (this->bitSize() == BLE_UUID_TYPE_128) {
+        return memcmp(this->getValue(), rhs.getValue(), 16) == 0;
+    }
+
+    return false;
 } // operator==
 
 /**
