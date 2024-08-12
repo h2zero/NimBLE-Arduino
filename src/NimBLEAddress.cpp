@@ -54,7 +54,7 @@ NimBLEAddress::NimBLEAddress(const std::string& addr, uint8_t type) {
     if (addr.length() == 17) {
         std::string mac{addr};
         mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
-        uint64_t address = std::stoul(mac, nullptr, 16);
+        uint64_t address = std::stoull(mac, nullptr, 16);
         memcpy(this->val, &address, sizeof this->val);
         return;
     }
