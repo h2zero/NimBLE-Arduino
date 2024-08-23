@@ -70,7 +70,7 @@ bool NimBLEExtAdvertising::setInstanceData(uint8_t inst_id, NimBLEExtAdvertiseme
                                        NULL);
 #else
     int rc = ble_gap_ext_adv_configure(inst_id,
-                                       &data.m_params,
+                                       &adv.m_params,
                                        NULL,
                                        NimBLEExtAdvertising::handleGapEvent,
                                        NULL);
