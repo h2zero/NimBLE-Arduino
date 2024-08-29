@@ -973,7 +973,7 @@ void NimBLEAdvertisementData::setServices(const bool complete, const uint8_t siz
  */
 void NimBLEAdvertisementData::setServiceData(const NimBLEUUID &uuid, const std::string &data) {
     uint8_t size = uuid.bitSize() / 8;
-    char cdata[2] = {static_cast<char>(1 + size), BLE_HS_ADV_TYPE_SVC_DATA_UUID16};
+    char cdata[2] = {static_cast<char>(1 + size + data.length()), BLE_HS_ADV_TYPE_SVC_DATA_UUID16};
     switch (size) {
         case 2: {
             // [Len] [0x16] [UUID16] data
