@@ -702,7 +702,7 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
                     return BLE_ATT_ERR_INVALID_HANDLE;
                 }
 
-                pServer->m_pServerCallbacks->onConfirmPIN(peerInfo, event->passkey.params.numcmp);
+                pServer->m_pServerCallbacks->onConfirmPassKey(peerInfo, event->passkey.params.numcmp);
             //TODO: Handle out of band pairing
             } else if (event->passkey.params.action == BLE_SM_IOACT_OOB) {
                 static uint8_t tem_oob[16] = {0};
@@ -1076,9 +1076,9 @@ uint32_t NimBLEServerCallbacks::onPassKeyDisplay(){
     return 123456;
 } //onPassKeyDisplay
 
-void NimBLEServerCallbacks::onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin){
+void NimBLEServerCallbacks::onConfirmPassKey(NimBLEConnInfo& connInfo, uint32_t pin){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onConfirmPIN: default: true");
-    NimBLEDevice::injectConfirmPIN(connInfo, true);
+    NimBLEDevice::injectConfirmPasskey(connInfo, true);
 } // onConfirmPIN
 
 void NimBLEServerCallbacks::onIdentity(NimBLEConnInfo& connInfo){

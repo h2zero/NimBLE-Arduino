@@ -387,7 +387,7 @@ NimBLEExtAdvertisement::NimBLEExtAdvertisement(uint8_t priPhy, uint8_t secPhy)
 :   m_advAddress{}
 {
     memset (&m_params, 0, sizeof(m_params));
-    m_params.own_addr_type = NimBLEDevice::m_own_addr_type;
+    m_params.own_addr_type = NimBLEDevice::m_ownAddrType;
     m_params.primary_phy   = priPhy;
     m_params.secondary_phy = secPhy;
     m_params.tx_power      = 127;

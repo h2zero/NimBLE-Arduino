@@ -386,7 +386,7 @@ The callback methods are:
 > `bool onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin)`
 
 Receives the pin when using numeric comparison authentication.
-Call `NimBLEDevice::injectConfirmPIN(connInfo, true);` to accept or `NimBLEDevice::injectConfirmPIN(connInfo, false);` to reject.
+Call `NimBLEDevice::injectConfirmPasskey(connInfo, true);` to accept or `NimBLEDevice::injectConfirmPasskey(connInfo, false);` to reject.
 <br/>
 
 > `void onPassKeyEntry(NimBLEConnInfo& connInfo)`
