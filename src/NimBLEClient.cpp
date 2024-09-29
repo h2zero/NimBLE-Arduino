@@ -226,7 +226,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) 
      */
     do {
 #if CONFIG_BT_NIMBLE_EXT_ADV
-        rc = ble_gap_ext_connect(NimBLEDevice::m_own_addr_type,
+        rc = ble_gap_ext_connect(NimBLEDevice::m_ownAddrType,
                                  peerAddr,
                                  m_connectTimeout,
                                  m_phyMask,
@@ -237,7 +237,7 @@ bool NimBLEClient::connect(const NimBLEAddress &address, bool deleteAttributes) 
                                  this);
 
 #else
-        rc = ble_gap_connect(NimBLEDevice::m_own_addr_type, peerAddr,
+        rc = ble_gap_connect(NimBLEDevice::m_ownAddrType, peerAddr,
                              m_connectTimeout, &m_pConnParams,
                              NimBLEClient::handleGapEvent, this);
 #endif
@@ -1342,7 +1342,7 @@ void NimBLEClientCallbacks::onIdentity(NimBLEConnInfo& connInfo){
 
 void NimBLEClientCallbacks::onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin){
     NIMBLE_LOGD("NimBLEClientCallbacks", "onConfirmPIN: default: true");
-    NimBLEDevice::injectConfirmPIN(connInfo, true);
+    NimBLEDevice::injectConfirmPasskey(connInfo, true);
 }
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */

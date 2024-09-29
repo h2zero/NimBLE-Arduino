@@ -180,10 +180,10 @@ public:
     /**
      * @brief Called when using numeric comparision for pairing.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
-     * Should be passed back to NimBLEDevice::injectConfirmPIN
+     * Should be passed back to NimBLEDevice::injectConfirmPasskey
      * @param [in] pin The pin to compare with the client.
      */
-    virtual void onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin);
+    virtual void onConfirmPassKey(NimBLEConnInfo& connInfo, uint32_t pin);
 
     /**
      * @brief Called when the pairing procedure is complete.

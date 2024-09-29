@@ -310,7 +310,7 @@ bool NimBLEScan::start(uint32_t duration, bool is_continue) {
     scan_params.passive = m_scan_params.passive;
     scan_params.itvl    = m_scan_params.itvl;
     scan_params.window  = m_scan_params.window;
-    int rc = ble_gap_ext_disc(NimBLEDevice::m_own_addr_type,
+    int rc = ble_gap_ext_disc(NimBLEDevice::m_ownAddrType,
                               duration/10,
                               0,
                               m_scan_params.filter_duplicates,
@@ -321,7 +321,7 @@ bool NimBLEScan::start(uint32_t duration, bool is_continue) {
                               NimBLEScan::handleGapEvent,
                               NULL);
 #else
-    int rc = ble_gap_disc(NimBLEDevice::m_own_addr_type,
+    int rc = ble_gap_disc(NimBLEDevice::m_ownAddrType,
                           duration,
                           &m_scan_params,
                           NimBLEScan::handleGapEvent,

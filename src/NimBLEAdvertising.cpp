@@ -44,7 +44,7 @@ NimBLEAdvertising::NimBLEAdvertising() {
  * @brief Stops the current advertising and resets the advertising data to the default values.
  */
 void NimBLEAdvertising::reset() {
-    if(NimBLEDevice::getInitialized() && isAdvertising()) {
+    if(NimBLEDevice::isInitialized() && isAdvertising()) {
         stop();
     }
     memset(&m_advData, 0, sizeof m_advData);
@@ -56,7 +56,11 @@ void NimBLEAdvertising::reset() {
     m_advData.name                   = (uint8_t *)name;
     m_advData.name_len               = strlen(name);
     m_advData.name_is_complete       = 1;
+#ifndef CONFIG_IDF_TARGET_ESP32P4
     m_advData.tx_pwr_lvl             = NimBLEDevice::getPower();
+#else
+    m_advData.tx_pwr_lvl             = 0;
+#endif
     m_advData.flags                  = (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
 
 #if !defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
@@ -639,7 +643,7 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
     }
 
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-    rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type,
+    rc = ble_gap_adv_start(NimBLEDevice::m_ownAddrType,
                            (dirAddr != nullptr) ? dirAddr->getBase() : NULL,
                            duration,
                            &m_advParams,
@@ -647,7 +651,7 @@ bool NimBLEAdvertising::start(uint32_t duration, advCompleteCB_t advCompleteCB, 
                                                   NimBLEAdvertising::handleGapEvent,
                            (void*)this);
 #else
-    rc = ble_gap_adv_start(NimBLEDevice::m_own_addr_type,
+    rc = ble_gap_adv_start(NimBLEDevice::m_ownAddrType,
                            (dirAddr != nullptr) ? &peerAddr : NULL,
                            duration,
                            &m_advParams,
@@ -1018,7 +1022,11 @@ void NimBLEAdvertisementData::addTxPower() {
     char cdata[3];
     cdata[0] = BLE_HS_ADV_TX_PWR_LVL_LEN + 1;
     cdata[1] = BLE_HS_ADV_TYPE_TX_PWR_LVL;
+#ifndef CONFIG_IDF_TARGET_ESP32P4
     cdata[2] = NimBLEDevice::getPower();
+#else
+    cdata[2] = 0;
+#endif
     addData(cdata, 3);
 } // addTxPower
 

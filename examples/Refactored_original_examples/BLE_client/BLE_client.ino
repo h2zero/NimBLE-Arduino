@@ -58,7 +58,7 @@ class MyClientCallback : public BLEClientCallbacks {
 
   void onConfirmPIN(const BLEConnInfo& connInfo, uint32_t pass_key) {
     Serial.print("The passkey YES/NO number: ");Serial.println(pass_key);
-    NimBLEDevice::injectConfirmPIN(connInfo, true);
+    NimBLEDevice::injectConfirmPasskey(connInfo, true);
   }
 
   void onAuthenticationComplete(const BLEConnInfo& connInfo){
