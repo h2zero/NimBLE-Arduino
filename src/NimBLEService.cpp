@@ -138,8 +138,6 @@ bool NimBLEService::start() {
                             continue;
                         }
 
-                        printf("adding disc %s\n", dsc->toString().c_str());
-
                         pDscs[j].uuid         = dsc->getUUID().getBase();
                         pDscs[j].att_flags    = dsc->getProperties();
                         pDscs[j].min_key_size = 0;
