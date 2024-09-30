@@ -554,18 +554,16 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
 
             for(auto &it : pServer->m_notifyChrVec) {
                 if(it->getHandle() == event->subscribe.attr_handle) {
-                    if((it->getProperties() & BLE_GATT_CHR_F_READ_AUTHEN) ||
-                       (it->getProperties() & BLE_GATT_CHR_F_READ_AUTHOR) ||
-                       (it->getProperties() & BLE_GATT_CHR_F_READ_ENC))
-                    {
-                        rc = ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc);
-                        if (rc != 0) {
-                            break;
-                        }
+                    rc = ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc);
+                    if (rc != 0) {
+                        break;
+                    }
 
-                        if(!peerInfo.isEncrypted()) {
+                    if(((it->getProperties() & BLE_GATT_CHR_F_READ_AUTHEN) ||
+                        (it->getProperties() & BLE_GATT_CHR_F_READ_AUTHOR) ||
+                        (it->getProperties() & BLE_GATT_CHR_F_READ_ENC))   &&
+                       !peerInfo.isEncrypted()) {
                             NimBLEDevice::startSecurity(event->subscribe.conn_handle);
-                        }
                     }
 
                     it->setSubscribe(event, peerInfo);
