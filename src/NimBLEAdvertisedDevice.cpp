@@ -47,7 +47,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice(const ble_gap_event* event, uint8
       m_rssi{event->disc.rssi},
       m_callbackSent{0},
       m_advLength{event->disc.length_data},
-      m_payload{event->disc.data, event->disc.data + event->disc.length_data} {
+      m_payload(event->disc.data, event->disc.data + event->disc.length_data) {
 # endif
 } // NimBLEAdvertisedDevice
 
