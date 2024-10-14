@@ -64,16 +64,6 @@ class NimBLERemoteValueAttribute : public NimBLEAttribute {
     bool writeValue(const uint8_t* data, size_t length, bool response = false) const;
 
     /**
-     * @brief Write a new value to the remote characteristic from a std::vector<uint8_t>.
-     * @param [in] vec A std::vector<uint8_t> value to write to the remote characteristic.
-     * @param [in] response Whether we require a response from the write.
-     * @return false if not connected or otherwise cannot perform write.
-     */
-    bool writeValue(const std::vector<uint8_t>& v, bool response = false) const {
-        return writeValue(&v[0], v.size(), response);
-    }
-
-    /**
      * @brief Write a new value to the remote characteristic from a const char*.
      * @param [in] str A character string to write to the remote characteristic.
      * @param [in] length (optional) The length of the character string, uses strlen if omitted.
@@ -88,32 +78,18 @@ class NimBLERemoteValueAttribute : public NimBLEAttribute {
      * @brief Template to set the remote characteristic value to <type\>val.
      * @param [in] s The value to write.
      * @param [in] response True == request write response.
-     * @details Only used for non-arrays and types without a `c_str()` method.
+     * @note This function is only available if the type T is not a pointer.
      */
     template <typename T>
-# ifdef _DOXYGEN_
-    bool
-# else
-    typename std::enable_if<!std::is_array<T>::value && !Has_c_str_len<T>::value, bool>::type
-# endif
+    typename std::enable_if<!std::is_pointer<T>::value, bool>::type
     writeValue(const T& v, bool response = false) const {
-        return writeValue(reinterpret_cast<const uint8_t*>(&v), sizeof(T), response);
-    }
-
-    /**
-     * @brief Template to set the remote characteristic value to <type\>val.
-     * @param [in] s The value to write.
-     * @param [in] response True == request write response.
-     * @details Only used if the <type\> has a `c_str()` method.
-     */
-    template <typename T>
-# ifdef _DOXYGEN_
-    bool
-# else
-    typename std::enable_if<Has_c_str_len<T>::value, bool>::type
-# endif
-    writeValue(const T& s, bool response = false) const {
-        return writeValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length(), response);
+        if constexpr (Has_data_size<T>::value) {
+            return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size(), response);
+        } else if constexpr (Has_c_str_length<T>::value) {
+            return writeValue(reinterpret_cast<const uint8_t*>(v.c_str()), v.length(), response);
+        } else {
+            return writeValue(reinterpret_cast<const uint8_t*>(&v), sizeof(v), response);
+        }
     }
 
     /**

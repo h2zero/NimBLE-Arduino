@@ -56,10 +56,8 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     void        setCallbacks(NimBLECharacteristicCallbacks* pCallbacks);
     void        indicate(uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE) const;
     void        indicate(const uint8_t* value, size_t length, uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE) const;
-    void        indicate(const std::vector<uint8_t>& value, uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE) const;
     void        notify(uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE) const;
     void        notify(const uint8_t* value, size_t length, uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE) const;
-    void        notify(const std::vector<uint8_t>& value, uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE) const;
 
     NimBLEDescriptor* createDescriptor(const char* uuid,
                                        uint32_t    properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
@@ -77,36 +75,47 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     /*********************** Template Functions ************************/
 
     /**
-     * @brief Template to send a notification from a class type that has a c_str() and length() method.
+     * @brief Template to send a notification for classes which may have
+     *        data()/size() or c_str()/length() methods. Falls back to sending
+     *        the data by casting the first element of the array to a uint8_t
+     *        pointer and getting the length of the array using sizeof.
      * @tparam T The a reference to a class containing the data to send.
      * @param[in] value The <type\>value to set.
-     * @param[in] is_notification if true sends a notification, false sends an indication.
-     * @details Only used if the <type\> has a `c_str()` method.
+     * @param[in] conn_handle The connection handle to send the notification to.
+     * @note This function is only available if the type T is not a pointer.
      */
     template <typename T>
-# ifdef _DOXYGEN_
-    void
-# else
-    typename std::enable_if<Has_c_str_len<T>::value, void>::type
-# endif
-    notify(const T& value, bool is_notification = true) const {
-        notify(reinterpret_cast<const uint8_t*>(value.c_str()), value.length(), is_notification);
+    typename std::enable_if<!std::is_pointer<T>::value, void>::type
+    notify(const T& value, uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE) const {
+        if constexpr (Has_data_size<T>::value) {
+            notify(reinterpret_cast<const uint8_t*>(value.data()), value.size(), conn_handle);
+        } else if constexpr (Has_c_str_length<T>::value) {
+            notify(reinterpret_cast<const uint8_t*>(value.c_str()), value.length(), conn_handle);
+        } else {
+            notify(reinterpret_cast<const uint8_t*>(&value), sizeof(value), conn_handle);
+        }
     }
 
     /**
-     * @brief Template to send an indication from a class type that has a c_str() and length() method.
+     * @brief Template to send an indication for classes which may have
+     *       data()/size() or c_str()/length() methods. Falls back to sending
+     *       the data by casting the first element of the array to a uint8_t
+     *       pointer and getting the length of the array using sizeof.
      * @tparam T The a reference to a class containing the data to send.
      * @param[in] value The <type\>value to set.
-     * @details Only used if the <type\> has a `c_str()` method.
+     * @param[in] conn_handle The connection handle to send the indication to.
+     * @note This function is only available if the type T is not a pointer.
      */
     template <typename T>
-# ifdef _DOXYGEN_
-    void
-# else
-    typename std::enable_if<Has_c_str_len<T>::value, void>::type
-# endif
-    indicate(const T& value) const {
-        indicate(reinterpret_cast<const uint8_t*>(value.c_str()), value.length());
+    typename std::enable_if<!std::is_pointer<T>::value, void>::type
+    indicate(const T& value, uint16_t conn_handle = BLE_HS_CONN_HANDLE_NONE) const {
+        if constexpr (Has_data_size<T>::value) {
+            indicate(reinterpret_cast<const uint8_t*>(value.data()), value.size(), conn_handle);
+        } else if constexpr (Has_c_str_length<T>::value) {
+            indicate(reinterpret_cast<const uint8_t*>(value.c_str()), value.length(), conn_handle);
+        } else {
+            indicate(reinterpret_cast<const uint8_t*>(&value), sizeof(value), conn_handle);
+        }
     }
 
   private:

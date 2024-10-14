@@ -267,16 +267,6 @@ void NimBLECharacteristic::indicate(const uint8_t* value, size_t length, uint16_
 } // indicate
 
 /**
- * @brief Send an indication.
- * @param[in] value A std::vector<uint8_t> containing the value to send as the notification value.
- * @param[in] conn_handle Connection handle to send an individual indication, or BLE_HS_CONN_HANDLE_NONE to send
- * the indication to all subscribed clients.
- */
-void NimBLECharacteristic::indicate(const std::vector<uint8_t>& value, uint16_t conn_handle) const {
-    sendValue(value.data(), value.size(), false, conn_handle);
-} // indicate
-
-/**
  * @brief Send a notification.
  * @param[in] conn_handle Connection handle to send an individual notification, or BLE_HS_CONN_HANDLE_NONE to send
  * the notification to all subscribed clients.
@@ -295,16 +285,6 @@ void NimBLECharacteristic::notify(uint16_t conn_handle) const {
 void NimBLECharacteristic::notify(const uint8_t* value, size_t length, uint16_t conn_handle) const {
     sendValue(value, length, true, conn_handle);
 } // indicate
-
-/**
- * @brief Send a notification.
- * @param[in] value A std::vector<uint8_t> containing the value to send as the notification value.
- * @param[in] conn_handle Connection handle to send an individual notification, or BLE_HS_CONN_HANDLE_NONE to send
- * the notification to all subscribed clients.
- */
-void NimBLECharacteristic::notify(const std::vector<uint8_t>& value, uint16_t conn_handle) const {
-    sendValue(value.data(), value.size(), true, conn_handle);
-} // notify
 
 /**
  * @brief Sends a notification or indication.

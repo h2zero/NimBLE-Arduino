@@ -60,7 +60,7 @@ public:
 	void 	setBatteryLevel(uint8_t level);
 
 
-	//NimBLECharacteristic* 	reportMap();
+	NimBLECharacteristic* 	reportMap();
 	NimBLECharacteristic* 	hidControl();
 	NimBLECharacteristic* 	inputReport(uint8_t reportID);
 	NimBLECharacteristic* 	outputReport(uint8_t reportID);

@@ -225,11 +225,11 @@ NimBLECharacteristic* NimBLEHIDDevice::batteryLevel() {
 	return m_batteryLevelCharacteristic;
 }
 
-/*
-
-BLECharacteristic*	 BLEHIDDevice::reportMap() {
+NimBLECharacteristic* NimBLEHIDDevice::reportMap() {
 	return m_reportMapCharacteristic;
 }
+
+/*
 
 BLECharacteristic*	 BLEHIDDevice::pnp() {
 	return m_pnpCharacteristic;
