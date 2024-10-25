@@ -624,7 +624,12 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
         // BLE_GAP_EVENT_ADV_COMPLETE | BLE_GAP_EVENT_SCAN_REQ_RCVD
 
         case BLE_GAP_EVENT_CONN_UPDATE: {
-            NIMBLE_LOGD(LOG_TAG, "Connection parameters updated.");
+            rc = ble_gap_conn_find(event->connect.conn_handle, &peerInfo.m_desc);
+            if (rc != 0) {
+                return 0;
+            }
+            
+            pServer->m_pServerCallbacks->onConnParamsUpdate(peerInfo);
             return 0;
         } // BLE_GAP_EVENT_CONN_UPDATE
 
@@ -1087,5 +1092,9 @@ void NimBLEServerCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo){
 void NimBLEServerCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo, const std::string& name){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onAuthenticationComplete: default");
 } // onAuthenticationComplete
+
+void NimBLEServerCallbacks::onConnParamsUpdate(NimBLEConnInfo& connInfo){
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onConnParamsUpdate: default");
+} // onConnParamsUpdate
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */

@@ -205,6 +205,14 @@ public:
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
      */
     virtual void onIdentity(NimBLEConnInfo& connInfo);
+
+    /**
+     * @brief Called when connection parameters are updated following a request to
+     * update via NimBLEServer::updateConnParams
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the
+     * updated connection parameters.
+     */
+    virtual void onConnParamsUpdate(NimBLEConnInfo& connInfo);
 }; // NimBLEServerCallbacks
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
