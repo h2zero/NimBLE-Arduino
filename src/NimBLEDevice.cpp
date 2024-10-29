@@ -405,7 +405,7 @@ NimBLEClient* NimBLEDevice::getClientByPeerAddress(const NimBLEAddress& addr) {
 } // getClientPeerAddress
 
 /**
- * @brief Finds the first disconnected client in the list.
+ * @brief Finds the first disconnected client available.
  * @return A pointer to the first client object that is not connected to a peer or nullptr.
  */
 NimBLEClient* NimBLEDevice::getDisconnectedClient() {
@@ -417,6 +417,21 @@ NimBLEClient* NimBLEDevice::getDisconnectedClient() {
 
     return nullptr;
 } // getDisconnectedClient
+
+/**
+ * @brief Get a list of connected clients.
+ * @return A vector of connected client objects.
+ */
+std::vector<NimBLEClient*> NimBLEDevice::getConnectedClients() {
+    std::vector<NimBLEClient*> clients;
+    for (const auto clt : m_pClients) {
+        if (clt != nullptr && clt->isConnected()) {
+            clients.push_back(clt);
+        }
+    }
+
+    return clients;
+} // getConnectedClients
 
 # endif // #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
