@@ -168,13 +168,14 @@ class NimBLEDevice {
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-    static NimBLEClient* createClient();
-    static NimBLEClient* createClient(const NimBLEAddress& peerAddress);
-    static bool          deleteClient(NimBLEClient* pClient);
-    static NimBLEClient* getClientByHandle(uint16_t connHandle);
-    static NimBLEClient* getClientByPeerAddress(const NimBLEAddress& peerAddress);
-    static NimBLEClient* getDisconnectedClient();
-    static size_t        getCreatedClientCount();
+    static NimBLEClient*              createClient();
+    static NimBLEClient*              createClient(const NimBLEAddress& peerAddress);
+    static bool                       deleteClient(NimBLEClient* pClient);
+    static NimBLEClient*              getClientByHandle(uint16_t connHandle);
+    static NimBLEClient*              getClientByPeerAddress(const NimBLEAddress& peerAddress);
+    static NimBLEClient*              getDisconnectedClient();
+    static size_t                     getCreatedClientCount();
+    static std::vector<NimBLEClient*> getConnectedClients();
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)

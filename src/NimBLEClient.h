@@ -44,9 +44,12 @@ struct BleTaskData;
  */
 class NimBLEClient {
   public:
-    bool           connect(NimBLEAdvertisedDevice* device, bool deleteAttributes = true);
-    bool           connect(const NimBLEAddress& address, bool deleteAttributes = true);
-    bool           connect(bool deleteAttributes = true);
+    bool connect(NimBLEAdvertisedDevice* device,
+                 bool                    deleteAttributes = true,
+                 bool                    asyncConnect     = false,
+                 bool                    exchangeMTU      = true);
+    bool connect(const NimBLEAddress& address, bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
+    bool           connect(bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
     NimBLEAddress  getPeerAddress() const;
     bool           setPeerAddress(const NimBLEAddress& address);
@@ -59,6 +62,7 @@ class NimBLEClient {
     bool           setConnection(const NimBLEConnInfo& connInfo);
     bool           setConnection(uint16_t connHandle);
     uint16_t       getMTU() const;
+    bool           exchangeMTU();
     bool           secureConnection() const;
     void           setConnectTimeout(uint32_t timeout);
     bool           setDataLen(uint16_t txOctets);
@@ -98,6 +102,7 @@ class NimBLEClient {
 
     bool       retrieveServices(const NimBLEUUID* uuidFilter = nullptr);
     static int handleGapEvent(struct ble_gap_event* event, void* arg);
+    static int exchangeMTUCb(uint16_t conn_handle, const ble_gatt_error* error, uint16_t mtu, void* arg);
     static int serviceDiscoveredCB(uint16_t                     connHandle,
                                    const struct ble_gatt_error* error,
                                    const struct ble_gatt_svc*   service,
@@ -113,6 +118,8 @@ class NimBLEClient {
     uint8_t                           m_terminateFailCount;
     bool                              m_deleteCallbacks;
     bool                              m_connEstablished;
+    bool                              m_asyncConnect;
+    bool                              m_exchangeMTU;
 # if CONFIG_BT_NIMBLE_EXT_ADV
     uint8_t m_phyMask;
 # endif
@@ -174,6 +181,14 @@ class NimBLEClientCallbacks {
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
      */
     virtual void onIdentity(NimBLEConnInfo& connInfo);
+
+    /**
+     * @brief Called when the connection MTU changes.
+     * @param [in] pClient A pointer to the client that the MTU change is associated with.
+     * @param [in] MTU The new MTU value.
+     * about the peer connection parameters.
+     */
+    virtual void onMTUChange(NimBLEClient* pClient, uint16_t MTU);
 };
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */

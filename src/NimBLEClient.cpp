@@ -65,6 +65,8 @@ NimBLEClient::NimBLEClient(const NimBLEAddress& peerAddress)
       m_terminateFailCount{0},
       m_deleteCallbacks{false},
       m_connEstablished{false},
+      m_asyncConnect{false},
+      m_exchangeMTU{true},
 # if CONFIG_BT_NIMBLE_EXT_ADV
       m_phyMask{BLE_GAP_LE_PHY_1M_MASK | BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_CODED_MASK},
 # endif
@@ -123,35 +125,48 @@ size_t NimBLEClient::deleteService(const NimBLEUUID& uuid) {
 } // deleteServices
 
 /**
- * @brief Connect to the BLE Server.
+ * @brief Connect to the BLE Server using the address of the last connected device, or the address\n
+ * passed to the constructor.
  * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
- * have created and clears the vectors after successful connection.
- * @return True on success.
+ * have created when last connected.
+ * @param [in] asyncConnect If true, the connection will be made asynchronously and this function will return immediately.\n
+ * If false, this function will block until the connection is established or the connection attempt times out.
+ * @param [in] exchangeMTU If true, the client will attempt to exchange MTU with the server after connection.\n
+ * If false, the client will use the default MTU size and the application will need to call exchangeMTU() later.
+ * @return true on success.
  */
-bool NimBLEClient::connect(bool deleteAttributes) {
-    return connect(m_peerAddress, deleteAttributes);
+bool NimBLEClient::connect(bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
+    return connect(m_peerAddress, deleteAttributes, asyncConnect, exchangeMTU);
 }
 
 /**
  * @brief Connect to an advertising device.
  * @param [in] device The device to connect to.
  * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
- * have created and clears the vectors after successful connection.
- * @return True on success.
+ * have created when last connected.
+ * @param [in] asyncConnect If true, the connection will be made asynchronously and this function will return immediately.\n
+ * If false, this function will block until the connection is established or the connection attempt times out.
+ * @param [in] exchangeMTU If true, the client will attempt to exchange MTU with the server after connection.\n
+ * If false, the client will use the default MTU size and the application will need to call exchangeMTU() later.
+ * @return true on success.
  */
-bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttributes) {
+bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
     NimBLEAddress address(device->getAddress());
-    return connect(address, deleteAttributes);
+    return connect(address, deleteAttributes, asyncConnect, exchangeMTU);
 }
 
 /**
  * @brief Connect to a BLE Server by address.
  * @param [in] address The address of the server.
  * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
- * have created and clears the vectors after successful connection.
- * @return True on success.
+ * have created when last connected.
+ * @param [in] asyncConnect If true, the connection will be made asynchronously and this function will return immediately.\n
+ * If false, this function will block until the connection is established or the connection attempt times out.
+ * @param [in] exchangeMTU If true, the client will attempt to exchange MTU with the server after connection.\n
+ * If false, the client will use the default MTU size and the application will need to call exchangeMTU() later.
+ * @return true on success.
  */
-bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) {
+bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
 
     if (!NimBLEDevice::m_synced) {
@@ -159,8 +174,13 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) 
         return false;
     }
 
-    if (isConnected() || m_connEstablished || m_pTaskData != nullptr) {
-        NIMBLE_LOGE(LOG_TAG, "Client busy, connected to %s, handle=%d", std::string(m_peerAddress).c_str(), getConnHandle());
+    if (isConnected() || m_connEstablished) {
+        NIMBLE_LOGE(LOG_TAG, "Client already connected");
+        return false;
+    }
+
+    if (NimBLEDevice::isConnectionInProgress()) {
+        NIMBLE_LOGE(LOG_TAG, "Connection already in progress");
         return false;
     }
 
@@ -171,16 +191,24 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) 
     }
 
     if (address.isNull()) {
-        NIMBLE_LOGE(LOG_TAG, "Invalid peer address;(NULL)");
+        NIMBLE_LOGE(LOG_TAG, "Invalid peer address; (NULL)");
         return false;
     } else {
         m_peerAddress = address;
     }
 
-    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-    BleTaskData  taskData = {this, cur_task, 0, nullptr};
-    m_pTaskData           = &taskData;
+    if (deleteAttributes) {
+        deleteServices();
+    }
+
     int rc                = 0;
+    m_asyncConnect        = asyncConnect;
+    m_exchangeMTU         = exchangeMTU;
+    TaskHandle_t curTask  = xTaskGetCurrentTaskHandle();
+    BleTaskData  taskData = {this, curTask, 0, nullptr};
+    if (!asyncConnect) {
+        m_pTaskData = &taskData;
+    }
 
     // Set the connection in progress flag to prevent a scan from starting while connecting.
     NimBLEDevice::setConnectionInProgress(true);
@@ -222,10 +250,7 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) 
                 break;
 
             case BLE_HS_EALREADY:
-                // Already attempting to connect to this device, cancel the previous
-                // attempt and report failure here so we don't get 2 connections.
-                NIMBLE_LOGE(LOG_TAG, "Already attempting to connect to %s - cancelling", std::string(m_peerAddress).c_str());
-                ble_gap_conn_cancel();
+                NIMBLE_LOGE(LOG_TAG, "Already attempting to connect");
                 break;
 
             default:
@@ -239,16 +264,21 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) 
 
     } while (rc == BLE_HS_EBUSY);
 
-    NimBLEDevice::setConnectionInProgress(false);
     m_lastErr = rc;
     if (rc != 0) {
+        m_lastErr   = rc;
         m_pTaskData = nullptr;
+        NimBLEDevice::setConnectionInProgress(false);
         return false;
+    }
+
+    if (m_asyncConnect) {
+        return true;
     }
 
 # ifdef ulTaskNotifyValueClear
     // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(cur_task, ULONG_MAX);
+    ulTaskNotifyValueClear(curTask, ULONG_MAX);
 # endif
     // Wait for the connect timeout time +1 second for the connection to complete
     if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(m_connectTimeout + 1000)) == pdFALSE) {
@@ -276,10 +306,6 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) 
         return false;
     } else {
         NIMBLE_LOGI(LOG_TAG, "Connection established");
-    }
-
-    if (deleteAttributes) {
-        deleteServices();
     }
 
     m_connEstablished = true;
@@ -855,6 +881,41 @@ uint16_t NimBLEClient::getMTU() const {
 } // getMTU
 
 /**
+ * @brief Callback for the MTU exchange API function.
+ * @details When the MTU exchange is complete the API will call this and report the new MTU.
+ */
+int NimBLEClient::exchangeMTUCb(uint16_t conn_handle, const ble_gatt_error* error, uint16_t mtu, void* arg) {
+    NIMBLE_LOGD(LOG_TAG, "exchangeMTUCb: status=%d, mtu=%d", error->status, mtu);
+
+    NimBLEClient* pClient = (NimBLEClient*)arg;
+    if (pClient->getConnHandle() != conn_handle) {
+        return 0;
+    }
+
+    if (error->status != 0) {
+        NIMBLE_LOGE(LOG_TAG, "exchangeMTUCb() rc=%d %s", error->status, NimBLEUtils::returnCodeToString(error->status));
+        pClient->m_lastErr = error->status;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Begin the MTU exchange process with the server.
+ * @returns true if the request was sent successfully.
+ */
+bool NimBLEClient::exchangeMTU() {
+    int rc = ble_gattc_exchange_mtu(m_connHandle, NimBLEClient::exchangeMTUCb, this);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "MTU exchange error; rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+        m_lastErr = rc;
+        return false;
+    }
+
+    return true;
+} // exchangeMTU
+
+/**
  * @brief Handle a received GAP event.
  * @param [in] event The event structure sent by the NimBLE stack.
  * @param [in] arg A pointer to the client instance that registered for this callback.
@@ -908,21 +969,22 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
         case BLE_GAP_EVENT_CONNECT: {
             // If we aren't waiting for this connection response we should drop the connection immediately.
-            if (pClient->isConnected() || pClient->m_pTaskData == nullptr) {
+            if (pClient->isConnected() || (!pClient->m_asyncConnect && pClient->m_pTaskData == nullptr)) {
                 ble_gap_terminate(event->connect.conn_handle, BLE_ERR_REM_USER_CONN_TERM);
                 return 0;
             }
 
+            NimBLEDevice::setConnectionInProgress(false);
             rc = event->connect.status;
             if (rc == 0) {
                 NIMBLE_LOGI(LOG_TAG, "Connected event");
 
                 pClient->m_connHandle = event->connect.conn_handle;
-
-                rc = ble_gattc_exchange_mtu(pClient->m_connHandle, NULL, NULL);
-                if (rc != 0) {
-                    NIMBLE_LOGE(LOG_TAG, "MTU exchange error; rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-                    break;
+                if (pClient->m_exchangeMTU) {
+                    if (!pClient->exchangeMTU() && !pClient->m_asyncConnect) {
+                        rc = pClient->m_lastErr;
+                        break;
+                    }
                 }
 
                 // In the case of a multi-connecting device we ignore this device when
@@ -930,7 +992,16 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 NimBLEDevice::addIgnored(pClient->m_peerAddress);
             } else {
                 pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
-                break;
+                if (!pClient->m_asyncConnect) {
+                    break;
+                }
+            }
+
+            if (pClient->m_asyncConnect) {
+                pClient->m_connEstablished = rc == 0;
+                pClient->m_pClientCallbacks->onConnect(pClient);
+            } else if (!pClient->m_exchangeMTU) {
+                break; // not wating for MTU exchange so release the task now.
             }
 
             return 0;
@@ -1072,7 +1143,9 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             if (pClient->m_connHandle != event->mtu.conn_handle) {
                 return 0;
             }
-            NIMBLE_LOGI(LOG_TAG, "mtu update event; conn_handle=%d mtu=%d", event->mtu.conn_handle, event->mtu.value);
+
+            NIMBLE_LOGI(LOG_TAG, "mtu update: mtu=%d", event->mtu.value);
+            pClient->m_pClientCallbacks->onMTUChange(pClient, event->mtu.value);
             rc = 0;
             break;
         } // BLE_GAP_EVENT_MTU
@@ -1202,6 +1275,10 @@ void NimBLEClientCallbacks::onIdentity(NimBLEConnInfo& connInfo) {
 void NimBLEClientCallbacks::onConfirmPasskey(NimBLEConnInfo& connInfo, uint32_t pin) {
     NIMBLE_LOGD(CB_TAG, "onConfirmPasskey: default: true");
     NimBLEDevice::injectConfirmPasskey(connInfo, true);
+}
+
+void NimBLEClientCallbacks::onMTUChange(NimBLEClient* pClient, uint16_t mtu) {
+    NIMBLE_LOGD(CB_TAG, "onMTUChange: default");
 }
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
