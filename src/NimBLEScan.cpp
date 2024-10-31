@@ -285,7 +285,7 @@ bool NimBLEScan::isScanning() {
 
 /**
  * @brief Start scanning.
- * @param [in] duration The duration in milliseconds for which to scan.
+ * @param [in] duration The duration in milliseconds for which to scan. 0 == scan forever.
  * @param [in] is_continue Set to true to save previous scan results, false to clear them.
  * @return True if scan started or false if there was an error.
  */
