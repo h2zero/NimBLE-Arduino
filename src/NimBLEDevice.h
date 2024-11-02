@@ -117,6 +117,8 @@ class NimBLEDevice {
     static bool          setPower(int8_t dbm);
     static int           getPower();
     static bool          setOwnAddrType(uint8_t type);
+    static bool          setOwnAddr(const NimBLEAddress& addr);
+    static bool          setOwnAddr(const uint8_t* addr);
     static void          setScanDuplicateCacheSize(uint16_t cacheSize);
     static void          setScanFilterMode(uint8_t type);
     static bool          setCustomGapHandler(gap_event_handler handler);

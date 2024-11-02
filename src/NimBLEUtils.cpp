@@ -10,6 +10,7 @@
 #if defined(CONFIG_BT_ENABLED)
 
 #include "NimBLEUtils.h"
+#include "NimBLEAddress.h"
 #include "NimBLELog.h"
 
 #include <stdlib.h>
@@ -475,5 +476,21 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
     return "";
 #endif // #if defined(CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
 } // gapEventToString
+
+/**
+ * @brief Generate a random BLE address.
+ * @param [in] nrpa True to generate a non-resolvable private address,
+ * false to generate a random static address
+ * @return The generated address or a NULL address if there was an error.
+ */
+NimBLEAddress NimBLEUtils::generateAddr(bool nrpa) {
+    ble_addr_t addr{};
+    int rc = ble_hs_id_gen_rnd(nrpa, &addr);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Generate address failed, rc=%d", rc);
+    }
+
+    return NimBLEAddress{addr};
+} // generateAddr
 
 #endif //CONFIG_BT_ENABLED
