@@ -1004,6 +1004,32 @@ bool NimBLEDevice::setOwnAddrType(uint8_t type) {
     return rc == 0;
 } // setOwnAddrType
 
+/**
+ * @brief Set the device address to use.
+ * @param [in] addr The address to set.
+ * @return True if the address was set successfully.
+ * @details To use the address generated the address type must be set to random with `setOwnAddrType`.
+ */
+bool NimBLEDevice::setOwnAddr(const NimBLEAddress& addr) {
+    return setOwnAddr(addr.getBase()->val);
+} // setOwnAddr
+
+/**
+ * @brief Set the device address to use.
+ * @param [in] addr The address to set.
+ * @return True if the address was set successfully.
+ * @details To use the address generated the address type must be set to random with `setOwnAddrType`.
+ */
+bool NimBLEDevice::setOwnAddr(const uint8_t* addr) {
+    int rc = ble_hs_id_set_rnd(addr);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to set address, rc=%d", rc);
+        return false;
+    }
+
+    return true;
+} // setOwnAddr
+
 /* -------------------------------------------------------------------------- */
 /*                                  SECURITY                                  */
 /* -------------------------------------------------------------------------- */

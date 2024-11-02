@@ -25,6 +25,8 @@
 
 #include <string>
 
+class NimBLEAddress;
+
 typedef struct {
     void *pATT;
     TaskHandle_t task;
@@ -43,6 +45,7 @@ public:
     static char*                buildHexData(uint8_t* target, const uint8_t* source, uint8_t length);
     static const char*          advTypeToString(uint8_t advType);
     static const char*          returnCodeToString(int rc);
+    static NimBLEAddress        generateAddr(bool nrpa);
 };
 
 
