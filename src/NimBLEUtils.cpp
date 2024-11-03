@@ -13,6 +13,17 @@
 #include "NimBLEAddress.h"
 #include "NimBLELog.h"
 
+# if defined(CONFIG_NIMBLE_CPP_IDF)
+#  include "host/ble_hs.h"
+# else
+#  include "nimble/nimble/host/include/host/ble_hs.h"
+# endif
+
+/****  FIX COMPILATION ****/
+#undef min
+#undef max
+/**************************/
+
 #include <stdlib.h>
 
 static const char* LOG_TAG = "NimBLEUtils";

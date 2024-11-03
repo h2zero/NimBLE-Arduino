@@ -324,8 +324,7 @@ bool NimBLEDevice::deleteClient(NimBLEClient* pClient) {
     int rc                     = 0;
 
     if (pClient->isConnected()) {
-        rc = pClient->disconnect();
-        if (rc != 0 && rc != BLE_HS_EALREADY && rc != BLE_HS_ENOTCONN) {
+        if (!pClient->disconnect()) {
             return false;
         }
 
@@ -378,7 +377,7 @@ size_t NimBLEDevice::getCreatedClientCount() {
  */
 NimBLEClient* NimBLEDevice::getClientByHandle(uint16_t connHandle) {
     for (const auto clt : m_pClients) {
-        if (clt != nullptr && clt->getConnId() == connHandle) {
+        if (clt != nullptr && clt->getConnHandle() == connHandle) {
             return clt;
         }
     }

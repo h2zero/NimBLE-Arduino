@@ -12,28 +12,21 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 
-#if defined(CONFIG_NIMBLE_CPP_IDF)
-#include "host/ble_gap.h"
-#else
-#include "nimble/nimble/host/include/host/ble_gap.h"
-#endif
-
-/****  FIX COMPILATION ****/
-#undef min
-#undef max
-/**************************/
+# include <freertos/FreeRTOS.h>
+# include <freertos/task.h>
 
 #include <string>
 
 class NimBLEAddress;
 
-typedef struct {
-    void *pATT;
+struct BleTaskData {
+    void*        pATT;
     TaskHandle_t task;
-    int rc;
-    void *buf;
-} ble_task_data_t;
+    int          rc;
+    void*        buf;
+};
 
+struct ble_gap_event;
 
 /**
  * @brief A BLE Utility class with methods for debugging and general purpose use.
@@ -47,7 +40,6 @@ public:
     static const char*          returnCodeToString(int rc);
     static NimBLEAddress        generateAddr(bool nrpa);
 };
-
 
 #endif // CONFIG_BT_ENABLED
 #endif // COMPONENTS_NIMBLEUTILS_H_

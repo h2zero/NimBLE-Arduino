@@ -24,11 +24,6 @@
 #  include "nimble/nimble/host/include/host/ble_uuid.h"
 # endif
 
-/****  FIX COMPILATION ****/
-# undef min
-# undef max
-/**************************/
-
 # include <string>
 # include <cstring>
 

@@ -368,7 +368,7 @@ int NimBLEServer::peerNameCB(uint16_t conn_handle,
                              const struct ble_gatt_error *error,
                              struct ble_gatt_attr *attr,
                              void *arg) {
-    ble_task_data_t *pTaskData = (ble_task_data_t*)arg;
+    BleTaskData *pTaskData = (BleTaskData*)arg;
     std::string *name = (std::string*)pTaskData->buf;
     int rc = error->status;
 
@@ -414,7 +414,7 @@ int NimBLEServer::peerNameCB(uint16_t conn_handle,
  */
 std::string NimBLEServer::getPeerNameInternal(uint16_t conn_handle, TaskHandle_t task, int cb_type) {
     std::string *buf = new std::string{};
-    ble_task_data_t *taskData = new ble_task_data_t{this, task, cb_type, buf};
+    BleTaskData *taskData = new BleTaskData{this, task, cb_type, buf};
     ble_uuid16_t uuid {{BLE_UUID_TYPE_16}, BLE_SVC_GAP_CHR_UUID16_DEVICE_NAME};
     int rc = ble_gattc_read_by_uuid(conn_handle,
                                     1,
@@ -628,7 +628,7 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
             if (rc != 0) {
                 return 0;
             }
-            
+
             pServer->m_pServerCallbacks->onConnParamsUpdate(peerInfo);
             return 0;
         } // BLE_GAP_EVENT_CONN_UPDATE

@@ -145,11 +145,11 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t              conn_handle,
                                               const ble_gatt_chr*   chr,
                                               void*                 arg) {
     NIMBLE_LOGD(LOG_TAG, "Characteristic Discovery >>");
-    auto       pTaskData = (ble_task_data_t*)arg;
+    auto       pTaskData = (BleTaskData*)arg;
     const auto pSvc      = (NimBLERemoteService*)pTaskData->pATT;
 
     // Make sure the discovery is for this device
-    if (pSvc->getClient()->getConnId() != conn_handle) {
+    if (pSvc->getClient()->getConnHandle() != conn_handle) {
         return 0;
     }
 
@@ -173,16 +173,16 @@ bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID* uuidFilter) 
     NIMBLE_LOGD(LOG_TAG, ">> retrieveCharacteristics()");
     int             rc       = 0;
     TaskHandle_t    cur_task = xTaskGetCurrentTaskHandle();
-    ble_task_data_t taskData = {const_cast<NimBLERemoteService*>(this), cur_task, 0, nullptr};
+    BleTaskData taskData = {const_cast<NimBLERemoteService*>(this), cur_task, 0, nullptr};
 
     if (uuidFilter == nullptr) {
-        rc = ble_gattc_disc_all_chrs(m_pClient->getConnId(),
+        rc = ble_gattc_disc_all_chrs(m_pClient->getConnHandle(),
                                      getHandle(),
                                      getEndHandle(),
                                      NimBLERemoteService::characteristicDiscCB,
                                      &taskData);
     } else {
-        rc = ble_gattc_disc_chrs_by_uuid(m_pClient->getConnId(),
+        rc = ble_gattc_disc_chrs_by_uuid(m_pClient->getConnHandle(),
                                          getHandle(),
                                          getEndHandle(),
                                          uuidFilter->getBase(),
