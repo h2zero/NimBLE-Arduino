@@ -94,7 +94,7 @@ private:
     bool                  m_ignoreResults;
     NimBLEScanResults     m_scanResults;
     uint32_t              m_duration;
-    ble_task_data_t       *m_pTaskData;
+    BleTaskData           *m_pTaskData;
     uint8_t               m_maxResults;
 };
 

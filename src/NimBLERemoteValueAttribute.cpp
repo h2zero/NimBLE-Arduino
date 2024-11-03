@@ -10,6 +10,7 @@
 
 # include "NimBLERemoteValueAttribute.h"
 # include "NimBLEClient.h"
+# include "NimBLEUtils.h"
 
 # include <climits>
 
@@ -20,7 +21,7 @@ bool NimBLERemoteValueAttribute::writeValue(const uint8_t* data, size_t length, 
 
     const NimBLEClient* pClient    = getClient();
     TaskHandle_t        cur_task   = xTaskGetCurrentTaskHandle();
-    ble_task_data_t     taskData   = {const_cast<NimBLERemoteValueAttribute*>(this), cur_task, 0, nullptr};
+    BleTaskData         taskData   = {const_cast<NimBLERemoteValueAttribute*>(this), cur_task, 0, nullptr};
     int                 retryCount = 1;
     int                 rc         = 0;
     uint16_t            mtu        = pClient->getMTU() - 3;
@@ -28,7 +29,7 @@ bool NimBLERemoteValueAttribute::writeValue(const uint8_t* data, size_t length, 
     // Check if the data length is longer than we can write in one connection event.
     // If so we must do a long write which requires a response.
     if (length <= mtu && !response) {
-        rc = ble_gattc_write_no_rsp_flat(pClient->getConnId(), getHandle(), data, length);
+        rc = ble_gattc_write_no_rsp_flat(pClient->getConnHandle(), getHandle(), data, length);
         goto Done;
     }
 
@@ -36,9 +37,9 @@ bool NimBLERemoteValueAttribute::writeValue(const uint8_t* data, size_t length, 
         if (length > mtu) {
             NIMBLE_LOGI(LOG_TAG, "writeValue: long write");
             os_mbuf* om = ble_hs_mbuf_from_flat(data, length);
-            rc = ble_gattc_write_long(pClient->getConnId(), getHandle(), 0, om, NimBLERemoteValueAttribute::onWriteCB, &taskData);
+            rc = ble_gattc_write_long(pClient->getConnHandle(), getHandle(), 0, om, NimBLERemoteValueAttribute::onWriteCB, &taskData);
         } else {
-            rc = ble_gattc_write_flat(pClient->getConnId(),
+            rc = ble_gattc_write_flat(pClient->getConnHandle(),
                                       getHandle(),
                                       data,
                                       length,
@@ -93,10 +94,10 @@ Done:
  * @return success == 0 or error code.
  */
 int NimBLERemoteValueAttribute::onWriteCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg) {
-    auto       pTaskData = static_cast<ble_task_data_t*>(arg);
+    auto       pTaskData = static_cast<BleTaskData*>(arg);
     const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->pATT);
 
-    if (pAtt->getClient()->getConnId() != conn_handle) {
+    if (pAtt->getClient()->getConnHandle() != conn_handle) {
         return 0;
     }
 
@@ -119,10 +120,10 @@ NimBLEAttValue NimBLERemoteValueAttribute::readValue(time_t* timestamp) const {
     int                 rc         = 0;
     int                 retryCount = 1;
     TaskHandle_t        cur_task   = xTaskGetCurrentTaskHandle();
-    ble_task_data_t     taskData   = {const_cast<NimBLERemoteValueAttribute*>(this), cur_task, 0, &value};
+    BleTaskData     taskData   = {const_cast<NimBLERemoteValueAttribute*>(this), cur_task, 0, &value};
 
     do {
-        rc = ble_gattc_read_long(pClient->getConnId(), getHandle(), 0, NimBLERemoteValueAttribute::onReadCB, &taskData);
+        rc = ble_gattc_read_long(pClient->getConnHandle(), getHandle(), 0, NimBLERemoteValueAttribute::onReadCB, &taskData);
         if (rc != 0) {
             goto Done;
         }
@@ -142,7 +143,7 @@ NimBLEAttValue NimBLERemoteValueAttribute::readValue(time_t* timestamp) const {
             // Characteristic is not long-readable, return with what we have.
             case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
                 NIMBLE_LOGI(LOG_TAG, "Attribute not long");
-                rc = ble_gattc_read(pClient->getConnId(), getHandle(), NimBLERemoteValueAttribute::onReadCB, &taskData);
+                rc = ble_gattc_read(pClient->getConnHandle(), getHandle(), NimBLERemoteValueAttribute::onReadCB, &taskData);
                 if (rc != 0) {
                     goto Done;
                 }
@@ -179,10 +180,10 @@ Done:
  * @return success == 0 or error code.
  */
 int NimBLERemoteValueAttribute::onReadCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg) {
-    auto       pTaskData = static_cast<ble_task_data_t*>(arg);
+    auto       pTaskData = static_cast<BleTaskData*>(arg);
     const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->pATT);
 
-    if (pAtt->getClient()->getConnId() != conn_handle) {
+    if (pAtt->getClient()->getConnHandle() != conn_handle) {
         return 0;
     }
 

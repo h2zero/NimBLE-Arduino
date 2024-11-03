@@ -457,7 +457,7 @@ NimBLEScanResults NimBLEScan::getResults(uint32_t duration, bool is_continue) {
     }
 
     TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-    ble_task_data_t taskData = {nullptr, cur_task, 0, nullptr};
+    BleTaskData taskData = {nullptr, cur_task, 0, nullptr};
     m_pTaskData = &taskData;
 
     if(start(duration, is_continue)) {

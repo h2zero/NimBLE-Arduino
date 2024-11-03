@@ -65,7 +65,7 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
     NIMBLE_LOGD(LOG_TAG, "Descriptor Discovery >> status: %d handle: %d", rc, (rc == 0) ? dsc->handle : -1);
 
     auto              filter     = (desc_filter_t*)arg;
-    auto              pTaskData  = (ble_task_data_t*)filter->task_data;
+    auto              pTaskData  = (BleTaskData*)filter->task_data;
     const auto        pChr       = (NimBLERemoteCharacteristic*)pTaskData->pATT;
     const NimBLEUUID* uuidFilter = filter->uuid;
 
@@ -102,10 +102,10 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID* uuidFilte
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
     TaskHandle_t    cur_task = xTaskGetCurrentTaskHandle();
-    ble_task_data_t taskData = {const_cast<NimBLERemoteCharacteristic*>(this), cur_task, 0, nullptr};
+    BleTaskData taskData = {const_cast<NimBLERemoteCharacteristic*>(this), cur_task, 0, nullptr};
     desc_filter_t   filter   = {uuidFilter, &taskData};
 
-    int rc = ble_gattc_disc_all_dscs(getClient()->getConnId(),
+    int rc = ble_gattc_disc_all_dscs(getClient()->getConnHandle(),
                                      getHandle(),
                                      getRemoteService()->getEndHandle(),
                                      NimBLERemoteCharacteristic::descriptorDiscCB,

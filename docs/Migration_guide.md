@@ -383,7 +383,7 @@ The security callback methods are now incorporated in the `NimBLEServerCallbacks
 
 The callback methods are:
 
-> `bool onConfirmPIN(NimBLEConnInfo& connInfo, uint32_t pin)`
+> `bool onConfirmPasskey(NimBLEConnInfo& connInfo, uint32_t pin)`
 
 Receives the pin when using numeric comparison authentication.
 Call `NimBLEDevice::injectConfirmPasskey(connInfo, true);` to accept or `NimBLEDevice::injectConfirmPasskey(connInfo, false);` to reject.

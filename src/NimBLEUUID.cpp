@@ -19,6 +19,11 @@
 # include "NimBLEUUID.h"
 # include "NimBLELog.h"
 
+/****  FIX COMPILATION ****/
+# undef min
+# undef max
+/**************************/
+
 # include <algorithm>
 
 static const char*   LOG_TAG         = "NimBLEUUID";
