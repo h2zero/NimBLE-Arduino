@@ -819,7 +819,7 @@ ble_hs_init(void)
 
 #if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
     /* Configure the HCI transport to communicate with a host. */
-    ble_hci_trans_cfg_hs(ble_hs_hci_rx_evt, NULL, ble_hs_rx_data, NULL);
+    ble_hci_trans_cfg_hs(ble_hs_hci_rx_evt_ovr, NULL, ble_hs_rx_data, NULL);
 #endif
 
     /* Enqueue the start event to the default event queue.  Using the default
@@ -843,7 +843,7 @@ ble_hs_init(void)
 int
 ble_transport_to_hs_evt_impl(void *buf)
 {
-    return ble_hs_hci_rx_evt(buf, NULL);
+    return ble_hs_hci_rx_evt_ovr(buf, NULL);
 }
 
 int
