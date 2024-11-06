@@ -890,11 +890,19 @@ bool NimBLEDevice::init(const std::string& deviceName) {
             return false;
         }
 
+#   if !defined(ESP_NIMBLE_CONTROLLER_ENABLED)
         err = esp_nimble_hci_init();
         if (err != ESP_OK) {
             NIMBLE_LOGE(LOG_TAG, "esp_nimble_hci_init() failed; err=%d", err);
             return false;
         }
+#   else
+        err = esp_nimble_init();
+        if (err != ESP_OK) {
+            NIMBLE_LOGE(LOG_TAG, "esp_nimble_init() failed; err=%d", err);
+            return false;
+        }
+#   endif
 #  endif
 # endif
         nimble_port_init();
