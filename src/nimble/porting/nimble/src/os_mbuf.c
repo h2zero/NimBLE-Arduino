@@ -33,6 +33,9 @@
  *
  */
 
+#include "nimconfig.h"
+#if !defined(ESP_NIMBLE_CONTROLLER_ENABLED)
+
 #include "../include/os/os.h"
 #include "../include/os/os_trace_api.h"
 
@@ -1258,3 +1261,4 @@ os_mbuf_pack_chains(struct os_mbuf *m1, struct os_mbuf *m2)
 
     return m1;
 }
+#endif

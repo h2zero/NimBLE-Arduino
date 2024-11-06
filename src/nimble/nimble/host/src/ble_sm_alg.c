@@ -515,6 +515,7 @@ ble_sm_alg_g2(const uint8_t *u, const uint8_t *v, const uint8_t *x,
     return 0;
 }
 
+#if !defined(SOC_ESP_NIMBLE_CONTROLLER)
 int
 ble_sm_alg_gen_dhkey(const uint8_t *peer_pub_key_x, const uint8_t *peer_pub_key_y,
                      const uint8_t *our_priv_key, uint8_t *out_dhkey)
@@ -611,6 +612,7 @@ exit:
     swap_buf(out_dhkey, dh, 32);
     return 0;
 }
+#endif
 
 /* based on Core Specification 4.2 Vol 3. Part H 2.3.5.6.1 */
 static const uint8_t ble_sm_alg_dbg_priv_key[32] = {
@@ -694,6 +696,7 @@ void mbedtls_free_keypair(void)
  * pub: 64 bytes
  * priv: 32 bytes
  */
+#if !defined(SOC_ESP_NIMBLE_CONTROLLER)
 int
 ble_sm_alg_gen_key_pair(uint8_t *pub, uint8_t *priv)
 {
@@ -726,6 +729,7 @@ ble_sm_alg_gen_key_pair(uint8_t *pub, uint8_t *priv)
 
     return 0;
 }
+#endif
 
 #if MYNEWT_VAL(SELFTEST)
 /* Unit tests rely on custom RNG function not being set */

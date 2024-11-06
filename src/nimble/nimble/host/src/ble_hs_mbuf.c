@@ -68,6 +68,8 @@ ble_hs_mbuf_bare_pkt(void)
  * @return                  An empty mbuf on success; null on memory
  *                              exhaustion.
  */
+#include "nimconfig.h"
+#if !defined(ESP_NIMBLE_CONTROLLER_ENABLED)
 struct os_mbuf *
 ble_hs_mbuf_acl_pkt(void)
 {
@@ -77,6 +79,7 @@ ble_hs_mbuf_acl_pkt(void)
     return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + BLE_HS_CTRL_DATA_HDR_SZ + 1);
 #endif
 }
+#endif
 
 /**
  * Allocates an mbuf suitable for an L2CAP data packet.  The resulting packet

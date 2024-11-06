@@ -387,6 +387,7 @@ ble_hs_hci_rx_ack(uint8_t *ack_ev)
     ble_npl_sem_release(&ble_hs_hci_sem);
 }
 
+#if !defined(SOC_ESP_NIMBLE_CONTROLLER)
 int
 ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
 {
@@ -428,6 +429,7 @@ ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
 
     return 0;
 }
+#endif
 
 #if !(SOC_ESP_NIMBLE_CONTROLLER) || !(CONFIG_BT_CONTROLLER_ENABLED)
 /**
