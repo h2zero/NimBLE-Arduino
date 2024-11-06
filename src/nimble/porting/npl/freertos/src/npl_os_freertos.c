@@ -1384,7 +1384,10 @@ void npl_freertos_funcs_deinit(void)
 #ifdef ESP_PLATFORM
 #include "freertos/portable.h"
 #include "esp_log.h"
+#include "soc/soc_caps.h"
+#if !SOC_ESP_NIMBLE_CONTROLLER
 portMUX_TYPE ble_port_mutex = portMUX_INITIALIZER_UNLOCKED;
+#endif
 #  if CONFIG_BT_NIMBLE_USE_ESP_TIMER
 static const char *LOG_TAG = "Timer";
 #  endif
