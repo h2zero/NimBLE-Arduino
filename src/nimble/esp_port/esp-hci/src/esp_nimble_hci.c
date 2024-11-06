@@ -5,6 +5,8 @@
  */
 
 #ifdef ESP_PLATFORM
+#include <sdkconfig.h>
+#if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
 
 #include <assert.h>
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
@@ -292,4 +294,5 @@ esp_err_t esp_nimble_hci_deinit(void)
     return ESP_OK;
 }
 
+#endif // defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
 #endif
