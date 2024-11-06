@@ -129,7 +129,9 @@ esp_err_t esp_nimble_init(void)
     /* Initialize the global memory pool */
     os_mempool_module_init();
     os_msys_init();
-
+#else
+    /* Initialize default event queue */
+    ble_npl_eventq_init(&g_eventq_dflt);
 #endif
     /* Initialize the host */
     ble_transport_hs_init();
@@ -161,6 +163,8 @@ esp_err_t esp_nimble_deinit(void)
     ble_buf_free();
 #endif
 
+    ble_npl_eventq_deinit(&g_eventq_dflt);
+#else
     ble_npl_eventq_deinit(&g_eventq_dflt);
 #endif
     ble_hs_deinit();
