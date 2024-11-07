@@ -17,6 +17,9 @@
  * under the License.
  */
 
+#include "nimconfig.h"
+#if !defined(ESP_NIMBLE_CONTROLLER_ENABLED)
+
 #include <assert.h>
 #include "../include/os/os.h"
 #include "../include/mem/mem.h"
@@ -220,3 +223,4 @@ void os_msys_init(void)
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 }
+#endif
