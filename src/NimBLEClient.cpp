@@ -302,9 +302,8 @@ bool NimBLEClient::secureConnection() const {
     do {
         m_pTaskData = &taskData;
 
-        int rc = NimBLEDevice::startSecurity(m_connHandle);
-        if (rc != 0 && rc != BLE_HS_EALREADY) {
-            m_lastErr   = rc;
+        if (!NimBLEDevice::startSecurity(m_connHandle)) {
+            m_lastErr   = BLE_HS_ENOTCONN;
             m_pTaskData = nullptr;
             return false;
         }

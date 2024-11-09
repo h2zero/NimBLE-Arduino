@@ -1127,7 +1127,7 @@ bool NimBLEDevice::startSecurity(uint16_t connHandle) {
         NIMBLE_LOGE(LOG_TAG, "ble_gap_security_initiate: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
 
-    return rc == 0;
+    return rc == 0 || rc == BLE_HS_EALREADY;
 } // startSecurity
 
 /**
