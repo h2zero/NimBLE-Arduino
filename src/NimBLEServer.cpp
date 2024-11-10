@@ -368,8 +368,8 @@ int NimBLEServer::peerNameCB(uint16_t conn_handle,
                              const struct ble_gatt_error *error,
                              struct ble_gatt_attr *attr,
                              void *arg) {
-    BleTaskData *pTaskData = (BleTaskData*)arg;
-    std::string *name = (std::string*)pTaskData->buf;
+    NimBLETaskData *pTaskData = (NimBLETaskData*)arg;
+    std::string *name = (std::string*)pTaskData->m_pBuf;
     int rc = error->status;
 
     if (rc == 0) {
@@ -380,16 +380,15 @@ int NimBLEServer::peerNameCB(uint16_t conn_handle,
     }
 
     if (rc == BLE_HS_EDONE) {
-        // No ask means this was read for a callback.
-        if (pTaskData->task == nullptr) {
-            NimBLEServer* pServer = (NimBLEServer*)pTaskData->pATT;
+        if (pTaskData->m_flags != -1) {
+            NimBLEServer* pServer = (NimBLEServer*)pTaskData->m_pInstance;
             NimBLEConnInfo peerInfo{};
             ble_gap_conn_find(conn_handle, &peerInfo.m_desc);
 
-            // Use the rc value as a flag to indicate which callback should be called.
-            if (pTaskData->rc == NIMBLE_SERVER_GET_PEER_NAME_ON_CONNECT_CB) {
+            // check the flag to indicate which callback should be called.
+            if (pTaskData->m_flags == NIMBLE_SERVER_GET_PEER_NAME_ON_CONNECT_CB) {
                 pServer->m_pServerCallbacks->onConnect(pServer, peerInfo, *name);
-            } else if (pTaskData->rc == NIMBLE_SERVER_GET_PEER_NAME_ON_AUTH_CB) {
+            } else if (pTaskData->m_flags == NIMBLE_SERVER_GET_PEER_NAME_ON_AUTH_CB) {
                 pServer->m_pServerCallbacks->onAuthenticationComplete(peerInfo, *name);
             }
         }
@@ -397,9 +396,8 @@ int NimBLEServer::peerNameCB(uint16_t conn_handle,
         NIMBLE_LOGE(LOG_TAG, "NimBLEServerPeerNameCB rc=%d; %s", rc, NimBLEUtils::returnCodeToString(rc));
     }
 
-    if (pTaskData->task != nullptr) {
-        pTaskData->rc = rc;
-        xTaskNotifyGive(pTaskData->task);
+    if (pTaskData->m_flags == -1) {
+        NimBLEUtils::taskRelease(*pTaskData, rc);
     } else {
         // If the read was triggered for callback use then these were allocated.
         delete name;
@@ -412,16 +410,16 @@ int NimBLEServer::peerNameCB(uint16_t conn_handle,
 /**
  * @brief Internal method that sends the read command.
  */
-std::string NimBLEServer::getPeerNameInternal(uint16_t conn_handle, TaskHandle_t task, int cb_type) {
+std::string NimBLEServer::getPeerNameInternal(uint16_t conn_handle, int cb_type) {
     std::string *buf = new std::string{};
-    BleTaskData *taskData = new BleTaskData{this, task, cb_type, buf};
+    NimBLETaskData *pTaskData = new NimBLETaskData(this, cb_type, buf);
     ble_uuid16_t uuid {{BLE_UUID_TYPE_16}, BLE_SVC_GAP_CHR_UUID16_DEVICE_NAME};
     int rc = ble_gattc_read_by_uuid(conn_handle,
                                     1,
                                     0xffff,
                                     &uuid.u,
                                     NimBLEServer::peerNameCB,
-                                    taskData);
+                                    pTaskData);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_read_by_uuid rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
         NimBLEConnInfo peerInfo{};
@@ -432,17 +430,13 @@ std::string NimBLEServer::getPeerNameInternal(uint16_t conn_handle, TaskHandle_t
             m_pServerCallbacks->onAuthenticationComplete(peerInfo, *buf);
         }
         delete buf;
-        delete taskData;
-    } else if (task != nullptr) {
-#ifdef ulTaskNotifyValueClear
-        // Clear the task notification value to ensure we block
-        ulTaskNotifyValueClear(task, ULONG_MAX);
-#endif
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        rc = taskData->rc;
-        std::string name{*(std::string*)taskData->buf};
+        delete pTaskData;
+    } else if (cb_type == -1) {
+        NimBLEUtils::taskWait(*pTaskData, BLE_NPL_TIME_FOREVER);
+        rc = pTaskData->m_flags;
+        std::string name{*(std::string*)pTaskData->m_pBuf};
         delete buf;
-        delete taskData;
+        delete pTaskData;
 
         if (rc != 0 && rc != BLE_HS_EDONE) {
             NIMBLE_LOGE(LOG_TAG, "getPeerName rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
@@ -461,7 +455,7 @@ std::string NimBLEServer::getPeerNameInternal(uint16_t conn_handle, TaskHandle_t
  * @note This is a blocking call and should NOT be called from any callbacks!
  */
 std::string NimBLEServer::getPeerName(const NimBLEConnInfo& connInfo) {
-    std::string name = getPeerNameInternal(connInfo.getConnHandle(), xTaskGetCurrentTaskHandle());
+    std::string name = getPeerNameInternal(connInfo.getConnHandle());
     return name;
 }
 
@@ -500,7 +494,6 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
 
                 if (pServer->m_getPeerNameOnConnect) {
                     pServer->getPeerNameInternal(event->connect.conn_handle,
-                                                 nullptr,
                                                  NIMBLE_SERVER_GET_PEER_NAME_ON_CONNECT_CB);
                 } else {
                     pServer->m_pServerCallbacks->onConnect(pServer, peerInfo);
@@ -661,7 +654,6 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
 
             if (pServer->m_getPeerNameOnConnect) {
                 pServer->getPeerNameInternal(event->enc_change.conn_handle,
-                                             nullptr,
                                              NIMBLE_SERVER_GET_PEER_NAME_ON_AUTH_CB);
             } else {
                 pServer->m_pServerCallbacks->onAuthenticationComplete(peerInfo);

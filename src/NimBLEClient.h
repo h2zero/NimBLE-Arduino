@@ -37,7 +37,7 @@ class NimBLEAdvertisedDevice;
 class NimBLEAttValue;
 class NimBLEClientCallbacks;
 class NimBLEConnInfo;
-struct BleTaskData;
+struct NimBLETaskData;
 
 /**
  * @brief A model of a BLE client.
@@ -112,7 +112,7 @@ class NimBLEClient {
     NimBLEAddress                     m_peerAddress;
     mutable int                       m_lastErr;
     int32_t                           m_connectTimeout;
-    mutable BleTaskData*              m_pTaskData;
+    mutable NimBLETaskData*           m_pTaskData;
     std::vector<NimBLERemoteService*> m_svcVec;
     NimBLEClientCallbacks*            m_pClientCallbacks;
     uint16_t                          m_connHandle;

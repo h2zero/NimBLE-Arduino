@@ -145,8 +145,8 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t              conn_handle,
                                               const ble_gatt_chr*   chr,
                                               void*                 arg) {
     NIMBLE_LOGD(LOG_TAG, "Characteristic Discovery >>");
-    auto       pTaskData = (BleTaskData*)arg;
-    const auto pSvc      = (NimBLERemoteService*)pTaskData->pATT;
+    auto       pTaskData = (NimBLETaskData*)arg;
+    const auto pSvc      = (NimBLERemoteService*)pTaskData->m_pInstance;
 
     // Make sure the discovery is for this device
     if (pSvc->getClient()->getConnHandle() != conn_handle) {
@@ -155,12 +155,11 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t              conn_handle,
 
     if (error->status == 0) {
         pSvc->m_vChars.push_back(new NimBLERemoteCharacteristic(pSvc, chr));
-    } else {
-        pTaskData->rc = error->status == BLE_HS_EDONE ? 0 : error->status;
-        NIMBLE_LOGD(LOG_TAG, "<< Characteristic Discovery");
-        xTaskNotifyGive(pTaskData->task);
+        return 0;
     }
 
+    NimBLEUtils::taskRelease(*pTaskData, error->status);
+    NIMBLE_LOGD(LOG_TAG, "<< Characteristic Discovery");
     return error->status;
 }
 
@@ -171,9 +170,8 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t              conn_handle,
  */
 bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID* uuidFilter) const {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveCharacteristics()");
-    int             rc       = 0;
-    TaskHandle_t    cur_task = xTaskGetCurrentTaskHandle();
-    BleTaskData taskData = {const_cast<NimBLERemoteService*>(this), cur_task, 0, nullptr};
+    int            rc = 0;
+    NimBLETaskData taskData(const_cast<NimBLERemoteService*>(this));
 
     if (uuidFilter == nullptr) {
         rc = ble_gattc_disc_all_chrs(m_pClient->getConnHandle(),
@@ -190,21 +188,20 @@ bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID* uuidFilter) 
                                          &taskData);
     }
 
-    if (rc == 0) {
-# ifdef ulTaskNotifyValueClear
-        // Clear the task notification value to ensure we block
-        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-# endif
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_chrs rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+        return false;
     }
 
-    if (taskData.rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "<< retrieveCharacteristics() rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-    } else {
+    NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+    rc = taskData.m_flags;
+    if (rc == 0 || rc == BLE_HS_EDONE) {
         NIMBLE_LOGD(LOG_TAG, "<< retrieveCharacteristics()");
+        return true;
     }
 
-    return taskData.rc == 0;
+    NIMBLE_LOGE(LOG_TAG, "<< retrieveCharacteristics() rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    return false;
 } // retrieveCharacteristics
 
 /**

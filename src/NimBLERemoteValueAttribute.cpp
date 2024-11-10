@@ -20,11 +20,10 @@ bool NimBLERemoteValueAttribute::writeValue(const uint8_t* data, size_t length, 
     NIMBLE_LOGD(LOG_TAG, ">> writeValue()");
 
     const NimBLEClient* pClient    = getClient();
-    TaskHandle_t        cur_task   = xTaskGetCurrentTaskHandle();
-    BleTaskData         taskData   = {const_cast<NimBLERemoteValueAttribute*>(this), cur_task, 0, nullptr};
     int                 retryCount = 1;
     int                 rc         = 0;
     uint16_t            mtu        = pClient->getMTU() - 3;
+    NimBLETaskData      taskData(const_cast<NimBLERemoteValueAttribute*>(this));
 
     // Check if the data length is longer than we can write in one connection event.
     // If so we must do a long write which requires a response.
@@ -51,13 +50,8 @@ bool NimBLERemoteValueAttribute::writeValue(const uint8_t* data, size_t length, 
             goto Done;
         }
 
-# ifdef ulTaskNotifyValueClear
-        // Clear the task notification value to ensure we block
-        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-# endif
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        rc = taskData.rc;
-
+        NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+        rc = taskData.m_flags;
         switch (rc) {
             case 0:
             case BLE_HS_EDONE:
@@ -83,7 +77,7 @@ Done:
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "<< writeValue failed, rc: %d %s", rc, NimBLEUtils::returnCodeToString(rc));
     } else {
-        NIMBLE_LOGD(LOG_TAG, "<< writeValue, rc: %d", rc);
+        NIMBLE_LOGD(LOG_TAG, "<< writeValue");
     }
 
     return (rc == 0);
@@ -94,16 +88,15 @@ Done:
  * @return success == 0 or error code.
  */
 int NimBLERemoteValueAttribute::onWriteCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg) {
-    auto       pTaskData = static_cast<BleTaskData*>(arg);
-    const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->pATT);
+    auto       pTaskData = static_cast<NimBLETaskData*>(arg);
+    const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->m_pInstance);
 
     if (pAtt->getClient()->getConnHandle() != conn_handle) {
         return 0;
     }
 
     NIMBLE_LOGI(LOG_TAG, "Write complete; status=%d", error->status);
-    pTaskData->rc = error->status;
-    xTaskNotifyGive(pTaskData->task);
+    NimBLEUtils::taskRelease(*pTaskData, error->status);
     return 0;
 }
 
@@ -119,8 +112,7 @@ NimBLEAttValue NimBLERemoteValueAttribute::readValue(time_t* timestamp) const {
     const NimBLEClient* pClient    = getClient();
     int                 rc         = 0;
     int                 retryCount = 1;
-    TaskHandle_t        cur_task   = xTaskGetCurrentTaskHandle();
-    BleTaskData     taskData   = {const_cast<NimBLERemoteValueAttribute*>(this), cur_task, 0, &value};
+    NimBLETaskData      taskData(const_cast<NimBLERemoteValueAttribute*>(this), 0, &value);
 
     do {
         rc = ble_gattc_read_long(pClient->getConnHandle(), getHandle(), 0, NimBLERemoteValueAttribute::onReadCB, &taskData);
@@ -128,13 +120,8 @@ NimBLEAttValue NimBLERemoteValueAttribute::readValue(time_t* timestamp) const {
             goto Done;
         }
 
-# ifdef ulTaskNotifyValueClear
-        // Clear the task notification value to ensure we block
-        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-# endif
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        rc = taskData.rc;
-
+        NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+        rc = taskData.m_flags;
         switch (rc) {
             case 0:
             case BLE_HS_EDONE:
@@ -169,7 +156,7 @@ Done:
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "<< readValue failed rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
     } else {
-        NIMBLE_LOGD(LOG_TAG, "<< readValue rc=%d", rc);
+        NIMBLE_LOGD(LOG_TAG, "<< readValue");
     }
 
     return value;
@@ -180,8 +167,8 @@ Done:
  * @return success == 0 or error code.
  */
 int NimBLERemoteValueAttribute::onReadCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg) {
-    auto       pTaskData = static_cast<BleTaskData*>(arg);
-    const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->pATT);
+    auto       pTaskData = static_cast<NimBLETaskData*>(arg);
+    const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->m_pInstance);
 
     if (pAtt->getClient()->getConnHandle() != conn_handle) {
         return 0;
@@ -192,7 +179,7 @@ int NimBLERemoteValueAttribute::onReadCB(uint16_t conn_handle, const ble_gatt_er
 
     if (rc == 0) {
         if (attr) {
-            auto     valBuf   = static_cast<NimBLEAttValue*>(pTaskData->buf);
+            auto     valBuf   = static_cast<NimBLEAttValue*>(pTaskData->m_pBuf);
             uint16_t data_len = OS_MBUF_PKTLEN(attr->om);
             if ((valBuf->size() + data_len) > BLE_ATT_ATTR_MAX_LEN) {
                 rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
@@ -204,9 +191,7 @@ int NimBLERemoteValueAttribute::onReadCB(uint16_t conn_handle, const ble_gatt_er
         }
     }
 
-    pTaskData->rc = rc;
-    xTaskNotifyGive(pTaskData->task);
-
+    NimBLEUtils::taskRelease(*pTaskData, rc);
     return rc;
 } // onReadCB
 
