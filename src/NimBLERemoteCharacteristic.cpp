@@ -65,8 +65,8 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
     NIMBLE_LOGD(LOG_TAG, "Descriptor Discovery >> status: %d handle: %d", rc, (rc == 0) ? dsc->handle : -1);
 
     auto              filter     = (desc_filter_t*)arg;
-    auto              pTaskData  = (BleTaskData*)filter->task_data;
-    const auto        pChr       = (NimBLERemoteCharacteristic*)pTaskData->pATT;
+    auto              pTaskData  = (NimBLETaskData*)filter->task_data;
+    const auto        pChr       = (NimBLERemoteCharacteristic*)pTaskData->m_pInstance;
     const NimBLEUUID* uuidFilter = filter->uuid;
 
     if (pChr->getHandle() != chr_val_handle) {
@@ -85,12 +85,8 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
         pChr->m_vDescriptors.push_back(new NimBLERemoteDescriptor(pChr, dsc));
     }
 
-    if (rc != 0) {
-        pTaskData->rc = rc == BLE_HS_EDONE ? 0 : rc;
-        NIMBLE_LOGD(LOG_TAG, "<< Descriptor Discovery");
-        xTaskNotifyGive(pTaskData->task);
-    }
-
+    NimBLEUtils::taskRelease(*pTaskData, rc);
+    NIMBLE_LOGD(LOG_TAG, "<< Descriptor Discovery");
     return rc;
 }
 
@@ -101,9 +97,8 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
 bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID* uuidFilter) const {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
-    TaskHandle_t    cur_task = xTaskGetCurrentTaskHandle();
-    BleTaskData taskData = {const_cast<NimBLERemoteCharacteristic*>(this), cur_task, 0, nullptr};
-    desc_filter_t   filter   = {uuidFilter, &taskData};
+    NimBLETaskData taskData(const_cast<NimBLERemoteCharacteristic*>(this));
+    desc_filter_t  filter = {uuidFilter, &taskData};
 
     int rc = ble_gattc_disc_all_dscs(getClient()->getConnHandle(),
                                      getHandle(),
@@ -115,22 +110,15 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID* uuidFilte
         return false;
     }
 
-# ifdef ulTaskNotifyValueClear
-    // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-# endif
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-    if (taskData.rc != 0) {
-        NIMBLE_LOGE(LOG_TAG,
-                    "<< retrieveDescriptors(): failed: rc=%d %s",
-                    taskData.rc,
-                    NimBLEUtils::returnCodeToString(taskData.rc));
-    } else {
+    NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+    rc = taskData.m_flags;
+    if (rc == 0 || rc == BLE_HS_EDONE) {
         NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): found %d descriptors.", m_vDescriptors.size());
+        return true;
     }
 
-    return taskData.rc == 0;
+    NIMBLE_LOGE(LOG_TAG, "<< retrieveDescriptors(): failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    return false;
 } // retrieveDescriptors
 
 /**

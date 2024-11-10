@@ -167,8 +167,7 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
             }
 
             if(pScan->m_pTaskData != nullptr) {
-                pScan->m_pTaskData->rc = event->disc_complete.reason;
-                xTaskNotifyGive(pScan->m_pTaskData->task);
+                NimBLEUtils::taskRelease(*pScan->m_pTaskData, event->disc_complete.reason);
             }
 
             return 0;
@@ -393,7 +392,7 @@ bool NimBLEScan::stop() {
     }
 
     if(m_pTaskData != nullptr) {
-        xTaskNotifyGive(m_pTaskData->task);
+        NimBLEUtils::taskRelease(*m_pTaskData);
     }
 
     NIMBLE_LOGD(LOG_TAG, "<< stop()");
@@ -461,16 +460,11 @@ NimBLEScanResults NimBLEScan::getResults(uint32_t duration, bool is_continue) {
         NIMBLE_LOGW(LOG_TAG, "Blocking scan called with duration = forever");
     }
 
-    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-    BleTaskData taskData = {nullptr, cur_task, 0, nullptr};
+    NimBLETaskData taskData;
     m_pTaskData = &taskData;
 
     if(start(duration, is_continue)) {
-#ifdef ulTaskNotifyValueClear
-        // Clear the task notification value to ensure we block
-        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-#endif
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
     }
 
     m_pTaskData = nullptr;

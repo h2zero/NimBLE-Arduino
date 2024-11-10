@@ -201,11 +201,10 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
         deleteServices();
     }
 
-    int rc                = 0;
-    m_asyncConnect        = asyncConnect;
-    m_exchangeMTU         = exchangeMTU;
-    TaskHandle_t curTask  = xTaskGetCurrentTaskHandle();
-    BleTaskData  taskData = {this, curTask, 0, nullptr};
+    int rc         = 0;
+    m_asyncConnect = asyncConnect;
+    m_exchangeMTU  = exchangeMTU;
+    NimBLETaskData taskData(this);
     if (!asyncConnect) {
         m_pTaskData = &taskData;
     }
@@ -276,12 +275,8 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
         return true;
     }
 
-# ifdef ulTaskNotifyValueClear
-    // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(curTask, ULONG_MAX);
-# endif
     // Wait for the connect timeout time +1 second for the connection to complete
-    if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(m_connectTimeout + 1000)) == pdFALSE) {
+    if (!NimBLEUtils::taskWait(*m_pTaskData, m_connectTimeout + 1000)) {
         m_pTaskData = nullptr;
         // If a connection was made but no response from MTU exchange; disconnect
         if (isConnected()) {
@@ -296,9 +291,9 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
 
         return false;
 
-    } else if (taskData.rc != 0) {
-        m_lastErr = taskData.rc;
-        NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s", taskData.rc, NimBLEUtils::returnCodeToString(taskData.rc));
+    } else if (taskData.m_flags != 0) {
+        m_lastErr = taskData.m_flags;
+        NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s", m_lastErr, NimBLEUtils::returnCodeToString(m_lastErr));
         // If the failure was not a result of a disconnection, make sure we disconnect now to avoid dangling connections
         if (isConnected()) {
             disconnect();
@@ -324,9 +319,8 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
  */
 bool NimBLEClient::secureConnection() const {
     NIMBLE_LOGD(LOG_TAG, ">> secureConnection()");
-    TaskHandle_t cur_task   = xTaskGetCurrentTaskHandle();
-    BleTaskData  taskData   = {const_cast<NimBLEClient*>(this), cur_task, 0, nullptr};
-    int          retryCount = 1;
+    NimBLETaskData taskData(const_cast<NimBLEClient*>(this));
+    int            retryCount = 1;
 
     do {
         m_pTaskData = &taskData;
@@ -337,16 +331,12 @@ bool NimBLEClient::secureConnection() const {
             return false;
         }
 
-# ifdef ulTaskNotifyValueClear
-        // Clear the task notification value to ensure we block
-        ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-# endif
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    } while (taskData.rc == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING) && retryCount--);
+        NimBLEUtils::taskWait(*m_pTaskData, BLE_NPL_TIME_FOREVER);
+    } while (taskData.m_flags == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING) && retryCount--);
 
-    if (taskData.rc != 0) {
-        m_lastErr = taskData.rc;
-        NIMBLE_LOGE(LOG_TAG, "secureConnection: failed rc=%d", taskData.rc);
+    if (taskData.m_flags != 0) {
+        m_lastErr = taskData.m_flags;
+        NIMBLE_LOGE(LOG_TAG, "secureConnection: failed rc=%d", taskData.m_flags);
         return false;
     }
 
@@ -721,9 +711,8 @@ bool NimBLEClient::retrieveServices(const NimBLEUUID* uuidFilter) {
         return false;
     }
 
-    int          rc       = 0;
-    TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-    BleTaskData  taskData = {this, cur_task, 0, nullptr};
+    int            rc = 0;
+    NimBLETaskData taskData(this);
 
     if (uuidFilter == nullptr) {
         rc = ble_gattc_disc_all_svcs(m_connHandle, NimBLEClient::serviceDiscoveredCB, &taskData);
@@ -737,24 +726,15 @@ bool NimBLEClient::retrieveServices(const NimBLEUUID* uuidFilter) {
         return false;
     }
 
-# ifdef ulTaskNotifyValueClear
-    // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-# endif
-
-    // wait until we have all the services
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    m_lastErr = taskData.rc;
-
-    if (taskData.rc == 0) {
+    NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+    rc = taskData.m_flags;
+    if (rc == 0 || rc == BLE_HS_EDONE) {
         return true;
-    } else {
-        NIMBLE_LOGE(LOG_TAG,
-                    "Could not retrieve services, rc=%d %s",
-                    taskData.rc,
-                    NimBLEUtils::returnCodeToString(taskData.rc));
-        return false;
     }
+
+    m_lastErr = rc;
+    NIMBLE_LOGE(LOG_TAG, "Could not retrieve services, rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    return false;
 } // getServices
 
 /**
@@ -771,8 +751,8 @@ int NimBLEClient::serviceDiscoveredCB(uint16_t                     connHandle,
                 error->status,
                 (error->status == 0) ? service->start_handle : -1);
 
-    BleTaskData*  pTaskData = (BleTaskData*)arg;
-    NimBLEClient* pClient   = (NimBLEClient*)pTaskData->pATT;
+    NimBLETaskData* pTaskData = (NimBLETaskData*)arg;
+    NimBLEClient*   pClient   = (NimBLEClient*)pTaskData->m_pInstance;
 
     // Make sure the service discovery is for this device
     if (pClient->getConnHandle() != connHandle) {
@@ -785,15 +765,7 @@ int NimBLEClient::serviceDiscoveredCB(uint16_t                     connHandle,
         return 0;
     }
 
-    if (error->status == BLE_HS_EDONE) {
-        pTaskData->rc = 0;
-    } else {
-        NIMBLE_LOGE(LOG_TAG, "serviceDiscoveredCB() rc=%d %s", error->status, NimBLEUtils::returnCodeToString(error->status));
-        pTaskData->rc = error->status;
-    }
-
-    xTaskNotifyGive(pTaskData->task);
-
+    NimBLEUtils::taskRelease(*pTaskData, error->status);
     NIMBLE_LOGD(LOG_TAG, "<< Service Discovered");
     return error->status;
 }
@@ -1189,10 +1161,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
     } // Switch
 
     if (pClient->m_pTaskData != nullptr) {
-        pClient->m_pTaskData->rc = rc;
-        if (pClient->m_pTaskData->task) {
-            xTaskNotifyGive(pClient->m_pTaskData->task);
-        }
+        NimBLEUtils::taskRelease(*pClient->m_pTaskData, rc);
         pClient->m_pTaskData = nullptr;
     }
 

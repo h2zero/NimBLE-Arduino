@@ -253,7 +253,7 @@ NimBLEScan* NimBLEAdvertisedDevice::getScan() const {
  * @return The number of addresses.
  */
 uint8_t NimBLEAdvertisedDevice::getTargetAddressCount() const {
-    uint8_t count = findAdvField(BLE_HS_ADV_TYPE_PUBLIC_TGT_ADDR);
+    uint8_t count  = findAdvField(BLE_HS_ADV_TYPE_PUBLIC_TGT_ADDR);
     count         += findAdvField(BLE_HS_ADV_TYPE_RANDOM_TGT_ADDR);
 
     return count;
@@ -269,7 +269,7 @@ NimBLEAddress NimBLEAdvertisedDevice::getTargetAddress(uint8_t index) const {
     uint8_t count    = findAdvField(BLE_HS_ADV_TYPE_PUBLIC_TGT_ADDR, index, &data_loc);
     if (count < index + 1) {
         index -= count;
-        count = findAdvField(BLE_HS_ADV_TYPE_RANDOM_TGT_ADDR, index, &data_loc);
+        count  = findAdvField(BLE_HS_ADV_TYPE_RANDOM_TGT_ADDR, index, &data_loc);
     }
 
     if (count > 0 && data_loc != ULONG_MAX) {
@@ -368,14 +368,14 @@ size_t NimBLEAdvertisedDevice::findServiceData(uint8_t index, uint8_t* bytes) co
     }
 
     index -= found;
-    found = findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID32, index, &data_loc);
+    found  = findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID32, index, &data_loc);
     if (found > index) {
         *bytes = 4;
         return data_loc;
     }
 
     index -= found;
-    found = findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID128, index, &data_loc);
+    found  = findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID128, index, &data_loc);
     if (found > index) {
         *bytes = 16;
         return data_loc;
@@ -389,7 +389,7 @@ size_t NimBLEAdvertisedDevice::findServiceData(uint8_t index, uint8_t* bytes) co
  * @return The number of service data UUIDS in the vector.
  */
 uint8_t NimBLEAdvertisedDevice::getServiceDataCount() const {
-    uint8_t count = findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID16);
+    uint8_t count  = findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID16);
     count         += findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID32);
     count         += findAdvField(BLE_HS_ADV_TYPE_SVC_DATA_UUID128);
 
@@ -448,7 +448,7 @@ NimBLEUUID NimBLEAdvertisedDevice::getServiceUUID(uint8_t index) const {
  * @return The count of services in the advertising packet.
  */
 uint8_t NimBLEAdvertisedDevice::getServiceUUIDCount() const {
-    uint8_t count = findAdvField(BLE_HS_ADV_TYPE_INCOMP_UUIDS16);
+    uint8_t count  = findAdvField(BLE_HS_ADV_TYPE_INCOMP_UUIDS16);
     count         += findAdvField(BLE_HS_ADV_TYPE_COMP_UUIDS16);
     count         += findAdvField(BLE_HS_ADV_TYPE_INCOMP_UUIDS32);
     count         += findAdvField(BLE_HS_ADV_TYPE_COMP_UUIDS32);
@@ -695,11 +695,9 @@ std::string NimBLEAdvertisedDevice::toString() const {
     }
 
     if (haveManufacturerData()) {
-        char* pHex =
-            NimBLEUtils::buildHexData(nullptr, (uint8_t*)getManufacturerData().data(), getManufacturerData().length());
-        res += ", manufacturer data: ";
-        res += pHex;
-        free(pHex);
+        auto mfgData  = getManufacturerData();
+        res          += ", manufacturer data: ";
+        res += NimBLEUtils::dataToHexString(reinterpret_cast<const uint8_t*>(mfgData.data()), mfgData.length());
     }
 
     if (haveServiceUUID()) {
@@ -714,7 +712,7 @@ std::string NimBLEAdvertisedDevice::toString() const {
     }
 
     if (haveServiceData()) {
-        uint8_t count = getServiceDataCount();
+        uint8_t count  = getServiceDataCount();
         res           += "\nService Data:";
         for (uint8_t i = 0; i < count; i++) {
             res += "\nUUID: " + std::string(getServiceDataUUID(i));

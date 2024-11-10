@@ -115,7 +115,7 @@ private:
     static int             handleGapEvent(struct ble_gap_event *event, void *arg);
     static int             peerNameCB(uint16_t conn_handle, const struct ble_gatt_error *error,
                                       struct ble_gatt_attr *attr, void *arg);
-    std::string            getPeerNameInternal(uint16_t conn_handle, TaskHandle_t task, int cb_type = -1);
+    std::string            getPeerNameInternal(uint16_t conn_handle, int cb_type = -1);
     void                   serviceChanged();
     void                   resetGATT();
     bool                   setIndicateWait(uint16_t conn_handle);
