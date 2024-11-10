@@ -51,6 +51,7 @@ class NimBLEClient {
     bool connect(const NimBLEAddress& address, bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           connect(bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
+    bool           cancelConnect();
     NimBLEAddress  getPeerAddress() const;
     bool           setPeerAddress(const NimBLEAddress& address);
     int            getRssi() const;
