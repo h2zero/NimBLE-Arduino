@@ -369,6 +369,21 @@ bool NimBLEClient::disconnect(uint8_t reason) {
     return true;
 } // disconnect
 
+/**
+ * @brief Cancel an ongoing connection attempt.
+ * @return True if the command was successfully sent.
+ */
+bool NimBLEClient::cancelConnect() {
+    int rc = ble_gap_conn_cancel();
+    if (rc != 0 && rc != BLE_HS_EALREADY) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gap_conn_cancel failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+        m_lastErr = rc;
+        return false;
+    }
+
+    return true;
+} // cancelConnect
+
 # if CONFIG_BT_NIMBLE_EXT_ADV
 /**
  * @brief Set the PHY types to use when connecting to a server.
