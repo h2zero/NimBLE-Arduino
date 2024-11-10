@@ -292,6 +292,11 @@ bool NimBLEScan::isScanning() {
 bool NimBLEScan::start(uint32_t duration, bool is_continue) {
     NIMBLE_LOGD(LOG_TAG, ">> start: duration=%" PRIu32, duration);
 
+    if (NimBLEDevice::isConnectionInProgress()) {
+        NIMBLE_LOGE(LOG_TAG, "Connection in progress, cannot start scan");
+        return false;
+    }
+
     // Save the duration in the case that the host is reset so we can reuse it.
     m_duration = duration;
 

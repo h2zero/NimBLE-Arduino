@@ -182,6 +182,9 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) 
     m_pTaskData           = &taskData;
     int rc                = 0;
 
+    // Set the connection in progress flag to prevent a scan from starting while connecting.
+    NimBLEDevice::setConnectionInProgress(true);
+
     do {
 # if CONFIG_BT_NIMBLE_EXT_ADV
         rc = ble_gap_ext_connect(NimBLEDevice::m_ownAddrType,
@@ -207,7 +210,7 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) 
                 break;
 
             case BLE_HS_EBUSY:
-                // Scan was still running, stop it and try again
+                // Scan was active, stop it through the NimBLEScan API to release any tasks and call the callback.
                 if (!NimBLEDevice::getScan()->stop()) {
                     rc = BLE_HS_EUNKNOWN;
                 }
@@ -236,8 +239,8 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes) 
 
     } while (rc == BLE_HS_EBUSY);
 
+    NimBLEDevice::setConnectionInProgress(false);
     m_lastErr = rc;
-
     if (rc != 0) {
         m_pTaskData = nullptr;
         return false;
