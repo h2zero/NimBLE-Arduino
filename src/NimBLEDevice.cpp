@@ -101,6 +101,10 @@ std::vector<NimBLEAddress> NimBLEDevice::m_ignoreList{};
 std::vector<NimBLEAddress> NimBLEDevice::m_whiteList{};
 uint8_t                    NimBLEDevice::m_ownAddrType{BLE_OWN_ADDR_PUBLIC};
 
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+bool NimBLEDevice::m_connectionInProgress{false};
+# endif
+
 # ifdef ESP_PLATFORM
 #  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
 uint16_t NimBLEDevice::m_scanDuplicateSize{CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE};
@@ -1231,6 +1235,23 @@ bool NimBLEDevice::setCustomGapHandler(gap_event_handler handler) {
 
     return rc == 0;
 } // setCustomGapHandler
+
+/**
+ * @brief Set the connection in progress flag.
+ * @param [in] inProgress The connection in progress flag.
+ * @details This is used to prevent a scan from starting while a connection is in progress.
+ */
+void NimBLEDevice::setConnectionInProgress(bool inProgress) {
+    m_connectionInProgress = inProgress;
+} // setConnectionInProgress
+
+/**
+ * @brief Check if a connection is in progress.
+ * @return True if a connection is in progress.
+ */
+bool NimBLEDevice::isConnectionInProgress() {
+    return m_connectionInProgress;
+} // isConnectionInProgress
 
 /**
  * @brief Return a string representation of the address of this device.
