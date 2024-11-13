@@ -498,18 +498,17 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
  * @return A string representation of the data.
  */
 std::string NimBLEUtils::dataToHexString(const uint8_t* source, uint8_t length) {
-    std::string str{};
+    constexpr char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    std::string    str{};
     str.reserve(length * 2 + 1);
 
     for (uint8_t i = 0; i < length; i++) {
-        char c = (source[i] >> 4) & 0x0f;
-        str.push_back(c > 9 ? c + 'A' - 10 : c + '0');
-        c = source[i] & 0x0f;
-        str.push_back(c > 9 ? c + 'A' - 10 : c + '0');
+        str[2 * i]     = hexmap[(source[i] & 0xF0) >> 4];
+        str[2 * i + 1] = hexmap[source[i] & 0x0F];
     }
 
     return str;
-} // hexDataToString
+} // dataToHexString
 
 /**
  * @brief Generate a random BLE address.
