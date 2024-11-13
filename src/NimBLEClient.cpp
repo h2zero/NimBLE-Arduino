@@ -204,10 +204,6 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
     int rc         = 0;
     m_asyncConnect = asyncConnect;
     m_exchangeMTU  = exchangeMTU;
-    NimBLETaskData taskData(this);
-    if (!asyncConnect) {
-        m_pTaskData = &taskData;
-    }
 
     // Set the connection in progress flag to prevent a scan from starting while connecting.
     NimBLEDevice::setConnectionInProgress(true);
@@ -263,10 +259,8 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
 
     } while (rc == BLE_HS_EBUSY);
 
-    m_lastErr = rc;
     if (rc != 0) {
-        m_lastErr   = rc;
-        m_pTaskData = nullptr;
+        m_lastErr = rc;
         NimBLEDevice::setConnectionInProgress(false);
         return false;
     }
@@ -275,29 +269,31 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
         return true;
     }
 
+    NimBLETaskData taskData(this);
+    m_pTaskData = &taskData;
+
     // Wait for the connect timeout time +1 second for the connection to complete
-    if (!NimBLEUtils::taskWait(*m_pTaskData, m_connectTimeout + 1000)) {
-        m_pTaskData = nullptr;
-        // If a connection was made but no response from MTU exchange; disconnect
+    if (!NimBLEUtils::taskWait(taskData, m_connectTimeout + 1000)) {
+        // If a connection was made but no response from MTU exchange proceed anyway
         if (isConnected()) {
-            NIMBLE_LOGE(LOG_TAG, "Connect timeout - no response");
-            disconnect();
+            taskData.m_flags = 0;
         } else {
-            // workaround; if the controller doesn't cancel the connection
-            // at the timeout, cancel it here.
+            // workaround; if the controller doesn't cancel the connection at the timeout, cancel it here.
             NIMBLE_LOGE(LOG_TAG, "Connect timeout - cancelling");
             ble_gap_conn_cancel();
+            taskData.m_flags = BLE_HS_ETIMEOUT;
         }
+    }
 
-        return false;
-
-    } else if (taskData.m_flags != 0) {
-        m_lastErr = taskData.m_flags;
-        NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s", m_lastErr, NimBLEUtils::returnCodeToString(m_lastErr));
+    m_pTaskData = nullptr;
+    rc          = taskData.m_flags;
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         // If the failure was not a result of a disconnection, make sure we disconnect now to avoid dangling connections
         if (isConnected()) {
             disconnect();
         }
+        m_lastErr = rc;
         return false;
     } else {
         NIMBLE_LOGI(LOG_TAG, "Connection established");
@@ -319,29 +315,27 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
  */
 bool NimBLEClient::secureConnection() const {
     NIMBLE_LOGD(LOG_TAG, ">> secureConnection()");
-    NimBLETaskData taskData(const_cast<NimBLEClient*>(this));
-    int            retryCount = 1;
 
+    NimBLETaskData taskData(const_cast<NimBLEClient*>(this), BLE_HS_ENOTCONN);
+    m_pTaskData    = &taskData;
+    int retryCount = 1;
     do {
-        m_pTaskData = &taskData;
-
-        if (!NimBLEDevice::startSecurity(m_connHandle)) {
-            m_lastErr   = BLE_HS_ENOTCONN;
-            m_pTaskData = nullptr;
-            return false;
+        if (NimBLEDevice::startSecurity(m_connHandle)) {
+            NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
         }
-
-        NimBLEUtils::taskWait(*m_pTaskData, BLE_NPL_TIME_FOREVER);
     } while (taskData.m_flags == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING) && retryCount--);
 
-    if (taskData.m_flags != 0) {
-        m_lastErr = taskData.m_flags;
-        NIMBLE_LOGE(LOG_TAG, "secureConnection: failed rc=%d", taskData.m_flags);
-        return false;
+    m_pTaskData = nullptr;
+
+    if (taskData.m_flags == 0) {
+        NIMBLE_LOGD(LOG_TAG, "<< secureConnection: success");
+        return true;
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<< secureConnection: success");
-    return true;
+    m_lastErr = taskData.m_flags;
+    NIMBLE_LOGE(LOG_TAG, "secureConnection: failed rc=%d", taskData.m_flags);
+    return false;
+
 } // secureConnection
 
 /**
@@ -988,7 +982,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 pClient->m_connEstablished = rc == 0;
                 pClient->m_pClientCallbacks->onConnect(pClient);
             } else if (!pClient->m_exchangeMTU) {
-                break; // not wating for MTU exchange so release the task now.
+                break; // not waiting for MTU exchange so release the task now.
             }
 
             return 0;
@@ -1177,7 +1171,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
     if (pClient->m_pTaskData != nullptr) {
         NimBLEUtils::taskRelease(*pClient->m_pTaskData, rc);
-        pClient->m_pTaskData = nullptr;
     }
 
     return 0;
