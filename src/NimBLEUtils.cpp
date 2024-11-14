@@ -500,7 +500,7 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
 std::string NimBLEUtils::dataToHexString(const uint8_t* source, uint8_t length) {
     constexpr char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     std::string    str{};
-    str.reserve(length * 2 + 1);
+    str.resize(length << 1);
 
     for (uint8_t i = 0; i < length; i++) {
         str[2 * i]     = hexmap[(source[i] & 0xF0) >> 4];
