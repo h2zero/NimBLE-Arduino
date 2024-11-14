@@ -91,6 +91,12 @@ int NimBLERemoteValueAttribute::onWriteCB(uint16_t conn_handle, const ble_gatt_e
     auto       pTaskData = static_cast<NimBLETaskData*>(arg);
     const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->m_pInstance);
 
+    if (error->status == BLE_HS_ENOTCONN) {
+        NIMBLE_LOGE(LOG_TAG, "<< Write complete; Not connected");
+        NimBLEUtils::taskRelease(*pTaskData, error->status);
+        return error->status;
+    }
+
     if (pAtt->getClient()->getConnHandle() != conn_handle) {
         return 0;
     }
@@ -169,6 +175,12 @@ Done:
 int NimBLERemoteValueAttribute::onReadCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg) {
     auto       pTaskData = static_cast<NimBLETaskData*>(arg);
     const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->m_pInstance);
+
+    if (error->status == BLE_HS_ENOTCONN) {
+        NIMBLE_LOGE(LOG_TAG, "<< Read complete; Not connected");
+        NimBLEUtils::taskRelease(*pTaskData, error->status);
+        return error->status;
+    }
 
     if (pAtt->getClient()->getConnHandle() != conn_handle) {
         return 0;

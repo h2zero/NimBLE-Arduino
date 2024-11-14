@@ -148,6 +148,13 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t              conn_handle,
     auto       pTaskData = (NimBLETaskData*)arg;
     const auto pSvc      = (NimBLERemoteService*)pTaskData->m_pInstance;
 
+
+    if (error->status == BLE_HS_ENOTCONN) {
+        NIMBLE_LOGE(LOG_TAG, "<< Characteristic Discovery; Not connected");
+        NimBLEUtils::taskRelease(*pTaskData, error->status);
+        return error->status;
+    }
+
     // Make sure the discovery is for this device
     if (pSvc->getClient()->getConnHandle() != conn_handle) {
         return 0;
