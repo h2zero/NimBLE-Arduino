@@ -34,6 +34,45 @@ constexpr uint32_t TASK_BLOCK_BIT = (1 << CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_
 static const char* LOG_TAG = "NimBLEUtils";
 
 /**
+ * @brief Construct a NimBLETaskData instance.
+ * @param [in] pInstance An instance of the class that will be waiting.
+ * @param [in] flags General purpose flags for the caller.
+ * @param [in] buf A buffer for data.
+ */
+NimBLETaskData::NimBLETaskData(void* pInstance, int flags, void* buf)
+    : m_pInstance{pInstance},
+      m_flags{flags},
+      m_pBuf{buf}
+# if defined INC_FREERTOS_H
+      ,
+      m_pHandle{xTaskGetCurrentTaskHandle()} {
+}
+# else
+{
+    ble_npl_sem* sem = new ble_npl_sem;
+    if (ble_npl_sem_init(sem, 0) != BLE_NPL_OK) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to init semaphore");
+        delete sem;
+        m_pHandle = nullptr;
+    } else {
+        m_pHandle = sem;
+    }
+}
+# endif
+
+/**
+ * @brief Destructor.
+ */
+NimBLETaskData::~NimBLETaskData() {
+# if !defined INC_FREERTOS_H
+    if (m_pHandle != nullptr) {
+        ble_npl_sem_deinit(static_cast<ble_npl_sem*>(m_pHandle));
+        delete static_cast<ble_npl_sem*>(m_pHandle);
+    }
+# endif
+}
+
+/**
  * @brief Blocks the calling task until released or timeout.
  * @param [in] taskData A pointer to the task data structure.
  * @param [in] timeout The time to wait in milliseconds.
@@ -54,22 +93,10 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
         return true;
     }
 
-    taskData.m_pHandle = xTaskGetCurrentTaskHandle();
     return xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
 
 # else
-    ble_npl_sem     sem;
-    ble_npl_error_t err = ble_npl_sem_init(&sem, 0);
-    if (err != BLE_NPL_OK) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to create semaphore");
-        return false;
-    }
-
-    taskData.m_pHandle = &sem;
-    err                = ble_npl_sem_pend(&sem, ticks);
-    ble_npl_sem_deinit(&sem);
-    taskData.m_pHandle = nullptr;
-    return err == BLE_NPL_OK;
+    return ble_npl_sem_pend(static_cast<ble_npl_sem*>(taskData.m_pHandle), ticks) == BLE_NPL_OK;
 # endif
 } // taskWait
 

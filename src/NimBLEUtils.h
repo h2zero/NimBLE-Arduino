@@ -21,14 +21,8 @@ class NimBLEAddress;
  * All items are optional, the m_pHandle will be set in taskWait().
  */
 struct NimBLETaskData {
-    /**
-     * @brief Constructor.
-     * @param [in] pInstance An instance of the class that is waiting.
-     * @param [in] flags General purpose flags for the caller.
-     * @param [in] buf A buffer for data.
-     */
-    NimBLETaskData(void* pInstance = nullptr, int flags = 0, void* buf = nullptr)
-        : m_pInstance(pInstance), m_flags(flags), m_pBuf(buf) {}
+    NimBLETaskData(void* pInstance = nullptr, int flags = 0, void* buf = nullptr);
+    ~NimBLETaskData();
     void*       m_pInstance{nullptr};
     mutable int m_flags{0};
     void*       m_pBuf{nullptr};
