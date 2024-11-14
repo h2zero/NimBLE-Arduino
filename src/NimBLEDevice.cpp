@@ -322,41 +322,28 @@ bool NimBLEDevice::deleteClient(NimBLEClient* pClient) {
         return false;
     }
 
-    // Set the connection established flag to false to stop notifications
-    // from accessing the attribute vectors while they are being deleted.
-    pClient->m_connEstablished = false;
-    int rc                     = 0;
-
-    if (pClient->isConnected()) {
-        if (!pClient->disconnect()) {
-            return false;
-        }
-
-        while (pClient->isConnected()) {
-            ble_npl_time_delay(1);
-        }
-        // Since we set the flag to false the app will not get a callback
-        // in the disconnect event so we call it here for good measure.
-        pClient->m_pClientCallbacks->onDisconnect(pClient, BLE_ERR_CONN_TERM_LOCAL);
-    } else if (pClient->m_pTaskData != nullptr) {
-        rc = ble_gap_conn_cancel();
-        if (rc != 0 && rc != BLE_HS_EALREADY) {
-            return false;
-        }
-
-        while (pClient->m_pTaskData != nullptr) {
-            ble_npl_time_delay(1);
-        }
-    }
-
     for (auto& clt : m_pClients) {
         if (clt == pClient) {
-            delete pClient;
-            clt = nullptr;
+            if (clt->isConnected()) {
+                clt->m_config.deleteOnDisconnect = true;
+                if (!clt->disconnect()) {
+                    break;
+                }
+            } else if (pClient->m_pTaskData != nullptr) {
+                clt->m_config.deleteOnConnectFail = true;
+                if (!clt->cancelConnect()) {
+                    break;
+                }
+            } else {
+                delete clt;
+                clt = nullptr;
+            }
+
+            return true;
         }
     }
 
-    return true;
+    return false;
 } // deleteClient
 
 /**

@@ -51,7 +51,8 @@ class NimBLEClient {
     bool connect(const NimBLEAddress& address, bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           connect(bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
-    bool           cancelConnect();
+    bool           cancelConnect() const;
+    void           setSelfDelete(bool deleteOnDisconnect, bool deleteOnConnectFail);
     NimBLEAddress  getPeerAddress() const;
     bool           setPeerAddress(const NimBLEAddress& address);
     int            getRssi() const;
@@ -95,6 +96,17 @@ class NimBLEClient {
     void setConnectPhy(uint8_t mask);
 # endif
 
+    struct Config {
+        uint8_t deleteCallbacks : 1;     // Delete the callback object when the client is deleted.
+        uint8_t deleteOnDisconnect : 1;  // Delete the client when disconnected.
+        uint8_t deleteOnConnectFail : 1; // Delete the client when a connection attempt fails.
+        uint8_t asyncConnect : 1;        // Connect asynchronously.
+        uint8_t exchangeMTU : 1;         // Exchange MTU after connection.
+    };
+
+    Config getConfig() const;
+    void   setConfig(Config config);
+
   private:
     NimBLEClient(const NimBLEAddress& peerAddress);
     ~NimBLEClient();
@@ -117,10 +129,8 @@ class NimBLEClient {
     NimBLEClientCallbacks*            m_pClientCallbacks;
     uint16_t                          m_connHandle;
     uint8_t                           m_terminateFailCount;
-    bool                              m_deleteCallbacks;
-    bool                              m_connEstablished;
-    bool                              m_asyncConnect;
-    bool                              m_exchangeMTU;
+    Config                            m_config;
+
 # if CONFIG_BT_NIMBLE_EXT_ADV
     uint8_t m_phyMask;
 # endif

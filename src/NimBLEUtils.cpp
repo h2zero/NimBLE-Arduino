@@ -143,7 +143,7 @@ const char* NimBLEUtils::returnCodeToString(int rc) {
         case BLE_HS_ENOTSUP:
             return "Operation disabled at compile time";
         case BLE_HS_EAPP:
-            return "Application error";
+            return "Operation canceled by app";
         case BLE_HS_EBADDATA:
             return "Invalid command from peer";
         case BLE_HS_EOS:
