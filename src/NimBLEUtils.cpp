@@ -27,6 +27,10 @@
 # include <stdlib.h>
 # include <climits>
 
+# if defined INC_FREERTOS_H
+constexpr uint32_t TASK_BLOCK_BIT = (1 << CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT);
+# endif
+
 static const char* LOG_TAG = "NimBLEUtils";
 
 /**
@@ -44,12 +48,14 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
     }
 
 # if defined INC_FREERTOS_H
+    uint32_t notificationValue;
+    xTaskNotifyWait(0, TASK_BLOCK_BIT, &notificationValue, 0);
+    if (notificationValue & TASK_BLOCK_BIT) {
+        return true;
+    }
+
     taskData.m_pHandle = xTaskGetCurrentTaskHandle();
-#  ifdef ulTaskNotifyValueClear
-    // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(static_cast<TaskHandle_t>(taskData.m_pHandle), ULONG_MAX);
-#  endif
-    return ulTaskNotifyTake(pdTRUE, ticks) == pdTRUE;
+    return xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
 
 # else
     ble_npl_sem     sem;
@@ -73,10 +79,10 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
  * @param [in] flags A return value to set in the task data structure.
  */
 void NimBLEUtils::taskRelease(const NimBLETaskData& taskData, int flags) {
+    taskData.m_flags = flags;
     if (taskData.m_pHandle != nullptr) {
-        taskData.m_flags = flags;
 # if defined INC_FREERTOS_H
-        xTaskNotifyGive(static_cast<TaskHandle_t>(taskData.m_pHandle));
+        xTaskNotify(static_cast<TaskHandle_t>(taskData.m_pHandle), TASK_BLOCK_BIT, eSetBits);
 # else
         ble_npl_sem_release(static_cast<ble_npl_sem*>(taskData.m_pHandle));
 # endif
