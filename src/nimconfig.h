@@ -148,6 +148,13 @@
  */
 // #define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 1
 
+/**
+ * @brief Un-comment to change the bit used to block tasks during BLE operations
+ * that call NimBLEUtils::taskWait. This should be different than any other
+ * task notification flag used in the system.
+ */
+// #define CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT 31
+
 /**********************************
  End Arduino user-config
 **********************************/
@@ -348,6 +355,10 @@
 
 #ifndef CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED
 #define CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED 0
+#endif
+
+#ifndef CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
+#define CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT 31
 #endif
 
 #if CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED && !defined NDEBUG
