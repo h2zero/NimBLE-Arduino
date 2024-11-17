@@ -291,7 +291,7 @@ bool NimBLEScan::isScanning() {
 bool NimBLEScan::start(uint32_t duration, bool is_continue) {
     NIMBLE_LOGD(LOG_TAG, ">> start: duration=%" PRIu32, duration);
 
-    if (NimBLEDevice::isConnectionInProgress()) {
+    if (ble_gap_conn_active()) {
         NIMBLE_LOGE(LOG_TAG, "Connection in progress, cannot start scan");
         return false;
     }
