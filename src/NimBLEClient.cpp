@@ -176,11 +176,6 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
         return false;
     }
 
-    if (NimBLEDevice::isConnectionInProgress()) {
-        NIMBLE_LOGE(LOG_TAG, "Connection already in progress");
-        return false;
-    }
-
     const ble_addr_t* peerAddr = address.getBase();
     if (ble_gap_conn_find_by_addr(peerAddr, NULL) == 0) {
         NIMBLE_LOGE(LOG_TAG, "A connection to %s already exists", address.toString().c_str());
@@ -201,9 +196,6 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
     int rc                = 0;
     m_config.asyncConnect = asyncConnect;
     m_config.exchangeMTU  = exchangeMTU;
-
-    // Set the connection in progress flag to prevent a scan from starting while connecting.
-    NimBLEDevice::setConnectionInProgress(true);
 
     do {
 # if CONFIG_BT_NIMBLE_EXT_ADV
@@ -258,7 +250,6 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
 
     if (rc != 0) {
         m_lastErr = rc;
-        NimBLEDevice::setConnectionInProgress(false);
         return false;
     }
 
@@ -985,7 +976,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 return 0;
             }
 
-            NimBLEDevice::setConnectionInProgress(false);
             rc = event->connect.status;
             if (rc == 0) {
                 pClient->m_connHandle = event->connect.conn_handle;

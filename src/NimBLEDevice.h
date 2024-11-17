@@ -184,8 +184,6 @@ class NimBLEDevice {
     static bool          isBonded(const NimBLEAddress& address);
     static bool          deleteAllBonds();
     static NimBLEAddress getBondedAddress(int index);
-    static void          setConnectionInProgress(bool inProgress);
-    static bool          isConnectionInProgress();
 # endif
 
   private:
@@ -196,10 +194,6 @@ class NimBLEDevice {
     static ble_gap_event_listener     m_listener;
     static uint8_t                    m_ownAddrType;
     static std::vector<NimBLEAddress> m_whiteList;
-
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-    static bool m_connectionInProgress;
-# endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
     static NimBLEScan* m_pScan;
