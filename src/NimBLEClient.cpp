@@ -909,6 +909,12 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
     switch (event->type) {
         case BLE_GAP_EVENT_DISCONNECT: {
+            // workaround for bug in NimBLE stack where disconnect event argument is not passed correctly
+            pClient = NimBLEDevice::getClientByHandle(event->disconnect.conn.conn_handle);
+            if (pClient == nullptr) {
+                return 0;
+            }
+
             rc = event->disconnect.reason;
             // If Host reset tell the device now before returning to prevent
             // any errors caused by calling host functions before resyncing.
@@ -921,11 +927,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                     NimBLEDevice::onReset(rc);
                     break;
                 default:
-                    // Check that the event is for this client.
-                    if (pClient->m_connHandle != event->disconnect.conn.conn_handle) {
-                        return 0;
-                    }
-
                     break;
             }
 
