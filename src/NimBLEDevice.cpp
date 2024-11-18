@@ -723,15 +723,7 @@ void NimBLEDevice::onReset(int reason) {
 
     m_synced = false;
 
-    NIMBLE_LOGE(LOG_TAG, "Resetting state; reason=%d, %s", reason, NimBLEUtils::returnCodeToString(reason));
-
-# if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
-    if (m_initialized) {
-        if (m_pScan != nullptr) {
-            m_pScan->onHostReset();
-        }
-    }
-# endif
+    NIMBLE_LOGE(LOG_TAG, "Host reset; reason=%d, %s", reason, NimBLEUtils::returnCodeToString(reason));
 } // onReset
 
 /**

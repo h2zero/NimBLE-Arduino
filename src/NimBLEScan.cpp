@@ -15,39 +15,32 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
-#include "NimBLEScan.h"
-#include "NimBLEDevice.h"
-#include "NimBLELog.h"
+# include "NimBLEScan.h"
+# include "NimBLEDevice.h"
+# include "NimBLELog.h"
 
-#include <string>
-#include <climits>
+# include <string>
+# include <climits>
 
-static const char* LOG_TAG = "NimBLEScan";
-
+static const char*         LOG_TAG = "NimBLEScan";
+static NimBLEScanCallbacks defaultScanCallbacks;
 
 /**
- * @brief Scan constuctor.
+ * @brief Scan constructor.
  */
-NimBLEScan::NimBLEScan() {
-    m_scan_params.filter_policy      = BLE_HCI_SCAN_FILT_NO_WL;
-    m_scan_params.passive            = 1; // If set, don’t send scan requests to advertisers (i.e., don’t request additional advertising data).
-    m_scan_params.itvl               = 0; // This is defined as the time interval from when the Controller started its last LE scan until it begins the subsequent LE scan. (units=0.625 msec)
-    m_scan_params.window             = 0; // The duration of the LE scan. LE_Scan_Window shall be less than or equal to LE_Scan_Interval (units=0.625 msec)
-    m_scan_params.limited            = 0; // If set, only discover devices in limited discoverable mode.
-    m_scan_params.filter_duplicates  = 1; // If set, the controller ignores all but the first advertisement from each device.
-    m_pScanCallbacks                 = nullptr;
-    m_ignoreResults                  = false;
-    m_pTaskData                      = nullptr;
-    m_duration                       = BLE_HS_FOREVER; // make sure this is non-zero in the event of a host reset
-    m_maxResults                     = 0xFF;
-}
-
+NimBLEScan::NimBLEScan()
+    : m_pScanCallbacks{&defaultScanCallbacks},
+      // default interval + window, no whitelist scan filter,not limited scan, no scan response, filter_duplicates
+      m_scanParams{0, 0, BLE_HCI_SCAN_FILT_NO_WL, 0, 1, 1},
+      m_duration{BLE_HS_FOREVER},
+      m_pTaskData{nullptr},
+      m_maxResults{0xFF} {}
 
 /**
  * @brief Scan destructor, release any allocated resources.
  */
 NimBLEScan::~NimBLEScan() {
-     clearResults();
+    clearResults();
 }
 
 /**
@@ -55,32 +48,26 @@ NimBLEScan::~NimBLEScan() {
  * @param [in] event The event type for this event.
  * @param [in] param Parameter data for this event.
  */
-/*STATIC*/
 int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
     (void)arg;
     NimBLEScan* pScan = NimBLEDevice::getScan();
 
-    switch(event->type) {
-
+    switch (event->type) {
         case BLE_GAP_EVENT_EXT_DISC:
         case BLE_GAP_EVENT_DISC: {
-            if(pScan->m_ignoreResults) {
-                NIMBLE_LOGI(LOG_TAG, "Scan op in progress - ignoring results");
-                return 0;
-            }
-#if CONFIG_BT_NIMBLE_EXT_ADV
-            const auto& disc = event->ext_disc;
-            const bool isLegacyAdv = disc.props & BLE_HCI_ADV_LEGACY_MASK;
-            const auto event_type = isLegacyAdv ? disc.legacy_event_type : disc.props;
-#else
-            const auto& disc = event->disc;
-            const bool isLegacyAdv = true;
-            const auto event_type = disc.event_type;
-#endif
+# if CONFIG_BT_NIMBLE_EXT_ADV
+            const auto& disc        = event->ext_disc;
+            const bool  isLegacyAdv = disc.props & BLE_HCI_ADV_LEGACY_MASK;
+            const auto  event_type  = isLegacyAdv ? disc.legacy_event_type : disc.props;
+# else
+            const auto& disc        = event->disc;
+            const bool  isLegacyAdv = true;
+            const auto  event_type  = disc.event_type;
+# endif
             NimBLEAddress advertisedAddress(disc.addr);
 
-            // Examine our list of ignored addresses and stop processing if we don't want to see it or are already connected
-            if(NimBLEDevice::isIgnored(advertisedAddress)) {
+            // stop processing if we don't want to see it or are already connected
+            if (NimBLEDevice::isIgnored(advertisedAddress)) {
                 NIMBLE_LOGI(LOG_TAG, "Ignoring device: address: %s", advertisedAddress.toString().c_str());
                 return 0;
             }
@@ -88,85 +75,79 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
             NimBLEAdvertisedDevice* advertisedDevice = nullptr;
 
             // If we've seen this device before get a pointer to it from the vector
-            for(auto &it: pScan->m_scanResults.m_advertisedDevicesVector) {
-#if CONFIG_BT_NIMBLE_EXT_ADV
+            for (const auto& dev : pScan->m_scanResults.m_deviceVec) {
+# if CONFIG_BT_NIMBLE_EXT_ADV
                 // Same address but different set ID should create a new advertised device.
-                if (it->getAddress() == advertisedAddress && it->getSetId() == disc.sid) {
-#else
-                if (it->getAddress() == advertisedAddress) {
-#endif
-                    advertisedDevice = it;
+                if (dev->getAddress() == advertisedAddress && dev->getSetId() == disc.sid)
+# else
+                if (dev->getAddress() == advertisedAddress)
+# endif
+                {
+                    advertisedDevice = dev;
                     break;
                 }
             }
 
             // If we haven't seen this device before; create a new instance and insert it in the vector.
             // Otherwise just update the relevant parameters of the already known device.
-            if (advertisedDevice == nullptr &&
-                (!isLegacyAdv || event_type != BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP)) {
+            if (advertisedDevice == nullptr) {
                 // Check if we have reach the scan results limit, ignore this one if so.
                 // We still need to store each device when maxResults is 0 to be able to append the scan results
                 if (pScan->m_maxResults > 0 && pScan->m_maxResults < 0xFF &&
-                   (pScan->m_scanResults.m_advertisedDevicesVector.size() >= pScan->m_maxResults)) {
+                    (pScan->m_scanResults.m_deviceVec.size() >= pScan->m_maxResults)) {
                     return 0;
+                }
+
+                if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                    NIMBLE_LOGI(LOG_TAG, "Scan response without advertisement: %s", advertisedAddress.toString().c_str());
                 }
 
                 advertisedDevice = new NimBLEAdvertisedDevice(event, event_type);
-                pScan->m_scanResults.m_advertisedDevicesVector.push_back(advertisedDevice);
+                pScan->m_scanResults.m_deviceVec.push_back(advertisedDevice);
                 NIMBLE_LOGI(LOG_TAG, "New advertiser: %s", advertisedAddress.toString().c_str());
-            } else if (advertisedDevice != nullptr) {
-                advertisedDevice->update(event, event_type);
-                NIMBLE_LOGI(LOG_TAG, "Updated advertiser: %s", advertisedAddress.toString().c_str());
             } else {
-                // Scan response from unknown device
-                return 0;
+                advertisedDevice->update(event, event_type);
+                if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                    NIMBLE_LOGI(LOG_TAG, "Scan response from: %s", advertisedAddress.toString().c_str());
+                } else {
+                    NIMBLE_LOGI(LOG_TAG, "Duplicate; updated: %s", advertisedAddress.toString().c_str());
+                }
             }
 
-            if (pScan->m_pScanCallbacks) {
-                if (advertisedDevice->m_callbackSent == 0 || !pScan->m_scan_params.filter_duplicates) {
-                    advertisedDevice->m_callbackSent = 1;
-                    pScan->m_pScanCallbacks->onDiscovered(advertisedDevice);
-                }
+            if (!advertisedDevice->m_callbackSent) {
+                pScan->m_pScanCallbacks->onDiscovered(advertisedDevice);
+                advertisedDevice->m_callbackSent++;
+            }
 
-                if (pScan->m_scan_params.filter_duplicates && advertisedDevice->m_callbackSent >= 2) {
-                    return 0;
-                }
+            // If not active scanning or scan response is not available
+            // or extended advertisement scanning, report the result to the callback now.
+            if (pScan->m_scanParams.passive || !isLegacyAdv || !advertisedDevice->isScannable()) {
+                pScan->m_pScanCallbacks->onResult(advertisedDevice);
+                advertisedDevice->m_callbackSent++;
+            } else if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                // got the scan response report the full data.
+                pScan->m_pScanCallbacks->onResult(advertisedDevice);
+                advertisedDevice->m_callbackSent++;
+            }
 
-                // If not active scanning or scan response is not available
-                // or extended advertisement scanning, report the result to the callback now.
-                if(pScan->m_scan_params.passive || !isLegacyAdv ||
-                  (advertisedDevice->getAdvType() != BLE_HCI_ADV_TYPE_ADV_IND &&
-                   advertisedDevice->getAdvType() != BLE_HCI_ADV_TYPE_ADV_SCAN_IND))
-                {
-                    advertisedDevice->m_callbackSent = 2;
-                    pScan->m_pScanCallbacks->onResult(advertisedDevice);
-
-                // Otherwise, wait for the scan response so we can report the complete data.
-                } else if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
-                    advertisedDevice->m_callbackSent = 2;
-                    pScan->m_pScanCallbacks->onResult(advertisedDevice);
-                }
-                // If not storing results and we have invoked the callback, delete the device.
-                if(pScan->m_maxResults == 0 && advertisedDevice->m_callbackSent >= 2) {
-                    pScan->erase(advertisedAddress);
-                }
+            // If not storing results and we have invoked the callback, delete the device.
+            if (pScan->m_maxResults == 0 && advertisedDevice->m_callbackSent >= 2) {
+                pScan->erase(advertisedDevice);
             }
 
             return 0;
         }
-        case BLE_GAP_EVENT_DISC_COMPLETE: {
-            NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d",
-                        event->disc_complete.reason);
 
-            if(pScan->m_maxResults == 0) {
+        case BLE_GAP_EVENT_DISC_COMPLETE: {
+            NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d", event->disc_complete.reason);
+
+            if (pScan->m_maxResults == 0) {
                 pScan->clearResults();
             }
 
-            if (pScan->m_pScanCallbacks != nullptr) {
-                pScan->m_pScanCallbacks->onScanEnd(pScan->m_scanResults);
-            }
+            pScan->m_pScanCallbacks->onScanEnd(pScan->m_scanResults, event->disc_complete.reason);
 
-            if(pScan->m_pTaskData != nullptr) {
+            if (pScan->m_pTaskData != nullptr) {
                 NimBLEUtils::taskRelease(*pScan->m_pTaskData, event->disc_complete.reason);
             }
 
@@ -176,8 +157,7 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
         default:
             return 0;
     }
-}  // gapEventHandler
-
+} // handleGapEvent
 
 /**
  * @brief Should we perform an active or passive scan?
@@ -185,9 +165,8 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
  * @param [in] active If true, we perform an active scan otherwise a passive scan.
  */
 void NimBLEScan::setActiveScan(bool active) {
-    m_scan_params.passive = !active;
+    m_scanParams.passive = !active;
 } // setActiveScan
-
 
 /**
  * @brief Set whether or not the BLE controller should only report results
@@ -197,19 +176,17 @@ void NimBLEScan::setActiveScan(bool active) {
  * duplicate devices once the limit is reached.
  */
 void NimBLEScan::setDuplicateFilter(bool enabled) {
-    m_scan_params.filter_duplicates = enabled;
+    m_scanParams.filter_duplicates = enabled;
 } // setDuplicateFilter
 
-
 /**
- * @brief Set whether or not the BLE controller only report scan results
- * from devices advertising in limited discovery mode, i.e. directed advertising.
+ * @brief Set whether or not the BLE controller only reports scan results
+ * from devices advertising in limited discovery mode.
  * @param [in] enabled If true, only limited discovery devices will be in scan results.
  */
 void NimBLEScan::setLimitedOnly(bool enabled) {
-    m_scan_params.limited = enabled;
+    m_scanParams.limited = enabled;
 } // setLimited
-
 
 /**
  * @brief Sets the scan filter policy.
@@ -230,9 +207,8 @@ void NimBLEScan::setLimitedOnly(bool enabled) {
  *      resolvable private address.
  */
 void NimBLEScan::setFilterPolicy(uint8_t filter) {
-    m_scan_params.filter_policy = filter;
+    m_scanParams.filter_policy = filter;
 } // setFilterPolicy
-
 
 /**
  * @brief Sets the max number of results to store.
@@ -243,35 +219,35 @@ void NimBLEScan::setMaxResults(uint8_t maxResults) {
     m_maxResults = maxResults;
 }
 
-
 /**
  * @brief Set the call backs to be invoked.
  * @param [in] pScanCallbacks Call backs to be invoked.
- * @param [in] wantDuplicates  True if we wish to be called back with duplicates.  Default is false.
+ * @param [in] wantDuplicates  True if we wish to be called back with duplicates, default: false.
  */
 void NimBLEScan::setScanCallbacks(NimBLEScanCallbacks* pScanCallbacks, bool wantDuplicates) {
     setDuplicateFilter(!wantDuplicates);
+    if (pScanCallbacks == nullptr) {
+        m_pScanCallbacks = &defaultScanCallbacks;
+        return;
+    }
     m_pScanCallbacks = pScanCallbacks;
 } // setScanCallbacks
-
 
 /**
  * @brief Set the interval to scan.
  * @param [in] intervalMSecs The scan interval (how often) in milliseconds.
  */
 void NimBLEScan::setInterval(uint16_t intervalMSecs) {
-    m_scan_params.itvl = intervalMSecs / 0.625;
+    m_scanParams.itvl = (intervalMSecs * 16) / 10;
 } // setInterval
-
 
 /**
  * @brief Set the window to actively scan.
- * @param [in] windowMSecs How long to actively scan.
+ * @param [in] windowMSecs How long during the interval to actively scan.
  */
 void NimBLEScan::setWindow(uint16_t windowMSecs) {
-    m_scan_params.window = windowMSecs / 0.625;
+    m_scanParams.window = (windowMSecs * 16) / 10;
 } // setWindow
-
 
 /**
  * @brief Get the status of the scanner.
@@ -281,14 +257,15 @@ bool NimBLEScan::isScanning() {
     return ble_gap_disc_active();
 }
 
-
 /**
  * @brief Start scanning.
  * @param [in] duration The duration in milliseconds for which to scan. 0 == scan forever.
- * @param [in] is_continue Set to true to save previous scan results, false to clear them.
+ * @param [in] isContinue Set to true to save previous scan results, false to clear them.
+ * @param [in] restart Set to true to restart the scan if already in progress.
+ * this is useful to clear the duplicate filter so all devices are reported again.
  * @return True if scan started or false if there was an error.
  */
-bool NimBLEScan::start(uint32_t duration, bool is_continue) {
+bool NimBLEScan::start(uint32_t duration, bool isContinue, bool restart) {
     NIMBLE_LOGD(LOG_TAG, ">> start: duration=%" PRIu32, duration);
 
     if (ble_gap_conn_active()) {
@@ -296,51 +273,52 @@ bool NimBLEScan::start(uint32_t duration, bool is_continue) {
         return false;
     }
 
+    if (isScanning()) {
+        if (restart) {
+            NIMBLE_LOGI(LOG_TAG, "Scan already in progress, restarting it");
+            if (!stop()) {
+                return false;
+            }
+        } else {
+            NIMBLE_LOGI(LOG_TAG, "Scan already in progress");
+            return true;
+        }
+    }
+
+    if (!isContinue) {
+        clearResults();
+    }
+
     // Save the duration in the case that the host is reset so we can reuse it.
     m_duration = duration;
 
     // If 0 duration specified then we assume a continuous scan is desired.
-    if(duration == 0){
+    if (duration == 0) {
         duration = BLE_HS_FOREVER;
-    }
-
-    // Set the flag to ignore the results while we are deleting the vector
-    if(!is_continue) {
-        m_ignoreResults = true;
     }
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
     ble_gap_ext_disc_params scan_params;
-    scan_params.passive = m_scan_params.passive;
-    scan_params.itvl    = m_scan_params.itvl;
-    scan_params.window  = m_scan_params.window;
-    int rc = ble_gap_ext_disc(NimBLEDevice::m_ownAddrType,
-                              duration/10,
+    scan_params.passive = m_scanParams.passive;
+    scan_params.itvl    = m_scanParams.itvl;
+    scan_params.window  = m_scanParams.window;
+    int rc              = ble_gap_ext_disc(NimBLEDevice::m_ownAddrType,
+                              duration / 10,
                               0,
-                              m_scan_params.filter_duplicates,
-                              m_scan_params.filter_policy,
-                              m_scan_params.limited,
+                              m_scanParams.filter_duplicates,
+                              m_scanParams.filter_policy,
+                              m_scanParams.limited,
                               &scan_params,
                               &scan_params,
                               NimBLEScan::handleGapEvent,
                               NULL);
-#else
-    int rc = ble_gap_disc(NimBLEDevice::m_ownAddrType,
-                          duration,
-                          &m_scan_params,
-                          NimBLEScan::handleGapEvent,
-                          NULL);
-#endif
-    switch(rc) {
+# else
+    int rc = ble_gap_disc(NimBLEDevice::m_ownAddrType, duration, &m_scanParams, NimBLEScan::handleGapEvent, NULL);
+# endif
+    switch (rc) {
         case 0:
-            if(!is_continue) {
-                clearResults();
-            }
-            break;
-
         case BLE_HS_EALREADY:
-            // Clear the cache if already scanning in case an advertiser was missed.
-            clearDuplicateCache();
+            NIMBLE_LOGD(LOG_TAG, "Scan started");
             break;
 
         case BLE_HS_EBUSY:
@@ -355,20 +333,13 @@ bool NimBLEScan::start(uint32_t duration, bool is_continue) {
             break;
 
         default:
-            NIMBLE_LOGE(LOG_TAG, "Error initiating GAP discovery procedure; rc=%d, %s",
-                        rc, NimBLEUtils::returnCodeToString(rc));
+            NIMBLE_LOGE(LOG_TAG, "Error starting scan; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
             break;
     }
 
-    m_ignoreResults = false;
     NIMBLE_LOGD(LOG_TAG, "<< start()");
-
-    if(rc != 0 && rc != BLE_HS_EALREADY) {
-        return false;
-    }
-    return true;
+    return rc == 0 || rc == BLE_HS_EALREADY;
 } // start
-
 
 /**
  * @brief Stop an in progress scan.
@@ -383,15 +354,11 @@ bool NimBLEScan::stop() {
         return false;
     }
 
-    if(m_maxResults == 0) {
+    if (m_maxResults == 0) {
         clearResults();
     }
 
-    if (rc != BLE_HS_EALREADY && m_pScanCallbacks != nullptr) {
-        m_pScanCallbacks->onScanEnd(m_scanResults);
-    }
-
-    if(m_pTaskData != nullptr) {
+    if (m_pTaskData != nullptr) {
         NimBLEUtils::taskRelease(*m_pTaskData);
     }
 
@@ -399,55 +366,45 @@ bool NimBLEScan::stop() {
     return true;
 } // stop
 
-
-/**
- * @brief Clears the duplicate scan filter cache.
- */
-void NimBLEScan::clearDuplicateCache() {
-#ifdef CONFIG_IDF_TARGET_ESP32 // Not available for ESP32C3
-    esp_ble_scan_dupilcate_list_flush();
-#endif
-}
-
-
 /**
  * @brief Delete peer device from the scan results vector.
  * @param [in] address The address of the device to delete from the results.
- * @details After disconnecting, it may be required in the case we were connected to a device without a public address.
  */
-void NimBLEScan::erase(const NimBLEAddress &address) {
+void NimBLEScan::erase(const NimBLEAddress& address) {
     NIMBLE_LOGD(LOG_TAG, "erase device: %s", address.toString().c_str());
-
-    for(auto it = m_scanResults.m_advertisedDevicesVector.begin(); it != m_scanResults.m_advertisedDevicesVector.end(); ++it) {
-        if((*it)->getAddress() == address) {
+    for (auto it = m_scanResults.m_deviceVec.begin(); it != m_scanResults.m_deviceVec.end(); ++it) {
+        if ((*it)->getAddress() == address) {
             delete *it;
-            m_scanResults.m_advertisedDevicesVector.erase(it);
+            m_scanResults.m_deviceVec.erase(it);
             break;
         }
     }
 }
 
-
 /**
- * @brief Called when host reset, we set a flag to stop scanning until synced.
+ * @brief Delete peer device from the scan results vector.
+ * @param [in] device The device to delete from the results.
  */
-void NimBLEScan::onHostReset() {
-    m_ignoreResults = true;
+void NimBLEScan::erase(const NimBLEAdvertisedDevice* device) {
+    NIMBLE_LOGD(LOG_TAG, "erase device: %s", device->getAddress().toString().c_str());
+    for (auto it = m_scanResults.m_deviceVec.begin(); it != m_scanResults.m_deviceVec.end(); ++it) {
+        if ((*it) == device) {
+            delete *it;
+            m_scanResults.m_deviceVec.erase(it);
+            break;
+        }
+    }
 }
-
 
 /**
  * @brief If the host reset and re-synced this is called.
  * If the application was scanning indefinitely with a callback, restart it.
  */
 void NimBLEScan::onHostSync() {
-    m_ignoreResults = false;
-
-    if(m_duration == 0 && m_pScanCallbacks != nullptr) {
+    if (m_duration == 0 && m_pScanCallbacks != &defaultScanCallbacks) {
         start(0, false);
     }
 }
-
 
 /**
  * @brief Start scanning and block until scanning has been completed.
@@ -456,21 +413,25 @@ void NimBLEScan::onHostSync() {
  * @return The scan results.
  */
 NimBLEScanResults NimBLEScan::getResults(uint32_t duration, bool is_continue) {
-    if(duration == 0) {
+    if (duration == 0) {
         NIMBLE_LOGW(LOG_TAG, "Blocking scan called with duration = forever");
+    }
+
+    if (m_pTaskData != nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "Scan already in progress");
+        return m_scanResults;
     }
 
     NimBLETaskData taskData;
     m_pTaskData = &taskData;
 
-    if(start(duration, is_continue)) {
+    if (start(duration, is_continue)) {
         NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
     }
 
     m_pTaskData = nullptr;
     return m_scanResults;
 } // getResults
-
 
 /**
  * @brief Get the results of the scan.
@@ -480,67 +441,58 @@ NimBLEScanResults NimBLEScan::getResults() {
     return m_scanResults;
 }
 
-
 /**
- * @brief Clear the results of the scan.
+ * @brief Clear the stored results of the scan.
  */
 void NimBLEScan::clearResults() {
-    for(auto &it: m_scanResults.m_advertisedDevicesVector) {
-        delete it;
+    for (const auto& dev : m_scanResults.m_deviceVec) {
+        delete dev;
     }
-    m_scanResults.m_advertisedDevicesVector.clear();
-    clearDuplicateCache();
-}
-
+    std::vector<NimBLEAdvertisedDevice*>().swap(m_scanResults.m_deviceVec);
+} // clearResults
 
 /**
  * @brief Dump the scan results to the log.
  */
-void NimBLEScanResults::dump() {
-    NIMBLE_LOGD(LOG_TAG, ">> Dump scan results:");
-    for (int i=0; i<getCount(); i++) {
-        NIMBLE_LOGI(LOG_TAG, "- %s", getDevice(i).toString().c_str());
+void NimBLEScanResults::dump() const {
+    for (const auto& dev : m_deviceVec) {
+        NIMBLE_LOGI(LOG_TAG, "- %s", dev->toString().c_str());
     }
 } // dump
-
 
 /**
  * @brief Get the count of devices found in the last scan.
  * @return The number of devices found in the last scan.
  */
-int NimBLEScanResults::getCount() {
-    return m_advertisedDevicesVector.size();
+int NimBLEScanResults::getCount() const {
+    return m_deviceVec.size();
 } // getCount
-
 
 /**
  * @brief Return the specified device at the given index.
  * The index should be between 0 and getCount()-1.
- * @param [in] i The index of the device.
+ * @param [in] idx The index of the device.
  * @return The device at the specified index.
  */
-NimBLEAdvertisedDevice NimBLEScanResults::getDevice(uint32_t i) {
-    return *m_advertisedDevicesVector[i];
+const NimBLEAdvertisedDevice* NimBLEScanResults::getDevice(uint32_t idx) const {
+    return m_deviceVec[idx];
 }
-
 
 /**
  * @brief Get iterator to the beginning of the vector of advertised device pointers.
  * @return An iterator to the beginning of the vector of advertised device pointers.
  */
-std::vector<NimBLEAdvertisedDevice*>::iterator NimBLEScanResults::begin() {
-    return m_advertisedDevicesVector.begin();
+std::vector<NimBLEAdvertisedDevice*>::const_iterator NimBLEScanResults::begin() const {
+    return m_deviceVec.begin();
 }
-
 
 /**
  * @brief Get iterator to the end of the vector of advertised device pointers.
  * @return An iterator to the end of the vector of advertised device pointers.
  */
-std::vector<NimBLEAdvertisedDevice*>::iterator NimBLEScanResults::end() {
-    return m_advertisedDevicesVector.end();
+std::vector<NimBLEAdvertisedDevice*>::const_iterator NimBLEScanResults::end() const {
+    return m_deviceVec.end();
 }
-
 
 /**
  * @brief Get a pointer to the specified device at the given address.
@@ -548,14 +500,28 @@ std::vector<NimBLEAdvertisedDevice*>::iterator NimBLEScanResults::end() {
  * @param [in] address The address of the device.
  * @return A pointer to the device at the specified address.
  */
-NimBLEAdvertisedDevice *NimBLEScanResults::getDevice(const NimBLEAddress &address) {
-    for(size_t index = 0; index < m_advertisedDevicesVector.size(); index++) {
-        if(m_advertisedDevicesVector[index]->getAddress() == address) {
-            return m_advertisedDevicesVector[index];
+const NimBLEAdvertisedDevice* NimBLEScanResults::getDevice(const NimBLEAddress& address) const {
+    for (const auto& dev : m_deviceVec) {
+        if (dev->getAddress() == address) {
+            return dev;
         }
     }
 
     return nullptr;
+}
+
+static const char* CB_TAG = "NimBLEScanCallbacks";
+
+void NimBLEScanCallbacks::onDiscovered(const NimBLEAdvertisedDevice* pAdvertisedDevice) {
+    NIMBLE_LOGD(CB_TAG, "Discovered: %s", pAdvertisedDevice->toString().c_str());
+}
+
+void NimBLEScanCallbacks::onResult(const NimBLEAdvertisedDevice* pAdvertisedDevice) {
+    NIMBLE_LOGD(CB_TAG, "Result: %s", pAdvertisedDevice->toString().c_str());
+}
+
+void NimBLEScanCallbacks::onScanEnd(const NimBLEScanResults& results, int reason) {
+    NIMBLE_LOGD(CB_TAG, "Scan ended; reason %d, num results: %d", reason, results.getCount());
 }
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER */

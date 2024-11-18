@@ -16,7 +16,7 @@
 #define SERVICE_UUID        "ABCD"
 #define CHARACTERISTIC_UUID "1234"
 
-static NimBLEAdvertisedDevice* advDevice;
+static const NimBLEAdvertisedDevice* advDevice;
 static bool doConnect = false;
 static uint32_t scanTime = 10 * 1000; // In milliseconds, 0 = scan forever
 
@@ -40,7 +40,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 /* Define a class to handle the callbacks when advertisements are received */
 class scanCallbacks: public NimBLEScanCallbacks {
 
-    void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
+    void onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
         Serial.printf("Advertised Device found: %s\n", advertisedDevice->toString().c_str());
         if(advertisedDevice->isAdvertisingService(NimBLEUUID("ABCD")))
         {
@@ -55,8 +55,8 @@ class scanCallbacks: public NimBLEScanCallbacks {
     }
 
     /** Callback to process the results of the completed scan or restart it */
-    void onScanEnd(NimBLEScanResults results) {
-        Serial.println("Scan Ended");
+    void onScanEnd(const NimBLEScanResults& results, int reason) {
+        Serial.print("Scan Ended; reason = "); Serial.println(reason);
     }
 };
 

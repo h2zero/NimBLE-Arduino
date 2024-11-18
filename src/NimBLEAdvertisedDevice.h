@@ -82,6 +82,7 @@ class NimBLEAdvertisedDevice {
     bool                 haveType(uint16_t type) const;
     std::string          toString() const;
     bool                 isConnectable() const;
+    bool                 isScannable() const;
     bool                 isLegacyAdvertisement() const;
 # if CONFIG_BT_NIMBLE_EXT_ADV
     uint8_t  getSetId() const;

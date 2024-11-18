@@ -25,7 +25,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
 } clientCB;
 
 class scanCallbacks : public NimBLEScanCallbacks {
-    void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
+    void onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
         Serial.printf("Advertised Device found: %s\n", advertisedDevice->toString().c_str());
         if (advertisedDevice->haveName() && advertisedDevice->getName() == "NimBLE-Server") {
             Serial.println("Found Our Device");
@@ -48,8 +48,8 @@ class scanCallbacks : public NimBLEScanCallbacks {
         }
     }
 
-    void onScanEnd(NimBLEScanResults results) {
-        Serial.println("Scan Ended");
+    void onScanEnd(const NimBLEScanResults& results, int reason) {
+        Serial.print("Scan Ended; reason = "); Serial.println(reason);
         NimBLEDevice::getScan()->start(scanTimeMs);
     }
 };
