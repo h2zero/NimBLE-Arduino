@@ -129,7 +129,7 @@ class NimBLEDevice {
     static void          setSecurityRespKey(uint8_t respKey);
     static void          setSecurityPasskey(uint32_t passKey);
     static uint32_t      getSecurityPasskey();
-    static bool          startSecurity(uint16_t connHandle);
+    static bool          startSecurity(uint16_t connHandle, int* rcPtr = nullptr);
     static bool          setMTU(uint16_t mtu);
     static uint16_t      getMTU();
     static void          onReset(int reason);

@@ -63,6 +63,7 @@ NimBLEClient::NimBLEClient(const NimBLEAddress& peerAddress)
       m_pClientCallbacks{&defaultCallbacks},
       m_connHandle{BLE_HS_CONN_HANDLE_NONE},
       m_terminateFailCount{0},
+      m_asyncSecureAttempt{0},
       m_config{},
 # if CONFIG_BT_NIMBLE_EXT_ADV
       m_phyMask{BLE_GAP_LE_PHY_1M_MASK | BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_CODED_MASK},
@@ -293,11 +294,25 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
 /**
  * @brief Initiate a secure connection (pair/bond) with the server.\n
  * Called automatically when a characteristic or descriptor requires encryption or authentication to access it.
+ * @param [in] async If true, the connection will be secured asynchronously and this function will return immediately.\n
+ * If false, this function will block until the connection is secured or the client disconnects.
  * @return True on success.
- * @details This is a blocking function and should not be used in a callback.
+ * @details If async=false, this function will block and should not be used in a callback.
  */
-bool NimBLEClient::secureConnection() const {
+bool NimBLEClient::secureConnection(bool async) const {
     NIMBLE_LOGD(LOG_TAG, ">> secureConnection()");
+
+    int rc = 0;
+    if (async && !NimBLEDevice::startSecurity(m_connHandle, &rc)) {
+        m_lastErr = rc;
+        m_asyncSecureAttempt = 0;
+        return false;
+    }
+
+    if (async) {
+        m_asyncSecureAttempt++;
+        return true;
+    }
 
     NimBLETaskData taskData(const_cast<NimBLEClient*>(this), BLE_HS_ENOTCONN);
     m_pTaskData    = &taskData;
@@ -988,6 +1003,8 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             NIMBLE_LOGD(LOG_TAG, "disconnect; reason=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
 
             pClient->m_terminateFailCount = 0;
+            pClient->m_asyncSecureAttempt = 0;
+
             // Don't call the disconnect callback if we are waiting for a connection to complete and it fails
             if (rc != (BLE_HS_ERR_HCI_BASE + BLE_ERR_CONN_ESTABLISHMENT) || pClient->m_config.asyncConnect) {
                 pClient->m_pClientCallbacks->onDisconnect(pClient, rc);
@@ -1150,7 +1167,12 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 if (event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
                     // Key is missing, try deleting.
                     ble_store_util_delete_peer(&peerInfo.m_desc.peer_id_addr);
+                    // Attempt a retry if async secure failed.
+                    if (pClient->m_asyncSecureAttempt == 1) {
+                        pClient->secureConnection(true);
+                    }
                 } else {
+                    pClient->m_asyncSecureAttempt = 0;
                     pClient->m_pClientCallbacks->onAuthenticationComplete(peerInfo);
                 }
             }
