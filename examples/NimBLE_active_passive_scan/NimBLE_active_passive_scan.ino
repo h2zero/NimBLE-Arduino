@@ -12,16 +12,16 @@ bool active = false;
 
 class scanCallbacks: public NimBLEScanCallbacks {
 
-    void onDiscovered(NimBLEAdvertisedDevice* advertisedDevice) {
+    void onDiscovered(const NimBLEAdvertisedDevice* advertisedDevice) {
       Serial.printf("Discovered Advertised Device: %s \n", advertisedDevice->toString().c_str());
     }
 
-    void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
+    void onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
       Serial.printf("Advertised Device Result: %s \n", advertisedDevice->toString().c_str());
     }
 
-    void onScanEnd(NimBLEScanResults results){
-        Serial.println("Scan Ended");
+    void onScanEnd(const NimBLEScanResults& results, int reason) {
+        Serial.print("Scan Ended; reason = "); Serial.println(reason);
         active = !active;
         pBLEScan->setActiveScan(active);
         Serial.printf("scan start, active = %u\n", active);

@@ -22,7 +22,9 @@ static boolean doConnect = false;
 static boolean connected = false;
 static boolean doScan = false;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
-static BLEAdvertisedDevice* myDevice;
+/* const required now */
+/* static BLEAdvertisedDevice* myDevice;*/
+static const BLEAdvertisedDevice* myDevice;
 
 static void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic,
@@ -128,9 +130,9 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
    * Called for each advertising BLE server.
    */
 
-/*** Only a reference to the advertised device is passed now
+/*** Only a const pointer to the advertised device is passed now
   void onResult(BLEAdvertisedDevice advertisedDevice) { **/
-  void onResult(BLEAdvertisedDevice* advertisedDevice) {
+  void onResult(const BLEAdvertisedDevice* advertisedDevice) {
     Serial.print("BLE Advertised Device found: ");
     Serial.println(advertisedDevice->toString().c_str());
 

@@ -1,71 +1,49 @@
-/** Example of continuous scanning for BLE advertisements.
- * This example will scan forever while consuming as few resources as possible
- * and report all advertisments on the serial monitor.
+/**
+ *  Continuous Scan Example
+ *
+ *  This example demonstrates how to continuously scan for BLE devices.
+ *  When devices are found the onDiscovered and onResults callbacks will be called with the device data.
+ *  The scan will not store the results, only the callbacks will be used
+ *  When the scan timeout is reached the onScanEnd callback will be called and the scan will be restarted.
+ *  This will clear the duplicate cache in the controller and allow the same devices to be reported again.
  *
  * Created: on January 31 2021
  *      Author: H2zero
- *
  */
 
 #include "NimBLEDevice.h"
 
-NimBLEScan* pBLEScan;
+static constexpr uint32_t scanTime = 30 * 1000; // 30 seconds scan time.
 
-class scanCallbacks: public NimBLEScanCallbacks {
-    void onResult(NimBLEAdvertisedDevice* advertisedDevice) {
-      Serial.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
+class scanCallbacks : public NimBLEScanCallbacks {
+    // Initial discovery, advertisement data only.
+    void onDiscovered(const NimBLEAdvertisedDevice* advertisedDevice) override {
+        Serial.printf("Discovered Device: %s\n", advertisedDevice->toString().c_str());
     }
-};
+
+    // If active scanning the result here will have the scan response data.
+    // If not active scanning then this will be the same as onDiscovered.
+    void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
+        Serial.printf("Device result: %s\n", advertisedDevice->toString().c_str());
+    }
+
+    void onScanEnd(const NimBLEScanResults& results, int reason) override {
+        Serial.printf("Scan ended reason = %d; restarting scan\n", reason);
+        NimBLEDevice::getScan()->start(scanTime, false, true);
+    }
+} scanCallbacks; // create a callback class instance.
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println("Scanning...");
-
-/** *Optional* Sets the filtering mode used by the scanner in the BLE controller.
- *
- *  Can be one of:
- *  CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE (0) (default)
- *  Filter by device address only, advertisements from the same address will be reported only once.
- *
- *  CONFIG_BTDM_SCAN_DUPL_TYPE_DATA (1)
- *  Filter by data only, advertisements with the same data will only be reported once,
- *  even from different addresses.
- *
- *  CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE (2)
- *  Filter by address and data, advertisements from the same address will be reported only once,
- *  except if the data in the advertisement has changed, then it will be reported again.
- *
- *  Can only be used BEFORE calling NimBLEDevice::init.
-*/
-  NimBLEDevice::setScanFilterMode(CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE);
-
-/** *Optional* Sets the scan filter cache size in the BLE controller.
- *  When the number of duplicate advertisements seen by the controller
- *  reaches this value it will clear the cache and start reporting previously
- *  seen devices. The larger this number, the longer time between repeated
- *  device reports. Range 10 - 1000. (default 20)
- *
- *  Can only be used BEFORE calling NimBLEDevice::init.
- */
-  NimBLEDevice::setScanDuplicateCacheSize(200);
-
-  NimBLEDevice::init("");
-
-  pBLEScan = NimBLEDevice::getScan(); //create new scan
-  // Set the callback for when devices are discovered, no duplicates.
-  pBLEScan->setScanCallbacks(new scanCallbacks(), false);
-  pBLEScan->setActiveScan(true); // Set active scanning, this will get more data from the advertiser.
-  pBLEScan->setInterval(97); // How often the scan occurs / switches channels; in milliseconds,
-  pBLEScan->setWindow(37);  // How long to scan during the interval; in milliseconds.
-  pBLEScan->setMaxResults(0); // do not store the scan results, use callback only.
+    Serial.begin(115200);
+    NimBLEDevice::init("");                         // Initialize the device, you can specify a device name if you want.
+    NimBLEScan* pBLEScan = NimBLEDevice::getScan(); // Create the scan object.
+    pBLEScan->setScanCallbacks(&scanCallbacks, false); // Set the callback for when devices are discovered, no duplicates.
+    pBLEScan->setActiveScan(true);          // Set active scanning, this will get more data from the advertiser.
+    pBLEScan->setMaxResults(0);             // Do not store the scan results, use callback only.
+    pBLEScan->start(scanTime, false, true); // duration, not a continuation of last scan, restart to get all devices again.
+    Serial.println("Scanning...");
 }
 
 void loop() {
-  // If an error occurs that stops the scan, it will be restarted here.
-  if(pBLEScan->isScanning() == false) {
-      // Start scan with: duration = 0 seconds(forever), no scan end callback, not a continuation of a previous scan.
-      pBLEScan->start(0, false);
-  }
-
-  delay(2000);
+    delay(2000);
 }

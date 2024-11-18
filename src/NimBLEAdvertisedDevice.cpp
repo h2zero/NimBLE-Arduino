@@ -758,6 +758,14 @@ bool NimBLEAdvertisedDevice::isConnectable() const {
 } // isConnectable
 
 /**
+ * @brief Check if this device is advertising as scannable.
+ * @return True if the device is scannable.
+ */
+bool NimBLEAdvertisedDevice::isScannable() const {
+    return isLegacyAdvertisement() && (m_advType == BLE_HCI_ADV_TYPE_ADV_IND || m_advType == BLE_HCI_ADV_TYPE_ADV_SCAN_IND);
+} // isScannable
+
+/**
  * @brief Check if this advertisement is a legacy or extended type
  * @return True if legacy (Bluetooth 4.x), false if extended (bluetooth 5.x).
  */

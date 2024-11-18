@@ -18,9 +18,9 @@ int scanTime = 5 * 1000; // In milliseconds, 0 = scan forever
 BLEScan* pBLEScan;
 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-  /*** Only a reference to the advertised device is passed now
+  /*** Only a const pointer to the advertised device is passed now
     void onResult(BLEAdvertisedDevice advertisedDevice) { **/
-    void onResult(BLEAdvertisedDevice* advertisedDevice) {
+    void onResult(const BLEAdvertisedDevice* advertisedDevice) {
   /** Serial.printf("Advertised Device: %s \n", advertisedDevice.toString().c_str()); **/
       Serial.printf("Advertised Device: %s \n", advertisedDevice->toString().c_str());
     }
