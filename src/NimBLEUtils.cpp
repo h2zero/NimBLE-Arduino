@@ -509,10 +509,14 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             return "BLE_GAP_EVENT_AUTHORIZE";
         case BLE_GAP_EVENT_TEST_UPDATE: // 31
             return "BLE_GAP_EVENT_TEST_UPDATE";
+#   ifdef BLE_GAP_EVENT_DATA_LEN_CHG
         case BLE_GAP_EVENT_DATA_LEN_CHG: // 32
             return "BLE_GAP_EVENT_DATA_LEN_CHG";
+#   endif
+#   ifdef BLE_GAP_EVENT_LINK_ESTAB
         case BLE_GAP_EVENT_LINK_ESTAB: // 33
             return "BLE_GAP_EVENT_LINK_ESTAB";
+#   endif
 #  endif
         default:
             NIMBLE_LOGD(LOG_TAG, "Unknown event type %d 0x%.2x", eventType, eventType);
