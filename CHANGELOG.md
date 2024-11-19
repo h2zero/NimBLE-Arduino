@@ -70,6 +70,18 @@ All notable changes to this project will be documented in this file.
 - `NimBLEEddystoneTLM::getData` now returns a reference to * `NimBLEEddystoneTLM::BeaconData` instead of `std::string`.
 - `NimBLEBeacon::setData` now takes `const NimBLEBeacon::BeaconData&` instead of `std::string`.
 - `NimBLEBeacon::getData` now returns `const NimBLEBeacon::BeaconData&` instead of `std::string`.
+- `NimBLEHIDDevice::reportMap` renamed to `NimBLEHIDDevice::getReportMap`.
+- `NimBLEHIDDevice::hidControl` renamed to `NimBLEHIDDevice::getHidControl`.
+- `NimBLEHIDDevice::inputReport`renamed to `NimBLEHIDDevice::getInputReport`.
+- `NimBLEHIDDevice::outputReport`renamed to `NimBLEHIDDevice::getOutputReport`.
+- `NimBLEHIDDevice::featureReport`renamed to `NimBLEHIDDevice::getFeatureReport`.
+- `NimBLEHIDDevice::protocolMode`renamed to `NimBLEHIDDevice::getProtocolMode`.
+- `NimBLEHIDDevice::bootOutput`renamed to `NimBLEHIDDevice::getBootOutput`.
+- `NimBLEHIDDevice::pnp`renamed to `NimBLEHIDDevice::setPnp`.
+- `NimBLEHIDDevice::hidInfo`renamed to `NimBLEHIDDevice::setHidInfo`.
+- `NimBLEHIDDevice::deviceInfo`renamed to `NimBLEHIDDevice::getDeviceInfoService`.
+- `NimBLEHIDDevice::hidService`renamed to `NimBLEHIDDevice::getHidService`.
+- `NimBLEHIDDevice::batteryService`renamed to `NimBLEHIDDevice::getBatteryService`.
 
 ## Fixed
 - `NimBLEDevice::getPower` and `NimBLEDevice::getPowerLevel` bug worked around for the esp32s3 and esp32c3.
@@ -195,6 +207,8 @@ the functions and tracking in the host stack.
 - `NimBLEAddress::reverseByteOrder` method which will reverse the byte order of the address value.
 - `NimBLEHIDDevice::batteryLevel` returns the HID device battery level characteristic.
 - `NimBLEBeacon::setData` overload that takes `uint8_t* data` and `uint8_t length`.
+- `NimBLEHIDDevice::getPnp` function added to access the pnp characteristic.
+- `NimBLEHIDDevice::getHidInfo` function added to access the hid info characteristic.
 
 ## [1.4.3] 2024-11-27
 
