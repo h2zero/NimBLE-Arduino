@@ -17,6 +17,11 @@
 #  include "nimble/nimble/host/include/host/ble_hs.h"
 # endif
 
+/****  FIX COMPILATION ****/
+# undef min
+# undef max
+/**************************/
+
 typedef enum {
     READ         = BLE_GATT_CHR_F_READ,
     READ_ENC     = BLE_GATT_CHR_F_READ_ENC,
