@@ -12,76 +12,73 @@
  *      Author: chegewara
  */
 
-#ifndef _BLEHIDDEVICE_H_
-#define _BLEHIDDEVICE_H_
+#ifndef NIMBLE_CPP_HIDDEVICE_H_
+#define NIMBLE_CPP_HIDDEVICE_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
-#include "NimBLECharacteristic.h"
-#include "NimBLEService.h"
-#include "NimBLEDescriptor.h"
-#include "HIDTypes.h"
+# include <stdint.h>
+# include <string>
 
-#define GENERIC_HID		0x03C0
-#define HID_KEYBOARD	   0x03C1
-#define HID_MOUSE		  0x03C2
-#define HID_JOYSTICK	   0x03C3
-#define HID_GAMEPAD		0x03C4
-#define HID_TABLET		 0x03C5
-#define HID_CARD_READER	0x03C6
-#define HID_DIGITAL_PEN	0x03C7
-#define HID_BARCODE		0x03C8
+# define GENERIC_HID     0x03C0
+# define HID_KEYBOARD    0x03C1
+# define HID_MOUSE       0x03C2
+# define HID_JOYSTICK    0x03C3
+# define HID_GAMEPAD     0x03C4
+# define HID_TABLET      0x03C5
+# define HID_CARD_READER 0x03C6
+# define HID_DIGITAL_PEN 0x03C7
+# define HID_BARCODE     0x03C8
 
-#define PNPVersionField(MajorVersion, MinorVersion, PatchVersion) ((MajorVersion << 16) & 0xFF00) | ((MinorVersion << 8) & 0x00F0) | (PatchVersion & 0x000F)
+# define PNPVersionField(MajorVersion, MinorVersion, PatchVersion) \
+     ((MajorVersion << 16) & 0xFF00) | ((MinorVersion << 8) & 0x00F0) | (PatchVersion & 0x000F)
+
+class NimBLEServer;
+class NimBLEService;
+class NimBLECharacteristic;
 
 /**
- * @brief A model of a %BLE Human Interface Device.
+ * @brief A model of a BLE Human Interface Device.
  */
 class NimBLEHIDDevice {
-public:
-	NimBLEHIDDevice(NimBLEServer*);
-	virtual ~NimBLEHIDDevice();
+  public:
+    NimBLEHIDDevice(NimBLEServer* server);
 
-	void reportMap(uint8_t* map, uint16_t);
-	void startServices();
+    void                  setReportMap(uint8_t* map, uint16_t);
+    void                  startServices();
+    bool                  setManufacturer(const std::string& name);
+    void                  setPnp(uint8_t sig, uint16_t vid, uint16_t pid, uint16_t version);
+    void                  setHidInfo(uint8_t country, uint8_t flags);
+    void                  setBatteryLevel(uint8_t level, bool notify = false);
+    NimBLECharacteristic* getBatteryLevel();
+    NimBLECharacteristic* getReportMap();
+    NimBLECharacteristic* getHidControl();
+    NimBLECharacteristic* getInputReport(uint8_t reportId);
+    NimBLECharacteristic* getOutputReport(uint8_t reportId);
+    NimBLECharacteristic* getFeatureReport(uint8_t reportId);
+    NimBLECharacteristic* getProtocolMode();
+    NimBLECharacteristic* getBootInput();
+    NimBLECharacteristic* getBootOutput();
+    NimBLECharacteristic* getPnp();
+    NimBLECharacteristic* getHidInfo();
+    NimBLEService*        getDeviceInfoService();
+    NimBLEService*        getHidService();
+    NimBLEService*        getBatteryService();
 
-	NimBLEService* deviceInfo();
-	NimBLEService* hidService();
-	NimBLEService* batteryService();
+  private:
+    NimBLEService* m_deviceInfoSvc{nullptr}; // 0x180a
+    NimBLEService* m_hidSvc{nullptr};        // 0x1812
+    NimBLEService* m_batterySvc{nullptr};    // 0x180f
 
-	NimBLECharacteristic* 	manufacturer();
-	void 	manufacturer(std::string name);
-	//NimBLECharacteristic* 	pnp();
-	void	pnp(uint8_t sig, uint16_t vid, uint16_t pid, uint16_t version);
-	//NimBLECharacteristic*	hidInfo();
-	void	hidInfo(uint8_t country, uint8_t flags);
-	NimBLECharacteristic* 	batteryLevel();
-	void 	setBatteryLevel(uint8_t level);
-
-
-	NimBLECharacteristic* 	reportMap();
-	NimBLECharacteristic* 	hidControl();
-	NimBLECharacteristic* 	inputReport(uint8_t reportID);
-	NimBLECharacteristic* 	outputReport(uint8_t reportID);
-	NimBLECharacteristic* 	featureReport(uint8_t reportID);
-	NimBLECharacteristic* 	protocolMode();
-	NimBLECharacteristic* 	bootInput();
-	NimBLECharacteristic* 	bootOutput();
-
-private:
-	NimBLEService*			m_deviceInfoService;			//0x180a
-	NimBLEService*			m_hidService;					//0x1812
-	NimBLEService*			m_batteryService = 0;			//0x180f
-
-	NimBLECharacteristic* 	m_manufacturerCharacteristic;	//0x2a29
-	NimBLECharacteristic* 	m_pnpCharacteristic;			//0x2a50
-	NimBLECharacteristic* 	m_hidInfoCharacteristic;		//0x2a4a
-	NimBLECharacteristic* 	m_reportMapCharacteristic;		//0x2a4b
-	NimBLECharacteristic* 	m_hidControlCharacteristic;		//0x2a4c
-	NimBLECharacteristic* 	m_protocolModeCharacteristic;	//0x2a4e
-	NimBLECharacteristic*	m_batteryLevelCharacteristic;	//0x2a19
+    NimBLECharacteristic* m_manufacturerChr{nullptr}; // 0x2a29
+    NimBLECharacteristic* m_pnpChr{nullptr};          // 0x2a50
+    NimBLECharacteristic* m_hidInfoChr{nullptr};      // 0x2a4a
+    NimBLECharacteristic* m_reportMapChr{nullptr};    // 0x2a4b
+    NimBLECharacteristic* m_hidControlChr{nullptr};   // 0x2a4c
+    NimBLECharacteristic* m_protocolModeChr{nullptr}; // 0x2a4e
+    NimBLECharacteristic* m_batteryLevelChr{nullptr}; // 0x2a19
 };
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER */
-#endif /* _BLEHIDDEVICE_H_ */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#endif // NIMBLE_CPP_HIDDEVICE_H_
