@@ -147,7 +147,7 @@ bool NimBLEClient::connect(bool deleteAttributes, bool asyncConnect, bool exchan
  * If false, the client will use the default MTU size and the application will need to call exchangeMTU() later.
  * @return true on success.
  */
-bool NimBLEClient::connect(NimBLEAdvertisedDevice* device, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
+bool NimBLEClient::connect(const NimBLEAdvertisedDevice* device, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
     NimBLEAddress address(device->getAddress());
     return connect(address, deleteAttributes, asyncConnect, exchangeMTU);
 }
