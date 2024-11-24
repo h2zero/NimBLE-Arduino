@@ -132,9 +132,6 @@ class NimBLEDevice {
     static bool          startSecurity(uint16_t connHandle);
     static bool          setMTU(uint16_t mtu);
     static uint16_t      getMTU();
-    static bool          isIgnored(const NimBLEAddress& address);
-    static void          addIgnored(const NimBLEAddress& address);
-    static void          removeIgnored(const NimBLEAddress& address);
     static void          onReset(int reason);
     static void          onSync(void);
     static void          host_task(void* param);
@@ -189,7 +186,6 @@ class NimBLEDevice {
   private:
     static bool                       m_synced;
     static bool                       m_initialized;
-    static std::vector<NimBLEAddress> m_ignoreList;
     static uint32_t                   m_passkey;
     static ble_gap_event_listener     m_listener;
     static uint8_t                    m_ownAddrType;
