@@ -352,9 +352,6 @@ void setup (){
     NimBLEDevice::setPower(9); /** +9db */
 #endif
 
-    /** Optional: set any devices you don't want to get advertisments from */
-    // NimBLEDevice::addIgnored(NimBLEAddress ("aa:bb:cc:dd:ee:ff"));
-
     /** create new scan */
     NimBLEScan* pScan = NimBLEDevice::getScan();
 

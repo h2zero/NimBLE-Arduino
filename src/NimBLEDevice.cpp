@@ -97,7 +97,6 @@ bool                       NimBLEDevice::m_initialized{false};
 uint32_t                   NimBLEDevice::m_passkey{123456};
 bool                       NimBLEDevice::m_synced{false};
 ble_gap_event_listener     NimBLEDevice::m_listener{};
-std::vector<NimBLEAddress> NimBLEDevice::m_ignoreList{};
 std::vector<NimBLEAddress> NimBLEDevice::m_whiteList{};
 uint8_t                    NimBLEDevice::m_ownAddrType{BLE_OWN_ADDR_PUBLIC};
 
@@ -928,7 +927,6 @@ bool NimBLEDevice::deinit(bool clearAll) {
             deleteClient(clt);
         }
 # endif
-        m_ignoreList.clear();
     }
 
     return rc == 0;
@@ -1147,48 +1145,6 @@ bool NimBLEDevice::injectConfirmPasskey(const NimBLEConnInfo& peerInfo, bool acc
     int       rc = ble_sm_inject_io(peerInfo.getConnHandle(), &pkey);
     NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_NUMCMP; ble_sm_inject_io result: %d", rc);
     return rc == 0;
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                 IGNORE LIST                                */
-/* -------------------------------------------------------------------------- */
-
-/**
- * @brief Check if the device address is on our ignore list.
- * @param [in] address The address to look for.
- * @return True if ignoring.
- */
-bool NimBLEDevice::isIgnored(const NimBLEAddress& address) {
-    for (const auto& addr : m_ignoreList) {
-        if (addr == address) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/**
- * @brief Add a device to the ignore list.
- * @param [in] address The address of the device we want to ignore.
- */
-void NimBLEDevice::addIgnored(const NimBLEAddress& address) {
-    if (!isIgnored(address)) {
-        m_ignoreList.push_back(address);
-    }
-}
-
-/**
- * @brief Remove a device from the ignore list.
- * @param [in] address The address of the device we want to remove from the list.
- */
-void NimBLEDevice::removeIgnored(const NimBLEAddress& address) {
-    for (auto it = m_ignoreList.begin(); it < m_ignoreList.end(); ++it) {
-        if (*it == address) {
-            m_ignoreList.erase(it);
-            std::vector<NimBLEAddress>(m_ignoreList).swap(m_ignoreList);
-        }
-    }
 }
 
 /* -------------------------------------------------------------------------- */

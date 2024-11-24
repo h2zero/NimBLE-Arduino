@@ -66,12 +66,14 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
 # endif
             NimBLEAddress advertisedAddress(disc.addr);
 
-            // stop processing if we don't want to see it or are already connected
-            if (NimBLEDevice::isIgnored(advertisedAddress)) {
-                NIMBLE_LOGI(LOG_TAG, "Ignoring device: address: %s", advertisedAddress.toString().c_str());
+# ifdef CONFIG_BT_NIMBLE_ROLE_CENTRAL
+            // stop processing if already connected
+            NimBLEClient* pClient = NimBLEDevice::getClientByPeerAddress(advertisedAddress);
+            if (pClient != nullptr && pClient->isConnected()) {
+                NIMBLE_LOGI(LOG_TAG, "Ignoring device: address: %s, already connected", advertisedAddress.toString().c_str());
                 return 0;
             }
-
+# endif
             NimBLEAdvertisedDevice* advertisedDevice = nullptr;
 
             // If we've seen this device before get a pointer to it from the vector

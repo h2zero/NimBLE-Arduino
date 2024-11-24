@@ -946,8 +946,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             NIMBLE_LOGD(LOG_TAG, "disconnect; reason=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
 
             pClient->m_terminateFailCount = 0;
-            NimBLEDevice::removeIgnored(pClient->m_peerAddress);
-
             // Don't call the disconnect callback if we are waiting for a connection to complete and it fails
             if (rc != (BLE_HS_ERR_HCI_BASE + BLE_ERR_CONN_ESTABLISHMENT) || pClient->m_config.asyncConnect) {
                 pClient->m_pClientCallbacks->onDisconnect(pClient, rc);
@@ -985,10 +983,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                         break;
                     }
                 }
-
-                // In the case of a multi-connecting device we ignore this device when
-                // scanning since we are already connected to it
-                NimBLEDevice::addIgnored(pClient->m_peerAddress);
             } else {
                 pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
                 if (!pClient->m_config.asyncConnect) {
