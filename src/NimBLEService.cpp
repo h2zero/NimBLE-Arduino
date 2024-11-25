@@ -17,8 +17,13 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
-# include "NimBLEDevice.h"
 # include "NimBLEService.h"
+# if CONFIG_BT_NIMBLE_EXT_ADV
+#  include "NimBLEExtAdvertising.h"
+# else
+#  include "NimBLEAdvertising.h"
+# endif
+# include "NimBLEDevice.h"
 # include "NimBLEUtils.h"
 # include "NimBLELog.h"
 

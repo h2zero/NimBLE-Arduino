@@ -199,12 +199,7 @@ bool NimBLEAdvertising::start(uint32_t duration, const NimBLEAddress* dirAddr) {
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     NimBLEServer* pServer = NimBLEDevice::getServer();
     if (pServer != nullptr) {
-        if (!pServer->m_gattsStarted) {
-            pServer->start();
-        } else if (pServer->getConnectedCount() >= NIMBLE_MAX_CONNECTIONS) {
-            NIMBLE_LOGE(LOG_TAG, "Unable to advertise; Max connections reached");
-            return false;
-        }
+        pServer->start(); // make sure the GATT server is ready before advertising
     }
 # endif
 
