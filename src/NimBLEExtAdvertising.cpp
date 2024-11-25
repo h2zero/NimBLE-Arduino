@@ -62,9 +62,7 @@ bool NimBLEExtAdvertising::setInstanceData(uint8_t instId, NimBLEExtAdvertisemen
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     NimBLEServer* pServer = NimBLEDevice::getServer();
     if (pServer != nullptr) {
-        if (!pServer->m_gattsStarted) {
-            pServer->start();
-        }
+        pServer->start(); // make sure the GATT server is ready before advertising
     }
 
     int rc = ble_gap_ext_adv_configure(
