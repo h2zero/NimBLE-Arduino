@@ -148,9 +148,16 @@ class NimBLEClientCallbacks {
 
     /**
      * @brief Called after client connects.
-     * @param [in] pClient A pointer to the calling client object.
+     * @param [in] pClient A pointer to the connecting client object.
      */
     virtual void onConnect(NimBLEClient* pClient);
+
+        /**
+     * @brief Called when a connection attempt fails.
+     * @param [in] pClient A pointer to the connecting client object.
+     * @param [in] reason Contains the reason code for the connection failure.
+     */
+    virtual void onConnectFail(NimBLEClient* pClient, int reason);
 
     /**
      * @brief Called when disconnected from the server.

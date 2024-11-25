@@ -977,28 +977,28 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             rc = event->connect.status;
             if (rc == 0) {
                 pClient->m_connHandle = event->connect.conn_handle;
+
+                if (pClient->m_config.asyncConnect) {
+                    pClient->m_pClientCallbacks->onConnect(pClient);
+                }
+
                 if (pClient->m_config.exchangeMTU) {
-                    if (!pClient->exchangeMTU() && !pClient->m_config.asyncConnect) {
+                    if (!pClient->exchangeMTU()) {
                         rc = pClient->m_lastErr; // sets the error in the task data
                         break;
                     }
                 }
             } else {
                 pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
-                if (!pClient->m_config.asyncConnect) {
-                    break;
+
+                if (pClient->m_config.asyncConnect) {
+                    pClient->m_pClientCallbacks->onConnectFail(pClient, rc);
+                    if (pClient->m_config.deleteOnConnectFail) {
+                        NimBLEDevice::deleteClient(pClient);
+                    }
                 }
 
-                if (pClient->m_config.deleteOnConnectFail) { // async connect
-                    delete pClient;
-                    return 0;
-                }
-            }
-
-            if (pClient->m_config.asyncConnect) {
-                pClient->m_pClientCallbacks->onConnect(pClient);
-            } else if (!pClient->m_config.exchangeMTU) {
-                break; // not waiting for MTU exchange so release the task now.
+                break;
             }
 
             return 0;
@@ -1236,8 +1236,12 @@ void NimBLEClientCallbacks::onConnect(NimBLEClient* pClient) {
     NIMBLE_LOGD(CB_TAG, "onConnect: default");
 }
 
+void NimBLEClientCallbacks::onConnectFail(NimBLEClient* pClient, int reason) {
+    NIMBLE_LOGD(CB_TAG, "onConnectFail: default, reason: %d", reason);
+}
+
 void NimBLEClientCallbacks::onDisconnect(NimBLEClient* pClient, int reason) {
-    NIMBLE_LOGD(CB_TAG, "onDisconnect: default");
+    NIMBLE_LOGD(CB_TAG, "onDisconnect: default, reason: %d", reason);
 }
 
 bool NimBLEClientCallbacks::onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
