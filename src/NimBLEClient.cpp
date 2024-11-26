@@ -987,6 +987,8 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                         rc = pClient->m_lastErr; // sets the error in the task data
                         break;
                     }
+
+                    return 0; // return as we may have a task waiting for the MTU before releasing it.
                 }
             } else {
                 pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
@@ -997,11 +999,9 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                         NimBLEDevice::deleteClient(pClient);
                     }
                 }
-
-                break;
             }
 
-            return 0;
+            break;
         } // BLE_GAP_EVENT_CONNECT
 
         case BLE_GAP_EVENT_TERM_FAILURE: {
