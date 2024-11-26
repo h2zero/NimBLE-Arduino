@@ -18,9 +18,6 @@
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
 
-# define NIMBLE_SUB_NOTIFY   0x0001
-# define NIMBLE_SUB_INDICATE 0x0002
-
 static NimBLECharacteristicCallbacks defaultCallback;
 static const char*                   LOG_TAG = "NimBLECharacteristic";
 
@@ -28,21 +25,21 @@ static const char*                   LOG_TAG = "NimBLECharacteristic";
  * @brief Construct a characteristic
  * @param [in] uuid - UUID (const char*) for the characteristic.
  * @param [in] properties - Properties for the characteristic.
- * @param [in] max_len - The maximum length in bytes that the characteristic value can hold. (Default: 512 bytes for esp32, 20 for all others).
+ * @param [in] maxLen - The maximum length in bytes that the characteristic value can hold. (Default: 512 bytes for esp32, 20 for all others).
  * @param [in] pService - pointer to the service instance this characteristic belongs to.
  */
-NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties, uint16_t max_len, NimBLEService* pService)
-    : NimBLECharacteristic(NimBLEUUID(uuid), properties, max_len, pService) {}
+NimBLECharacteristic::NimBLECharacteristic(const char* uuid, uint16_t properties, uint16_t maxLen, NimBLEService* pService)
+    : NimBLECharacteristic(NimBLEUUID(uuid), properties, maxLen, pService) {}
 
 /**
  * @brief Construct a characteristic
  * @param [in] uuid - UUID for the characteristic.
  * @param [in] properties - Properties for the characteristic.
- * @param [in] max_len - The maximum length in bytes that the characteristic value can hold. (Default: 512 bytes for esp32, 20 for all others).
+ * @param [in] maxLen - The maximum length in bytes that the characteristic value can hold. (Default: 512 bytes for esp32, 20 for all others).
  * @param [in] pService - pointer to the service instance this characteristic belongs to.
  */
-NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID& uuid, uint16_t properties, uint16_t max_len, NimBLEService* pService)
-    : NimBLELocalValueAttribute{uuid, 0, max_len}, m_pCallbacks{&defaultCallback}, m_pService{pService} {
+NimBLECharacteristic::NimBLECharacteristic(const NimBLEUUID& uuid, uint16_t properties, uint16_t maxLen, NimBLEService* pService)
+    : NimBLELocalValueAttribute{uuid, 0, maxLen}, m_pCallbacks{&defaultCallback}, m_pService{pService} {
     setProperties(properties);
 } // NimBLECharacteristic
 
@@ -59,26 +56,26 @@ NimBLECharacteristic::~NimBLECharacteristic() {
  * @brief Create a new BLE Descriptor associated with this characteristic.
  * @param [in] uuid - The UUID of the descriptor.
  * @param [in] properties - The properties of the descriptor.
- * @param [in] max_len - The max length in bytes of the descriptor value.
+ * @param [in] maxLen - The max length in bytes of the descriptor value.
  * @return The new BLE descriptor.
  */
-NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint32_t properties, uint16_t max_len) {
-    return createDescriptor(NimBLEUUID(uuid), properties, max_len);
+NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint32_t properties, uint16_t maxLen) {
+    return createDescriptor(NimBLEUUID(uuid), properties, maxLen);
 }
 
 /**
  * @brief Create a new BLE Descriptor associated with this characteristic.
  * @param [in] uuid - The UUID of the descriptor.
  * @param [in] properties - The properties of the descriptor.
- * @param [in] max_len - The max length in bytes of the descriptor value.
+ * @param [in] maxLen - The max length in bytes of the descriptor value.
  * @return The new BLE descriptor.
  */
-NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID& uuid, uint32_t properties, uint16_t max_len) {
+NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID& uuid, uint32_t properties, uint16_t maxLen) {
     NimBLEDescriptor* pDescriptor = nullptr;
     if (uuid == NimBLEUUID(uint16_t(0x2904))) {
         pDescriptor = new NimBLE2904(this);
     } else {
-        pDescriptor = new NimBLEDescriptor(uuid, properties, max_len, this);
+        pDescriptor = new NimBLEDescriptor(uuid, properties, maxLen, this);
     }
 
     addDescriptor(pDescriptor);
@@ -200,181 +197,107 @@ void NimBLECharacteristic::setService(NimBLEService* pService) {
 } // setService
 
 /**
- * @brief Get the number of clients subscribed to the characteristic.
- * @returns Number of clients subscribed to notifications / indications.
- */
-size_t NimBLECharacteristic::getSubscribedCount() const {
-    return m_subscribedVec.size();
-}
-
-/**
- * @brief Set the subscribe status for this characteristic.\n
- * This will maintain a vector of subscribed clients and their indicate/notify status.
- */
-void NimBLECharacteristic::setSubscribe(const ble_gap_event* event, NimBLEConnInfo& connInfo) {
-    uint16_t subVal = 0;
-    if (event->subscribe.cur_notify > 0 && (m_properties & NIMBLE_PROPERTY::NOTIFY)) {
-        subVal |= NIMBLE_SUB_NOTIFY;
-    }
-    if (event->subscribe.cur_indicate && (m_properties & NIMBLE_PROPERTY::INDICATE)) {
-        subVal |= NIMBLE_SUB_INDICATE;
-    }
-
-    NIMBLE_LOGI(LOG_TAG, "New subscribe value for conn: %d val: %d", connInfo.getConnHandle(), subVal);
-
-    if (!event->subscribe.cur_indicate && event->subscribe.prev_indicate) {
-        NimBLEDevice::getServer()->clearIndicateWait(connInfo.getConnHandle());
-    }
-
-    auto it = m_subscribedVec.begin();
-    for (; it != m_subscribedVec.end(); ++it) {
-        if ((*it).first == connInfo.getConnHandle()) {
-            break;
-        }
-    }
-
-    if (subVal > 0) {
-        if (it == m_subscribedVec.end()) {
-            m_subscribedVec.push_back({connInfo.getConnHandle(), subVal});
-        } else {
-            (*it).second = subVal;
-        }
-    } else if (it != m_subscribedVec.end()) {
-        m_subscribedVec.erase(it);
-    }
-
-    m_pCallbacks->onSubscribe(this, connInfo, subVal);
-}
-
-/**
  * @brief Send an indication.
- * @param[in] conn_handle Connection handle to send an individual indication, or BLE_HS_CONN_HANDLE_NONE to send
+ * @param[in] connHandle Connection handle to send an individual indication, or BLE_HS_CONN_HANDLE_NONE to send
  * the indication to all subscribed clients.
+ * @return True if the indication was sent successfully, false otherwise.
  */
-void NimBLECharacteristic::indicate(uint16_t conn_handle) const {
-    sendValue(m_value.data(), m_value.size(), false, conn_handle);
+bool NimBLECharacteristic::indicate(uint16_t connHandle) const {
+    return sendValue(nullptr, 0, false, connHandle);
 } // indicate
 
 /**
  * @brief Send an indication.
  * @param[in] value A pointer to the data to send.
  * @param[in] length The length of the data to send.
- * @param[in] conn_handle Connection handle to send an individual indication, or BLE_HS_CONN_HANDLE_NONE to send
+ * @param[in] connHandle Connection handle to send an individual indication, or BLE_HS_CONN_HANDLE_NONE to send
  * the indication to all subscribed clients.
+ * @return True if the indication was sent successfully, false otherwise.
  */
-void NimBLECharacteristic::indicate(const uint8_t* value, size_t length, uint16_t conn_handle) const {
-    sendValue(value, length, false, conn_handle);
+bool NimBLECharacteristic::indicate(const uint8_t* value, size_t length, uint16_t connHandle) const {
+    return sendValue(value, length, false, connHandle);
 } // indicate
 
 /**
  * @brief Send a notification.
- * @param[in] conn_handle Connection handle to send an individual notification, or BLE_HS_CONN_HANDLE_NONE to send
+ * @param[in] connHandle Connection handle to send an individual notification, or BLE_HS_CONN_HANDLE_NONE to send
  * the notification to all subscribed clients.
+ * @return True if the notification was sent successfully, false otherwise.
  */
-void NimBLECharacteristic::notify(uint16_t conn_handle) const {
-    sendValue(m_value.data(), m_value.size(), true, conn_handle);
+bool NimBLECharacteristic::notify(uint16_t connHandle) const {
+    return sendValue(nullptr, 0, true, connHandle);
 } // notify
 
 /**
  * @brief Send a notification.
  * @param[in] value A pointer to the data to send.
  * @param[in] length The length of the data to send.
- * @param[in] conn_handle Connection handle to send an individual notification, or BLE_HS_CONN_HANDLE_NONE to send
+ * @param[in] connHandle Connection handle to send an individual notification, or BLE_HS_CONN_HANDLE_NONE to send
  * the notification to all subscribed clients.
+ * @return True if the notification was sent successfully, false otherwise.
  */
-void NimBLECharacteristic::notify(const uint8_t* value, size_t length, uint16_t conn_handle) const {
-    sendValue(value, length, true, conn_handle);
+bool NimBLECharacteristic::notify(const uint8_t* value, size_t length, uint16_t connHandle) const {
+    return sendValue(value, length, true, connHandle);
 } // indicate
 
 /**
  * @brief Sends a notification or indication.
  * @param[in] value A pointer to the data to send.
  * @param[in] length The length of the data to send.
- * @param[in] is_notification if true sends a notification, false sends an indication.
- * @param[in] conn_handle Connection handle to send to a specific peer, or BLE_HS_CONN_HANDLE_NONE to send
- * to all subscribed clients.
+ * @param[in] isNotification if true sends a notification, false sends an indication.
+ * @param[in] connHandle Connection handle to send to a specific peer.
+ * @return True if the value was sent successfully, false otherwise.
  */
-void NimBLECharacteristic::sendValue(const uint8_t* value, size_t length, bool is_notification, uint16_t conn_handle) const {
-    NIMBLE_LOGD(LOG_TAG, ">> sendValue");
+bool NimBLECharacteristic::sendValue(const uint8_t* value, size_t length, bool isNotification, uint16_t connHandle) const {
+    int rc = 0;
 
-    if (is_notification && !(getProperties() & NIMBLE_PROPERTY::NOTIFY)) {
-        NIMBLE_LOGE(LOG_TAG, "<< sendValue: notification not enabled for characteristic");
-        return;
-    }
+    if (value != nullptr && length > 0) { // custom notification value
+        // Notify all connected peers unless a specific handle is provided
+        for (const auto& ch : NimBLEDevice::getServer()->getPeerDevices()) {
+            if (connHandle != BLE_HS_CONN_HANDLE_NONE && ch != connHandle) {
+                continue; // only send to the specific handle, minor inefficiency but saves code.
+            }
 
-    if (!is_notification && !(getProperties() & NIMBLE_PROPERTY::INDICATE)) {
-        NIMBLE_LOGE(LOG_TAG, "<< sendValue: indication not enabled for characteristic");
-        return;
-    }
+            // Must re-create the data buffer on each iteration because it is freed by the calls bellow.
+            os_mbuf* om = ble_hs_mbuf_from_flat(value, length);
+            if (!om) {
+                NIMBLE_LOGE(LOG_TAG, "<< sendValue: failed to allocate mbuf");
+                return false;
+            }
 
-    if (!m_subscribedVec.size()) {
-        NIMBLE_LOGD(LOG_TAG, "<< sendValue: No clients subscribed.");
-        return;
-    }
+            if (isNotification) {
+                rc = ble_gattc_notify_custom(ch, m_handle, om);
+            } else {
+                rc = ble_gattc_indicate_custom(ch, m_handle, om);
+            }
 
-    for (const auto& it : m_subscribedVec) {
-        // check if connected and subscribed
-        if (!it.second) {
-            continue;
-        }
-
-        // sending to a specific client?
-        if ((conn_handle <= BLE_HCI_LE_CONN_HANDLE_MAX) && (it.first != conn_handle)) {
-            continue;
-        }
-
-        if (is_notification && !(it.second & NIMBLE_SUB_NOTIFY)) {
-            continue;
-        }
-
-        if (!is_notification && !(it.second & NIMBLE_SUB_INDICATE)) {
-            continue;
-        }
-
-        // check if security requirements are satisfied
-        if ((getProperties() & BLE_GATT_CHR_F_READ_AUTHEN) || (getProperties() & BLE_GATT_CHR_F_READ_AUTHOR) ||
-            (getProperties() & BLE_GATT_CHR_F_READ_ENC)) {
-            ble_gap_conn_desc desc;
-            if (ble_gap_conn_find(it.first, &desc) != 0 || !desc.sec_state.encrypted) {
-                continue;
+            if (rc != 0) {
+                NIMBLE_LOGE(LOG_TAG, "<< sendValue: failed to send value, rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+                break;
             }
         }
-
-        // don't create the m_buf until we are sure to send the data or else
-        // we could be allocating a buffer that doesn't get released.
-        // We also must create it in each loop iteration because it is consumed with each host call.
-        os_mbuf* om = ble_hs_mbuf_from_flat(value, length);
-        if (!om) {
-            NIMBLE_LOGE(LOG_TAG, "<< sendValue: failed to allocate mbuf");
-            return;
-        }
-
-        if (is_notification) {
-            ble_gattc_notify_custom(it.first, getHandle(), om);
+    } else if (connHandle != BLE_HS_CONN_HANDLE_NONE) { // only sending to specific peer
+        // Null buffer will read the value from the characteristic
+        if (isNotification) {
+            rc = ble_gattc_notify_custom(connHandle, m_handle, NULL);
         } else {
-            if (!NimBLEDevice::getServer()->setIndicateWait(it.first)) {
-                NIMBLE_LOGE(LOG_TAG, "<< sendValue: waiting for previous indicate");
-                os_mbuf_free_chain(om);
-                return;
-            }
-
-            if (ble_gattc_indicate_custom(it.first, getHandle(), om) != 0) {
-                NimBLEDevice::getServer()->clearIndicateWait(it.first);
-            }
+            rc = ble_gattc_indicate_custom(connHandle, m_handle, NULL);
         }
+    } else { // Notify or indicate to all connected peers the characteristic value
+        ble_gatts_chr_updated(m_handle);
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<< sendValue");
+    return rc == 0;
 } // sendValue
 
 void NimBLECharacteristic::readEvent(NimBLEConnInfo& connInfo) {
     m_pCallbacks->onRead(this, connInfo);
-}
+} // readEvent
 
 void NimBLECharacteristic::writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) {
     setValue(val, len);
     m_pCallbacks->onWrite(this, connInfo);
-}
+} // writeEvent
 
 /**
  * @brief Set the callback handlers for this characteristic.
@@ -455,7 +378,7 @@ void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacterist
  * * 3 = Notifications and Indications
  */
 void NimBLECharacteristicCallbacks::onSubscribe(NimBLECharacteristic* pCharacteristic,
-                                                NimBLEConnInfo& connInfo,
+                                                NimBLEConnInfo&       connInfo,
                                                 uint16_t              subValue) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onSubscribe: default");
 }

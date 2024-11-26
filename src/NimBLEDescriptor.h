@@ -34,11 +34,11 @@ class NimBLEDescriptorCallbacks;
  */
 class NimBLEDescriptor : public NimBLELocalValueAttribute {
   public:
-    NimBLEDescriptor(const char* uuid, uint16_t properties, uint16_t max_len, NimBLECharacteristic* pCharacteristic = nullptr);
+    NimBLEDescriptor(const char* uuid, uint16_t properties, uint16_t maxLen, NimBLECharacteristic* pCharacteristic = nullptr);
 
     NimBLEDescriptor(const NimBLEUUID&     uuid,
                      uint16_t              properties,
-                     uint16_t              max_len,
+                     uint16_t              maxLen,
                      NimBLECharacteristic* pCharacteristic = nullptr);
     ~NimBLEDescriptor() = default;
 

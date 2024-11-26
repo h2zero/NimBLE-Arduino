@@ -48,10 +48,8 @@ NimBLEServer::NimBLEServer()
       m_advertiseOnDisconnect{false},
 # endif
       m_pServerCallbacks{&defaultCallbacks},
-      m_svcVec{},
-      m_notifyChrVec{} {
+      m_svcVec{} {
     m_connectedPeers.fill(BLE_HS_CONN_HANDLE_NONE);
-    m_indWait.fill(BLE_HS_CONN_HANDLE_NONE);
 } // NimBLEServer
 
 /**
@@ -199,13 +197,8 @@ void NimBLEServer::start() {
             }
         }
 
-        for (auto& chr : svc->m_vChars) {
-            // if Notify / Indicate is enabled but we didn't create the descriptor
-            // we do it now.
-            if ((chr->m_properties & BLE_GATT_CHR_F_INDICATE) || (chr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
-                m_notifyChrVec.push_back(chr);
-            }
-
+        // Set the descriptor handles now as the stack does not set these when the service is started
+        for (const auto& chr : svc->m_vChars) {
             for (auto& desc : chr->m_vDescriptors) {
                 ble_gatts_find_dsc(svc->getUUID().getBase(), chr->getUUID().getBase(), desc->getUUID().getBase(), &desc->m_handle);
             }
@@ -519,22 +512,25 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                         event->subscribe.attr_handle,
                         (event->subscribe.cur_notify ? "true" : "false"));
 
-            for (const auto& chr : pServer->m_notifyChrVec) {
-                if (chr->getHandle() == event->subscribe.attr_handle) {
-                    rc = ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc);
-                    if (rc != 0) {
-                        break;
-                    }
+            for (const auto& svc : pServer->m_svcVec) {
+                for (const auto& chr : svc->m_vChars) {
+                    if (chr->getHandle() == event->subscribe.attr_handle) {
+                        rc = ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc);
+                        if (rc != 0) {
+                            break;
+                        }
 
-                    auto chrProps = chr->getProperties();
-                    if (!peerInfo.isEncrypted() &&
-                        (chrProps & BLE_GATT_CHR_F_READ_AUTHEN || chrProps & BLE_GATT_CHR_F_READ_AUTHOR ||
-                         chrProps & BLE_GATT_CHR_F_READ_ENC)) {
-                        NimBLEDevice::startSecurity(event->subscribe.conn_handle);
-                    }
+                        auto chrProps = chr->getProperties();
+                        if (!peerInfo.isEncrypted() &&
+                            (chrProps & BLE_GATT_CHR_F_READ_AUTHEN || chrProps & BLE_GATT_CHR_F_READ_AUTHOR ||
+                             chrProps & BLE_GATT_CHR_F_READ_ENC)) {
+                            NimBLEDevice::startSecurity(event->subscribe.conn_handle);
+                        }
 
-                    chr->setSubscribe(event, peerInfo);
-                    break;
+                        chr->m_pCallbacks->onSubscribe(chr,
+                                                       peerInfo,
+                                                       event->subscribe.cur_notify + event->subscribe.cur_indicate);
+                    }
                 }
             }
 
@@ -553,9 +549,11 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
         case BLE_GAP_EVENT_NOTIFY_TX: {
             NimBLECharacteristic* pChar = nullptr;
 
-            for (auto& chr : pServer->m_notifyChrVec) {
-                if (chr->getHandle() == event->notify_tx.attr_handle) {
-                    pChar = chr;
+            for (const auto& svc : pServer->m_svcVec) {
+                for (auto& chr : svc->m_vChars) {
+                    if (chr->getHandle() == event->notify_tx.attr_handle) {
+                        pChar = chr;
+                    }
                 }
             }
 
@@ -567,7 +565,6 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 if (event->notify_tx.status == 0) {
                     return 0; // Indication sent but not yet acknowledged.
                 }
-                pServer->clearIndicateWait(event->notify_tx.conn_handle);
             }
 
             pChar->m_pCallbacks->onStatus(pChar, event->notify_tx.status);
@@ -703,19 +700,21 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
     NIMBLE_LOGD(LOG_TAG,
                 "Gatt %s event",
                 (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR || ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC) ? "Read" : "Write");
-    auto           pAtt = static_cast<NimBLELocalValueAttribute*>(arg);
-    const auto&    val  = pAtt->getAttVal();
+    auto pAtt = static_cast<NimBLELocalValueAttribute*>(arg);
+    auto val  = pAtt->getAttVal();
     NimBLEConnInfo peerInfo{};
     ble_gap_conn_find(connHandle, &peerInfo.m_desc);
 
     switch (ctxt->op) {
         case BLE_GATT_ACCESS_OP_READ_DSC:
         case BLE_GATT_ACCESS_OP_READ_CHR: {
-            // If the packet header is only 8 bytes this is a follow up of a long read
-            // so we don't want to call the onRead() callback again.
-            if (ctxt->om->om_pkthdr_len > 8 || connHandle == BLE_HS_CONN_HANDLE_NONE ||
-                val.size() <= (ble_att_mtu(connHandle) - 3)) {
-                pAtt->readEvent(peerInfo);
+            // Don't call readEvent if this is an internal read (handle is NONE)
+            if (connHandle != BLE_HS_CONN_HANDLE_NONE) {
+                // If the packet header is only 8 bytes then this is a follow up of a long read
+                // so we don't want to call the onRead() callback again.
+                if (ctxt->om->om_pkthdr_len > 8 || pAtt->getAttVal().size() <= (ble_att_mtu(connHandle) - 3)) {
+                    pAtt->readEvent(peerInfo);
+                }
             }
 
             ble_npl_hw_enter_critical();
@@ -726,19 +725,19 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
 
         case BLE_GATT_ACCESS_OP_WRITE_DSC:
         case BLE_GATT_ACCESS_OP_WRITE_CHR: {
-            uint16_t att_max_len = val.max_size();
-            if (ctxt->om->om_len > att_max_len) {
+            uint16_t maxLen = val.max_size();
+            if (ctxt->om->om_len > maxLen) {
                 return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             }
 
-            uint8_t  buf[att_max_len];
+            uint8_t  buf[maxLen];
             uint16_t len = ctxt->om->om_len;
             memcpy(buf, ctxt->om->om_data, len);
 
             os_mbuf* next;
             next = SLIST_NEXT(ctxt->om, om_next);
             while (next != NULL) {
-                if ((len + next->om_len) > att_max_len) {
+                if ((len + next->om_len) > maxLen) {
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
                 memcpy(&buf[len], next->om_data, next->om_len);
@@ -760,8 +759,8 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
 /**
  * @brief Set the server callbacks.
  *
- * As a BLE server operates, it will generate server level events such as a new client connecting or a previous client
- * disconnecting.  This function can be called to register a callback handler that will be invoked when these
+ * As a BLE server operates, it will generate server level events such as a new client connecting or a previous
+ * client disconnecting.  This function can be called to register a callback handler that will be invoked when these
  * events are detected.
  *
  * @param [in] pCallbacks The callbacks to be invoked.
@@ -1025,25 +1024,6 @@ void NimBLEServer::setDataLen(uint16_t connHandle, uint16_t octets) const {
     }
 # endif
 } // setDataLen
-
-bool NimBLEServer::setIndicateWait(uint16_t connHandle) {
-    for (auto i = 0; i < CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
-        if (m_indWait[i] == connHandle) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void NimBLEServer::clearIndicateWait(uint16_t connHandle) {
-    for (auto i = 0; i < CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
-        if (m_indWait[i] == connHandle) {
-            m_indWait[i] = BLE_HS_CONN_HANDLE_NONE;
-            return;
-        }
-    }
-}
 
 /** Default callback handlers */
 void NimBLEServerCallbacks::onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) {

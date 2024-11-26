@@ -113,9 +113,7 @@ class NimBLEServer {
 # endif
     NimBLEServerCallbacks*                                 m_pServerCallbacks;
     std::vector<NimBLEService*>                            m_svcVec;
-    std::vector<NimBLECharacteristic*>                     m_notifyChrVec;
     std::array<uint16_t, CONFIG_BT_NIMBLE_MAX_CONNECTIONS> m_connectedPeers;
-    std::array<uint16_t, CONFIG_BT_NIMBLE_MAX_CONNECTIONS> m_indWait;
 
     static int  handleGapEvent(struct ble_gap_event* event, void* arg);
     static int  handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
@@ -123,8 +121,6 @@ class NimBLEServer {
     std::string getPeerNameImpl(uint16_t connHandle, int cb_type = -1) const;
     void        serviceChanged();
     void        resetGATT();
-    bool        setIndicateWait(uint16_t connHandle);
-    void        clearIndicateWait(uint16_t connHandle);
 
 }; // NimBLEServer
 
