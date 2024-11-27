@@ -90,84 +90,78 @@ void NimBLEService::dump() const {
  */
 bool NimBLEService::start() {
     NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service: %s", toString().c_str());
-
-    // Rebuild the service definition if the server attributes have changed.
-    if (getServer()->m_svcChanged) {
-        if (m_pSvcDef->characteristics) {
-            if (m_pSvcDef->characteristics->descriptors) {
-                delete[] m_pSvcDef->characteristics->descriptors;
-            }
-            delete[] m_pSvcDef->characteristics;
+    // If started previously, clear everything and start over
+    if (m_pSvcDef->characteristics) {
+        if (m_pSvcDef->characteristics->descriptors) {
+            delete[] m_pSvcDef->characteristics->descriptors;
         }
-        m_pSvcDef->type = 0;
+        delete[] m_pSvcDef->characteristics;
     }
 
-    if (!m_pSvcDef->type) {
-        m_pSvcDef->type = BLE_GATT_SVC_TYPE_PRIMARY;
-        size_t numChrs  = 0;
+    size_t numChrs = 0;
+    for (const auto& chr : m_vChars) {
+        if (chr->getRemoved()) {
+            continue;
+        }
+        ++numChrs;
+    }
+
+    NIMBLE_LOGD(LOG_TAG, "Adding %d characteristics for service %s", numChrs, toString().c_str());
+    if (numChrs) {
+        int i = 0;
+
+        // Nimble requires the last characteristic to have it's uuid = 0 to indicate the end
+        // of the characteristics for the service. We create 1 extra and set it to null
+        // for this purpose.
+        ble_gatt_chr_def* pChrs = new ble_gatt_chr_def[numChrs + 1]{};
         for (const auto& chr : m_vChars) {
             if (chr->getRemoved()) {
                 continue;
             }
-            ++numChrs;
-        }
 
-        NIMBLE_LOGD(LOG_TAG, "Adding %d characteristics for service %s", numChrs, toString().c_str());
-        if (numChrs) {
-            int i = 0;
-
-            // Nimble requires the last characteristic to have it's uuid = 0 to indicate the end
-            // of the characteristics for the service. We create 1 extra and set it to null
-            // for this purpose.
-            ble_gatt_chr_def* pChrs = new ble_gatt_chr_def[numChrs + 1]{};
-            for (const auto& chr : m_vChars) {
-                if (chr->getRemoved()) {
+            size_t numDscs = 0;
+            for (const auto& dsc : chr->m_vDescriptors) {
+                if (dsc->getRemoved()) {
                     continue;
                 }
+                ++numDscs;
+            }
 
-                size_t numDscs = 0;
+            if (numDscs) {
+                int j = 0;
+
+                // Must have last descriptor uuid = 0 so we have to create 1 extra
+                ble_gatt_dsc_def* pDscs = new ble_gatt_dsc_def[numDscs + 1]{};
                 for (const auto& dsc : chr->m_vDescriptors) {
                     if (dsc->getRemoved()) {
                         continue;
                     }
-                    ++numDscs;
+
+                    pDscs[j].uuid         = dsc->getUUID().getBase();
+                    pDscs[j].att_flags    = dsc->getProperties();
+                    pDscs[j].min_key_size = 0;
+                    pDscs[j].access_cb    = NimBLEServer::handleGattEvent;
+                    pDscs[j].arg          = dsc;
+                    ++j;
                 }
 
-                if (numDscs) {
-                    int j = 0;
-
-                    // Must have last descriptor uuid = 0 so we have to create 1 extra
-                    ble_gatt_dsc_def* pDscs = new ble_gatt_dsc_def[numDscs + 1]{};
-                    for (const auto& dsc : chr->m_vDescriptors) {
-                        if (dsc->getRemoved()) {
-                            continue;
-                        }
-
-                        pDscs[j].uuid         = dsc->getUUID().getBase();
-                        pDscs[j].att_flags    = dsc->getProperties();
-                        pDscs[j].min_key_size = 0;
-                        pDscs[j].access_cb    = NimBLEServer::handleGattEvent;
-                        pDscs[j].arg          = dsc;
-                        ++j;
-                    }
-
-                    pChrs[i].descriptors = pDscs;
-                }
-
-                pChrs[i].uuid         = chr->getUUID().getBase();
-                pChrs[i].access_cb    = NimBLEServer::handleGattEvent;
-                pChrs[i].arg          = chr;
-                pChrs[i].flags        = chr->getProperties();
-                pChrs[i].min_key_size = 0;
-                pChrs[i].val_handle   = &chr->m_handle;
-                ++i;
+                pChrs[i].descriptors = pDscs;
             }
 
-            m_pSvcDef->characteristics = pChrs;
+            pChrs[i].uuid         = chr->getUUID().getBase();
+            pChrs[i].access_cb    = NimBLEServer::handleGattEvent;
+            pChrs[i].arg          = chr;
+            pChrs[i].flags        = chr->getProperties();
+            pChrs[i].min_key_size = 0;
+            pChrs[i].val_handle   = &chr->m_handle;
+            ++i;
         }
+
+        m_pSvcDef->characteristics = pChrs;
     }
 
-    int rc = ble_gatts_count_cfg(m_pSvcDef);
+    m_pSvcDef->type = BLE_GATT_SVC_TYPE_PRIMARY;
+    int rc          = ble_gatts_count_cfg(m_pSvcDef);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_count_cfg failed, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;

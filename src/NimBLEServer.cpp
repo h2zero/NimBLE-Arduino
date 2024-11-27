@@ -153,13 +153,12 @@ NimBLEAdvertising* NimBLEServer::getAdvertising() const {
 # endif
 
 /**
- * @brief Sends a service changed notification and resets the GATT server.
+ * @brief Called when the services are added/removed and sets a flag to indicate they should be reloaded.
+ * @details This has no effect if the GATT server was not already started.
  */
 void NimBLEServer::serviceChanged() {
     if (m_gattsStarted) {
         m_svcChanged = true;
-        ble_svc_gatt_changed(0x0001, 0xffff);
-        resetGATT();
     }
 } // serviceChanged
 
@@ -203,6 +202,12 @@ void NimBLEServer::start() {
                 ble_gatts_find_dsc(svc->getUUID().getBase(), chr->getUUID().getBase(), desc->getUUID().getBase(), &desc->m_handle);
             }
         }
+    }
+
+    // If the services have changed indicate it now
+    if (m_svcChanged) {
+        m_svcChanged = false;
+        ble_svc_gatt_changed(0x0001, 0xffff);
     }
 
     m_gattsStarted = true;
@@ -876,7 +881,6 @@ void NimBLEServer::resetGATT() {
         ++it;
     }
 
-    m_svcChanged   = false;
     m_gattsStarted = false;
 } // resetGATT
 
