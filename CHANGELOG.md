@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.3] 2024-11-27
+
+### Fixed
+ - BT5 examples for non-esp devices.
+ - Build errors when configured as a non-connecting device
+
+### Added
+ - Coded PHY support for nRF52833 and nRF52820
+
 ## [1.4.2] 2024-06-17
 
 ### Fixed
@@ -35,7 +44,7 @@ All notable changes to this project will be documented in this file.
  - Removed abort in server start when a service is not found, logs a warning message instead.
  - `NimBLEAdvertising::start` on complete callback is now a std::function to allow the use of std::bind to class methods
  - `NimBLEAdvertising` setXXX methods will now properly clear the previous data before setting the new values.
- - Removed asserts in `NimBLECharacteristic` event handler when conn_handle is invalid, sends a NULL conn info to the callback instead. 
+ - Removed asserts in `NimBLECharacteristic` event handler when conn_handle is invalid, sends a NULL conn info to the callback instead.
 
 ## [1.4.1] - 2022-10-23
 
