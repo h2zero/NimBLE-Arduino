@@ -1115,21 +1115,21 @@ void NimBLEDevice::setSecurityCallbacks(NimBLESecurityCallbacks* callbacks) {
 void NimBLEDevice::setOwnAddrType(uint8_t own_addr_type, bool useNRPA) {
     m_own_addr_type = own_addr_type;
     switch (own_addr_type) {
-#ifdef CONFIG_IDF_TARGET_ESP32
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
         case BLE_OWN_ADDR_PUBLIC:
             ble_hs_pvcy_rpa_config(NIMBLE_HOST_DISABLE_PRIVACY);
             break;
 #endif
         case BLE_OWN_ADDR_RANDOM:
             setSecurityInitKey(BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID);
-#ifdef CONFIG_IDF_TARGET_ESP32
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
             ble_hs_pvcy_rpa_config(useNRPA ? NIMBLE_HOST_ENABLE_NRPA : NIMBLE_HOST_ENABLE_RPA);
 #endif
             break;
         case BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT:
         case BLE_OWN_ADDR_RPA_RANDOM_DEFAULT:
             setSecurityInitKey(BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID);
-#ifdef CONFIG_IDF_TARGET_ESP32
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
             ble_hs_pvcy_rpa_config(NIMBLE_HOST_ENABLE_RPA);
 #endif
             break;
