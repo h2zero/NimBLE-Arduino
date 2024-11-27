@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.2</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
    </div>
   </td>
  </tr>
@@ -107,7 +107,7 @@ Server</h1>
 <p ><code>NimBLEService::NimBLEService::createCharacteristic</code> takes a 3rd parameter to specify the maximum data size that can be stored by the characteristic. This allows for limiting the RAM use of the characteristic in cases where small amounts of data are expected. <br  />
  <br  />
 </p>
-<p ><code><a class="el" href="class_nim_b_l_e_characteristic.html#a7cd211a8bb9a0c2ffaed57f2af273677" title="Set the value of the characteristic from a data buffer .">NimBLECharacteristic::setValue</a>(const T &amp;s)</code> <code><a class="el" href="class_nim_b_l_e_descriptor.html#a9447cee9092dc516266f7764131ba923" title="Set the value of the descriptor.">NimBLEDescriptor::setValue</a>(const T &amp;s)</code></p>
+<p ><code>NimBLECharacteristic::setValue(const T &amp;s)</code> <code>NimBLEDescriptor::setValue(const T &amp;s)</code></p>
 <p >Now use the <code>NimbleAttValue</code> class and templates to accommodate standard and custom types/values.</p>
 <p ><b>Example</b> </p><div class="fragment"><div class="line">struct my_struct {</div>
 <div class="line">    uint8_t  one;</div>
@@ -129,7 +129,7 @@ Server</h1>
 <div class="line">    String myString = &quot;Hello&quot;;</div>
 <div class="line">    pCharacteristic-&gt;setValue(myString);</div>
 </div><!-- fragment --><p> This will send the struct to the receiving client when read or a notification sent.</p>
-<p ><code><a class="el" href="class_nim_b_l_e_characteristic.html#a78484a01350300176033a09180f7207f" title="Retrieve the current value of the characteristic.">NimBLECharacteristic::getValue</a></code> now takes an optional timestamp parameter which will update it's value with the time the last value was received. In addition an overloaded template has been added to retrieve the value as a type specified by the user.</p>
+<p ><code>NimBLECharacteristic::getValue</code> now takes an optional timestamp parameter which will update it's value with the time the last value was received. In addition an overloaded template has been added to retrieve the value as a type specified by the user.</p>
 <p ><b>Example</b> </p><div class="fragment"><div class="line">time_t timestamp;</div>
 <div class="line">myStruct = pCharacteristic-&gt;getValue&lt;myStruct&gt;(&amp;timestamp); // timestamp optional</div>
 </div><!-- fragment --><p> <br  />
@@ -145,8 +145,8 @@ Server</h1>
 <p ><a class="anchor" id="advertising"></a> </p>
 <h1><a class="anchor" id="autotoc_md7"></a>
 Advertising</h1>
-<p ><code><a class="el" href="class_nim_b_l_e_advertising.html#a89722f418bb530e0cb0fc5bea083f00b" title="Start advertising.">NimBLEAdvertising::start</a></code></p>
-<p >Now takes 2 optional parameters, the first is the duration to advertise for (in seconds), the second is a callback that is invoked when advertising ends and takes a pointer to a <code><a class="el" href="class_nim_b_l_e_advertising.html" title="Perform and manage BLE advertising.">NimBLEAdvertising</a></code> object (similar to the <code><a class="el" href="class_nim_b_l_e_scan.html#a21b1e27816717b77533755f31dfaa820" title="Start scanning.">NimBLEScan::start</a></code> API).</p>
+<p ><code><a class="el" href="class_nim_b_l_e_advertising.html#a8a5c880ee36fd44e0c72c14c47c8e15e" title="Start advertising.">NimBLEAdvertising::start</a></code></p>
+<p >Now takes 2 optional parameters, the first is the duration to advertise for (in milliseconds), the second is a callback that is invoked when advertising ends and takes a pointer to a <code><a class="el" href="class_nim_b_l_e_advertising.html" title="Perform and manage BLE advertising.">NimBLEAdvertising</a></code> object (similar to the <code><a class="el" href="class_nim_b_l_e_scan.html#ac1307f30a881688d3a4d57bac7abe02c" title="Start scanning.">NimBLEScan::start</a></code> API).</p>
 <p >This provides an opportunity to update the advertisement data if desired.</p>
 <p >Also now returns a bool value to indicate if advertising successfully started or not. <br  />
  <br  />
@@ -154,7 +154,7 @@ Advertising</h1>
 <p ><a class="anchor" id="client"></a> </p>
 <h1><a class="anchor" id="autotoc_md8"></a>
 Client</h1>
-<p ><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">NimBLERemoteCharacteristic::readValue</a>(time_t\*, bool)</code> <code><a class="el" href="class_nim_b_l_e_remote_descriptor.html#ac4e3a21818903b69ace41c36a58d3c46" title="Template to convert the remote descriptor data to &lt;type&gt;.">NimBLERemoteDescriptor::readValue(bool)</a></code></p>
+<p ><code>NimBLERemoteCharacteristic::readValue(time_t\*, bool)</code> <code>NimBLERemoteDescriptor::readValue(bool)</code></p>
 <p >Have been added as templates to allow reading the values as any specified type.</p>
 <p ><b>Example</b> </p><div class="fragment"><div class="line">struct my_struct{</div>
 <div class="line">    uint8_t  one;</div>
@@ -168,8 +168,12 @@ Client</h1>
 <div class="line">    myStruct = pRemoteCharacteristic-&gt;readValue&lt;myStruct&gt;(&amp;timestamp); // timestamp optional</div>
 </div><!-- fragment --><p> <br  />
 </p>
-<p ><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#ab4f54eabe90a416546b7b3fc3477f49c" title="backward-compatibility method for subscribe/unsubscribe notifications/indications">NimBLERemoteCharacteristic::registerForNotify</a></code> Has been <b>deprecated</b> as now the internally stored characteristic value is updated when notification/indication is received.</p>
-<p ><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#aa08b2f62376568e1fc833e4ff91e8aa7" title="Subscribe for notifications or indications.">NimBLERemoteCharacteristic::subscribe</a></code> and <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6e331afdbdbc32bf461c9866236a97aa" title="Unsubscribe for notifications or indications.">NimBLERemoteCharacteristic::unsubscribe</a></code> have been implemented to replace it. A callback is no longer required to get the most recent value unless timing is important. Instead, the application can call <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6d0779ffe7e89449121428e7fd6083d8" title="Get the value of the remote characteristic.">NimBLERemoteCharacteristic::getValue</a></code> to get the last updated value any time. <br  />
+<p ><code>NimBLERemoteCharacteristic::registerForNotify</code> <br  />
+ Has been removed.</p>
+<p ><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#adf445e6bd9dee047a61c708ae943304a" title="Subscribe for notifications or indications.">NimBLERemoteCharacteristic::subscribe</a></code> and <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a64a74ffc6612cf4a42f33836e34887f0" title="Unsubscribe for notifications or indications.">NimBLERemoteCharacteristic::unsubscribe</a></code> have been implemented to replace it. <br  />
+</p>
+<p >The internally stored characteristic value is now updated when notification/indication is recieved. Making a callback no longer required to get the most recent value unless timing is important. Instead, the application can call <code>NimBLERemoteCharacteristic::getValue</code> to get the most recent value any time. <br  />
+ <br  />
  <br  />
 </p>
 <p >The <code>notify_callback</code> function is now defined as a <code>std::function</code> to take advantage of using <code>std::bind</code> to specify a class member function for the callback.</p>
@@ -177,17 +181,17 @@ Client</h1>
 <div class="line">notify_callback callback = std::bind(&amp;&lt;ClassName&gt;::&lt;memberFunctionCallbackName&gt;, this, _1, _2, _3, _4);</div>
 <div class="line"> </div>
 <div class="line">&lt;remoteCharacteristicInstance&gt;-&gt;subscribe(true, callback);</div>
-</div><!-- fragment --><p ><code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">NimBLERemoteCharacteristic::readValue</a></code> and <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6d0779ffe7e89449121428e7fd6083d8" title="Get the value of the remote characteristic.">NimBLERemoteCharacteristic::getValue</a></code> take an optional timestamp parameter which will update it's value with the time the last value was received.</p>
+</div><!-- fragment --><p ><code>NimBLERemoteCharacteristic::readValue</code> and <code>NimBLERemoteCharacteristic::getValue</code> take an optional timestamp parameter which will update it's value with the time the last value was received.</p>
 <blockquote class="doxtable">
 <p >&zwj;<a class="el" href="class_nim_b_l_e_client.html#ae22379ab10bd82932d2303fb3753c366" title="Get the service BLE Remote Service instance corresponding to the uuid.">NimBLEClient::getService</a> <br  />
- <a class="el" href="class_nim_b_l_e_remote_service.html#ab12d195a2239a3808d60457184f0c487" title="Get the remote characteristic object for the characteristic UUID.">NimBLERemoteService::getCharacteristic</a> <br  />
- <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6178e1c58361b957be3c48548c1c4366" title="Get the descriptor instance with the given UUID that belongs to this characteristic.">NimBLERemoteCharacteristic::getDescriptor</a> </p>
+ <a class="el" href="class_nim_b_l_e_remote_service.html#ae10ddb56bc48bd06538ab49e4a561594" title="Get the remote characteristic object for the characteristic UUID.">NimBLERemoteService::getCharacteristic</a> <br  />
+ <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a8a2e29de02b97c99e88ce1a56e54cdd7" title="Get the descriptor instance with the given UUID that belongs to this characteristic.">NimBLERemoteCharacteristic::getDescriptor</a> </p>
 </blockquote>
 <p>These methods will now check the respective vectors for the attribute object and, if not found, will retrieve (only) the specified attribute from the peripheral.</p>
 <p >These changes allow more control for the user to manage the resources used for the attributes. <br  />
  <br  />
 </p>
-<p ><code><a class="el" href="class_nim_b_l_e_client.html#ae9b3e8a9b47c7eaad040b485bda958a1" title="Connect to an advertising device.">NimBLEClient::connect()</a></code> can now be called without an address or advertised device parameter. This will connect to the device with the address previously set when last connected or set with <code>NimBLEDevice::setPeerAddress()</code>.</p>
+<p ><code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect()</a></code> can now be called without an address or advertised device parameter. This will connect to the device with the address previously set when last connected or set with <code>NimBLEDevice::setPeerAddress()</code>.</p>
 <p ><a class="anchor" id="general"></a> </p>
 <h1><a class="anchor" id="autotoc_md9"></a>
 General</h1>
@@ -195,7 +199,7 @@ General</h1>
 <p >Use of <code>FreeRTOS::Semaphore</code> has been removed as it was consuming too much ram, the related files have been left in place to accomodate application use.</p>
 <p >Operators <code>==</code>, <code>!=</code> and <code>std::string</code> have been added to <code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a></code> and <code><a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID</a></code> for easier comparison and logging.</p>
 <p >New constructor for <code><a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID(uint32_t, uint16_t, uint16_t, uint64_t)</a></code> added to lower memory use vs string construction. See: <a href="https://github.com/h2zero/NimBLE-Arduino/pull/21">#21</a>.</p>
-<p >Security/pairing operations are now handled in the respective <code><a class="el" href="class_nim_b_l_e_client_callbacks.html" title="Callbacks associated with a BLE client.">NimBLEClientCallbacks</a></code> and <code><a class="el" href="class_nim_b_l_e_server_callbacks.html" title="Callbacks associated with the operation of a BLE server.">NimBLEServerCallbacks</a></code> classes, <code><a class="el" href="class_nim_b_l_e_security.html" title="A class to handle BLE security operations. Deprecated - provided for backward compatibility only.">NimBLESecurity</a></code>(deprecated) remains for backward compatibility.</p>
+<p >Security/pairing operations are now handled in the respective <code><a class="el" href="class_nim_b_l_e_client_callbacks.html" title="Callbacks associated with a BLE client.">NimBLEClientCallbacks</a></code> and <code><a class="el" href="class_nim_b_l_e_server_callbacks.html" title="Callbacks associated with the operation of a BLE server.">NimBLEServerCallbacks</a></code> classes, <code>NimBLESecurity</code>(deprecated) remains for backward compatibility.</p>
 <p >Configuration options have been added to add or remove debugging information, when disabled (default) significantly reduces binary size. In ESP-IDF the options are in menuconfig: <code>Main menu -&gt; ESP-NimBLE-cpp configuration</code>. <br  />
  For Arduino the options must be commented / uncommented in <a class="el" href="nimconfig_8h_source.html">nimconfig.h</a>.</p>
 <p >Characteristics and descriptors now use the <code><a class="el" href="class_nim_b_l_e_att_value.html" title="A specialized container class to hold BLE attribute values.">NimBLEAttValue</a></code> class to store their data. This is a polymorphic container class capable of converting to/from many different types efficiently. See: <a href="https://github.com/h2zero/NimBLE-Arduino/pull/286">#286</a> </p>

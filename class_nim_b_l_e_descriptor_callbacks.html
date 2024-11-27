@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.2</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
    </div>
   </td>
  </tr>
@@ -103,19 +103,19 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_descriptor_callbacks.h
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6b13d2a8447f50a089b869cea9fcdcbc"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor_callbacks.html#a6b13d2a8447f50a089b869cea9fcdcbc">onRead</a> (<a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *pDescriptor)</td></tr>
-<tr class="memdesc:a6b13d2a8447f50a089b869cea9fcdcbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a read request.  <a href="class_nim_b_l_e_descriptor_callbacks.html#a6b13d2a8447f50a089b869cea9fcdcbc">More...</a><br /></td></tr>
-<tr class="separator:a6b13d2a8447f50a089b869cea9fcdcbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7081bf2c4f22225c4715e09762be40ed"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor_callbacks.html#a7081bf2c4f22225c4715e09762be40ed">onWrite</a> (<a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *pDescriptor)</td></tr>
-<tr class="memdesc:a7081bf2c4f22225c4715e09762be40ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a write request.  <a href="class_nim_b_l_e_descriptor_callbacks.html#a7081bf2c4f22225c4715e09762be40ed">More...</a><br /></td></tr>
-<tr class="separator:a7081bf2c4f22225c4715e09762be40ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a061576b56702a6aca62a38f2ba27ba98"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor_callbacks.html#a061576b56702a6aca62a38f2ba27ba98">onRead</a> (<a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *pDescriptor, <a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo)</td></tr>
+<tr class="memdesc:a061576b56702a6aca62a38f2ba27ba98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a read request.  <a href="class_nim_b_l_e_descriptor_callbacks.html#a061576b56702a6aca62a38f2ba27ba98">More...</a><br /></td></tr>
+<tr class="separator:a061576b56702a6aca62a38f2ba27ba98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2872d9e602d4e23cc63f55f5b2f76dd7"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor_callbacks.html#a2872d9e602d4e23cc63f55f5b2f76dd7">onWrite</a> (<a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *pDescriptor, <a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo)</td></tr>
+<tr class="memdesc:a2872d9e602d4e23cc63f55f5b2f76dd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a write request.  <a href="class_nim_b_l_e_descriptor_callbacks.html#a2872d9e602d4e23cc63f55f5b2f76dd7">More...</a><br /></td></tr>
+<tr class="separator:a2872d9e602d4e23cc63f55f5b2f76dd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Callbacks that can be associated with a BLE descriptors to inform of events. </p>
 <p >When a server application creates a BLE descriptor, we may wish to be informed when there is either a read or write request to the descriptors value. An application can register a sub-classed instance of this class and will be notified when such an event happens. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a6b13d2a8447f50a089b869cea9fcdcbc" name="a6b13d2a8447f50a089b869cea9fcdcbc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6b13d2a8447f50a089b869cea9fcdcbc">&#9670;&#160;</a></span>onRead()</h2>
+<a id="a061576b56702a6aca62a38f2ba27ba98" name="a061576b56702a6aca62a38f2ba27ba98"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a061576b56702a6aca62a38f2ba27ba98">&#9670;&#160;</a></span>onRead()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -127,8 +127,18 @@ Public Member Functions</h2></td></tr>
           <td class="memname">void NimBLEDescriptorCallbacks::onRead </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td>
-          <td class="paramname"><em>pDescriptor</em></td><td>)</td>
+          <td class="paramname"><em>pDescriptor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;&#160;</td>
+          <td class="paramname"><em>connInfo</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -142,14 +152,15 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pDescriptor</td><td>The descriptor that is the source of the event. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">connInfo</td><td>A reference to a <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a> instance containing the peer info. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a7081bf2c4f22225c4715e09762be40ed" name="a7081bf2c4f22225c4715e09762be40ed"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7081bf2c4f22225c4715e09762be40ed">&#9670;&#160;</a></span>onWrite()</h2>
+<a id="a2872d9e602d4e23cc63f55f5b2f76dd7" name="a2872d9e602d4e23cc63f55f5b2f76dd7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2872d9e602d4e23cc63f55f5b2f76dd7">&#9670;&#160;</a></span>onWrite()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -161,8 +172,18 @@ Public Member Functions</h2></td></tr>
           <td class="memname">void NimBLEDescriptorCallbacks::onWrite </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td>
-          <td class="paramname"><em>pDescriptor</em></td><td>)</td>
+          <td class="paramname"><em>pDescriptor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;&#160;</td>
+          <td class="paramname"><em>connInfo</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -176,6 +197,7 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pDescriptor</td><td>The descriptor that is the source of the event. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">connInfo</td><td>A reference to a <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a> instance containing the peer info. </td></tr>
   </table>
   </dd>
 </dl>

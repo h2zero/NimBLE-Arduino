@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.2</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
    </div>
   </td>
  </tr>
@@ -92,38 +92,14 @@ $(document).ready(function(){initNavTree('md__usage_tips.html',''); initResizabl
   <div class="headertitle"><div class="title">Usage Tips </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md47"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md51"></a>
 Put BLE functions in a task running on the NimBLE stack core</h1>
 <p >When commands are sent to the stack from a different core they can experience delays in execution. <br  />
  This library detects this and invokes the esp32 IPC to reroute these commands through the correct core but this also increases overhead. <br  />
- Therefore it is highly recommended to create tasks for BLE to run on the same core, the macro <code>CONFIG_BT_NIMBLE_PINNED_TO_CORE</code> can be used to set the core.</p>
-<p >Here is an example of how to do this: </p><div class="fragment"><div class="line">void BLETask(void* param) {</div>
-<div class="line">  for(;;) {</div>
-<div class="line">    ..BLE STUFF GOES HERE..</div>
-<div class="line">    delay(1); // always delay in the loop to allow other tasks to run</div>
-<div class="line">  }</div>
-<div class="line">  vTaskDelete(NULL); // should never get here</div>
-<div class="line">}</div>
-<div class="line"> </div>
-<div class="line">void setup() {</div>
-<div class="line">  ...YOUR INIT CODE...</div>
-<div class="line">  xTaskCreatePinnedToCore(</div>
-<div class="line">     BLETask, /* Function to implement the task */</div>
-<div class="line">     &quot;BLETask&quot;, /* Name of the task */</div>
-<div class="line">     4096, /* Stack size in bytes */</div>
-<div class="line">     NULL, /* Task input parameter */</div>
-<div class="line">     2, /* Priority of the task (set higher than loop) */</div>
-<div class="line">     nullptr, /* Task handle. */</div>
-<div class="line">     CONFIG_BT_NIMBLE_PINNED_TO_CORE); /* Core where main nimble task runs */</div>
-<div class="line">}</div>
-<div class="line"> </div>
-<div class="line">void loop() {</div>
-<div class="line">  delay(1);</div>
-<div class="line">}</div>
-</div><!-- fragment --><p> <br  />
+ Therefore it is highly recommended to create tasks for BLE to run on the same core, the macro <code>CONFIG_BT_NIMBLE_PINNED_TO_CORE</code> can be used to set the core. <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md48"></a>
+<h1><a class="anchor" id="autotoc_md52"></a>
 Do not delete client instances unless necessary or unused</h1>
 <p >When a client instance has been created and has connected to a peer device and it has retrieved service/characteristic information it will store that data for the life of the client instance. <br  />
  If you are periodically connecting to the same devices and you have deleted the client instance or the services when connecting again it will cause a retrieval of that information from the peer again. <br  />
@@ -135,23 +111,23 @@ Do not delete client instances unless necessary or unused</h1>
  <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md49"></a>
+<h1><a class="anchor" id="autotoc_md53"></a>
 Only retrieve the services and characteristics needed</h1>
-<p >As a client the use of <code><a class="el" href="class_nim_b_l_e_client.html#acb9007569b3bb13b3b49f3c4cb47b21a" title="Get a pointer to the vector of found services.">NimBLEClient::getServices</a></code> or <code><a class="el" href="class_nim_b_l_e_remote_service.html#a2c9e91c842598a6a9576c7b87af0863a" title="Get a pointer to the vector of found characteristics.">NimBLERemoteService::getCharacteristics</a></code> and using <code>true</code> for the parameter should be limited to devices that are not known. <br  />
+<p >As a client the use of <code><a class="el" href="class_nim_b_l_e_client.html#adefe48b87e8a814e1643cdb8c3759298" title="Get a pointer to the vector of found services.">NimBLEClient::getServices</a></code> or <code><a class="el" href="class_nim_b_l_e_remote_service.html#a5b07f0756c401d40396886e80d64b03b" title="Get a pointer to the vector of found characteristics.">NimBLERemoteService::getCharacteristics</a></code> and using <code>true</code> for the parameter should be limited to devices that are not known. <br  />
  Instead <code>NimBLEClient::getService(NimBLEUUID)</code> or <code>NimBLERemoteService::getCharacteristic(NimBLEUUID)</code> should be used to access certain attributes that are useful to the application. <br  />
  This reduces energy consumed, heap allocated, connection time and improves overall efficiency. <br  />
  <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md50"></a>
+<h1><a class="anchor" id="autotoc_md54"></a>
 Check return values</h1>
-<p >Many user issues can be avoided by checking if a function returned successfully, by either testing for true/false such as when calling <code><a class="el" href="class_nim_b_l_e_client.html#ae9b3e8a9b47c7eaad040b485bda958a1" title="Connect to an advertising device.">NimBLEClient::connect</a></code>, <br  />
+<p >Many user issues can be avoided by checking if a function returned successfully, by either testing for true/false such as when calling <code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a></code>, <br  />
  or nullptr such as when calling <code><a class="el" href="class_nim_b_l_e_client.html#ae22379ab10bd82932d2303fb3753c366" title="Get the service BLE Remote Service instance corresponding to the uuid.">NimBLEClient::getService</a></code>. The latter being a must, as calling a method on a nullptr will surely result in a crash. <br  />
  Most of the functions in this library return something that should be checked before proceeding. <br  />
  <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md51"></a>
+<h1><a class="anchor" id="autotoc_md55"></a>
 There will be bugs - please report them</h1>
 <p >No code is bug free and unit testing will not find them all on it's own. If you encounter a bug, please report it along with any logs and decoded backtrace if applicable. <br  />
  Best efforts will be made to correct any errors ASAP. <br  />

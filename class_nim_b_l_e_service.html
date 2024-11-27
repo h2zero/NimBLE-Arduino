@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.2</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
    </div>
   </td>
  </tr>
@@ -100,6 +100,8 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_service.html',''); ini
  <a href="class_nim_b_l_e_service.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_nim_b_l_e_service_8h_source.html">NimBLEService.h</a>&gt;</code></p>
+
+<p>Inherits <a class="el" href="class_nim_b_l_e_local_attribute.html">NimBLELocalAttribute</a>.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -109,22 +111,23 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af4e9e030046352a6ff3d9ba67fe872e3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#af4e9e030046352a6ff3d9ba67fe872e3">NimBLEService</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid)</td></tr>
 <tr class="memdesc:af4e9e030046352a6ff3d9ba67fe872e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct an instance of the BLEService.  <a href="class_nim_b_l_e_service.html#af4e9e030046352a6ff3d9ba67fe872e3">More...</a><br /></td></tr>
 <tr class="separator:af4e9e030046352a6ff3d9ba67fe872e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af304386c4e067dd0eeb27b86c0e59d0f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#af304386c4e067dd0eeb27b86c0e59d0f">getServer</a> ()</td></tr>
-<tr class="memdesc:af304386c4e067dd0eeb27b86c0e59d0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the BLE server associated with this service.  <a href="class_nim_b_l_e_service.html#af304386c4e067dd0eeb27b86c0e59d0f">More...</a><br /></td></tr>
-<tr class="separator:af304386c4e067dd0eeb27b86c0e59d0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab000b7d2b7dbb3978a5a8c1e17b1d649"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#ab000b7d2b7dbb3978a5a8c1e17b1d649">getUUID</a> ()</td></tr>
-<tr class="memdesc:ab000b7d2b7dbb3978a5a8c1e17b1d649"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the UUID of the service.  <a href="class_nim_b_l_e_service.html#ab000b7d2b7dbb3978a5a8c1e17b1d649">More...</a><br /></td></tr>
-<tr class="separator:ab000b7d2b7dbb3978a5a8c1e17b1d649"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a86d65ef61a77bdd660632b4041c2b640"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a86d65ef61a77bdd660632b4041c2b640">getHandle</a> ()</td></tr>
-<tr class="memdesc:a86d65ef61a77bdd660632b4041c2b640"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the handle associated with this service.  <a href="class_nim_b_l_e_service.html#a86d65ef61a77bdd660632b4041c2b640">More...</a><br /></td></tr>
-<tr class="separator:a86d65ef61a77bdd660632b4041c2b640"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10d10d14f8c5a970a06915cd407a0a73"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a10d10d14f8c5a970a06915cd407a0a73">toString</a> ()</td></tr>
-<tr class="memdesc:a10d10d14f8c5a970a06915cd407a0a73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of this service. A service is defined by:  <a href="class_nim_b_l_e_service.html#a10d10d14f8c5a970a06915cd407a0a73">More...</a><br /></td></tr>
-<tr class="separator:a10d10d14f8c5a970a06915cd407a0a73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71488881933ae8adbf11c5986f9dfb75"><td class="memItemLeft" align="right" valign="top"><a id="a71488881933ae8adbf11c5986f9dfb75" name="a71488881933ae8adbf11c5986f9dfb75"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
-<tr class="memdesc:a71488881933ae8adbf11c5986f9dfb75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dump details of this BLE GATT service. <br /></td></tr>
-<tr class="separator:a71488881933ae8adbf11c5986f9dfb75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8904838e785b967c770a240e6c5099e7"><td class="memItemLeft" align="right" valign="top"><a id="a8904838e785b967c770a240e6c5099e7" name="a8904838e785b967c770a240e6c5099e7"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>~NimBLEService</b> ()</td></tr>
+<tr class="memdesc:a8904838e785b967c770a240e6c5099e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor, make sure we release the resources allocated for the service. <br /></td></tr>
+<tr class="separator:a8904838e785b967c770a240e6c5099e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfbb7abadee89abd496b89f8fe085f58"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#acfbb7abadee89abd496b89f8fe085f58">getServer</a> () const</td></tr>
+<tr class="memdesc:acfbb7abadee89abd496b89f8fe085f58"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the BLE server associated with this service.  <a href="class_nim_b_l_e_service.html#acfbb7abadee89abd496b89f8fe085f58">More...</a><br /></td></tr>
+<tr class="separator:acfbb7abadee89abd496b89f8fe085f58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a819ff207ef7c30f59887af277aa09ce9"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a819ff207ef7c30f59887af277aa09ce9">toString</a> () const</td></tr>
+<tr class="memdesc:a819ff207ef7c30f59887af277aa09ce9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of this service. A service is defined by:  <a href="class_nim_b_l_e_service.html#a819ff207ef7c30f59887af277aa09ce9">More...</a><br /></td></tr>
+<tr class="separator:a819ff207ef7c30f59887af277aa09ce9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fafb0c55e447114daf9ad758218905e"><td class="memItemLeft" align="right" valign="top"><a id="a8fafb0c55e447114daf9ad758218905e" name="a8fafb0c55e447114daf9ad758218905e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> () const</td></tr>
+<tr class="memdesc:a8fafb0c55e447114daf9ad758218905e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dump details of this BLE GATT service. <br /></td></tr>
+<tr class="separator:a8fafb0c55e447114daf9ad758218905e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9464e97d7e39a4634c5d9bdce1abbac"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#aa9464e97d7e39a4634c5d9bdce1abbac">isStarted</a> () const</td></tr>
+<tr class="memdesc:aa9464e97d7e39a4634c5d9bdce1abbac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the service has been started.  <a href="class_nim_b_l_e_service.html#aa9464e97d7e39a4634c5d9bdce1abbac">More...</a><br /></td></tr>
+<tr class="separator:aa9464e97d7e39a4634c5d9bdce1abbac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad37324ed0404d596923d6fdc0133b985"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#ad37324ed0404d596923d6fdc0133b985">start</a> ()</td></tr>
 <tr class="memdesc:ad37324ed0404d596923d6fdc0133b985"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds the database of characteristics/descriptors for the service and registers it with the NimBLE stack.  <a href="class_nim_b_l_e_service.html#ad37324ed0404d596923d6fdc0133b985">More...</a><br /></td></tr>
 <tr class="separator:ad37324ed0404d596923d6fdc0133b985"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,21 +143,56 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 <tr class="memitem:af992d0c27e3a559789fb77fc46623234"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#af992d0c27e3a559789fb77fc46623234">removeCharacteristic</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, bool deleteChr=false)</td></tr>
 <tr class="memdesc:af992d0c27e3a559789fb77fc46623234"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a characteristic from the service.  <a href="class_nim_b_l_e_service.html#af992d0c27e3a559789fb77fc46623234">More...</a><br /></td></tr>
 <tr class="separator:af992d0c27e3a559789fb77fc46623234"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a305b680286096638a4239620ec2de567"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a305b680286096638a4239620ec2de567">getCharacteristic</a> (const char *uuid, uint16_t instanceId=0)</td></tr>
-<tr class="memdesc:a305b680286096638a4239620ec2de567"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the characteristic object with the specified UUID.  <a href="class_nim_b_l_e_service.html#a305b680286096638a4239620ec2de567">More...</a><br /></td></tr>
-<tr class="separator:a305b680286096638a4239620ec2de567"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adfc4e67f79aaabc8f2c6bdb5c6966609"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#adfc4e67f79aaabc8f2c6bdb5c6966609">getCharacteristic</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, uint16_t instanceId=0)</td></tr>
-<tr class="memdesc:adfc4e67f79aaabc8f2c6bdb5c6966609"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the characteristic object with the specified UUID.  <a href="class_nim_b_l_e_service.html#adfc4e67f79aaabc8f2c6bdb5c6966609">More...</a><br /></td></tr>
-<tr class="separator:adfc4e67f79aaabc8f2c6bdb5c6966609"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35b56ab3ef7fffb2b299f95d3176d07e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a35b56ab3ef7fffb2b299f95d3176d07e">getCharacteristicByHandle</a> (uint16_t handle)</td></tr>
-<tr class="memdesc:a35b56ab3ef7fffb2b299f95d3176d07e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the characteristic object with the specified handle.  <a href="class_nim_b_l_e_service.html#a35b56ab3ef7fffb2b299f95d3176d07e">More...</a><br /></td></tr>
-<tr class="separator:a35b56ab3ef7fffb2b299f95d3176d07e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2cba47cb4c935e15c77707643e5e9a5"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#aa2cba47cb4c935e15c77707643e5e9a5">getCharacteristics</a> ()</td></tr>
-<tr class="separator:aa2cba47cb4c935e15c77707643e5e9a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24cf868e9eec7b5ecdf1e88d257e91d9"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a24cf868e9eec7b5ecdf1e88d257e91d9">getCharacteristics</a> (const char *uuid)</td></tr>
-<tr class="separator:a24cf868e9eec7b5ecdf1e88d257e91d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55724788b3bf4614995ea656bf8fe1bb"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a55724788b3bf4614995ea656bf8fe1bb">getCharacteristics</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid)</td></tr>
-<tr class="separator:a55724788b3bf4614995ea656bf8fe1bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeeaa4b0c543230e7819ad92d48432f5e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#aeeaa4b0c543230e7819ad92d48432f5e">getCharacteristic</a> (const char *uuid, uint16_t instanceId=0) const</td></tr>
+<tr class="memdesc:aeeaa4b0c543230e7819ad92d48432f5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the characteristic object with the specified UUID.  <a href="class_nim_b_l_e_service.html#aeeaa4b0c543230e7819ad92d48432f5e">More...</a><br /></td></tr>
+<tr class="separator:aeeaa4b0c543230e7819ad92d48432f5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a200714f911accd64acfd2fa3d0c6b863"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a200714f911accd64acfd2fa3d0c6b863">getCharacteristic</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, uint16_t instanceId=0) const</td></tr>
+<tr class="memdesc:a200714f911accd64acfd2fa3d0c6b863"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the characteristic object with the specified UUID.  <a href="class_nim_b_l_e_service.html#a200714f911accd64acfd2fa3d0c6b863">More...</a><br /></td></tr>
+<tr class="separator:a200714f911accd64acfd2fa3d0c6b863"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a488df9c39d1c49d4b1537abddddb1a7d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a488df9c39d1c49d4b1537abddddb1a7d">getCharacteristicByHandle</a> (uint16_t handle) const</td></tr>
+<tr class="memdesc:a488df9c39d1c49d4b1537abddddb1a7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the characteristic object with the specified handle.  <a href="class_nim_b_l_e_service.html#a488df9c39d1c49d4b1537abddddb1a7d">More...</a><br /></td></tr>
+<tr class="separator:a488df9c39d1c49d4b1537abddddb1a7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8219ccefd97180bee485b62572c62e58"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a8219ccefd97180bee485b62572c62e58">getCharacteristics</a> () const</td></tr>
+<tr class="separator:a8219ccefd97180bee485b62572c62e58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bb082780665005271fab6e79416f3ed"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a9bb082780665005271fab6e79416f3ed">getCharacteristics</a> (const char *uuid) const</td></tr>
+<tr class="separator:a9bb082780665005271fab6e79416f3ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a557ec314a4b2f912b1c1b03e332f9fe1"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a557ec314a4b2f912b1c1b03e332f9fe1">getCharacteristics</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid) const</td></tr>
+<tr class="separator:a557ec314a4b2f912b1c1b03e332f9fe1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_class_nim_b_l_e_local_attribute"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_class_nim_b_l_e_local_attribute')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="class_nim_b_l_e_local_attribute.html">NimBLELocalAttribute</a></td></tr>
+<tr class="memitem:a7664b8e5353f33ebfcff20a63273fe55 inherit pub_methods_class_nim_b_l_e_local_attribute"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_local_attribute.html#a7664b8e5353f33ebfcff20a63273fe55">getRemoved</a> () const</td></tr>
+<tr class="memdesc:a7664b8e5353f33ebfcff20a63273fe55 inherit pub_methods_class_nim_b_l_e_local_attribute"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the removed flag.  <a href="class_nim_b_l_e_local_attribute.html#a7664b8e5353f33ebfcff20a63273fe55">More...</a><br /></td></tr>
+<tr class="separator:a7664b8e5353f33ebfcff20a63273fe55 inherit pub_methods_class_nim_b_l_e_local_attribute"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_class_nim_b_l_e_attribute"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_class_nim_b_l_e_attribute')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="class_nim_b_l_e_attribute.html">NimBLEAttribute</a></td></tr>
+<tr class="memitem:afd4500e543c9480c52ca994ed5473e49 inherit pub_methods_class_nim_b_l_e_attribute"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_attribute.html#afd4500e543c9480c52ca994ed5473e49">getUUID</a> () const</td></tr>
+<tr class="memdesc:afd4500e543c9480c52ca994ed5473e49 inherit pub_methods_class_nim_b_l_e_attribute"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the UUID of the attribute.  <a href="class_nim_b_l_e_attribute.html#afd4500e543c9480c52ca994ed5473e49">More...</a><br /></td></tr>
+<tr class="separator:afd4500e543c9480c52ca994ed5473e49 inherit pub_methods_class_nim_b_l_e_attribute"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7907cb5b0a2d0f8cd9eb016a4ed876d1 inherit pub_methods_class_nim_b_l_e_attribute"><td class="memItemLeft" align="right" valign="top"><a id="a7907cb5b0a2d0f8cd9eb016a4ed876d1" name="a7907cb5b0a2d0f8cd9eb016a4ed876d1"></a>
+uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>getHandle</b> () const</td></tr>
+<tr class="memdesc:a7907cb5b0a2d0f8cd9eb016a4ed876d1 inherit pub_methods_class_nim_b_l_e_attribute"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the handle of the attribute. <br /></td></tr>
+<tr class="separator:a7907cb5b0a2d0f8cd9eb016a4ed876d1 inherit pub_methods_class_nim_b_l_e_attribute"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pro_methods_class_nim_b_l_e_local_attribute"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_class_nim_b_l_e_local_attribute')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="class_nim_b_l_e_local_attribute.html">NimBLELocalAttribute</a></td></tr>
+<tr class="memitem:a9fd2c2130f8bea42f86ee0d3263e9788 inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="memItemLeft" align="right" valign="top"><a id="a9fd2c2130f8bea42f86ee0d3263e9788" name="a9fd2c2130f8bea42f86ee0d3263e9788"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>NimBLELocalAttribute</b> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, uint16_t handle)</td></tr>
+<tr class="memdesc:a9fd2c2130f8bea42f86ee0d3263e9788 inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a local attribute. <br /></td></tr>
+<tr class="separator:a9fd2c2130f8bea42f86ee0d3263e9788 inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3a224e382c76e2bc2040d033e4f165b inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="memItemLeft" align="right" valign="top"><a id="af3a224e382c76e2bc2040d033e4f165b" name="af3a224e382c76e2bc2040d033e4f165b"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>~NimBLELocalAttribute</b> ()=default</td></tr>
+<tr class="memdesc:af3a224e382c76e2bc2040d033e4f165b inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the local attribute. <br /></td></tr>
+<tr class="separator:af3a224e382c76e2bc2040d033e4f165b inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d8b3828536a49051311bc236157a8a4 inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_local_attribute.html#a4d8b3828536a49051311bc236157a8a4">setRemoved</a> (uint8_t removed)</td></tr>
+<tr class="memdesc:a4d8b3828536a49051311bc236157a8a4 inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the removed flag.  <a href="class_nim_b_l_e_local_attribute.html#a4d8b3828536a49051311bc236157a8a4">More...</a><br /></td></tr>
+<tr class="separator:a4d8b3828536a49051311bc236157a8a4 inherit pro_methods_class_nim_b_l_e_local_attribute"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_class_nim_b_l_e_attribute"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_class_nim_b_l_e_attribute')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="class_nim_b_l_e_attribute.html">NimBLEAttribute</a></td></tr>
+<tr class="memitem:a51ce8e9cd9609f42b9b9248a0b6c642c inherit pro_methods_class_nim_b_l_e_attribute"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_attribute.html#a51ce8e9cd9609f42b9b9248a0b6c642c">NimBLEAttribute</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, uint16_t handle)</td></tr>
+<tr class="memdesc:a51ce8e9cd9609f42b9b9248a0b6c642c inherit pro_methods_class_nim_b_l_e_attribute"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_nim_b_l_e_attribute.html" title="A base class for BLE attributes.">NimBLEAttribute</a> object.  <a href="class_nim_b_l_e_attribute.html#a51ce8e9cd9609f42b9b9248a0b6c642c">More...</a><br /></td></tr>
+<tr class="separator:a51ce8e9cd9609f42b9b9248a0b6c642c inherit pro_methods_class_nim_b_l_e_attribute"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a060f480742cfb09ed47c1f5421d00f inherit pro_methods_class_nim_b_l_e_attribute"><td class="memItemLeft" align="right" valign="top"><a id="a8a060f480742cfb09ed47c1f5421d00f" name="a8a060f480742cfb09ed47c1f5421d00f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>~NimBLEAttribute</b> ()=default</td></tr>
+<tr class="memdesc:a8a060f480742cfb09ed47c1f5421d00f inherit pro_methods_class_nim_b_l_e_attribute"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the <a class="el" href="class_nim_b_l_e_attribute.html" title="A base class for BLE attributes.">NimBLEAttribute</a> object. <br /></td></tr>
+<tr class="separator:a8a060f480742cfb09ed47c1f5421d00f inherit pro_methods_class_nim_b_l_e_attribute"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >The model of a BLE service. </p>
@@ -222,7 +260,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td class="memname">void NimBLEService::addCharacteristic </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td>
-          <td class="paramname"><em>pCharacteristic</em></td><td>)</td>
+          <td class="paramname"><em>pChar</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -231,7 +269,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 <p>Add a characteristic to the service. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>A pointer to the characteristic instance to add to the service. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pChar</td><td>A pointer to the characteristic instance to add to the service. </td></tr>
   </table>
   </dd>
 </dl>
@@ -328,8 +366,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="a305b680286096638a4239620ec2de567" name="a305b680286096638a4239620ec2de567"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a305b680286096638a4239620ec2de567">&#9670;&#160;</a></span>getCharacteristic() <span class="overload">[1/2]</span></h2>
+<a id="aeeaa4b0c543230e7819ad92d48432f5e" name="aeeaa4b0c543230e7819ad92d48432f5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeeaa4b0c543230e7819ad92d48432f5e">&#9670;&#160;</a></span>getCharacteristic() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -344,12 +382,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>instanceId</em> = <code>0</code>&#160;</td>
+          <td class="paramname"><em>idx</em> = <code>0</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td>
+          <td></td><td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -358,7 +396,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">uuid</td><td>The UUID of the characteristic. </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">instanceId</td><td>The index of the characteristic to return (used when multiple characteristics have the same UUID). </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">idx</td><td>The index of the characteristic to return (used when multiple characteristics have the same UUID). </td></tr>
   </table>
   </dd>
 </dl>
@@ -366,8 +404,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="adfc4e67f79aaabc8f2c6bdb5c6966609" name="adfc4e67f79aaabc8f2c6bdb5c6966609"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adfc4e67f79aaabc8f2c6bdb5c6966609">&#9670;&#160;</a></span>getCharacteristic() <span class="overload">[2/2]</span></h2>
+<a id="a200714f911accd64acfd2fa3d0c6b863" name="a200714f911accd64acfd2fa3d0c6b863"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a200714f911accd64acfd2fa3d0c6b863">&#9670;&#160;</a></span>getCharacteristic() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -382,12 +420,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>instanceId</em> = <code>0</code>&#160;</td>
+          <td class="paramname"><em>idx</em> = <code>0</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td></td>
+          <td></td><td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -396,7 +434,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">uuid</td><td>The UUID of the characteristic. </td></tr>
-    <tr><td class="paramdir"></td><td class="paramname">instanceId</td><td>The index of the characteristic to return (used when multiple characteristics have the same UUID). </td></tr>
+    <tr><td class="paramdir"></td><td class="paramname">idx</td><td>The index of the characteristic to return (used when multiple characteristics have the same UUID). </td></tr>
   </table>
   </dd>
 </dl>
@@ -404,8 +442,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="a35b56ab3ef7fffb2b299f95d3176d07e" name="a35b56ab3ef7fffb2b299f95d3176d07e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a35b56ab3ef7fffb2b299f95d3176d07e">&#9670;&#160;</a></span>getCharacteristicByHandle()</h2>
+<a id="a488df9c39d1c49d4b1537abddddb1a7d" name="a488df9c39d1c49d4b1537abddddb1a7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a488df9c39d1c49d4b1537abddddb1a7d">&#9670;&#160;</a></span>getCharacteristicByHandle()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -415,7 +453,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
           <td class="paramname"><em>handle</em></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -431,17 +469,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="aa2cba47cb4c935e15c77707643e5e9a5" name="aa2cba47cb4c935e15c77707643e5e9a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa2cba47cb4c935e15c77707643e5e9a5">&#9670;&#160;</a></span>getCharacteristics() <span class="overload">[1/3]</span></h2>
+<a id="a8219ccefd97180bee485b62572c62e58" name="a8219ccefd97180bee485b62572c62e58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8219ccefd97180bee485b62572c62e58">&#9670;&#160;</a></span>getCharacteristics() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * &gt; NimBLEService::getCharacteristics </td>
+          <td class="memname">const std::vector&lt; <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * &gt; &amp; NimBLEService::getCharacteristics </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -449,8 +487,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="a24cf868e9eec7b5ecdf1e88d257e91d9" name="a24cf868e9eec7b5ecdf1e88d257e91d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a24cf868e9eec7b5ecdf1e88d257e91d9">&#9670;&#160;</a></span>getCharacteristics() <span class="overload">[2/3]</span></h2>
+<a id="a9bb082780665005271fab6e79416f3ed" name="a9bb082780665005271fab6e79416f3ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9bb082780665005271fab6e79416f3ed">&#9670;&#160;</a></span>getCharacteristics() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -460,7 +498,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>uuid</em></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -468,8 +506,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="a55724788b3bf4614995ea656bf8fe1bb" name="a55724788b3bf4614995ea656bf8fe1bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a55724788b3bf4614995ea656bf8fe1bb">&#9670;&#160;</a></span>getCharacteristics() <span class="overload">[3/3]</span></h2>
+<a id="a557ec314a4b2f912b1c1b03e332f9fe1" name="a557ec314a4b2f912b1c1b03e332f9fe1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a557ec314a4b2f912b1c1b03e332f9fe1">&#9670;&#160;</a></span>getCharacteristics() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -479,7 +517,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td>
           <td class="paramname"><em>uuid</em></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -487,28 +525,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="a86d65ef61a77bdd660632b4041c2b640" name="a86d65ef61a77bdd660632b4041c2b640"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a86d65ef61a77bdd660632b4041c2b640">&#9670;&#160;</a></span>getHandle()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">uint16_t NimBLEService::getHandle </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Get the handle associated with this service. </p>
-<dl class="section return"><dt>Returns</dt><dd>The handle associated with this service. </dd></dl>
-
-</div>
-</div>
-<a id="af304386c4e067dd0eeb27b86c0e59d0f" name="af304386c4e067dd0eeb27b86c0e59d0f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af304386c4e067dd0eeb27b86c0e59d0f">&#9670;&#160;</a></span>getServer()</h2>
+<a id="acfbb7abadee89abd496b89f8fe085f58" name="acfbb7abadee89abd496b89f8fe085f58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acfbb7abadee89abd496b89f8fe085f58">&#9670;&#160;</a></span>getServer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -517,7 +535,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td class="memname"><a class="el" href="class_nim_b_l_e_server.html">NimBLEServer</a> * NimBLEService::getServer </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -527,23 +545,23 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="ab000b7d2b7dbb3978a5a8c1e17b1d649" name="ab000b7d2b7dbb3978a5a8c1e17b1d649"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab000b7d2b7dbb3978a5a8c1e17b1d649">&#9670;&#160;</a></span>getUUID()</h2>
+<a id="aa9464e97d7e39a4634c5d9bdce1abbac" name="aa9464e97d7e39a4634c5d9bdce1abbac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9464e97d7e39a4634c5d9bdce1abbac">&#9670;&#160;</a></span>isStarted()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> NimBLEService::getUUID </td>
+          <td class="memname">bool NimBLEService::isStarted </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Get the UUID of the service. </p>
-<dl class="section return"><dt>Returns</dt><dd>the UUID of the service. </dd></dl>
+<p>Checks if the service has been started. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the service has been started. </dd></dl>
 
 </div>
 </div>
@@ -557,7 +575,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td class="memname">void NimBLEService::removeCharacteristic </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td>
-          <td class="paramname"><em>pCharacteristic</em>, </td>
+          <td class="paramname"><em>pChar</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -576,7 +594,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 <p>Remove a characteristic from the service. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>A pointer to the characteristic instance to remove from the service. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pChar</td><td>A pointer to the characteristic instance to remove from the service. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">deleteChr</td><td>If true it will delete the characteristic instance and free it's resources. </td></tr>
   </table>
   </dd>
@@ -604,8 +622,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
 
 </div>
 </div>
-<a id="a10d10d14f8c5a970a06915cd407a0a73" name="a10d10d14f8c5a970a06915cd407a0a73"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a10d10d14f8c5a970a06915cd407a0a73">&#9670;&#160;</a></span>toString()</h2>
+<a id="a819ff207ef7c30f59887af277aa09ce9" name="a819ff207ef7c30f59887af277aa09ce9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a819ff207ef7c30f59887af277aa09ce9">&#9670;&#160;</a></span>toString()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -614,7 +632,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
           <td class="memname">std::string NimBLEService::toString </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">

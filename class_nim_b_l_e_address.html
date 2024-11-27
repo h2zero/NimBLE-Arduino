@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.2</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
    </div>
   </td>
  </tr>
@@ -100,19 +100,21 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_address.html',''); ini
  <a href="class_nim_b_l_e_address.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_nim_b_l_e_address_8h_source.html">NimBLEAddress.h</a>&gt;</code></p>
+
+<p>Inherits ble_addr_t.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a19058addb94417e2921cade37a79d04c"><td class="memItemLeft" align="right" valign="top"><a id="a19058addb94417e2921cade37a79d04c" name="a19058addb94417e2921cade37a79d04c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>NimBLEAddress</b> ()</td></tr>
-<tr class="memdesc:a19058addb94417e2921cade37a79d04c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a blank address, i.e. 00:00:00:00:00:00, type 0. <br /></td></tr>
-<tr class="separator:a19058addb94417e2921cade37a79d04c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab8c9105b825ed0be5d1bbab966f2a0cf"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#ab8c9105b825ed0be5d1bbab966f2a0cf">NimBLEAddress</a> (ble_addr_t address)</td></tr>
-<tr class="memdesc:ab8c9105b825ed0be5d1bbab966f2a0cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an address from the native NimBLE representation.  <a href="class_nim_b_l_e_address.html#ab8c9105b825ed0be5d1bbab966f2a0cf">More...</a><br /></td></tr>
-<tr class="separator:ab8c9105b825ed0be5d1bbab966f2a0cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92637adc75c8010bcf34e2dd8f16cd94"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a92637adc75c8010bcf34e2dd8f16cd94">NimBLEAddress</a> (uint8_t address[6], uint8_t type=BLE_ADDR_PUBLIC)</td></tr>
-<tr class="memdesc:a92637adc75c8010bcf34e2dd8f16cd94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for compatibility with bluedroid esp library using native ESP representation.  <a href="class_nim_b_l_e_address.html#a92637adc75c8010bcf34e2dd8f16cd94">More...</a><br /></td></tr>
-<tr class="separator:a92637adc75c8010bcf34e2dd8f16cd94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc38af9709f212868a89e52ea700a417"><td class="memItemLeft" align="right" valign="top"><a id="adc38af9709f212868a89e52ea700a417" name="adc38af9709f212868a89e52ea700a417"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>NimBLEAddress</b> ()=default</td></tr>
+<tr class="memdesc:adc38af9709f212868a89e52ea700a417"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a blank address, i.e. 00:00:00:00:00:00, type 0. <br /></td></tr>
+<tr class="separator:adc38af9709f212868a89e52ea700a417"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1bad3b929b3a694402cc7354635775e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#ac1bad3b929b3a694402cc7354635775e">NimBLEAddress</a> (const ble_addr_t address)</td></tr>
+<tr class="memdesc:ac1bad3b929b3a694402cc7354635775e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an address from the native NimBLE representation.  <a href="class_nim_b_l_e_address.html#ac1bad3b929b3a694402cc7354635775e">More...</a><br /></td></tr>
+<tr class="separator:ac1bad3b929b3a694402cc7354635775e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e8c59521e12f3b97ab9fc7553845bc6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a2e8c59521e12f3b97ab9fc7553845bc6">NimBLEAddress</a> (const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t type=BLE_ADDR_PUBLIC)</td></tr>
+<tr class="memdesc:a2e8c59521e12f3b97ab9fc7553845bc6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for compatibility with bluedroid esp library using native ESP representation.  <a href="class_nim_b_l_e_address.html#a2e8c59521e12f3b97ab9fc7553845bc6">More...</a><br /></td></tr>
+<tr class="separator:a2e8c59521e12f3b97ab9fc7553845bc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeb6dafff197dc01e2713bbf43e21f1f3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#aeb6dafff197dc01e2713bbf43e21f1f3">NimBLEAddress</a> (const std::string &amp;stringAddress, uint8_t type=BLE_ADDR_PUBLIC)</td></tr>
 <tr class="memdesc:aeb6dafff197dc01e2713bbf43e21f1f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an address from a hex string.  <a href="class_nim_b_l_e_address.html#aeb6dafff197dc01e2713bbf43e21f1f3">More...</a><br /></td></tr>
 <tr class="separator:aeb6dafff197dc01e2713bbf43e21f1f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,18 +122,39 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a139790cf03d8297e253e5353a0213bff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for address using a hex value.<br  />
 Use the same byte order, so use 0xa4c1385def16 for "a4:c1:38:5d:ef:16".  <a href="class_nim_b_l_e_address.html#a139790cf03d8297e253e5353a0213bff">More...</a><br /></td></tr>
 <tr class="separator:a139790cf03d8297e253e5353a0213bff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96fba1524ed8ab43f59f5f650e8fd3c8"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a96fba1524ed8ab43f59f5f650e8fd3c8">isRpa</a> () const</td></tr>
+<tr class="memdesc:a96fba1524ed8ab43f59f5f650e8fd3c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if this address is a Resolvable Private Address.  <a href="class_nim_b_l_e_address.html#a96fba1524ed8ab43f59f5f650e8fd3c8">More...</a><br /></td></tr>
+<tr class="separator:a96fba1524ed8ab43f59f5f650e8fd3c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9af65abe3c02a16307b8cffa3b1bcac1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a9af65abe3c02a16307b8cffa3b1bcac1">isNrpa</a> () const</td></tr>
+<tr class="memdesc:a9af65abe3c02a16307b8cffa3b1bcac1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if this address is a Non-Resolvable Private Address.  <a href="class_nim_b_l_e_address.html#a9af65abe3c02a16307b8cffa3b1bcac1">More...</a><br /></td></tr>
+<tr class="separator:a9af65abe3c02a16307b8cffa3b1bcac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a409e3ef141526c8f5c5fad99bd95b660"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a409e3ef141526c8f5c5fad99bd95b660">isStatic</a> () const</td></tr>
+<tr class="memdesc:a409e3ef141526c8f5c5fad99bd95b660"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if this address is a Static Address.  <a href="class_nim_b_l_e_address.html#a409e3ef141526c8f5c5fad99bd95b660">More...</a><br /></td></tr>
+<tr class="separator:a409e3ef141526c8f5c5fad99bd95b660"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7154780415ae201a1fcdf86298b6116c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a7154780415ae201a1fcdf86298b6116c">isPublic</a> () const</td></tr>
+<tr class="memdesc:a7154780415ae201a1fcdf86298b6116c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if this address is a Public Address.  <a href="class_nim_b_l_e_address.html#a7154780415ae201a1fcdf86298b6116c">More...</a><br /></td></tr>
+<tr class="separator:a7154780415ae201a1fcdf86298b6116c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa05f35ab6724a00c65dd096006dba2bb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#aa05f35ab6724a00c65dd096006dba2bb">isNull</a> () const</td></tr>
+<tr class="memdesc:aa05f35ab6724a00c65dd096006dba2bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if this address is a NULL Address.  <a href="class_nim_b_l_e_address.html#aa05f35ab6724a00c65dd096006dba2bb">More...</a><br /></td></tr>
+<tr class="separator:aa05f35ab6724a00c65dd096006dba2bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a826fe8850cbc7d54f0696b8af4637169"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a826fe8850cbc7d54f0696b8af4637169">equals</a> (const <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> &amp;otherAddress) const</td></tr>
 <tr class="memdesc:a826fe8850cbc7d54f0696b8af4637169"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if this address equals another.  <a href="class_nim_b_l_e_address.html#a826fe8850cbc7d54f0696b8af4637169">More...</a><br /></td></tr>
 <tr class="separator:a826fe8850cbc7d54f0696b8af4637169"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adef69a03a08303957d7e40eef07b4d80"><td class="memItemLeft" align="right" valign="top">const uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#adef69a03a08303957d7e40eef07b4d80">getNative</a> () const</td></tr>
-<tr class="memdesc:adef69a03a08303957d7e40eef07b4d80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the native representation of the address.  <a href="class_nim_b_l_e_address.html#adef69a03a08303957d7e40eef07b4d80">More...</a><br /></td></tr>
-<tr class="separator:adef69a03a08303957d7e40eef07b4d80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31b466293f6cb752d5aba6b6ffb95351"><td class="memItemLeft" align="right" valign="top">const ble_addr_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a31b466293f6cb752d5aba6b6ffb95351">getBase</a> () const</td></tr>
+<tr class="memdesc:a31b466293f6cb752d5aba6b6ffb95351"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the NimBLE base struct of the address.  <a href="class_nim_b_l_e_address.html#a31b466293f6cb752d5aba6b6ffb95351">More...</a><br /></td></tr>
+<tr class="separator:a31b466293f6cb752d5aba6b6ffb95351"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac53b0cc945e1505d3e72d48164ad01d6"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#ac53b0cc945e1505d3e72d48164ad01d6">toString</a> () const</td></tr>
 <tr class="memdesc:ac53b0cc945e1505d3e72d48164ad01d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert a BLE address to a string.  <a href="class_nim_b_l_e_address.html#ac53b0cc945e1505d3e72d48164ad01d6">More...</a><br /></td></tr>
 <tr class="separator:ac53b0cc945e1505d3e72d48164ad01d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a18f8361ed20146cbc374a246d87015eb"><td class="memItemLeft" align="right" valign="top">uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a18f8361ed20146cbc374a246d87015eb">getType</a> () const</td></tr>
 <tr class="memdesc:a18f8361ed20146cbc374a246d87015eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the address type.  <a href="class_nim_b_l_e_address.html#a18f8361ed20146cbc374a246d87015eb">More...</a><br /></td></tr>
 <tr class="separator:a18f8361ed20146cbc374a246d87015eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a196801fb1ad972085e748c90159e858e"><td class="memItemLeft" align="right" valign="top">const uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a196801fb1ad972085e748c90159e858e">getVal</a> () const</td></tr>
+<tr class="memdesc:a196801fb1ad972085e748c90159e858e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the address value.  <a href="class_nim_b_l_e_address.html#a196801fb1ad972085e748c90159e858e">More...</a><br /></td></tr>
+<tr class="separator:a196801fb1ad972085e748c90159e858e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f390fb5f422db8ced1938bd40f87c4d"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a0f390fb5f422db8ced1938bd40f87c4d">reverseByteOrder</a> ()</td></tr>
+<tr class="memdesc:a0f390fb5f422db8ced1938bd40f87c4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reverse the byte order of the address.  <a href="class_nim_b_l_e_address.html#a0f390fb5f422db8ced1938bd40f87c4d">More...</a><br /></td></tr>
+<tr class="separator:a0f390fb5f422db8ced1938bd40f87c4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87e8ccc81c2d83bf0503166939319164"><td class="memItemLeft" align="right" valign="top"><a id="a87e8ccc81c2d83bf0503166939319164" name="a87e8ccc81c2d83bf0503166939319164"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> &amp;rhs) const</td></tr>
 <tr class="memdesc:a87e8ccc81c2d83bf0503166939319164"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience operator to check if this address is equal to another. <br /></td></tr>
@@ -141,7 +164,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
 <tr class="memdesc:ae243127c78af69b26dfa225effd806ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience operator to check if this address is not equal to another. <br /></td></tr>
 <tr class="separator:ae243127c78af69b26dfa225effd806ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5398ed7c6d8e95a7527103095e07093a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a5398ed7c6d8e95a7527103095e07093a">operator std::string</a> () const</td></tr>
-<tr class="memdesc:a5398ed7c6d8e95a7527103095e07093a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convienience operator to convert this address to string representation.  <a href="class_nim_b_l_e_address.html#a5398ed7c6d8e95a7527103095e07093a">More...</a><br /></td></tr>
+<tr class="memdesc:a5398ed7c6d8e95a7527103095e07093a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience operator to convert this address to string representation.  <a href="class_nim_b_l_e_address.html#a5398ed7c6d8e95a7527103095e07093a">More...</a><br /></td></tr>
 <tr class="separator:a5398ed7c6d8e95a7527103095e07093a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7d5d8d323d2846bf2082b83381bd7c8"><td class="memItemLeft" align="right" valign="top"><a id="aa7d5d8d323d2846bf2082b83381bd7c8" name="aa7d5d8d323d2846bf2082b83381bd7c8"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>operator uint64_t</b> () const</td></tr>
@@ -152,8 +175,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
 <div class="textblock"><p >A BLE device address. </p>
 <p >Every BLE device has a unique address which can be used to identify it and form connections. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ab8c9105b825ed0be5d1bbab966f2a0cf" name="ab8c9105b825ed0be5d1bbab966f2a0cf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab8c9105b825ed0be5d1bbab966f2a0cf">&#9670;&#160;</a></span>NimBLEAddress() <span class="overload">[1/4]</span></h2>
+<a id="ac1bad3b929b3a694402cc7354635775e" name="ac1bad3b929b3a694402cc7354635775e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1bad3b929b3a694402cc7354635775e">&#9670;&#160;</a></span>NimBLEAddress() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -161,7 +184,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
         <tr>
           <td class="memname">NimBLEAddress::NimBLEAddress </td>
           <td>(</td>
-          <td class="paramtype">ble_addr_t&#160;</td>
+          <td class="paramtype">const ble_addr_t&#160;</td>
           <td class="paramname"><em>address</em></td><td>)</td>
           <td></td>
         </tr>
@@ -178,8 +201,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
 
 </div>
 </div>
-<a id="a92637adc75c8010bcf34e2dd8f16cd94" name="a92637adc75c8010bcf34e2dd8f16cd94"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a92637adc75c8010bcf34e2dd8f16cd94">&#9670;&#160;</a></span>NimBLEAddress() <span class="overload">[2/4]</span></h2>
+<a id="a2e8c59521e12f3b97ab9fc7553845bc6" name="a2e8c59521e12f3b97ab9fc7553845bc6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e8c59521e12f3b97ab9fc7553845bc6">&#9670;&#160;</a></span>NimBLEAddress() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -187,8 +210,8 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
         <tr>
           <td class="memname">NimBLEAddress::NimBLEAddress </td>
           <td>(</td>
-          <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>address</em>[6], </td>
+          <td class="paramtype">const uint8_t&#160;</td>
+          <td class="paramname"><em>address</em>[BLE_DEV_ADDR_LEN], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -225,7 +248,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
           <td class="memname">NimBLEAddress::NimBLEAddress </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>stringAddress</em>, </td>
+          <td class="paramname"><em>addr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -243,10 +266,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
 
 <p>Create an address from a hex string. </p>
 <p >A hex string is of the format: </p><div class="fragment"><div class="line">00:00:00:00:00:00</div>
-</div><!-- fragment --><p> which is 17 characters in length.</p>
-<dl class="params"><dt>Parameters</dt><dd>
+</div><!-- fragment --><p> which is 17 characters in length. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">stringAddress</td><td>The hex string representation of the address. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">addr</td><td>The hex string representation of the address. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>The type of the address. </td></tr>
   </table>
   </dd>
@@ -320,14 +342,14 @@ Use the same byte order, so use 0xa4c1385def16 for "a4:c1:38:5d:ef:16". </p>
 
 </div>
 </div>
-<a id="adef69a03a08303957d7e40eef07b4d80" name="adef69a03a08303957d7e40eef07b4d80"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adef69a03a08303957d7e40eef07b4d80">&#9670;&#160;</a></span>getNative()</h2>
+<a id="a31b466293f6cb752d5aba6b6ffb95351" name="a31b466293f6cb752d5aba6b6ffb95351"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a31b466293f6cb752d5aba6b6ffb95351">&#9670;&#160;</a></span>getBase()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const uint8_t * NimBLEAddress::getNative </td>
+          <td class="memname">const ble_addr_t * NimBLEAddress::getBase </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -335,8 +357,8 @@ Use the same byte order, so use 0xa4c1385def16 for "a4:c1:38:5d:ef:16". </p>
       </table>
 </div><div class="memdoc">
 
-<p>Get the native representation of the address. </p>
-<dl class="section return"><dt>Returns</dt><dd>a pointer to the uint8_t[6] array of the address. </dd></dl>
+<p>Get the NimBLE base struct of the address. </p>
+<dl class="section return"><dt>Returns</dt><dd>A read only reference to the NimBLE base struct of the address. </dd></dl>
 
 </div>
 </div>
@@ -360,6 +382,126 @@ Use the same byte order, so use 0xa4c1385def16 for "a4:c1:38:5d:ef:16". </p>
 
 </div>
 </div>
+<a id="a196801fb1ad972085e748c90159e858e" name="a196801fb1ad972085e748c90159e858e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a196801fb1ad972085e748c90159e858e">&#9670;&#160;</a></span>getVal()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint8_t * NimBLEAddress::getVal </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the address value. </p>
+<dl class="section return"><dt>Returns</dt><dd>A read only reference to the address value. </dd></dl>
+
+</div>
+</div>
+<a id="a9af65abe3c02a16307b8cffa3b1bcac1" name="a9af65abe3c02a16307b8cffa3b1bcac1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9af65abe3c02a16307b8cffa3b1bcac1">&#9670;&#160;</a></span>isNrpa()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAddress::isNrpa </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Determine if this address is a Non-Resolvable Private Address. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the address is a NRPA. </dd></dl>
+
+</div>
+</div>
+<a id="aa05f35ab6724a00c65dd096006dba2bb" name="aa05f35ab6724a00c65dd096006dba2bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa05f35ab6724a00c65dd096006dba2bb">&#9670;&#160;</a></span>isNull()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAddress::isNull </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Determine if this address is a NULL Address. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the address is a NULL Address. </dd></dl>
+
+</div>
+</div>
+<a id="a7154780415ae201a1fcdf86298b6116c" name="a7154780415ae201a1fcdf86298b6116c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7154780415ae201a1fcdf86298b6116c">&#9670;&#160;</a></span>isPublic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAddress::isPublic </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Determine if this address is a Public Address. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the address is a Public Address. </dd></dl>
+
+</div>
+</div>
+<a id="a96fba1524ed8ab43f59f5f650e8fd3c8" name="a96fba1524ed8ab43f59f5f650e8fd3c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96fba1524ed8ab43f59f5f650e8fd3c8">&#9670;&#160;</a></span>isRpa()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAddress::isRpa </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Determine if this address is a Resolvable Private Address. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the address is a RPA. </dd></dl>
+
+</div>
+</div>
+<a id="a409e3ef141526c8f5c5fad99bd95b660" name="a409e3ef141526c8f5c5fad99bd95b660"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a409e3ef141526c8f5c5fad99bd95b660">&#9670;&#160;</a></span>isStatic()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAddress::isStatic </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Determine if this address is a Static Address. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the address is a Static Address. </dd></dl>
+
+</div>
+</div>
 <a id="a5398ed7c6d8e95a7527103095e07093a" name="a5398ed7c6d8e95a7527103095e07093a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5398ed7c6d8e95a7527103095e07093a">&#9670;&#160;</a></span>operator std::string()</h2>
 
@@ -375,8 +517,28 @@ Use the same byte order, so use 0xa4c1385def16 for "a4:c1:38:5d:ef:16". </p>
       </table>
 </div><div class="memdoc">
 
-<p>Convienience operator to convert this address to string representation. </p>
-<p >This allows passing <a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a> to functions that accept std::string and/or or it's methods as a parameter. </p>
+<p>Convenience operator to convert this address to string representation. </p>
+<p >This allows passing <a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a> to functions that accept std::string and/or it's methods as a parameter. </p>
+
+</div>
+</div>
+<a id="a0f390fb5f422db8ced1938bd40f87c4d" name="a0f390fb5f422db8ced1938bd40f87c4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f390fb5f422db8ced1938bd40f87c4d">&#9670;&#160;</a></span>reverseByteOrder()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> &amp; NimBLEAddress::reverseByteOrder </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Reverse the byte order of the address. </p>
+<dl class="section return"><dt>Returns</dt><dd>A reference to this address. </dd></dl>
 
 </div>
 </div>
@@ -396,9 +558,7 @@ Use the same byte order, so use 0xa4c1385def16 for "a4:c1:38:5d:ef:16". </p>
 </div><div class="memdoc">
 
 <p>Convert a BLE address to a string. </p>
-<p >A string representation of an address is in the format:</p>
-<div class="fragment"><div class="line">xx:xx:xx:xx:xx:xx</div>
-</div><!-- fragment --><dl class="section return"><dt>Returns</dt><dd>The string representation of the address. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The string representation of the address. </dd></dl>
 <dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000001">Deprecated:</a></b></dt><dd>Use std::string() operator instead. </dd></dl>
 
 </div>

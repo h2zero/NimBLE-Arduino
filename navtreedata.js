@@ -58,43 +58,46 @@ var NAVTREE =
         [ "Characteristics", "md__migration_guide.html#autotoc_md26", [
           [ "Originally", "md__migration_guide.html#autotoc_md27", null ],
           [ "Is Now", "md__migration_guide.html#autotoc_md28", null ],
-          [ "The full list of properties", "md__migration_guide.html#autotoc_md29", null ]
+          [ "The full list of properties", "md__migration_guide.html#autotoc_md29", null ],
+          [ "Characteristic callbacks", "md__migration_guide.html#autotoc_md30", null ]
         ] ],
-        [ "Descriptors", "md__migration_guide.html#autotoc_md30", null ],
-        [ "Server Security", "md__migration_guide.html#autotoc_md33", null ]
+        [ "Descriptors", "md__migration_guide.html#autotoc_md31", [
+          [ "Descriptor callbacks", "md__migration_guide.html#autotoc_md34", null ]
+        ] ],
+        [ "Server Security", "md__migration_guide.html#autotoc_md35", null ]
       ] ],
-      [ "Advertising API", "md__migration_guide.html#autotoc_md34", null ],
-      [ "Client API", "md__migration_guide.html#autotoc_md35", [
-        [ "Remote Services", "md__migration_guide.html#autotoc_md36", null ],
-        [ "Remote Characteristics", "md__migration_guide.html#autotoc_md37", null ],
-        [ "Client Security", "md__migration_guide.html#autotoc_md38", null ]
+      [ "Advertising API", "md__migration_guide.html#autotoc_md36", null ],
+      [ "Client API", "md__migration_guide.html#autotoc_md37", [
+        [ "Remote Services", "md__migration_guide.html#autotoc_md38", null ],
+        [ "Remote Characteristics", "md__migration_guide.html#autotoc_md39", null ],
+        [ "Client callbacks", "md__migration_guide.html#autotoc_md40", null ],
+        [ "Client Security", "md__migration_guide.html#autotoc_md41", null ]
       ] ],
-      [ "Security API", "md__migration_guide.html#autotoc_md39", null ],
-      [ "Arduino Configuration", "md__migration_guide.html#autotoc_md40", null ]
+      [ "BLE Scan", "md__migration_guide.html#autotoc_md42", null ],
+      [ "Security API", "md__migration_guide.html#autotoc_md43", null ],
+      [ "Arduino Configuration", "md__migration_guide.html#autotoc_md44", null ]
     ] ],
     [ "New User Guide", "md__new_user_guide.html", [
-      [ "Include Files", "md__new_user_guide.html#autotoc_md42", null ],
-      [ "Using the Library", "md__new_user_guide.html#autotoc_md43", null ],
-      [ "Creating a Server", "md__new_user_guide.html#autotoc_md44", null ],
-      [ "Creating a Client", "md__new_user_guide.html#autotoc_md45", null ]
+      [ "Include Files", "md__new_user_guide.html#autotoc_md46", null ],
+      [ "Using the Library", "md__new_user_guide.html#autotoc_md47", null ],
+      [ "Creating a Server", "md__new_user_guide.html#autotoc_md48", null ],
+      [ "Creating a Client", "md__new_user_guide.html#autotoc_md49", null ]
     ] ],
     [ "Usage Tips", "md__usage_tips.html", [
-      [ "Put BLE functions in a task running on the NimBLE stack core", "md__usage_tips.html#autotoc_md47", null ],
-      [ "Do not delete client instances unless necessary or unused", "md__usage_tips.html#autotoc_md48", null ],
-      [ "Only retrieve the services and characteristics needed", "md__usage_tips.html#autotoc_md49", null ],
-      [ "Check return values", "md__usage_tips.html#autotoc_md50", null ],
-      [ "There will be bugs - please report them", "md__usage_tips.html#autotoc_md51", null ]
+      [ "Put BLE functions in a task running on the NimBLE stack core", "md__usage_tips.html#autotoc_md51", null ],
+      [ "Do not delete client instances unless necessary or unused", "md__usage_tips.html#autotoc_md52", null ],
+      [ "Only retrieve the services and characteristics needed", "md__usage_tips.html#autotoc_md53", null ],
+      [ "Check return values", "md__usage_tips.html#autotoc_md54", null ],
+      [ "There will be bugs - please report them", "md__usage_tips.html#autotoc_md55", null ]
     ] ],
     [ "Deprecated List", "deprecated.html", null ],
-    [ "Todo List", "todo.html", null ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
       [ "Class Index", "classes.html", null ],
       [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
       [ "Class Members", "functions.html", [
         [ "All", "functions.html", "functions_dup" ],
-        [ "Functions", "functions_func.html", "functions_func" ],
-        [ "Enumerations", "functions_enum.html", null ]
+        [ "Functions", "functions_func.html", "functions_func" ]
       ] ]
     ] ],
     [ "Files", "files.html", [
@@ -106,8 +109,8 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_h_i_d_keyboard_types_8h_source.html",
-"class_nim_b_l_e_client.html#a1f9d4ad6d3d03b819bfad82d1f39b684",
-"class_nim_b_l_e_scan_results.html#ac2356f6c1b8384ebc061d4b7953a9374"
+"class_nim_b_l_e_characteristic.html#aed7315af86d4e1c61cc2c1045921faf8",
+"class_nim_b_l_e_server.html#a00c92f62f41ec1c499dfaf042b487d75"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

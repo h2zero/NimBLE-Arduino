@@ -1,5 +1,5 @@
 var class_nim_b_l_e_descriptor_callbacks =
 [
-    [ "onRead", "class_nim_b_l_e_descriptor_callbacks.html#a6b13d2a8447f50a089b869cea9fcdcbc", null ],
-    [ "onWrite", "class_nim_b_l_e_descriptor_callbacks.html#a7081bf2c4f22225c4715e09762be40ed", null ]
+    [ "onRead", "class_nim_b_l_e_descriptor_callbacks.html#a061576b56702a6aca62a38f2ba27ba98", null ],
+    [ "onWrite", "class_nim_b_l_e_descriptor_callbacks.html#a2872d9e602d4e23cc63f55f5b2f76dd7", null ]
 ];

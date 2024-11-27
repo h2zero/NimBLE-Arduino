@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.2</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
    </div>
   </td>
  </tr>
@@ -107,98 +107,119 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>NimBLEAdvertising</b> ()</td></tr>
 <tr class="memdesc:abe6258a917243a4567c3d6eece2ddcdd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a default advertising object. <br /></td></tr>
 <tr class="separator:abe6258a917243a4567c3d6eece2ddcdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f334752ea04223185292fe9ab524b69"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a4f334752ea04223185292fe9ab524b69">addServiceUUID</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;serviceUUID)</td></tr>
-<tr class="memdesc:a4f334752ea04223185292fe9ab524b69"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a service uuid to exposed list of services.  <a href="class_nim_b_l_e_advertising.html#a4f334752ea04223185292fe9ab524b69">More...</a><br /></td></tr>
-<tr class="separator:a4f334752ea04223185292fe9ab524b69"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e596e8dfa9268554a5b189380405d5c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a5e596e8dfa9268554a5b189380405d5c">addServiceUUID</a> (const char *serviceUUID)</td></tr>
-<tr class="memdesc:a5e596e8dfa9268554a5b189380405d5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a service uuid to exposed list of services.  <a href="class_nim_b_l_e_advertising.html#a5e596e8dfa9268554a5b189380405d5c">More...</a><br /></td></tr>
-<tr class="separator:a5e596e8dfa9268554a5b189380405d5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a725437c00152ff57ef1e21bdf7be980d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a725437c00152ff57ef1e21bdf7be980d">removeServiceUUID</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;serviceUUID)</td></tr>
-<tr class="memdesc:a725437c00152ff57ef1e21bdf7be980d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a service UUID from the advertisment.  <a href="class_nim_b_l_e_advertising.html#a725437c00152ff57ef1e21bdf7be980d">More...</a><br /></td></tr>
-<tr class="separator:a725437c00152ff57ef1e21bdf7be980d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89722f418bb530e0cb0fc5bea083f00b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a89722f418bb530e0cb0fc5bea083f00b">start</a> (uint32_t duration=0, advCompleteCB_t <a class="el" href="class_nim_b_l_e_advertising.html#a4de7bf016a086a2d3f6f14ae134678f2">advCompleteCB</a>=nullptr, <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> *dirAddr=nullptr)</td></tr>
-<tr class="memdesc:a89722f418bb530e0cb0fc5bea083f00b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start advertising.  <a href="class_nim_b_l_e_advertising.html#a89722f418bb530e0cb0fc5bea083f00b">More...</a><br /></td></tr>
-<tr class="separator:a89722f418bb530e0cb0fc5bea083f00b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79f926f083c1cfb07dad6a673405dd47"><td class="memItemLeft" align="right" valign="top"><a id="a79f926f083c1cfb07dad6a673405dd47" name="a79f926f083c1cfb07dad6a673405dd47"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>removeServices</b> ()</td></tr>
-<tr class="memdesc:a79f926f083c1cfb07dad6a673405dd47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove all service UUIDs from the advertisment. <br /></td></tr>
-<tr class="separator:a79f926f083c1cfb07dad6a673405dd47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a5c880ee36fd44e0c72c14c47c8e15e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a8a5c880ee36fd44e0c72c14c47c8e15e">start</a> (uint32_t duration=0, const <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> *dirAddr=nullptr)</td></tr>
+<tr class="memdesc:a8a5c880ee36fd44e0c72c14c47c8e15e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start advertising.  <a href="class_nim_b_l_e_advertising.html#a8a5c880ee36fd44e0c72c14c47c8e15e">More...</a><br /></td></tr>
+<tr class="separator:a8a5c880ee36fd44e0c72c14c47c8e15e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e81d7d3aa2b72b8db58427d4a42727b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a3e81d7d3aa2b72b8db58427d4a42727b">setAdvertisingCompleteCallback</a> (advCompleteCB_t callback)</td></tr>
+<tr class="memdesc:a3e81d7d3aa2b72b8db58427d4a42727b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the callback to be invoked when advertising stops.  <a href="class_nim_b_l_e_advertising.html#a3e81d7d3aa2b72b8db58427d4a42727b">More...</a><br /></td></tr>
+<tr class="separator:a3e81d7d3aa2b72b8db58427d4a42727b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ab772936ace18c9a7e509740aa59800"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a3ab772936ace18c9a7e509740aa59800">stop</a> ()</td></tr>
 <tr class="memdesc:a3ab772936ace18c9a7e509740aa59800"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop advertising.  <a href="class_nim_b_l_e_advertising.html#a3ab772936ace18c9a7e509740aa59800">More...</a><br /></td></tr>
 <tr class="separator:a3ab772936ace18c9a7e509740aa59800"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0d30dfb57670cc8180e17dffddad416"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#aa0d30dfb57670cc8180e17dffddad416">setAppearance</a> (uint16_t appearance)</td></tr>
-<tr class="memdesc:aa0d30dfb57670cc8180e17dffddad416"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the device appearance in the advertising data.  <a href="class_nim_b_l_e_advertising.html#aa0d30dfb57670cc8180e17dffddad416">More...</a><br /></td></tr>
-<tr class="separator:aa0d30dfb57670cc8180e17dffddad416"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add2ecd09877d7e4548b11ec7cb8c7a47"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#add2ecd09877d7e4548b11ec7cb8c7a47">setName</a> (const std::string &amp;name)</td></tr>
-<tr class="memdesc:add2ecd09877d7e4548b11ec7cb8c7a47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised name of the device.  <a href="class_nim_b_l_e_advertising.html#add2ecd09877d7e4548b11ec7cb8c7a47">More...</a><br /></td></tr>
-<tr class="separator:add2ecd09877d7e4548b11ec7cb8c7a47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1eff592870a47b0f62b0f0894efadbd4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a1eff592870a47b0f62b0f0894efadbd4">setManufacturerData</a> (const std::string &amp;data)</td></tr>
-<tr class="memdesc:a1eff592870a47b0f62b0f0894efadbd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised manufacturer data.  <a href="class_nim_b_l_e_advertising.html#a1eff592870a47b0f62b0f0894efadbd4">More...</a><br /></td></tr>
-<tr class="separator:a1eff592870a47b0f62b0f0894efadbd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b7d641e2b04d76297510c1118d75ee7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a2b7d641e2b04d76297510c1118d75ee7">setManufacturerData</a> (const std::vector&lt; uint8_t &gt; &amp;data)</td></tr>
-<tr class="memdesc:a2b7d641e2b04d76297510c1118d75ee7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised manufacturer data.  <a href="class_nim_b_l_e_advertising.html#a2b7d641e2b04d76297510c1118d75ee7">More...</a><br /></td></tr>
-<tr class="separator:a2b7d641e2b04d76297510c1118d75ee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6495d7c9ad80a8c2a5edf974705f8103"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a6495d7c9ad80a8c2a5edf974705f8103">setURI</a> (const std::string &amp;uri)</td></tr>
-<tr class="memdesc:a6495d7c9ad80a8c2a5edf974705f8103"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised URI.  <a href="class_nim_b_l_e_advertising.html#a6495d7c9ad80a8c2a5edf974705f8103">More...</a><br /></td></tr>
-<tr class="separator:a6495d7c9ad80a8c2a5edf974705f8103"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a994e43e9e4ace6ce64c57e57d0575781"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a994e43e9e4ace6ce64c57e57d0575781">setServiceData</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, const std::string &amp;data)</td></tr>
-<tr class="memdesc:a994e43e9e4ace6ce64c57e57d0575781"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the service data advertised for the UUID.  <a href="class_nim_b_l_e_advertising.html#a994e43e9e4ace6ce64c57e57d0575781">More...</a><br /></td></tr>
-<tr class="separator:a994e43e9e4ace6ce64c57e57d0575781"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68d54f11b47b9993322efec1d07c3519"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a68d54f11b47b9993322efec1d07c3519">setAdvertisementType</a> (uint8_t adv_type)</td></tr>
-<tr class="memdesc:a68d54f11b47b9993322efec1d07c3519"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the type of advertisment to use.  <a href="class_nim_b_l_e_advertising.html#a68d54f11b47b9993322efec1d07c3519">More...</a><br /></td></tr>
-<tr class="separator:a68d54f11b47b9993322efec1d07c3519"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab512576d8873fbbb631bac8ada19530"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#aab512576d8873fbbb631bac8ada19530">setMaxInterval</a> (uint16_t maxinterval)</td></tr>
-<tr class="memdesc:aab512576d8873fbbb631bac8ada19530"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the maximum advertising interval.  <a href="class_nim_b_l_e_advertising.html#aab512576d8873fbbb631bac8ada19530">More...</a><br /></td></tr>
-<tr class="separator:aab512576d8873fbbb631bac8ada19530"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16bd135cab3f06bc0ba81c2aec19cbbc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a16bd135cab3f06bc0ba81c2aec19cbbc">setMinInterval</a> (uint16_t mininterval)</td></tr>
-<tr class="memdesc:a16bd135cab3f06bc0ba81c2aec19cbbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the minimum advertising interval.  <a href="class_nim_b_l_e_advertising.html#a16bd135cab3f06bc0ba81c2aec19cbbc">More...</a><br /></td></tr>
-<tr class="separator:a16bd135cab3f06bc0ba81c2aec19cbbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7083f58717b7e76d90d367f00a0ef08"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#af7083f58717b7e76d90d367f00a0ef08">setAdvertisementData</a> (<a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;advertisementData)</td></tr>
-<tr class="memdesc:af7083f58717b7e76d90d367f00a0ef08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertisement data that is to be published in a regular advertisement.  <a href="class_nim_b_l_e_advertising.html#af7083f58717b7e76d90d367f00a0ef08">More...</a><br /></td></tr>
-<tr class="separator:af7083f58717b7e76d90d367f00a0ef08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3da80c7d17a7824484ee254076e4790"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#aa3da80c7d17a7824484ee254076e4790">setScanFilter</a> (bool scanRequestWhitelistOnly, bool connectWhitelistOnly)</td></tr>
-<tr class="memdesc:aa3da80c7d17a7824484ee254076e4790"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the filtering for the scan filter.  <a href="class_nim_b_l_e_advertising.html#aa3da80c7d17a7824484ee254076e4790">More...</a><br /></td></tr>
-<tr class="separator:aa3da80c7d17a7824484ee254076e4790"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04a51a0c639a70295a9b671f73b34358"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a04a51a0c639a70295a9b671f73b34358">setScanResponseData</a> (<a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;advertisementData)</td></tr>
-<tr class="memdesc:a04a51a0c639a70295a9b671f73b34358"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertisement data that is to be published in a scan response.  <a href="class_nim_b_l_e_advertising.html#a04a51a0c639a70295a9b671f73b34358">More...</a><br /></td></tr>
-<tr class="separator:a04a51a0c639a70295a9b671f73b34358"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6fb4d9ad3949928ac83d3e74857ab91f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a6fb4d9ad3949928ac83d3e74857ab91f">setScanResponse</a> (bool)</td></tr>
-<tr class="memdesc:a6fb4d9ad3949928ac83d3e74857ab91f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set if scan response is available.  <a href="class_nim_b_l_e_advertising.html#a6fb4d9ad3949928ac83d3e74857ab91f">More...</a><br /></td></tr>
-<tr class="separator:a6fb4d9ad3949928ac83d3e74857ab91f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3bc158da1f732361df69cf16ca1cfd42"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a3bc158da1f732361df69cf16ca1cfd42">setMinPreferred</a> (uint16_t)</td></tr>
-<tr class="memdesc:a3bc158da1f732361df69cf16ca1cfd42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised min connection interval preferred by this device.  <a href="class_nim_b_l_e_advertising.html#a3bc158da1f732361df69cf16ca1cfd42">More...</a><br /></td></tr>
-<tr class="separator:a3bc158da1f732361df69cf16ca1cfd42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3382cdf80f5ae46a52e3b9159f8e1b66"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a3382cdf80f5ae46a52e3b9159f8e1b66">setMaxPreferred</a> (uint16_t)</td></tr>
-<tr class="memdesc:a3382cdf80f5ae46a52e3b9159f8e1b66"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised max connection interval preferred by this device.  <a href="class_nim_b_l_e_advertising.html#a3382cdf80f5ae46a52e3b9159f8e1b66">More...</a><br /></td></tr>
-<tr class="separator:a3382cdf80f5ae46a52e3b9159f8e1b66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4ff0af45d1f7ed5bc208612852bc43a"><td class="memItemLeft" align="right" valign="top"><a id="ac4ff0af45d1f7ed5bc208612852bc43a" name="ac4ff0af45d1f7ed5bc208612852bc43a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>addTxPower</b> ()</td></tr>
-<tr class="memdesc:ac4ff0af45d1f7ed5bc208612852bc43a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add the transmission power level to the advertisement packet. <br /></td></tr>
-<tr class="separator:ac4ff0af45d1f7ed5bc208612852bc43a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a545b505ea76396c33133d41a78fad5b8"><td class="memItemLeft" align="right" valign="top"><a id="a545b505ea76396c33133d41a78fad5b8" name="a545b505ea76396c33133d41a78fad5b8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
-<tr class="memdesc:a545b505ea76396c33133d41a78fad5b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops the current advertising and resets the advertising data to the default values. <br /></td></tr>
-<tr class="separator:a545b505ea76396c33133d41a78fad5b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4de7bf016a086a2d3f6f14ae134678f2"><td class="memItemLeft" align="right" valign="top"><a id="a4de7bf016a086a2d3f6f14ae134678f2" name="a4de7bf016a086a2d3f6f14ae134678f2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>advCompleteCB</b> ()</td></tr>
-<tr class="memdesc:a4de7bf016a086a2d3f6f14ae134678f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handles the callback when advertising stops. <br /></td></tr>
-<tr class="separator:a4de7bf016a086a2d3f6f14ae134678f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae49d2bd91cabca46ec7c4bbd7fc49407"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#ae49d2bd91cabca46ec7c4bbd7fc49407">setConnectableMode</a> (uint8_t mode)</td></tr>
+<tr class="memdesc:ae49d2bd91cabca46ec7c4bbd7fc49407"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the type of connectable mode to advertise.  <a href="class_nim_b_l_e_advertising.html#ae49d2bd91cabca46ec7c4bbd7fc49407">More...</a><br /></td></tr>
+<tr class="separator:ae49d2bd91cabca46ec7c4bbd7fc49407"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a710eacfc97ecea1bf9a9a3569c58d410"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a710eacfc97ecea1bf9a9a3569c58d410">setDiscoverableMode</a> (uint8_t mode)</td></tr>
+<tr class="memdesc:a710eacfc97ecea1bf9a9a3569c58d410"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the discoverable mode to use.  <a href="class_nim_b_l_e_advertising.html#a710eacfc97ecea1bf9a9a3569c58d410">More...</a><br /></td></tr>
+<tr class="separator:a710eacfc97ecea1bf9a9a3569c58d410"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91cde5680de36840fc18f6fd76665af7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a91cde5680de36840fc18f6fd76665af7">reset</a> ()</td></tr>
+<tr class="memdesc:a91cde5680de36840fc18f6fd76665af7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops the current advertising and resets the advertising data to the default values.  <a href="class_nim_b_l_e_advertising.html#a91cde5680de36840fc18f6fd76665af7">More...</a><br /></td></tr>
+<tr class="separator:a91cde5680de36840fc18f6fd76665af7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac257ab68520a244cb6494d793f9b6c2a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#ac257ab68520a244cb6494d793f9b6c2a">isAdvertising</a> ()</td></tr>
 <tr class="memdesc:ac257ab68520a244cb6494d793f9b6c2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if currently advertising.  <a href="class_nim_b_l_e_advertising.html#ac257ab68520a244cb6494d793f9b6c2a">More...</a><br /></td></tr>
 <tr class="separator:ac257ab68520a244cb6494d793f9b6c2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3da80c7d17a7824484ee254076e4790"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#aa3da80c7d17a7824484ee254076e4790">setScanFilter</a> (bool scanRequestWhitelistOnly, bool connectWhitelistOnly)</td></tr>
+<tr class="memdesc:aa3da80c7d17a7824484ee254076e4790"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the filtering for the scan filter.  <a href="class_nim_b_l_e_advertising.html#aa3da80c7d17a7824484ee254076e4790">More...</a><br /></td></tr>
+<tr class="separator:aa3da80c7d17a7824484ee254076e4790"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6badd669ddf4ff8507561d5041d093d6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a6badd669ddf4ff8507561d5041d093d6">enableScanResponse</a> (bool enable)</td></tr>
+<tr class="memdesc:a6badd669ddf4ff8507561d5041d093d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable scan response data.  <a href="class_nim_b_l_e_advertising.html#a6badd669ddf4ff8507561d5041d093d6">More...</a><br /></td></tr>
+<tr class="separator:a6badd669ddf4ff8507561d5041d093d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28c082bb540325ada66b4e203ae6998a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a28c082bb540325ada66b4e203ae6998a">setAdvertisingInterval</a> (uint16_t interval)</td></tr>
+<tr class="memdesc:a28c082bb540325ada66b4e203ae6998a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertising interval.  <a href="class_nim_b_l_e_advertising.html#a28c082bb540325ada66b4e203ae6998a">More...</a><br /></td></tr>
+<tr class="separator:a28c082bb540325ada66b4e203ae6998a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97bf63603b9aabdf0a5284269dfc5549"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a97bf63603b9aabdf0a5284269dfc5549">setMaxInterval</a> (uint16_t maxInterval)</td></tr>
+<tr class="memdesc:a97bf63603b9aabdf0a5284269dfc5549"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the maximum advertising interval.  <a href="class_nim_b_l_e_advertising.html#a97bf63603b9aabdf0a5284269dfc5549">More...</a><br /></td></tr>
+<tr class="separator:a97bf63603b9aabdf0a5284269dfc5549"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6b5be947a5e188d512e3338d36a039cb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a6b5be947a5e188d512e3338d36a039cb">setMinInterval</a> (uint16_t minInterval)</td></tr>
+<tr class="memdesc:a6b5be947a5e188d512e3338d36a039cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the minimum advertising interval.  <a href="class_nim_b_l_e_advertising.html#a6b5be947a5e188d512e3338d36a039cb">More...</a><br /></td></tr>
+<tr class="separator:a6b5be947a5e188d512e3338d36a039cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8afd94479ebac3996fa3712d3d92325"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#ab8afd94479ebac3996fa3712d3d92325">setAdvertisementData</a> (const <a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;advertisementData)</td></tr>
+<tr class="memdesc:ab8afd94479ebac3996fa3712d3d92325"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertisement data that is to be broadcast in a regular advertisement.  <a href="class_nim_b_l_e_advertising.html#ab8afd94479ebac3996fa3712d3d92325">More...</a><br /></td></tr>
+<tr class="separator:ab8afd94479ebac3996fa3712d3d92325"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97798e6d9d7721eb588c5e67d54e97ef"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a97798e6d9d7721eb588c5e67d54e97ef">setScanResponseData</a> (const <a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;advertisementData)</td></tr>
+<tr class="memdesc:a97798e6d9d7721eb588c5e67d54e97ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the data that is to be provided in a scan response.  <a href="class_nim_b_l_e_advertising.html#a97798e6d9d7721eb588c5e67d54e97ef">More...</a><br /></td></tr>
+<tr class="separator:a97798e6d9d7721eb588c5e67d54e97ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e23657839038e5219f9c009cf360a32"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a1e23657839038e5219f9c009cf360a32">getAdvertisementData</a> ()</td></tr>
+<tr class="memdesc:a1e23657839038e5219f9c009cf360a32"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current advertisement data.  <a href="class_nim_b_l_e_advertising.html#a1e23657839038e5219f9c009cf360a32">More...</a><br /></td></tr>
+<tr class="separator:a1e23657839038e5219f9c009cf360a32"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0e7d64d51882830750bcb87e2d9678c"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#ae0e7d64d51882830750bcb87e2d9678c">getScanData</a> ()</td></tr>
+<tr class="memdesc:ae0e7d64d51882830750bcb87e2d9678c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current scan response data.  <a href="class_nim_b_l_e_advertising.html#ae0e7d64d51882830750bcb87e2d9678c">More...</a><br /></td></tr>
+<tr class="separator:ae0e7d64d51882830750bcb87e2d9678c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7cee42f24ad38872936a0bbc9e2ac1e"><td class="memItemLeft" align="right" valign="top"><a id="af7cee42f24ad38872936a0bbc9e2ac1e" name="af7cee42f24ad38872936a0bbc9e2ac1e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>clearData</b> ()</td></tr>
+<tr class="memdesc:af7cee42f24ad38872936a0bbc9e2ac1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear the advertisement and scan response data and set the flags to BLE_HS_ADV_F_DISC_GEN. <br /></td></tr>
+<tr class="separator:af7cee42f24ad38872936a0bbc9e2ac1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67c9589dff7e0ee3ec24f2c930d56c06"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a67c9589dff7e0ee3ec24f2c930d56c06">addServiceUUID</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;serviceUUID)</td></tr>
+<tr class="memdesc:a67c9589dff7e0ee3ec24f2c930d56c06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a service uuid to exposed list of services.  <a href="class_nim_b_l_e_advertising.html#a67c9589dff7e0ee3ec24f2c930d56c06">More...</a><br /></td></tr>
+<tr class="separator:a67c9589dff7e0ee3ec24f2c930d56c06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1bacfa32690f7e0c6f1172ea03c68c0d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a1bacfa32690f7e0c6f1172ea03c68c0d">addServiceUUID</a> (const char *serviceUUID)</td></tr>
+<tr class="memdesc:a1bacfa32690f7e0c6f1172ea03c68c0d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a service uuid to exposed list of services.  <a href="class_nim_b_l_e_advertising.html#a1bacfa32690f7e0c6f1172ea03c68c0d">More...</a><br /></td></tr>
+<tr class="separator:a1bacfa32690f7e0c6f1172ea03c68c0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba383012133dd694f56cf86966b2d80a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#aba383012133dd694f56cf86966b2d80a">removeServiceUUID</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;serviceUUID)</td></tr>
+<tr class="memdesc:aba383012133dd694f56cf86966b2d80a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a service UUID from the advertisement.  <a href="class_nim_b_l_e_advertising.html#aba383012133dd694f56cf86966b2d80a">More...</a><br /></td></tr>
+<tr class="separator:aba383012133dd694f56cf86966b2d80a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94452c2f9f7233611246827ce62f6a2b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a94452c2f9f7233611246827ce62f6a2b">removeServiceUUID</a> (const char *serviceUUID)</td></tr>
+<tr class="memdesc:a94452c2f9f7233611246827ce62f6a2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a service UUID from the advertisement.  <a href="class_nim_b_l_e_advertising.html#a94452c2f9f7233611246827ce62f6a2b">More...</a><br /></td></tr>
+<tr class="separator:a94452c2f9f7233611246827ce62f6a2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad159c2e2a65d9bc7dcc5babed146936d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#ad159c2e2a65d9bc7dcc5babed146936d">removeServices</a> ()</td></tr>
+<tr class="memdesc:ad159c2e2a65d9bc7dcc5babed146936d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove all service UUIDs from the advertisement.  <a href="class_nim_b_l_e_advertising.html#ad159c2e2a65d9bc7dcc5babed146936d">More...</a><br /></td></tr>
+<tr class="separator:ad159c2e2a65d9bc7dcc5babed146936d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f4e1ae9552400fb2bb3cd73b2a483b0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a1f4e1ae9552400fb2bb3cd73b2a483b0">setAppearance</a> (uint16_t appearance)</td></tr>
+<tr class="memdesc:a1f4e1ae9552400fb2bb3cd73b2a483b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the device appearance in the advertising data.  <a href="class_nim_b_l_e_advertising.html#a1f4e1ae9552400fb2bb3cd73b2a483b0">More...</a><br /></td></tr>
+<tr class="separator:a1f4e1ae9552400fb2bb3cd73b2a483b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9dbb66ca66aa040731fcfd737f881469"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a9dbb66ca66aa040731fcfd737f881469">setPreferredParams</a> (uint16_t minInterval, uint16_t maxInterval)</td></tr>
+<tr class="memdesc:a9dbb66ca66aa040731fcfd737f881469"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the preferred min and max connection intervals to advertise.  <a href="class_nim_b_l_e_advertising.html#a9dbb66ca66aa040731fcfd737f881469">More...</a><br /></td></tr>
+<tr class="separator:a9dbb66ca66aa040731fcfd737f881469"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d3c5cb3a93416a4206abb1f8e443ebf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a0d3c5cb3a93416a4206abb1f8e443ebf">addTxPower</a> ()</td></tr>
+<tr class="memdesc:a0d3c5cb3a93416a4206abb1f8e443ebf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add the transmission power level to the advertisement packet.  <a href="class_nim_b_l_e_advertising.html#a0d3c5cb3a93416a4206abb1f8e443ebf">More...</a><br /></td></tr>
+<tr class="separator:a0d3c5cb3a93416a4206abb1f8e443ebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fb4b74eb7acb1f46e57ff772baccd88"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a7fb4b74eb7acb1f46e57ff772baccd88">setName</a> (const std::string &amp;name)</td></tr>
+<tr class="memdesc:a7fb4b74eb7acb1f46e57ff772baccd88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised name of the device.  <a href="class_nim_b_l_e_advertising.html#a7fb4b74eb7acb1f46e57ff772baccd88">More...</a><br /></td></tr>
+<tr class="separator:a7fb4b74eb7acb1f46e57ff772baccd88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac433e3458ac5259ae21c4bdbd1198781"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#ac433e3458ac5259ae21c4bdbd1198781">setManufacturerData</a> (const uint8_t *data, size_t length)</td></tr>
+<tr class="memdesc:ac433e3458ac5259ae21c4bdbd1198781"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised manufacturer data.  <a href="class_nim_b_l_e_advertising.html#ac433e3458ac5259ae21c4bdbd1198781">More...</a><br /></td></tr>
+<tr class="separator:ac433e3458ac5259ae21c4bdbd1198781"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9f3a7270e1cefedf8547c5188d06120"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#ac9f3a7270e1cefedf8547c5188d06120">setManufacturerData</a> (const std::string &amp;data)</td></tr>
+<tr class="memdesc:ac9f3a7270e1cefedf8547c5188d06120"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised manufacturer data.  <a href="class_nim_b_l_e_advertising.html#ac9f3a7270e1cefedf8547c5188d06120">More...</a><br /></td></tr>
+<tr class="separator:ac9f3a7270e1cefedf8547c5188d06120"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac1b5e560aa497a274985a22083bfc97"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#aac1b5e560aa497a274985a22083bfc97">setManufacturerData</a> (const std::vector&lt; uint8_t &gt; &amp;data)</td></tr>
+<tr class="memdesc:aac1b5e560aa497a274985a22083bfc97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised manufacturer data.  <a href="class_nim_b_l_e_advertising.html#aac1b5e560aa497a274985a22083bfc97">More...</a><br /></td></tr>
+<tr class="separator:aac1b5e560aa497a274985a22083bfc97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9fe23a52ac3f699095d84d2ba8f90c28"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a9fe23a52ac3f699095d84d2ba8f90c28">setURI</a> (const std::string &amp;uri)</td></tr>
+<tr class="memdesc:a9fe23a52ac3f699095d84d2ba8f90c28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the advertised URI.  <a href="class_nim_b_l_e_advertising.html#a9fe23a52ac3f699095d84d2ba8f90c28">More...</a><br /></td></tr>
+<tr class="separator:a9fe23a52ac3f699095d84d2ba8f90c28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a815faed49fb4f29337fda94bd39c0bbc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a815faed49fb4f29337fda94bd39c0bbc">setServiceData</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, const uint8_t *data, size_t length)</td></tr>
+<tr class="memdesc:a815faed49fb4f29337fda94bd39c0bbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the service data advertised for the UUID.  <a href="class_nim_b_l_e_advertising.html#a815faed49fb4f29337fda94bd39c0bbc">More...</a><br /></td></tr>
+<tr class="separator:a815faed49fb4f29337fda94bd39c0bbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a708384c4b9af3006893afbdef74362bc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a708384c4b9af3006893afbdef74362bc">setServiceData</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, const std::string &amp;data)</td></tr>
+<tr class="memdesc:a708384c4b9af3006893afbdef74362bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the service data advertised for the UUID.  <a href="class_nim_b_l_e_advertising.html#a708384c4b9af3006893afbdef74362bc">More...</a><br /></td></tr>
+<tr class="separator:a708384c4b9af3006893afbdef74362bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65123182c5218758433e4acf0432fc84"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertising.html#a65123182c5218758433e4acf0432fc84">setServiceData</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, const std::vector&lt; uint8_t &gt; &amp;data)</td></tr>
+<tr class="memdesc:a65123182c5218758433e4acf0432fc84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the service data advertised for the UUID.  <a href="class_nim_b_l_e_advertising.html#a65123182c5218758433e4acf0432fc84">More...</a><br /></td></tr>
+<tr class="separator:a65123182c5218758433e4acf0432fc84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Perform and manage BLE advertising. </p>
 <p >A BLE server will want to perform advertising in order to make itself known to BLE clients. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a5e596e8dfa9268554a5b189380405d5c" name="a5e596e8dfa9268554a5b189380405d5c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5e596e8dfa9268554a5b189380405d5c">&#9670;&#160;</a></span>addServiceUUID() <span class="overload">[1/2]</span></h2>
+<a id="a1bacfa32690f7e0c6f1172ea03c68c0d" name="a1bacfa32690f7e0c6f1172ea03c68c0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1bacfa32690f7e0c6f1172ea03c68c0d">&#9670;&#160;</a></span>addServiceUUID() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::addServiceUUID </td>
+          <td class="memname">bool NimBLEAdvertising::addServiceUUID </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>serviceUUID</em></td><td>)</td>
@@ -214,17 +235,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>advCompleteCB</b> ()<
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the service was added successfully. </dd></dl>
 
 </div>
 </div>
-<a id="a4f334752ea04223185292fe9ab524b69" name="a4f334752ea04223185292fe9ab524b69"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4f334752ea04223185292fe9ab524b69">&#9670;&#160;</a></span>addServiceUUID() <span class="overload">[2/2]</span></h2>
+<a id="a67c9589dff7e0ee3ec24f2c930d56c06" name="a67c9589dff7e0ee3ec24f2c930d56c06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a67c9589dff7e0ee3ec24f2c930d56c06">&#9670;&#160;</a></span>addServiceUUID() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::addServiceUUID </td>
+          <td class="memname">bool NimBLEAdvertising::addServiceUUID </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td>
           <td class="paramname"><em>serviceUUID</em></td><td>)</td>
@@ -240,6 +262,94 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>advCompleteCB</b> ()<
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the service was added successfully. </dd></dl>
+
+</div>
+</div>
+<a id="a0d3c5cb3a93416a4206abb1f8e443ebf" name="a0d3c5cb3a93416a4206abb1f8e443ebf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d3c5cb3a93416a4206abb1f8e443ebf">&#9670;&#160;</a></span>addTxPower()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::addTxPower </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Add the transmission power level to the advertisement packet. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the transmission power level was added successfully. </dd></dl>
+
+</div>
+</div>
+<a id="a6badd669ddf4ff8507561d5041d093d6" name="a6badd669ddf4ff8507561d5041d093d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6badd669ddf4ff8507561d5041d093d6">&#9670;&#160;</a></span>enableScanResponse()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEAdvertising::enableScanResponse </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>enable</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Enable scan response data. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">enable</td><td>If true, scan response data will be available, false disabled, default = disabled.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>The scan response data is sent in response to a scan request from a peer device. </p>
+
+</div>
+</div>
+<a id="a1e23657839038e5219f9c009cf360a32" name="a1e23657839038e5219f9c009cf360a32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e23657839038e5219f9c009cf360a32">&#9670;&#160;</a></span>getAdvertisementData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp; NimBLEAdvertising::getAdvertisementData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the current advertisement data. </p>
+<dl class="section return"><dt>Returns</dt><dd>a reference to the current advertisement data. </dd></dl>
+
+</div>
+</div>
+<a id="ae0e7d64d51882830750bcb87e2d9678c" name="ae0e7d64d51882830750bcb87e2d9678c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0e7d64d51882830750bcb87e2d9678c">&#9670;&#160;</a></span>getScanData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp; NimBLEAdvertising::getScanData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the current scan response data. </p>
+<dl class="section return"><dt>Returns</dt><dd>a reference to the current scan response data. </dd></dl>
 
 </div>
 </div>
@@ -259,18 +369,65 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>advCompleteCB</b> ()<
 </div><div class="memdoc">
 
 <p>Check if currently advertising. </p>
-<dl class="section return"><dt>Returns</dt><dd>true if advertising is active. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>True if advertising is active. </dd></dl>
 
 </div>
 </div>
-<a id="a725437c00152ff57ef1e21bdf7be980d" name="a725437c00152ff57ef1e21bdf7be980d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a725437c00152ff57ef1e21bdf7be980d">&#9670;&#160;</a></span>removeServiceUUID()</h2>
+<a id="ad159c2e2a65d9bc7dcc5babed146936d" name="ad159c2e2a65d9bc7dcc5babed146936d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad159c2e2a65d9bc7dcc5babed146936d">&#9670;&#160;</a></span>removeServices()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::removeServiceUUID </td>
+          <td class="memname">bool NimBLEAdvertising::removeServices </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Remove all service UUIDs from the advertisement. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if the services were removed successfully. </dd></dl>
+
+</div>
+</div>
+<a id="a94452c2f9f7233611246827ce62f6a2b" name="a94452c2f9f7233611246827ce62f6a2b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94452c2f9f7233611246827ce62f6a2b">&#9670;&#160;</a></span>removeServiceUUID() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::removeServiceUUID </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>serviceUUID</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Remove a service UUID from the advertisement. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">serviceUUID</td><td>The UUID of the service to remove. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the service was removed successfully. </dd></dl>
+
+</div>
+</div>
+<a id="aba383012133dd694f56cf86966b2d80a" name="aba383012133dd694f56cf86966b2d80a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba383012133dd694f56cf86966b2d80a">&#9670;&#160;</a></span>removeServiceUUID() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::removeServiceUUID </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td>
           <td class="paramname"><em>serviceUUID</em></td><td>)</td>
@@ -279,84 +436,124 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>advCompleteCB</b> ()<
       </table>
 </div><div class="memdoc">
 
-<p>Remove a service UUID from the advertisment. </p>
+<p>Remove a service UUID from the advertisement. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">serviceUUID</td><td>The UUID of the service to remove. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the service was removed successfully. </dd></dl>
 
 </div>
 </div>
-<a id="af7083f58717b7e76d90d367f00a0ef08" name="af7083f58717b7e76d90d367f00a0ef08"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af7083f58717b7e76d90d367f00a0ef08">&#9670;&#160;</a></span>setAdvertisementData()</h2>
+<a id="a91cde5680de36840fc18f6fd76665af7" name="a91cde5680de36840fc18f6fd76665af7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a91cde5680de36840fc18f6fd76665af7">&#9670;&#160;</a></span>reset()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setAdvertisementData </td>
+          <td class="memname">bool NimBLEAdvertising::reset </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;&#160;</td>
-          <td class="paramname"><em>advertisementData</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Set the advertisement data that is to be published in a regular advertisement. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">advertisementData</td><td>The data to be advertised.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>The use of this function will replace any data set with addServiceUUID<br  />
-or setAppearance. If you wish for these to be advertised you must include them<br  />
-in the advertisementData parameter sent. </p>
+<p>Stops the current advertising and resets the advertising data to the default values. </p>
+<dl class="section return"><dt>Returns</dt><dd>True if successful. </dd></dl>
 
 </div>
 </div>
-<a id="a68d54f11b47b9993322efec1d07c3519" name="a68d54f11b47b9993322efec1d07c3519"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a68d54f11b47b9993322efec1d07c3519">&#9670;&#160;</a></span>setAdvertisementType()</h2>
+<a id="ab8afd94479ebac3996fa3712d3d92325" name="ab8afd94479ebac3996fa3712d3d92325"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8afd94479ebac3996fa3712d3d92325">&#9670;&#160;</a></span>setAdvertisementData()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setAdvertisementType </td>
+          <td class="memname">bool NimBLEAdvertising::setAdvertisementData </td>
           <td>(</td>
-          <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>adv_type</em></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;&#160;</td>
+          <td class="paramname"><em>data</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Set the type of advertisment to use. </p>
+<p>Set the advertisement data that is to be broadcast in a regular advertisement. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">adv_type</td><td><ul>
-<li>BLE_GAP_CONN_MODE_NON (0) - not connectable advertising</li>
-<li>BLE_GAP_CONN_MODE_DIR (1) - directed connectable advertising</li>
-<li>BLE_GAP_CONN_MODE_UND (2) - undirected connectable advertising </li>
-</ul>
-</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>The data to be broadcast. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the data was set successfully. </dd></dl>
+
+</div>
+</div>
+<a id="a3e81d7d3aa2b72b8db58427d4a42727b" name="a3e81d7d3aa2b72b8db58427d4a42727b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e81d7d3aa2b72b8db58427d4a42727b">&#9670;&#160;</a></span>setAdvertisingCompleteCallback()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEAdvertising::setAdvertisingCompleteCallback </td>
+          <td>(</td>
+          <td class="paramtype">advCompleteCB_t&#160;</td>
+          <td class="paramname"><em>callback</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the callback to be invoked when advertising stops. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">callback</td><td>The callback to be invoked when advertising stops. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="aa0d30dfb57670cc8180e17dffddad416" name="aa0d30dfb57670cc8180e17dffddad416"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa0d30dfb57670cc8180e17dffddad416">&#9670;&#160;</a></span>setAppearance()</h2>
+<a id="a28c082bb540325ada66b4e203ae6998a" name="a28c082bb540325ada66b4e203ae6998a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28c082bb540325ada66b4e203ae6998a">&#9670;&#160;</a></span>setAdvertisingInterval()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setAppearance </td>
+          <td class="memname">void NimBLEAdvertising::setAdvertisingInterval </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>interval</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the advertising interval. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">interval</td><td>The advertising interval in 0.625ms units, 0 = use default. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a1f4e1ae9552400fb2bb3cd73b2a483b0" name="a1f4e1ae9552400fb2bb3cd73b2a483b0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f4e1ae9552400fb2bb3cd73b2a483b0">&#9670;&#160;</a></span>setAppearance()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::setAppearance </td>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
           <td class="paramname"><em>appearance</em></td><td>)</td>
@@ -368,21 +565,86 @@ in the advertisementData parameter sent. </p>
 <p>Set the device appearance in the advertising data. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">appearance</td><td>The appearance of the device in the advertising data. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">appearance</td><td>The appearance of the device in the advertising data. If the appearance value is 0 then the appearance will not be in the advertisement. </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the appearance was set successfully. </dd></dl>
 
 </div>
 </div>
-<a id="a1eff592870a47b0f62b0f0894efadbd4" name="a1eff592870a47b0f62b0f0894efadbd4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1eff592870a47b0f62b0f0894efadbd4">&#9670;&#160;</a></span>setManufacturerData() <span class="overload">[1/2]</span></h2>
+<a id="ae49d2bd91cabca46ec7c4bbd7fc49407" name="ae49d2bd91cabca46ec7c4bbd7fc49407"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae49d2bd91cabca46ec7c4bbd7fc49407">&#9670;&#160;</a></span>setConnectableMode()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setManufacturerData </td>
+          <td class="memname">bool NimBLEAdvertising::setConnectableMode </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>mode</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the type of connectable mode to advertise. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>The connectable mode:<ul>
+<li>BLE_GAP_CONN_MODE_NON (0) - not connectable advertising</li>
+<li>BLE_GAP_CONN_MODE_DIR (1) - directed connectable advertising</li>
+<li>BLE_GAP_CONN_MODE_UND (2) - undirected connectable advertising </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the connectable mode was set, false if the mode is invalid. </dd></dl>
+
+</div>
+</div>
+<a id="a710eacfc97ecea1bf9a9a3569c58d410" name="a710eacfc97ecea1bf9a9a3569c58d410"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a710eacfc97ecea1bf9a9a3569c58d410">&#9670;&#160;</a></span>setDiscoverableMode()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::setDiscoverableMode </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>mode</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the discoverable mode to use. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">mode</td><td>The discoverable mode:<ul>
+<li>BLE_GAP_DISC_MODE_NON (0) - non-discoverable</li>
+<li>BLE_GAP_DISC_MODE_LTD (1) - limited discoverable</li>
+<li>BLE_GAP_DISC_MODE_GEN (2) - general discoverable </li>
+</ul>
+</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the discoverable mode was set, false if the mode is invalid. </dd></dl>
+
+</div>
+</div>
+<a id="ac9f3a7270e1cefedf8547c5188d06120" name="ac9f3a7270e1cefedf8547c5188d06120"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9f3a7270e1cefedf8547c5188d06120">&#9670;&#160;</a></span>setManufacturerData() <span class="overload">[1/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::setManufacturerData </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>data</em></td><td>)</td>
@@ -398,17 +660,18 @@ in the advertisementData parameter sent. </p>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the manufacturer data was set successfully. </dd></dl>
 
 </div>
 </div>
-<a id="a2b7d641e2b04d76297510c1118d75ee7" name="a2b7d641e2b04d76297510c1118d75ee7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2b7d641e2b04d76297510c1118d75ee7">&#9670;&#160;</a></span>setManufacturerData() <span class="overload">[2/2]</span></h2>
+<a id="aac1b5e560aa497a274985a22083bfc97" name="aac1b5e560aa497a274985a22083bfc97"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aac1b5e560aa497a274985a22083bfc97">&#9670;&#160;</a></span>setManufacturerData() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setManufacturerData </td>
+          <td class="memname">bool NimBLEAdvertising::setManufacturerData </td>
           <td>(</td>
           <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
           <td class="paramname"><em>data</em></td><td>)</td>
@@ -424,11 +687,50 @@ in the advertisementData parameter sent. </p>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the manufacturer data was set successfully. </dd></dl>
 
 </div>
 </div>
-<a id="aab512576d8873fbbb631bac8ada19530" name="aab512576d8873fbbb631bac8ada19530"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aab512576d8873fbbb631bac8ada19530">&#9670;&#160;</a></span>setMaxInterval()</h2>
+<a id="ac433e3458ac5259ae21c4bdbd1198781" name="ac433e3458ac5259ae21c4bdbd1198781"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac433e3458ac5259ae21c4bdbd1198781">&#9670;&#160;</a></span>setManufacturerData() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::setManufacturerData </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the advertised manufacturer data. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>The data to advertise. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The length of the data. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the manufacturer data was set successfully. </dd></dl>
+
+</div>
+</div>
+<a id="a97bf63603b9aabdf0a5284269dfc5549" name="a97bf63603b9aabdf0a5284269dfc5549"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97bf63603b9aabdf0a5284269dfc5549">&#9670;&#160;</a></span>setMaxInterval()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -437,7 +739,7 @@ in the advertisementData parameter sent. </p>
           <td class="memname">void NimBLEAdvertising::setMaxInterval </td>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>maxinterval</em></td><td>)</td>
+          <td class="paramname"><em>maxInterval</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -446,43 +748,15 @@ in the advertisementData parameter sent. </p>
 <p>Set the maximum advertising interval. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">maxinterval</td><td>Maximum value for advertising interval in 0.625ms units, 0 = use default. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">maxInterval</td><td>Maximum value for advertising interval in 0.625ms units, 0 = use default. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a3382cdf80f5ae46a52e3b9159f8e1b66" name="a3382cdf80f5ae46a52e3b9159f8e1b66"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3382cdf80f5ae46a52e3b9159f8e1b66">&#9670;&#160;</a></span>setMaxPreferred()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NimBLEAdvertising::setMaxPreferred </td>
-          <td>(</td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>maxinterval</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Set the advertised max connection interval preferred by this device. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">maxinterval</td><td>the max interval value. Range = 0x0006 to 0x0C80.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Values not within the range will cancel advertising of this data.<br  />
-Consumes 6 bytes of advertising space (combined with min interval). </p>
-
-</div>
-</div>
-<a id="a16bd135cab3f06bc0ba81c2aec19cbbc" name="a16bd135cab3f06bc0ba81c2aec19cbbc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16bd135cab3f06bc0ba81c2aec19cbbc">&#9670;&#160;</a></span>setMinInterval()</h2>
+<a id="a6b5be947a5e188d512e3338d36a039cb" name="a6b5be947a5e188d512e3338d36a039cb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6b5be947a5e188d512e3338d36a039cb">&#9670;&#160;</a></span>setMinInterval()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -491,7 +765,7 @@ Consumes 6 bytes of advertising space (combined with min interval). </p>
           <td class="memname">void NimBLEAdvertising::setMinInterval </td>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>mininterval</em></td><td>)</td>
+          <td class="paramname"><em>minInterval</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -500,49 +774,21 @@ Consumes 6 bytes of advertising space (combined with min interval). </p>
 <p>Set the minimum advertising interval. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">mininterval</td><td>Minimum value for advertising interval in 0.625ms units, 0 = use default. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">minInterval</td><td>Minimum value for advertising interval in 0.625ms units, 0 = use default. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a3bc158da1f732361df69cf16ca1cfd42" name="a3bc158da1f732361df69cf16ca1cfd42"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3bc158da1f732361df69cf16ca1cfd42">&#9670;&#160;</a></span>setMinPreferred()</h2>
+<a id="a7fb4b74eb7acb1f46e57ff772baccd88" name="a7fb4b74eb7acb1f46e57ff772baccd88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fb4b74eb7acb1f46e57ff772baccd88">&#9670;&#160;</a></span>setName()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setMinPreferred </td>
-          <td>(</td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>mininterval</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Set the advertised min connection interval preferred by this device. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">mininterval</td><td>the max interval value. Range = 0x0006 to 0x0C80.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Values not within the range will cancel advertising of this data.<br  />
-Consumes 6 bytes of advertising space (combined with max interval). </p>
-
-</div>
-</div>
-<a id="add2ecd09877d7e4548b11ec7cb8c7a47" name="add2ecd09877d7e4548b11ec7cb8c7a47"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add2ecd09877d7e4548b11ec7cb8c7a47">&#9670;&#160;</a></span>setName()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NimBLEAdvertising::setName </td>
+          <td class="memname">bool NimBLEAdvertising::setName </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>name</em></td><td>)</td>
@@ -558,6 +804,48 @@ Consumes 6 bytes of advertising space (combined with max interval). </p>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the name was set successfully. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>If the name is too long it will be truncated.</dd></dl>
+<p>If scan response is enabled the name will be set in the scan response data. </p>
+
+</div>
+</div>
+<a id="a9dbb66ca66aa040731fcfd737f881469" name="a9dbb66ca66aa040731fcfd737f881469"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9dbb66ca66aa040731fcfd737f881469">&#9670;&#160;</a></span>setPreferredParams()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::setPreferredParams </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>minInterval</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>maxInterval</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the preferred min and max connection intervals to advertise. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">minInterval</td><td>The minimum preferred connection interval. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">maxInterval</td><td>The Maximum preferred connection interval. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the preferred connection interval was set successfully.</dd></dl>
+<p>Range = 0x0006(7.5ms) to 0x0C80(4000ms), values not within the range will be limited to this range. </p>
 
 </div>
 </div>
@@ -598,68 +886,42 @@ Consumes 6 bytes of advertising space (combined with max interval). </p>
 
 </div>
 </div>
-<a id="a6fb4d9ad3949928ac83d3e74857ab91f" name="a6fb4d9ad3949928ac83d3e74857ab91f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6fb4d9ad3949928ac83d3e74857ab91f">&#9670;&#160;</a></span>setScanResponse()</h2>
+<a id="a97798e6d9d7721eb588c5e67d54e97ef" name="a97798e6d9d7721eb588c5e67d54e97ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97798e6d9d7721eb588c5e67d54e97ef">&#9670;&#160;</a></span>setScanResponseData()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setScanResponse </td>
+          <td class="memname">bool NimBLEAdvertising::setScanResponseData </td>
           <td>(</td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>set</em></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;&#160;</td>
+          <td class="paramname"><em>data</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Set if scan response is available. </p>
+<p>Set the data that is to be provided in a scan response. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">set</td><td>true = scan response available. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>The data to be provided in the scan response </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the data was set successfully.</dd></dl>
+<p>The scan response data is sent in response to a scan request from a peer device. If this is set without setting the advertisement data when advertising starts this may be overwritten. </p>
 
 </div>
 </div>
-<a id="a04a51a0c639a70295a9b671f73b34358" name="a04a51a0c639a70295a9b671f73b34358"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a04a51a0c639a70295a9b671f73b34358">&#9670;&#160;</a></span>setScanResponseData()</h2>
+<a id="a708384c4b9af3006893afbdef74362bc" name="a708384c4b9af3006893afbdef74362bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a708384c4b9af3006893afbdef74362bc">&#9670;&#160;</a></span>setServiceData() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setScanResponseData </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> &amp;&#160;</td>
-          <td class="paramname"><em>advertisementData</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Set the advertisement data that is to be published in a scan response. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">advertisementData</td><td>The data to be advertised.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Calling this without also using setAdvertisementData will have no effect.<br  />
-When using custom scan response data you must also use custom advertisement data. </p>
-
-</div>
-</div>
-<a id="a994e43e9e4ace6ce64c57e57d0575781" name="a994e43e9e4ace6ce64c57e57d0575781"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a994e43e9e4ace6ce64c57e57d0575781">&#9670;&#160;</a></span>setServiceData()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NimBLEAdvertising::setServiceData </td>
+          <td class="memname">bool NimBLEAdvertising::setServiceData </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td>
           <td class="paramname"><em>uuid</em>, </td>
@@ -686,18 +948,104 @@ When using custom scan response data you must also use custom advertisement data
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the service data was set successfully. </dd></dl>
 <dl class="section note"><dt>Note</dt><dd>If data length is 0 the service data will not be advertised. </dd></dl>
 
 </div>
 </div>
-<a id="a6495d7c9ad80a8c2a5edf974705f8103" name="a6495d7c9ad80a8c2a5edf974705f8103"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6495d7c9ad80a8c2a5edf974705f8103">&#9670;&#160;</a></span>setURI()</h2>
+<a id="a65123182c5218758433e4acf0432fc84" name="a65123182c5218758433e4acf0432fc84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65123182c5218758433e4acf0432fc84">&#9670;&#160;</a></span>setServiceData() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLEAdvertising::setURI </td>
+          <td class="memname">bool NimBLEAdvertising::setServiceData </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td>
+          <td class="paramname"><em>uuid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>data</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the service data advertised for the UUID. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">uuid</td><td>The UUID the service data belongs to. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>The data to advertise. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the service data was set successfully. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>If data length is 0 the service data will not be advertised. </dd></dl>
+
+</div>
+</div>
+<a id="a815faed49fb4f29337fda94bd39c0bbc" name="a815faed49fb4f29337fda94bd39c0bbc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a815faed49fb4f29337fda94bd39c0bbc">&#9670;&#160;</a></span>setServiceData() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::setServiceData </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td>
+          <td class="paramname"><em>uuid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the service data advertised for the UUID. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">uuid</td><td>The UUID the service data belongs to. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>The data to advertise. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The length of the data. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the service data was set successfully. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>If data length is 0 the service data will not be advertised. </dd></dl>
+
+</div>
+</div>
+<a id="a9fe23a52ac3f699095d84d2ba8f90c28" name="a9fe23a52ac3f699095d84d2ba8f90c28"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9fe23a52ac3f699095d84d2ba8f90c28">&#9670;&#160;</a></span>setURI()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAdvertising::setURI </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>uri</em></td><td>)</td>
@@ -713,11 +1061,12 @@ When using custom scan response data you must also use custom advertisement data
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>True if the URI was set successfully. </dd></dl>
 
 </div>
 </div>
-<a id="a89722f418bb530e0cb0fc5bea083f00b" name="a89722f418bb530e0cb0fc5bea083f00b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a89722f418bb530e0cb0fc5bea083f00b">&#9670;&#160;</a></span>start()</h2>
+<a id="a8a5c880ee36fd44e0c72c14c47c8e15e" name="a8a5c880ee36fd44e0c72c14c47c8e15e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a5c880ee36fd44e0c72c14c47c8e15e">&#9670;&#160;</a></span>start()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -731,13 +1080,7 @@ When using custom scan response data you must also use custom advertisement data
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">advCompleteCB_t&#160;</td>
-          <td class="paramname"><em>advCompleteCB</em> = <code>nullptr</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> *&#160;</td>
+          <td class="paramtype">const <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> *&#160;</td>
           <td class="paramname"><em>dirAddr</em> = <code>nullptr</code>&#160;</td>
         </tr>
         <tr>
@@ -751,8 +1094,7 @@ When using custom scan response data you must also use custom advertisement data
 <p>Start advertising. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">duration</td><td>The duration, in seconds, to advertise, 0 == advertise forever. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">advCompleteCB</td><td>A pointer to a callback to be invoked when advertising ends. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">duration</td><td>The duration, in milliseconds, to advertise, 0 == advertise forever. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">dirAddr</td><td>The address of a peer to directly advertise to. </td></tr>
   </table>
   </dd>
