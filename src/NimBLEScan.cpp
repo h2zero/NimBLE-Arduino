@@ -32,7 +32,6 @@ NimBLEScan::NimBLEScan()
     : m_pScanCallbacks{&defaultScanCallbacks},
       // default interval + window, no whitelist scan filter,not limited scan, no scan response, filter_duplicates
       m_scanParams{0, 0, BLE_HCI_SCAN_FILT_NO_WL, 0, 1, 1},
-      m_duration{BLE_HS_FOREVER},
       m_pTaskData{nullptr},
       m_maxResults{0xFF} {}
 
@@ -173,11 +172,14 @@ void NimBLEScan::setActiveScan(bool active) {
 /**
  * @brief Set whether or not the BLE controller should only report results
  * from devices it has not already seen.
- * @param [in] enabled If true, scanned devices will only be reported once.
- * @details The controller has a limited buffer and will start reporting
- * duplicate devices once the limit is reached.
+ * @param [in] enabled If set to 1 (true), scanned devices will only be reported once.
+ * If set to 0 duplicates will be reported each time they are seen.
+ * If using extended scanning this can be set to 2 which will reset the duplicate filter
+ * at the end of each scan period if the scan period is set.
+ * @note The controller has a limited buffer and will start reporting
+duplicate devices once the limit is reached.
  */
-void NimBLEScan::setDuplicateFilter(bool enabled) {
+void NimBLEScan::setDuplicateFilter(uint8_t enabled) {
     m_scanParams.filter_duplicates = enabled;
 } // setDuplicateFilter
 
@@ -219,7 +221,7 @@ void NimBLEScan::setFilterPolicy(uint8_t filter) {
  */
 void NimBLEScan::setMaxResults(uint8_t maxResults) {
     m_maxResults = maxResults;
-}
+} // setMaxResults
 
 /**
  * @brief Set the call backs to be invoked.
@@ -237,18 +239,20 @@ void NimBLEScan::setScanCallbacks(NimBLEScanCallbacks* pScanCallbacks, bool want
 
 /**
  * @brief Set the interval to scan.
- * @param [in] intervalMSecs The scan interval (how often) in milliseconds.
+ * @param [in] intervalMs The scan interval in milliseconds.
+ * @details The interval is the time between the start of two consecutive scan windows.
+ * When a new interval starts the controller changes the channel it's scanning on.
  */
-void NimBLEScan::setInterval(uint16_t intervalMSecs) {
-    m_scanParams.itvl = (intervalMSecs * 16) / 10;
+void NimBLEScan::setInterval(uint16_t intervalMs) {
+    m_scanParams.itvl = (intervalMs * 16) / 10;
 } // setInterval
 
 /**
  * @brief Set the window to actively scan.
- * @param [in] windowMSecs How long during the interval to actively scan.
+ * @param [in] windowMs How long during the interval to actively scan in milliseconds.
  */
-void NimBLEScan::setWindow(uint16_t windowMSecs) {
-    m_scanParams.window = (windowMSecs * 16) / 10;
+void NimBLEScan::setWindow(uint16_t windowMs) {
+    m_scanParams.window = (windowMs * 16) / 10;
 } // setWindow
 
 /**
@@ -258,6 +262,29 @@ void NimBLEScan::setWindow(uint16_t windowMSecs) {
 bool NimBLEScan::isScanning() {
     return ble_gap_disc_active();
 }
+
+# if CONFIG_BT_NIMBLE_EXT_ADV
+/**
+ * @brief Set the PHYs to scan.
+ * @param [in] phyMask The PHYs to scan, a bit mask of:
+ * * NIMBLE_CPP_SCAN_1M
+ * * NIMBLE_CPP_SCAN_CODED
+ */
+void NimBLEScan::setPhy(Phy phyMask) {
+    m_phy = phyMask;
+} // setScanPhy
+
+/**
+ * @brief Set the extended scanning period.
+ * @param [in] periodMs The scan period in milliseconds
+ * @details The period is the time between the start of two consecutive scan periods.
+ * This works as a timer to restart scanning at the specified amount of time in periodMs.
+ * @note The duration used when this is set must be less than period.
+ */
+void NimBLEScan::setPeriod(uint32_t periodMs) {
+    m_period = (periodMs + 500) / 1280; // round up 1.28 second units
+} // setScanPeriod
+# endif
 
 /**
  * @brief Start scanning.
@@ -269,35 +296,24 @@ bool NimBLEScan::isScanning() {
  */
 bool NimBLEScan::start(uint32_t duration, bool isContinue, bool restart) {
     NIMBLE_LOGD(LOG_TAG, ">> start: duration=%" PRIu32, duration);
-
-    if (ble_gap_conn_active()) {
-        NIMBLE_LOGE(LOG_TAG, "Connection in progress, cannot start scan");
-        return false;
-    }
-
     if (isScanning()) {
         if (restart) {
             NIMBLE_LOGI(LOG_TAG, "Scan already in progress, restarting it");
             if (!stop()) {
                 return false;
             }
-        } else {
-            NIMBLE_LOGI(LOG_TAG, "Scan already in progress");
-            return true;
+
+            if (!isContinue) {
+                clearResults();
+            }
+        }
+    } else { // Don't clear results while scanning is active
+        if (!isContinue) {
+            clearResults();
         }
     }
 
-    if (!isContinue) {
-        clearResults();
-    }
-
-    // Save the duration in the case that the host is reset so we can reuse it.
-    m_duration = duration;
-
-    // If 0 duration specified then we assume a continuous scan is desired.
-    if (duration == 0) {
-        duration = BLE_HS_FOREVER;
-    }
+    // If scanning is already active, call the functions anyway as the parameters can be changed.
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
     ble_gap_ext_disc_params scan_params;
@@ -305,17 +321,21 @@ bool NimBLEScan::start(uint32_t duration, bool isContinue, bool restart) {
     scan_params.itvl    = m_scanParams.itvl;
     scan_params.window  = m_scanParams.window;
     int rc              = ble_gap_ext_disc(NimBLEDevice::m_ownAddrType,
-                              duration / 10,
-                              0,
+                              duration / 10, // 10ms units
+                              m_period,
                               m_scanParams.filter_duplicates,
                               m_scanParams.filter_policy,
                               m_scanParams.limited,
-                              &scan_params,
-                              &scan_params,
+                              m_phy & SCAN_1M ? &scan_params : NULL,
+                              m_phy & SCAN_CODED ? &scan_params : NULL,
                               NimBLEScan::handleGapEvent,
                               NULL);
 # else
-    int rc = ble_gap_disc(NimBLEDevice::m_ownAddrType, duration, &m_scanParams, NimBLEScan::handleGapEvent, NULL);
+    int rc = ble_gap_disc(NimBLEDevice::m_ownAddrType,
+                          duration ? duration : BLE_HS_FOREVER,
+                          &m_scanParams,
+                          NimBLEScan::handleGapEvent,
+                          NULL);
 # endif
     switch (rc) {
         case 0:
@@ -403,9 +423,7 @@ void NimBLEScan::erase(const NimBLEAdvertisedDevice* device) {
  * If the application was scanning indefinitely with a callback, restart it.
  */
 void NimBLEScan::onHostSync() {
-    if (m_duration == 0 && m_pScanCallbacks != &defaultScanCallbacks) {
-        start(0, false);
-    }
+    m_pScanCallbacks->onScanEnd(m_scanResults, BLE_HS_ENOTSYNCED);
 }
 
 /**
