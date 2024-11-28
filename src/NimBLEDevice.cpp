@@ -711,6 +711,31 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
 /*                               STACK FUNCTIONS                              */
 /* -------------------------------------------------------------------------- */
 
+# if CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
+/**
+ * @brief Set the preferred default phy to use for connections.
+ * @param [in] txPhyMask TX PHY. Can be mask of following:
+ * - BLE_GAP_LE_PHY_1M_MASK
+ * - BLE_GAP_LE_PHY_2M_MASK
+ * - BLE_GAP_LE_PHY_CODED_MASK
+ * - BLE_GAP_LE_PHY_ANY_MASK
+ * @param [in] rxPhyMask RX PHY. Can be mask of following:
+ * - BLE_GAP_LE_PHY_1M_MASK
+ * - BLE_GAP_LE_PHY_2M_MASK
+ * - BLE_GAP_LE_PHY_CODED_MASK
+ * - BLE_GAP_LE_PHY_ANY_MASK
+ * @return True if successful.
+ */
+bool NimBLEDevice::setDefaultPhy(uint8_t txPhyMask, uint8_t rxPhyMask) {
+    int rc = ble_gap_set_prefered_default_le_phy(txPhyMask, rxPhyMask);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to set default phy; rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+
+    return rc == 0;
+}
+# endif
+
 /**
  * @brief Host reset, we pass the message so we don't make calls until re-synced.
  * @param [in] reason The reason code for the reset.

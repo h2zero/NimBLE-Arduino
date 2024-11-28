@@ -136,6 +136,10 @@ class NimBLEDevice {
     static void          onSync(void);
     static void          host_task(void* param);
 
+# if CONFIG_BT_NIMBLE_EXT_ADV
+    static bool setDefaultPhy(uint8_t txPhyMask, uint8_t rxPhyMask);
+# endif
+
 # if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
     static NimBLEScan* getScan();
 # endif
