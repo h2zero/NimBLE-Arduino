@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.3</span>
    </div>
   </td>
  </tr>
@@ -100,8 +100,6 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_characteristic.html','
  <a href="class_nim_b_l_e_characteristic.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_nim_b_l_e_characteristic_8h_source.html">NimBLECharacteristic.h</a>&gt;</code></p>
-
-<p>Inherits NimBLELocalValueAttribute.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -115,71 +113,105 @@ Public Member Functions</h2></td></tr>
 &#160;</td><td class="memItemRight" valign="bottom"><b>~NimBLECharacteristic</b> ()</td></tr>
 <tr class="memdesc:a7fe29c5ec571d0513c51b8cbac942f4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor. <br /></td></tr>
 <tr class="separator:a7fe29c5ec571d0513c51b8cbac942f4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd70c1d2f95f78e01dbdb92cd009559a"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#afd70c1d2f95f78e01dbdb92cd009559a">toString</a> () const</td></tr>
-<tr class="memdesc:afd70c1d2f95f78e01dbdb92cd009559a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of the characteristic.  <a href="class_nim_b_l_e_characteristic.html#afd70c1d2f95f78e01dbdb92cd009559a">More...</a><br /></td></tr>
-<tr class="separator:afd70c1d2f95f78e01dbdb92cd009559a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab440bf84397e3705d5749eb0ddf3bc0"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aab440bf84397e3705d5749eb0ddf3bc0">getSubscribedCount</a> () const</td></tr>
-<tr class="memdesc:aab440bf84397e3705d5749eb0ddf3bc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the number of clients subscribed to the characteristic.  <a href="class_nim_b_l_e_characteristic.html#aab440bf84397e3705d5749eb0ddf3bc0">More...</a><br /></td></tr>
-<tr class="separator:aab440bf84397e3705d5749eb0ddf3bc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc3ea122771cd447103adfce22537379"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#acc3ea122771cd447103adfce22537379">getHandle</a> ()</td></tr>
+<tr class="memdesc:acc3ea122771cd447103adfce22537379"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the handle of the characteristic.  <a href="class_nim_b_l_e_characteristic.html#acc3ea122771cd447103adfce22537379">More...</a><br /></td></tr>
+<tr class="separator:acc3ea122771cd447103adfce22537379"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28b03617fe753133582ba4e58c60e52e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a28b03617fe753133582ba4e58c60e52e">getUUID</a> ()</td></tr>
+<tr class="memdesc:a28b03617fe753133582ba4e58c60e52e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the UUID of the characteristic.  <a href="class_nim_b_l_e_characteristic.html#a28b03617fe753133582ba4e58c60e52e">More...</a><br /></td></tr>
+<tr class="separator:a28b03617fe753133582ba4e58c60e52e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4fa6b8ed011d12e2b1f16e92a02b9a89"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a4fa6b8ed011d12e2b1f16e92a02b9a89">toString</a> ()</td></tr>
+<tr class="memdesc:a4fa6b8ed011d12e2b1f16e92a02b9a89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of the characteristic.  <a href="class_nim_b_l_e_characteristic.html#a4fa6b8ed011d12e2b1f16e92a02b9a89">More...</a><br /></td></tr>
+<tr class="separator:a4fa6b8ed011d12e2b1f16e92a02b9a89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ce9f62ecc3d1644ef4d58efe7a3c434"><td class="memItemLeft" align="right" valign="top"><a id="a2ce9f62ecc3d1644ef4d58efe7a3c434" name="a2ce9f62ecc3d1644ef4d58efe7a3c434"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>indicate</b> ()</td></tr>
+<tr class="memdesc:a2ce9f62ecc3d1644ef4d58efe7a3c434"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send an indication. <br /></td></tr>
+<tr class="separator:a2ce9f62ecc3d1644ef4d58efe7a3c434"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c1875611a1beb192e6c24dff35d0655"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a8c1875611a1beb192e6c24dff35d0655">indicate</a> (const uint8_t *value, size_t length)</td></tr>
+<tr class="memdesc:a8c1875611a1beb192e6c24dff35d0655"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send an indication.  <a href="class_nim_b_l_e_characteristic.html#a8c1875611a1beb192e6c24dff35d0655">More...</a><br /></td></tr>
+<tr class="separator:a8c1875611a1beb192e6c24dff35d0655"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e827aba484add48e52c8eebf80b4a78"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a2e827aba484add48e52c8eebf80b4a78">indicate</a> (const std::vector&lt; uint8_t &gt; &amp;value)</td></tr>
+<tr class="memdesc:a2e827aba484add48e52c8eebf80b4a78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send an indication.  <a href="class_nim_b_l_e_characteristic.html#a2e827aba484add48e52c8eebf80b4a78">More...</a><br /></td></tr>
+<tr class="separator:a2e827aba484add48e52c8eebf80b4a78"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa45461059e1992c816e32c371d17e813"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aa45461059e1992c816e32c371d17e813">notify</a> (bool is_notification=true)</td></tr>
+<tr class="memdesc:aa45461059e1992c816e32c371d17e813"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a notification or indication.  <a href="class_nim_b_l_e_characteristic.html#aa45461059e1992c816e32c371d17e813">More...</a><br /></td></tr>
+<tr class="separator:aa45461059e1992c816e32c371d17e813"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ce09408a307a6b62a91418ea7723ebf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a9ce09408a307a6b62a91418ea7723ebf">notify</a> (const uint8_t *value, size_t length, bool is_notification=true)</td></tr>
+<tr class="memdesc:a9ce09408a307a6b62a91418ea7723ebf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a notification or indication.  <a href="class_nim_b_l_e_characteristic.html#a9ce09408a307a6b62a91418ea7723ebf">More...</a><br /></td></tr>
+<tr class="separator:a9ce09408a307a6b62a91418ea7723ebf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15a9f056e5a3e85d5cb0bdc7adbdd970"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a15a9f056e5a3e85d5cb0bdc7adbdd970">notify</a> (const std::vector&lt; uint8_t &gt; &amp;value, bool is_notification=true)</td></tr>
+<tr class="memdesc:a15a9f056e5a3e85d5cb0bdc7adbdd970"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a notification or indication.  <a href="class_nim_b_l_e_characteristic.html#a15a9f056e5a3e85d5cb0bdc7adbdd970">More...</a><br /></td></tr>
+<tr class="separator:a15a9f056e5a3e85d5cb0bdc7adbdd970"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aced225d46153b6969f6ded30c0190e39"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aced225d46153b6969f6ded30c0190e39">getSubscribedCount</a> ()</td></tr>
+<tr class="memdesc:aced225d46153b6969f6ded30c0190e39"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the number of clients subscribed to the characteristic.  <a href="class_nim_b_l_e_characteristic.html#aced225d46153b6969f6ded30c0190e39">More...</a><br /></td></tr>
+<tr class="separator:aced225d46153b6969f6ded30c0190e39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed4b2241c89ad2a8f49117e2b9433e5b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aed4b2241c89ad2a8f49117e2b9433e5b">addDescriptor</a> (<a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *pDescriptor)</td></tr>
 <tr class="memdesc:aed4b2241c89ad2a8f49117e2b9433e5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a descriptor to the characteristic.  <a href="class_nim_b_l_e_characteristic.html#aed4b2241c89ad2a8f49117e2b9433e5b">More...</a><br /></td></tr>
 <tr class="separator:aed4b2241c89ad2a8f49117e2b9433e5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc5f4819e4d2c0956857ddd7a1064189"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#abc5f4819e4d2c0956857ddd7a1064189">getDescriptorByUUID</a> (const char *uuid)</td></tr>
+<tr class="memdesc:abc5f4819e4d2c0956857ddd7a1064189"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the BLE Descriptor for the given UUID.  <a href="class_nim_b_l_e_characteristic.html#abc5f4819e4d2c0956857ddd7a1064189">More...</a><br /></td></tr>
+<tr class="separator:abc5f4819e4d2c0956857ddd7a1064189"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae310b081d2d7d2a52ab2ddc11d5dbd99"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#ae310b081d2d7d2a52ab2ddc11d5dbd99">getDescriptorByUUID</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid)</td></tr>
+<tr class="memdesc:ae310b081d2d7d2a52ab2ddc11d5dbd99"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the BLE Descriptor for the given UUID.  <a href="class_nim_b_l_e_characteristic.html#ae310b081d2d7d2a52ab2ddc11d5dbd99">More...</a><br /></td></tr>
+<tr class="separator:ae310b081d2d7d2a52ab2ddc11d5dbd99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a062f52918f13c49a37ce8e58b9e7382a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a062f52918f13c49a37ce8e58b9e7382a">getDescriptorByHandle</a> (uint16_t handle)</td></tr>
+<tr class="memdesc:a062f52918f13c49a37ce8e58b9e7382a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the BLE Descriptor for the given handle.  <a href="class_nim_b_l_e_characteristic.html#a062f52918f13c49a37ce8e58b9e7382a">More...</a><br /></td></tr>
+<tr class="separator:a062f52918f13c49a37ce8e58b9e7382a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2c0ed8932ee257a8632e3d72e353489b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a2c0ed8932ee257a8632e3d72e353489b">removeDescriptor</a> (<a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *pDescriptor, bool deleteDsc=false)</td></tr>
 <tr class="memdesc:a2c0ed8932ee257a8632e3d72e353489b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove a descriptor from the characteristic.  <a href="class_nim_b_l_e_characteristic.html#a2c0ed8932ee257a8632e3d72e353489b">More...</a><br /></td></tr>
 <tr class="separator:a2c0ed8932ee257a8632e3d72e353489b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a7d8e25403d4045f0790a4baeb5248c"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a0a7d8e25403d4045f0790a4baeb5248c">getProperties</a> () const</td></tr>
-<tr class="memdesc:a0a7d8e25403d4045f0790a4baeb5248c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the properties of the characteristic.  <a href="class_nim_b_l_e_characteristic.html#a0a7d8e25403d4045f0790a4baeb5248c">More...</a><br /></td></tr>
-<tr class="separator:a0a7d8e25403d4045f0790a4baeb5248c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84aa251a612810ec8d07e77ab03cb483"><td class="memItemLeft" align="right" valign="top"><a id="a84aa251a612810ec8d07e77ab03cb483" name="a84aa251a612810ec8d07e77ab03cb483"></a>
+<a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getService</b> ()</td></tr>
+<tr class="memdesc:a84aa251a612810ec8d07e77ab03cb483"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the service associated with this characteristic. <br /></td></tr>
+<tr class="separator:a84aa251a612810ec8d07e77ab03cb483"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79759a98d9bdb761cb12c1ea6f601afc"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a79759a98d9bdb761cb12c1ea6f601afc">getProperties</a> ()</td></tr>
+<tr class="memdesc:a79759a98d9bdb761cb12c1ea6f601afc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the properties of the characteristic.  <a href="class_nim_b_l_e_characteristic.html#a79759a98d9bdb761cb12c1ea6f601afc">More...</a><br /></td></tr>
+<tr class="separator:a79759a98d9bdb761cb12c1ea6f601afc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78484a01350300176033a09180f7207f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a78484a01350300176033a09180f7207f">getValue</a> (time_t *timestamp=nullptr)</td></tr>
+<tr class="memdesc:a78484a01350300176033a09180f7207f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the current value of the characteristic.  <a href="class_nim_b_l_e_characteristic.html#a78484a01350300176033a09180f7207f">More...</a><br /></td></tr>
+<tr class="separator:a78484a01350300176033a09180f7207f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a580ad0133fd82a673027c91cbb1c74fa"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a580ad0133fd82a673027c91cbb1c74fa">getDataLength</a> ()</td></tr>
+<tr class="memdesc:a580ad0133fd82a673027c91cbb1c74fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the the current data length of the characteristic.  <a href="class_nim_b_l_e_characteristic.html#a580ad0133fd82a673027c91cbb1c74fa">More...</a><br /></td></tr>
+<tr class="separator:a580ad0133fd82a673027c91cbb1c74fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7cd211a8bb9a0c2ffaed57f2af273677"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a7cd211a8bb9a0c2ffaed57f2af273677">setValue</a> (const uint8_t *data, size_t size)</td></tr>
+<tr class="memdesc:a7cd211a8bb9a0c2ffaed57f2af273677"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of the characteristic from a data buffer .  <a href="class_nim_b_l_e_characteristic.html#a7cd211a8bb9a0c2ffaed57f2af273677">More...</a><br /></td></tr>
+<tr class="separator:a7cd211a8bb9a0c2ffaed57f2af273677"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9daeb13599265cb0f8ea94b7ac4ef053"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a9daeb13599265cb0f8ea94b7ac4ef053">setValue</a> (const std::vector&lt; uint8_t &gt; &amp;vec)</td></tr>
+<tr class="memdesc:a9daeb13599265cb0f8ea94b7ac4ef053"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of the characteristic from a <code>std::vector&lt;uint8_t&gt;</code>.<br  />
+.  <a href="class_nim_b_l_e_characteristic.html#a9daeb13599265cb0f8ea94b7ac4ef053">More...</a><br /></td></tr>
+<tr class="separator:a9daeb13599265cb0f8ea94b7ac4ef053"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29dc2505e1d3b4a7d6800d1547965d17"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a29dc2505e1d3b4a7d6800d1547965d17">setCallbacks</a> (<a class="el" href="class_nim_b_l_e_characteristic_callbacks.html">NimBLECharacteristicCallbacks</a> *pCallbacks)</td></tr>
 <tr class="memdesc:a29dc2505e1d3b4a7d6800d1547965d17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the callback handlers for this characteristic.  <a href="class_nim_b_l_e_characteristic.html#a29dc2505e1d3b4a7d6800d1547965d17">More...</a><br /></td></tr>
 <tr class="separator:a29dc2505e1d3b4a7d6800d1547965d17"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed7315af86d4e1c61cc2c1045921faf8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aed7315af86d4e1c61cc2c1045921faf8">indicate</a> (uint16_t conn_handle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
-<tr class="memdesc:aed7315af86d4e1c61cc2c1045921faf8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send an indication.  <a href="class_nim_b_l_e_characteristic.html#aed7315af86d4e1c61cc2c1045921faf8">More...</a><br /></td></tr>
-<tr class="separator:aed7315af86d4e1c61cc2c1045921faf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0aa0dfa9ef526ddd2c3d3eac8beeb101"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a0aa0dfa9ef526ddd2c3d3eac8beeb101">indicate</a> (const uint8_t *value, size_t length, uint16_t conn_handle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
-<tr class="memdesc:a0aa0dfa9ef526ddd2c3d3eac8beeb101"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send an indication.  <a href="class_nim_b_l_e_characteristic.html#a0aa0dfa9ef526ddd2c3d3eac8beeb101">More...</a><br /></td></tr>
-<tr class="separator:a0aa0dfa9ef526ddd2c3d3eac8beeb101"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefbd9f135d01a538ab4789bc6832065b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aefbd9f135d01a538ab4789bc6832065b">notify</a> (uint16_t conn_handle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
-<tr class="memdesc:aefbd9f135d01a538ab4789bc6832065b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a notification.  <a href="class_nim_b_l_e_characteristic.html#aefbd9f135d01a538ab4789bc6832065b">More...</a><br /></td></tr>
-<tr class="separator:aefbd9f135d01a538ab4789bc6832065b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03b7cc8a7c14ecb2f92d0c4520da4e39"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a03b7cc8a7c14ecb2f92d0c4520da4e39">notify</a> (const uint8_t *value, size_t length, uint16_t conn_handle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
-<tr class="memdesc:a03b7cc8a7c14ecb2f92d0c4520da4e39"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a notification.  <a href="class_nim_b_l_e_characteristic.html#a03b7cc8a7c14ecb2f92d0c4520da4e39">More...</a><br /></td></tr>
-<tr class="separator:a03b7cc8a7c14ecb2f92d0c4520da4e39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1fc55adb9d62d8b5fe1be2b172686353"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a1fc55adb9d62d8b5fe1be2b172686353">createDescriptor</a> (const char *uuid, uint32_t properties=NIMBLE_PROPERTY::READ|NIMBLE_PROPERTY::WRITE, uint16_t max_len=BLE_ATT_ATTR_MAX_LEN)</td></tr>
 <tr class="memdesc:a1fc55adb9d62d8b5fe1be2b172686353"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new BLE Descriptor associated with this characteristic.  <a href="class_nim_b_l_e_characteristic.html#a1fc55adb9d62d8b5fe1be2b172686353">More...</a><br /></td></tr>
 <tr class="separator:a1fc55adb9d62d8b5fe1be2b172686353"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67a1fb8bddfbd47007ccb8b6f5e5611a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a67a1fb8bddfbd47007ccb8b6f5e5611a">createDescriptor</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, uint32_t properties=NIMBLE_PROPERTY::READ|NIMBLE_PROPERTY::WRITE, uint16_t max_len=BLE_ATT_ATTR_MAX_LEN)</td></tr>
 <tr class="memdesc:a67a1fb8bddfbd47007ccb8b6f5e5611a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new BLE Descriptor associated with this characteristic.  <a href="class_nim_b_l_e_characteristic.html#a67a1fb8bddfbd47007ccb8b6f5e5611a">More...</a><br /></td></tr>
 <tr class="separator:a67a1fb8bddfbd47007ccb8b6f5e5611a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3dd5745ea2cd75e12d27c51fc90b4914"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a3dd5745ea2cd75e12d27c51fc90b4914">getDescriptorByUUID</a> (const char *uuid) const</td></tr>
-<tr class="memdesc:a3dd5745ea2cd75e12d27c51fc90b4914"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the BLE Descriptor for the given UUID.  <a href="class_nim_b_l_e_characteristic.html#a3dd5745ea2cd75e12d27c51fc90b4914">More...</a><br /></td></tr>
-<tr class="separator:a3dd5745ea2cd75e12d27c51fc90b4914"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15d9945ee9549e60db77666a2ef5d0c8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a15d9945ee9549e60db77666a2ef5d0c8">getDescriptorByUUID</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid) const</td></tr>
-<tr class="memdesc:a15d9945ee9549e60db77666a2ef5d0c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the BLE Descriptor for the given UUID.  <a href="class_nim_b_l_e_characteristic.html#a15d9945ee9549e60db77666a2ef5d0c8">More...</a><br /></td></tr>
-<tr class="separator:a15d9945ee9549e60db77666a2ef5d0c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a283bd1661b5865dd247b1b59bcbf46d6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a283bd1661b5865dd247b1b59bcbf46d6">getDescriptorByHandle</a> (uint16_t handle) const</td></tr>
-<tr class="memdesc:a283bd1661b5865dd247b1b59bcbf46d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the BLE Descriptor for the given handle.  <a href="class_nim_b_l_e_characteristic.html#a283bd1661b5865dd247b1b59bcbf46d6">More...</a><br /></td></tr>
-<tr class="separator:a283bd1661b5865dd247b1b59bcbf46d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8afe29701cd595d8b3c34cc59400b86b"><td class="memItemLeft" align="right" valign="top"><a id="a8afe29701cd595d8b3c34cc59400b86b" name="a8afe29701cd595d8b3c34cc59400b86b"></a>
-<a class="el" href="class_nim_b_l_e_service.html">NimBLEService</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getService</b> () const</td></tr>
-<tr class="memdesc:a8afe29701cd595d8b3c34cc59400b86b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the service that owns this characteristic. <br /></td></tr>
-<tr class="separator:a8afe29701cd595d8b3c34cc59400b86b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac194f58f909f9e447949a41c2a7cdf00"><td class="memItemLeft" align="right" valign="top"><a id="ac194f58f909f9e447949a41c2a7cdf00" name="ac194f58f909f9e447949a41c2a7cdf00"></a>
-<a class="el" href="class_nim_b_l_e_characteristic_callbacks.html">NimBLECharacteristicCallbacks</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getCallbacks</b> () const</td></tr>
-<tr class="memdesc:ac194f58f909f9e447949a41c2a7cdf00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the callback handlers for this characteristic. <br /></td></tr>
-<tr class="separator:ac194f58f909f9e447949a41c2a7cdf00"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad6bb5402ddae12b16fbedc942400f230"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:ad6bb5402ddae12b16fbedc942400f230"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if&lt;!std::is_pointer&lt; T &gt;::value, void &gt;::type&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#ad6bb5402ddae12b16fbedc942400f230">notify</a> (const T &amp;value, uint16_t conn_handle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
-<tr class="memdesc:ad6bb5402ddae12b16fbedc942400f230"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send a notification for classes which may have data()/size() or c_str()/length() methods. Falls back to sending the data by casting the first element of the array to a uint8_t pointer and getting the length of the array using sizeof.  <a href="class_nim_b_l_e_characteristic.html#ad6bb5402ddae12b16fbedc942400f230">More...</a><br /></td></tr>
-<tr class="separator:ad6bb5402ddae12b16fbedc942400f230"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89de4e8bbe430b7e43892336701c62d2"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a89de4e8bbe430b7e43892336701c62d2"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if&lt;!std::is_pointer&lt; T &gt;::value, void &gt;::type&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a89de4e8bbe430b7e43892336701c62d2">indicate</a> (const T &amp;value, uint16_t conn_handle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
-<tr class="memdesc:a89de4e8bbe430b7e43892336701c62d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send an indication for classes which may have data()/size() or c_str()/length() methods. Falls back to sending the data by casting the first element of the array to a uint8_t pointer and getting the length of the array using sizeof.  <a href="class_nim_b_l_e_characteristic.html#a89de4e8bbe430b7e43892336701c62d2">More...</a><br /></td></tr>
-<tr class="separator:a89de4e8bbe430b7e43892336701c62d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1747ac4889c7adbb93a2d88a10327a47"><td class="memItemLeft" align="right" valign="top"><a id="a1747ac4889c7adbb93a2d88a10327a47" name="a1747ac4889c7adbb93a2d88a10327a47"></a>
+<a class="el" href="class_nim_b_l_e_characteristic_callbacks.html">NimBLECharacteristicCallbacks</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getCallbacks</b> ()</td></tr>
+<tr class="memdesc:a1747ac4889c7adbb93a2d88a10327a47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the callback handlers for this characteristic. <br /></td></tr>
+<tr class="separator:a1747ac4889c7adbb93a2d88a10327a47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aba05898f446e31222fbe509fa357c730"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aba05898f446e31222fbe509fa357c730"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aba05898f446e31222fbe509fa357c730">setValue</a> (const T &amp;s)</td></tr>
+<tr class="memdesc:aba05898f446e31222fbe509fa357c730"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to set the characteristic value to &lt;type&gt;val.  <a href="class_nim_b_l_e_characteristic.html#aba05898f446e31222fbe509fa357c730">More...</a><br /></td></tr>
+<tr class="separator:aba05898f446e31222fbe509fa357c730"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d09c29b26362f6ddcaf51a9c9dc8be4"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a7d09c29b26362f6ddcaf51a9c9dc8be4"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a7d09c29b26362f6ddcaf51a9c9dc8be4">getValue</a> (time_t *timestamp=nullptr, bool skipSizeCheck=false)</td></tr>
+<tr class="memdesc:a7d09c29b26362f6ddcaf51a9c9dc8be4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to convert the characteristic data to &lt;type&gt;.  <a href="class_nim_b_l_e_characteristic.html#a7d09c29b26362f6ddcaf51a9c9dc8be4">More...</a><br /></td></tr>
+<tr class="separator:a7d09c29b26362f6ddcaf51a9c9dc8be4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed1432c11fadec203104b13aaaf7060d"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aed1432c11fadec203104b13aaaf7060d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aed1432c11fadec203104b13aaaf7060d">notify</a> (const T &amp;value, bool is_notification=true)</td></tr>
+<tr class="memdesc:aed1432c11fadec203104b13aaaf7060d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send a notification from a class type that has a c_str() and length() method.  <a href="class_nim_b_l_e_characteristic.html#aed1432c11fadec203104b13aaaf7060d">More...</a><br /></td></tr>
+<tr class="separator:aed1432c11fadec203104b13aaaf7060d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2940e8c314a1ecee1750d20a60c459d"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:af2940e8c314a1ecee1750d20a60c459d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#af2940e8c314a1ecee1750d20a60c459d">indicate</a> (const T &amp;value)</td></tr>
+<tr class="memdesc:af2940e8c314a1ecee1750d20a60c459d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send an indication from a class type that has a c_str() and length() method.  <a href="class_nim_b_l_e_characteristic.html#af2940e8c314a1ecee1750d20a60c459d">More...</a><br /></td></tr>
+<tr class="separator:af2940e8c314a1ecee1750d20a60c459d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >The model of a BLE Characteristic. </p>
-<p >A BLE Characteristic is an identified value container that manages a value. It is exposed by a BLE service and can be read and written to by a BLE client. </p>
+<p >A BLE Characteristic is an identified value container that manages a value. It is exposed by a BLE server and can be read and written to by a BLE client. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa32224e69115e9ba60ac614e8f37a871" name="aa32224e69115e9ba60ac614e8f37a871"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa32224e69115e9ba60ac614e8f37a871">&#9670;&#160;</a></span>NimBLECharacteristic() <span class="overload">[1/2]</span></h2>
@@ -400,8 +432,28 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a283bd1661b5865dd247b1b59bcbf46d6" name="a283bd1661b5865dd247b1b59bcbf46d6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a283bd1661b5865dd247b1b59bcbf46d6">&#9670;&#160;</a></span>getDescriptorByHandle()</h2>
+<a id="a580ad0133fd82a673027c91cbb1c74fa" name="a580ad0133fd82a673027c91cbb1c74fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a580ad0133fd82a673027c91cbb1c74fa">&#9670;&#160;</a></span>getDataLength()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t NimBLECharacteristic::getDataLength </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Retrieve the the current data length of the characteristic. </p>
+<dl class="section return"><dt>Returns</dt><dd>The length of the current characteristic data. </dd></dl>
+
+</div>
+</div>
+<a id="a062f52918f13c49a37ce8e58b9e7382a" name="a062f52918f13c49a37ce8e58b9e7382a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a062f52918f13c49a37ce8e58b9e7382a">&#9670;&#160;</a></span>getDescriptorByHandle()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -411,7 +463,7 @@ Public Member Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
           <td class="paramname"><em>handle</em></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -427,8 +479,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a3dd5745ea2cd75e12d27c51fc90b4914" name="a3dd5745ea2cd75e12d27c51fc90b4914"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3dd5745ea2cd75e12d27c51fc90b4914">&#9670;&#160;</a></span>getDescriptorByUUID() <span class="overload">[1/2]</span></h2>
+<a id="abc5f4819e4d2c0956857ddd7a1064189" name="abc5f4819e4d2c0956857ddd7a1064189"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc5f4819e4d2c0956857ddd7a1064189">&#9670;&#160;</a></span>getDescriptorByUUID() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -438,7 +490,7 @@ Public Member Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>uuid</em></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -454,8 +506,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a15d9945ee9549e60db77666a2ef5d0c8" name="a15d9945ee9549e60db77666a2ef5d0c8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a15d9945ee9549e60db77666a2ef5d0c8">&#9670;&#160;</a></span>getDescriptorByUUID() <span class="overload">[2/2]</span></h2>
+<a id="ae310b081d2d7d2a52ab2ddc11d5dbd99" name="ae310b081d2d7d2a52ab2ddc11d5dbd99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae310b081d2d7d2a52ab2ddc11d5dbd99">&#9670;&#160;</a></span>getDescriptorByUUID() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -465,7 +517,7 @@ Public Member Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td>
           <td class="paramname"><em>uuid</em></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -481,8 +533,28 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a0a7d8e25403d4045f0790a4baeb5248c" name="a0a7d8e25403d4045f0790a4baeb5248c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a7d8e25403d4045f0790a4baeb5248c">&#9670;&#160;</a></span>getProperties()</h2>
+<a id="acc3ea122771cd447103adfce22537379" name="acc3ea122771cd447103adfce22537379"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc3ea122771cd447103adfce22537379">&#9670;&#160;</a></span>getHandle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t NimBLECharacteristic::getHandle </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the handle of the characteristic. </p>
+<dl class="section return"><dt>Returns</dt><dd>The handle of the characteristic. </dd></dl>
+
+</div>
+</div>
+<a id="a79759a98d9bdb761cb12c1ea6f601afc" name="a79759a98d9bdb761cb12c1ea6f601afc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79759a98d9bdb761cb12c1ea6f601afc">&#9670;&#160;</a></span>getProperties()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -491,7 +563,7 @@ Public Member Functions</h2></td></tr>
           <td class="memname">uint16_t NimBLECharacteristic::getProperties </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -501,8 +573,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aab440bf84397e3705d5749eb0ddf3bc0" name="aab440bf84397e3705d5749eb0ddf3bc0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aab440bf84397e3705d5749eb0ddf3bc0">&#9670;&#160;</a></span>getSubscribedCount()</h2>
+<a id="aced225d46153b6969f6ded30c0190e39" name="aced225d46153b6969f6ded30c0190e39"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aced225d46153b6969f6ded30c0190e39">&#9670;&#160;</a></span>getSubscribedCount()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -511,7 +583,7 @@ Public Member Functions</h2></td></tr>
           <td class="memname">size_t NimBLECharacteristic::getSubscribedCount </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -521,8 +593,49 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a89de4e8bbe430b7e43892336701c62d2" name="a89de4e8bbe430b7e43892336701c62d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a89de4e8bbe430b7e43892336701c62d2">&#9670;&#160;</a></span>indicate() <span class="overload">[1/3]</span></h2>
+<a id="a28b03617fe753133582ba4e58c60e52e" name="a28b03617fe753133582ba4e58c60e52e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28b03617fe753133582ba4e58c60e52e">&#9670;&#160;</a></span>getUUID()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> NimBLECharacteristic::getUUID </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the UUID of the characteristic. </p>
+<dl class="section return"><dt>Returns</dt><dd>The UUID of the characteristic. </dd></dl>
+
+</div>
+</div>
+<a id="a78484a01350300176033a09180f7207f" name="a78484a01350300176033a09180f7207f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78484a01350300176033a09180f7207f">&#9670;&#160;</a></span>getValue() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a> NimBLECharacteristic::getValue </td>
+          <td>(</td>
+          <td class="paramtype">time_t *&#160;</td>
+          <td class="paramname"><em>timestamp</em> = <code>nullptr</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Retrieve the current value of the characteristic. </p>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_nim_b_l_e_att_value.html" title="A specialized container class to hold BLE attribute values.">NimBLEAttValue</a> containing the current characteristic value. </dd></dl>
+
+</div>
+</div>
+<a id="a7d09c29b26362f6ddcaf51a9c9dc8be4" name="a7d09c29b26362f6ddcaf51a9c9dc8be4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d09c29b26362f6ddcaf51a9c9dc8be4">&#9670;&#160;</a></span>getValue() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -533,21 +646,21 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::enable_if&lt;!std::is_pointer&lt; T &gt;::value, void &gt;::type NimBLECharacteristic::indicate </td>
+          <td class="memname">T NimBLECharacteristic::getValue </td>
           <td>(</td>
-          <td class="paramtype">const T &amp;&#160;</td>
-          <td class="paramname"><em>value</em>, </td>
+          <td class="paramtype">time_t *&#160;</td>
+          <td class="paramname"><em>timestamp</em> = <code>nullptr</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>conn_handle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>skipSizeCheck</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -557,7 +670,78 @@ template&lt;typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Template to send an indication for classes which may have data()/size() or c_str()/length() methods. Falls back to sending the data by casting the first element of the array to a uint8_t pointer and getting the length of the array using sizeof. </p>
+<p>Template to convert the characteristic data to &lt;type&gt;. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">T</td><td>The type to convert the data to. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">timestamp</td><td>(Optional) A pointer to a time_t struct to store the time the value was read. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">skipSizeCheck</td><td>(Optional) If true it will skip checking if the data size is less than <code>sizeof(&lt;type&gt;)</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The data converted to &lt;type&gt; or NULL if skipSizeCheck is false and the data is less than <code>sizeof(&lt;type&gt;)</code>.</dd></dl>
+<p><b>Use:</b> <code>getValue&lt;type&gt;(&amp;timestamp, skipSizeCheck);</code> </p>
+
+</div>
+</div>
+<a id="a2e827aba484add48e52c8eebf80b4a78" name="a2e827aba484add48e52c8eebf80b4a78"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e827aba484add48e52c8eebf80b4a78">&#9670;&#160;</a></span>indicate() <span class="overload">[1/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristic::indicate </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>value</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Send an indication. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>A std::vector&lt;uint8_t&gt; containing the value to send as the notification value. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="af2940e8c314a1ecee1750d20a60c459d" name="af2940e8c314a1ecee1750d20a60c459d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2940e8c314a1ecee1750d20a60c459d">&#9670;&#160;</a></span>indicate() <span class="overload">[2/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristic::indicate </td>
+          <td>(</td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>value</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Template to send an indication from a class type that has a c_str() and length() method. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">T</td><td>The a reference to a class containing the data to send. </td></tr>
@@ -566,17 +750,16 @@ template&lt;typename T &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>The &lt;type&gt;value to set. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">conn_handle</td><td>The connection handle to send the indication to. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>The &lt;type&gt;value to set.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This function is only available if the type T is not a pointer. </dd></dl>
+<p>Only used if the &lt;type&gt; has a <code>c_str()</code> method. </p>
 
 </div>
 </div>
-<a id="a0aa0dfa9ef526ddd2c3d3eac8beeb101" name="a0aa0dfa9ef526ddd2c3d3eac8beeb101"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0aa0dfa9ef526ddd2c3d3eac8beeb101">&#9670;&#160;</a></span>indicate() <span class="overload">[2/3]</span></h2>
+<a id="a8c1875611a1beb192e6c24dff35d0655" name="a8c1875611a1beb192e6c24dff35d0655"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c1875611a1beb192e6c24dff35d0655">&#9670;&#160;</a></span>indicate() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -591,18 +774,12 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>length</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>conn_handle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -612,41 +789,77 @@ template&lt;typename T &gt; </div>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>A pointer to the data to send. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The length of the data to send. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">conn_handle</td><td>Connection handle to send an individual indication, or BLE_HS_CONN_HANDLE_NONE to send the indication to all subscribed clients. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="aed7315af86d4e1c61cc2c1045921faf8" name="aed7315af86d4e1c61cc2c1045921faf8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aed7315af86d4e1c61cc2c1045921faf8">&#9670;&#160;</a></span>indicate() <span class="overload">[3/3]</span></h2>
+<a id="aa45461059e1992c816e32c371d17e813" name="aa45461059e1992c816e32c371d17e813"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa45461059e1992c816e32c371d17e813">&#9670;&#160;</a></span>notify() <span class="overload">[1/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NimBLECharacteristic::indicate </td>
+          <td class="memname">void NimBLECharacteristic::notify </td>
           <td>(</td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>conn_handle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code></td><td>)</td>
-          <td> const</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>is_notification</em> = <code>true</code></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Send an indication. </p>
+<p>Send a notification or indication. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">conn_handle</td><td>Connection handle to send an individual indication, or BLE_HS_CONN_HANDLE_NONE to send the indication to all subscribed clients. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">is_notification</td><td>if true sends a notification, false sends an indication. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="ad6bb5402ddae12b16fbedc942400f230" name="ad6bb5402ddae12b16fbedc942400f230"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad6bb5402ddae12b16fbedc942400f230">&#9670;&#160;</a></span>notify() <span class="overload">[1/3]</span></h2>
+<a id="a15a9f056e5a3e85d5cb0bdc7adbdd970" name="a15a9f056e5a3e85d5cb0bdc7adbdd970"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a15a9f056e5a3e85d5cb0bdc7adbdd970">&#9670;&#160;</a></span>notify() <span class="overload">[2/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristic::notify </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>is_notification</em> = <code>true</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Send a notification or indication. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>A std::vector&lt;uint8_t&gt; containing the value to send as the notification value. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">is_notification</td><td>if true sends a notification, false sends an indication. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aed1432c11fadec203104b13aaaf7060d" name="aed1432c11fadec203104b13aaaf7060d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed1432c11fadec203104b13aaaf7060d">&#9670;&#160;</a></span>notify() <span class="overload">[3/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -657,7 +870,7 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::enable_if&lt;!std::is_pointer&lt; T &gt;::value, void &gt;::type NimBLECharacteristic::notify </td>
+          <td class="memname">void NimBLECharacteristic::notify </td>
           <td>(</td>
           <td class="paramtype">const T &amp;&#160;</td>
           <td class="paramname"><em>value</em>, </td>
@@ -665,13 +878,13 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>conn_handle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>is_notification</em> = <code>true</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -681,7 +894,7 @@ template&lt;typename T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Template to send a notification for classes which may have data()/size() or c_str()/length() methods. Falls back to sending the data by casting the first element of the array to a uint8_t pointer and getting the length of the array using sizeof. </p>
+<p>Template to send a notification from a class type that has a c_str() and length() method. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">T</td><td>The a reference to a class containing the data to send. </td></tr>
@@ -691,16 +904,16 @@ template&lt;typename T &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>The &lt;type&gt;value to set. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">conn_handle</td><td>The connection handle to send the notification to. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">is_notification</td><td>if true sends a notification, false sends an indication.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This function is only available if the type T is not a pointer. </dd></dl>
+<p>Only used if the &lt;type&gt; has a <code>c_str()</code> method. </p>
 
 </div>
 </div>
-<a id="a03b7cc8a7c14ecb2f92d0c4520da4e39" name="a03b7cc8a7c14ecb2f92d0c4520da4e39"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a03b7cc8a7c14ecb2f92d0c4520da4e39">&#9670;&#160;</a></span>notify() <span class="overload">[2/3]</span></h2>
+<a id="a9ce09408a307a6b62a91418ea7723ebf" name="a9ce09408a307a6b62a91418ea7723ebf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9ce09408a307a6b62a91418ea7723ebf">&#9670;&#160;</a></span>notify() <span class="overload">[4/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -720,49 +933,23 @@ template&lt;typename T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>conn_handle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>is_notification</em> = <code>true</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> const</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Send a notification. </p>
+<p>Send a notification or indication. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">value</td><td>A pointer to the data to send. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The length of the data to send. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">conn_handle</td><td>Connection handle to send an individual notification, or BLE_HS_CONN_HANDLE_NONE to send the notification to all subscribed clients. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="aefbd9f135d01a538ab4789bc6832065b" name="aefbd9f135d01a538ab4789bc6832065b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aefbd9f135d01a538ab4789bc6832065b">&#9670;&#160;</a></span>notify() <span class="overload">[3/3]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void NimBLECharacteristic::notify </td>
-          <td>(</td>
-          <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>conn_handle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Send a notification. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">conn_handle</td><td>Connection handle to send an individual notification, or BLE_HS_CONN_HANDLE_NONE to send the notification to all subscribed clients. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">is_notification</td><td>if true sends a notification, false sends an indication. </td></tr>
   </table>
   </dd>
 </dl>
@@ -833,8 +1020,108 @@ used to define any callbacks for the characteristic. </td></tr>
 
 </div>
 </div>
-<a id="afd70c1d2f95f78e01dbdb92cd009559a" name="afd70c1d2f95f78e01dbdb92cd009559a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afd70c1d2f95f78e01dbdb92cd009559a">&#9670;&#160;</a></span>toString()</h2>
+<a id="a9daeb13599265cb0f8ea94b7ac4ef053" name="a9daeb13599265cb0f8ea94b7ac4ef053"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9daeb13599265cb0f8ea94b7ac4ef053">&#9670;&#160;</a></span>setValue() <span class="overload">[1/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristic::setValue </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>vec</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the value of the characteristic from a <code>std::vector&lt;uint8_t&gt;</code>.<br  />
+. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec</td><td>The std::vector&lt;uint8_t&gt; reference to set the characteristic value from. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aba05898f446e31222fbe509fa357c730" name="aba05898f446e31222fbe509fa357c730"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba05898f446e31222fbe509fa357c730">&#9670;&#160;</a></span>setValue() <span class="overload">[2/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristic::setValue </td>
+          <td>(</td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>s</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Template to set the characteristic value to &lt;type&gt;val. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>The value to set. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a7cd211a8bb9a0c2ffaed57f2af273677" name="a7cd211a8bb9a0c2ffaed57f2af273677"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7cd211a8bb9a0c2ffaed57f2af273677">&#9670;&#160;</a></span>setValue() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristic::setValue </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the value of the characteristic from a data buffer . </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>The data buffer to set for the characteristic. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The number of bytes in the data buffer. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a4fa6b8ed011d12e2b1f16e92a02b9a89" name="a4fa6b8ed011d12e2b1f16e92a02b9a89"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4fa6b8ed011d12e2b1f16e92a02b9a89">&#9670;&#160;</a></span>toString()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -843,7 +1130,7 @@ used to define any callbacks for the characteristic. </td></tr>
           <td class="memname">std::string NimBLECharacteristic::toString </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">

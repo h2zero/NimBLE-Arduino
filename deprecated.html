@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.3</span>
    </div>
   </td>
  </tr>
@@ -95,8 +95,30 @@ $(document).ready(function(){initNavTree('deprecated.html',''); initResizable();
 <div class="textblock"><dl class="reflist">
 <dt>Member <a class="el" href="class_nim_b_l_e_address.html#ac53b0cc945e1505d3e72d48164ad01d6">NimBLEAddress::toString</a>  () const</dt>
 <dd><a class="anchor" id="_deprecated000001"></a>Use std::string() operator instead.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a104baba3c4bbdee7aa28273d265e4c6f">NimBLECharacteristicCallbacks::Status</a>  </dt>
+<dd><a class="anchor" id="_deprecated000002"></a>To be removed in the future as the NimBLE stack return code is also provided.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_device.html#a7d44bb960c0bb1bec02a33369c693085">NimBLEDevice::setSecurityCallbacks</a>  (<a class="el" href="class_nim_b_l_e_security_callbacks.html" title="Callbacks to handle GAP events related to authorization. Deprecated - provided for backward compatibi...">NimBLESecurityCallbacks</a> *pCallbacks)</dt>
+<dd><a class="anchor" id="_deprecated000003"></a>For backward compatibility, New code should use client/server callback methods.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a181c54862bc422d8ad0b326af675922d">NimBLERemoteCharacteristic::readUInt16</a>  () __attribute__((deprecated("Use template readValue&lt;uint16_t&gt;()")))</dt>
+<dd><a class="anchor" id="_deprecated000004"></a>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">readValue&lt;uint16_t&gt;()</a>.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a71793454ffab034f87af3a5e9677a63d">NimBLERemoteCharacteristic::readUInt32</a>  () __attribute__((deprecated("Use template readValue&lt;uint32_t&gt;()")))</dt>
+<dd><a class="anchor" id="_deprecated000005"></a>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">readValue&lt;uint32_t&gt;()</a>.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_remote_characteristic.html#ade5c6ae280c3cf36c9905be23df8f080">NimBLERemoteCharacteristic::readUInt8</a>  () __attribute__((deprecated("Use template readValue&lt;uint8_t&gt;()")))</dt>
+<dd><a class="anchor" id="_deprecated000006"></a>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">readValue&lt;uint8_t&gt;()</a>.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_remote_characteristic.html#ab4f54eabe90a416546b7b3fc3477f49c">NimBLERemoteCharacteristic::registerForNotify</a>  (notify_callback notifyCallback, bool notifications=true, bool response=true) __attribute__((deprecated("Use subscribe()/unsubscribe()")))</dt>
+<dd><a class="anchor" id="_deprecated000007"></a>Use <a class="el" href="class_nim_b_l_e_remote_characteristic.html#aa08b2f62376568e1fc833e4ff91e8aa7" title="Subscribe for notifications or indications.">subscribe()</a> / <a class="el" href="class_nim_b_l_e_remote_characteristic.html#a6e331afdbdbc32bf461c9866236a97aa" title="Unsubscribe for notifications or indications.">unsubscribe()</a> instead.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a14351ea51b7b04f91b71e388881edd53">NimBLERemoteDescriptor::readUInt16</a>  () __attribute__((deprecated("Use template readValue&lt;uint16_t&gt;()")))</dt>
+<dd><a class="anchor" id="_deprecated000009"></a>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7" title="Read the value of the remote descriptor.">readValue&lt;uint16_t&gt;()</a>.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a219606f84d63bc02f093051d66f05204">NimBLERemoteDescriptor::readUInt32</a>  () __attribute__((deprecated("Use template readValue&lt;uint32_t&gt;()")))</dt>
+<dd><a class="anchor" id="_deprecated000010"></a>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7" title="Read the value of the remote descriptor.">readValue&lt;uint32_t&gt;()</a>.  </dd>
+<dt>Member <a class="el" href="class_nim_b_l_e_remote_descriptor.html#ab07e86707a91e48f68e9de55686e939b">NimBLERemoteDescriptor::readUInt8</a>  () __attribute__((deprecated("Use template readValue&lt;uint8_t&gt;()")))</dt>
+<dd><a class="anchor" id="_deprecated000008"></a>Use <a class="el" href="class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7" title="Read the value of the remote descriptor.">readValue&lt;uint8_t&gt;()</a>.  </dd>
+<dt>Class <a class="el" href="class_nim_b_l_e_security.html">NimBLESecurity</a>  </dt>
+<dd><a class="anchor" id="_deprecated000011"></a>Use the security methods provided in <a class="el" href="class_nim_b_l_e_device.html" title="A model of a BLE Device from which all the BLE roles are created.">NimBLEDevice</a> instead.  </dd>
+<dt>Class <a class="el" href="class_nim_b_l_e_security_callbacks.html">NimBLESecurityCallbacks</a>  </dt>
+<dd><a class="anchor" id="_deprecated000012"></a>Use the callbacks provided in <a class="el" href="class_nim_b_l_e_client_callbacks.html" title="Callbacks associated with a BLE client.">NimBLEClientCallbacks</a> and <a class="el" href="class_nim_b_l_e_server_callbacks.html" title="Callbacks associated with the operation of a BLE server.">NimBLEServerCallbacks</a> instead.  </dd>
 <dt>Member <a class="el" href="class_nim_b_l_e_u_u_i_d.html#a9708e07b8e0915aafcfa32fe74ccdf64">NimBLEUUID::toString</a>  () const</dt>
-<dd><a class="anchor" id="_deprecated000002"></a>Use std::string() operator instead. </dd>
+<dd><a class="anchor" id="_deprecated000013"></a>Use std::string() operator instead. </dd>
 </dl>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

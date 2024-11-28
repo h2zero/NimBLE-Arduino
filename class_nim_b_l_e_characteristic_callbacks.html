@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.3</span>
    </div>
   </td>
  </tr>
@@ -90,6 +90,7 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_characteristic_callbac
 
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="class_nim_b_l_e_characteristic_callbacks-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">NimBLECharacteristicCallbacks Class Reference</div></div>
@@ -101,27 +102,128 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_characteristic_callbac
 
 <p><code>#include &lt;<a class="el" href="_nim_b_l_e_characteristic_8h_source.html">NimBLECharacteristic.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a104baba3c4bbdee7aa28273d265e4c6f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a104baba3c4bbdee7aa28273d265e4c6f">Status</a> </td></tr>
+<tr class="memdesc:a104baba3c4bbdee7aa28273d265e4c6f"><td class="mdescLeft">&#160;</td><td class="mdescRight">An enum to provide the callback the status of the notification/indication, implemented for backward compatibility.  <a href="class_nim_b_l_e_characteristic_callbacks.html#a104baba3c4bbdee7aa28273d265e4c6f">More...</a><br /></td></tr>
+<tr class="separator:a104baba3c4bbdee7aa28273d265e4c6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a120d3dade06fbc941a93edbdc0e4d830"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a120d3dade06fbc941a93edbdc0e4d830">onRead</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, <a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo)</td></tr>
-<tr class="memdesc:a120d3dade06fbc941a93edbdc0e4d830"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a read request.  <a href="class_nim_b_l_e_characteristic_callbacks.html#a120d3dade06fbc941a93edbdc0e4d830">More...</a><br /></td></tr>
-<tr class="separator:a120d3dade06fbc941a93edbdc0e4d830"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab4edbb758f0212fd190dedad6c9b8ec9"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#ab4edbb758f0212fd190dedad6c9b8ec9">onWrite</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, <a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo)</td></tr>
-<tr class="memdesc:ab4edbb758f0212fd190dedad6c9b8ec9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a write request.  <a href="class_nim_b_l_e_characteristic_callbacks.html#ab4edbb758f0212fd190dedad6c9b8ec9">More...</a><br /></td></tr>
-<tr class="separator:ab4edbb758f0212fd190dedad6c9b8ec9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f9b1f0f15492e3d47662e5e2ff0baee"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a6f9b1f0f15492e3d47662e5e2ff0baee">onStatus</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, int code)</td></tr>
-<tr class="memdesc:a6f9b1f0f15492e3d47662e5e2ff0baee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a Notify/Indicate Status report.  <a href="class_nim_b_l_e_characteristic_callbacks.html#a6f9b1f0f15492e3d47662e5e2ff0baee">More...</a><br /></td></tr>
-<tr class="separator:a6f9b1f0f15492e3d47662e5e2ff0baee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a024951384bb777d7ee71bfd1d5eff185"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a024951384bb777d7ee71bfd1d5eff185">onSubscribe</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, <a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo, uint16_t subValue)</td></tr>
-<tr class="memdesc:a024951384bb777d7ee71bfd1d5eff185"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function called when a client changes subscription status.  <a href="class_nim_b_l_e_characteristic_callbacks.html#a024951384bb777d7ee71bfd1d5eff185">More...</a><br /></td></tr>
-<tr class="separator:a024951384bb777d7ee71bfd1d5eff185"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a523904b8d39e364db094f623403bad93"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a523904b8d39e364db094f623403bad93">onRead</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic)</td></tr>
+<tr class="memdesc:a523904b8d39e364db094f623403bad93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a read request.  <a href="class_nim_b_l_e_characteristic_callbacks.html#a523904b8d39e364db094f623403bad93">More...</a><br /></td></tr>
+<tr class="separator:a523904b8d39e364db094f623403bad93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acae83420ae378277c225ce465f979f88"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#acae83420ae378277c225ce465f979f88">onRead</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, ble_gap_conn_desc *desc)</td></tr>
+<tr class="memdesc:acae83420ae378277c225ce465f979f88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a read request.  <a href="class_nim_b_l_e_characteristic_callbacks.html#acae83420ae378277c225ce465f979f88">More...</a><br /></td></tr>
+<tr class="separator:acae83420ae378277c225ce465f979f88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac7caf4a80da061b5beda5ebcd214fc3"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#aac7caf4a80da061b5beda5ebcd214fc3">onWrite</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic)</td></tr>
+<tr class="memdesc:aac7caf4a80da061b5beda5ebcd214fc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a write request.  <a href="class_nim_b_l_e_characteristic_callbacks.html#aac7caf4a80da061b5beda5ebcd214fc3">More...</a><br /></td></tr>
+<tr class="separator:aac7caf4a80da061b5beda5ebcd214fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a303a44a2efad76d54d67955fcb7b05d7"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a303a44a2efad76d54d67955fcb7b05d7">onWrite</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, ble_gap_conn_desc *desc)</td></tr>
+<tr class="memdesc:a303a44a2efad76d54d67955fcb7b05d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a write request.  <a href="class_nim_b_l_e_characteristic_callbacks.html#a303a44a2efad76d54d67955fcb7b05d7">More...</a><br /></td></tr>
+<tr class="separator:a303a44a2efad76d54d67955fcb7b05d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a185eb5298cc042f1aceeba21caf0dcc9"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a185eb5298cc042f1aceeba21caf0dcc9">onNotify</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic)</td></tr>
+<tr class="memdesc:a185eb5298cc042f1aceeba21caf0dcc9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a Notify request.  <a href="class_nim_b_l_e_characteristic_callbacks.html#a185eb5298cc042f1aceeba21caf0dcc9">More...</a><br /></td></tr>
+<tr class="separator:a185eb5298cc042f1aceeba21caf0dcc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab17e7c61723a33cd3c922e3ca9c20f1e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#ab17e7c61723a33cd3c922e3ca9c20f1e">onStatus</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, <a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a104baba3c4bbdee7aa28273d265e4c6f">Status</a> s, int code)</td></tr>
+<tr class="memdesc:ab17e7c61723a33cd3c922e3ca9c20f1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a Notify/Indicate Status report.  <a href="class_nim_b_l_e_characteristic_callbacks.html#ab17e7c61723a33cd3c922e3ca9c20f1e">More...</a><br /></td></tr>
+<tr class="separator:ab17e7c61723a33cd3c922e3ca9c20f1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c0c0f524bc0d00d24a7c5ea92c5cb7e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a3c0c0f524bc0d00d24a7c5ea92c5cb7e">onSubscribe</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, ble_gap_conn_desc *desc, uint16_t subValue)</td></tr>
+<tr class="memdesc:a3c0c0f524bc0d00d24a7c5ea92c5cb7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function called when a client changes subscription status.  <a href="class_nim_b_l_e_characteristic_callbacks.html#a3c0c0f524bc0d00d24a7c5ea92c5cb7e">More...</a><br /></td></tr>
+<tr class="separator:a3c0c0f524bc0d00d24a7c5ea92c5cb7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Callbacks that can be associated with a BLE characteristic to inform of events. </p>
 <p >When a server application creates a BLE characteristic, we may wish to be informed when there is either a read or write request to the characteristic's value. An application can register a sub-classed instance of this class and will be notified when such an event happens. </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a120d3dade06fbc941a93edbdc0e4d830" name="a120d3dade06fbc941a93edbdc0e4d830"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a120d3dade06fbc941a93edbdc0e4d830">&#9670;&#160;</a></span>onRead()</h2>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="a104baba3c4bbdee7aa28273d265e4c6f" name="a104baba3c4bbdee7aa28273d265e4c6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a104baba3c4bbdee7aa28273d265e4c6f">&#9670;&#160;</a></span>Status</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a104baba3c4bbdee7aa28273d265e4c6f">NimBLECharacteristicCallbacks::Status</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>An enum to provide the callback the status of the notification/indication, implemented for backward compatibility. </p>
+<dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000002">Deprecated:</a></b></dt><dd>To be removed in the future as the NimBLE stack return code is also provided. </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a185eb5298cc042f1aceeba21caf0dcc9" name="a185eb5298cc042f1aceeba21caf0dcc9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a185eb5298cc042f1aceeba21caf0dcc9">&#9670;&#160;</a></span>onNotify()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristicCallbacks::onNotify </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td>
+          <td class="paramname"><em>pCharacteristic</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Callback function to support a Notify request. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a523904b8d39e364db094f623403bad93" name="a523904b8d39e364db094f623403bad93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a523904b8d39e364db094f623403bad93">&#9670;&#160;</a></span>onRead() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristicCallbacks::onRead </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td>
+          <td class="paramname"><em>pCharacteristic</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Callback function to support a read request. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="acae83420ae378277c225ce465f979f88" name="acae83420ae378277c225ce465f979f88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acae83420ae378277c225ce465f979f88">&#9670;&#160;</a></span>onRead() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -138,8 +240,8 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;&#160;</td>
-          <td class="paramname"><em>connInfo</em>&#160;</td>
+          <td class="paramtype">ble_gap_conn_desc *&#160;</td>
+          <td class="paramname"><em>desc</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -158,15 +260,15 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">connInfo</td><td>A reference to a <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a> instance containing the peer info. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">desc</td><td>The connection description struct that is associated with the peer that performed the read. </td></tr>
   </table>
   </dd>
 </dl>
 
 </div>
 </div>
-<a id="a6f9b1f0f15492e3d47662e5e2ff0baee" name="a6f9b1f0f15492e3d47662e5e2ff0baee"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f9b1f0f15492e3d47662e5e2ff0baee">&#9670;&#160;</a></span>onStatus()</h2>
+<a id="ab17e7c61723a33cd3c922e3ca9c20f1e" name="ab17e7c61723a33cd3c922e3ca9c20f1e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab17e7c61723a33cd3c922e3ca9c20f1e">&#9670;&#160;</a></span>onStatus()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -179,6 +281,12 @@ Public Member Functions</h2></td></tr>
           <td>(</td>
           <td class="paramtype"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td>
           <td class="paramname"><em>pCharacteristic</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a104baba3c4bbdee7aa28273d265e4c6f">Status</a>&#160;</td>
+          <td class="paramname"><em>s</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -203,16 +311,16 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">code</td><td>Status return code from the NimBLE stack.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>Status of the notification/indication. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">code</td><td>Additional return code from the NimBLE stack. </td></tr>
   </table>
   </dd>
 </dl>
-<p>The status code for success is 0 for notifications and BLE_HS_EDONE for indications, any other value is an error. </p>
 
 </div>
 </div>
-<a id="a024951384bb777d7ee71bfd1d5eff185" name="a024951384bb777d7ee71bfd1d5eff185"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a024951384bb777d7ee71bfd1d5eff185">&#9670;&#160;</a></span>onSubscribe()</h2>
+<a id="a3c0c0f524bc0d00d24a7c5ea92c5cb7e" name="a3c0c0f524bc0d00d24a7c5ea92c5cb7e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c0c0f524bc0d00d24a7c5ea92c5cb7e">&#9670;&#160;</a></span>onSubscribe()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -229,8 +337,8 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;&#160;</td>
-          <td class="paramname"><em>connInfo</em>, </td>
+          <td class="paramtype">ble_gap_conn_desc *&#160;</td>
+          <td class="paramname"><em>desc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -255,7 +363,7 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">connInfo</td><td>A reference to a <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a> instance containing the peer info. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">desc</td><td>The connection description struct that is associated with the client. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">subValue</td><td>The subscription status:<ul>
 <li>0 = Un-Subscribed</li>
 <li>1 = Notifications</li>
@@ -269,8 +377,42 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ab4edbb758f0212fd190dedad6c9b8ec9" name="ab4edbb758f0212fd190dedad6c9b8ec9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab4edbb758f0212fd190dedad6c9b8ec9">&#9670;&#160;</a></span>onWrite()</h2>
+<a id="aac7caf4a80da061b5beda5ebcd214fc3" name="aac7caf4a80da061b5beda5ebcd214fc3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aac7caf4a80da061b5beda5ebcd214fc3">&#9670;&#160;</a></span>onWrite() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristicCallbacks::onWrite </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td>
+          <td class="paramname"><em>pCharacteristic</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Callback function to support a write request. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a303a44a2efad76d54d67955fcb7b05d7" name="a303a44a2efad76d54d67955fcb7b05d7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a303a44a2efad76d54d67955fcb7b05d7">&#9670;&#160;</a></span>onWrite() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -287,8 +429,8 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;&#160;</td>
-          <td class="paramname"><em>connInfo</em>&#160;</td>
+          <td class="paramtype">ble_gap_conn_desc *&#160;</td>
+          <td class="paramname"><em>desc</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -307,7 +449,7 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">connInfo</td><td>A reference to a <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a> instance containing the peer info. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">desc</td><td>The connection description struct that is associated with the peer that performed the write. </td></tr>
   </table>
   </dd>
 </dl>

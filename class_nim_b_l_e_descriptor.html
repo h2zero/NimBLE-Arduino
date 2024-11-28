@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.3</span>
    </div>
   </td>
  </tr>
@@ -101,8 +101,6 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_descriptor.html',''); 
 
 <p><code>#include &lt;<a class="el" href="_nim_b_l_e_descriptor_8h_source.html">NimBLEDescriptor.h</a>&gt;</code></p>
 
-<p>Inherits NimBLELocalValueAttribute.</p>
-
 <p>Inherited by <a class="el" href="class_nim_b_l_e2904.html">NimBLE2904</a>.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
@@ -110,18 +108,53 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3cf995352eb1b1c212a7911a05c33b25"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a3cf995352eb1b1c212a7911a05c33b25">NimBLEDescriptor</a> (const char *uuid, uint16_t properties, uint16_t max_len, <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic=nullptr)</td></tr>
 <tr class="memdesc:a3cf995352eb1b1c212a7911a05c33b25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a descriptor.  <a href="class_nim_b_l_e_descriptor.html#a3cf995352eb1b1c212a7911a05c33b25">More...</a><br /></td></tr>
 <tr class="separator:a3cf995352eb1b1c212a7911a05c33b25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad49b02778991338e09f4c4c4461f4cfd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#ad49b02778991338e09f4c4c4461f4cfd">NimBLEDescriptor</a> (const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;uuid, uint16_t properties, uint16_t max_len, <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic=nullptr)</td></tr>
-<tr class="memdesc:ad49b02778991338e09f4c4c4461f4cfd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a descriptor.  <a href="class_nim_b_l_e_descriptor.html#ad49b02778991338e09f4c4c4461f4cfd">More...</a><br /></td></tr>
-<tr class="separator:ad49b02778991338e09f4c4c4461f4cfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a83b589a2022bbd86743b0ee4c3670a37"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a83b589a2022bbd86743b0ee4c3670a37">toString</a> () const</td></tr>
-<tr class="memdesc:a83b589a2022bbd86743b0ee4c3670a37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of the descriptor.  <a href="class_nim_b_l_e_descriptor.html#a83b589a2022bbd86743b0ee4c3670a37">More...</a><br /></td></tr>
-<tr class="separator:a83b589a2022bbd86743b0ee4c3670a37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ecb634b7d6390677cad232bd6be6638"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a7ecb634b7d6390677cad232bd6be6638">NimBLEDescriptor</a> (<a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> uuid, uint16_t properties, uint16_t max_len, <a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic=nullptr)</td></tr>
+<tr class="memdesc:a7ecb634b7d6390677cad232bd6be6638"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a descriptor.  <a href="class_nim_b_l_e_descriptor.html#a7ecb634b7d6390677cad232bd6be6638">More...</a><br /></td></tr>
+<tr class="separator:a7ecb634b7d6390677cad232bd6be6638"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad110851335bc7b225f5bea9ac11bedcc"><td class="memItemLeft" align="right" valign="top"><a id="ad110851335bc7b225f5bea9ac11bedcc" name="ad110851335bc7b225f5bea9ac11bedcc"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>~NimBLEDescriptor</b> ()</td></tr>
+<tr class="memdesc:ad110851335bc7b225f5bea9ac11bedcc"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_nim_b_l_e_descriptor.html" title="A model of a BLE descriptor.">NimBLEDescriptor</a> destructor. <br /></td></tr>
+<tr class="separator:ad110851335bc7b225f5bea9ac11bedcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a486af6799753dfa60b3faddfac2adbcd"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a486af6799753dfa60b3faddfac2adbcd">getHandle</a> ()</td></tr>
+<tr class="memdesc:a486af6799753dfa60b3faddfac2adbcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the BLE handle for this descriptor.  <a href="class_nim_b_l_e_descriptor.html#a486af6799753dfa60b3faddfac2adbcd">More...</a><br /></td></tr>
+<tr class="separator:a486af6799753dfa60b3faddfac2adbcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc5398a570edc197fbadad3f5b45e186"><td class="memItemLeft" align="right" valign="top"><a id="abc5398a570edc197fbadad3f5b45e186" name="abc5398a570edc197fbadad3f5b45e186"></a>
+<a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getUUID</b> ()</td></tr>
+<tr class="memdesc:abc5398a570edc197fbadad3f5b45e186"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the UUID of the descriptor. <br /></td></tr>
+<tr class="separator:abc5398a570edc197fbadad3f5b45e186"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac15dc6c9c24d280c4b0eb766080497e5"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#ac15dc6c9c24d280c4b0eb766080497e5">toString</a> ()</td></tr>
+<tr class="memdesc:ac15dc6c9c24d280c4b0eb766080497e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of the descriptor.  <a href="class_nim_b_l_e_descriptor.html#ac15dc6c9c24d280c4b0eb766080497e5">More...</a><br /></td></tr>
+<tr class="separator:ac15dc6c9c24d280c4b0eb766080497e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9cb8727f9e17cf8050cf619e5fe3096"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#aa9cb8727f9e17cf8050cf619e5fe3096">setCallbacks</a> (<a class="el" href="class_nim_b_l_e_descriptor_callbacks.html">NimBLEDescriptorCallbacks</a> *pCallbacks)</td></tr>
 <tr class="memdesc:aa9cb8727f9e17cf8050cf619e5fe3096"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the callback handlers for this descriptor.  <a href="class_nim_b_l_e_descriptor.html#aa9cb8727f9e17cf8050cf619e5fe3096">More...</a><br /></td></tr>
 <tr class="separator:aa9cb8727f9e17cf8050cf619e5fe3096"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa61b5f14156e9f378688ec875cf48309"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#aa61b5f14156e9f378688ec875cf48309">getCharacteristic</a> () const</td></tr>
-<tr class="memdesc:aa61b5f14156e9f378688ec875cf48309"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the characteristic this descriptor belongs to.  <a href="class_nim_b_l_e_descriptor.html#aa61b5f14156e9f378688ec875cf48309">More...</a><br /></td></tr>
-<tr class="separator:aa61b5f14156e9f378688ec875cf48309"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a412b3735186d94e9ddcf37a06c2055e1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a412b3735186d94e9ddcf37a06c2055e1">getCharacteristic</a> ()</td></tr>
+<tr class="memdesc:a412b3735186d94e9ddcf37a06c2055e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the characteristic this descriptor belongs to.  <a href="class_nim_b_l_e_descriptor.html#a412b3735186d94e9ddcf37a06c2055e1">More...</a><br /></td></tr>
+<tr class="separator:a412b3735186d94e9ddcf37a06c2055e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a378346f59afb706d4c1d961227b98c5d"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a378346f59afb706d4c1d961227b98c5d">getLength</a> ()</td></tr>
+<tr class="memdesc:a378346f59afb706d4c1d961227b98c5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the length of the value of this descriptor.  <a href="class_nim_b_l_e_descriptor.html#a378346f59afb706d4c1d961227b98c5d">More...</a><br /></td></tr>
+<tr class="separator:a378346f59afb706d4c1d961227b98c5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f64c733c8848948fe9123bd7cd3fd53"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a8f64c733c8848948fe9123bd7cd3fd53">getValue</a> (time_t *timestamp=nullptr)</td></tr>
+<tr class="memdesc:a8f64c733c8848948fe9123bd7cd3fd53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of this descriptor.  <a href="class_nim_b_l_e_descriptor.html#a8f64c733c8848948fe9123bd7cd3fd53">More...</a><br /></td></tr>
+<tr class="separator:a8f64c733c8848948fe9123bd7cd3fd53"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7153e051e5808469c23e2207fa6711db"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a7153e051e5808469c23e2207fa6711db">getStringValue</a> ()</td></tr>
+<tr class="memdesc:a7153e051e5808469c23e2207fa6711db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the value of this descriptor as a string.  <a href="class_nim_b_l_e_descriptor.html#a7153e051e5808469c23e2207fa6711db">More...</a><br /></td></tr>
+<tr class="separator:a7153e051e5808469c23e2207fa6711db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9447cee9092dc516266f7764131ba923"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a9447cee9092dc516266f7764131ba923">setValue</a> (const uint8_t *data, size_t size)</td></tr>
+<tr class="memdesc:a9447cee9092dc516266f7764131ba923"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of the descriptor.  <a href="class_nim_b_l_e_descriptor.html#a9447cee9092dc516266f7764131ba923">More...</a><br /></td></tr>
+<tr class="separator:a9447cee9092dc516266f7764131ba923"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a644f739b6621702856be8db93035e9a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a644f739b6621702856be8db93035e9a0">setValue</a> (const std::vector&lt; uint8_t &gt; &amp;vec)</td></tr>
+<tr class="memdesc:a644f739b6621702856be8db93035e9a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the value of the descriptor from a <code>std::vector&lt;uint8_t&gt;</code>.<br  />
+.  <a href="class_nim_b_l_e_descriptor.html#a644f739b6621702856be8db93035e9a0">More...</a><br /></td></tr>
+<tr class="separator:a644f739b6621702856be8db93035e9a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9136cc9e4b41110b3dd99d1c9553a477"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a9136cc9e4b41110b3dd99d1c9553a477"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a9136cc9e4b41110b3dd99d1c9553a477">setValue</a> (const T &amp;s)</td></tr>
+<tr class="memdesc:a9136cc9e4b41110b3dd99d1c9553a477"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to set the characteristic value to &lt;type&gt;val.  <a href="class_nim_b_l_e_descriptor.html#a9136cc9e4b41110b3dd99d1c9553a477">More...</a><br /></td></tr>
+<tr class="separator:a9136cc9e4b41110b3dd99d1c9553a477"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61062547f21ca8e102ec5d8e0843c9f9"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a61062547f21ca8e102ec5d8e0843c9f9"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_descriptor.html#a61062547f21ca8e102ec5d8e0843c9f9">getValue</a> (time_t *timestamp=nullptr, bool skipSizeCheck=false)</td></tr>
+<tr class="memdesc:a61062547f21ca8e102ec5d8e0843c9f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to convert the descriptor data to &lt;type&gt;.  <a href="class_nim_b_l_e_descriptor.html#a61062547f21ca8e102ec5d8e0843c9f9">More...</a><br /></td></tr>
+<tr class="separator:a61062547f21ca8e102ec5d8e0843c9f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >A model of a BLE descriptor. </p>
@@ -177,8 +210,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ad49b02778991338e09f4c4c4461f4cfd" name="ad49b02778991338e09f4c4c4461f4cfd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad49b02778991338e09f4c4c4461f4cfd">&#9670;&#160;</a></span>NimBLEDescriptor() <span class="overload">[2/2]</span></h2>
+<a id="a7ecb634b7d6390677cad232bd6be6638" name="a7ecb634b7d6390677cad232bd6be6638"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ecb634b7d6390677cad232bd6be6638">&#9670;&#160;</a></span>NimBLEDescriptor() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -186,7 +219,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">NimBLEDescriptor::NimBLEDescriptor </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a>&#160;</td>
           <td class="paramname"><em>uuid</em>, </td>
         </tr>
         <tr>
@@ -229,8 +262,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="aa61b5f14156e9f378688ec875cf48309" name="aa61b5f14156e9f378688ec875cf48309"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa61b5f14156e9f378688ec875cf48309">&#9670;&#160;</a></span>getCharacteristic()</h2>
+<a id="a412b3735186d94e9ddcf37a06c2055e1" name="a412b3735186d94e9ddcf37a06c2055e1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a412b3735186d94e9ddcf37a06c2055e1">&#9670;&#160;</a></span>getCharacteristic()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -239,13 +272,149 @@ Public Member Functions</h2></td></tr>
           <td class="memname"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> * NimBLEDescriptor::getCharacteristic </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Get the characteristic this descriptor belongs to. </p>
 <dl class="section return"><dt>Returns</dt><dd>A pointer to the characteristic this descriptor belongs to. </dd></dl>
+
+</div>
+</div>
+<a id="a486af6799753dfa60b3faddfac2adbcd" name="a486af6799753dfa60b3faddfac2adbcd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a486af6799753dfa60b3faddfac2adbcd">&#9670;&#160;</a></span>getHandle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t NimBLEDescriptor::getHandle </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the BLE handle for this descriptor. </p>
+<dl class="section return"><dt>Returns</dt><dd>The handle for this descriptor. </dd></dl>
+
+</div>
+</div>
+<a id="a378346f59afb706d4c1d961227b98c5d" name="a378346f59afb706d4c1d961227b98c5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a378346f59afb706d4c1d961227b98c5d">&#9670;&#160;</a></span>getLength()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t NimBLEDescriptor::getLength </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the length of the value of this descriptor. </p>
+<dl class="section return"><dt>Returns</dt><dd>The length (in bytes) of the value of this descriptor. </dd></dl>
+
+</div>
+</div>
+<a id="a7153e051e5808469c23e2207fa6711db" name="a7153e051e5808469c23e2207fa6711db"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7153e051e5808469c23e2207fa6711db">&#9670;&#160;</a></span>getStringValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string NimBLEDescriptor::getStringValue </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the value of this descriptor as a string. </p>
+<dl class="section return"><dt>Returns</dt><dd>A std::string instance containing a copy of the descriptor's value. </dd></dl>
+
+</div>
+</div>
+<a id="a8f64c733c8848948fe9123bd7cd3fd53" name="a8f64c733c8848948fe9123bd7cd3fd53"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f64c733c8848948fe9123bd7cd3fd53">&#9670;&#160;</a></span>getValue() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a> NimBLEDescriptor::getValue </td>
+          <td>(</td>
+          <td class="paramtype">time_t *&#160;</td>
+          <td class="paramname"><em>timestamp</em> = <code>nullptr</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get the value of this descriptor. </p>
+<dl class="section return"><dt>Returns</dt><dd>The <a class="el" href="class_nim_b_l_e_att_value.html" title="A specialized container class to hold BLE attribute values.">NimBLEAttValue</a> of this descriptor. </dd></dl>
+
+</div>
+</div>
+<a id="a61062547f21ca8e102ec5d8e0843c9f9" name="a61062547f21ca8e102ec5d8e0843c9f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61062547f21ca8e102ec5d8e0843c9f9">&#9670;&#160;</a></span>getValue() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">T NimBLEDescriptor::getValue </td>
+          <td>(</td>
+          <td class="paramtype">time_t *&#160;</td>
+          <td class="paramname"><em>timestamp</em> = <code>nullptr</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>skipSizeCheck</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Template to convert the descriptor data to &lt;type&gt;. </p>
+<dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">T</td><td>The type to convert the data to. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">timestamp</td><td>(Optional) A pointer to a time_t struct to store the time the value was read. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">skipSizeCheck</td><td>(Optional) If true it will skip checking if the data size is less than <code>sizeof(&lt;type&gt;)</code>. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The data converted to &lt;type&gt; or NULL if skipSizeCheck is false and the data is less than <code>sizeof(&lt;type&gt;)</code>.</dd></dl>
+<p><b>Use:</b> <code>getValue&lt;type&gt;(&amp;timestamp, skipSizeCheck);</code> </p>
 
 </div>
 </div>
@@ -275,8 +444,108 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a83b589a2022bbd86743b0ee4c3670a37" name="a83b589a2022bbd86743b0ee4c3670a37"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a83b589a2022bbd86743b0ee4c3670a37">&#9670;&#160;</a></span>toString()</h2>
+<a id="a644f739b6621702856be8db93035e9a0" name="a644f739b6621702856be8db93035e9a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a644f739b6621702856be8db93035e9a0">&#9670;&#160;</a></span>setValue() <span class="overload">[1/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEDescriptor::setValue </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; uint8_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>vec</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the value of the descriptor from a <code>std::vector&lt;uint8_t&gt;</code>.<br  />
+. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vec</td><td>The std::vector&lt;uint8_t&gt; reference to set the descriptor value from. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a9136cc9e4b41110b3dd99d1c9553a477" name="a9136cc9e4b41110b3dd99d1c9553a477"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9136cc9e4b41110b3dd99d1c9553a477">&#9670;&#160;</a></span>setValue() <span class="overload">[2/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEDescriptor::setValue </td>
+          <td>(</td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>s</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Template to set the characteristic value to &lt;type&gt;val. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>The value to set. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a9447cee9092dc516266f7764131ba923" name="a9447cee9092dc516266f7764131ba923"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9447cee9092dc516266f7764131ba923">&#9670;&#160;</a></span>setValue() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEDescriptor::setValue </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>data</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>length</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the value of the descriptor. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">data</td><td>The data to set for the descriptor. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">length</td><td>The length of the data in bytes. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ac15dc6c9c24d280c4b0eb766080497e5" name="ac15dc6c9c24d280c4b0eb766080497e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac15dc6c9c24d280c4b0eb766080497e5">&#9670;&#160;</a></span>toString()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -285,7 +554,7 @@ Public Member Functions</h2></td></tr>
           <td class="memname">std::string NimBLEDescriptor::toString </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
-          <td> const</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">

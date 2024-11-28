@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.0.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;1.4.3</span>
    </div>
   </td>
  </tr>
@@ -102,27 +102,27 @@ $(document).ready(function(){initNavTree('md__new_user_guide.html',''); initResi
  <br  />
 </li>
 </ul>
-<h1><a class="anchor" id="autotoc_md46"></a>
+<h1><a class="anchor" id="autotoc_md42"></a>
 Include Files</h1>
 <p >At the top of your application file add <code>#include <a class="el" href="_nim_b_l_e_device_8h_source.html">NimBLEDevice.h</a></code>, this is the only header required and provides access to all classes. <br  />
  <br  />
 </p>
-<h1><a class="anchor" id="autotoc_md47"></a>
+<h1><a class="anchor" id="autotoc_md43"></a>
 Using the Library</h1>
 <p >In order to perform any BLE tasks you must first initialize the library, this prepares the NimBLE stack to be ready for commands. <br  />
 </p>
-<p >To do this you must call <code><a class="el" href="class_nim_b_l_e_device.html#a2e8bb71daabbffd9eab8787493a45ce7" title="Initialize the BLE environment.">NimBLEDevice::init</a>("your device name here")</code>, the parameter passed is a character string containing the name you want to advertise. <br  />
+<p >To do this you must call <code><a class="el" href="class_nim_b_l_e_device.html#a674d2e68d4ba0e3f84d7993f9da7d15b" title="Initialize the BLE environment.">NimBLEDevice::init</a>("your device name here")</code>, the parameter passed is a character string containing the name you want to advertise. <br  />
  If you're not creating a server or do not want to advertise a name, simply pass an empty string for the parameter. <br  />
 </p>
 <p >This can be called any time you wish to use BLE functions and does not need to be called from app_main(IDF) or setup(Arduino) but usually is. <br  />
  <br  />
 </p>
 <p ><a class="anchor" id="creating-a-server"></a> </p>
-<h1><a class="anchor" id="autotoc_md48"></a>
+<h1><a class="anchor" id="autotoc_md44"></a>
 Creating a Server</h1>
 <p >BLE servers perform 2 tasks, they advertise their existence for clients to find them and they provide services which contain information for the connecting client. <br  />
 </p>
-<p >After initializing the NimBLE stack we create a server by calling <code><a class="el" href="class_nim_b_l_e_device.html#a4d9780d0b5fafc279483822af802a508" title="Create an instance of a server.">NimBLEDevice::createServer()</a></code>, this will create a server instance and return a pointer to it. <br  />
+<p >After initializing the NimBLE stack we create a server by calling <code><a class="el" href="class_nim_b_l_e_device.html#a4d9780d0b5fafc279483822af802a508" title="Create a new instance of a server.">NimBLEDevice::createServer()</a></code>, this will create a server instance and return a pointer to it. <br  />
 </p>
 <p >Once we have created the server we need to tell it the services it hosts. <br  />
  To do this we call <code><a class="el" href="class_nim_b_l_e_server.html#aaeb58b4de85754d1aac6964e9248aa35" title="Create a BLE Service.">NimBLEServer::createService(const char* uuid)</a></code>. Which returns a pointer to an instance of <code><a class="el" href="class_nim_b_l_e_service.html" title="The model of a BLE service.">NimBLEService</a></code>. <br  />
@@ -186,7 +186,7 @@ Creating a Server</h1>
 </div><!-- fragment --><p >All that's left to do now is start the service, give the characteristic a value and start advertising for clients. <br  />
 </p>
 <p >Fist we start the service by calling <code><a class="el" href="class_nim_b_l_e_service.html#ad37324ed0404d596923d6fdc0133b985" title="Builds the database of characteristics/descriptors for the service and registers it with the NimBLE s...">NimBLEService::start()</a></code>.</p>
-<p >Next we need to call <code>NimBLECharacteristic::setValue</code> to set the characteristic value that the client will read. <br  />
+<p >Next we need to call <code><a class="el" href="class_nim_b_l_e_characteristic.html#a7cd211a8bb9a0c2ffaed57f2af273677" title="Set the value of the characteristic from a data buffer .">NimBLECharacteristic::setValue</a></code> to set the characteristic value that the client will read. <br  />
  There are many different types you can send as parameters for the value but for this example we will use a simple string. <code>pCharacteristic-&gt;setValue("Hello BLE");</code> <br  />
 </p>
 <p >Next we need to advertise for connections. <br  />
@@ -223,14 +223,14 @@ Creating a Server</h1>
  <br  />
 </p>
 <p ><a class="anchor" id="creating-a-client"></a> </p>
-<h1><a class="anchor" id="autotoc_md49"></a>
+<h1><a class="anchor" id="autotoc_md45"></a>
 Creating a Client</h1>
 <p >BLE clients perform 2 tasks, they scan for advertising servers and form connections to them to read and write to their characteristics/descriptors.</p>
 <p >After initializing the NimBLE stack we create a scan instance by calling <code><a class="el" href="class_nim_b_l_e_device.html#af93d92316454b051125460056368baec" title="Retrieve the Scan object that we use for scanning.">NimBLEDevice::getScan()</a></code>, this will create a <code><a class="el" href="class_nim_b_l_e_scan.html" title="Perform and manage BLE scans.">NimBLEScan</a></code> instance and return a pointer to it. <br  />
 </p>
 <p >Once we have created the scan we can start looking for advertising servers. <br  />
 </p>
-<p >To do this we call <code>NimBLEScan::start(duration)</code>, the duration parameter is a uint32_t that specifies the number of milliseconds to scan for, <br  />
+<p >To do this we call <code>NimBLEScan::start(duration)</code>, the duration parameter is a uint32_t that specifies the number of seconds to scan for, <br  />
  passing 0 will scan forever. <br  />
 </p>
 <p >In this example we will scan for 10 seconds. This is a blocking function (a non blocking overload is also available). <br  />
@@ -245,7 +245,7 @@ Creating a Client</h1>
 <div class="line">    NimBLEDevice::init(&quot;&quot;);</div>
 <div class="line">    </div>
 <div class="line">    NimBLEScan *pScan = NimBLEDevice::getScan();</div>
-<div class="line">    NimBLEScanResults results = pScan-&gt;getResults(10 * 1000);</div>
+<div class="line">    NimBLEScanResults results = pScan-&gt;start(10);</div>
 <div class="line">}</div>
 </div><!-- fragment --><p> <br  />
 </p>
@@ -253,7 +253,7 @@ Creating a Client</h1>
 </p>
 <p >To do this we iterate through the results and check if any of the devices found are advertising the service we want <code>ABCD</code>. <br  />
  Each result in <code><a class="el" href="class_nim_b_l_e_scan_results.html" title="A class that contains and operates on the results of a BLE scan.">NimBLEScanResults</a></code> is a <code><a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a></code> instance that we can access data from.</p>
-<p >We will check each device found for the <code>ABCD</code> service by calling <code><a class="el" href="class_nim_b_l_e_advertised_device.html#ad006b08552281a3e6c9d9444e7942709" title="Check advertised services for existence of the required UUID.">NimBLEAdvertisedDevice::isAdvertisingService</a></code>. <br  />
+<p >We will check each device found for the <code>ABCD</code> service by calling <code><a class="el" href="class_nim_b_l_e_advertised_device.html#a37ad095c066aa231a52a7259734c9bce" title="Check advertised services for existence of the required UUID.">NimBLEAdvertisedDevice::isAdvertisingService</a></code>. <br  />
  This takes an instance of <code><a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID</a></code> as a parameter so we will need to create one. <br  />
 </p>
 <p ><b>The code for this looks like:</b> </p><div class="fragment"><div class="line">NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
@@ -269,9 +269,9 @@ Creating a Client</h1>
 </p>
 <p >Now that we can scan and parse advertisers we need to be able to create a <code><a class="el" href="class_nim_b_l_e_client.html" title="A model of a BLE client.">NimBLEClient</a></code> instance and use it to connect. <br  />
 </p>
-<p >To do this we call <code><a class="el" href="class_nim_b_l_e_device.html#a010b12177917f33e7d3633736c0cc553" title="Creates a new client object, each client can connect to 1 peripheral device.">NimBLEDevice::createClient</a></code> which creates the <code><a class="el" href="class_nim_b_l_e_client.html" title="A model of a BLE client.">NimBLEClient</a></code> instance and returns a pointer to it. <br  />
+<p >To do this we call <code><a class="el" href="class_nim_b_l_e_device.html#af8142995252f486916dbb9de2a5b0c9e" title="Creates a new client object and maintains a list of all client objects each client can connect to 1 p...">NimBLEDevice::createClient</a></code> which creates the <code><a class="el" href="class_nim_b_l_e_client.html" title="A model of a BLE client.">NimBLEClient</a></code> instance and returns a pointer to it. <br  />
 </p>
-<p >After this we call <code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a></code> to connect to the advertiser. <br  />
+<p >After this we call <code><a class="el" href="class_nim_b_l_e_client.html#ae9b3e8a9b47c7eaad040b485bda958a1" title="Connect to an advertising device.">NimBLEClient::connect</a></code> to connect to the advertiser. <br  />
  This takes a pointer to the <code><a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a></code> and returns <code>true</code> if successful.</p>
 <p ><b>Lets do that now:</b> </p><div class="fragment"><div class="line">NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
 <div class="line"> </div>
@@ -288,17 +288,17 @@ Creating a Client</h1>
 <div class="line">        }</div>
 <div class="line">    }</div>
 <div class="line">}</div>
-</div><!-- fragment --><p> As shown, the call to <code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a></code> should have it's return value tested to make sure it succeeded before proceeding to get data. <br  />
+</div><!-- fragment --><p> As shown, the call to <code><a class="el" href="class_nim_b_l_e_client.html#ae9b3e8a9b47c7eaad040b485bda958a1" title="Connect to an advertising device.">NimBLEClient::connect</a></code> should have it's return value tested to make sure it succeeded before proceeding to get data. <br  />
  <br  />
 </p>
 <p >Next we need to access the servers data by asking it for the service and the characteristic we are interested in, then read the characteristic value.</p>
 <p >To do this we call <code><a class="el" href="class_nim_b_l_e_client.html#ae22379ab10bd82932d2303fb3753c366" title="Get the service BLE Remote Service instance corresponding to the uuid.">NimBLEClient::getService</a></code>, which takes as a parameter the UUID of the service and returns <br  />
  a pointer an instance to <code><a class="el" href="class_nim_b_l_e_remote_service.html" title="A model of a remote BLE service.">NimBLERemoteService</a></code> or <code>nullptr</code> if the service was not found. <br  />
 </p>
-<p >Next we will call <code><a class="el" href="class_nim_b_l_e_remote_service.html#ae10ddb56bc48bd06538ab49e4a561594" title="Get the remote characteristic object for the characteristic UUID.">NimBLERemoteService::getCharacteristic</a></code> which takes as a parameter the UUID of the service and returns <br  />
+<p >Next we will call <code><a class="el" href="class_nim_b_l_e_remote_service.html#ab12d195a2239a3808d60457184f0c487" title="Get the remote characteristic object for the characteristic UUID.">NimBLERemoteService::getCharacteristic</a></code> which takes as a parameter the UUID of the service and returns <br  />
  a pointer to an instance of <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html" title="A model of a remote BLE characteristic.">NimBLERemoteCharacteristic</a></code> or <code>nullptr</code> if not found. <br  />
 </p>
-<p >Finally we will read the characteristic value with <code>NimBLERemoteCharacteristic::readValue()</code>. <br  />
+<p >Finally we will read the characteristic value with <code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a" title="Read the value of the remote characteristic.">NimBLERemoteCharacteristic::readValue()</a></code>. <br  />
 </p>
 <p ><b>Here is what that looks like:</b> </p><div class="fragment"><div class="line">NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
 <div class="line"> </div>
@@ -367,7 +367,7 @@ Creating a Client</h1>
 <div class="line">    NimBLEDevice::init(&quot;&quot;);</div>
 <div class="line">    </div>
 <div class="line">    NimBLEScan *pScan = NimBLEDevice::getScan();</div>
-<div class="line">    NimBLEScanResults results = pScan-&gt;start(10 * 1000);</div>
+<div class="line">    NimBLEScanResults results = pScan-&gt;start(10);</div>
 <div class="line">    </div>
 <div class="line">    NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
 <div class="line">    </div>
