@@ -388,7 +388,49 @@ void NimBLEClient::setConfig(NimBLEClient::Config config) {
  */
 void NimBLEClient::setConnectPhy(uint8_t mask) {
     m_phyMask = mask;
-}
+} // setConnectPhy
+
+/**
+ * @brief Request a change to the PHY used for this peer connection.
+ * @param [in] txPhyMask TX PHY. Can be mask of following:
+ * - BLE_GAP_LE_PHY_1M_MASK
+ * - BLE_GAP_LE_PHY_2M_MASK
+ * - BLE_GAP_LE_PHY_CODED_MASK
+ * - BLE_GAP_LE_PHY_ANY_MASK
+ * @param [in] rxPhyMask RX PHY. Can be mask of following:
+ * - BLE_GAP_LE_PHY_1M_MASK
+ * - BLE_GAP_LE_PHY_2M_MASK
+ * - BLE_GAP_LE_PHY_CODED_MASK
+ * - BLE_GAP_LE_PHY_ANY_MASK
+ * @param phyOptions Additional PHY options. Valid values are:
+ * - BLE_GAP_LE_PHY_CODED_ANY (default)
+ * - BLE_GAP_LE_PHY_CODED_S2
+ * - BLE_GAP_LE_PHY_CODED_S8
+ * @return True if successful.
+ */
+bool NimBLEClient::updatePhy(uint8_t txPhyMask, uint8_t rxPhyMask, uint16_t phyOptions) {
+    int rc = ble_gap_set_prefered_le_phy(m_connHandle, txPhyMask, rxPhyMask, phyOptions);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to update phy; rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+
+    return rc == 0;
+} // updatePhy
+
+/**
+ * @brief Get the PHY used for this peer connection.
+ * @param [out] txPhy The TX PHY.
+ * @param [out] rxPhy The RX PHY.
+ * @return True if successful.
+ */
+bool NimBLEClient::getPhy(uint8_t* txPhy, uint8_t* rxPhy) {
+    int rc = ble_gap_read_le_phy(m_connHandle, txPhy, rxPhy);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to read phy; rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+
+    return rc == 0;
+} // getPhy
 # endif
 
 /**
@@ -1129,6 +1171,19 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             break;
         } // BLE_GAP_EVENT_IDENTITY_RESOLVED
 
+# if CONFIG_BT_NIMBLE_EXT_ADV
+        case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE: {
+            NimBLEConnInfo peerInfo;
+            rc = ble_gap_conn_find(event->phy_updated.conn_handle, &peerInfo.m_desc);
+            if (rc != 0) {
+                return BLE_ATT_ERR_INVALID_HANDLE;
+            }
+
+            pClient->m_pClientCallbacks->onPhyUpdate(pClient, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
+            return 0;
+        } // BLE_GAP_EVENT_PHY_UPDATE_COMPLETE
+# endif
+
         case BLE_GAP_EVENT_MTU: {
             if (pClient->m_connHandle != event->mtu.conn_handle) {
                 return 0;
@@ -1224,30 +1279,31 @@ std::string NimBLEClient::toString() const {
 } // toString
 
 static const char* CB_TAG = "NimBLEClientCallbacks";
+
 /**
  * @brief Get the last error code reported by the NimBLE host
  * @return int, the NimBLE error code.
  */
-int                NimBLEClient::getLastError() const {
+int NimBLEClient::getLastError() const {
     return m_lastErr;
 } // getLastError
 
 void NimBLEClientCallbacks::onConnect(NimBLEClient* pClient) {
     NIMBLE_LOGD(CB_TAG, "onConnect: default");
-}
+} // onConnect
 
 void NimBLEClientCallbacks::onConnectFail(NimBLEClient* pClient, int reason) {
     NIMBLE_LOGD(CB_TAG, "onConnectFail: default, reason: %d", reason);
-}
+} // onConnectFail
 
 void NimBLEClientCallbacks::onDisconnect(NimBLEClient* pClient, int reason) {
     NIMBLE_LOGD(CB_TAG, "onDisconnect: default, reason: %d", reason);
-}
+} // onDisconnect
 
 bool NimBLEClientCallbacks::onConnParamsUpdateRequest(NimBLEClient* pClient, const ble_gap_upd_params* params) {
     NIMBLE_LOGD(CB_TAG, "onConnParamsUpdateRequest: default");
     return true;
-}
+} // onConnParamsUpdateRequest
 
 void NimBLEClientCallbacks::onPassKeyEntry(NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD(CB_TAG, "onPassKeyEntry: default: 123456");
@@ -1256,7 +1312,7 @@ void NimBLEClientCallbacks::onPassKeyEntry(NimBLEConnInfo& connInfo) {
 
 void NimBLEClientCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD(CB_TAG, "onAuthenticationComplete: default");
-}
+} // onAuthenticationComplete
 
 void NimBLEClientCallbacks::onIdentity(NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD(CB_TAG, "onIdentity: default");
@@ -1265,10 +1321,16 @@ void NimBLEClientCallbacks::onIdentity(NimBLEConnInfo& connInfo) {
 void NimBLEClientCallbacks::onConfirmPasskey(NimBLEConnInfo& connInfo, uint32_t pin) {
     NIMBLE_LOGD(CB_TAG, "onConfirmPasskey: default: true");
     NimBLEDevice::injectConfirmPasskey(connInfo, true);
-}
+} // onConfirmPasskey
 
 void NimBLEClientCallbacks::onMTUChange(NimBLEClient* pClient, uint16_t mtu) {
     NIMBLE_LOGD(CB_TAG, "onMTUChange: default");
-}
+} // onMTUChange
+
+# if CONFIG_BT_NIMBLE_EXT_ADV
+void NimBLEClientCallbacks::onPhyUpdate(NimBLEClient* pClient, uint8_t txPhy, uint8_t rxPhy) {
+    NIMBLE_LOGD(CB_TAG, "onPhyUpdate: default, txPhy: %d, rxPhy: %d", txPhy, rxPhy);
+} // onPhyUpdate
+# endif
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */

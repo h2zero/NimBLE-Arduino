@@ -671,6 +671,20 @@ int NimBLEServer::handleGapEvent(struct ble_gap_event *event, void *arg) {
             return 0;
         } // BLE_GAP_EVENT_IDENTITY_RESOLVED
 
+# if CONFIG_BT_NIMBLE_EXT_ADV
+        case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE: {
+            rc = ble_gap_conn_find(event->phy_updated.conn_handle, &peerInfo.m_desc);
+            if(rc != 0) {
+                return BLE_ATT_ERR_INVALID_HANDLE;
+            }
+
+            pServer->m_pServerCallbacks->onPhyUpdate(peerInfo,
+                                                     event->phy_updated.tx_phy,
+                                                     event->phy_updated.rx_phy);
+            return 0;
+        } //BLE_GAP_EVENT_PHY_UPDATE_COMPLETE
+#endif
+
         case BLE_GAP_EVENT_PASSKEY_ACTION: {
             struct ble_sm_io pkey = {0,0};
 
@@ -937,6 +951,50 @@ bool NimBLEServer::startAdvertising(uint8_t inst_id,
 bool NimBLEServer::stopAdvertising(uint8_t inst_id) {
     return getAdvertising()->stop(inst_id);
 } // stopAdvertising
+
+/**
+ * @brief Request an update to the PHY used for a peer connection.
+ * @param [in] connHandle the connection handle to the update the PHY for.
+ * @param [in] txPhyMask TX PHY. Can be mask of following:
+ * - BLE_GAP_LE_PHY_1M_MASK
+ * - BLE_GAP_LE_PHY_2M_MASK
+ * - BLE_GAP_LE_PHY_CODED_MASK
+ * - BLE_GAP_LE_PHY_ANY_MASK
+ * @param [in] rxPhyMask RX PHY. Can be mask of following:
+ * - BLE_GAP_LE_PHY_1M_MASK
+ * - BLE_GAP_LE_PHY_2M_MASK
+ * - BLE_GAP_LE_PHY_CODED_MASK
+ * - BLE_GAP_LE_PHY_ANY_MASK
+ * @param phyOptions Additional PHY options. Valid values are:
+ * - BLE_GAP_LE_PHY_CODED_ANY (default)
+ * - BLE_GAP_LE_PHY_CODED_S2
+ * - BLE_GAP_LE_PHY_CODED_S8
+ * @return True if successful.
+ */
+bool NimBLEServer::updatePhy(uint16_t connHandle, uint8_t txPhyMask, uint8_t rxPhyMask, uint16_t phyOptions) {
+    int rc = ble_gap_set_prefered_le_phy(connHandle, txPhyMask, rxPhyMask, phyOptions);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to update phy; rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+
+    return rc == 0;
+} // updatePhy
+
+/**
+ * @brief Get the PHY used for a peer connection.
+ * @param [in] connHandle the connection handle to the get the PHY for.
+ * @param [out] txPhy The TX PHY.
+ * @param [out] rxPhy The RX PHY.
+ * @return True if successful.
+ */
+bool NimBLEServer::getPhy(uint16_t connHandle, uint8_t* txPhy, uint8_t* rxPhy) {
+    int rc = ble_gap_read_le_phy(connHandle, txPhy, rxPhy);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to read phy; rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    }
+
+    return rc == 0;
+} // getPhy
 #endif
 
 #if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
@@ -1088,5 +1146,11 @@ void NimBLEServerCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo, c
 void NimBLEServerCallbacks::onConnParamsUpdate(NimBLEConnInfo& connInfo){
     NIMBLE_LOGD("NimBLEServerCallbacks", "onConnParamsUpdate: default");
 } // onConnParamsUpdate
+
+# if CONFIG_BT_NIMBLE_EXT_ADV
+void NimBLEServerCallbacks::onPhyUpdate(NimBLEConnInfo& connInfo, uint8_t txPhy, uint8_t rxPhy) {
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onPhyUpdate: default, txPhy: %d, rxPhy: %d", txPhy, rxPhy);
+} // onPhyUpdate
+# endif
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */

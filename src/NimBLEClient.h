@@ -93,7 +93,9 @@ class NimBLEClient {
                             bool                  response = false);
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
-    void setConnectPhy(uint8_t mask);
+    void setConnectPhy(uint8_t phyMask);
+    bool updatePhy(uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions = 0);
+    bool getPhy(uint8_t* txPhy, uint8_t* rxPhy);
 # endif
 
     struct Config {
@@ -207,6 +209,21 @@ class NimBLEClientCallbacks {
      * about the peer connection parameters.
      */
     virtual void onMTUChange(NimBLEClient* pClient, uint16_t MTU);
+
+# if CONFIG_BT_NIMBLE_EXT_ADV
+    /**
+     * @brief Called when the PHY update procedure is complete.
+     * @param [in] pClient A pointer to the client whose PHY was updated.
+     * about the peer connection parameters.
+     * @param [in] txPhy The transmit PHY.
+     * @param [in] rxPhy The receive PHY.
+     * Possible values:
+     * * BLE_GAP_LE_PHY_1M
+     * * BLE_GAP_LE_PHY_2M
+     * * BLE_GAP_LE_PHY_CODED
+     */
+    virtual void onPhyUpdate(NimBLEClient* pClient, uint8_t txPhy, uint8_t rxPhy);
+# endif
 };
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
