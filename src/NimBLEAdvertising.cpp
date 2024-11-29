@@ -386,6 +386,22 @@ void NimBLEAdvertising::clearData() {
 } // clearData
 
 /**
+ * @brief Refresh advertsing data dynamically without stop/start cycle.
+ * For instance allows refreshing manufacturer data dynamically.
+ *
+ * @return True if the data was set successfully.
+ * @details If scan response is enabled it will be refreshed as well.
+ */
+bool NimBLEAdvertising::refreshAdvertisingData() {
+    bool success = setAdvertisementData(m_advData);
+    if (m_scanResp) {
+        success = setScanResponseData(m_scanData);
+    }
+
+    return success;
+} // refreshAdvertisingData
+
+/**
  * @brief Add a service uuid to exposed list of services.
  * @param [in] serviceUUID The UUID of the service to expose.
  * @return True if the service was added successfully.
