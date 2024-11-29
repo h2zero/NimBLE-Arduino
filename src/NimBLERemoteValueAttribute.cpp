@@ -14,7 +14,7 @@
 
 # include <climits>
 
-const char* LOG_TAG = "NimBLERemoteValueAttribute";
+static const char* LOG_TAG = "NimBLERemoteValueAttribute";
 
 bool NimBLERemoteValueAttribute::writeValue(const uint8_t* data, size_t length, bool response) const {
     NIMBLE_LOGD(LOG_TAG, ">> writeValue()");
