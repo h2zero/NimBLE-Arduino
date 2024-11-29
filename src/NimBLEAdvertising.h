@@ -67,6 +67,7 @@ class NimBLEAdvertising {
     const NimBLEAdvertisementData& getAdvertisementData();
     const NimBLEAdvertisementData& getScanData();
     void                           clearData();
+    bool                           refreshAdvertisingData();
 
     bool addServiceUUID(const NimBLEUUID& serviceUUID);
     bool addServiceUUID(const char* serviceUUID);
