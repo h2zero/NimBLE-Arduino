@@ -72,6 +72,101 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 
     /*********************** Template Functions ************************/
 
+# if __cplusplus < 201703L
+    /**
+     * @brief Template to send a notification with a value from a struct or array.
+     * @param [in] v The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     * @details <type\> size must be evaluatable by `sizeof()`.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+#  endif
+    notify(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        return notify(reinterpret_cast<const uint8_t*>(&v), sizeof(T), connHandle);
+    }
+
+    /**
+     * @brief Template to send a notification with a value from a class that has a c_str() and length() method.
+     * @param [in] s The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+#  endif
+    notify(const T& s, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        return notify(reinterpret_cast<const uint8_t*>(s.c_str()), s.length(), connHandle);
+    }
+
+    /**
+     * @brief Template to send a notification with a value from a class that has a data() and size() method.
+     * @param [in] v The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_data_size<T>::value, bool>::type
+#  endif
+    notify(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        return notify(reinterpret_cast<const uint8_t*>(v.data()), v.size(), connHandle);
+    }
+
+    /**
+     * @brief Template to send an indication with a value from a struct or array.
+     * @param [in] v The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     * @details <type\> size must be evaluatable by `sizeof()`.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+#  endif
+    indicate(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        return indicate(reinterpret_cast<const uint8_t*>(&v), sizeof(T), connHandle);
+    }
+
+    /**
+     * @brief Template to send a indication with a value from a class that has a c_str() and length() method.
+     * @param [in] s The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+#  endif
+    indicate(const T& s, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        return indicate(reinterpret_cast<const uint8_t*>(s.c_str()), s.length(), connHandle);
+    }
+
+    /**
+     * @brief Template to send a indication with a value from a class that has a data() and size() method.
+     * @param [in] v The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_data_size<T>::value, bool>::type
+#  endif
+    indicate(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        return indicate(reinterpret_cast<const uint8_t*>(v.data()), v.size(), connHandle);
+    }
+
+# else
+
     /**
      * @brief Template to send a notification for classes which may have
      *        data()/size() or c_str()/length() methods. Falls back to sending
@@ -115,6 +210,7 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
             return indicate(reinterpret_cast<const uint8_t*>(&value), sizeof(value), connHandle);
         }
     }
+# endif
 
   private:
     friend class NimBLEServer;

@@ -74,6 +74,57 @@ class NimBLERemoteValueAttribute : public NimBLEAttribute {
         return writeValue(reinterpret_cast<const uint8_t*>(str), length ? length : strlen(str), response);
     }
 
+# if __cplusplus < 201703L
+    /**
+     * @brief Template to set the remote characteristic value to <type\>val.
+     * @param [in] v The value to write.
+     * @param [in] response True == request write response.
+     * @details Only used for types without a `c_str()` and `length()` or `data()` and `size()` method.
+     * <type\> size must be evaluatable by `sizeof()` if no length is provided.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+#  endif
+    writeValue(const T& v, bool response = false) const {
+        return writeValue(reinterpret_cast<const uint8_t*>(&v), sizeof(T), response);
+    }
+
+    /**
+     * @brief Template to set the remote characteristic value to <type\>val.
+     * @param [in] s The value to write.
+     * @param [in] response True == request write response.
+     * @details Only used if the <type\> has a `c_str()` and `length()` method.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+#  endif
+    writeValue(const T& s, bool response = false) const {
+        return writeValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length(), response);
+    }
+
+    /**
+     * @brief Template to set the remote characteristic value to <type\>val.
+     * @param [in] v The value to write.
+     * @param [in] response True == request write response.
+     * @details Only used if the <type\> has a `data()` and `size()` method.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_data_size<T>::value, bool>::type
+#  endif
+    writeValue(const T& v, bool response = false) const {
+        return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size(), response);
+    }
+
+# else
     /**
      * @brief Template to set the remote characteristic value to <type\>val.
      * @param [in] s The value to write.
@@ -81,8 +132,7 @@ class NimBLERemoteValueAttribute : public NimBLEAttribute {
      * @note This function is only available if the type T is not a pointer.
      */
     template <typename T>
-    typename std::enable_if<!std::is_pointer<T>::value, bool>::type
-    writeValue(const T& v, bool response = false) const {
+    typename std::enable_if<!std::is_pointer<T>::value, bool>::type writeValue(const T& v, bool response = false) const {
         if constexpr (Has_data_size<T>::value) {
             return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size(), response);
         } else if constexpr (Has_c_str_length<T>::value) {
@@ -91,6 +141,7 @@ class NimBLERemoteValueAttribute : public NimBLEAttribute {
             return writeValue(reinterpret_cast<const uint8_t*>(&v), sizeof(v), response);
         }
     }
+# endif
 
     /**
      * @brief Template to convert the remote characteristic data to <type\>.
