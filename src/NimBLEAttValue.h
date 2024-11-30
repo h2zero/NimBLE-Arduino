@@ -84,16 +84,15 @@ class NimBLEAttValue {
      * @param[in] len The size in bytes of the value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const uint8_t *value, uint16_t len,
-                   uint16_t max_len = BLE_ATT_ATTR_MAX_LEN);
+    NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN);
 
     /**
      * @brief Construct with an initial value from a const char string.
      * @param value A pointer to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const char *value, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-                   :NimBLEAttValue((uint8_t*)value, (uint16_t)strlen(value), max_len){}
+    NimBLEAttValue(const char* value, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue((uint8_t*)value, (uint16_t)strlen(value), max_len) {}
 
     /**
      * @brief Construct with an initializer list.
@@ -221,14 +220,61 @@ class NimBLEAttValue {
 
     /*********************** Template Functions ************************/
 
+# if __cplusplus < 201703L
+    /**
+     * @brief Template to set value to the value of <type\>val.
+     * @param [in] v The <type\>value to set.
+     * @details Only used for types without a `c_str()` and `length()` or `data()` and `size()` method.
+     * <type\> size must be evaluatable by `sizeof()`.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+#  endif
+    setValue(const T& v) {
+        return setValue(reinterpret_cast<const uint8_t*>(&v), sizeof(T));
+    }
+
     /**
      * @brief Template to set value to the value of <type\>val.
      * @param [in] s The <type\>value to set.
-     * @note This function is only availabe if the type T is not a pointer.
+     * @details Only used if the <type\> has a `c_str()` method.
      */
     template <typename T>
-    typename std::enable_if<!std::is_pointer<T>::value, bool>::type
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+#  endif
     setValue(const T& s) {
+        return setValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length());
+    }
+
+    /**
+     * @brief Template to set value to the value of <type\>val.
+     * @param [in] v The <type\>value to set.
+     * @details Only used if the <type\> has a `data()` and `size()` method.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_data_size<T>::value, bool>::type
+#  endif
+    setValue(const T& v) {
+        return setValue(reinterpret_cast<const uint8_t*>(v.data()), v.size());
+    }
+
+# else
+    /**
+     * @brief Template to set value to the value of <type\>val.
+     * @param [in] s The <type\>value to set.
+     * @note This function is only available if the type T is not a pointer.
+     */
+    template <typename T>
+    typename std::enable_if<!std::is_pointer<T>::value, bool>::type setValue(const T& s) {
         if constexpr (Has_data_size<T>::value) {
             return setValue(reinterpret_cast<const uint8_t*>(s.data()), s.size());
         } else if constexpr (Has_c_str_length<T>::value) {
@@ -237,6 +283,7 @@ class NimBLEAttValue {
             return setValue(reinterpret_cast<const uint8_t*>(&s), sizeof(s));
         }
     }
+# endif
 
     /**
      * @brief Template to return the value as a <type\>.
