@@ -185,7 +185,7 @@ void setup() {
      *  However we must cast the returned reference to the correct type as the method
      *  only returns a pointer to the base NimBLEDescriptor class.
      */
-    NimBLE2904* pBeef2904 = (NimBLE2904*)pBeefCharacteristic->createDescriptor("2904");
+    NimBLE2904* pBeef2904 = pBeefCharacteristic->create2904();
     pBeef2904->setFormat(NimBLE2904::FORMAT_UTF8);
     pBeef2904->setCallbacks(&dscCallbacks);
 

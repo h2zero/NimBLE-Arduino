@@ -17,14 +17,12 @@
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 class NimBLECharacteristicCallbacks;
+class NimBLEService;
 class NimBLECharacteristic;
+class NimBLEDescriptor;
+class NimBLE2904;
 
 # include "NimBLELocalValueAttribute.h"
-# include "NimBLEServer.h"
-# include "NimBLEService.h"
-# include "NimBLEDescriptor.h"
-# include "NimBLEAttValue.h"
-# include "NimBLEConnInfo.h"
 
 # include <string>
 # include <vector>
@@ -39,11 +37,11 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
   public:
     NimBLECharacteristic(const char*    uuid,
                          uint16_t       properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
-                         uint16_t       maxLen    = BLE_ATT_ATTR_MAX_LEN,
+                         uint16_t       maxLen     = BLE_ATT_ATTR_MAX_LEN,
                          NimBLEService* pService   = nullptr);
     NimBLECharacteristic(const NimBLEUUID& uuid,
                          uint16_t          properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
-                         uint16_t          maxLen    = BLE_ATT_ATTR_MAX_LEN,
+                         uint16_t          maxLen     = BLE_ATT_ATTR_MAX_LEN,
                          NimBLEService*    pService   = nullptr);
 
     ~NimBLECharacteristic();
@@ -60,10 +58,11 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 
     NimBLEDescriptor* createDescriptor(const char* uuid,
                                        uint32_t    properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
-                                       uint16_t    maxLen    = BLE_ATT_ATTR_MAX_LEN);
+                                       uint16_t    maxLen     = BLE_ATT_ATTR_MAX_LEN);
     NimBLEDescriptor* createDescriptor(const NimBLEUUID& uuid,
                                        uint32_t          properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
-                                       uint16_t          maxLen    = BLE_ATT_ATTR_MAX_LEN);
+                                       uint16_t          maxLen     = BLE_ATT_ATTR_MAX_LEN);
+    NimBLE2904*       create2904();
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid) const;
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID& uuid) const;
     NimBLEDescriptor* getDescriptorByHandle(uint16_t handle) const;
@@ -127,7 +126,7 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     bool sendValue(const uint8_t* value,
                    size_t         length,
                    bool           is_notification = true,
-                   uint16_t       connHandle     = BLE_HS_CONN_HANDLE_NONE) const;
+                   uint16_t       connHandle      = BLE_HS_CONN_HANDLE_NONE) const;
 
     NimBLECharacteristicCallbacks* m_pCallbacks{nullptr};
     NimBLEService*                 m_pService{nullptr};

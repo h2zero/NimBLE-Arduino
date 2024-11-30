@@ -72,8 +72,9 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const char* uuid, uint3
  */
 NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID& uuid, uint32_t properties, uint16_t maxLen) {
     NimBLEDescriptor* pDescriptor = nullptr;
-    if (uuid == NimBLEUUID(uint16_t(0x2904))) {
-        pDescriptor = new NimBLE2904(this);
+    if (uuid == NimBLEUUID(static_cast<uint16_t>(0x2904))) {
+        NIMBLE_LOGW(LOG_TAG, "0x2904 descriptor should be created with create2904()");
+        pDescriptor = create2904();
     } else {
         pDescriptor = new NimBLEDescriptor(uuid, properties, maxLen, this);
     }
@@ -81,6 +82,16 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID& uuid,
     addDescriptor(pDescriptor);
     return pDescriptor;
 } // createDescriptor
+
+/**
+ * @brief Create a Characteristic Presentation Format Descriptor for this characteristic.
+ * @return A pointer to a NimBLE2904 descriptor.
+ */
+NimBLE2904* NimBLECharacteristic::create2904() {
+    NimBLE2904* pDescriptor = new NimBLE2904(this);
+    addDescriptor(pDescriptor);
+    return pDescriptor;
+} // create2904
 
 /**
  * @brief Add a descriptor to the characteristic.
