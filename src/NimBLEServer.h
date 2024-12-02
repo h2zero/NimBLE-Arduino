@@ -48,6 +48,9 @@ class NimBLEExtAdvertising;
 # else
 class NimBLEAdvertising;
 # endif
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+class NimBLEClient;
+# endif
 
 /**
  * @brief The model of a BLE server.
@@ -76,6 +79,12 @@ class NimBLEServer {
     void                  getPeerNameOnConnect(bool enable);
     void                  advertiseOnDisconnect(bool enable);
     void                  setDataLen(uint16_t connHandle, uint16_t tx_octets) const;
+
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+    NimBLEClient* getClient(uint16_t connHandle);
+    NimBLEClient* getClient(const NimBLEConnInfo& connInfo);
+    void          deleteClient();
+# endif
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
     NimBLEExtAdvertising* getAdvertising() const;
@@ -114,6 +123,10 @@ class NimBLEServer {
     NimBLEServerCallbacks*                                 m_pServerCallbacks;
     std::vector<NimBLEService*>                            m_svcVec;
     std::array<uint16_t, CONFIG_BT_NIMBLE_MAX_CONNECTIONS> m_connectedPeers;
+
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+    NimBLEClient* m_pClient{nullptr};
+# endif
 
     static int  handleGapEvent(struct ble_gap_event* event, void* arg);
     static int  handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);

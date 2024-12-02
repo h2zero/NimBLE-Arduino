@@ -552,62 +552,6 @@ uint16_t NimBLEClient::getConnHandle() const {
 } // getConnHandle
 
 /**
- * @brief Clear the connection information for this client.
- * @note This is designed to be used to reset the connection information after
- * calling setConnection(), and should not be used to disconnect from a peer.
- * To disconnect from a peer, use disconnect().
- */
-void NimBLEClient::clearConnection() {
-    m_connHandle  = BLE_HS_CONN_HANDLE_NONE;
-    m_peerAddress = NimBLEAddress{};
-} // clearConnection
-
-/**
- * @brief Set the connection information for this client.
- * @param [in] connInfo The connection information.
- * @return True on success.
- * @note Sets the connection established flag to true.
- * @note If the client is already connected to a peer, this will return false.
- * @note This is designed to be used when a connection is made outside of the
- * NimBLEClient class, such as when a connection is made by the
- * NimBLEServer class and the client is passed the connection info.
- * This enables the GATT Server to read the attributes of the client connected to it.
- */
-bool NimBLEClient::setConnection(const NimBLEConnInfo& connInfo) {
-    if (isConnected()) {
-        NIMBLE_LOGE(LOG_TAG, "Already connected");
-        return false;
-    }
-
-    m_peerAddress = connInfo.getAddress();
-    m_connHandle  = connInfo.getConnHandle();
-    return true;
-} // setConnection
-
-/**
- * @brief Set the connection information for this client.
- * @param [in] connHandle The connection handle.
- * @note Sets the connection established flag to true.
- * @note This is designed to be used when a connection is made outside of the
- * NimBLEClient class, such as when a connection is made by the
- * NimBLEServer class and the client is passed the connection handle.
- * This enables the GATT Server to read the attributes of the client connected to it.
- * @note If the client is already connected to a peer, this will return false.
- * @note This will look up the peer address using the connection handle.
- */
-bool NimBLEClient::setConnection(uint16_t connHandle) {
-    // we weren't provided the peer address, look it up using ble_gap_conn_find
-    NimBLEConnInfo connInfo;
-    int            rc = ble_gap_conn_find(connHandle, &connInfo.m_desc);
-    if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "Connection info not found");
-        return false;
-    }
-
-    return setConnection(connInfo);
-} // setConnection
-
-/**
  * @brief Retrieve the address of the peer.
  * @return A NimBLEAddress instance with the peer address data.
  */
