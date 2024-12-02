@@ -114,8 +114,6 @@ class NimBLEDevice {
     static bool          onWhiteList(const NimBLEAddress& address);
     static size_t        getWhiteListCount();
     static NimBLEAddress getWhiteListAddress(size_t index);
-    static bool          setPower(int8_t dbm);
-    static int           getPower();
     static bool          setOwnAddrType(uint8_t type);
     static bool          setOwnAddr(const NimBLEAddress& addr);
     static bool          setOwnAddr(const uint8_t* addr);
@@ -135,6 +133,13 @@ class NimBLEDevice {
     static void          onReset(int reason);
     static void          onSync(void);
     static void          host_task(void* param);
+    static int           getPower();
+    static bool          setPower(int8_t dbm);
+
+# if defined(ESP_PLATFORM)
+    static esp_power_level_t getPowerLevel(esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
+    static bool setPowerLevel(esp_power_level_t powerLevel, esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
+# endif
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
     static bool setDefaultPhy(uint8_t txPhyMask, uint8_t rxPhyMask);

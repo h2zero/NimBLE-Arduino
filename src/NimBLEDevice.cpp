@@ -421,47 +421,51 @@ std::vector<NimBLEClient*> NimBLEDevice::getConnectedClients() {
 /*                               TRANSMIT POWER                               */
 /* -------------------------------------------------------------------------- */
 
+# ifdef ESP_PLATFORM
+/**
+ * @brief Get the transmission power.
+ * @return The power level currently used in esp_power_level_t.
+ */
+esp_power_level_t NimBLEDevice::getPowerLevel(esp_ble_power_type_t powerType) {
+#  ifdef CONFIG_IDF_TARGET_ESP32P4
+    return 0xFF; // CONFIG_IDF_TARGET_ESP32P4 does not support esp_ble_tx_power_get
+#  else
+    return esp_ble_tx_power_get(powerType);
+#  endif
+} // getPowerLevel
+
+/**
+ * @brief Set the transmission power.
+ * @param [in] powerLevel The power level to set in esp_power_level_t.
+ * @return True if the power level was set successfully.
+ */
+bool NimBLEDevice::setPowerLevel(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
+#  ifdef CONFIG_IDF_TARGET_ESP32P4
+    return false; // CONFIG_IDF_TARGET_ESP32P4 does not support esp_ble_tx_power_set
+#  else
+    esp_err_t errRc = esp_ble_tx_power_set(powerType, powerLevel);
+    if (errRc != ESP_OK) {
+        NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_set: rc=%d", errRc);
+    }
+
+    return errRc == ESP_OK;
+#  endif
+} // setPowerLevel
+
+# endif
 /**
  * @brief Set the transmission power.
  * @param [in] dbm The power level to set in dBm.
  * @return True if the power level was set successfully.
  */
 bool NimBLEDevice::setPower(int8_t dbm) {
-    NIMBLE_LOGD(LOG_TAG, ">> setPower: %d", dbm);
 # ifdef ESP_PLATFORM
-#  ifndef CONFIG_IDF_TARGET_ESP32P4
-    if (dbm >= 9) {
-        dbm = ESP_PWR_LVL_P9;
-    } else if (dbm >= 6) {
-        dbm = ESP_PWR_LVL_P6;
-    } else if (dbm >= 3) {
-        dbm = ESP_PWR_LVL_P3;
-    } else if (dbm >= 0) {
-        dbm = ESP_PWR_LVL_N0;
-    } else if (dbm >= -3) {
-        dbm = ESP_PWR_LVL_N3;
-    } else if (dbm >= -6) {
-        dbm = ESP_PWR_LVL_N6;
-    } else if (dbm >= -9) {
-        dbm = ESP_PWR_LVL_N9;
-    } else if (dbm >= -12) {
-        dbm = ESP_PWR_LVL_N12;
-    } else {
-        NIMBLE_LOGE(LOG_TAG, "Unsupported power level");
-        return false;
+    if (dbm % 3 == 2) {
+        dbm++; // round up to the next multiple of 3 to be able to target 20dbm
     }
-
-    esp_err_t errRc = esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, (esp_power_level_t)dbm);
-    if (errRc != ESP_OK) {
-        NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_set: rc=%d", errRc);
-    }
-
-    return errRc == ESP_OK;
-#  else
-    return 0xFF; // CONFIG_IDF_TARGET_ESP32P4
-#  endif
-
+    return setPowerLevel(static_cast<esp_power_level_t>(dbm / 3 + ESP_PWR_LVL_N0));
 # else
+    NIMBLE_LOGD(LOG_TAG, ">> setPower: %d", dbm);
     ble_hci_vs_set_tx_pwr_cp cmd{dbm};
     ble_hci_vs_set_tx_pwr_rp rsp{0};
     int rc = ble_hs_hci_send_vs_cmd(BLE_HCI_OCF_VS_SET_TX_PWR, &cmd, sizeof(cmd), &rsp, sizeof(rsp));
@@ -478,34 +482,24 @@ bool NimBLEDevice::setPower(int8_t dbm) {
 /**
  * @brief Get the transmission power.
  * @return The power level currently used in dbm.
+ * @note ESP32S3 only returns 0xFF as of IDF 5, so this function will return 20dbm.
  */
 int NimBLEDevice::getPower() {
 # ifdef ESP_PLATFORM
-#  ifndef CONFIG_IDF_TARGET_ESP32P4
-    switch (esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_DEFAULT)) {
-        case ESP_PWR_LVL_N12:
-            return -12;
-        case ESP_PWR_LVL_N9:
-            return -9;
-        case ESP_PWR_LVL_N6:
-            return -6;
-        case ESP_PWR_LVL_N3:
-            return -3;
-        case ESP_PWR_LVL_N0:
-            return 0;
-        case ESP_PWR_LVL_P3:
-            return 3;
-        case ESP_PWR_LVL_P6:
-            return 6;
-        case ESP_PWR_LVL_P9:
-            return 9;
-        default:
-            return 0xFF;
-    }
-#  else
+#  ifdef CONFIG_IDF_TARGET_ESP32P4
     return 0xFF; // CONFIG_IDF_TARGET_ESP32P4 does not support esp_ble_tx_power_get
-#  endif
+#  else
+    int pwr = esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_DEFAULT);
+    if (pwr < ESP_PWR_LVL_N0) {
+        return -3 * (ESP_PWR_LVL_N0 - pwr);
+    }
 
+    if (pwr > ESP_PWR_LVL_N0) {
+        return std::min<int>((pwr - ESP_PWR_LVL_N0) * 3, 20);
+    }
+
+    return 0;
+#  endif
 # else
     return ble_phy_txpwr_get();
 # endif
