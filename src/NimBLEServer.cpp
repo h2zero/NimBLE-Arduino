@@ -19,6 +19,10 @@
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
 
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#  include "NimBLEClient.h"
+# endif
+
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "services/gap/ble_svc_gap.h"
 #  include "services/gatt/ble_svc_gatt.h"
@@ -62,6 +66,10 @@ NimBLEServer::~NimBLEServer() {
 
     if (m_deleteCallbacks) {
         delete m_pServerCallbacks;
+    }
+
+    if (m_pClient != nullptr) {
+        delete m_pClient;
     }
 }
 
@@ -169,7 +177,7 @@ void NimBLEServer::serviceChanged() {
  */
 void NimBLEServer::start() {
     if (m_gattsStarted) {
-        return; //already started
+        return; // already started
     }
 
     int rc = ble_gatts_start();
@@ -497,6 +505,11 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 }
             }
 
+            if (pServer->m_pClient->m_connHandle == event->disconnect.conn.conn_handle) {
+                // If this was also the client make sure it's flagged as disconnected.
+                pServer->m_pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
+            }
+
             if (pServer->m_svcChanged) {
                 pServer->resetGATT();
             }
@@ -705,8 +718,8 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
     NIMBLE_LOGD(LOG_TAG,
                 "Gatt %s event",
                 (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR || ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC) ? "Read" : "Write");
-    auto pAtt = static_cast<NimBLELocalValueAttribute*>(arg);
-    auto val  = pAtt->getAttVal();
+    auto           pAtt = static_cast<NimBLELocalValueAttribute*>(arg);
+    auto           val  = pAtt->getAttVal();
     NimBLEConnInfo peerInfo{};
     ble_gap_conn_find(connHandle, &peerInfo.m_desc);
 
@@ -1028,6 +1041,54 @@ void NimBLEServer::setDataLen(uint16_t connHandle, uint16_t octets) const {
     }
 # endif
 } // setDataLen
+
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+/**
+ * @brief Create a client instance from the connection handle.
+ * @param [in] connHandle The connection handle to create a client instance from.
+ * @return A pointer to the NimBLEClient instance or nullptr if there was an error.
+ * @note Only one instance is supported subsequent calls will overwrite the previous
+ * client connection information and data.
+ */
+NimBLEClient* NimBLEServer::getClient(uint16_t connHandle) {
+    NimBLEConnInfo connInfo;
+    int            rc = ble_gap_conn_find(connHandle, &connInfo.m_desc);
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Client info not found");
+        return nullptr;
+    }
+
+    return getClient(connInfo);
+} // getClient
+
+/**
+ * @brief Create a client instance from the NimBLEConnInfo reference.
+ * @param [in] connInfo The connection info to create a client instance from.
+ * @return A pointer to the NimBLEClient instance or nullptr if there was an error.
+ * @note Only one instance is supported subsequent calls will overwrite the previous
+ * client connection information and data.
+ */
+NimBLEClient* NimBLEServer::getClient(const NimBLEConnInfo& connInfo) {
+    if (m_pClient == nullptr) {
+        m_pClient = new NimBLEClient(connInfo.getAddress());
+    }
+
+    m_pClient->deleteServices(); // Changed peer connection delete the database.
+    m_pClient->m_peerAddress = connInfo.getAddress();
+    m_pClient->m_connHandle  = connInfo.getConnHandle();
+    return m_pClient;
+} // getClient
+
+/**
+ * @brief Delete the NimBLEClient instance that was created with `getClient()`
+ */
+void NimBLEServer::deleteClient() {
+    if (m_pClient != nullptr) {
+        delete m_pClient;
+        m_pClient = nullptr;
+    }
+} // deleteClient
+# endif
 
 /** Default callback handlers */
 void NimBLEServerCallbacks::onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) {
