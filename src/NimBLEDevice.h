@@ -18,7 +18,9 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED)
 # ifdef ESP_PLATFORM
-#  include <esp_bt.h>
+#  ifndef CONFIG_IDF_TARGET_ESP32P4
+#   include <esp_bt.h>
+#  endif
 # endif
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
@@ -136,9 +138,11 @@ class NimBLEDevice {
     static int           getPower();
     static bool          setPower(int8_t dbm);
 
-# if defined(ESP_PLATFORM)
+# ifdef ESP_PLATFORM
+#  ifndef CONFIG_IDF_TARGET_ESP32P4
     static esp_power_level_t getPowerLevel(esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
     static bool setPowerLevel(esp_power_level_t powerLevel, esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
+#  endif
 # endif
 
 # if CONFIG_BT_NIMBLE_EXT_ADV

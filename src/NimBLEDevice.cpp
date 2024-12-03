@@ -422,16 +422,13 @@ std::vector<NimBLEClient*> NimBLEDevice::getConnectedClients() {
 /* -------------------------------------------------------------------------- */
 
 # ifdef ESP_PLATFORM
+#  ifndef CONFIG_IDF_TARGET_ESP32P4
 /**
  * @brief Get the transmission power.
  * @return The power level currently used in esp_power_level_t.
  */
 esp_power_level_t NimBLEDevice::getPowerLevel(esp_ble_power_type_t powerType) {
-#  ifdef CONFIG_IDF_TARGET_ESP32P4
-    return 0xFF; // CONFIG_IDF_TARGET_ESP32P4 does not support esp_ble_tx_power_get
-#  else
     return esp_ble_tx_power_get(powerType);
-#  endif
 } // getPowerLevel
 
 /**
@@ -440,19 +437,16 @@ esp_power_level_t NimBLEDevice::getPowerLevel(esp_ble_power_type_t powerType) {
  * @return True if the power level was set successfully.
  */
 bool NimBLEDevice::setPowerLevel(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
-#  ifdef CONFIG_IDF_TARGET_ESP32P4
-    return false; // CONFIG_IDF_TARGET_ESP32P4 does not support esp_ble_tx_power_set
-#  else
     esp_err_t errRc = esp_ble_tx_power_set(powerType, powerLevel);
     if (errRc != ESP_OK) {
         NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_set: rc=%d", errRc);
     }
 
     return errRc == ESP_OK;
-#  endif
 } // setPowerLevel
+#  endif // !CONFIG_IDF_TARGET_ESP32P4
+# endif  // ESP_PLATFORM
 
-# endif
 /**
  * @brief Set the transmission power.
  * @param [in] dbm The power level to set in dBm.
@@ -460,10 +454,14 @@ bool NimBLEDevice::setPowerLevel(esp_power_level_t powerLevel, esp_ble_power_typ
  */
 bool NimBLEDevice::setPower(int8_t dbm) {
 # ifdef ESP_PLATFORM
+#  ifdef CONFIG_IDF_TARGET_ESP32P4
+    return false; // CONFIG_IDF_TARGET_ESP32P4 does not support esp_ble_tx_power_set
+#  else
     if (dbm % 3 == 2) {
         dbm++; // round up to the next multiple of 3 to be able to target 20dbm
     }
     return setPowerLevel(static_cast<esp_power_level_t>(dbm / 3 + ESP_PWR_LVL_N0));
+#  endif
 # else
     NIMBLE_LOGD(LOG_TAG, ">> setPower: %d", dbm);
     ble_hci_vs_set_tx_pwr_cp cmd{dbm};
