@@ -29,7 +29,6 @@
 # undef max
 /**************************/
 
-# include <string>
 # include <vector>
 # include <array>
 
@@ -75,8 +74,6 @@ class NimBLEServer {
     NimBLEConnInfo        getPeerInfo(uint8_t index) const;
     NimBLEConnInfo        getPeerInfo(const NimBLEAddress& address) const;
     NimBLEConnInfo        getPeerInfoByHandle(uint16_t connHandle) const;
-    std::string           getPeerName(const NimBLEConnInfo& connInfo) const;
-    void                  getPeerNameOnConnect(bool enable);
     void                  advertiseOnDisconnect(bool enable);
     void                  setDataLen(uint16_t connHandle, uint16_t tx_octets) const;
 
@@ -114,7 +111,6 @@ class NimBLEServer {
     ~NimBLEServer();
 
     bool m_gattsStarted : 1;
-    bool m_getPeerNameOnConnect : 1;
     bool m_svcChanged : 1;
     bool m_deleteCallbacks : 1;
 # if !CONFIG_BT_NIMBLE_EXT_ADV
@@ -128,17 +124,15 @@ class NimBLEServer {
     NimBLEClient* m_pClient{nullptr};
 # endif
 
-    static int  handleGapEvent(struct ble_gap_event* event, void* arg);
-    static int  handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
-    static int  peerNameCB(uint16_t connHandle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg);
-    std::string getPeerNameImpl(uint16_t connHandle, int cb_type = -1) const;
-    void        serviceChanged();
-    void        resetGATT();
+    static int handleGapEvent(struct ble_gap_event* event, void* arg);
+    static int handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
+    void       serviceChanged();
+    void       resetGATT();
 
 }; // NimBLEServer
 
 /**
- * @brief Callbacks associated with the operation of a %BLE server.
+ * @brief Callbacks associated with the operation of a BLE server.
  */
 class NimBLEServerCallbacks {
   public:
@@ -147,26 +141,16 @@ class NimBLEServerCallbacks {
     /**
      * @brief Handle a client connection.
      * This is called when a client connects.
-     * @param [in] pServer A pointer to the %BLE server that received the client connection.
+     * @param [in] pServer A pointer to the BLE server that received the client connection.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information.
      * about the peer connection parameters.
      */
     virtual void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo);
 
     /**
-     * @brief Handle a client connection.
-     * This is called when a client connects.
-     * @param [in] pServer A pointer to the %BLE server that received the client connection.
-     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information.
-     * @param [in] name The name of the connected peer device.
-     * about the peer connection parameters.
-     */
-    virtual void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, std::string& name);
-
-    /**
      * @brief Handle a client disconnection.
-     * This is called when a client discconnects.
-     * @param [in] pServer A pointer to the %BLE server that received the client disconnection.
+     * This is called when a client disconnects.
+     * @param [in] pServer A pointer to the BLE server that received the client disconnection.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
      * about the peer connection parameters.
      * @param [in] reason The reason code for the disconnection.
@@ -201,14 +185,6 @@ class NimBLEServerCallbacks {
      * about the peer connection parameters.
      */
     virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo);
-
-    /**
-     * @brief Called when the pairing procedure is complete.
-     * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
-     * @param [in] name The name of the connected peer device.
-     * about the peer connection parameters.
-     */
-    virtual void onAuthenticationComplete(NimBLEConnInfo& connInfo, const std::string& name);
 
     /**
      * @brief Called when the peer identity address is resolved.
