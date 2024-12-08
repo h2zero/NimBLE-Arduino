@@ -36,8 +36,6 @@ If you have not used the original BLE library please refer to the [New user guid
 
 If you are familiar with the original library, see: [The migration guide](Migration_guide.md) for details.
 
-Also see [Improvements and updates](Improvements_and_updates.md) for information about non-breaking changes.
-
 For more advanced usage see [Usage tips](Usage_tips.md) for more performance and optimization.  
 <br/>
 
@@ -46,7 +44,7 @@ See the Refactored_original_examples in the examples folder for highlights of th
 
 More advanced examples highlighting many available features are in examples/NimBLE_Server, NimBLE_Client.
 
-Beacon examples provided by [beegee-tokyo](https://github.com/beegee-tokyo) are in examples/BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon, BLE_EddystoneURL_Beacon.
+Beacon examples provided by [beegee-tokyo](https://github.com/beegee-tokyo) are in examples/BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon.
 
 Change the settings in the nimconfig.h file to customize NimBLE to your project, such as increasing max connections (default is 3).  
 <br/>
