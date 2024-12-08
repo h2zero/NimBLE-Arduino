@@ -3,12 +3,242 @@
 All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
-### Changed
+## **Breaking changes**
 - NimBLESecurity class removed.
+- All connection oriented callbacks now receive a reference to `NimBLEConnInfo`, the `ble_gap_conn_desc` has also been replace with `NimBLEConnInfo` in the functions that received it.
+- All functions that take a time input parameter now expect the value to be in milliseconds instead of seconds.
+- `NimBLEDevice` Ignore list functions removed.
+- `NimBLEDevice::startSecurity` now returns a `bool`, true on success, instead of an int to be consistent with the rest of the library.
+- `NimBLEDevice::getInitialized` renamed to `NimBLEDevice::isInitialized`.
+- `NimBLEDevice::setPower` no longer takes the `esp_power_level_t` and `esp_ble_power_type_t`, instead only an integer value in dbm units is accepted.
+- `NimBLEDevice::setOwnAddrType` no longer takes a `bool nrpa` parameter.
+- `NimBLEDevice::getClientListSize` replaced with `NimBLEDevice::getCreatedClientCount`.
+- `NimBLEDevice::getClientList` was removed.
+- `NimBLEServer::disconnect` now returns `bool`, true = success,  instead of `int` to be consistent with the rest of the library.
+- `NimBLEServer::getPeerIDInfo` renamed to `NimBLEServer::getPeerInfoByHandle` to better describe it's use.
+- `NimBLEServerCallbacks::onMTUChanged` renamed to `NimBLEServerCallbacks::onMTUChange` to be consistent with the client callback.
+- `NimBLEServerCallbacks::onPassKeyRequest` has been replaced with `NimBLEServer::onPassKeyDisplay` which should display the pairing pin that the client is expected to send.
+- `NimBLEServerCallbacks::onAuthenticationComplete` now takes a `NimBLEConnInfo&` parameter.
+- `NimBLEClient::getServices` now returns a const reference to std::vector<NimBLERemoteService*> instead of a pointer to the internal vector.
+- `NimBLEClient::getConnId` has been renamed to `getConnHandle` to be consistent with bluetooth terminology.
+- `NimBLEClient::disconnect` now returns a `bool`, true on success, instead of an int to be consistent with the rest of the library.
+- `NimBLEClientCallbacks::onDisconnect` now takes an additional `int reason` parameter to let the application know why the disconnect occurred.
+- `NimBLEClientCallbacks::onPassKeyRequest` has been changed to `NimBLEClientCallbacks::onPassKeyEntry` which takes a `NimBLEConnInfo&` parameter and does not return a value. Instead or returning a value this callback should prompt a user to enter a pin number which is sent later via `NimBLEDevice::injectPassKey`.
+- `NimBLEClientCallbacks::onConfirmPIN` renamed to `NimBLEClientCallbacks::onConfirmPasskey` and no longer returns a value and now takes a `NimBLEConnInfo&` parameter. This should be used to prompt a user to confirm the pin on the display (YES/NO) after which the response should be sent with `NimBLEDevice::injectConfirmPasskey`.
+- `NimBLEAdvertising::setMinPreferred` and `NimBLEAdvertising::setMaxPreferred` have been removed, use `NimBLEAdvertising::setPreferredParams` instead.
+- Advertising the name and TX power of the device will no longer happen by default and should be set manually by the application.
+- `NimBLEAdvertising::setAdvertisementType` has been renamed to `NimBLEAdvertising::setConnectableMode` to better reflect it's function.
+- `NimBLEAdvertising::setScanResponse` has been renamed to `NimBLEAdvertising::enableScanResponse` to better reflect it's function.
+- `NimBLEAdvertising`; Scan response is no longer enabled by default.
+- `NimBLEAdvertising::start` No longer takes a callback pointer parameter, instead the new method `NimBLEAdvertising::setAdvertisingCompleteCallback` should be used.
+- `NimBLEAdvertisementData::addData` now takes either a `std::vector<uint8_t>` or `uint8_t* + length` instead of `std::string` or `char + length`.
+- `NimBLEAdvertisementData::getPayload` now returns `std::vector<uint8_t>` instead of `std::string`.
+- The callback parameter for `NimBLEScan::start` has been removed and the blocking overload of `NimBLEScan::start` has been replaced by an overload of `NimBLEScan::getResults` with the same parameters.
+- `NimBLEAdvertisedDeviceCallbacks` Has been replaced by `NimBLEScanCallbacks` which contains the following methods: `onResult`, `onScanEnd`, and `onDiscovered
+- - `NimBLEScanCallbacks::onResult`, functions the same as the old `NimBLEAdvertisedDeviceCallbacks::onResult` but now takes aa `const NimBLEAdvertisedDevice*` instead of non-const.
+- - `NimBLEScanCallbacks::onScanEnd`, replaces the scanEnded callback passed to `NimBLEScan::start` and now takes a `const NimBLEScanResults&` and `int reason` parameter.
+- - `NimBLEScanCallbacks::onDiscovered`, This is called immediately when a device is first scanned, before any scan response data is available and takes a `const NimBLEAdvertisedDevice*` parameter.
+- `NimBLEScan::stop` will no longer call the `onScanEnd` callback as the caller should know its been stopped when this is called.
+- `NimBLEScan::clearDuplicateCache` has been removed as it was problematic and only for the esp32. Stop and start the scanner for the same effect.
+- `NimBLEScanResults::getDevice` methods now return `const NimBLEAdvertisedDevice*`.
+- `NimBLEScanResults` iterators are now `const_iterator`.
+- `NimBLEService::getCharacteristics` now returns a `const std::vector<NimBLECharacteristic*>&` instead of std::vector<NimBLECharacteristic *>.
+- `NimBLECharacteristic::notify` no longer takes a `bool is_notification` parameter, instead `indicate()` should be called to send indications.
+- `NimBLECharacteristicCallbacks::onNotify` removed as unnecessary, the library does not call notify without app input.
+- `NimBLECharacteristicCallbacks::onStatus` No longer takes a `status` parameter, refer to the return code for success/failure.
+- `NimBLERemoteService::getCharacteristics` now returns a `const std::vector<NimBLERemoteCharacteristic*>&` instead of non-const `std::vector<NimBLERemoteCharacteristic*>*`.
+- `NimBLERemoteService::getValue` now returns `NimBLEAttValue` instead of `std::string`.
+- `NimBLERemoteCharacteristic::getRemoteService` now returns a `const NimBLERemoteService*` instead of non-const.
+- `NimBLERemoteCharacteristic::readUInt32` Has been removed.
+- `NimBLERemoteCharacteristic::readUInt16` Has been removed.
+- `NimBLERemoteCharacteristic::readUInt8` Has been removed.
+- `NimBLERemoteCharacteristic::readFloat` Has been removed.
+- `NimBLERemoteCharacteristic::registerForNotify` Has been removed.
+- `NimBLEAdvertisedDevice::hasRSSI` removed as redundant, RSSI is always available.
+- `NimBLEAdvertisedDevice::getPayload` now returns `const std::vector<uint8_t>` instead of a pointer to internal memory.
+- `NimBLEAdvertisedDevice` Timestamp removed, if needed then the app should track the time from the callback.
+- `NimBLEAddress::getNative` replaced with `NimBLEAddress::getBase` and now returns a pointer to `const ble_addr_t` instead of a pointer to the address value.
+- `NimBLEAddress::equals` method and `NimBLEAddress::== operator` will now also test if the address types are the same.
+- `NimBLEUUID::getNative` method replaced with `NimBLEUUID::getBase` which returns a read-only pointer to the underlying `ble_uuid_t` struct.
+- `NimBLEUUID`; `msbFirst` parameter has been removed from constructor, caller should reverse the data first or call the new `reverseByteOrder` method after.
+- `NimBLEUtils::dumpGapEvent` function removed.
+- `NimBLEUtils::buildHexData` replaced with `NimBLEUtils::dataToHexString`, which returns a `std::string` containing the hex string.
+- Removed Eddystone URL as it has been shutdown by google since 2021.
+- `NimBLEEddystoneTLM::setTemp` now takes an `int16_t` parameter instead of float to be friendly to devices without floating point support.
+- `NimBLEEddystoneTLM::getTemp` now returns `int16_t` to work with devices that don't have floating point support.
+- `NimBLEEddystoneTLM::setData` now takes a reference to * `NimBLEEddystoneTLM::BeaconData` instead of `std::string`.
+- `NimBLEEddystoneTLM::getData` now returns a reference to * `NimBLEEddystoneTLM::BeaconData` instead of `std::string`.
+- `NimBLEBeacon::setData` now takes `const NimBLEBeacon::BeaconData&` instead of `std::string`.
+- `NimBLEBeacon::getData` now returns `const NimBLEBeacon::BeaconData&` instead of `std::string`.
+
+## Fixed
+- `NimBLEDevice::getPower` and `NimBLEDevice::getPowerLevel` bug worked around for the esp32s3 and esp32c3.
+- `NimBLEDevice::setPower` and `NimBLEDevice::getPower` now support the full power range for all esp devices.
+- `NimBLEDevice::setOwnAddrType` will now correctly apply the provided address type for all devices.
+- `NimBLEDevice::getPower` (esp32) return value is now calculated to support devices with different min/max ranges.
+- Crash if `NimBLEDevice::deinit` is called when the stack has not been initialized.
+- `NimBLEServer` service changed notifications will now wait until the changes have taken effect and the server re-started before indicating the change to peers, reducing difficultly for some clients to update their data.
+- `NimBLEService::getHandle` will now fetch the handle from the stack if not valid to avoid returning an invalid value.
+- `std::vector` input to set/write values template.
+- Pairing failing when the process was started by the peer first.
+
+### Changed
+- `NimBLEClient::secureConnection` now takes an additional parameter `bool async`, if true, will send the secure command and return immediately with a true value for successfully sending the command, else false. This allows for asynchronously securing a connection.
+- Deleting the client instance from the `onDisconnect` callback is now supported.
+- `NimBLEClient::connect` will no longer cancel already in progress connections.
+- `NimBLEClient::setDataLen` now returns bool, true if successful.
+- `NimBLEClient::updateConnParams` now returns bool, true if successful.
+- `NimBLEClient::setPeerAddress` now returns a bool, true on success.
+- `NimBLEDevice::startSecurity` now takes and additional parameter `int* rcPtr` which will provide the return code from the stack if provided.
+- `NimBLEDevice::deleteClient` no longer blocks tasks.
+- `NimBLEDevice::getAddress` will now return the address currently in use.
+- `NimBLEDevice::init` now returns a bool with `true` indicating success.
+- `NimBLEDevice::deinit` now returns a bool with `true` indicating success.
+- `NimBLEDevice::setDeviceName` now returns a bool with `true` indicating success.
+- `NimBLEDevice::setCustomGapHandler` now returns a bool with `true` indicating success.
+- `NimBLEDevice::setOwnAddrType` now returns a bool with `true` indicating success and works with non-esp32 devices.
+- `NimBLEDevice::setPower` now returns a bool value, true = success.
+- `NimBLEDevice::setMTU` now returns a bool value, true = success.
+- `NimBLEDevice::deleteAllBonds` now returns true on success, otherwise false.
+- `NimBLEEddystoneTLM` internal data struct type `BeaconData` is now public and usable by the application.
+- `NimBLEBeacon` internal data struct type `BeaconData` is now public and can be used by the application.
+- Removed tracking of client characteristic subscription status from `NimBLEServer` and `NimBLECharacteristic` and instead uses
+the functions and tracking in the host stack.
+- `NimBLECharacteristic::indicate` now takes the same parameters as `notify`.
+- `NimBLECharacteristic::notify` and `NimBLECharacteristic::indicate` now return a `bool`, true = success.
+- Added optional `connHandle` parameter to `NimBLECharacteristic::notify` to allow for sending notifications to specific clients.
+- `NimBLEServer` Now uses a std::array to store client connection handles instead of std::vector to reduce memory allocation.
+- `NimBLEExtAdvertisement`; All functions that set data now return `bool`, true = success.
+- `NimBLEAdvertising` Advertising data is now stored in instances of `NimBLEAdvertisingData` and old vectors removed.
+- `NimBLEAdvertising::setAdvertisementData` and `NimBLEAdvertising::setScanResponseData` now return `bool`, true = success.
+- Added optional `NimBLEAddress` parameter to `NimBLEAdvertising::start` to allow for directed advertising to a peer.
+- All `NimBLEAdvertising` functions that change data values now return `bool`, true = success.
+- All `NimBLEAdvertisementData` functions that change data values now return `bool`, true = success.
+- `NimBLEAdvertisementData::setName` now takes an optional `bool` parameter to indicate if the name is complete or incomplete, default = complete.
+- `NimBLEAdvertisementData` moved to it's own .h and .cpp files.
+- `NimBLEScan::start` takes a new `bool restart` parameter, default `true`, that will restart an already in progress scan and clear the duplicate filter so all devices will be discovered again.
+- Scan response data that is received without advertisement first will now create the device and send a callback.
+- `NimBLEScan::start` will no longer clear cache or results if scanning is already in progress.
+- `NimBLEScan::start` will now allow the start command to be sent with updated parameters if already scanning.
+- `NimBLEScan::clearResults` will now reset the vector capacity to 0.
+- Host reset will now no longer restart scanning and instead will call `NimBLEScanCallbacks::onScanEnd`.
+- Added optional `index` parameter to `NimBLEAdvertisedDevice::getPayloadByType`
+- `NimBLEUtils`: Add missing GAP event strings.
+- `NimBLEUtils`: Add missing return code strings.
+- `NimBLEUtils`: Event/error code strings optimized.
+- `NimBLEAttValue` cleanup and optimization.
+- cleaned up code, removed assert/abort calls, replaced with a configurable option to enable debug asserts.
 
 ### Added
+- (esp32 specific) `NimBLEDevice::setPowerLevel` and `NimBLEDevice::getPowerLevel` which take and return the related `esp_power_level*` types.
+- `NimBLEDevice::setDefaultPhy` which will set the default preferred PHY for all connections.
+- `NimBLEDevice::getConnectedClients`, which returns a vector of pointers to the currently connected client instances.
+- `NimBLEDevice::setOwnAddr` function added, which takes a `uint8_t*` or `NimBLEAddress&` and will set the mac address of the device, returns `bool` true = success.
+- `NimBLEDevice::injectPassKey` Used to send the pairing passkey instead of a return value from the client callback.
+- `NimBLEDevice::injectConfirmPasskey` Used to send the numeric comparison pairing passkey confirmation instead of a return value from the client callback.
 - `NimBLEDevice::setDeviceName` to change the device name after initialization.
+- `NimBLECharacteristic::create2904` which will specifically create a Characteristic Presentation Format (0x2904) descriptor.
+- `NimBLEAdvertising::refreshAdvertisingData` refreshes the advertisement data while still actively advertising.
+- `NimBLEClient::updatePhy` to request a PHY change with a peer.
+- `NimBLEClient::getPhy` to read the current connection PHY setting.
+- `Config` struct to `NimBLEClient` to efficiently set single bit config settings.
+- `NimBLEClient::setSelfDelete` that takes the bool parameters `deleteOnDisconnect` and `deleteOnConnectFail`, which will configure the client to delete itself when disconnected or the connection attempt fails.
+- `NimBLEClient::setConfig` and `NimBLEClient::getConfig` which takes or returns a `NimBLEClient::Config` object respectively.
+- `NimBLEClient::cancelConnect()` to cancel an in-progress connection, returns `bool`, true = success.
+- Non-blocking `NimBLEClient::connect` option added via 2 new `bool` parameters added to the function:
+- * `asyncConnect`; if true, will send the connect command and return immediately.
+- * `exchangeMTU`; if true will send the exchange MTU command upon connection.
+- `NimBLEClientCallbacks::onConnectFail` callback that is called when the connection attempt fail while connecting asynchronously.
+- `NimBLEClientCallbacks::onMTUChange` callback which will be called when the MTU exchange completes and takes a `NimBLEClient*` and `uint16_t MTU` parameter.
+- `NimBLEClientCallbacks::onPhyUpdate` and -`NimBLEServerCallbacks::onPhyUpdate` Which are called when the PHY update is complete.
+- Extended scan example.
+- `NimBLEServer::updatePhy` to request a PHY change with a peer.
+- `NimBLEServer::getPhy` to read the PHY of a peer connection.
+- `NimBLEServer::getClient` which will create a client instance from the provided peer connHandle or connInfo to facilitate reading/write from the connected client.
+- `NimBLEServerCallbacks::onConnParamsUpdate` callback.
+- `NimBLEScan::erase` overload that takes a `const NimBLEAdvertisedDevice*` parameter.
+- `NimBLEScan::setScanPhy` to enable/disable the PHY's to scan on (extended advertising only).
+- `NimBLEScan::setScanPeriod` which will allow for setting a scan restart timer in the controller (extended advertising only).
+- `NimBLEAdvertisedDevice::isScannable()` that returns true if the device is scannable.
+- `NimBLEAdvertisedDevice::begin` and `NimBLEAdvertisedDevice::end` read-only iterators for convenience and use in range loops.
+- `NimBLEAdvertisedDevice::haveType` Generic use function that returns true if the advertisement data contains a field with the specified type.
+- `NimBLEExtAdvertisement::removeData`, which will remove the data of the specified type from the advertisement.
+- `NimBLEExtAdvertisement::addServiceUUID`, which will append to the service uuids advertised.
+- `NimBLEExtAdvertisement::removeServiceUUID`, which will remove the service from the uuids advertised.
+- `NimBLEExtAdvertisement::removeServices`, which will remove all service uuids advertised.
+- New overloads for `NimBLEExtAdvertisement::setServiceData` with the parameters `const NimBLEUUID& uuid, const uint8_t* data, size_t length` and `const NimBLEUUID& uuid, const std::vector<uint8_t>& data`.
+- `NimBLEExtAdvertisement::getDataLocation`, which returns the location in the advertisement data of the type requested in parameter `uint8_t type`.
+- `NimBLEExtAdvertisement::toString` which returns a hex string representation of the advertisement data.
+- `NimBLEAdvertising::getAdvertisementData`, which returns a reference to the currently set advertisement data.
+- `NimBLEAdvertising::getScanData`, which returns a reference to the currently set scan response data.
+- New overloads for `NimBLEAdvertising::removeServiceUUID` and `NimBLEAdvertisementData::removeServiceUUID` to accept a `const char*`
+- `NimBLEAdvertising::setManufacturerData` Overload that takes a `const uint8_t*` and , size_t` parameter.
+- `NimBLEAdvertising::setServiceData` Overload that takes `const NimBLEUUID& uuid`, ` const uint8_t* data`, ` size_t length` as parameters.
+- `NimBLEAdvertising::setServiceData` Overload that takes `const NimBLEUUID& uuid`, `const std::vector<uint8_t>&` as parameters.
+- `NimBLEAdvertising::setDiscoverableMode` to allow applications to control the discoverability of the advertiser.
+- `NimBLEAdvertising::setAdvertisingCompleteCallback` sets the callback to call when advertising ends.
+- `NimBLEAdvertising::setPreferredParams` that takes the min and max preferred connection parameters as an alternative for `setMinPreferred` and `setMaxPreferred`.
+- `NimBLEAdvertising::setAdvertisingInterval` Sets the advertisement interval for min and max to the same value instead of calling `setMinInterval` and `setMaxInterval` separately if there is not value difference.
+- `NimBLEAdvertisementData::removeData`, which takes a parameter `uint8_t type`, the data type to remove.
+- `NimBLEAdvertisementData::toString`, which will print the data in hex.
+- `NimBLEUtils::taskWait` which causes the calling task to wait for an event.
+- `NimBLEUtils::taskRelease` releases the task from and event.
+- `NimBLEUtils::generateAddr` function added with will generate a random address and takes a `bool` parameter, true = create non-resolvable private address, otherwise a random static address is created, returns `NimBLEAddress`.
+- `NimBLEUUID::getValue` which returns a read-only `uint8_t` pointer to the UUID value.
+- `NimBLEUUID::reverseByteOrder`, this will reverse the bytes of the UUID, which can be useful for advertising/logging.
+- `NimBLEUUID` constructor overload that takes a reference to `ble_uuid_any_t`.
+- `NimBLEAddress::isNrpa` method to test if an address is random non-resolvable.
+- `NimBLEAddress::isStatic` method to test if an address is random static.
+- `NimBLEAddress::isPublic` method to test if an address is a public address.
+- `NimBLEAddress::isNull` methods to test if an address is NULL.
+- `NimBLEAddress::getValue` method which returns a read-only pointer to the address value.
+- `NimBLEAddress::reverseByteOrder` method which will reverse the byte order of the address value.
 - `NimBLEHIDDevice::batteryLevel` returns the HID device battery level characteristic.
+- `NimBLEBeacon::setData` overload that takes `uint8_t* data` and `uint8_t length`.
+
+## [1.4.3] 2024-11-27
+
+### Fixed
+ - BT5 examples for non-esp devices.
+ - Build errors when configured as a non-connecting device
+
+### Added
+ - Coded PHY support for nRF52833 and nRF52820
+
+## [1.4.2] 2024-06-17
+
+### Fixed
+ - `CONFIG_BT_NIMBLE_NVS_PERSIST` value not being used to enable/disable persistance.
+ - Set service handle in `NimBLEService::getHandle` function if not set already.
+ - NimBLE_service_data_advertiser example updated to initialize the advertising pointer after stack initialization.
+ - Unhandled exception on `NimBLECharacteristic::handleGapEvent` when the connection handle is invalid.
+ - `NimBLEHIDDevice::pnp` now correctly sets the byte order.
+ - `NimBLEEddystoneTLM` now correctly sets/gets negative temperatures.
+ - Adding to the whitelist will now allow the device to be added again if the previous attempts failed.
+ - The IPC calls added to esp_nimble_hci have been removed to prevent IPC stack crashing.
+ - Espressif log tag renamed from "TAG" to "LOG_TAG" to avoid conflict with Arduino core definition.
+ - Removed broken links in docs
+
+### Added
+ - `NimBLEAdvertisedDevice` new method: `getAdvFlags`, to read the flags advertised.
+ - `NimBLEAdvertising::setManufacturerData` new overload method that accepts a vector of `uint8_t`.
+ - `NimBLEAdvertisementData::setManufacturerData` new overload method that accepts a vector of `uint8_t`.
+ - `NimBLEAdvertisedDevice` new method: `getPayloadByType`, to get data from generic data types advertised.
+ - `NimBLEService` new method: `isStarted`, checks if the service has been started.
+ - `NimBLEAdvertising` new method: `removeServices` removes all service UUID's from the advertisement.
+ - `NimBLEAdvertisementData` new method: `clearData` sets all data to NULL to reuse the instance.
+
+### Changed
+ - `NimBLEAdvertisedDevice::getManufacturerData`, now takes an index value parameter to use when there is more than 1 instance of manufacturer data.
+ - `NimBLEAdvertising` directed peer address parameter to advertising start.
+ - Update NimBLE core to esp-nimble @0fc6282
+ - Can now create more than 255 Characteristics/Descriptors in a service.
+ - `nimble_port_freertos_get_hs_hwm` function is now available to the application to get the core task stack usage.
+ - changed default pairing keys shared to include ID key which is now needed by iOS
+ - Removed abort in server start when a service is not found, logs a warning message instead.
+ - `NimBLEAdvertising::start` on complete callback is now a std::function to allow the use of std::bind to class methods
+ - `NimBLEAdvertising` setXXX methods will now properly clear the previous data before setting the new values.
+ - Removed asserts in `NimBLECharacteristic` event handler when conn_handle is invalid, sends a NULL conn info to the callback instead.
 
 ## [1.4.1] - 2022-10-23
 
