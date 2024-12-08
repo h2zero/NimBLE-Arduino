@@ -42,8 +42,6 @@ If you have not used the original Bluedroid library please refer to the [New use
 
 If you are familiar with the original library, see: [The migration guide](docs/Migration_guide.md) for details about breaking changes and migration.
 
-Also see [Improvements_and_updates](docs/Improvements_and_updates.md) for information about non-breaking changes.
-
 [Full API documentation and class list can be found here.](https://h2zero.github.io/NimBLE-Arduino/)
 
 For added performance and optimizations see [Usage tips](docs/Usage_tips.md).
@@ -52,16 +50,14 @@ Check the Refactored_original_examples in the examples folder for highlights of 
 
 More advanced examples highlighting many available features are in examples/ NimBLE_Server, NimBLE_Client.
 
-Beacon examples provided by @beegee-tokyo are in examples/ BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon, BLE_EddystoneURL_Beacon.
+Beacon examples provided by @beegee-tokyo are in examples/ BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon.
 
 Change the settings in the `src/nimconfig.h` file to customize NimBLE to your project,
-such as increasing max connections, default is 3, absolute maximum connections is 9.
+such as increasing max connections, default is 3 for the esp32.
 <br/>
 
 # Development Status
-This Library is tracking the esp-nimble repo, nimble-1.4.0-idf branch, currently [@3df0d20.](https://github.com/espressif/esp-nimble)
-
-Also tracking the NimBLE related changes in ESP-IDF, master branch, currently [@95db4bb.](https://github.com/espressif/esp-idf/tree/master/components/bt/host/nimble)
+This Library is tracking the esp-nimble repo, nimble-1.5.0-idf branch, currently [@e3cbdc0.](https://github.com/espressif/esp-nimble)  
 <br/>
 
 # Acknowledgments
