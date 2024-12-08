@@ -21,7 +21,6 @@ If you're not creating a server or do not want to advertise a name, simply pass 
 This can be called any time you wish to use BLE functions and does not need to be called from app_main(IDF) or setup(Arduino) but usually is.  
 <br/>
 
-<a name="creating-a-server"></a>
 ## Creating a Server
 BLE servers perform 2 tasks, they advertise their existence for clients to find them and they provide services which contain information for the connecting client.  
 
@@ -137,7 +136,6 @@ Now if you scan with your phone using nRFConnect or any other BLE app you should
 For more advanced features and options please see the server examples in the examples folder.  
 <br/>
 
-<a name="creating-a-client"></a>
 ## Creating a Client 
 
 BLE clients perform 2 tasks, they scan for advertising servers and form connections to them to read and write to their characteristics/descriptors.
