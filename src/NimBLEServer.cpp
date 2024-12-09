@@ -397,7 +397,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 }
             }
 
-            if (pServer->m_pClient->m_connHandle == event->disconnect.conn.conn_handle) {
+            if (pServer->m_pClient && pServer->m_pClient->m_connHandle == event->disconnect.conn.conn_handle) {
                 // If this was also the client make sure it's flagged as disconnected.
                 pServer->m_pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
             }
