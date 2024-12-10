@@ -351,7 +351,6 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
     switch (event->type) {
         case BLE_GAP_EVENT_CONNECT: {
             if (event->connect.status != 0) {
-                /* Connection failed; resume advertising */
                 NIMBLE_LOGE(LOG_TAG, "Connection failed");
 # if !CONFIG_BT_NIMBLE_EXT_ADV
                 NimBLEDevice::startAdvertising();
@@ -420,7 +419,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
             NIMBLE_LOGI(LOG_TAG,
                         "subscribe event; attr_handle=%d, subscribed: %s",
                         event->subscribe.attr_handle,
-                        (event->subscribe.cur_notify ? "true" : "false"));
+                        ((event->subscribe.cur_notify || event->subscribe.cur_indicate) ? "true" : "false"));
 
             for (const auto& svc : pServer->m_svcVec) {
                 for (const auto& chr : svc->m_vChars) {
@@ -594,7 +593,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
             break;
     }
 
-    NIMBLE_LOGD(LOG_TAG, "<< handleGATTServerEvent");
+    NIMBLE_LOGD(LOG_TAG, "<< handleGapEvent");
     return 0;
 } // handleGapEvent
 
@@ -751,7 +750,7 @@ void NimBLEServer::addService(NimBLEService* service) {
 
     service->setRemoved(0);
     serviceChanged();
-}
+} // addService
 
 /**
  * @brief Resets the GATT server, used when services are added/removed after initialization.
