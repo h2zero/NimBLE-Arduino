@@ -122,6 +122,8 @@ jobs:
         example:
           - "examples/Bluetooth_5/NimBLE_extended_client"
           - "examples/Bluetooth_5/NimBLE_extended_server"
+          - "examples/Bluetooth_5/NimBLE_extended_scan"
+          - "examples/Bluetooth_5/NimBLE_multi_advertiser"
         variant:
           - esp32c3
           - esp32s3
@@ -244,6 +246,8 @@ jobs:
         example:
           - "examples/Bluetooth_5/NimBLE_extended_client"
           - "examples/Bluetooth_5/NimBLE_extended_server"
+          - "examples/Bluetooth_5/NimBLE_extended_scan"
+          - "examples/Bluetooth_5/NimBLE_multi_advertiser"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

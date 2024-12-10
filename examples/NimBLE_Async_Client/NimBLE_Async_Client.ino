@@ -6,7 +6,6 @@
  *
  *  Created: on November 4, 2024
  *      Author: H2zero
- *
  */
 
 #include <NimBLEDevice.h>
@@ -28,13 +27,14 @@ class scanCallbacks : public NimBLEScanCallbacks {
     void onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
         Serial.printf("Advertised Device found: %s\n", advertisedDevice->toString().c_str());
         if (advertisedDevice->haveName() && advertisedDevice->getName() == "NimBLE-Server") {
-            Serial.println("Found Our Device");
+            Serial.printf("Found Our Device\n");
 
+            /** Async connections can be made directly in the scan callbacks */
             auto pClient = NimBLEDevice::getDisconnectedClient();
             if (!pClient) {
                 pClient = NimBLEDevice::createClient(advertisedDevice->getAddress());
                 if (!pClient) {
-                    Serial.println("Failed to create client");
+                    Serial.printf("Failed to create client\n");
                     return;
                 }
             }
@@ -42,28 +42,28 @@ class scanCallbacks : public NimBLEScanCallbacks {
             pClient->setClientCallbacks(&clientCB, false);
             if (!pClient->connect(true, true, false)) { // delete attributes, async connect, no MTU exchange
                 NimBLEDevice::deleteClient(pClient);
-                Serial.println("Failed to connect");
+                Serial.printf("Failed to connect\n");
                 return;
             }
         }
     }
 
-    void onScanEnd(const NimBLEScanResults& results, int reason) {
-        Serial.print("Scan Ended; reason = "); Serial.println(reason);
+    void onScanEnd(const NimBLEScanResults&, int reason) {
+        Serial.printf("Scan Ended\n");
         NimBLEDevice::getScan()->start(scanTimeMs);
     }
 };
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("Starting NimBLE Client");
-    NimBLEDevice::init("");
+    Serial.printf("Starting NimBLE Async Client\n");
+    NimBLEDevice::init("Async-Client");
     NimBLEDevice::setPower(3); /** +3db */
 
     NimBLEScan* pScan = NimBLEDevice::getScan();
     pScan->setScanCallbacks(new scanCallbacks());
     pScan->setInterval(45);
-    pScan->setWindow(15);
+    pScan->setWindow(45);
     pScan->setActiveScan(true);
     pScan->start(scanTimeMs);
 }
@@ -71,12 +71,12 @@ void setup() {
 void loop() {
     delay(1000);
     auto pClients = NimBLEDevice::getConnectedClients();
-    if (pClients.size() == 0) {
+    if (!pClients.size()) {
         return;
     }
 
     for (auto& pClient : pClients) {
-        Serial.println(pClient->toString().c_str());
+        Serial.printf("%s\n", pClient->toString().c_str());
         NimBLEDevice::deleteClient(pClient);
     }
 
