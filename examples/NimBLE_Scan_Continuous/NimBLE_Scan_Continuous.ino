@@ -7,43 +7,43 @@
  *  When the scan timeout is reached the onScanEnd callback will be called and the scan will be restarted.
  *  This will clear the duplicate cache in the controller and allow the same devices to be reported again.
  *
- * Created: on January 31 2021
+ *  Created: on March 24 2020
  *      Author: H2zero
  */
 
-#include "NimBLEDevice.h"
+#include <Arduino.h>
+#include <NimBLEDevice.h>
 
 static constexpr uint32_t scanTime = 30 * 1000; // 30 seconds scan time.
 
 class scanCallbacks : public NimBLEScanCallbacks {
-    // Initial discovery, advertisement data only.
+    /** Initial discovery, advertisement data only. */
     void onDiscovered(const NimBLEAdvertisedDevice* advertisedDevice) override {
-        Serial.printf("Discovered Device: %s\n", advertisedDevice->toString().c_str());
+        printf("Discovered Device: %s\n", advertisedDevice->toString().c_str());
     }
 
-    // If active scanning the result here will have the scan response data.
-    // If not active scanning then this will be the same as onDiscovered.
+    /**
+     *  If active scanning the result here will have the scan response data.
+     *  If not active scanning then this will be the same as onDiscovered.
+     */
     void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
-        Serial.printf("Device result: %s\n", advertisedDevice->toString().c_str());
+        printf("Device result: %s\n", advertisedDevice->toString().c_str());
     }
 
     void onScanEnd(const NimBLEScanResults& results, int reason) override {
-        Serial.printf("Scan ended reason = %d; restarting scan\n", reason);
+        printf("Scan ended reason = %d; restarting scan\n", reason);
         NimBLEDevice::getScan()->start(scanTime, false, true);
     }
-} scanCallbacks; // create a callback class instance.
+} scanCallbacks;
 
 void setup() {
-    Serial.begin(115200);
     NimBLEDevice::init("");                         // Initialize the device, you can specify a device name if you want.
     NimBLEScan* pBLEScan = NimBLEDevice::getScan(); // Create the scan object.
     pBLEScan->setScanCallbacks(&scanCallbacks, false); // Set the callback for when devices are discovered, no duplicates.
     pBLEScan->setActiveScan(true);          // Set active scanning, this will get more data from the advertiser.
     pBLEScan->setMaxResults(0);             // Do not store the scan results, use callback only.
     pBLEScan->start(scanTime, false, true); // duration, not a continuation of last scan, restart to get all devices again.
-    Serial.println("Scanning...");
+    printf("Scanning...\n");
 }
 
-void loop() {
-    delay(2000);
-}
+void loop() {}
