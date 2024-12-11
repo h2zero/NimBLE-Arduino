@@ -135,7 +135,7 @@ size_t NimBLEClient::deleteService(const NimBLEUUID& uuid) {
  */
 bool NimBLEClient::connect(bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
     return connect(m_peerAddress, deleteAttributes, asyncConnect, exchangeMTU);
-}
+} // connect
 
 /**
  * @brief Connect to an advertising device.
@@ -151,7 +151,7 @@ bool NimBLEClient::connect(bool deleteAttributes, bool asyncConnect, bool exchan
 bool NimBLEClient::connect(const NimBLEAdvertisedDevice* device, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
     NimBLEAddress address(device->getAddress());
     return connect(address, deleteAttributes, asyncConnect, exchangeMTU);
-}
+} // connect
 
 /**
  * @brief Connect to a BLE Server by address.
@@ -601,7 +601,7 @@ int NimBLEClient::getRssi() const {
  */
 std::vector<NimBLERemoteService*>::iterator NimBLEClient::begin() {
     return m_svcVec.begin();
-}
+} // begin
 
 /**
  * @brief Get iterator to the end of the vector of remote service pointers.
@@ -609,7 +609,7 @@ std::vector<NimBLERemoteService*>::iterator NimBLEClient::begin() {
  */
 std::vector<NimBLERemoteService*>::iterator NimBLEClient::end() {
     return m_svcVec.end();
-}
+} // end
 
 /**
  * @brief Get the service BLE Remote Service instance corresponding to the uuid.
@@ -771,7 +771,7 @@ int NimBLEClient::serviceDiscoveredCB(uint16_t                     connHandle,
     NimBLEClient*   pClient   = (NimBLEClient*)pTaskData->m_pInstance;
 
     if (error->status == BLE_HS_ENOTCONN) {
-        NIMBLE_LOGE(LOG_TAG, "<< Service Discovered; Not connected");
+        NIMBLE_LOGE(LOG_TAG, "<< Service Discovered; Disconnected");
         NimBLEUtils::taskRelease(*pTaskData, error->status);
         return error->status;
     }
@@ -790,7 +790,7 @@ int NimBLEClient::serviceDiscoveredCB(uint16_t                     connHandle,
     NimBLEUtils::taskRelease(*pTaskData, error->status);
     NIMBLE_LOGD(LOG_TAG, "<< Service Discovered");
     return error->status;
-}
+} // serviceDiscoveredCB
 
 /**
  * @brief Get the value of a specific characteristic associated with a specific service.
@@ -864,7 +864,7 @@ NimBLERemoteCharacteristic* NimBLEClient::getCharacteristic(uint16_t handle) {
     }
 
     return nullptr;
-}
+} // getCharacteristic
 
 /**
  * @brief Get the current mtu of this connection.
@@ -892,7 +892,7 @@ int NimBLEClient::exchangeMTUCb(uint16_t conn_handle, const ble_gatt_error* erro
     }
 
     return 0;
-}
+} // exchangeMTUCb
 
 /**
  * @brief Begin the MTU exchange process with the server.
@@ -919,7 +919,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
     int             rc        = 0;
     NimBLETaskData* pTaskData = pClient->m_pTaskData; // save a copy in case client is deleted
 
-    NIMBLE_LOGD(LOG_TAG, "Got Client event %s", NimBLEUtils::gapEventToString(event->type));
+    NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent %s", NimBLEUtils::gapEventToString(event->type));
 
     switch (event->type) {
         case BLE_GAP_EVENT_DISCONNECT: {
@@ -1203,6 +1203,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
         NimBLEUtils::taskRelease(*pTaskData, rc);
     }
 
+    NIMBLE_LOGD(LOG_TAG, "<< handleGapEvent");
     return 0;
 } // handleGapEvent
 
