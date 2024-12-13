@@ -1233,7 +1233,8 @@ std::string NimBLEDevice::toString() {
  * @param [in] line The line number where the assert occurred.
  */
 void nimble_cpp_assert(const char* file, unsigned line) {
-    NIMBLE_LOGC("", "Assertion failed at %s:%u\n", file, line);
+    console_printf("Assertion failed at %s:%u\n", file, line);
+    ble_npl_time_delay(10);
     abort();
 }
 # endif // CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED
