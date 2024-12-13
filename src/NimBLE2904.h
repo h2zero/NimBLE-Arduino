@@ -1,15 +1,18 @@
 /*
- * NimBLE2904.h
+ * Copyright 2020-2024 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
  *
- *  Created: on March 13, 2020
- *      Author H2zero
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Originally:
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * BLE2904.h
- *
- *  Created on: Dec 23, 2017
- *      Author: kolban
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef NIMBLE_CPP_2904_H_
@@ -23,8 +26,8 @@
 struct NimBLE2904Data {
     uint8_t  m_format{0};
     int8_t   m_exponent{0};
-    uint16_t m_unit{0x2700}; // Unitless; See https://www.bluetooth.com/specifications/assigned-numbers/units
-    uint8_t  m_namespace{1}; // 1 = Bluetooth SIG Assigned Numbers
+    uint16_t m_unit{0x2700};   // Unitless; See https://www.bluetooth.com/specifications/assigned-numbers/units
+    uint8_t  m_namespace{1};   // 1 = Bluetooth SIG Assigned Numbers
     uint16_t m_description{0}; // unknown description
 } __attribute__((packed));
 
