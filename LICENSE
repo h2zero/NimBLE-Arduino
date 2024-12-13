@@ -186,7 +186,7 @@
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright {2020} {Ryan Powell}
+   Copyright {yyyy} {name of copyright owner}
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -199,21 +199,3 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
-This product bundles queue.h 8.5, which is available under the "3-clause BSD"
-license.  For details, see porting/nimble/include/os/queue.h
-
-This product partly derives from FreeBSD, which is available under the
-"3-clause BSD" license.  For details, see:
-    * porting/nimble/src/os_mbuf.c
-
-This product bundles Gary S. Brown's CRC32 implementation, which is available
-under the following license:
-    COPYRIGHT (C) 1986 Gary S. Brown.  You may use this program, or
-    code or tables extracted from it, as desired without restriction.
-
-This product bundles tinycrypt, which is available under the "3-clause BSD"
-license. For details, and bundled files see:
-    * ext/tinycrypt/LICENSE
-    
-This product partly derives from esp32-snippets; Copyright 2017 Neil Kolban.

@@ -1,9 +1,18 @@
 /*
- * NimBLEAttValue.cpp
+ * Copyright 2020-2024 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
  *
- *  Created: on July 17, 2024
- *      Author H2zero
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "nimconfig.h"
@@ -32,8 +41,7 @@ NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
 }
 
 // Value constructor implementation.
-NimBLEAttValue::NimBLEAttValue(const uint8_t *value, uint16_t len, uint16_t max_len)
-: NimBLEAttValue(len, max_len) {
+NimBLEAttValue::NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_len) : NimBLEAttValue(len, max_len) {
     memcpy(m_attr_value, value, len);
     m_attr_value[len] = '\0';
     m_attr_len        = len;
