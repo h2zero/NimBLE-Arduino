@@ -223,7 +223,7 @@ bool NimBLEAdvertisementData::removeServiceUUID(const NimBLEUUID& serviceUUID) {
     }
 
     int uuidLoc = -1;
-    for (int i = dataLoc + 2; i < m_payload.size(); i += bytes) {
+    for (size_t i = dataLoc + 2; i < m_payload.size(); i += bytes) {
         if (memcmp(&m_payload[i], serviceUUID.getValue(), bytes) == 0) {
             uuidLoc = i;
             break;
@@ -519,7 +519,7 @@ bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, const std::
  * @return -1 if the data is not found, otherwise the index of the data in the payload.
  */
 int NimBLEAdvertisementData::getDataLocation(uint8_t type) const {
-    int index = 0;
+    size_t index = 0;
     while (index < m_payload.size()) {
         if (m_payload[index + 1] == type) {
             return index;
