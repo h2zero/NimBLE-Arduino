@@ -17,11 +17,7 @@ void setup() {
     Serial.begin(115200);
     Serial.println("Starting NimBLE Server");
     NimBLEDevice::init("NimBLE");
-#ifdef ESP_PLATFORM
-    NimBLEDevice::setPower(ESP_PWR_LVL_P9); /** +9db */
-#else
-    NimBLEDevice::setPower(9); /** +9db */
-#endif
+    NimBLEDevice::setPower(3); /** +3db */
 
     NimBLEDevice::setSecurityAuth(true, true, true); /** bonding, MITM, BLE secure connections */
     NimBLEDevice::setSecurityPasskey(123456);

@@ -268,7 +268,7 @@ void setup() {
     NimBLEDevice::setSecurityAuth(/*BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM |*/ BLE_SM_PAIR_AUTHREQ_SC);
 
     /** Optional: set the transmit power */
-    NimBLEDevice::setPower(3); // 9dbm
+    NimBLEDevice::setPower(3); /** 3dbm */
     NimBLEScan* pScan = NimBLEDevice::getScan();
 
     /** Set the callbacks to call when scan events occur, no duplicates */
