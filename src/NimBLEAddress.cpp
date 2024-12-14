@@ -45,7 +45,9 @@ NimBLEAddress::NimBLEAddress(ble_addr_t address) : ble_addr_t{address} {}
  * ```
  * which is 17 characters in length.
  * @param [in] addr The hex string representation of the address.
- * @param [in] type The type of the address.
+ * @param [in] type The type of the address, should be one of:
+ * * BLE_ADDR_PUBLIC (0)
+ * * BLE_ADDR_RANDOM (1)
  */
 NimBLEAddress::NimBLEAddress(const std::string& addr, uint8_t type) {
     this->type = type;
@@ -70,7 +72,9 @@ NimBLEAddress::NimBLEAddress(const std::string& addr, uint8_t type) {
 /**
  * @brief Constructor for compatibility with bluedroid esp library using native ESP representation.
  * @param [in] address A uint8_t[6] or esp_bd_addr_t containing the address.
- * @param [in] type The type of the address.
+ * @param [in] type The type of the address should be one of:
+ * * BLE_ADDR_PUBLIC (0)
+ * * BLE_ADDR_RANDOM (1)
  */
 NimBLEAddress::NimBLEAddress(const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t type) {
     std::reverse_copy(address, address + BLE_DEV_ADDR_LEN, this->val);
@@ -81,7 +85,9 @@ NimBLEAddress::NimBLEAddress(const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t ty
  * @brief Constructor for address using a hex value.\n
  * Use the same byte order, so use 0xa4c1385def16 for "a4:c1:38:5d:ef:16"
  * @param [in] address uint64_t containing the address.
- * @param [in] type The type of the address.
+ * @param [in] type The type of the address should be one of:
+ * * BLE_ADDR_PUBLIC (0)
+ * * BLE_ADDR_RANDOM (1)
  */
 NimBLEAddress::NimBLEAddress(const uint64_t& address, uint8_t type) {
     memcpy(this->val, &address, sizeof this->val);

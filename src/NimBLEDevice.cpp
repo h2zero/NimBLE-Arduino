@@ -614,18 +614,14 @@ bool NimBLEDevice::isBonded(const NimBLEAddress& address) {
 /**
  * @brief Get the address of a bonded peer device by index.
  * @param [in] index The index to retrieve the peer address of.
- * @returns NimBLEAddress of the found bonded peer or nullptr if not found.
+ * @returns NimBLEAddress of the found bonded peer or null address if not found.
  */
 NimBLEAddress NimBLEDevice::getBondedAddress(int index) {
     ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
     int        num_peers, rc;
     rc = ble_store_util_bonded_peers(&peer_id_addrs[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
-    if (rc != 0) {
-        return nullptr;
-    }
-
-    if (index > num_peers || index < 0) {
-        return nullptr;
+    if (rc != 0 || index > num_peers || index < 0) {
+        return NimBLEAddress{};
     }
 
     return NimBLEAddress(peer_id_addrs[index]);
@@ -704,12 +700,12 @@ size_t NimBLEDevice::getWhiteListCount() {
 /**
  * @brief Gets the address at the vector index.
  * @param [in] index The vector index to retrieve the address from.
- * @returns The NimBLEAddress at the whitelist index or nullptr if not found.
+ * @returns The NimBLEAddress at the whitelist index or null address if not found.
  */
 NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
     if (index > m_whiteList.size()) {
         NIMBLE_LOGE(LOG_TAG, "Invalid index; %u", index);
-        return nullptr;
+        return NimBLEAddress{};
     }
 
     return m_whiteList[index];
