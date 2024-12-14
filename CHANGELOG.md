@@ -1,7 +1,7 @@
 # Changelog
-
 All notable changes to this project will be documented in this file.
-## [Unreleased]
+
+## [2.1.0] 2024-12-14
 
 ## **Breaking changes**
 - NimBLESecurity class removed.
@@ -57,6 +57,7 @@ All notable changes to this project will be documented in this file.
 - `NimBLEAdvertisedDevice::hasRSSI` removed as redundant, RSSI is always available.
 - `NimBLEAdvertisedDevice::getPayload` now returns `const std::vector<uint8_t>` instead of a pointer to internal memory.
 - `NimBLEAdvertisedDevice` Timestamp removed, if needed then the app should track the time from the callback.
+- `NimBLEAddress` constructor; default value for the `type` parameter removed, caller should know the address type and specify it.
 - `NimBLEAddress::getNative` replaced with `NimBLEAddress::getBase` and now returns a pointer to `const ble_addr_t` instead of a pointer to the address value.
 - `NimBLEAddress::equals` method and `NimBLEAddress::== operator` will now also test if the address types are the same.
 - `NimBLEUUID::getNative` method replaced with `NimBLEUUID::getBase` which returns a read-only pointer to the underlying `ble_uuid_t` struct.
