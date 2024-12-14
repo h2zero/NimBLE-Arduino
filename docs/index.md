@@ -24,7 +24,7 @@ Call `NimBLEDevice::init` in `setup`.
 * Open platformio.ini, a project configuration file located in the root of PlatformIO project.  
 * Add the following line to the lib_deps option of [env:] section:
 ```
-h2zero/NimBLE-Arduino@^1.4.0
+h2zero/NimBLE-Arduino@^2.1.0
 ```
 * Build a project, PlatformIO will automatically install dependencies.  
 <br/>
@@ -36,13 +36,13 @@ If you have not used the original BLE library please refer to the [New user guid
 
 If you are familiar with the original library, see: [The migration guide](Migration_guide.md) for details.
 
+If you already use this library and need to migrate your code to version 2.x see the [1.x to 2.x Migration Guide.](docs/1.x_to2.x_migration_guide.md)
+
 For more advanced usage see [Usage tips](Usage_tips.md) for more performance and optimization.  
 <br/>
 
 ## Examples
-See the Refactored_original_examples in the examples folder for highlights of the differences with the original library.
-
-More advanced examples highlighting many available features are in examples/NimBLE_Server, NimBLE_Client.
+Examples highlighting many available features are in examples/NimBLE_Server, NimBLE_Client.
 
 Beacon examples provided by [beegee-tokyo](https://github.com/beegee-tokyo) are in examples/BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon.
 
@@ -55,14 +55,14 @@ As an alternative to changing the configuration in nimconfig.h, Arduino command 
 See the command line configuration options available in [Command line config](Command_line_config.md).  
 <br/>
 
-# Need help? Have a question or suggestion?
-Come chat on [gitter](https://gitter.im/NimBLE-Arduino/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link) or open an issue at [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino/issues) or [esp-nimble-cpp](https://github.com/h2zero/esp-nimble-cpp/issues)  
+# Sponsors
+Thank you to all the sponsors who support this project!
+
+If you use this library for a commercial product please consider [sponsoring the development](https://github.com/sponsors/h2zero) to ensure the continued updates and maintenance.  
 <br/>
 
 # Acknowledgments
-
 * [nkolban](https://github.com/nkolban) and [chegewara](https://github.com/chegewara) for the [original esp32 BLE library](https://github.com/nkolban/esp32-snippets/tree/master/cpp_utils) this project was derived from.
 * [beegee-tokyo](https://github.com/beegee-tokyo) for contributing your time to test/debug and contributing the beacon examples.
 * [Jeroen88](https://github.com/Jeroen88) for the amazing help debugging and improving the client code.  
 <br/>
-

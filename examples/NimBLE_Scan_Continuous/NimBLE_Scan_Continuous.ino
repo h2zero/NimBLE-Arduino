@@ -14,7 +14,7 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 
-static constexpr uint32_t scanTime = 30 * 1000; // 30 seconds scan time.
+static constexpr uint32_t scanTimeMs = 30 * 1000; // 30 seconds scan time.
 
 class scanCallbacks : public NimBLEScanCallbacks {
     /** Initial discovery, advertisement data only. */
@@ -32,7 +32,7 @@ class scanCallbacks : public NimBLEScanCallbacks {
 
     void onScanEnd(const NimBLEScanResults& results, int reason) override {
         printf("Scan ended reason = %d; restarting scan\n", reason);
-        NimBLEDevice::getScan()->start(scanTime, false, true);
+        NimBLEDevice::getScan()->start(scanTimeMs, false, true);
     }
 } scanCallbacks;
 
@@ -42,7 +42,7 @@ void setup() {
     pBLEScan->setScanCallbacks(&scanCallbacks, false); // Set the callback for when devices are discovered, no duplicates.
     pBLEScan->setActiveScan(true);          // Set active scanning, this will get more data from the advertiser.
     pBLEScan->setMaxResults(0);             // Do not store the scan results, use callback only.
-    pBLEScan->start(scanTime, false, true); // duration, not a continuation of last scan, restart to get all devices again.
+    pBLEScan->start(scanTimeMs, false, true); // duration, not a continuation of last scan, restart to get all devices again.
     printf("Scanning...\n");
 }
 
