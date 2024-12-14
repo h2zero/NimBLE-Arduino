@@ -34,9 +34,9 @@
 # include <string>
 
 /**
- * @brief A %BLE device address.
+ * @brief A BLE device address.
  *
- * Every %BLE device has a unique address which can be used to identify it and form connections.
+ * Every BLE device has a unique address which can be used to identify it and form connections.
  */
 class NimBLEAddress : private ble_addr_t {
   public:
@@ -45,9 +45,9 @@ class NimBLEAddress : private ble_addr_t {
      */
     NimBLEAddress() = default;
     NimBLEAddress(const ble_addr_t address);
-    NimBLEAddress(const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t type = BLE_ADDR_PUBLIC);
-    NimBLEAddress(const std::string& stringAddress, uint8_t type = BLE_ADDR_PUBLIC);
-    NimBLEAddress(const uint64_t& address, uint8_t type = BLE_ADDR_PUBLIC);
+    NimBLEAddress(const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t type);
+    NimBLEAddress(const std::string& stringAddress, uint8_t type);
+    NimBLEAddress(const uint64_t& address, uint8_t type);
 
     bool                 isRpa() const;
     bool                 isNrpa() const;
