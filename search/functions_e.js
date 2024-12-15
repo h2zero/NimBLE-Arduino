@@ -1,20 +1,15 @@
 var searchData=
 [
-  ['readfloat_0',['readFloat',['../class_nim_b_l_e_remote_characteristic.html#a81f39759d48a8fb792c94e4b3b455eef',1,'NimBLERemoteCharacteristic']]],
-  ['readuint16_1',['readUInt16',['../class_nim_b_l_e_remote_characteristic.html#a181c54862bc422d8ad0b326af675922d',1,'NimBLERemoteCharacteristic::readUInt16()'],['../class_nim_b_l_e_remote_descriptor.html#a14351ea51b7b04f91b71e388881edd53',1,'NimBLERemoteDescriptor::readUInt16()']]],
-  ['readuint32_2',['readUInt32',['../class_nim_b_l_e_remote_characteristic.html#a71793454ffab034f87af3a5e9677a63d',1,'NimBLERemoteCharacteristic::readUInt32()'],['../class_nim_b_l_e_remote_descriptor.html#a219606f84d63bc02f093051d66f05204',1,'NimBLERemoteDescriptor::readUInt32()']]],
-  ['readuint8_3',['readUInt8',['../class_nim_b_l_e_remote_characteristic.html#ade5c6ae280c3cf36c9905be23df8f080',1,'NimBLERemoteCharacteristic::readUInt8()'],['../class_nim_b_l_e_remote_descriptor.html#ab07e86707a91e48f68e9de55686e939b',1,'NimBLERemoteDescriptor::readUInt8()']]],
-  ['readvalue_4',['readValue',['../class_nim_b_l_e_remote_characteristic.html#a417bb44d000758535253488f4d77774a',1,'NimBLERemoteCharacteristic::readValue(time_t *timestamp=nullptr)'],['../class_nim_b_l_e_remote_characteristic.html#a463760cabc9ca104a6fe094eb942fec0',1,'NimBLERemoteCharacteristic::readValue(time_t *timestamp=nullptr, bool skipSizeCheck=false)'],['../class_nim_b_l_e_remote_descriptor.html#a7c7c07e6ccd969de568b5bda72ec52d7',1,'NimBLERemoteDescriptor::readValue()'],['../class_nim_b_l_e_remote_descriptor.html#ac4e3a21818903b69ace41c36a58d3c46',1,'NimBLERemoteDescriptor::readValue(bool skipSizeCheck=false)']]],
-  ['registerfornotify_5',['registerForNotify',['../class_nim_b_l_e_remote_characteristic.html#ab4f54eabe90a416546b7b3fc3477f49c',1,'NimBLERemoteCharacteristic']]],
-  ['removeall_6',['removeAll',['../class_nim_b_l_e_ext_advertising.html#a8c4df0be35301c90a39491b9e98d3e24',1,'NimBLEExtAdvertising']]],
-  ['removecharacteristic_7',['removeCharacteristic',['../class_nim_b_l_e_service.html#af992d0c27e3a559789fb77fc46623234',1,'NimBLEService']]],
-  ['removedescriptor_8',['removeDescriptor',['../class_nim_b_l_e_characteristic.html#a2c0ed8932ee257a8632e3d72e353489b',1,'NimBLECharacteristic']]],
-  ['removeignored_9',['removeIgnored',['../class_nim_b_l_e_device.html#a0374ab8e323277bd8498609559966924',1,'NimBLEDevice']]],
-  ['removeinstance_10',['removeInstance',['../class_nim_b_l_e_ext_advertising.html#af7f4225f33f03d17efba1d4de0684eef',1,'NimBLEExtAdvertising']]],
-  ['removeservice_11',['removeService',['../class_nim_b_l_e_server.html#a00c92f62f41ec1c499dfaf042b487d75',1,'NimBLEServer']]],
-  ['removeservices_12',['removeServices',['../class_nim_b_l_e_advertising.html#a79f926f083c1cfb07dad6a673405dd47',1,'NimBLEAdvertising']]],
-  ['removeserviceuuid_13',['removeServiceUUID',['../class_nim_b_l_e_advertising.html#a725437c00152ff57ef1e21bdf7be980d',1,'NimBLEAdvertising']]],
-  ['reportmap_14',['reportMap',['../class_nim_b_l_e_h_i_d_device.html#a5e996a1668785f7a978f9874b4ff3b3e',1,'NimBLEHIDDevice']]],
-  ['reset_15',['reset',['../class_nim_b_l_e_advertising.html#a545b505ea76396c33133d41a78fad5b8',1,'NimBLEAdvertising']]],
-  ['returncodetostring_16',['returnCodeToString',['../class_nim_b_l_e_utils.html#a9885eda5c51477aefc0ba9e1c96d5a34',1,'NimBLEUtils']]]
+  ['refreshadvertisingdata_0',['refreshAdvertisingData',['../class_nim_b_l_e_advertising.html#ad899be16fa054a01908692a504af9832',1,'NimBLEAdvertising']]],
+  ['removeall_1',['removeAll',['../class_nim_b_l_e_ext_advertising.html#a8c4df0be35301c90a39491b9e98d3e24',1,'NimBLEExtAdvertising']]],
+  ['removecharacteristic_2',['removeCharacteristic',['../class_nim_b_l_e_service.html#af992d0c27e3a559789fb77fc46623234',1,'NimBLEService']]],
+  ['removedata_3',['removedata',['../class_nim_b_l_e_advertisement_data.html#acf839da2c36a9ac5ef53e86b57d73874',1,'NimBLEAdvertisementData::removeData()'],['../class_nim_b_l_e_ext_advertisement.html#a28a6b771e81c043d471d87a6aa5a7622',1,'NimBLEExtAdvertisement::removeData()']]],
+  ['removedescriptor_4',['removeDescriptor',['../class_nim_b_l_e_characteristic.html#a2c0ed8932ee257a8632e3d72e353489b',1,'NimBLECharacteristic']]],
+  ['removeinstance_5',['removeInstance',['../class_nim_b_l_e_ext_advertising.html#acace5e9e195b65b61041f7007f9359ab',1,'NimBLEExtAdvertising']]],
+  ['removeservice_6',['removeService',['../class_nim_b_l_e_server.html#a00c92f62f41ec1c499dfaf042b487d75',1,'NimBLEServer']]],
+  ['removeservices_7',['removeservices',['../class_nim_b_l_e_ext_advertisement.html#ab71e5616a011eae51c58b4edfbd3bc71',1,'NimBLEExtAdvertisement::removeServices()'],['../class_nim_b_l_e_advertising.html#ad159c2e2a65d9bc7dcc5babed146936d',1,'NimBLEAdvertising::removeServices()'],['../class_nim_b_l_e_advertisement_data.html#aff30e0d0dc95e1dc8bb1cb6858a4e813',1,'NimBLEAdvertisementData::removeServices()']]],
+  ['removeserviceuuid_8',['removeserviceuuid',['../class_nim_b_l_e_advertisement_data.html#ad22fa3253134dd5bfd3e76f8c31bef2e',1,'NimBLEAdvertisementData::removeServiceUUID(const NimBLEUUID &amp;serviceUUID)'],['../class_nim_b_l_e_advertisement_data.html#a62963648edf361ed7d3f24027dd41a9d',1,'NimBLEAdvertisementData::removeServiceUUID(const char *serviceUUID)'],['../class_nim_b_l_e_advertising.html#aba383012133dd694f56cf86966b2d80a',1,'NimBLEAdvertising::removeServiceUUID(const NimBLEUUID &amp;serviceUUID)'],['../class_nim_b_l_e_advertising.html#a94452c2f9f7233611246827ce62f6a2b',1,'NimBLEAdvertising::removeServiceUUID(const char *serviceUUID)'],['../class_nim_b_l_e_ext_advertisement.html#a5ddd5bc3a96406518580bc33aab62a84',1,'NimBLEExtAdvertisement::removeServiceUUID(const NimBLEUUID &amp;serviceUUID)'],['../class_nim_b_l_e_ext_advertisement.html#a7cb10f1b8cbfe6706144a20ee3258c63',1,'NimBLEExtAdvertisement::removeServiceUUID(const char *serviceUUID)']]],
+  ['reset_9',['reset',['../class_nim_b_l_e_advertising.html#a91cde5680de36840fc18f6fd76665af7',1,'NimBLEAdvertising']]],
+  ['returncodetostring_10',['returnCodeToString',['../class_nim_b_l_e_utils.html#a9885eda5c51477aefc0ba9e1c96d5a34',1,'NimBLEUtils']]],
+  ['reversebyteorder_11',['reversebyteorder',['../class_nim_b_l_e_address.html#a0f390fb5f422db8ced1938bd40f87c4d',1,'NimBLEAddress::reverseByteOrder()'],['../class_nim_b_l_e_u_u_i_d.html#a9b96d90463f02f6a21afbaebcc242dd9',1,'NimBLEUUID::reverseByteOrder()']]]
 ];

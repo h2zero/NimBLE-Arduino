@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['arduino_20command_20line_20and_20platformio_20config_20options_0',['Arduino command line and platformio config options',['../md__command_line_config.html',1,'']]]
+  ['1_20x_20to_202_20x_0',['Migrating from 1.x to 2.x',['../md_1_8x__to2_8x__migration__guide.html',1,'']]]
 ];

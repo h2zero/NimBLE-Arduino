@@ -1,4 +1,27 @@
 var searchData=
 [
-  ['length_0',['length',['../class_nim_b_l_e_att_value.html#a35df29c514613b1d00841abd6fffa320',1,'NimBLEAttValue']]]
+  ['indicate_0',['indicate',['../class_nim_b_l_e_characteristic.html#aa5eb7de28ee6ec5661acac5c07abb11c',1,'NimBLECharacteristic::indicate(const uint8_t *value, size_t length, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const'],['../class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31',1,'NimBLECharacteristic::indicate(const T &amp;v, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const'],['../class_nim_b_l_e_characteristic.html#a3ae5959f98c503de42660e195470192b',1,'NimBLECharacteristic::indicate(const T &amp;s, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const'],['../class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31',1,'NimBLECharacteristic::indicate(const T &amp;v, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const'],['../class_nim_b_l_e_characteristic.html#aabdc2745d2523239a9ab3f02e39aa3cf',1,'NimBLECharacteristic::indicate(uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const']]],
+  ['init_1',['init',['../class_nim_b_l_e_device.html#a2e8bb71daabbffd9eab8787493a45ce7',1,'NimBLEDevice']]],
+  ['injectconfirmpasskey_2',['injectConfirmPasskey',['../class_nim_b_l_e_device.html#aff35384524ab80a19ce1ef23fdcd970b',1,'NimBLEDevice']]],
+  ['injectpasskey_3',['injectPassKey',['../class_nim_b_l_e_device.html#a5071168b3bda69aa4457a43473ad7a96',1,'NimBLEDevice']]],
+  ['isactive_4',['isActive',['../class_nim_b_l_e_ext_advertising.html#a6fd8c8fff9fcb8be80c76774be031104',1,'NimBLEExtAdvertising']]],
+  ['isadvertising_5',['isadvertising',['../class_nim_b_l_e_advertising.html#ac257ab68520a244cb6494d793f9b6c2a',1,'NimBLEAdvertising::isAdvertising()'],['../class_nim_b_l_e_ext_advertising.html#abd7d35653a6831e75700eb5ac9ab5789',1,'NimBLEExtAdvertising::isAdvertising()']]],
+  ['isadvertisingservice_6',['isAdvertisingService',['../class_nim_b_l_e_advertised_device.html#ad006b08552281a3e6c9d9444e7942709',1,'NimBLEAdvertisedDevice']]],
+  ['isauthenticated_7',['isAuthenticated',['../class_nim_b_l_e_conn_info.html#a8a1174d706ae36e99adc9498bf30d68f',1,'NimBLEConnInfo']]],
+  ['isbonded_8',['isbonded',['../class_nim_b_l_e_conn_info.html#afefcdd1c560a307632c15394497c436f',1,'NimBLEConnInfo::isBonded()'],['../class_nim_b_l_e_device.html#a16bf4f5394735ed8d7f0bb32ca5d269a',1,'NimBLEDevice::isBonded()']]],
+  ['isconnectable_9',['isConnectable',['../class_nim_b_l_e_advertised_device.html#ab9710a6c3a141b6413d5159dfe4a4040',1,'NimBLEAdvertisedDevice']]],
+  ['isconnected_10',['isConnected',['../class_nim_b_l_e_client.html#a0bdaf55b06367d1abd6f59bfbe1e8689',1,'NimBLEClient']]],
+  ['isencrypted_11',['isEncrypted',['../class_nim_b_l_e_conn_info.html#a1a29242623a50989c7a03ee209ac2cf4',1,'NimBLEConnInfo']]],
+  ['isinitialized_12',['isInitialized',['../class_nim_b_l_e_device.html#a425561f1e23856756ab9c1c330da5737',1,'NimBLEDevice']]],
+  ['islegacyadvertisement_13',['isLegacyAdvertisement',['../class_nim_b_l_e_advertised_device.html#a49b445130f028b49175d01cd3f6db050',1,'NimBLEAdvertisedDevice']]],
+  ['ismaster_14',['isMaster',['../class_nim_b_l_e_conn_info.html#a5f91ef30d5ff92ad26f07feb31a5cd20',1,'NimBLEConnInfo']]],
+  ['isnrpa_15',['isNrpa',['../class_nim_b_l_e_address.html#a9af65abe3c02a16307b8cffa3b1bcac1',1,'NimBLEAddress']]],
+  ['isnull_16',['isNull',['../class_nim_b_l_e_address.html#aa05f35ab6724a00c65dd096006dba2bb',1,'NimBLEAddress']]],
+  ['ispublic_17',['isPublic',['../class_nim_b_l_e_address.html#a7154780415ae201a1fcdf86298b6116c',1,'NimBLEAddress']]],
+  ['isrpa_18',['isRpa',['../class_nim_b_l_e_address.html#a96fba1524ed8ab43f59f5f650e8fd3c8',1,'NimBLEAddress']]],
+  ['isscannable_19',['isScannable',['../class_nim_b_l_e_advertised_device.html#a6f55263d4a86d3e2f6b23b71eb68ef98',1,'NimBLEAdvertisedDevice']]],
+  ['isscanning_20',['isScanning',['../class_nim_b_l_e_scan.html#ab788ad282fdbf4467302f6ad2d4d6016',1,'NimBLEScan']]],
+  ['isslave_21',['isSlave',['../class_nim_b_l_e_conn_info.html#ad91de04bdad64019950a1d095baf0e43',1,'NimBLEConnInfo']]],
+  ['isstarted_22',['isStarted',['../class_nim_b_l_e_service.html#aa9464e97d7e39a4634c5d9bdce1abbac',1,'NimBLEService']]],
+  ['isstatic_23',['isStatic',['../class_nim_b_l_e_address.html#a409e3ef141526c8f5c5fad99bd95b660',1,'NimBLEAddress']]]
 ];

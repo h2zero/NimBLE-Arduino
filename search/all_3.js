@@ -1,20 +1,13 @@
 var searchData=
 [
-  ['data_0',['data',['../class_nim_b_l_e_att_value.html#a86acbb5ab3a35b3d5692c2e05fdccadd',1,'NimBLEAttValue']]],
-  ['deinit_1',['deinit',['../class_nim_b_l_e_device.html#ae95693ce0f5b8e784ea8e10834dd624c',1,'NimBLEDevice']]],
-  ['deleteallbonds_2',['deleteAllBonds',['../class_nim_b_l_e_device.html#ab436502ecd044f8b3480ec3e824e1418',1,'NimBLEDevice']]],
-  ['deletebond_3',['deleteBond',['../class_nim_b_l_e_device.html#a20fc979ec9dbad5cce7f73e41b2e422e',1,'NimBLEDevice']]],
-  ['deletecharacteristic_4',['deleteCharacteristic',['../class_nim_b_l_e_remote_service.html#a15b3b750b073f334c3be680a99ce2e02',1,'NimBLERemoteService']]],
-  ['deletecharacteristics_5',['deleteCharacteristics',['../class_nim_b_l_e_remote_service.html#a221069047193f8d25f7112b44bbcb28f',1,'NimBLERemoteService']]],
-  ['deleteclient_6',['deleteClient',['../class_nim_b_l_e_device.html#a83aa0a3d9d57358d35082a442edf8549',1,'NimBLEDevice']]],
-  ['deletedescriptor_7',['deleteDescriptor',['../class_nim_b_l_e_remote_characteristic.html#aad0ba99cad9779b33ea7cd4e94349099',1,'NimBLERemoteCharacteristic']]],
-  ['deletedescriptors_8',['deleteDescriptors',['../class_nim_b_l_e_remote_characteristic.html#a5f0a51b4a7fb2244d236dcb96fcf5205',1,'NimBLERemoteCharacteristic']]],
-  ['deleteservice_9',['deleteService',['../class_nim_b_l_e_client.html#a0f940c51807469db1f1802b742180beb',1,'NimBLEClient']]],
-  ['deleteservices_10',['deleteServices',['../class_nim_b_l_e_client.html#a668d476de250055a106a9f46bb7719f3',1,'NimBLEClient']]],
-  ['deprecated_20list_11',['Deprecated List',['../deprecated.html',1,'']]],
-  ['deviceinfo_12',['deviceInfo',['../class_nim_b_l_e_h_i_d_device.html#a033c4ad91f1bc165ac6a322b4dcc1699',1,'NimBLEHIDDevice']]],
-  ['disconnect_13',['disconnect',['../class_nim_b_l_e_client.html#a5f77999664cc8a83f3cdb603ba4a5c8c',1,'NimBLEClient::disconnect()'],['../class_nim_b_l_e_server.html#a63c9dce5c4bbc1c6bc720b6c51bcf3e1',1,'NimBLEServer::disconnect()']]],
-  ['discoverattributes_14',['discoverAttributes',['../class_nim_b_l_e_client.html#a1019178a12799ca2c3a84f523b3a7db9',1,'NimBLEClient']]],
-  ['dump_15',['dump',['../class_nim_b_l_e_scan_results.html#a2bbead75105733d04796b69e10c56cd4',1,'NimBLEScanResults::dump()'],['../class_nim_b_l_e_service.html#a71488881933ae8adbf11c5986f9dfb75',1,'NimBLEService::dump()']]],
-  ['dumpgapevent_16',['dumpGapEvent',['../class_nim_b_l_e_utils.html#a27df310308e72c477a3fda7a65806e01',1,'NimBLEUtils']]]
+  ['3_200_202021_2008_2002_0',['[1.3.0] - 2021-08-02',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md130---2021-08-02',1,'']]],
+  ['3_201_202021_2008_2004_1',['[1.3.1] - 2021-08-04',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md131---2021-08-04',1,'']]],
+  ['3_202_202021_2011_2020_2',['[1.3.2] - 2021-11-20',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md132---2021-11-20',1,'']]],
+  ['3_202024_2011_2027_3',['[1.4.3] 2024-11-27',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md143-2024-11-27',1,'']]],
+  ['3_203_202021_2011_2024_4',['[1.3.3] - 2021-11-24',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md133---2021-11-24',1,'']]],
+  ['3_204_202022_2001_2009_5',['[1.3.4] - 2022-01-09',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md134---2022-01-09',1,'']]],
+  ['3_205_202022_2001_2014_6',['[1.3.5] - 2022-01-14',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md135---2022-01-14',1,'']]],
+  ['3_206_202022_2001_2018_7',['[1.3.6] - 2022-01-18',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md136---2022-01-18',1,'']]],
+  ['3_207_202022_2002_2015_8',['[1.3.7] - 2022-02-15',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md137---2022-02-15',1,'']]],
+  ['3_208_202022_2004_2027_9',['[1.3.8] - 2022-04-27',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md138---2022-04-27',1,'']]]
 ];
