@@ -326,11 +326,6 @@ IRAM_ATTR nimble_port_get_dflt_eventq(void)
 
 #else // ESP_PLATFORM
 
-static struct ble_npl_eventq g_eventq_dflt;
-
-extern void os_msys_init(void);
-extern void os_mempool_module_init(void);
-
 void
 nimble_port_init(void)
 {
