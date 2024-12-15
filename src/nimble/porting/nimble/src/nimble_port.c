@@ -47,6 +47,7 @@
 #if !CONFIG_BT_CONTROLLER_ENABLED
 #include "nimble/nimble/transport/include/nimble/transport.h"
 #endif
+#endif
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -84,6 +85,7 @@ nimble_port_stop_cb(struct ble_npl_event *ev)
     ble_npl_sem_release(&ble_hs_stop_sem);
 }
 
+#ifdef ESP_PLATFORM
 /**
  * @brief esp_nimble_init - Initialize the NimBLE host stack
  *
@@ -358,6 +360,39 @@ nimble_port_init(void)
 #if MYNEWT_VAL(BLE_QUEUE_CONG_CHECK)
     ble_adv_list_init();
 #endif
+}
+
+int
+nimble_port_stop(void)
+{
+    int rc = 0;
+
+    rc = ble_npl_sem_init(&ble_hs_stop_sem, 0);
+    if (rc != 0) {
+        return rc;
+    }
+
+    /* Initiate a host stop procedure. */
+    rc = ble_hs_stop(&stop_listener, ble_hs_stop_cb,
+            NULL);
+    if (rc != 0) {
+        ble_npl_sem_deinit(&ble_hs_stop_sem);
+        return rc;
+    }
+
+    /* Wait till the host stop procedure is complete */
+    ble_npl_sem_pend(&ble_hs_stop_sem, BLE_NPL_TIME_FOREVER);
+
+    ble_npl_event_init(&ble_hs_ev_stop, nimble_port_stop_cb,
+                       NULL);
+    ble_npl_eventq_put(&g_eventq_dflt, &ble_hs_ev_stop);
+
+    /* Wait till the event is serviced */
+    ble_npl_sem_pend(&ble_hs_stop_sem, BLE_NPL_TIME_FOREVER);
+
+    ble_npl_sem_deinit(&ble_hs_stop_sem);
+
+    return rc;
 }
 
 void
