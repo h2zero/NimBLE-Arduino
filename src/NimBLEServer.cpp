@@ -70,9 +70,11 @@ NimBLEServer::~NimBLEServer() {
         delete m_pServerCallbacks;
     }
 
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     if (m_pClient != nullptr) {
         delete m_pClient;
     }
+# endif
 }
 
 /**
@@ -399,10 +401,12 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 }
             }
 
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
             if (pServer->m_pClient && pServer->m_pClient->m_connHandle == event->disconnect.conn.conn_handle) {
                 // If this was also the client make sure it's flagged as disconnected.
                 pServer->m_pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
             }
+# endif
 
             if (pServer->m_svcChanged) {
                 pServer->resetGATT();
