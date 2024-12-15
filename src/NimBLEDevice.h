@@ -282,5 +282,11 @@ class NimBLEDevice {
 #  endif
 # endif
 
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#  include "NimBLEConnInfo.h"
+# endif
+
+# include "NimBLEUtils.h"
+
 #endif // CONFIG_BT_ENABLED
 #endif // NIMBLE_CPP_DEVICE_H_
