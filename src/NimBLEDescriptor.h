@@ -21,16 +21,11 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
-class NimBLEDescriptor;
-class NimBLEDescriptorCallbacks;
-
 # include "NimBLELocalValueAttribute.h"
-# include "NimBLECharacteristic.h"
-# include "NimBLEUUID.h"
-# include "NimBLEAttValue.h"
-# include "NimBLEConnInfo.h"
-
 # include <string>
+
+class NimBLECharacteristic;
+class NimBLEDescriptorCallbacks;
 
 /**
  * @brief A model of a BLE descriptor.
