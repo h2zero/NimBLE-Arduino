@@ -176,9 +176,11 @@ NimBLECharacteristic* NimBLEHIDDevice::getInputReport(uint8_t reportId) {
  * @param [in] reportId Output report ID, the same as in report map for output object related to the characteristic.
  * @return A pointer to the output report characteristic.
  * @details This will create the characteristic if not already created.
+ * @note The output report characteristic is optional and should only be created after the input report characteristic.
  */
 NimBLECharacteristic* NimBLEHIDDevice::getOutputReport(uint8_t reportId) {
-    NimBLECharacteristic* outputReportChr = m_hidSvc->getCharacteristic(inputReportChrUuid);
+    // Same uuid as input so this needs to be the second instance
+    NimBLECharacteristic* outputReportChr = m_hidSvc->getCharacteristic(inputReportChrUuid, 1);
     if (outputReportChr == nullptr) {
         outputReportChr =
             m_hidSvc->createCharacteristic(inputReportChrUuid,
