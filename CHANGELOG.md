@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+## Fixed
+- `NimBLEHIDDevice::getOutputReport` will now return the correct characteristic.
+- Compile error when central is disabled, class `NimBLEServer` has no member named `m_pClient`.
+- Compile error with nRF devices, unresolved symbol `nimble_port_stop`.
+
 ## [2.1.0] 2024-12-14
 
 ## **Breaking changes**
