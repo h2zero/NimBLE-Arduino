@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 - Compile error when central is disabled, class `NimBLEServer` has no member named `m_pClient`.
 - Compile error with nRF devices, unresolved symbol `nimble_port_stop`.
 
+## Changed
+- Added missing includes for `NimBLEConnInfo` and `NimBLEUtils` to `NimBLEDevice.h`.
+
 ## [2.1.0] 2024-12-14
 
 ## **Breaking changes**
