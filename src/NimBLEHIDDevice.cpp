@@ -22,7 +22,6 @@
 # include "NimBLEServer.h"
 # include "NimBLEService.h"
 # include "NimBLE2904.h"
-# include <limits>
 
 static constexpr uint16_t deviceInfoSvcUuid = 0x180a;
 static constexpr uint16_t hidSvcUuid        = 0x1812;
