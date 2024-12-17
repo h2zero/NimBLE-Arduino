@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.1</span>
    </div>
   </td>
  </tr>
@@ -380,8 +380,14 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_device_8h_source.html','');
 <div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="preprocessor">#  endif</span></div>
 <div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="preprocessor"># endif</span></div>
 <div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span> </div>
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span><span class="preprocessor">#endif </span><span class="comment">// CONFIG_BT_ENABLED</span></div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span><span class="preprocessor">#endif </span><span class="comment">// NIMBLE_CPP_DEVICE_H_</span></div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span><span class="preprocessor"># if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)</span></div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span><span class="preprocessor">#  include &quot;NimBLEConnInfo.h&quot;</span></div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span><span class="preprocessor"># endif</span></div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span> </div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span><span class="preprocessor"># include &quot;NimBLEUtils.h&quot;</span></div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span> </div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span><span class="preprocessor">#endif </span><span class="comment">// CONFIG_BT_ENABLED</span></div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span><span class="preprocessor">#endif </span><span class="comment">// NIMBLE_CPP_DEVICE_H_</span></div>
 <div class="ttc" id="aclass_nim_b_l_e_address_html"><div class="ttname"><a href="class_nim_b_l_e_address.html">NimBLEAddress</a></div><div class="ttdoc">A BLE device address.</div><div class="ttdef"><b>Definition</b> NimBLEAddress.h:41</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_advertising_html"><div class="ttname"><a href="class_nim_b_l_e_advertising.html">NimBLEAdvertising</a></div><div class="ttdoc">Perform and manage BLE advertising.</div><div class="ttdef"><b>Definition</b> NimBLEAdvertising.h:52</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_characteristic_html"><div class="ttname"><a href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a></div><div class="ttdoc">The model of a BLE Characteristic.</div><div class="ttdef"><b>Definition</b> NimBLECharacteristic.h:40</div></div>
