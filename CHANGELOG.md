@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2.1.1] 2024-12-16
 
 ## Fixed
 - `NimBLEHIDDevice::getOutputReport` will now return the correct characteristic.
