@@ -81,6 +81,8 @@ class NimBLEHIDDevice {
     NimBLECharacteristic* m_hidControlChr{nullptr};   // 0x2a4c
     NimBLECharacteristic* m_protocolModeChr{nullptr}; // 0x2a4e
     NimBLECharacteristic* m_batteryLevelChr{nullptr}; // 0x2a19
+
+    NimBLECharacteristic* locateReportCharacteristicById(uint8_t reportId, uint8_t &reportType);
 };
 
 #endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
