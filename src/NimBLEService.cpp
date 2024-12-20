@@ -91,6 +91,13 @@ void NimBLEService::dump() const {
  */
 bool NimBLEService::start() {
     NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service: %s", toString().c_str());
+
+    // If started previously and no characteristics have been added or removed,
+    // then we can skip the service registration process.
+    if (m_pSvcDef->characteristics && !getServer()->m_svcChanged) {
+        return true;
+    }
+
     // If started previously, clear everything and start over
     if (m_pSvcDef->characteristics) {
         if (m_pSvcDef->characteristics->descriptors) {
