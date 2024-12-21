@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+## Fixed
+- Compile error when only advertising role is enabled.
+- Possible crash if bonded client reconnects.
+
+## Changed
+- `NimBLEHIDDevice` can now create more than one in/out/feature report map.
+
 ## [2.1.1] 2024-12-16
 
 ## Fixed
