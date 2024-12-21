@@ -1154,6 +1154,7 @@ bool NimBLEDevice::startSecurity(uint16_t connHandle, int* rcPtr) {
     return rc == 0 || rc == BLE_HS_EALREADY;
 } // startSecurity
 
+# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 /**
  * @brief Inject the provided passkey into the Security Manager.
  * @param [in] peerInfo Connection information for the peer.
@@ -1178,6 +1179,7 @@ bool NimBLEDevice::injectConfirmPasskey(const NimBLEConnInfo& peerInfo, bool acc
     NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_NUMCMP; ble_sm_inject_io result: %d", rc);
     return rc == 0;
 }
+# endif // CONFIG_BT_NIMBLE_ROLE_CENTRAL || CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
 /* -------------------------------------------------------------------------- */
 /*                                  UTILITIES                                 */
