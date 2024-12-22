@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2.1.2] 2024-12-21
 
 ## Fixed
 - Compile error when only advertising role is enabled.
