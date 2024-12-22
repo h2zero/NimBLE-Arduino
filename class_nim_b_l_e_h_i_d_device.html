@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.1</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.2</span>
    </div>
   </td>
  </tr>
@@ -323,7 +323,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>startServices</b> ()<
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A pointer to feature report characteristic.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>NimBLECharacteristic* A pointer to feature report characteristic. Store this value to avoid computational overhead. </dd>
+<dd>
+nullptr If the report is already created as an input or output report.</dd></dl>
 <p>This will create the characteristic if not already created. </p>
 
 </div>
@@ -407,11 +409,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>startServices</b> ()<
 <p>Get the input report characteristic. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">reportId</td><td>input report ID, the same as in report map for input object related to the characteristic. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">reportId</td><td>Input report ID, the same as in report map for input object related to the characteristic. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A pointer to the input report characteristic.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>NimBLECharacteristic* A pointer to the input report characteristic. Store this value to avoid computational overhead. </dd>
+<dd>
+nullptr If the report is already created as an output or feature report.</dd></dl>
 <p>This will create the characteristic if not already created. </p>
 
 </div>
@@ -439,8 +443,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>startServices</b> ()<
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A pointer to the output report characteristic.</dd></dl>
-<p>This will create the characteristic if not already created. </p><dl class="section note"><dt>Note</dt><dd>The output report characteristic is optional and should only be created after the input report characteristic. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>NimBLECharacteristic* A pointer to the output report characteristic. Store this value to avoid computational overhead. </dd>
+<dd>
+nullptr If the report is already created as an input or feature report.</dd></dl>
+<p>This will create the characteristic if not already created. </p>
 
 </div>
 </div>

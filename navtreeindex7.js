@@ -1,5 +1,8 @@
 var NAVTREEINDEX7 =
 {
+"structble__l2cap__event.html#ae1d5abf70346cab0de39cb30380605b0":[13,0,24,3],
+"structble__l2cap__event.html#afd77f8146239efaeda83ff0b10f279a7":[13,0,24,8],
+"structble__ll__conn__phy__data.html":[13,0,25],
 "structble__sm__dhkey__check.html":[13,0,26],
 "structble__sm__enc__info.html":[13,0,27],
 "structble__sm__id__addr__info.html":[13,0,28],
