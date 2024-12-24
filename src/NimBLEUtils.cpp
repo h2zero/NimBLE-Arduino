@@ -37,6 +37,9 @@
 # include <climits>
 
 # if defined INC_FREERTOS_H
+#  ifndef CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
+#   define CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT 31
+#  endif
 constexpr uint32_t TASK_BLOCK_BIT = (1 << CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT);
 # endif
 
