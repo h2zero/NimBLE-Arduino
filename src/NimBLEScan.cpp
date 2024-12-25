@@ -119,19 +119,19 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
             }
 
             if (!advertisedDevice->m_callbackSent) {
-                pScan->m_pScanCallbacks->onDiscovered(advertisedDevice);
                 advertisedDevice->m_callbackSent++;
+                pScan->m_pScanCallbacks->onDiscovered(advertisedDevice);
             }
 
             // If not active scanning or scan response is not available
             // or extended advertisement scanning, report the result to the callback now.
             if (pScan->m_scanParams.passive || !isLegacyAdv || !advertisedDevice->isScannable()) {
-                pScan->m_pScanCallbacks->onResult(advertisedDevice);
                 advertisedDevice->m_callbackSent++;
+                pScan->m_pScanCallbacks->onResult(advertisedDevice);
             } else if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                advertisedDevice->m_callbackSent++;
                 // got the scan response report the full data.
                 pScan->m_pScanCallbacks->onResult(advertisedDevice);
-                advertisedDevice->m_callbackSent++;
             }
 
             // If not storing results and we have invoked the callback, delete the device.
