@@ -138,7 +138,7 @@ class NimBLEDevice {
     static void          onReset(int reason);
     static void          onSync(void);
     static void          host_task(void* param);
-    static int           getPower();
+    static int           getPower(const esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
     static bool          setPower(int8_t dbm);
 
 # ifdef ESP_PLATFORM

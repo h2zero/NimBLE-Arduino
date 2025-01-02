@@ -105,12 +105,12 @@ bool NimBLEAdvertisementData::setFlags(uint8_t flag) {
  * @brief Adds Tx power level to the advertisement data.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::addTxPower() {
+bool NimBLEAdvertisementData::addTxPower(const esp_ble_power_type_t powerType) {
     uint8_t data[3];
     data[0] = BLE_HS_ADV_TX_PWR_LVL_LEN + 1;
     data[1] = BLE_HS_ADV_TYPE_TX_PWR_LVL;
 # ifndef CONFIG_IDF_TARGET_ESP32P4
-    data[2] = NimBLEDevice::getPower();
+    data[2] = NimBLEDevice::getPower(powerType);
 # else
     data[2] = 0;
 # endif

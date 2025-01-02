@@ -26,6 +26,14 @@
 # include <string>
 # include <vector>
 
+#if defined(CONFIG_BT_ENABLED)
+# ifdef ESP_PLATFORM
+#  ifndef CONFIG_IDF_TARGET_ESP32P4
+#   include <esp_bt.h>
+#  endif
+# endif
+#endif
+
 class NimBLEUUID;
 /**
  * @brief Advertisement data set by the programmer to be published by the BLE server.
@@ -39,7 +47,7 @@ class NimBLEAdvertisementData {
     bool addData(const std::vector<uint8_t>& data);
     bool setAppearance(uint16_t appearance);
     bool setFlags(uint8_t);
-    bool addTxPower();
+    bool addTxPower(const esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
     bool setPreferredParams(uint16_t minInterval, uint16_t maxInterval);
     bool addServiceUUID(const NimBLEUUID& serviceUUID);
     bool addServiceUUID(const char* serviceUUID);
