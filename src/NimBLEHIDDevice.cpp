@@ -150,21 +150,21 @@ void NimBLEHIDDevice::setBatteryLevel(uint8_t level, bool notify) {
 } // setBatteryLevel
 
 /**
- * @brief Locate the characteristic for a report ID.
+ * @brief Locate the characteristic for a report ID and a report type.
  *
  * @param [in] reportId Report identifier to locate.
- * @param [out] reportType Type of report (input/output/feature). Not meaningful if the return value is nullptr.
+ * @param [in] reportType Type of report (input/output/feature).
  * @return NimBLECharacteristic* The characteristic.
  * @return nullptr If the characteristic does not exist.
  */
-NimBLECharacteristic* NimBLEHIDDevice::locateReportCharacteristicById(uint8_t reportId, uint8_t& reportType) {
+NimBLECharacteristic* NimBLEHIDDevice::locateReportCharacteristicByIdAndType(uint8_t reportId, uint8_t reportType) {
     NimBLECharacteristic* candidate = m_hidSvc->getCharacteristic(inputReportChrUuid, 0);
     for (uint16_t i = 1; (candidate != nullptr) && (i != 0); i++) {
         NimBLEDescriptor* dsc           = candidate->getDescriptorByUUID(featureReportDscUuid);
         NimBLEAttValue    desc1_val_att = dsc->getValue();
         const uint8_t*    desc1_val     = desc1_val_att.data();
         reportType                      = desc1_val[1];
-        if (desc1_val[0] == reportId) return candidate;
+        if ((desc1_val[0] == reportId) && (desc1_val[1] == reportType)) return candidate;
         candidate = m_hidSvc->getCharacteristic(inputReportChrUuid, i);
     }
     return nullptr;
@@ -175,15 +175,10 @@ NimBLECharacteristic* NimBLEHIDDevice::locateReportCharacteristicById(uint8_t re
  * @param [in] reportId Input report ID, the same as in report map for input object related to the characteristic.
  * @return NimBLECharacteristic* A pointer to the input report characteristic.
  *                               Store this value to avoid computational overhead.
- * @return nullptr If the report is already created as an output or feature report.
  * @details This will create the characteristic if not already created.
  */
 NimBLECharacteristic* NimBLEHIDDevice::getInputReport(uint8_t reportId) {
-    uint8_t               reportType;
-    NimBLECharacteristic* inputReportChr = locateReportCharacteristicById(reportId, reportType);
-    if ((inputReportChr != nullptr) && (reportType != 0x01))
-        // ERROR: this reportId exists, but it is not an input report
-        return nullptr;
+    NimBLECharacteristic* inputReportChr = locateReportCharacteristicByIdAndType(reportId, 0x01);
     if (inputReportChr == nullptr) {
         inputReportChr =
             m_hidSvc->createCharacteristic(inputReportChrUuid,
@@ -203,15 +198,10 @@ NimBLECharacteristic* NimBLEHIDDevice::getInputReport(uint8_t reportId) {
  * @param [in] reportId Output report ID, the same as in report map for output object related to the characteristic.
  * @return NimBLECharacteristic* A pointer to the output report characteristic.
  *                               Store this value to avoid computational overhead.
- * @return nullptr If the report is already created as an input or feature report.
  * @details This will create the characteristic if not already created.
  */
 NimBLECharacteristic* NimBLEHIDDevice::getOutputReport(uint8_t reportId) {
-    uint8_t               reportType;
-    NimBLECharacteristic* outputReportChr = locateReportCharacteristicById(reportId, reportType);
-    if ((outputReportChr != nullptr) && (reportType != 0x02))
-        // ERROR: this reportId exists, but it is not an output report
-        return nullptr;
+    NimBLECharacteristic* outputReportChr = locateReportCharacteristicByIdAndType(reportId, 0x02);
     if (outputReportChr == nullptr) {
         outputReportChr =
             m_hidSvc->createCharacteristic(inputReportChrUuid,
@@ -232,15 +222,10 @@ NimBLECharacteristic* NimBLEHIDDevice::getOutputReport(uint8_t reportId) {
  * @param [in] reportId Feature report ID, the same as in report map for feature object related to the characteristic.
  * @return NimBLECharacteristic* A pointer to feature report characteristic.
  *                               Store this value to avoid computational overhead.
- * @return nullptr If the report is already created as an input or output report.
  * @details This will create the characteristic if not already created.
  */
 NimBLECharacteristic* NimBLEHIDDevice::getFeatureReport(uint8_t reportId) {
-    uint8_t               reportType;
-    NimBLECharacteristic* featureReportChr = locateReportCharacteristicById(reportId, reportType);
-    if ((featureReportChr != nullptr) && (reportType != 0x03))
-        // ERROR: this reportId exists, but it is not a feature report
-        return nullptr;
+    NimBLECharacteristic* featureReportChr = locateReportCharacteristicByIdAndType(reportId, 0x03);
     if (featureReportChr == nullptr) {
         featureReportChr = m_hidSvc->createCharacteristic(
             inputReportChrUuid,
