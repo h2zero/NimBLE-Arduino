@@ -25,6 +25,9 @@
 # endif
 
 # include "NimBLEAttValue.h"
+# include "NimBLELog.h"
+
+static const char* LOG_TAG = "NimBLEAttValue";
 
 // Default constructor implementation.
 NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
@@ -38,13 +41,17 @@ NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
 # endif
 {
     NIMBLE_CPP_DEBUG_ASSERT(m_attr_value);
+    if (m_attr_value == nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to calloc ctx");
+    }
 }
 
 // Value constructor implementation.
 NimBLEAttValue::NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_len) : NimBLEAttValue(len, max_len) {
-    memcpy(m_attr_value, value, len);
-    m_attr_value[len] = '\0';
-    m_attr_len        = len;
+    if (m_attr_value != nullptr) {
+        memcpy(m_attr_value, value, len);
+        m_attr_len = len;
+    }
 }
 
 // Destructor implementation.
@@ -81,6 +88,10 @@ NimBLEAttValue& NimBLEAttValue::operator=(const NimBLEAttValue& source) {
 void NimBLEAttValue::deepCopy(const NimBLEAttValue& source) {
     uint8_t* res = static_cast<uint8_t*>(realloc(m_attr_value, source.m_capacity + 1));
     NIMBLE_CPP_DEBUG_ASSERT(res);
+    if (res == nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to realloc deepCopy");
+        return;
+    }
 
     ble_npl_hw_enter_critical();
     m_attr_value   = res;
@@ -106,7 +117,7 @@ NimBLEAttValue& NimBLEAttValue::append(const uint8_t* value, uint16_t len) {
     }
 
     if ((m_attr_len + len) > m_attr_max_len) {
-        NIMBLE_LOGE("NimBLEAttValue", "val > max, len=%u, max=%u", len, m_attr_max_len);
+        NIMBLE_LOGE(LOG_TAG, "val > max, len=%u, max=%u", len, m_attr_max_len);
         return *this;
     }
 
@@ -117,6 +128,10 @@ NimBLEAttValue& NimBLEAttValue::append(const uint8_t* value, uint16_t len) {
         m_capacity = new_len;
     }
     NIMBLE_CPP_DEBUG_ASSERT(res);
+    if (res == nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to realloc append");
+        return *this;
+    }
 
 # if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
     time_t t = time(nullptr);
@@ -133,6 +148,15 @@ NimBLEAttValue& NimBLEAttValue::append(const uint8_t* value, uint16_t len) {
     ble_npl_hw_exit_critical(0);
 
     return *this;
+}
+
+uint8_t NimBLEAttValue::operator[](int pos) const {
+    NIMBLE_CPP_DEBUG_ASSERT(pos < m_attr_len);
+    if (pos >= m_attr_len) {
+        NIMBLE_LOGE(LOG_TAG, "pos >= len, pos=%u, len=%u", pos, m_attr_len);
+        return 0;
+    }
+    return m_attr_value[pos];
 }
 
 #endif // CONFIG_BT_ENABLED

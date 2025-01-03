@@ -24,7 +24,6 @@
 #  include <Arduino.h>
 # endif
 
-# include "NimBLELog.h"
 # include <string>
 # include <vector>
 # include <ctime>
@@ -323,10 +322,7 @@ class NimBLEAttValue {
     /*********************** Operators ************************/
 
     /** @brief Subscript operator */
-    uint8_t operator[](int pos) const {
-        NIMBLE_CPP_DEBUG_ASSERT(pos < m_attr_len);
-        return m_attr_value[pos];
-    }
+    uint8_t operator[](int pos) const;
 
     /** @brief Operator; Get the value as a std::vector<uint8_t>. */
     operator std::vector<uint8_t>() const { return std::vector<uint8_t>(m_attr_value, m_attr_value + m_attr_len); }

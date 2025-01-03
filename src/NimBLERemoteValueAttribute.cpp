@@ -21,6 +21,7 @@
 # include "NimBLERemoteValueAttribute.h"
 # include "NimBLEClient.h"
 # include "NimBLEUtils.h"
+# include "NimBLELog.h"
 
 # include <climits>
 
