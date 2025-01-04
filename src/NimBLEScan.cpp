@@ -478,12 +478,11 @@ void NimBLEScan::clearResults() {
  * @brief Dump the scan results to the log.
  */
 void NimBLEScanResults::dump() const {
+#if CONFIG_NIMBLE_CPP_LOG_LEVEL >=3
     for (const auto& dev : m_deviceVec) {
         NIMBLE_LOGI(LOG_TAG, "- %s", dev->toString().c_str());
-#if CONFIG_NIMBLE_CPP_LOG_LEVEL < 3
-        (void)dev;
+    }
 #endif
-     }
 } // dump
 
 /**
