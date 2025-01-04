@@ -101,6 +101,13 @@ class NimBLEAddress;
 #  define NIMBLE_MAX_CONNECTIONS CONFIG_NIMBLE_MAX_CONNECTIONS
 # endif
 
+enum class NimBLETxPowerType {
+    All  = 0,
+    Advertise  = 1,
+    Scan = 2,
+    Connection = 3
+};
+
 typedef int (*gap_event_handler)(ble_gap_event* event, void* arg);
 
 /**
@@ -138,8 +145,8 @@ class NimBLEDevice {
     static void          onReset(int reason);
     static void          onSync(void);
     static void          host_task(void* param);
-    static int           getPower();
-    static bool          setPower(int8_t dbm);
+    static int           getPower(NimBLETxPowerType type = NimBLETxPowerType::All);
+    static bool          setPower(int8_t dbm, NimBLETxPowerType type = NimBLETxPowerType::All);
 
 # ifdef ESP_PLATFORM
 #  ifndef CONFIG_IDF_TARGET_ESP32P4

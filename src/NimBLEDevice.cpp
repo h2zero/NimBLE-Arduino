@@ -464,7 +464,7 @@ bool NimBLEDevice::setPowerLevel(esp_power_level_t powerLevel, esp_ble_power_typ
  * @param [in] dbm The power level to set in dBm.
  * @return True if the power level was set successfully.
  */
-bool NimBLEDevice::setPower(int8_t dbm) {
+bool NimBLEDevice::setPower(int8_t dbm, NimBLETxPowerType type) {
 # ifdef ESP_PLATFORM
 #  ifdef CONFIG_IDF_TARGET_ESP32P4
     return false; // CONFIG_IDF_TARGET_ESP32P4 does not support esp_ble_tx_power_set
@@ -472,9 +472,25 @@ bool NimBLEDevice::setPower(int8_t dbm) {
     if (dbm % 3 == 2) {
         dbm++; // round up to the next multiple of 3 to be able to target 20dbm
     }
-    return setPowerLevel(static_cast<esp_power_level_t>(dbm / 3 + ESP_PWR_LVL_N0));
+
+    bool success = false;
+    esp_power_level_t espPwr = static_cast<esp_power_level_t>(dbm / 3 + ESP_PWR_LVL_N0);
+    if (type == NimBLETxPowerType::All) {
+        success  = setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_ADV);
+        success &= setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_SCAN);
+        success &= setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_DEFAULT);
+    } else if (type == NimBLETxPowerType::Advertise) {
+        success = setPowerLevel(espPwr,  ESP_BLE_PWR_TYPE_ADV);
+    } else if (type == NimBLETxPowerType::Scan) {
+        success = setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_SCAN);
+    } else if (type == NimBLETxPowerType::Connection) {
+        success = setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_DEFAULT);
+    }
+
+    return success;
 #  endif
 # else
+    (void)type; // unused
     NIMBLE_LOGD(LOG_TAG, ">> setPower: %d", dbm);
     ble_hci_vs_set_tx_pwr_cp cmd{dbm};
     ble_hci_vs_set_tx_pwr_rp rsp{0};
@@ -493,12 +509,16 @@ bool NimBLEDevice::setPower(int8_t dbm) {
  * @brief Get the transmission power.
  * @return The power level currently used in dbm or 0xFF on error.
  */
-int NimBLEDevice::getPower() {
+int NimBLEDevice::getPower(NimBLETxPowerType type) {
 # ifdef ESP_PLATFORM
 #  ifdef CONFIG_IDF_TARGET_ESP32P4
     return 0xFF; // CONFIG_IDF_TARGET_ESP32P4 does not support esp_ble_tx_power_get
 #  else
-    int pwr = getPowerLevel();
+    esp_ble_power_type_t espPwr = type == NimBLETxPowerType::Advertise ? ESP_BLE_PWR_TYPE_ADV
+                                  : type == NimBLETxPowerType::Scan    ? ESP_BLE_PWR_TYPE_SCAN
+                                                                       : ESP_BLE_PWR_TYPE_DEFAULT;
+
+    int pwr = getPowerLevel(espPwr);
     if (pwr < 0) {
         NIMBLE_LOGE(LOG_TAG, "esp_ble_tx_power_get failed rc=%d", pwr);
         return 0xFF;
@@ -515,6 +535,7 @@ int NimBLEDevice::getPower() {
     return 0;
 #  endif
 # else
+    (void)type; // unused
     return ble_phy_txpwr_get();
 # endif
 } // getPower
