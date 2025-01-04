@@ -163,7 +163,6 @@ NimBLECharacteristic* NimBLEHIDDevice::locateReportCharacteristicByIdAndType(uin
         NimBLEDescriptor* dsc           = candidate->getDescriptorByUUID(featureReportDscUuid);
         NimBLEAttValue    desc1_val_att = dsc->getValue();
         const uint8_t*    desc1_val     = desc1_val_att.data();
-        reportType                      = desc1_val[1];
         if ((desc1_val[0] == reportId) && (desc1_val[1] == reportType)) return candidate;
         candidate = m_hidSvc->getCharacteristic(inputReportChrUuid, i);
     }
