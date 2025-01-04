@@ -408,7 +408,7 @@ bool NimBLEAdvertising::refreshAdvertisingData() {
  * @return True if the service was added successfully.
  */
 bool NimBLEAdvertising::addServiceUUID(const NimBLEUUID& serviceUUID) {
-    if (!m_advData.addServiceUUID(serviceUUID) && m_scanResp) {
+    if (!m_advData.addServiceUUID(serviceUUID)) {
         if (!m_scanData.addServiceUUID(serviceUUID)) {
             return false;
         }
@@ -466,7 +466,7 @@ bool NimBLEAdvertising::removeServices() {
  * @return True if the appearance was set successfully.
  */
 bool NimBLEAdvertising::setAppearance(uint16_t appearance) {
-    if (!m_advData.setAppearance(appearance) && m_scanResp) {
+    if (!m_advData.setAppearance(appearance)) {
         if (!m_scanData.setAppearance(appearance)) {
             return false;
         }
@@ -484,7 +484,7 @@ bool NimBLEAdvertising::setAppearance(uint16_t appearance) {
  * @details  Range = 0x0006(7.5ms) to 0x0C80(4000ms), values not within the range will be limited to this range.
  */
 bool NimBLEAdvertising::setPreferredParams(uint16_t minInterval, uint16_t maxInterval) {
-    if (!m_advData.setPreferredParams(minInterval, maxInterval) && m_scanResp) {
+    if (!m_advData.setPreferredParams(minInterval, maxInterval)) {
         if (!m_scanData.setPreferredParams(minInterval, maxInterval)) {
             return false;
         }
@@ -499,7 +499,7 @@ bool NimBLEAdvertising::setPreferredParams(uint16_t minInterval, uint16_t maxInt
  * @return True if the transmission power level was added successfully.
  */
 bool NimBLEAdvertising::addTxPower() {
-    if (!m_advData.addTxPower() && m_scanResp) {
+    if (!m_advData.addTxPower()) {
         if (!m_scanData.addTxPower()) {
             return false;
         }
@@ -537,7 +537,7 @@ bool NimBLEAdvertising::setName(const std::string& name) {
  * @return True if the manufacturer data was set successfully.
  */
 bool NimBLEAdvertising::setManufacturerData(const uint8_t* data, size_t length) {
-    if (!m_advData.setManufacturerData(data, length) && m_scanResp) {
+    if (!m_advData.setManufacturerData(data, length)) {
         if (!m_scanData.setManufacturerData(data, length)) {
             return false;
         }
@@ -571,7 +571,7 @@ bool NimBLEAdvertising::setManufacturerData(const std::vector<uint8_t>& data) {
  * @return True if the URI was set successfully.
  */
 bool NimBLEAdvertising::setURI(const std::string& uri) {
-    if (!m_advData.setURI(uri) && m_scanResp) {
+    if (!m_advData.setURI(uri)) {
         if (!m_scanData.setURI(uri)) {
             return false;
         }
@@ -590,7 +590,7 @@ bool NimBLEAdvertising::setURI(const std::string& uri) {
  * @note If data length is 0 the service data will not be advertised.
  */
 bool NimBLEAdvertising::setServiceData(const NimBLEUUID& uuid, const uint8_t* data, size_t length) {
-    if (!m_advData.setServiceData(uuid, data, length) && m_scanResp) {
+    if (!m_advData.setServiceData(uuid, data, length)) {
         if (!m_scanData.setServiceData(uuid, data, length)) {
             return false;
         }
