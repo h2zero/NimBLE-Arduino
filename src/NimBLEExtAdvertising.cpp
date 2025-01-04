@@ -359,7 +359,7 @@ NimBLEExtAdvertisement::NimBLEExtAdvertisement(uint8_t priPhy, uint8_t secPhy) {
     m_params.own_addr_type = NimBLEDevice::m_ownAddrType;
     m_params.primary_phy   = priPhy;
     m_params.secondary_phy = secPhy;
-    m_params.tx_power      = 127;
+    m_params.tx_power      = NimBLEDevice::getPower(NimBLETxPowerType::Advertise);
 } // NimBLEExtAdvertisement
 
 /**
@@ -1014,8 +1014,22 @@ bool NimBLEExtAdvertisement::setPreferredParams(uint16_t minInterval, uint16_t m
 /**
  * @brief Adds Tx power level to the advertisement data.
  */
-void NimBLEExtAdvertisement::addTxPower() {
+bool NimBLEExtAdvertisement::addTxPower() {
+    if (m_params.legacy_pdu) {
+        m_params.include_tx_power = 0;
+        uint8_t data[3];
+        data[0] = BLE_HS_ADV_TX_PWR_LVL_LEN + 1;
+        data[1] = BLE_HS_ADV_TYPE_TX_PWR_LVL;
+# ifndef CONFIG_IDF_TARGET_ESP32P4
+        data[2] = NimBLEDevice::getPower(NimBLETxPowerType::Advertise);
+# else
+        data[2] = 0;
+# endif
+        return addData(data, 3);
+    }
+
     m_params.include_tx_power = 1;
+    return true;
 } // addTxPower
 
 /**

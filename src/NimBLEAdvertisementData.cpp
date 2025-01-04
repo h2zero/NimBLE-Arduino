@@ -110,7 +110,7 @@ bool NimBLEAdvertisementData::addTxPower() {
     data[0] = BLE_HS_ADV_TX_PWR_LVL_LEN + 1;
     data[1] = BLE_HS_ADV_TYPE_TX_PWR_LVL;
 # ifndef CONFIG_IDF_TARGET_ESP32P4
-    data[2] = NimBLEDevice::getPower();
+    data[2] = NimBLEDevice::getPower(NimBLETxPowerType::Advertise);
 # else
     data[2] = 0;
 # endif
