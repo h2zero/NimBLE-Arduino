@@ -701,6 +701,7 @@ bool NimBLEExtAdvertisement::addServiceUUID(const NimBLEUUID& serviceUUID) {
             type = BLE_HS_ADV_TYPE_COMP_UUIDS128;
             break;
         default:
+            NIMBLE_LOGE(LOG_TAG, "Cannot add UUID, invalid size!");
             return false;
     }
 
@@ -711,10 +712,11 @@ bool NimBLEExtAdvertisement::addServiceUUID(const NimBLEUUID& serviceUUID) {
     }
 
     if (length + getDataSize() > CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot add UUID, data length exceeded!");
         return false;
     }
 
-    uint8_t        data[31];
+    uint8_t        data[BLE_HS_ADV_MAX_SZ];
     const uint8_t* uuid = serviceUUID.getValue();
     if (dataLoc == -1) {
         data[0] = 1 + bytes;
@@ -756,6 +758,7 @@ bool NimBLEExtAdvertisement::removeServiceUUID(const NimBLEUUID& serviceUUID) {
             type = BLE_HS_ADV_TYPE_COMP_UUIDS128;
             break;
         default:
+            NIMBLE_LOGE(LOG_TAG, "Cannot remove UUID, invalid size!");
             return false;
     }
 
@@ -878,6 +881,7 @@ bool NimBLEExtAdvertisement::setServices(bool complete, uint8_t size, const std:
             header[1] = complete ? BLE_HS_ADV_TYPE_COMP_UUIDS128 : BLE_HS_ADV_TYPE_INCOMP_UUIDS128;
             break;
         default:
+            NIMBLE_LOGE(LOG_TAG, "Cannot set services, invalid size!");
             return false;
     }
 
@@ -932,6 +936,7 @@ bool NimBLEExtAdvertisement::setServiceData(const NimBLEUUID& uuid, const uint8_
             type = BLE_HS_ADV_TYPE_SVC_DATA_UUID128;
             break;
         default:
+            NIMBLE_LOGE(LOG_TAG, "Cannot set service data, invalid size!");
             return false;
     }
 
