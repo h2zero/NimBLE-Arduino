@@ -39,7 +39,7 @@ static const char* LOG_TAG = "NimBLEAdvertisementData";
  * @param [in] length The size of data to be added to the payload.
  */
 bool NimBLEAdvertisementData::addData(const uint8_t* data, size_t length) {
-    if ((m_payload.size() + length) > BLE_HS_ADV_MAX_SZ) {
+    if (m_payload.size() + length > BLE_HS_ADV_MAX_SZ) {
         NIMBLE_LOGE(LOG_TAG, "Data length exceeded");
         return false;
     }
@@ -159,6 +159,7 @@ bool NimBLEAdvertisementData::addServiceUUID(const NimBLEUUID& serviceUUID) {
             type = BLE_HS_ADV_TYPE_COMP_UUIDS128;
             break;
         default:
+            NIMBLE_LOGE(LOG_TAG, "Cannot add UUID, invalid size!");
             return false;
     }
 
@@ -169,10 +170,11 @@ bool NimBLEAdvertisementData::addServiceUUID(const NimBLEUUID& serviceUUID) {
     }
 
     if (length + getPayload().size() > BLE_HS_ADV_MAX_SZ) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot add UUID, data length exceeded!");
         return false;
     }
 
-    uint8_t        data[31];
+    uint8_t        data[BLE_HS_ADV_MAX_SZ];
     const uint8_t* uuid = serviceUUID.getValue();
     if (dataLoc == -1) {
         data[0] = 1 + bytes;
@@ -214,6 +216,7 @@ bool NimBLEAdvertisementData::removeServiceUUID(const NimBLEUUID& serviceUUID) {
             type = BLE_HS_ADV_TYPE_COMP_UUIDS128;
             break;
         default:
+            NIMBLE_LOGE(LOG_TAG, "Cannot remove UUID, invalid size!");
             return false;
     }
 
@@ -266,12 +269,12 @@ bool NimBLEAdvertisementData::removeServices() {
  * @return True if successful.
  */
 bool NimBLEAdvertisementData::setManufacturerData(const uint8_t* data, size_t length) {
-    if (length > 29) {
+    if (length > BLE_HS_ADV_MAX_FIELD_SZ) {
         NIMBLE_LOGE(LOG_TAG, "MFG data too long");
         return false;
     }
 
-    uint8_t mdata[31];
+    uint8_t mdata[BLE_HS_ADV_MAX_SZ];
     mdata[0] = length + 1;
     mdata[1] = BLE_HS_ADV_TYPE_MFG_DATA;
     memcpy(&mdata[2], data, length);
@@ -302,12 +305,12 @@ bool NimBLEAdvertisementData::setManufacturerData(const std::vector<uint8_t>& da
  * @return True if successful.
  */
 bool NimBLEAdvertisementData::setURI(const std::string& uri) {
-    if (uri.length() > 29) {
+    if (uri.length() > BLE_HS_ADV_MAX_FIELD_SZ) {
         NIMBLE_LOGE(LOG_TAG, "URI too long");
         return false;
     }
 
-    uint8_t data[31];
+    uint8_t data[BLE_HS_ADV_MAX_SZ];
     uint8_t length = 2 + uri.length();
     data[0]        = length - 1;
     data[1]        = BLE_HS_ADV_TYPE_URI;
@@ -324,16 +327,16 @@ bool NimBLEAdvertisementData::setURI(const std::string& uri) {
  * @return True if successful.
  */
 bool NimBLEAdvertisementData::setName(const std::string& name, bool isComplete) {
-    if (name.length() > 29) {
+    if (name.length() > BLE_HS_ADV_MAX_FIELD_SZ) {
         NIMBLE_LOGE(LOG_TAG, "Name too long - truncating");
         isComplete = false;
     }
 
-    uint8_t data[31];
-    uint8_t length = 2 + std::min<uint8_t>(name.length(), 29);
+    uint8_t data[BLE_HS_ADV_MAX_SZ];
+    uint8_t length = 2 + std::min<uint8_t>(name.length(), BLE_HS_ADV_MAX_FIELD_SZ);
     data[0]        = length - 1;
     data[1]        = isComplete ? BLE_HS_ADV_TYPE_COMP_NAME : BLE_HS_ADV_TYPE_INCOMP_NAME;
-    memcpy(&data[2], name.c_str(), std::min<uint8_t>(name.length(), 29));
+    memcpy(&data[2], name.c_str(), std::min<uint8_t>(name.length(), BLE_HS_ADV_MAX_FIELD_SZ));
     return addData(data, length);
 } // setName
 
@@ -411,14 +414,14 @@ bool NimBLEAdvertisementData::setPartialServices32(const std::vector<NimBLEUUID>
 bool NimBLEAdvertisementData::setServices(bool complete, uint8_t size, const std::vector<NimBLEUUID>& uuids) {
     uint8_t bytes  = size / 8;
     uint8_t length = 2; // start with 2 for length + type bytes
-    uint8_t data[31];
+    uint8_t data[BLE_HS_ADV_MAX_SZ];
 
     for (const auto& uuid : uuids) {
         if (uuid.bitSize() != size) {
             NIMBLE_LOGE(LOG_TAG, "Service UUID(%d) invalid", size);
             continue;
         } else {
-            if (length + bytes >= 31) {
+            if (length + bytes >= BLE_HS_ADV_MAX_SZ) {
                 NIMBLE_LOGW(LOG_TAG, "Too many services - truncating");
                 complete = false;
                 break;
@@ -441,6 +444,7 @@ bool NimBLEAdvertisementData::setServices(bool complete, uint8_t size, const std
             data[1] = (complete ? BLE_HS_ADV_TYPE_COMP_UUIDS128 : BLE_HS_ADV_TYPE_INCOMP_UUIDS128);
             break;
         default:
+            NIMBLE_LOGE(LOG_TAG, "Cannot set services, invalid size!");
             return false;
     }
 
@@ -458,7 +462,7 @@ bool NimBLEAdvertisementData::setServices(bool complete, uint8_t size, const std
 bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, const uint8_t* data, size_t length) {
     uint8_t uuidBytes = uuid.bitSize() / 8;
     uint8_t sDataLen  = 2 + uuidBytes + length;
-    if (sDataLen > 31) {
+    if (sDataLen > BLE_HS_ADV_MAX_SZ) {
         NIMBLE_LOGE(LOG_TAG, "Service Data too long");
         return false;
     }
@@ -475,6 +479,7 @@ bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, const uint8
             type = BLE_HS_ADV_TYPE_SVC_DATA_UUID128;
             break;
         default:
+            NIMBLE_LOGE(LOG_TAG, "Cannot set service data, invalid size!");
             return false;
     }
 
@@ -483,7 +488,7 @@ bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, const uint8
         return true;
     }
 
-    uint8_t sData[31];
+    uint8_t sData[BLE_HS_ADV_MAX_SZ];
     sData[0] = uuidBytes + length + 1;
     sData[1] = type;
     memcpy(&sData[2], uuid.getValue(), uuidBytes);
