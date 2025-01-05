@@ -611,8 +611,9 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
     NIMBLE_LOGD(LOG_TAG,
                 "Gatt %s event",
                 (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR || ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC) ? "Read" : "Write");
-    auto           pAtt = static_cast<NimBLELocalValueAttribute*>(arg);
-    auto           val  = pAtt->getAttVal();
+    auto                  pAtt = static_cast<NimBLELocalValueAttribute*>(arg);
+    const NimBLEAttValue& val  = pAtt->getAttVal();
+
     NimBLEConnInfo peerInfo{};
     ble_gap_conn_find(connHandle, &peerInfo.m_desc);
 
@@ -623,7 +624,7 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
             if (connHandle != BLE_HS_CONN_HANDLE_NONE) {
                 // If the packet header is only 8 bytes then this is a follow up of a long read
                 // so we don't want to call the onRead() callback again.
-                if (ctxt->om->om_pkthdr_len > 8 || pAtt->getAttVal().size() <= (ble_att_mtu(connHandle) - 3)) {
+                if (ctxt->om->om_pkthdr_len > 8 || val.size() <= (ble_att_mtu(connHandle) - 3)) {
                     pAtt->readEvent(peerInfo);
                 }
             }
