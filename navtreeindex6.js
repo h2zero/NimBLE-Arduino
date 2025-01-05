@@ -1,5 +1,9 @@
 var NAVTREEINDEX6 =
 {
+"md__usage__tips.html#only-retrieve-the-services-and-characteristics-needed":[7,2],
+"md__usage__tips.html#put-ble-functions-in-a-task-running-on-the-nimble-stack-core":[7,0],
+"md__usage__tips.html#there-will-be-bugs---please-report-them":[7,4],
+"mem_8h_source.html":[14,0,0,0,4,0,0,4,0],
 "mesh_8h.html":[14,0,0,0,3,2,1,0,0,11],
 "mesh_8h_source.html":[14,0,0,0,3,2,1,0,0,11],
 "mesh__priv_8h_source.html":[14,0,0,0,3,2,1,1,13],
@@ -245,9 +249,5 @@ var NAVTREEINDEX6 =
 "structble__l2cap__event.html#a1d302d954ebdd9da261f9f5330c12a4a":[13,0,24,5],
 "structble__l2cap__event.html#a2bfa004b88b3ac6ad9db2e8379716546":[13,0,24,10],
 "structble__l2cap__event.html#a319b17c1240ae0d0dfb08841e0f2ee6b":[13,0,24,1],
-"structble__l2cap__event.html#a6f594b943e9f2615160e3259e4346077":[13,0,24,2],
-"structble__l2cap__event.html#a9460b4447a7c3391d6b72b3f0c286fe8":[13,0,24,11],
-"structble__l2cap__event.html#aa9af4532e9b24990428d3448bb63762a":[13,0,24,4],
-"structble__l2cap__event.html#ac3efb9cd77873d102a61a4f3e6987da1":[13,0,24,0],
-"structble__l2cap__event.html#ac64944a52564f0eb46a78a2852ac9c2a":[13,0,24,6]
+"structble__l2cap__event.html#a6f594b943e9f2615160e3259e4346077":[13,0,24,2]
 };

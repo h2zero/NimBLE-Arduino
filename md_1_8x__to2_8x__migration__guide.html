@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.2</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.3</span>
    </div>
   </td>
  </tr>
@@ -170,7 +170,8 @@ Server</h1>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_server.html#ac79e828bcc3c45ae817bf51be914bfc0" title="Disconnect the specified client with optional reason.">NimBLEServer::disconnect</a></code> now returns <code>bool</code>, true = success, instead of <code>int</code> to be consistent with the rest of the library.</li>
 <li><code>NimBLEServerCallbacks::onMTUChanged</code> renamed to <code><a class="el" href="class_nim_b_l_e_server_callbacks.html#ab702f73e739b4df72e191f47056c01ff" title="Called when the connection MTU changes.">NimBLEServerCallbacks::onMTUChange</a></code> to be consistent with the client callback.</li>
-<li><code>NimBLEServer::getPeerIDInfo</code> renamed to <code><a class="el" href="class_nim_b_l_e_server.html#a08916d16ea00b4718bd6241bd407829f" title="Get the connection information of a connected peer by connection handle.">NimBLEServer::getPeerInfoByHandle</a></code> to better describe it's use. <br  />
+<li><code>NimBLEServer::getPeerIDInfo</code> renamed to <code><a class="el" href="class_nim_b_l_e_server.html#a08916d16ea00b4718bd6241bd407829f" title="Get the connection information of a connected peer by connection handle.">NimBLEServer::getPeerInfoByHandle</a></code> to better describe it's use.</li>
+<li>Advertising is no longer automatically restarted when a peer disconnects, to re-enable this feature either call <code>NimBLEServer::advertiseOnDisconnect(true);</code> after creating the server or manually restart advertising in the <code>onDisconnect</code> callback. <br  />
  <br  />
 </li>
 </ul>
