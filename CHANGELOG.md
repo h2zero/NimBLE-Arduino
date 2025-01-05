@@ -1,6 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.3] 2025-01-05
+
+## Fixed
+- Unused variable warning when log level is below info.
+- Race condition in `NimBLEScan` that can cause a crash due to heap corruption if `NimBLEScan::stop` is called from the `onResult` callback.
+- Advertisement data not set if scan response is enabled after the data is set.
+- `NimBLECharacteristic`/`NimBLEDescriptor` not able to update their values in the `onRead` callback.
+- Too short of a timeout being requested in NimBLE_Server example leading to frequent disconnects.
+
+## Changed
+- `NimBLEHIDDevice` now allows for the same report ID in multiple input/output/feature reports.
+
+## Added
+- Error logs in the case that NIMBLE_CPP_DEBUG_ASSERT is not defined.
+- Error logs when setting advertisement data fails.
+- Missing documentation in the migration guide about enabling automatic advertising on disconnect, which was disabled by default in 2.x.
+
 ## [2.1.2] 2024-12-21
 
 ## Fixed
