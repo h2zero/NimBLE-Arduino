@@ -72,14 +72,8 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
     const auto        pChr       = (NimBLERemoteCharacteristic*)pTaskData->m_pInstance;
     const NimBLEUUID* uuidFilter = filter->uuid;
 
-    if (error->status == BLE_HS_ENOTCONN) {
-        NIMBLE_LOGE(LOG_TAG, "<< Descriptor Discovery; Not connected");
-        NimBLEUtils::taskRelease(*pTaskData, error->status);
-        return error->status;
-    }
-
     if (pChr->getHandle() != chr_val_handle) {
-        rc = BLE_HS_EDONE; // descriptor not for this characteristic
+        return 0; // Descriptor not for this characteristic
     }
 
     if (rc == 0) {
@@ -92,6 +86,7 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
         }
 
         pChr->m_vDescriptors.push_back(new NimBLERemoteDescriptor(pChr, dsc));
+        return 0;
     }
 
     NimBLEUtils::taskRelease(*pTaskData, rc);

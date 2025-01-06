@@ -147,7 +147,10 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t              conn_handle,
                                               const ble_gatt_error* error,
                                               const ble_gatt_chr*   chr,
                                               void*                 arg) {
-    NIMBLE_LOGD(LOG_TAG, "Characteristic Discovery >>");
+    NIMBLE_LOGD(LOG_TAG,
+                "Characteristic Discovery >> status: %d handle: %d",
+                error->status,
+                (error->status == 0) ? chr->def_handle : -1);
     auto       pTaskData = (NimBLETaskData*)arg;
     const auto pSvc      = (NimBLERemoteService*)pTaskData->m_pInstance;
 
