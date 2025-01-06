@@ -23,6 +23,18 @@
 
 # include <algorithm>
 
+# ifdef CONFIG_NIMBLE_CPP_ADDR_FMT_EXCLUDE_DELIMITER
+#  define NIMBLE_CPP_ADDR_DELIMITER ":"
+# else
+#  define NIMBLE_CPP_ADDR_DELIMITER ""
+# endif
+
+# ifdef CONFIG_NIMBLE_CPP_ADDR_FMT_UPPERCASE
+#  define NIMBLE_CPP_ADDR_FMT "%02X%s%02X%s%02X%s%02X%s%02X%s%02X"
+# else
+#  define NIMBLE_CPP_ADDR_FMT "%02x%s%02x%s%02x%s%02x%s%02x%s%02x"
+# endif
+
 static const char* LOG_TAG = "NimBLEAddress";
 
 /*************************************************
@@ -211,12 +223,12 @@ NimBLEAddress::operator std::string() const {
     char buffer[18];
     snprintf(buffer,
              sizeof(buffer),
-             "%02x:%02x:%02x:%02x:%02x:%02x",
-             this->val[5],
-             this->val[4],
-             this->val[3],
-             this->val[2],
-             this->val[1],
+             NIMBLE_CPP_ADDR_FMT,
+             this->val[5], NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[4], NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[3], NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[2], NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[1], NIMBLE_CPP_ADDR_DELIMITER,
              this->val[0]);
     return std::string{buffer};
 } // operator std::string
