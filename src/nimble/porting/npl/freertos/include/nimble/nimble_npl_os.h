@@ -422,6 +422,9 @@ static inline bool ble_npl_hw_is_in_critical(void)
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
+#ifdef CONFIG_BT_NIMBLE_USE_ESP_TIMER
+#include "esp_timer.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
