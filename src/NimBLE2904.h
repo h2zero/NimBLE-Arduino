@@ -68,7 +68,7 @@ class NimBLE2904 : public NimBLEDescriptor {
     static const uint8_t FORMAT_OPAQUE    = 27;
     static const uint8_t FORMAT_MEDASN1   = 28;
 
-    void setDescription(uint16_t);
+    void setDescription(uint16_t description);
     void setExponent(int8_t exponent);
     void setFormat(uint8_t format);
     void setNamespace(uint8_t namespace_value);
