@@ -37,9 +37,7 @@ For this example we will keep it simple and use a 16 bit value: ABCD.
 ```
 #include "NimBLEDevice.h"
 
-// void setup() in Arduino
-void app_main(void)  
-{
+void setup() {
     NimBLEDevice::init("NimBLE");
     
     NimBLEServer *pServer = NimBLEDevice::createServer();
@@ -79,9 +77,7 @@ The function call will simply be `pService->createCharacteristic("1234");`
 ```
 #include "NimBLEDevice.h"
 
-// void setup() in Arduino
-void app_main(void)
-{
+void setup() {
     NimBLEDevice::init("NimBLE");
     
     NimBLEServer *pServer = NimBLEDevice::createServer();
@@ -99,12 +95,13 @@ There are many different types you can send as parameters for the value but for 
 `pCharacteristic->setValue("Hello BLE");`  
 
 Next we need to advertise for connections.  
-To do this we create an instance of `NimBLEAdvertising` add our service to it (optional) and start advertisng.  
+To do this we create an instance of `NimBLEAdvertising` add our service to it (optional) and start advertising.  
 
 **The code for this will be:**  
 ```
 NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising(); // create advertising instance
-pAdvertising->addServiceUUID("ABCD"); // tell advertising the UUID of our service
+pAdvertising->addServiceUUID("ABCD"); // advertise the UUID of our service
+pAdvertising->setName("NimBLE"); // advertise the device name
 pAdvertising->start(); // start advertising
 ```
 That's it, this will be enough to create a BLE server with a service and a characteristic and advertise for client connections.  
@@ -113,9 +110,7 @@ That's it, this will be enough to create a BLE server with a service and a chara
 ```
 #include "NimBLEDevice.h"
 
-// void setup() in Arduino
-void app_main(void)
-{
+void setup() {
     NimBLEDevice::init("NimBLE");
     
     NimBLEServer *pServer = NimBLEDevice::createServer();
@@ -126,7 +121,8 @@ void app_main(void)
     pCharacteristic->setValue("Hello BLE");
     
     NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID("ABCD"); 
+    pAdvertising->addServiceUUID("ABCD"); // advertise the UUID of our service
+    pAdvertising->setName("NimBLE"); // advertise the device name
     pAdvertising->start(); 
 }
 ```
@@ -144,7 +140,7 @@ After initializing the NimBLE stack we create a scan instance by calling `NimBLE
 
 Once we have created the scan we can start looking for advertising servers.  
 
-To do this we call `NimBLEScan::start(duration)`, the duration parameter is a uint32_t that specifies the number of milliseconds to scan for,  
+To do this we call `NimBLEScan::getResults(duration)`, the duration parameter is a uint32_t that specifies the number of milliseconds to scan for,  
 passing 0 will scan forever.  
 
 In this example we will scan for 10 seconds. This is a blocking function (a non blocking overload is also available).  
@@ -154,9 +150,7 @@ This call returns an instance of `NimBLEScanResults` when the scan completes whi
 ```
 #include "NimBLEDevice.h"
 
-// void setup() in Arduino
-void app_main(void)  
-{
+void setup() {
     NimBLEDevice::init("");
     
     NimBLEScan *pScan = NimBLEDevice::getScan();
@@ -168,7 +162,7 @@ void app_main(void)
 Now that we have scanned we need to check the results for any advertisers we are interested in connecting to.  
 
 To do this we iterate through the results and check if any of the devices found are advertising the service we want `ABCD`.  
-Each result in `NimBLEScanResults` is a `NimBLEAdvertisedDevice` instance that we can access data from.
+Each result in `NimBLEScanResults` is a `const NimBLEAdvertisedDevice*` that we can access data from.
 
 We will check each device found for the `ABCD` service by calling `NimBLEAdvertisedDevice::isAdvertisingService`.  
 This takes an instance of `NimBLEUUID` as a parameter so we will need to create one.  
@@ -177,11 +171,11 @@ This takes an instance of `NimBLEUUID` as a parameter so we will need to create 
 ```
 NimBLEUUID serviceUuid("ABCD");
 
-for(int i = 0; i < results.getCount(); i++) {
-    NimBLEAdvertisedDevice device = results.getDevice(i);
+for (int i = 0; i < results.getCount(); i++) {
+    const NimBLEAdvertisedDevice *device = results.getDevice(i);
     
-    if (device.isAdvertisingService(serviceUuid)) {
-    // create a client and connect
+    if (device->isAdvertisingService(serviceUuid)) {
+        // create a client and connect
     }
 }
 ```
@@ -198,16 +192,16 @@ This takes a pointer to the `NimBLEAdvertisedDevice` and returns `true` if succe
 ```
 NimBLEUUID serviceUuid("ABCD");
 
-for(int i = 0; i < results.getCount(); i++) {
-    NimBLEAdvertisedDevice device = results.getDevice(i);
+for (int i = 0; i < results.getCount(); i++) {
+    const NimBLEAdvertisedDevice *device = results.getDevice(i);
     
-    if (device.isAdvertisingService(serviceUuid)) {
+    if (device->isAdvertisingService(serviceUuid)) {
         NimBLEClient *pClient = NimBLEDevice::createClient();
         
-        if(pClient->connect(&device)) {
-        //success
+        if (pClient->connect(&device)) {
+            //success
         } else {
-        // failed to connect
+            // failed to connect
         }
     }
 }
@@ -229,11 +223,15 @@ Finally we will read the characteristic value with `NimBLERemoteCharacteristic::
 ```
 NimBLEUUID serviceUuid("ABCD");
 
-for(int i = 0; i < results.getCount(); i++) {
-    NimBLEAdvertisedDevice device = results.getDevice(i);
+for (int i = 0; i < results.getCount(); i++) {
+    const NimBLEAdvertisedDevice *device = results.getDevice(i);
     
-    if (device.isAdvertisingService(serviceUuid)) {
+    if (device->isAdvertisingService(serviceUuid)) {
         NimBLEClient *pClient = NimBLEDevice::createClient();
+
+        if (!pClient) { // Make sure the client was created
+            break;
+        }
         
         if (pClient->connect(&device)) {
             NimBLERemoteService *pService = pClient->getService(serviceUuid);
@@ -247,7 +245,7 @@ for(int i = 0; i < results.getCount(); i++) {
                 }
             }
         } else {
-        // failed to connect
+            // failed to connect
         }
     }
 }
@@ -262,12 +260,16 @@ This is done by calling `NimBLEDevice::deleteClient`.
 ```
 NimBLEUUID serviceUuid("ABCD");
 
-for(int i = 0; i < results.getCount(); i++) {
-    NimBLEAdvertisedDevice device = results.getDevice(i);
+for (int i = 0; i < results.getCount(); i++) {
+    const NimBLEAdvertisedDevice *device = results.getDevice(i);
     
-    if (device.isAdvertisingService(serviceUuid)) {
+    if (device->isAdvertisingService(serviceUuid)) {
         NimBLEClient *pClient = NimBLEDevice::createClient();
-        
+
+        if (!pClient) { // Make sure the client was created
+            break;
+        }
+
         if (pClient->connect(&device)) {
             NimBLERemoteService *pService = pClient->getService(serviceUuid);
             
@@ -280,7 +282,7 @@ for(int i = 0; i < results.getCount(); i++) {
                 }
             }
         } else {
-        // failed to connect
+            // failed to connect
         }
         
         NimBLEDevice::deleteClient(pClient);
@@ -294,37 +296,39 @@ Note that there is no need to disconnect as that will be done when deleting the 
 ```
 #include "NimBLEDevice.h"
 
-// void setup() in Arduino
-void app_main(void)  
-{
+void setup() {
     NimBLEDevice::init("");
-    
+
     NimBLEScan *pScan = NimBLEDevice::getScan();
-    NimBLEScanResults results = pScan->start(10 * 1000);
-    
+    NimBLEScanResults results = pScan->getResults(10 * 1000);
+
     NimBLEUUID serviceUuid("ABCD");
-    
-    for(int i = 0; i < results.getCount(); i++) {
-        NimBLEAdvertisedDevice device = results.getDevice(i);
-        
-        if (device.isAdvertisingService(serviceUuid)) {
+
+    for (int i = 0; i < results.getCount(); i++) {
+        const NimBLEAdvertisedDevice *device = results.getDevice(i);
+
+        if (device->isAdvertisingService(serviceUuid)) {
             NimBLEClient *pClient = NimBLEDevice::createClient();
-            
+
+            if (!pClient) { // Make sure the client was created
+                break;
+            }
+
             if (pClient->connect(&device)) {
                 NimBLERemoteService *pService = pClient->getService(serviceUuid);
-                
+
                 if (pService != nullptr) {
                     NimBLERemoteCharacteristic *pCharacteristic = pService->getCharacteristic("1234");
-                    
+
                     if (pCharacteristic != nullptr) {
                         std::string value = pCharacteristic->readValue();
                         // print or do whatever you need with the value
                     }
                 }
             } else {
-            // failed to connect
+                // failed to connect
             }
-            
+
             NimBLEDevice::deleteClient(pClient);
         }
     }
@@ -334,4 +338,3 @@ void app_main(void)
 
 For more advanced features and options please see the client examples in the examples folder.  
 <br/>
-
