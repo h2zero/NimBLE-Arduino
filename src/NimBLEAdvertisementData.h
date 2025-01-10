@@ -38,7 +38,7 @@ class NimBLEAdvertisementData {
     bool addData(const uint8_t* data, size_t length);
     bool addData(const std::vector<uint8_t>& data);
     bool setAppearance(uint16_t appearance);
-    bool setFlags(uint8_t);
+    bool setFlags(uint8_t flag);
     bool addTxPower();
     bool setPreferredParams(uint16_t minInterval, uint16_t maxInterval);
     bool addServiceUUID(const NimBLEUUID& serviceUUID);
