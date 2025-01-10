@@ -73,7 +73,7 @@ NimBLEAddress::NimBLEAddress(const std::string& addr, uint8_t type) {
         std::string mac{addr};
         mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
         uint64_t address = std::stoull(mac, nullptr, 16);
-        memcpy(this->val, &address, sizeof this->val);
+        memcpy(this->val, &address, sizeof(this->val));
         return;
     }
 
@@ -102,7 +102,7 @@ NimBLEAddress::NimBLEAddress(const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t ty
  * * BLE_ADDR_RANDOM (1)
  */
 NimBLEAddress::NimBLEAddress(const uint64_t& address, uint8_t type) {
-    memcpy(this->val, &address, sizeof this->val);
+    memcpy(this->val, &address, sizeof(this->val));
     this->type = type;
 } // NimBLEAddress
 
@@ -205,7 +205,7 @@ bool NimBLEAddress::operator==(const NimBLEAddress& rhs) const {
         return false;
     }
 
-    return memcmp(rhs.val, this->val, sizeof this->val) == 0;
+    return memcmp(rhs.val, this->val, sizeof(this->val)) == 0;
 } // operator ==
 
 /**
@@ -238,7 +238,7 @@ NimBLEAddress::operator std::string() const {
  */
 NimBLEAddress::operator uint64_t() const {
     uint64_t address = 0;
-    memcpy(&address, this->val, sizeof this->val);
+    memcpy(&address, this->val, sizeof(this->val));
     return address;
 } // operator uint64_t
 
