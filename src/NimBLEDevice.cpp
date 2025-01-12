@@ -877,17 +877,21 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         nimble_port_init();
 
         // Setup callbacks for host events
-        ble_hs_cfg.reset_cb = NimBLEDevice::onReset;
-        ble_hs_cfg.sync_cb  = NimBLEDevice::onSync;
+        ble_hs_cfg.reset_cb        = NimBLEDevice::onReset;
+        ble_hs_cfg.sync_cb         = NimBLEDevice::onSync;
+        ble_hs_cfg.store_status_cb = ble_store_util_status_rr; /*TODO: Implement handler for this*/
 
         // Set initial security capabilities
         ble_hs_cfg.sm_io_cap         = BLE_HS_IO_NO_INPUT_OUTPUT;
         ble_hs_cfg.sm_bonding        = 0;
         ble_hs_cfg.sm_mitm           = 0;
         ble_hs_cfg.sm_sc             = 1;
-        ble_hs_cfg.sm_our_key_dist   = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
-        ble_hs_cfg.sm_their_key_dist = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
-        ble_hs_cfg.store_status_cb   = ble_store_util_status_rr; /*TODO: Implement handler for this*/
+        ble_hs_cfg.sm_our_key_dist   = BLE_SM_PAIR_KEY_DIST_ENC;
+        ble_hs_cfg.sm_their_key_dist = BLE_SM_PAIR_KEY_DIST_ENC;
+# if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
+        ble_hs_cfg.sm_our_key_dist   |= BLE_SM_PAIR_KEY_DIST_ID;
+        ble_hs_cfg.sm_their_key_dist |= BLE_SM_PAIR_KEY_DIST_ID;
+# endif
 
         setDeviceName(deviceName);
         ble_store_config_init();
