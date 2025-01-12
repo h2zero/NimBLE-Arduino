@@ -468,10 +468,15 @@ NimBLEScanResults NimBLEScan::getResults() {
  * @brief Clear the stored results of the scan.
  */
 void NimBLEScan::clearResults() {
-    for (const auto& dev : m_scanResults.m_deviceVec) {
-        delete dev;
+    if (m_scanResults.m_deviceVec.size()) {
+        std::vector<NimBLEAdvertisedDevice*> vSwap{};
+        ble_npl_hw_enter_critical();
+        vSwap.swap(m_scanResults.m_deviceVec);
+        ble_npl_hw_exit_critical(0);
+        for (const auto& dev : vSwap) {
+            delete dev;
+        }
     }
-    std::vector<NimBLEAdvertisedDevice*>().swap(m_scanResults.m_deviceVec);
 } // clearResults
 
 /**
