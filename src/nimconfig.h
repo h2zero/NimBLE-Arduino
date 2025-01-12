@@ -163,7 +163,7 @@
 /**
  * @brief Un-comment to use uppercase letters when printing address.
  */
-//#define CONFIG_NIMBLE_CPP_ADDR_FMT_UPPERCASE 1
+// #define CONFIG_NIMBLE_CPP_ADDR_FMT_UPPERCASE 1
 
 /**********************************
  End Arduino user-config
@@ -369,14 +369,6 @@
 
 #ifndef CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
 #define CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT 31
-#endif
-
-#ifndef CONFIG_NIMBLE_CPP_ADDR_FMT_EXCLUDE_DELIMITER
-#define CONFIG_NIMBLE_CPP_ADDR_FMT_INCLUDE_DELIMITER 0
-#endif
-
-#ifndef CONFIG_NIMBLE_CPP_ADDR_FMT_UPPERCASE
-#define CONFIG_NIMBLE_CPP_ADDR_FMT_UPPERCASE 0
 #endif
 
 #if CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED && !defined NDEBUG
