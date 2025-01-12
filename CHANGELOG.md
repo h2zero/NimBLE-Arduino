@@ -1,6 +1,24 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] 2025-01-12
+
+## Fixed
+- Crash when retrieving descriptors if more than one exists.
+- Incorrect TX power value being advertised.
+- New user guide code for 2.x
+- Potential race condition if `NimBLEScan::clearResults1 is called from multiple tasks.
+
+## Changed
+- If privacy is not enabled identity keys will not be shared.
+- `NimBLEDevice::setPower` and `NimBLEDevice::getPower` now take an additional parameter `NimBLETxPowerType` to set/get the power level for different operations.
+- ESP32 devices now use esp_timer instead of freeRTOS timers for BLE operations by default.
+
+## Added
+- Config option to use mbedtls instead of tinycrypt for crypto operations, this will save approximately 8k of flash if already using mbedtls for other applications (https, mqtts, etc..).
+- Config option `CONFIG_NIMBLE_CPP_ADDR_FMT_EXCLUDE_DELIMITER`, if defined will remove the ":" delimiter from the BLE address string.
+- Config option `CONFIG_NIMBLE_CPP_ADDR_FMT_UPPERCASE` if defined will make the BLE address strings uppercase.
+
 ## [2.1.3] 2025-01-05
 
 ## Fixed
