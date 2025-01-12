@@ -24,9 +24,9 @@
 # include <algorithm>
 
 # ifdef CONFIG_NIMBLE_CPP_ADDR_FMT_EXCLUDE_DELIMITER
-#  define NIMBLE_CPP_ADDR_DELIMITER ":"
-# else
 #  define NIMBLE_CPP_ADDR_DELIMITER ""
+# else
+#  define NIMBLE_CPP_ADDR_DELIMITER ":"
 # endif
 
 # ifdef CONFIG_NIMBLE_CPP_ADDR_FMT_UPPERCASE
