@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.3</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.0</span>
    </div>
   </td>
  </tr>
@@ -133,9 +133,7 @@ Creating a Server</h1>
 <p><b>Example code:</b> <br  />
  </p><div class="fragment"><div class="line">#include &quot;NimBLEDevice.h&quot;</div>
 <div class="line"> </div>
-<div class="line">// void setup() in Arduino</div>
-<div class="line">void app_main(void)  </div>
-<div class="line">{</div>
+<div class="line">void setup() {</div>
 <div class="line">    NimBLEDevice::init(&quot;NimBLE&quot;);</div>
 <div class="line">    </div>
 <div class="line">    NimBLEServer *pServer = NimBLEDevice::createServer();</div>
@@ -173,9 +171,7 @@ Creating a Server</h1>
 <p><b>Our example code now is:</b> <br  />
  </p><div class="fragment"><div class="line">#include &quot;NimBLEDevice.h&quot;</div>
 <div class="line"> </div>
-<div class="line">// void setup() in Arduino</div>
-<div class="line">void app_main(void)</div>
-<div class="line">{</div>
+<div class="line">void setup() {</div>
 <div class="line">    NimBLEDevice::init(&quot;NimBLE&quot;);</div>
 <div class="line">    </div>
 <div class="line">    NimBLEServer *pServer = NimBLEDevice::createServer();</div>
@@ -189,20 +185,19 @@ Creating a Server</h1>
  There are many different types you can send as parameters for the value but for this example we will use a simple string. <code>pCharacteristic-&gt;setValue("Hello BLE");</code> <br  />
 </p>
 <p>Next we need to advertise for connections. <br  />
- To do this we create an instance of <code><a class="el" href="class_nim_b_l_e_advertising.html" title="Perform and manage BLE advertising.">NimBLEAdvertising</a></code> add our service to it (optional) and start advertisng. <br  />
+ To do this we create an instance of <code><a class="el" href="class_nim_b_l_e_advertising.html" title="Perform and manage BLE advertising.">NimBLEAdvertising</a></code> add our service to it (optional) and start advertising. <br  />
 </p>
 <p><b>The code for this will be:</b> <br  />
  </p><div class="fragment"><div class="line">NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising(); // create advertising instance</div>
-<div class="line">pAdvertising-&gt;addServiceUUID(&quot;ABCD&quot;); // tell advertising the UUID of our service</div>
+<div class="line">pAdvertising-&gt;addServiceUUID(&quot;ABCD&quot;); // advertise the UUID of our service</div>
+<div class="line">pAdvertising-&gt;setName(&quot;NimBLE&quot;); // advertise the device name</div>
 <div class="line">pAdvertising-&gt;start(); // start advertising</div>
 </div><!-- fragment --><p> That's it, this will be enough to create a BLE server with a service and a characteristic and advertise for client connections. <br  />
 </p>
 <p><b>The full example code:</b> <br  />
  </p><div class="fragment"><div class="line">#include &quot;NimBLEDevice.h&quot;</div>
 <div class="line"> </div>
-<div class="line">// void setup() in Arduino</div>
-<div class="line">void app_main(void)</div>
-<div class="line">{</div>
+<div class="line">void setup() {</div>
 <div class="line">    NimBLEDevice::init(&quot;NimBLE&quot;);</div>
 <div class="line">    </div>
 <div class="line">    NimBLEServer *pServer = NimBLEDevice::createServer();</div>
@@ -213,7 +208,8 @@ Creating a Server</h1>
 <div class="line">    pCharacteristic-&gt;setValue(&quot;Hello BLE&quot;);</div>
 <div class="line">    </div>
 <div class="line">    NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();</div>
-<div class="line">    pAdvertising-&gt;addServiceUUID(&quot;ABCD&quot;); </div>
+<div class="line">    pAdvertising-&gt;addServiceUUID(&quot;ABCD&quot;); // advertise the UUID of our service</div>
+<div class="line">    pAdvertising-&gt;setName(&quot;NimBLE&quot;); // advertise the device name</div>
 <div class="line">    pAdvertising-&gt;start(); </div>
 <div class="line">}</div>
 </div><!-- fragment --><p>Now if you scan with your phone using nRFConnect or any other BLE app you should see a device named "NimBLE" with a service of "ABCD". <br  />
@@ -228,7 +224,7 @@ Creating a Client</h1>
 </p>
 <p>Once we have created the scan we can start looking for advertising servers. <br  />
 </p>
-<p>To do this we call <code>NimBLEScan::start(duration)</code>, the duration parameter is a uint32_t that specifies the number of milliseconds to scan for, <br  />
+<p>To do this we call <code>NimBLEScan::getResults(duration)</code>, the duration parameter is a uint32_t that specifies the number of milliseconds to scan for, <br  />
  passing 0 will scan forever. <br  />
 </p>
 <p>In this example we will scan for 10 seconds. This is a blocking function (a non blocking overload is also available). <br  />
@@ -237,9 +233,7 @@ Creating a Client</h1>
 <p><b>Example Code:</b> <br  />
  </p><div class="fragment"><div class="line">#include &quot;NimBLEDevice.h&quot;</div>
 <div class="line"> </div>
-<div class="line">// void setup() in Arduino</div>
-<div class="line">void app_main(void)  </div>
-<div class="line">{</div>
+<div class="line">void setup() {</div>
 <div class="line">    NimBLEDevice::init(&quot;&quot;);</div>
 <div class="line">    </div>
 <div class="line">    NimBLEScan *pScan = NimBLEDevice::getScan();</div>
@@ -250,17 +244,17 @@ Creating a Client</h1>
 <p>Now that we have scanned we need to check the results for any advertisers we are interested in connecting to. <br  />
 </p>
 <p>To do this we iterate through the results and check if any of the devices found are advertising the service we want <code>ABCD</code>. <br  />
- Each result in <code><a class="el" href="class_nim_b_l_e_scan_results.html" title="A class that contains and operates on the results of a BLE scan.">NimBLEScanResults</a></code> is a <code><a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a></code> instance that we can access data from.</p>
+ Each result in <code><a class="el" href="class_nim_b_l_e_scan_results.html" title="A class that contains and operates on the results of a BLE scan.">NimBLEScanResults</a></code> is a <code>const NimBLEAdvertisedDevice*</code> that we can access data from.</p>
 <p>We will check each device found for the <code>ABCD</code> service by calling <code><a class="el" href="class_nim_b_l_e_advertised_device.html#ad006b08552281a3e6c9d9444e7942709" title="Check advertised services for existence of the required UUID.">NimBLEAdvertisedDevice::isAdvertisingService</a></code>. <br  />
  This takes an instance of <code><a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID</a></code> as a parameter so we will need to create one. <br  />
 </p>
 <p><b>The code for this looks like:</b> </p><div class="fragment"><div class="line">NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
 <div class="line"> </div>
-<div class="line">for(int i = 0; i &lt; results.getCount(); i++) {</div>
-<div class="line">    NimBLEAdvertisedDevice device = results.getDevice(i);</div>
+<div class="line">for (int i = 0; i &lt; results.getCount(); i++) {</div>
+<div class="line">    const NimBLEAdvertisedDevice *device = results.getDevice(i);</div>
 <div class="line">    </div>
-<div class="line">    if (device.isAdvertisingService(serviceUuid)) {</div>
-<div class="line">    // create a client and connect</div>
+<div class="line">    if (device-&gt;isAdvertisingService(serviceUuid)) {</div>
+<div class="line">        // create a client and connect</div>
 <div class="line">    }</div>
 <div class="line">}</div>
 </div><!-- fragment --><p> <br  />
@@ -273,16 +267,16 @@ Creating a Client</h1>
  This takes a pointer to the <code><a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a></code> and returns <code>true</code> if successful.</p>
 <p><b>Lets do that now:</b> </p><div class="fragment"><div class="line">NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
 <div class="line"> </div>
-<div class="line">for(int i = 0; i &lt; results.getCount(); i++) {</div>
-<div class="line">    NimBLEAdvertisedDevice device = results.getDevice(i);</div>
+<div class="line">for (int i = 0; i &lt; results.getCount(); i++) {</div>
+<div class="line">    const NimBLEAdvertisedDevice *device = results.getDevice(i);</div>
 <div class="line">    </div>
-<div class="line">    if (device.isAdvertisingService(serviceUuid)) {</div>
+<div class="line">    if (device-&gt;isAdvertisingService(serviceUuid)) {</div>
 <div class="line">        NimBLEClient *pClient = NimBLEDevice::createClient();</div>
 <div class="line">        </div>
-<div class="line">        if(pClient-&gt;connect(&amp;device)) {</div>
-<div class="line">        //success</div>
+<div class="line">        if (pClient-&gt;connect(&amp;device)) {</div>
+<div class="line">            //success</div>
 <div class="line">        } else {</div>
-<div class="line">        // failed to connect</div>
+<div class="line">            // failed to connect</div>
 <div class="line">        }</div>
 <div class="line">    }</div>
 <div class="line">}</div>
@@ -300,11 +294,15 @@ Creating a Client</h1>
 </p>
 <p><b>Here is what that looks like:</b> </p><div class="fragment"><div class="line">NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
 <div class="line"> </div>
-<div class="line">for(int i = 0; i &lt; results.getCount(); i++) {</div>
-<div class="line">    NimBLEAdvertisedDevice device = results.getDevice(i);</div>
+<div class="line">for (int i = 0; i &lt; results.getCount(); i++) {</div>
+<div class="line">    const NimBLEAdvertisedDevice *device = results.getDevice(i);</div>
 <div class="line">    </div>
-<div class="line">    if (device.isAdvertisingService(serviceUuid)) {</div>
+<div class="line">    if (device-&gt;isAdvertisingService(serviceUuid)) {</div>
 <div class="line">        NimBLEClient *pClient = NimBLEDevice::createClient();</div>
+<div class="line"> </div>
+<div class="line">        if (!pClient) { // Make sure the client was created</div>
+<div class="line">            break;</div>
+<div class="line">        }</div>
 <div class="line">        </div>
 <div class="line">        if (pClient-&gt;connect(&amp;device)) {</div>
 <div class="line">            NimBLERemoteService *pService = pClient-&gt;getService(serviceUuid);</div>
@@ -318,7 +316,7 @@ Creating a Client</h1>
 <div class="line">                }</div>
 <div class="line">            }</div>
 <div class="line">        } else {</div>
-<div class="line">        // failed to connect</div>
+<div class="line">            // failed to connect</div>
 <div class="line">        }</div>
 <div class="line">    }</div>
 <div class="line">}</div>
@@ -329,12 +327,16 @@ Creating a Client</h1>
  This is done by calling <code><a class="el" href="class_nim_b_l_e_device.html#a83aa0a3d9d57358d35082a442edf8549" title="Delete the client object and remove it from the list. Checks if it is connected or trying to connect ...">NimBLEDevice::deleteClient</a></code>.</p>
 <p><b>Lets add that now:</b> </p><div class="fragment"><div class="line">NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
 <div class="line"> </div>
-<div class="line">for(int i = 0; i &lt; results.getCount(); i++) {</div>
-<div class="line">    NimBLEAdvertisedDevice device = results.getDevice(i);</div>
+<div class="line">for (int i = 0; i &lt; results.getCount(); i++) {</div>
+<div class="line">    const NimBLEAdvertisedDevice *device = results.getDevice(i);</div>
 <div class="line">    </div>
-<div class="line">    if (device.isAdvertisingService(serviceUuid)) {</div>
+<div class="line">    if (device-&gt;isAdvertisingService(serviceUuid)) {</div>
 <div class="line">        NimBLEClient *pClient = NimBLEDevice::createClient();</div>
-<div class="line">        </div>
+<div class="line"> </div>
+<div class="line">        if (!pClient) { // Make sure the client was created</div>
+<div class="line">            break;</div>
+<div class="line">        }</div>
+<div class="line"> </div>
 <div class="line">        if (pClient-&gt;connect(&amp;device)) {</div>
 <div class="line">            NimBLERemoteService *pService = pClient-&gt;getService(serviceUuid);</div>
 <div class="line">            </div>
@@ -347,7 +349,7 @@ Creating a Client</h1>
 <div class="line">                }</div>
 <div class="line">            }</div>
 <div class="line">        } else {</div>
-<div class="line">        // failed to connect</div>
+<div class="line">            // failed to connect</div>
 <div class="line">        }</div>
 <div class="line">        </div>
 <div class="line">        NimBLEDevice::deleteClient(pClient);</div>
@@ -359,37 +361,39 @@ Creating a Client</h1>
 <p><b>Here is the full example code:</b> <br  />
  </p><div class="fragment"><div class="line">#include &quot;NimBLEDevice.h&quot;</div>
 <div class="line"> </div>
-<div class="line">// void setup() in Arduino</div>
-<div class="line">void app_main(void)  </div>
-<div class="line">{</div>
+<div class="line">void setup() {</div>
 <div class="line">    NimBLEDevice::init(&quot;&quot;);</div>
-<div class="line">    </div>
+<div class="line"> </div>
 <div class="line">    NimBLEScan *pScan = NimBLEDevice::getScan();</div>
-<div class="line">    NimBLEScanResults results = pScan-&gt;start(10 * 1000);</div>
-<div class="line">    </div>
+<div class="line">    NimBLEScanResults results = pScan-&gt;getResults(10 * 1000);</div>
+<div class="line"> </div>
 <div class="line">    NimBLEUUID serviceUuid(&quot;ABCD&quot;);</div>
-<div class="line">    </div>
-<div class="line">    for(int i = 0; i &lt; results.getCount(); i++) {</div>
-<div class="line">        NimBLEAdvertisedDevice device = results.getDevice(i);</div>
-<div class="line">        </div>
-<div class="line">        if (device.isAdvertisingService(serviceUuid)) {</div>
+<div class="line"> </div>
+<div class="line">    for (int i = 0; i &lt; results.getCount(); i++) {</div>
+<div class="line">        const NimBLEAdvertisedDevice *device = results.getDevice(i);</div>
+<div class="line"> </div>
+<div class="line">        if (device-&gt;isAdvertisingService(serviceUuid)) {</div>
 <div class="line">            NimBLEClient *pClient = NimBLEDevice::createClient();</div>
-<div class="line">            </div>
+<div class="line"> </div>
+<div class="line">            if (!pClient) { // Make sure the client was created</div>
+<div class="line">                break;</div>
+<div class="line">            }</div>
+<div class="line"> </div>
 <div class="line">            if (pClient-&gt;connect(&amp;device)) {</div>
 <div class="line">                NimBLERemoteService *pService = pClient-&gt;getService(serviceUuid);</div>
-<div class="line">                </div>
+<div class="line"> </div>
 <div class="line">                if (pService != nullptr) {</div>
 <div class="line">                    NimBLERemoteCharacteristic *pCharacteristic = pService-&gt;getCharacteristic(&quot;1234&quot;);</div>
-<div class="line">                    </div>
+<div class="line"> </div>
 <div class="line">                    if (pCharacteristic != nullptr) {</div>
 <div class="line">                        std::string value = pCharacteristic-&gt;readValue();</div>
 <div class="line">                        // print or do whatever you need with the value</div>
 <div class="line">                    }</div>
 <div class="line">                }</div>
 <div class="line">            } else {</div>
-<div class="line">            // failed to connect</div>
+<div class="line">                // failed to connect</div>
 <div class="line">            }</div>
-<div class="line">            </div>
+<div class="line"> </div>
 <div class="line">            NimBLEDevice::deleteClient(pClient);</div>
 <div class="line">        }</div>
 <div class="line">    }</div>

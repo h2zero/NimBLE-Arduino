@@ -1,5 +1,9 @@
 var NAVTREEINDEX6 =
 {
+"md__new__user__guide.html#using-the-library":[6,1],
+"md__usage__tips.html":[7],
+"md__usage__tips.html#check-return-values":[7,3],
+"md__usage__tips.html#do-not-delete-client-instances-unless-necessary-or-unused":[7,1],
 "md__usage__tips.html#only-retrieve-the-services-and-characteristics-needed":[7,2],
 "md__usage__tips.html#put-ble-functions-in-a-task-running-on-the-nimble-stack-core":[7,0],
 "md__usage__tips.html#there-will-be-bugs---please-report-them":[7,4],
@@ -245,9 +249,5 @@ var NAVTREEINDEX6 =
 "structble__hs__stop__listener.html":[13,0,23],
 "structble__l2cap__event.html":[13,0,24],
 "structble__l2cap__event.html#a02e88ee423cb048f556fade26cb2fcaa":[13,0,24,9],
-"structble__l2cap__event.html#a110ac89d796a5c13e60e9f2d3c7efd99":[13,0,24,7],
-"structble__l2cap__event.html#a1d302d954ebdd9da261f9f5330c12a4a":[13,0,24,5],
-"structble__l2cap__event.html#a2bfa004b88b3ac6ad9db2e8379716546":[13,0,24,10],
-"structble__l2cap__event.html#a319b17c1240ae0d0dfb08841e0f2ee6b":[13,0,24,1],
-"structble__l2cap__event.html#a6f594b943e9f2615160e3259e4346077":[13,0,24,2]
+"structble__l2cap__event.html#a110ac89d796a5c13e60e9f2d3c7efd99":[13,0,24,7]
 };

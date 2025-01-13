@@ -5,7 +5,7 @@ var class_nim_b_l_e_ext_advertisement =
     [ "addData", "class_nim_b_l_e_ext_advertisement.html#a1f449f67deca3d7ef66c07d61c12d28e", null ],
     [ "addServiceUUID", "class_nim_b_l_e_ext_advertisement.html#a4b4bea2600ee592ffe6877fe8eac7872", null ],
     [ "addServiceUUID", "class_nim_b_l_e_ext_advertisement.html#a0e7a8731b021ba8813a3a9024171e926", null ],
-    [ "addTxPower", "class_nim_b_l_e_ext_advertisement.html#ac9f82eb0112544b977eb1947ed308525", null ],
+    [ "addTxPower", "class_nim_b_l_e_ext_advertisement.html#aa423a004e031744463e82623142195d6", null ],
     [ "clearData", "class_nim_b_l_e_ext_advertisement.html#a1391be9ee1b2ba1dc0548f2431b1d3af", null ],
     [ "enableScanRequestCallback", "class_nim_b_l_e_ext_advertisement.html#aaf6c44bc23f03a72bc02c3d45a9adf1d", null ],
     [ "getDataLocation", "class_nim_b_l_e_ext_advertisement.html#a7cf145aa6be376efaddadc507f5018d0", null ],

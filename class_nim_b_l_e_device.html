@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.3</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.0</span>
    </div>
   </td>
  </tr>
@@ -189,12 +189,12 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>onSync</b> (vo
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>host_task</b> (void *param)</td></tr>
 <tr class="memdesc:ab4771de8c0805836f0e7059199d56411"><td class="mdescLeft">&#160;</td><td class="mdescRight">The main host task. <br /></td></tr>
 <tr class="separator:ab4771de8c0805836f0e7059199d56411"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae59445e712b468349099befca7a7be16" id="r_ae59445e712b468349099befca7a7be16"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#ae59445e712b468349099befca7a7be16">getPower</a> ()</td></tr>
-<tr class="memdesc:ae59445e712b468349099befca7a7be16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the transmission power.  <br /></td></tr>
-<tr class="separator:ae59445e712b468349099befca7a7be16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b45ce364bf3ee69959389c8cc70249c" id="r_a2b45ce364bf3ee69959389c8cc70249c"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#a2b45ce364bf3ee69959389c8cc70249c">setPower</a> (int8_t dbm)</td></tr>
-<tr class="memdesc:a2b45ce364bf3ee69959389c8cc70249c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the transmission power.  <br /></td></tr>
-<tr class="separator:a2b45ce364bf3ee69959389c8cc70249c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58742d313c683b98b47396383cb6ddfa" id="r_a58742d313c683b98b47396383cb6ddfa"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#a58742d313c683b98b47396383cb6ddfa">getPower</a> (NimBLETxPowerType type=NimBLETxPowerType::All)</td></tr>
+<tr class="memdesc:a58742d313c683b98b47396383cb6ddfa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the transmission power.  <br /></td></tr>
+<tr class="separator:a58742d313c683b98b47396383cb6ddfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4c78fbf7344fbc0d6189e92a756db91" id="r_ac4c78fbf7344fbc0d6189e92a756db91"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#ac4c78fbf7344fbc0d6189e92a756db91">setPower</a> (int8_t dbm, NimBLETxPowerType type=NimBLETxPowerType::All)</td></tr>
+<tr class="memdesc:ac4c78fbf7344fbc0d6189e92a756db91"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the transmission power.  <br /></td></tr>
+<tr class="separator:ac4c78fbf7344fbc0d6189e92a756db91"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0e021958df2f2dbf40e52b9022c37594" id="r_a0e021958df2f2dbf40e52b9022c37594"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#a0e021958df2f2dbf40e52b9022c37594">setDefaultPhy</a> (uint8_t txPhyMask, uint8_t rxPhyMask)</td></tr>
 <tr class="memdesc:a0e021958df2f2dbf40e52b9022c37594"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the preferred default phy to use for connections.  <br /></td></tr>
 <tr class="separator:a0e021958df2f2dbf40e52b9022c37594"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -773,8 +773,8 @@ A pointer to the advertising object. </dd></dl>
 
 </div>
 </div>
-<a id="ae59445e712b468349099befca7a7be16" name="ae59445e712b468349099befca7a7be16"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae59445e712b468349099befca7a7be16">&#9670;&#160;</a></span>getPower()</h2>
+<a id="a58742d313c683b98b47396383cb6ddfa" name="a58742d313c683b98b47396383cb6ddfa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58742d313c683b98b47396383cb6ddfa">&#9670;&#160;</a></span>getPower()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -785,7 +785,8 @@ A pointer to the advertising object. </dd></dl>
         <tr>
           <td class="memname">int NimBLEDevice::getPower </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">NimBLETxPowerType&#160;</td>
+          <td class="paramname"><em>type</em> = <code>NimBLETxPowerType::All</code></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1482,8 +1483,8 @@ A pointer to the advertising object. </dd></dl>
 
 </div>
 </div>
-<a id="a2b45ce364bf3ee69959389c8cc70249c" name="a2b45ce364bf3ee69959389c8cc70249c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2b45ce364bf3ee69959389c8cc70249c">&#9670;&#160;</a></span>setPower()</h2>
+<a id="ac4c78fbf7344fbc0d6189e92a756db91" name="ac4c78fbf7344fbc0d6189e92a756db91"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac4c78fbf7344fbc0d6189e92a756db91">&#9670;&#160;</a></span>setPower()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1495,8 +1496,18 @@ A pointer to the advertising object. </dd></dl>
           <td class="memname">bool NimBLEDevice::setPower </td>
           <td>(</td>
           <td class="paramtype">int8_t&#160;</td>
-          <td class="paramname"><em>dbm</em></td><td>)</td>
+          <td class="paramname"><em>dbm</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">NimBLETxPowerType&#160;</td>
+          <td class="paramname"><em>type</em> = <code>NimBLETxPowerType::All</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>

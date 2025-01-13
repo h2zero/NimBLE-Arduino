@@ -73,7 +73,7 @@ var searchData=
   ['getperiodicinterval_70',['getPeriodicInterval',['../class_nim_b_l_e_advertised_device.html#a899abd2a02e0c9bf941a998f4184a9ee',1,'NimBLEAdvertisedDevice']]],
   ['getphy_71',['getphy',['../class_nim_b_l_e_client.html#a6ca4e212d5b69d4759bd695def020525',1,'NimBLEClient::getPhy()'],['../class_nim_b_l_e_server.html#a709eb11532ec43a35f8653845b3158fc',1,'NimBLEServer::getPhy()']]],
   ['getpnp_72',['getPnp',['../class_nim_b_l_e_h_i_d_device.html#abda5099d23c7111e99d8d755565be84a',1,'NimBLEHIDDevice']]],
-  ['getpower_73',['getPower',['../class_nim_b_l_e_device.html#ae59445e712b468349099befca7a7be16',1,'NimBLEDevice']]],
+  ['getpower_73',['getPower',['../class_nim_b_l_e_device.html#a58742d313c683b98b47396383cb6ddfa',1,'NimBLEDevice']]],
   ['getprimaryphy_74',['getPrimaryPhy',['../class_nim_b_l_e_advertised_device.html#a927a8418e4078107e5bf457c0bb56cbc',1,'NimBLEAdvertisedDevice']]],
   ['getproperties_75',['getProperties',['../class_nim_b_l_e_characteristic.html#a0a7d8e25403d4045f0790a4baeb5248c',1,'NimBLECharacteristic']]],
   ['getprotocolmode_76',['getProtocolMode',['../class_nim_b_l_e_h_i_d_device.html#a1bdd21f3cc61d0128b06cdfd9588d6f5',1,'NimBLEHIDDevice']]],

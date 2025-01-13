@@ -82,7 +82,7 @@ var searchData=
   ['setperiod_79',['setPeriod',['../class_nim_b_l_e_scan.html#aaace4d0b128b6294276347f6790f3f8b',1,'NimBLEScan']]],
   ['setphy_80',['setPhy',['../class_nim_b_l_e_scan.html#a17f2f775b5e6793f06a412f840d5dceb',1,'NimBLEScan']]],
   ['setpnp_81',['setPnp',['../class_nim_b_l_e_h_i_d_device.html#ab0495fb5fbee85277a14a0b9476a0239',1,'NimBLEHIDDevice']]],
-  ['setpower_82',['setPower',['../class_nim_b_l_e_device.html#a2b45ce364bf3ee69959389c8cc70249c',1,'NimBLEDevice']]],
+  ['setpower_82',['setPower',['../class_nim_b_l_e_device.html#ac4c78fbf7344fbc0d6189e92a756db91',1,'NimBLEDevice']]],
   ['setpreferredparams_83',['setpreferredparams',['../class_nim_b_l_e_ext_advertisement.html#a2d95f2975f229386023348749305df43',1,'NimBLEExtAdvertisement::setPreferredParams()'],['../class_nim_b_l_e_advertising.html#a9dbb66ca66aa040731fcfd737f881469',1,'NimBLEAdvertising::setPreferredParams()'],['../class_nim_b_l_e_advertisement_data.html#acee3a78f4c8d69a1dc3df1f9af16632f',1,'NimBLEAdvertisementData::setPreferredParams()']]],
   ['setprimarychannels_84',['setPrimaryChannels',['../class_nim_b_l_e_ext_advertisement.html#ab6103c5e86949d0e334101353b109775',1,'NimBLEExtAdvertisement']]],
   ['setprimaryphy_85',['setPrimaryPhy',['../class_nim_b_l_e_ext_advertisement.html#ad8522542b90067e3a53076823d2087c3',1,'NimBLEExtAdvertisement']]],

@@ -1,5 +1,9 @@
 var NAVTREEINDEX7 =
 {
+"structble__l2cap__event.html#a1d302d954ebdd9da261f9f5330c12a4a":[13,0,24,5],
+"structble__l2cap__event.html#a2bfa004b88b3ac6ad9db2e8379716546":[13,0,24,10],
+"structble__l2cap__event.html#a319b17c1240ae0d0dfb08841e0f2ee6b":[13,0,24,1],
+"structble__l2cap__event.html#a6f594b943e9f2615160e3259e4346077":[13,0,24,2],
 "structble__l2cap__event.html#a9460b4447a7c3391d6b72b3f0c286fe8":[13,0,24,11],
 "structble__l2cap__event.html#aa9af4532e9b24990428d3448bb63762a":[13,0,24,4],
 "structble__l2cap__event.html#ac3efb9cd77873d102a61a4f3e6987da1":[13,0,24,0],

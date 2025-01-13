@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.1.3</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.0</span>
    </div>
   </td>
  </tr>
@@ -140,7 +140,7 @@ BLE Device</h1>
 <li>Ignore list functions and vector have been removed, the application should implement this if desired. It was no longer used by the library.</li>
 <li><code><a class="el" href="class_nim_b_l_e_device.html#a8b6b4bedfe37725ed9c20e91a3470005" title="Start the connection securing and authorization for this connection.">NimBLEDevice::startSecurity</a></code> now returns a <code>bool</code>, true on success, instead of an int to be consistent with the rest of the library.</li>
 <li><code>NimBLEDevice::getInitialized</code> renamed to <code><a class="el" href="class_nim_b_l_e_device.html#a425561f1e23856756ab9c1c330da5737" title="Check if the initialization is complete.">NimBLEDevice::isInitialized</a></code>.</li>
-<li><code><a class="el" href="class_nim_b_l_e_device.html#a2b45ce364bf3ee69959389c8cc70249c" title="Set the transmission power.">NimBLEDevice::setPower</a></code> no longer takes the <code>esp_power_level_t</code> and <code>esp_ble_power_type_t</code>, instead only an integer value in dbm units is accepted, so instead of <code>ESP_PWR_LVL_P9</code> an <code>int8_t</code> value of <code>9</code> would be used for the same result.</li>
+<li><code><a class="el" href="class_nim_b_l_e_device.html#ac4c78fbf7344fbc0d6189e92a756db91" title="Set the transmission power.">NimBLEDevice::setPower</a></code> no longer takes the <code>esp_power_level_t</code> and <code>esp_ble_power_type_t</code>, instead only an integer value in dbm units is accepted, so instead of <code>ESP_PWR_LVL_P9</code> an <code>int8_t</code> value of <code>9</code> would be used for the same result.</li>
 <li><code><a class="el" href="class_nim_b_l_e_device.html#a31acb43c150014f06bad74b57c2335ff" title="Sets the address type to use.">NimBLEDevice::setOwnAddrType</a></code> no longer takes a <code>bool nrpa</code> parameter, the random address type will be determined by the bits the in the address instead. <br  />
  Note: If setting a custom address, it should be set with <code><a class="el" href="class_nim_b_l_e_device.html#a0f6521729222f9e55e40325824786070" title="Set the device address to use.">NimBLEDevice::setOwnAddr</a></code> first before calling <code><a class="el" href="class_nim_b_l_e_device.html#a31acb43c150014f06bad74b57c2335ff" title="Sets the address type to use.">NimBLEDevice::setOwnAddrType</a></code>.</li>
 <li><code>NimBLEDevice::getClientListSize</code> replaced with <code><a class="el" href="class_nim_b_l_e_device.html#a0944f3f6eca16ed4b7fd96d88b2906d9" title="Get the number of created client objects.">NimBLEDevice::getCreatedClientCount</a></code>.</li>
