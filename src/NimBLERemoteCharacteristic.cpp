@@ -101,6 +101,12 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
 bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID* uuidFilter) const {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
+    // If this is the last handle then there are no descriptors
+    if (getHandle() == getRemoteService()->getEndHandle()) {
+      NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): found 0 descriptors.");
+      return true;
+    }
+
     NimBLETaskData taskData(const_cast<NimBLERemoteCharacteristic*>(this));
     desc_filter_t  filter = {uuidFilter, &taskData};
 
