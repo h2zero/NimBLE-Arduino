@@ -76,6 +76,8 @@ extern "C" void ble_store_config_init(void);
 /**
  * Singletons for the NimBLEDevice.
  */
+NimBLEDeviceCallbacks* NimBLEDevice::m_pDeviceCallbacks = nullptr;
+
 # if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 NimBLEScan* NimBLEDevice::m_pScan = nullptr;
 # endif
@@ -900,7 +902,9 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         // Setup callbacks for host events
         ble_hs_cfg.reset_cb        = NimBLEDevice::onReset;
         ble_hs_cfg.sync_cb         = NimBLEDevice::onSync;
-        ble_hs_cfg.store_status_cb = ble_store_util_status_rr; /*TODO: Implement handler for this*/
+        ble_hs_cfg.store_status_cb = [](struct ble_store_status_event* event, void* arg) {
+            return m_pDeviceCallbacks->onStoreStatus(event, arg);
+        };
 
         // Set initial security capabilities
         ble_hs_cfg.sm_io_cap         = BLE_HS_IO_NO_INPUT_OUTPUT;
@@ -1261,5 +1265,14 @@ void nimble_cpp_assert(const char* file, unsigned line) {
     abort();
 }
 # endif // CONFIG_NIMBLE_CPP_DEBUG_ASSERT_ENABLED
+
+void NimBLEDevice::setDeviceCallbacks(NimBLEDeviceCallbacks* cb) {
+    m_pDeviceCallbacks = cb ? cb : &defaultDeviceCallbacks;
+}
+
+int NimBLEDeviceCallbacks::onStoreStatus(struct ble_store_status_event* event, void* arg) {
+    NIMBLE_LOGD("NimBLEDeviceCallbacks", "onStoreStatus: default");
+    return ble_store_util_status_rr(event, arg);
+}
 
 #endif // CONFIG_BT_ENABLED
