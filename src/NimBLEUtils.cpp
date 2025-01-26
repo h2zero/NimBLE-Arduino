@@ -511,22 +511,24 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             return "BLE_GAP_EVENT_PATHLOSS_THRESHOLD";
         case BLE_GAP_EVENT_TRANSMIT_POWER: // 26
             return "BLE_GAP_EVENT_TRANSMIT_POWER";
-        case BLE_GAP_EVENT_SUBRATE_CHANGE: // 27
+        case BLE_GAP_EVENT_PARING_COMPLETE: // 27
+            return "BLE_GAP_EVENT_PARING_COMPLETE";
+        case BLE_GAP_EVENT_SUBRATE_CHANGE: // 28
             return "BLE_GAP_EVENT_SUBRATE_CHANGE";
-        case BLE_GAP_EVENT_VS_HCI: // 28
+        case BLE_GAP_EVENT_VS_HCI: // 29
             return "BLE_GAP_EVENT_VS_HCI";
-        case BLE_GAP_EVENT_REATTEMPT_COUNT: // 29
+        case BLE_GAP_EVENT_REATTEMPT_COUNT: // 31
             return "BLE_GAP_EVENT_REATTEMPT_COUNT";
-        case BLE_GAP_EVENT_AUTHORIZE: // 30
+        case BLE_GAP_EVENT_AUTHORIZE: // 32
             return "BLE_GAP_EVENT_AUTHORIZE";
-        case BLE_GAP_EVENT_TEST_UPDATE: // 31
+        case BLE_GAP_EVENT_TEST_UPDATE: // 33
             return "BLE_GAP_EVENT_TEST_UPDATE";
 #   ifdef BLE_GAP_EVENT_DATA_LEN_CHG
-        case BLE_GAP_EVENT_DATA_LEN_CHG: // 32
+        case BLE_GAP_EVENT_DATA_LEN_CHG: // 34
             return "BLE_GAP_EVENT_DATA_LEN_CHG";
 #   endif
 #   ifdef BLE_GAP_EVENT_LINK_ESTAB
-        case BLE_GAP_EVENT_LINK_ESTAB: // 33
+        case BLE_GAP_EVENT_LINK_ESTAB: // 38
             return "BLE_GAP_EVENT_LINK_ESTAB";
 #   endif
 #  endif
