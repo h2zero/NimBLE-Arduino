@@ -781,6 +781,16 @@ bool NimBLEAdvertisedDevice::isLegacyAdvertisement() const {
 } // isLegacyAdvertisement
 
 /**
+ * @brief Convenience operator to convert this NimBLEAdvertisedDevice to NimBLEAddress representation.
+ * @details This allows passing NimBLEAdvertisedDevice to functions
+ * that accept NimBLEAddress and/or or it's methods as a parameter.
+ */
+NimBLEAdvertisedDevice::operator NimBLEAddress() const {
+    NimBLEAddress address(getAddress());
+    return address;
+} // operator NimBLEAddress
+
+/**
  * @brief Get the payload advertised by the device.
  * @return The advertisement payload.
  */
