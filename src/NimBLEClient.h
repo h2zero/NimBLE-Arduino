@@ -48,10 +48,6 @@ struct NimBLETaskData;
  */
 class NimBLEClient {
   public:
-    bool connect(const NimBLEAdvertisedDevice* device,
-                 bool                          deleteAttributes = true,
-                 bool                          asyncConnect     = false,
-                 bool                          exchangeMTU      = true);
     bool connect(const NimBLEAddress& address, bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           connect(bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);

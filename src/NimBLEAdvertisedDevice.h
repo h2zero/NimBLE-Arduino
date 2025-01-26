@@ -93,6 +93,7 @@ class NimBLEAdvertisedDevice {
     uint8_t  getSecondaryPhy() const;
     uint16_t getPeriodicInterval() const;
 # endif
+    operator NimBLEAddress() const;
 
     const std::vector<uint8_t>&                getPayload() const;
     const std::vector<uint8_t>::const_iterator begin() const;
