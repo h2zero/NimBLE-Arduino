@@ -142,22 +142,6 @@ bool NimBLEClient::connect(bool deleteAttributes, bool asyncConnect, bool exchan
 } // connect
 
 /**
- * @brief Connect to an advertising device.
- * @param [in] device The device to connect to.
- * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
- * have created when last connected.
- * @param [in] asyncConnect If true, the connection will be made asynchronously and this function will return immediately.\n
- * If false, this function will block until the connection is established or the connection attempt times out.
- * @param [in] exchangeMTU If true, the client will attempt to exchange MTU with the server after connection.\n
- * If false, the client will use the default MTU size and the application will need to call exchangeMTU() later.
- * @return true on success.
- */
-bool NimBLEClient::connect(const NimBLEAdvertisedDevice* device, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
-    NimBLEAddress address(device->getAddress());
-    return connect(address, deleteAttributes, asyncConnect, exchangeMTU);
-} // connect
-
-/**
  * @brief Connect to a BLE Server by address.
  * @param [in] address The address of the server.
  * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
