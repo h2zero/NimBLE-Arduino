@@ -25,8 +25,10 @@
 # include <vector>
 # include <functional>
 
+class NimBLEUUID;
 class NimBLERemoteService;
 class NimBLERemoteDescriptor;
+struct NimBLEDescriptorFilter;
 
 /**
  * @brief A model of a remote BLE characteristic.
@@ -65,10 +67,10 @@ class NimBLERemoteCharacteristic : public NimBLERemoteValueAttribute {
     ~NimBLERemoteCharacteristic();
 
     bool setNotify(uint16_t val, notify_callback notifyCallback = nullptr, bool response = true) const;
-    bool retrieveDescriptors(const NimBLEUUID* uuidFilter = nullptr) const;
+    bool retrieveDescriptors(NimBLEDescriptorFilter* filter = nullptr) const;
 
     static int descriptorDiscCB(
-        uint16_t conn_handle, const ble_gatt_error* error, uint16_t chr_val_handle, const ble_gatt_dsc* dsc, void* arg);
+        uint16_t connHandle, const ble_gatt_error* error, uint16_t chrHandle, const ble_gatt_dsc* dsc, void* arg);
 
     const NimBLERemoteService*                   m_pRemoteService{nullptr};
     uint8_t                                      m_properties{0};
