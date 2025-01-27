@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.1] 2025-01-26
+
+## Fixed
+- remote descriptor discovery error when no descriptors exist.
+- scan filter settings not enabled for esp32s3/c3.
+- remote descriptor discovery returning more than the desired descriptor.
+
 ## [2.2.0] 2025-01-12
 
 ## Fixed
