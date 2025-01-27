@@ -1,5 +1,7 @@
 var NAVTREEINDEX6 =
 {
+"md__new__user__guide.html#creating-a-server":[6,2],
+"md__new__user__guide.html#include-files":[6,0],
 "md__new__user__guide.html#using-the-library":[6,1],
 "md__usage__tips.html":[7],
 "md__usage__tips.html#check-return-values":[7,3],
@@ -247,7 +249,5 @@ var NAVTREEINDEX6 =
 "structble__hs__cfg.html#af89adcda7396b28cb3ba7dcd5b2b9651":[12,1,5,1,12],
 "structble__hs__hci__evt__dispatch__entry.html":[13,0,22],
 "structble__hs__stop__listener.html":[13,0,23],
-"structble__l2cap__event.html":[13,0,24],
-"structble__l2cap__event.html#a02e88ee423cb048f556fade26cb2fcaa":[13,0,24,9],
-"structble__l2cap__event.html#a110ac89d796a5c13e60e9f2d3c7efd99":[13,0,24,7]
+"structble__l2cap__event.html":[13,0,24]
 };
