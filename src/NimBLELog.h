@@ -110,16 +110,16 @@
 
 #   define NIMBLE_CPP_LOG_FORMAT(letter, format) NIMBLE_CPP_LOG_COLOR_##letter #letter " (%lu) %s: " format LOG_RESET_COLOR "\n"
 
-#   define NIMBLE_CPP_LOG_LEVEL_LOCAL(level, tag, format, ...)                                                                                                  		\
-      do {                                                                                                                                                          	\
-        if (level==ESP_LOG_ERROR)       { esp_log_write(ESP_LOG_ERROR, tag, NIMBLE_CPP_LOG_FORMAT(E, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); }	\
+#   define NIMBLE_CPP_LOG_LEVEL_LOCAL(level, tag, format, ...)                                                                                                          \
+      do {                                                                                                                                                              \
+        if (level==ESP_LOG_ERROR)       { esp_log_write(ESP_LOG_ERROR, tag, NIMBLE_CPP_LOG_FORMAT(E, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); }    \
         else if (level==ESP_LOG_WARN)   { esp_log_write(ESP_LOG_WARN, tag, NIMBLE_CPP_LOG_FORMAT(W, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); }     \
         else if (level==ESP_LOG_INFO)   { esp_log_write(ESP_LOG_INFO, tag, NIMBLE_CPP_LOG_FORMAT(I, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); }     \
         else                            { esp_log_write(ESP_LOG_DEBUG, tag, NIMBLE_CPP_LOG_FORMAT(D, format), esp_log_timestamp(), tag __VA_OPT__(,) __VA_ARGS__); }    \
       } while(0)
 
-#   define NIMBLE_CPP_LOG_PRINT(level, tag, format, ...)                                               				\
-      do {                                                                                                      	\
+#   define NIMBLE_CPP_LOG_PRINT(level, tag, format, ...)                                                            \
+      do {                                                                                                          \
         if (CONFIG_NIMBLE_CPP_LOG_LEVEL >= level) NIMBLE_CPP_LOG_LEVEL_LOCAL(level, tag, format, ##__VA_ARGS__);    \
       } while (0)
 
@@ -172,5 +172,12 @@
 #  endif
 
 # endif  /* CONFIG_NIMBLE_CPP_IDF */
+
+#  define NIMBLE_LOGD_IF(cond, tag, format, ...) { if (cond) { NIMBLE_LOGD(tag, format, ##__VA_ARGS__); }}
+#  define NIMBLE_LOGI_IF(cond, tag, format, ...) { if (cond) { NIMBLE_LOGI(tag, format, ##__VA_ARGS__); }}
+#  define NIMBLE_LOGW_IF(cond, tag, format, ...) { if (cond) { NIMBLE_LOGW(tag, format, ##__VA_ARGS__); }}
+#  define NIMBLE_LOGE_IF(cond, tag, format, ...) { if (cond) { NIMBLE_LOGE(tag, format, ##__VA_ARGS__); }}
+#  define NIMBLE_LOGE_RC(rc, tag, format, ...) { if (rc) { NIMBLE_LOGE(tag, format "; rc=%d %s", ##__VA_ARGS__, rc, NimBLEUtils::returnCodeToString(rc)); }}
+
 #endif   /* CONFIG_BT_ENABLED */
 #endif   /* NIMBLE_CPP_LOG_H_ */
