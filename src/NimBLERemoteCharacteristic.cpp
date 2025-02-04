@@ -27,11 +27,10 @@
 
 # include <climits>
 
-struct NimBLEDescriptorFilter {
-    NimBLERemoteDescriptor* dsc;
-    const NimBLEUUID*       uuid;
-    void*                   taskData;
-};
+typedef struct {
+    const NimBLEUUID* uuid;
+    void*             taskData;
+} desc_filter_t;
 
 static const char* LOG_TAG = "NimBLERemoteCharacteristic";
 
@@ -69,7 +68,7 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t connHandle,
                                                  const ble_gatt_dsc* dsc,
                                                  void* arg) {
     int        rc        = error->status;
-    auto       filter    = (NimBLEDescriptorFilter*)arg;
+    auto       filter    = (desc_filter_t*)arg;
     auto       pTaskData = (NimBLETaskData*)filter->taskData;
     const auto pChr      = (NimBLERemoteCharacteristic*)pTaskData->m_pInstance;
     const auto uuid      = filter->uuid; // UUID to filter for
@@ -93,10 +92,10 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(uint16_t connHandle,
 
 /**
  * @brief Populate the descriptors (if any) for this characteristic.
- * @param [in] filter Structure containing pointers to descriptor, UUID, and task data.
+ * This function will not return until we have all the descriptors.
  * @return True if successfully retrieved, success = BLE_HS_EDONE.
  */
-bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* filter) const {
+bool NimBLERemoteCharacteristic::retrieveDescriptors(const NimBLEUUID* uuid, NimBLERemoteDescriptor* out) const {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
     // If this is the last handle then there are no descriptors
@@ -105,24 +104,29 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* fil
         return true;
     }
 
+    NimBLETaskData taskData(const_cast<NimBLERemoteCharacteristic*>(this));
+    desc_filter_t  filter = {uuid, &taskData};
+
     int rc = ble_gattc_disc_all_dscs(getClient()->getConnHandle(),
                                      getHandle(),
                                      getRemoteService()->getEndHandle(),
                                      NimBLERemoteCharacteristic::descriptorDiscCB,
-                                     filter);
+                                     &filter);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gattc_disc_all_dscs: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;
     }
 
-    NimBLEUtils::taskWait(filter->taskData, BLE_NPL_TIME_FOREVER);
-    rc = ((NimBLETaskData*)filter->taskData)->m_flags;
+    NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+    rc = taskData.m_flags;
     if (rc != BLE_HS_EDONE) {
         NIMBLE_LOGE(LOG_TAG, "<< retrieveDescriptors(): failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;
     }
 
-    filter->dsc = m_vDescriptors.back();
+    if (out) {
+        out = m_vDescriptors.back();
+    }
     NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): found %d descriptors.", m_vDescriptors.size());
     return true;
 } // retrieveDescriptors
@@ -134,36 +138,35 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* fil
  */
 NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID& uuid) const {
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
-    NimBLETaskData         taskData(const_cast<NimBLERemoteCharacteristic*>(this));
-    NimBLEDescriptorFilter filter = {nullptr, &uuid, &taskData};
-    NimBLEUUID             uuidTmp;
+    NimBLERemoteDescriptor* pDsc = nullptr;
+    NimBLEUUID              uuidTmp;
 
     for (const auto& dsc : m_vDescriptors) {
         if (dsc->getUUID() == uuid) {
-            filter.dsc = dsc;
+            pDsc = dsc;
             goto Done;
         }
     }
 
-    if (!retrieveDescriptors(&filter) || filter.dsc) {
+    if (!retrieveDescriptors(&uuid, pDsc) || pDsc) {
         goto Done;
     }
     // Try again with 128 bit uuid if request succeeded with no uuid found.
     if (uuid.bitSize() == BLE_UUID_TYPE_16 || uuid.bitSize() == BLE_UUID_TYPE_32) {
         uuidTmp = NimBLEUUID(uuid).to128();
-        retrieveDescriptors(&filter);
+        retrieveDescriptors(&uuid, pDsc);
         goto Done;
     }
     // Try again with 16 bit uuid if request succeeded with no uuid found.
     // If the uuid was 128 bit but not of the BLE base type this check will fail.
     uuidTmp = NimBLEUUID(uuid).to16();
     if (uuidTmp.bitSize() == BLE_UUID_TYPE_16) {
-        retrieveDescriptors(&filter);
+        retrieveDescriptors(&uuid, pDsc);
     }
 
 Done:
-    NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: %sfound", filter.dsc ? "" : "not ");
-    return filter.dsc;
+    NIMBLE_LOGD(LOG_TAG, "<< getDescriptor: %sfound", pDsc ? "" : "not ");
+    return pDsc;
 } // getDescriptor
 
 /**
