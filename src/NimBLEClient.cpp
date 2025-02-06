@@ -705,13 +705,16 @@ bool NimBLEClient::discoverAttributes() {
         return false;
     }
 
+    NimBLETaskData          taskData(this);
+    NimBLERemoteDescriptor* dsc    = nullptr;
+    NimBLEDescriptorFilter  filter = {dsc, nullptr, &taskData};
     for (auto svc : m_svcVec) {
         if (!svc->retrieveCharacteristics()) {
             return false;
         }
 
         for (auto chr : svc->m_vChars) {
-            if (!chr->retrieveDescriptors()) {
+            if (!chr->retrieveDescriptors(&filter)) {
                 return false;
             }
         }
