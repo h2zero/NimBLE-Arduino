@@ -31,8 +31,8 @@
 extern "C" {
 #endif
 
-#include "../syscfg/syscfg.h"
-#include "../hal/hal_timer.h"
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "nimble/porting/nimble/include/hal/hal_timer.h"
 
 /*
  * NOTE: these definitions allow one to override the cputime frequency used.

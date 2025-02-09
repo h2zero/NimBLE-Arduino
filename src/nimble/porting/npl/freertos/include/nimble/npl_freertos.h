@@ -111,7 +111,7 @@ ble_npl_error_t npl_freertos_time_ms_to_ticks(uint32_t ms,
 ble_npl_error_t npl_freertos_time_ticks_to_ms(ble_npl_time_t ticks,
                                               uint32_t *out_ms);
 
-void npl_freertos_hw_set_isr(int irqn, void (*addr)(void));
+void npl_freertos_hw_set_isr(int irqn, uint32_t addr);
 
 uint32_t npl_freertos_hw_enter_critical(void);
 

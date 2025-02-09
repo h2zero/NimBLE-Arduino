@@ -29,7 +29,7 @@
 #define H_HAL_TIMER_
 
 #include <inttypes.h>
-#include "../os/queue.h"
+#include "nimble/porting/nimble/include/os/queue.h"
 
 #ifdef __cplusplus
 extern "C" {

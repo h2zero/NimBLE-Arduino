@@ -20,7 +20,7 @@
 #ifndef H_BLE_MONITOR_
 #define H_BLE_MONITOR_
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include <nimble/porting/nimble/include/syscfg/syscfg.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,11 +30,20 @@ extern "C" {
                          MYNEWT_VAL(BLE_MONITOR_UART))
 
 #if BLE_MONITOR
+int ble_monitor_out(int c);
 int ble_monitor_log(int level, const char *fmt, ...);
 #else
 static inline int
+ble_monitor_out(int c)
+{
+    (void)c;
+    return 0;
+}
+static inline int
 ble_monitor_log(int level, const char *fmt, ...)
 {
+    (void)level;
+    (void)fmt;
     return 0;
 }
 
@@ -51,6 +60,12 @@ ble_transport_to_ll_acl(struct os_mbuf *om)
 }
 
 static inline int
+ble_transport_to_ll_iso(struct os_mbuf *om)
+{
+    return ble_transport_to_ll_iso_impl(om);
+}
+
+static inline int
 ble_transport_to_hs_evt(void *buf)
 {
     return ble_transport_to_hs_evt_impl(buf);
@@ -60,6 +75,12 @@ static inline int
 ble_transport_to_hs_acl(struct os_mbuf *om)
 {
     return ble_transport_to_hs_acl_impl(om);
+}
+
+static inline int
+ble_transport_to_hs_iso(struct os_mbuf *om)
+{
+    return ble_transport_to_hs_iso_impl(om);
 }
 #endif /* BLE_MONITOR */
 

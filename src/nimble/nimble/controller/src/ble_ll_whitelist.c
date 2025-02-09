@@ -28,8 +28,8 @@
 
 #if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
 #include "nimble/nimble/drivers/nrf51/include/ble/xcvr.h"
-#elif defined(ARDUINO_ARCH_NRF5) && defined(NRF52_SERIES)
-#include "nimble/nimble/drivers/nrf52/include/ble/xcvr.h"
+#elif defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES) || defined(NRF53_SERIES))
+#include "nimble/nimble/drivers/nrf5x/include/ble/xcvr.h"
 #endif
 
 #include "../include/controller/ble_ll_whitelist.h"
@@ -41,9 +41,6 @@
 #if (MYNEWT_VAL(BLE_LL_WHITELIST_SIZE) < BLE_HW_WHITE_LIST_SIZE)
 #define BLE_LL_WHITELIST_SIZE       MYNEWT_VAL(BLE_LL_WHITELIST_SIZE)
 #else
-#ifndef BLE_HW_WHITE_LIST_SIZE
-#define BLE_HW_WHITE_LIST_SIZE 0
-#endif
 #define BLE_LL_WHITELIST_SIZE       BLE_HW_WHITE_LIST_SIZE
 #endif
 

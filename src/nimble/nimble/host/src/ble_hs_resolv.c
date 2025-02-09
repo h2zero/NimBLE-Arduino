@@ -29,19 +29,12 @@
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
 #include "ble_hs_resolv_priv.h"
-#include "../store/config/include/store/config/ble_store_config.h"
-#include "../store/config/src/ble_store_config_priv.h"
+#include "nimble/nimble/host/store/config/include/store/config/ble_store_config.h"
+#include "nimble/nimble/host/store/config/src/ble_store_config_priv.h"
 
 /* Resolve list size, additional space to save local device's configuration */
 #define BLE_RESOLV_LIST_SIZE    (MYNEWT_VAL(BLE_STORE_MAX_BONDS) + 1)
 #define BLE_MAX_RPA_TIMEOUT_VAL 0xA1B8
-
-static struct ble_hs_resolv_data g_ble_hs_resolv_data;
-static struct ble_hs_resolv_entry g_ble_hs_resolv_list[BLE_RESOLV_LIST_SIZE];
-/* Allocate one extra space for peer_records than no. of Bonds, it will take
- * care of storage overflow  */
-static struct ble_hs_dev_records peer_dev_rec[BLE_RESOLV_LIST_SIZE];
-static int ble_store_num_peer_dev_rec;
 
 struct ble_hs_resolv_data {
     uint8_t addr_res_enabled;
@@ -49,6 +42,13 @@ struct ble_hs_resolv_data {
     uint32_t rpa_tmo;
     struct ble_npl_callout rpa_timer;
 };
+
+static struct ble_hs_resolv_data g_ble_hs_resolv_data;
+static struct ble_hs_resolv_entry g_ble_hs_resolv_list[BLE_RESOLV_LIST_SIZE];
+/* Allocate one extra space for peer_records than no. of Bonds, it will take
+ * care of storage overflow  */
+static struct ble_hs_dev_records peer_dev_rec[BLE_RESOLV_LIST_SIZE];
+static int ble_store_num_peer_dev_rec;
 
 /* NRPA bit: Enables NRPA as private address. */
 static bool nrpa_pvcy;

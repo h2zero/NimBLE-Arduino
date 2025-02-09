@@ -9,8 +9,8 @@
 
 #define MESH_LOG_MODULE BLE_MESH_MODEL_LOG
 
-#include "../include/mesh/mesh.h"
-#include "../include/mesh/model_srv.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/model_srv.h"
 #include "mesh_priv.h"
 
 static struct bt_mesh_gen_onoff_srv *gen_onoff_srv;

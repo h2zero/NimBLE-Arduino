@@ -12,7 +12,7 @@
 #if MYNEWT_VAL(BLE_MESH_SETTINGS)
 
 #include "mesh_priv.h"
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 #include "subnet.h"
 #include "app_keys.h"
 #include "net.h"

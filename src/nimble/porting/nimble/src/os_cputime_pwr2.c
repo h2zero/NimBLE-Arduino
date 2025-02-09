@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#include "../include/os/os_cputime.h"
+#include "nimble/porting/nimble/include/os/os_cputime.h"
 
 /**
  * This module implements cputime functionality for timers for which:

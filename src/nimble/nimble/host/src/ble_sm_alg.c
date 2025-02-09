@@ -30,7 +30,7 @@
 #include "ble_hs_priv.h"
 
 #if MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS)
-#include "mbedtls/aes.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
 
 #if MYNEWT_VAL(BLE_SM_SC)
 #include "mbedtls/cipher.h"
@@ -510,7 +510,7 @@ ble_sm_alg_g2(const uint8_t *u, const uint8_t *v, const uint8_t *x,
     ble_sm_alg_log_buf("res", xs, 16);
 
     *passkey = get_be32(xs + 12) % 1000000;
-    BLE_HS_LOG(DEBUG, "    passkey=%" PRIu32"\n", *passkey);
+    BLE_HS_LOG(DEBUG, "    passkey=%u\n", *passkey);
 
     return 0;
 }

@@ -21,29 +21,11 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "../../../nimble/include/nimble/nimble_port.h"
-#ifdef ESP_PLATFORM
-#include "esp_bt.h"
-#endif
-
-#ifndef ESP_PLATFORM
-#if NIMBLE_CFG_CONTROLLER
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-#define NIMBLE_LL_STACK_SIZE   (130)
-#else
-#define NIMBLE_LL_STACK_SIZE   (100)
-#endif
-static StackType_t ll_xStack[ NIMBLE_LL_STACK_SIZE ];
-static StaticTask_t ll_xTaskBuffer;
-static TaskHandle_t ll_task_h;
-#endif
-
-static StackType_t hs_xStack[ NIMBLE_HS_STACK_SIZE ];
-static StaticTask_t hs_xTaskBuffer;
-#endif
 
 static TaskHandle_t host_task_h = NULL;
 
 #ifdef ESP_PLATFORM
+#include "esp_bt.h"
 /**
  * @brief esp_nimble_enable - Initialize the NimBLE host
  *
@@ -100,6 +82,20 @@ nimble_port_freertos_deinit(void)
 }
 
 #else // !ESP_PLATFORM
+
+#if NIMBLE_CFG_CONTROLLER
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+#define NIMBLE_LL_STACK_SIZE   (130)
+#else
+#define NIMBLE_LL_STACK_SIZE   (100)
+#endif
+static StackType_t ll_xStack[ NIMBLE_LL_STACK_SIZE ];
+static StaticTask_t ll_xTaskBuffer;
+static TaskHandle_t ll_task_h;
+#endif
+
+static StackType_t hs_xStack[ NIMBLE_HS_STACK_SIZE ];
+static StaticTask_t hs_xTaskBuffer;
 
 void
 nimble_port_freertos_init(TaskFunction_t host_task_fn)

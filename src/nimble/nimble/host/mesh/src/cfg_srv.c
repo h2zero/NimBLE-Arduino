@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdbool.h>
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 #include "mesh_priv.h"
 #include "adv.h"
@@ -31,6 +31,7 @@
 #include "proxy.h"
 #include "foundation.h"
 #include "friend.h"
+#include "testing.h"
 #include "settings.h"
 #include "cfg.h"
 
@@ -1964,6 +1965,10 @@ static int mod_app_bind(struct bt_mesh_model *model,
 
 	status = mod_bind(mod, key_app_idx);
 
+	if (IS_ENABLED(CONFIG_BT_TESTING) && status == STATUS_SUCCESS) {
+		bt_test_mesh_model_bound(ctx->addr, mod, key_app_idx);
+	}
+
 send_status:
 	BT_DBG("status 0x%02x", status);
 	create_mod_app_status(msg, mod, vnd, elem_addr, key_app_idx, status,
@@ -2022,6 +2027,10 @@ static int mod_app_unbind(struct bt_mesh_model *model,
 
 	status = mod_unbind(mod, key_app_idx, true);
 
+	if (IS_ENABLED(CONFIG_BT_TESTING) && status == STATUS_SUCCESS) {
+		bt_test_mesh_model_unbound(ctx->addr, mod, key_app_idx);
+	}
+
 send_status:
 	BT_DBG("status 0x%02x", status);
 	create_mod_app_status(msg, mod, vnd, elem_addr, key_app_idx, status,
@@ -2043,7 +2052,7 @@ static int mod_app_get(struct bt_mesh_model *model,
 		       struct bt_mesh_msg_ctx *ctx,
 		       struct os_mbuf *buf)
 {
-	struct os_mbuf *msg = NET_BUF_SIMPLE(max(BT_MESH_MODEL_BUF_LEN(OP_VND_MOD_APP_LIST,
+	struct os_mbuf *msg = NET_BUF_SIMPLE(MAX(BT_MESH_MODEL_BUF_LEN(OP_VND_MOD_APP_LIST,
 								       9 + KEY_LIST_LEN),
 						 BT_MESH_MODEL_BUF_LEN(OP_SIG_MOD_APP_LIST,
 								       9 + KEY_LIST_LEN)));

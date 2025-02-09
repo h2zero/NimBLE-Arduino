@@ -10,7 +10,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "mesh_priv.h"
 #include "net.h"
 #include "app_keys.h"

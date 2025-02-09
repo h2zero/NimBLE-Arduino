@@ -12,7 +12,7 @@
 #define MESH_LOG_MODULE BLE_MESH_MODEL_LOG
 #if MYNEWT_VAL(BLE_MESH_CFG_CLI)
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 #include <string.h>
 #include <errno.h>
@@ -54,7 +54,7 @@ static int comp_data_status(struct bt_mesh_model *model,
 	if (param->page) {
 		*(param->page) = net_buf_simple_pull_u8(buf);
 	}
-	to_copy  = min(net_buf_simple_tailroom(param->comp), buf->om_len);
+	to_copy  = MIN(net_buf_simple_tailroom(param->comp), buf->om_len);
 	net_buf_simple_add_mem(param->comp, buf->om_data, to_copy);
 
 	bt_mesh_msg_ack_ctx_rx(&cli->ack_ctx);

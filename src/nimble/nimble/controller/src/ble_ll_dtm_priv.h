@@ -37,4 +37,5 @@ int ble_ll_dtm_rx_isr_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr);
 void ble_ll_dtm_rx_pkt_in(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr);
 void ble_ll_dtm_wfr_timer_exp(void);
 void ble_ll_dtm_reset(void);
+int ble_ll_dtm_enabled(void);
 #endif

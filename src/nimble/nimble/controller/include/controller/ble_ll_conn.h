@@ -24,10 +24,10 @@
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
-#include "ble_ll.h"
-#include "ble_ll_sched.h"
-#include "ble_ll_ctrl.h"
-#include "ble_phy.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sched.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_ctrl.h"
+#include "nimble/nimble/controller/include/controller/ble_phy.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,44 +98,44 @@ struct ble_ll_conn_enc_data
 #endif
 
 /* Connection state machine flags. */
-union ble_ll_conn_sm_flags {
-    struct {
-        uint32_t pkt_rxd:1;
-        uint32_t terminate_ind_txd:1;
-        uint32_t terminate_ind_rxd:1;
-        uint32_t terminate_ind_rxd_acked:1;
-        uint32_t allow_periph_latency:1;
-        uint32_t periph_set_last_anchor:1;
-        uint32_t awaiting_host_reply:1;
-        uint32_t terminate_started:1;
-        uint32_t conn_update_sched:1;
-        uint32_t host_expects_upd_event:1;
-        uint32_t version_ind_sent:1;
-        uint32_t rxd_version_ind:1;
-        uint32_t chanmap_update_scheduled:1;
-        uint32_t conn_empty_pdu_txd:1;
-        uint32_t last_txd_md:1;
-        uint32_t conn_req_txd:1;
-        uint32_t send_ltk_req:1;
-        uint32_t encrypted:1;
-        uint32_t encrypt_chg_sent:1;
-        uint32_t le_ping_supp:1;
-        uint32_t csa2_supp:1;
-        uint32_t host_phy_update: 1;
-        uint32_t phy_update_sched: 1;
-        uint32_t ctrlr_phy_update: 1;
-        uint32_t phy_update_event: 1;
-        uint32_t peer_phy_update: 1; /* XXX:combine with ctrlr udpate bit? */
-        uint32_t aux_conn_req: 1;
-        uint32_t rxd_features:1;
-        uint32_t pending_hci_rd_features:1;
-        uint32_t pending_initiate_dle:1;
-        uint32_t subrate_trans:1;
-        uint32_t subrate_ind_txd:1;
-        uint32_t subrate_host_req:1;
-    } cfbit;
-    uint32_t conn_flags;
-} __attribute__((packed));
+struct ble_ll_conn_sm_flags {
+    uint32_t pkt_rxd : 1;
+    uint32_t last_txd_md : 1;
+    uint32_t empty_pdu_txd : 1;
+    uint32_t periph_use_latency : 1;
+    uint32_t periph_set_last_anchor : 1;
+    uint32_t csa2 : 1;
+    uint32_t encrypted : 1;
+    uint32_t encrypt_ltk_req : 1;
+    uint32_t encrypt_event_sent : 1;
+    uint32_t version_ind_txd : 1;
+    uint32_t version_ind_rxd : 1;
+    uint32_t features_rxd : 1;
+    uint32_t features_host_req : 1;
+    uint32_t terminate_started : 1;
+    uint32_t terminate_ind_txd : 1;
+    uint32_t terminate_ind_rxd : 1;
+    uint32_t terminate_ind_rxd_acked : 1;
+    uint32_t conn_update_sched : 1;
+    uint32_t conn_update_use_cp : 1;
+    uint32_t conn_update_host_w4reply : 1;
+    uint32_t conn_update_host_w4event : 1;
+    uint32_t chanmap_update_sched : 1;
+    uint32_t phy_update_sched : 1;
+    uint32_t phy_update_self_initiated : 1;
+    uint32_t phy_update_peer_initiated : 1;
+    uint32_t phy_update_host_initiated : 1;
+    uint32_t phy_update_host_w4event : 1;
+    uint32_t le_ping_supp : 1;
+#if MYNEWT_VAL(BLE_LL_CONN_INIT_AUTO_DLE)
+    uint32_t pending_initiate_dle : 1;
+#endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    uint8_t subrate_trans : 1;
+    uint8_t subrate_ind_txd : 1;
+    uint8_t subrate_host_req : 1;
+#endif
+};
 
 /**
  * Structure used for PHY data inside a connection.
@@ -204,7 +204,7 @@ struct ble_ll_conn_subrate_req_params {
 struct ble_ll_conn_sm
 {
     /* Connection state machine flags */
-    union ble_ll_conn_sm_flags csmflags;
+    struct ble_ll_conn_sm_flags flags;
 
     /* Current connection handle, state and role */
     uint16_t conn_handle;
@@ -227,8 +227,10 @@ struct ble_ll_conn_sm
     uint16_t rem_max_rx_time;
     uint16_t eff_max_tx_time;
     uint16_t eff_max_rx_time;
+    uint16_t ota_max_rx_time;
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY)
     uint16_t host_req_max_tx_time;
+    uint16_t host_req_max_rx_time;
 #endif
 
 #if (BLE_LL_BT5_PHY_SUPPORTED == 1)
@@ -238,14 +240,14 @@ struct ble_ll_conn_sm
 #endif
 
     /* Used to calculate data channel index for connection */
-    uint8_t chanmap[BLE_LL_CHAN_MAP_LEN];
+    uint8_t chan_map[BLE_LL_CHAN_MAP_LEN];
     uint8_t req_chanmap[BLE_LL_CHAN_MAP_LEN];
     uint16_t chanmap_instant;
     uint16_t channel_id; /* TODO could be union with hop and last chan used */
     uint8_t hop_inc;
     uint8_t data_chan_index;
     uint8_t last_unmapped_chan;
-    uint8_t num_used_chans;
+    uint8_t chan_map_used;
 
     /* Ack/Flow Control */
     uint8_t tx_seqnum;          /* note: can be 1 bit */
@@ -287,8 +289,7 @@ struct ble_ll_conn_sm
     /* Connection timing */
     uint16_t conn_itvl;
     uint16_t supervision_tmo;
-    uint16_t min_ce_len;
-    uint16_t max_ce_len;
+    uint32_t max_ce_len_ticks;
     uint16_t tx_win_off;
     uint32_t anchor_point;
     uint8_t anchor_point_usecs;     /* XXX: can this be uint8_t ?*/
@@ -310,7 +311,8 @@ struct ble_ll_conn_sm
     uint16_t subrate_base_event;
     uint16_t subrate_factor;
     uint16_t cont_num;
-    uint16_t last_pdu_event;
+    uint16_t cont_num_left;
+    uint8_t has_nonempty_pdu;
 
     union {
         struct ble_ll_conn_subrate_params subrate_trans;
@@ -377,6 +379,7 @@ struct ble_ll_conn_sm
 
     /* For connection update procedure */
     struct ble_ll_conn_upd_req conn_update_req;
+    uint16_t conn_update_anchor_offset_req;
 
     /* XXX: for now, just store them all */
     struct ble_ll_conn_params conn_cp;
@@ -388,28 +391,12 @@ struct ble_ll_conn_sm
 #endif
 
 #if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+    SLIST_ENTRY(ble_ll_conn_sm) css_sle;
     uint16_t css_slot_idx;
     uint16_t css_slot_idx_pending;
     uint8_t css_period_idx;
 #endif
 };
-
-/* Flags */
-#define CONN_F_UPDATE_SCHED(csm)    ((csm)->csmflags.cfbit.conn_update_sched)
-#define CONN_F_EMPTY_PDU_TXD(csm)   ((csm)->csmflags.cfbit.conn_empty_pdu_txd)
-#define CONN_F_LAST_TXD_MD(csm)     ((csm)->csmflags.cfbit.last_txd_md)
-#define CONN_F_CONN_REQ_TXD(csm)    ((csm)->csmflags.cfbit.conn_req_txd)
-#define CONN_F_ENCRYPTED(csm)       ((csm)->csmflags.cfbit.encrypted)
-#define CONN_F_ENC_CHANGE_SENT(csm) ((csm)->csmflags.cfbit.encrypt_chg_sent)
-#define CONN_F_LE_PING_SUPP(csm)    ((csm)->csmflags.cfbit.le_ping_supp)
-#define CONN_F_TERMINATE_STARTED(csm) ((csm)->csmflags.cfbit.terminate_started)
-#define CONN_F_CSA2_SUPP(csm)       ((csm)->csmflags.cfbit.csa2_supp)
-#define CONN_F_HOST_PHY_UPDATE(csm) ((csm)->csmflags.cfbit.host_phy_update)
-#define CONN_F_PHY_UPDATE_SCHED(csm) ((csm)->csmflags.cfbit.phy_update_sched)
-#define CONN_F_CTRLR_PHY_UPDATE(csm) ((csm)->csmflags.cfbit.ctrlr_phy_update)
-#define CONN_F_PHY_UPDATE_EVENT(csm) ((csm)->csmflags.cfbit.phy_update_event)
-#define CONN_F_PEER_PHY_UPDATE(csm)  ((csm)->csmflags.cfbit.peer_phy_update)
-#define CONN_F_AUX_CONN_REQ(csm)  ((csm)->csmflags.cfbit.aux_conn_req)
 
 /* Role */
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
@@ -453,6 +440,9 @@ ble_ll_conn_rem_feature_add(struct ble_ll_conn_sm *connsm, uint64_t feature)
 struct ble_ll_conn_sm *ble_ll_conn_find_by_handle(uint16_t handle);
 struct ble_ll_conn_sm *ble_ll_conn_find_by_peer_addr(const uint8_t* addr,
                                                      uint8_t addr_type);
+
+/* Perform channel map update on all connections (applies to central role) */
+void ble_ll_conn_chan_map_update(void);
 
 /* required for unit testing */
 uint8_t ble_ll_conn_calc_dci(struct ble_ll_conn_sm *conn, uint16_t latency);

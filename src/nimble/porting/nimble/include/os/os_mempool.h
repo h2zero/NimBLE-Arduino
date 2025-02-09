@@ -29,8 +29,8 @@
 #define _OS_MEMPOOL_H_
 
 #include <stdbool.h>
-#include "os.h"
-#include "queue.h"
+#include "nimble/porting/nimble/include/os/os.h"
+#include "nimble/porting/nimble/include/os/queue.h"
 
 #ifdef __cplusplus
 extern "C" {
