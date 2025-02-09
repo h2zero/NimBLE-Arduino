@@ -8,21 +8,19 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_PROV_LOG
 
 #include <stdint.h>
 #include <string.h>
-#include "../include/mesh/mesh.h"
-#include "nimble/porting/nimble/include/os/os_mbuf.h"
-#include "../include/mesh/testing.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include <nimble/porting/nimble/include/os/os_mbuf.h>
+#include "testing.h"
 #include "net.h"
 #include "prov.h"
 #include "adv.h"
 #include "crypto.h"
 #include "beacon.h"
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 
 #define GPCF(gpc)           (gpc & 0x03)
 #define GPC_START(last_seg) (((last_seg) << 2) | 0x00)
@@ -32,6 +30,7 @@
 
 #define START_PAYLOAD_MAX 20
 #define CONT_PAYLOAD_MAX  23
+#define RX_BUFFER_MAX     65
 
 #define START_LAST_SEG(gpc) (gpc >> 2)
 #define CONT_SEG_INDEX(gpc) (gpc >> 2)
@@ -41,7 +40,8 @@
 #define LINK_ACK        0x01
 #define LINK_CLOSE      0x02
 
-#define XACT_SEG_DATA(_seg) (&link.rx.buf->om_data[20 + ((_seg - 1) * 23)])
+#define XACT_SEG_OFFSET(_seg) (20 + ((_seg - 1) * 23))
+#define XACT_SEG_DATA(_seg) (&link.rx.buf->om_data[XACT_SEG_OFFSET(_seg)])
 #define XACT_SEG_RECV(_seg) (link.rx.seg &= ~(1 << (_seg)))
 
 #define XACT_ID_MAX  0x7f
@@ -224,7 +224,7 @@ static void reset_adv_link(void)
 	}
 	link.tx.pending_ack = XACT_ID_NVAL;
 	if (!rx_buf) {
-		rx_buf = NET_BUF_SIMPLE(65);
+		rx_buf = NET_BUF_SIMPLE(RX_BUFFER_MAX);
 	}
 	link.rx.buf = rx_buf;
 	net_buf_simple_reset(link.rx.buf);
@@ -388,6 +388,11 @@ static void gen_prov_cont(struct prov_rx *rx, struct os_mbuf *buf)
 		return;
 	}
 
+	if (XACT_SEG_OFFSET(seg) + buf->om_len > RX_BUFFER_MAX) {
+		BT_WARN("Rx buffer overflow. Malformed generic prov frame?");
+		return;
+	}
+
 	memcpy(XACT_SEG_DATA(seg), buf->om_data, buf->om_len);
 	XACT_SEG_RECV(seg);
 
@@ -520,6 +525,11 @@ static void gen_prov_ctl(struct prov_rx *rx, struct os_mbuf *buf)
 		break;
 	default:
 		BT_ERR("Unknown bearer opcode: 0x%02x", BEARER_CTL(rx->gpc));
+
+		if (IS_ENABLED(CONFIG_BT_TESTING)) {
+			bt_test_mesh_prov_invalid_bearer(BEARER_CTL(rx->gpc));
+		}
+
 		return;
 	}
 }
@@ -887,7 +897,7 @@ void pb_adv_init(void)
 	k_work_init_delayable(&link.tx.retransmit, prov_retransmit);
 
     if (!rx_buf) {
-        rx_buf = NET_BUF_SIMPLE(65);
+        rx_buf = NET_BUF_SIMPLE(RX_BUFFER_MAX);
     }
     link.rx.buf = rx_buf;
     net_buf_simple_reset(link.rx.buf);
@@ -906,5 +916,3 @@ const struct prov_bearer pb_adv = {
 	.send = prov_send_adv,
 	.clear_tx = prov_clear_tx,
 };
-
-#endif /* MYNEWT_VAL(BLE_MESH) */

@@ -30,7 +30,7 @@ extern "C" {
 #define static_assert _Static_assert
 #endif
 
-#include "../syscfg/syscfg.h"
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
 
 #define OS_ALIGN(__n, __a) (                             \
@@ -46,11 +46,11 @@ typedef uint32_t os_sr_t;
 #define OS_ASSERT_CRITICAL() assert(ble_npl_hw_is_in_critical())
 
 /* Mynewt components (not abstracted in NPL) */
-#include "endian.h"
-#include "queue.h"
-#include "os_error.h"
-#include "os_mbuf.h"
-#include "os_mempool.h"
+#include "nimble/porting/nimble/include/os/endian.h"
+#include "nimble/porting/nimble/include/os/queue.h"
+#include "nimble/porting/nimble/include/os/os_error.h"
+#include "nimble/porting/nimble/include/os/os_mbuf.h"
+#include "nimble/porting/nimble/include/os/os_mempool.h"
 
 #ifdef __cplusplus
 }

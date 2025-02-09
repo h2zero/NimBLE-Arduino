@@ -7,15 +7,13 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_ACCESS_LOG
 
 #include <errno.h>
 #include <stdlib.h>
-#include "nimble/porting/nimble/include/os/os_mbuf.h"
+#include <nimble/porting/nimble/include/os/os_mbuf.h>
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 #include "mesh_priv.h"
 #include "adv.h"
@@ -26,7 +24,7 @@
 #include "foundation.h"
 #include "settings.h"
 #if MYNEWT_VAL(BLE_MESH_SHELL_MODELS)
-#include "../include/mesh/model_cli.h"
+#include "nimble/nimble/host/mesh/include/mesh/model_cli.h"
 #endif
 
 /* bt_mesh_model.flags */
@@ -308,7 +306,7 @@ static int bt_mesh_vnd_mod_msg_cid_check(struct bt_mesh_model *mod)
 		}
 
 		BT_ERR("Invalid vendor model(company:0x%04x"
-		       " id:0x%04x) message opcode 0x%08x",
+		       " id:0x%04x) message opcode 0x%08" PRIx32,
 		       mod->vnd.company, mod->vnd.id, op->opcode);
 
 		return -EINVAL;
@@ -703,10 +701,10 @@ void bt_mesh_model_recv(struct bt_mesh_net_rx *rx, struct os_mbuf *buf)
 		}
 
 		if ((op->len >= 0) && (buf->om_len < (size_t)op->len)) {
-			BT_ERR("Too short message for OpCode 0x%08x", opcode);
+			BT_ERR("Too short message for OpCode 0x%08" PRIx32, opcode);
 			continue;
 		} else if ((op->len < 0) && (buf->om_len != (size_t)(-op->len))) {
-			BT_ERR("Invalid message size for OpCode 0x%08x",
+			BT_ERR("Invalid message size for OpCode 0x%08" PRIx32,
 			       opcode);
 			continue;
 		}
@@ -1313,4 +1311,3 @@ void bt_mesh_access_init(void)
 				 "Failed to register bt_mesh_access conf");
     #endif
 }
-#endif

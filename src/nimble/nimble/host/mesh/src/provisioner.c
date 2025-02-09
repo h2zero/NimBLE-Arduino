@@ -8,14 +8,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_PROV_LOG
+
+#include "testing.h"
 
 #include "crypto.h"
 #include "adv.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "net.h"
 #include "rpl.h"
 #include "beacon.h"
@@ -750,4 +749,3 @@ int bt_mesh_pb_adv_open(const uint8_t uuid[16], uint16_t net_idx, uint16_t addr,
 	return err;
 }
 #endif
-#endif /* MYNEWT_VAL(BLE_MESH) */

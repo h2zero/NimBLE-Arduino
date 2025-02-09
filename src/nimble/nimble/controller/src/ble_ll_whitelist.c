@@ -25,25 +25,16 @@
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
-
-#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
 #include "nimble/nimble/drivers/nrf51/include/ble/xcvr.h"
-#elif defined(ARDUINO_ARCH_NRF5) && defined(NRF52_SERIES)
-#include "nimble/nimble/drivers/nrf52/include/ble/xcvr.h"
-#endif
-
-#include "../include/controller/ble_ll_whitelist.h"
-#include "../include/controller/ble_ll_hci.h"
-#include "../include/controller/ble_ll_adv.h"
-#include "../include/controller/ble_ll_scan.h"
-#include "../include/controller/ble_hw.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_whitelist.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_hci.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_adv.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_scan.h"
+#include "nimble/nimble/controller/include/controller/ble_hw.h"
 
 #if (MYNEWT_VAL(BLE_LL_WHITELIST_SIZE) < BLE_HW_WHITE_LIST_SIZE)
 #define BLE_LL_WHITELIST_SIZE       MYNEWT_VAL(BLE_LL_WHITELIST_SIZE)
 #else
-#ifndef BLE_HW_WHITE_LIST_SIZE
-#define BLE_HW_WHITE_LIST_SIZE 0
-#endif
 #define BLE_LL_WHITELIST_SIZE       BLE_HW_WHITE_LIST_SIZE
 #endif
 

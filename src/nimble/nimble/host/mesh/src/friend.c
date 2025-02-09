@@ -7,8 +7,6 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_FRIEND_LOG
 
 #if MYNEWT_VAL(BLE_MESH_FRIEND)
@@ -17,9 +15,9 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "../include/mesh/mesh.h"
-#include "../include/mesh/slist.h"
-#include "../include/mesh_priv.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/slist.h"
+#include "mesh_priv.h"
 #include "crypto.h"
 #include "adv.h"
 #include "net.h"
@@ -1688,9 +1686,9 @@ void bt_mesh_friend_enqueue_rx(struct bt_mesh_net_rx *rx,
 			continue;
 		}
 
-		if (friend_lpn_matches(frnd, rx->sub->net_idx,
-					rx->ctx.addr)) {
-			continue;
+		if (friend_lpn_matches(frnd, rx->sub->net_idx,	
+					rx->ctx.addr)) {	
+			continue;	
 		}
 
 		if (friend_lpn_matches(frnd, rx->sub->net_idx,
@@ -1791,5 +1789,3 @@ void bt_mesh_friend_clear_incomplete(struct bt_mesh_subnet *sub, uint16_t src,
 }
 
 #endif /* MYNEWT_VAL(BLE_MESH_FRIEND) */
-
-#endif /* MYNEWT_VAL(BLE_MESH) */

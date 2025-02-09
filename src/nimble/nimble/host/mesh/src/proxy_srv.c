@@ -7,13 +7,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH_PROXY)
-
 #define MESH_LOG_MODULE BLE_MESH_PROXY_LOG
 
-#include "../include/mesh/slist.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/slist.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/nimble/host/src/ble_hs_priv.h"
 #include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
 
@@ -272,7 +269,7 @@ static void proxy_cfg(struct bt_mesh_proxy_role *role)
 	rx.local_match = 1U;
 
 	if (bt_mesh_rpl_check(&rx, NULL)) {
-		BT_WARN("Replay: src 0x%04x dst 0x%04x seq 0x%06lx",
+		BT_WARN("Replay: src 0x%04x dst 0x%04x seq 0x%06" PRIx32,
 			rx.ctx.addr, rx.ctx.recv_dst, rx.seq);
 		return;
 	}
@@ -592,8 +589,8 @@ static int gatt_proxy_advertise(struct bt_mesh_subnet *sub)
 		 * 6 slices, but make sure that a slice is at least one
 		 * second long (to avoid excessive rotation).
 		 */
-		max_timeout = NODE_ID_TIMEOUT / max(subnet_count, 6);
-		max_timeout = max(max_timeout, K_SECONDS(1));
+		max_timeout = NODE_ID_TIMEOUT / MAX(subnet_count, 6);
+		max_timeout = MAX(max_timeout, K_SECONDS(1));
 
 		if (remaining > max_timeout || remaining < 0) {
 			remaining = max_timeout;
@@ -942,9 +939,11 @@ static void ble_mesh_handle_connect(struct ble_gap_event *event, void *arg)
 			return;
 		}
 
+#if MYNEWT_VAL(BLE_MESH_PROXY)
 		if (event->adv_complete.instance != BT_MESH_ADV_GATT_INST) {
 			return;
 		}
+#endif
 
 		gatt_connected(event->adv_complete.conn_handle);
 #if MYNEWT_VAL(BLE_MESH_PB_GATT)
@@ -1014,5 +1013,3 @@ int bt_mesh_proxy_init(void)
 
 	return 0;
 }
-
-#endif //MYNEWT_VAL(BLE_MESH_PROXY)

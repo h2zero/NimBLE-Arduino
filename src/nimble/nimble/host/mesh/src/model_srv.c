@@ -5,12 +5,10 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_MODEL_LOG
 
-#include "../include/mesh/mesh.h"
-#include "../include/mesh/model_srv.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/model_srv.h"
 #include "mesh_priv.h"
 
 static struct bt_mesh_gen_onoff_srv *gen_onoff_srv;
@@ -282,4 +280,3 @@ static int lightness_srv_init(struct bt_mesh_model *model)
 const struct bt_mesh_model_cb light_lightness_srv_cb = {
 	.init = lightness_srv_init,
 };
-#endif

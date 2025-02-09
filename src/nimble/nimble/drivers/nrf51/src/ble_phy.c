@@ -17,7 +17,7 @@
  * under the License.
  */
 
- #if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
+#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
 
 #include <stdint.h>
 #include <string.h>
@@ -26,13 +26,13 @@
 #include "nimble/porting/nimble/include/os/os.h"
 /* Keep os_cputime explicitly to enable build on non-Mynewt platforms */
 #include "nimble/porting/nimble/include/os/os_cputime.h"
-#include "../include/ble/xcvr.h"
+#include "nimble/nimble/drivers/nrf51/include/ble/xcvr.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
 #include "nimble/nimble/controller/include/controller/ble_phy.h"
 #include "nimble/nimble/controller/include/controller/ble_phy_trace.h"
 #include "nimble/nimble/controller/include/controller/ble_ll.h"
-#include "nrf.h"
+#include "nrfx.h"
 
 #if MYNEWT
 #include "mcu/nrf51_clock.h"
@@ -49,9 +49,11 @@
 #error LE Coded PHY cannot be enabled on nRF51
 #endif
 
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
+static uint32_t
+ble_phy_mode_pdu_start_off(int phy_mode)
+{
+    return 40;
+}
 
 /* XXX: 4) Make sure RF is higher priority interrupt than schedule */
 
@@ -102,7 +104,6 @@ struct ble_phy_obj
     uint8_t phy_privacy;
     uint8_t phy_tx_pyld_len;
     uint8_t *rxdptr;
-    int8_t  rx_pwr_compensation;
     uint32_t phy_aar_scratch;
     uint32_t phy_access_address;
     struct ble_mbuf_hdr rxhdr;
@@ -626,8 +627,7 @@ ble_phy_rx_end_isr(void)
     /* Set RSSI and CRC status flag in header */
     ble_hdr = &g_ble_phy_data.rxhdr;
     assert(NRF_RADIO->EVENTS_RSSIEND != 0);
-    ble_hdr->rxinfo.rssi = (-1 * NRF_RADIO->RSSISAMPLE) +
-                            g_ble_phy_data.rx_pwr_compensation;
+    ble_hdr->rxinfo.rssi = (-1 * NRF_RADIO->RSSISAMPLE);
 
     dptr = g_ble_phy_data.rxdptr;
 
@@ -855,8 +855,6 @@ ble_phy_init(void)
     /* Set phy channel to an invalid channel so first set channel works */
     g_ble_phy_data.phy_chan = BLE_PHY_NUM_CHANS;
 
-    g_ble_phy_data.rx_pwr_compensation = 0;
-
     /* Toggle peripheral power to reset (just in case) */
     NRF_RADIO->POWER = 0;
     NRF_RADIO->POWER = 1;
@@ -987,24 +985,10 @@ ble_phy_rx(void)
 }
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
-/**
- * Called to enable encryption at the PHY. Note that this state will persist
- * in the PHY; in other words, if you call this function you have to call
- * disable so that future PHY transmits/receives will not be encrypted.
- *
- * @param pkt_counter
- * @param iv
- * @param key
- * @param is_master
- */
 void
-ble_phy_encrypt_enable(uint64_t pkt_counter, uint8_t *iv, uint8_t *key,
-                       uint8_t is_master)
+ble_phy_encrypt_enable(const uint8_t *key)
 {
     memcpy(g_nrf_ccm_data.key, key, 16);
-    g_nrf_ccm_data.pkt_counter = pkt_counter;
-    memcpy(g_nrf_ccm_data.iv, iv, 8);
-    g_nrf_ccm_data.dir_bit = is_master;
     g_ble_phy_data.phy_encrypted = 1;
 
     /* Encryption uses LFLEN=5, S1LEN = 3. */
@@ -1018,10 +1002,16 @@ ble_phy_encrypt_enable(uint64_t pkt_counter, uint8_t *iv, uint8_t *key,
 }
 
 void
-ble_phy_encrypt_set_pkt_cntr(uint64_t pkt_counter, int dir)
+ble_phy_encrypt_iv_set(const uint8_t *iv)
 {
-    g_nrf_ccm_data.pkt_counter = pkt_counter;
-    g_nrf_ccm_data.dir_bit = dir;
+    memcpy(g_nrf_ccm_data.iv, iv, 8);
+}
+
+void
+ble_phy_encrypt_counter_set(uint64_t counter, uint8_t dir_bit)
+{
+    g_nrf_ccm_data.pkt_counter = counter;
+    g_nrf_ccm_data.dir_bit = dir_bit;
 }
 
 void
@@ -1262,7 +1252,7 @@ ble_phy_tx(ble_phy_tx_pducb_t pducb, void *pducb_arg, uint8_t end_trans)
  * @return int 0: success; anything else is an error
  */
 int
-ble_phy_txpwr_set(int dbm)
+ble_phy_tx_power_set(int dbm)
 {
     /* Check valid range */
     assert(dbm <= BLE_PHY_MAX_PWR_DBM);
@@ -1291,7 +1281,8 @@ ble_phy_txpwr_set(int dbm)
  *
  * @return int Rounded power in dBm
  */
-int ble_phy_txpower_round(int dbm)
+int
+ble_phy_tx_power_round(int dbm)
 {
     /* "Rail" power level if outside supported range */
     if (dbm > NRF_TX_PWR_MAX_DBM) {
@@ -1313,15 +1304,9 @@ int ble_phy_txpower_round(int dbm)
  * @return int  The current PHY transmit power, in dBm
  */
 int
-ble_phy_txpwr_get(void)
+ble_phy_tx_power_get(void)
 {
     return g_ble_phy_data.phy_txpwr_dbm;
-}
-
-void
-ble_phy_set_rx_pwr_compensation(int8_t compensation)
-{
-    g_ble_phy_data.rx_pwr_compensation = compensation;
 }
 
 /**
@@ -1380,6 +1365,12 @@ ble_phy_setchan(uint8_t chan, uint32_t access_addr, uint32_t crcinit)
     NRF_RADIO->DATAWHITEIV = chan;
 
     return 0;
+}
+
+uint8_t
+ble_phy_chan_get(void)
+{
+    return g_ble_phy_data.phy_chan;
 }
 
 /**
@@ -1530,4 +1521,5 @@ ble_phy_rfclk_disable(void)
     NRF_CLOCK->TASKS_HFCLKSTOP = 1;
 #endif
 }
-#endif
+
+#endif /* ARDUINO_ARCH_NRF5 && NRF51 */

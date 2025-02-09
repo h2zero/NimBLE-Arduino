@@ -7,13 +7,11 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_PROV_LOG
 
 #include <errno.h>
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "mesh_priv.h"
 
 #include "crypto.h"
@@ -22,7 +20,7 @@
 #include "access.h"
 #include "foundation.h"
 #include "prov.h"
-#include "../include/mesh/testing.h"
+#include "testing.h"
 
 struct bt_mesh_prov_link bt_mesh_prov_link;
 const struct bt_mesh_prov *bt_mesh_prov;
@@ -459,5 +457,3 @@ int bt_mesh_prov_init(const struct bt_mesh_prov *prov_info)
 
 	return bt_mesh_prov_reset_state(NULL);
 }
-
-#endif /* MYNEWT_VAL(BLE_MESH) */

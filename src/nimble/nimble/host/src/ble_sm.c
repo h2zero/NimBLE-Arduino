@@ -48,7 +48,7 @@
 #include "nimble/nimble/host/include/host/ble_sm.h"
 #include "ble_hs_priv.h"
 #include "ble_hs_resolv_priv.h"
-#include "../store/config/src/ble_store_config_priv.h"
+#include "nimble/nimble/host/store/config/src/ble_store_config_priv.h"
 
 #if NIMBLE_BLE_CONNECT
 
@@ -557,11 +557,12 @@ ble_sm_persist_keys(struct ble_sm_proc *proc)
             switch (peer_addr.type) {
             case BLE_ADDR_PUBLIC:
             case BLE_ADDR_PUBLIC_ID:
-                conn->bhc_peer_addr.type = BLE_ADDR_PUBLIC_ID;
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
                 /* In case of Host based privacy, we should not be changing
                  * peer address type to BLE_ADDR_PUBLIC_ID */
                 conn->bhc_peer_addr.type = BLE_ADDR_PUBLIC;
+#else
+                conn->bhc_peer_addr.type = BLE_ADDR_PUBLIC_ID;
 #endif
                 break;
 
@@ -602,7 +603,8 @@ ble_sm_persist_keys(struct ble_sm_proc *proc)
     ble_hs_unlock();
 
     if (identity_ev) {
-        ble_gap_identity_event(proc->conn_handle);
+        /* Use peer_addr since it does have proper addr type (i.e. 0/1, not 2/3) */
+        ble_gap_identity_event(proc->conn_handle, &peer_addr);
     }
 
     authenticated = proc->flags & BLE_SM_PROC_F_AUTHENTICATED;
@@ -945,7 +947,8 @@ ble_sm_chk_repeat_pairing(uint16_t conn_handle,
 }
 
 void
-ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res)
+ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res,
+                      bool tx_fail)
 {
     struct ble_sm_proc *prev;
     struct ble_sm_proc *proc;
@@ -972,7 +975,7 @@ ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res)
                                 &prev);
 
         if (proc != NULL) {
-            if (res->execute) {
+            if (res && res->execute) {
                 ble_sm_exec(proc, res, res->state_arg);
             }
 
@@ -991,7 +994,7 @@ ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res)
             }
         }
 
-        if (res->sm_err != 0) {
+        if (res && (res->sm_err != 0) && tx_fail) {
             ble_sm_pair_fail_tx(conn_handle, res->sm_err);
         }
 
@@ -1001,20 +1004,32 @@ ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res)
             break;
         }
 
-	if (res->app_status == 518 ) {
-	    conn = ble_hs_conn_find(conn_handle);
+        if (res->app_status == 518 ) {
+            conn = ble_hs_conn_find(conn_handle);
 
             conn_flags = conn->bhc_flags;
 
             ble_sm_proc_free(proc);
 
-	    if (conn_flags & BLE_HS_CONN_F_MASTER) {
-	       ble_sm_pair_initiate(conn_handle);
-	    }
-	    else {
-	       ble_sm_slave_initiate(conn_handle);
+            if (conn_flags & BLE_HS_CONN_F_MASTER) {
+                ble_sm_pair_initiate(conn_handle);
+            } else {
+                ble_sm_slave_initiate(conn_handle);
             }
-	    break;
+            break;
+        }
+
+        if (res->enc_cb &&
+            res->app_status != BLE_HS_ENOTCONN) {
+            /* Do not send this event on broken connection */
+            ble_gap_pairing_complete_event(conn_handle, res->sm_err);
+        }
+        /* Persist keys if bonding has successfully completed. */
+        if (res->app_status == 0    &&
+            rm                      &&
+            proc->flags & BLE_SM_PROC_F_BONDING) {
+
+            ble_sm_persist_keys(proc);
         }
 
         if (res->enc_cb) {
@@ -1028,13 +1043,6 @@ ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res)
             ble_gap_passkey_event(conn_handle, &res->passkey_params);
         }
 
-        /* Persist keys if bonding has successfully completed. */
-        if (res->app_status == 0    &&
-            rm                      &&
-            proc->flags & BLE_SM_PROC_F_BONDING) {
-
-            ble_sm_persist_keys(proc);
-        }
 
         if (rm) {
             ble_sm_proc_free(proc);
@@ -1272,7 +1280,7 @@ ble_sm_enc_event_rx(uint16_t conn_handle, uint8_t evt_status, int encrypted)
     ble_hs_unlock();
 
     res.bonded = bonded;
-    ble_sm_process_result(conn_handle, &res);
+    ble_sm_process_result(conn_handle, &res, true);
 }
 
 void
@@ -1302,15 +1310,15 @@ ble_sm_retrieve_ltk(uint16_t ediv, uint64_t rand, uint8_t peer_addr_type,
     struct ble_store_key_sec key_sec;
     int rc;
 
-    /* Tell applicaiton to look up LTK by peer address and ediv/rand pair. */
+    /* Tell application to look up LTK by peer address and ediv/rand pair. */
     memset(&key_sec, 0, sizeof key_sec);
     key_sec.peer_addr.type = peer_addr_type;
     memcpy(key_sec.peer_addr.val, peer_addr, 6);
-    key_sec.ediv = ediv;
-    key_sec.rand_num = rand;
-    key_sec.ediv_rand_present = 1;
 
     rc = ble_store_read_our_sec(&key_sec, value_sec);
+    if (value_sec->ediv != ediv || value_sec->rand_num != rand) {
+        return BLE_HS_ENOENT;
+    }
     return rc;
 }
 
@@ -1493,7 +1501,7 @@ ble_sm_ltk_req_rx(const struct ble_hci_ev_le_subev_lt_key_req *ev)
         }
     }
 
-    ble_sm_process_result(conn_handle, &res);
+    ble_sm_process_result(conn_handle, &res, true);
 
     return 0;
 }
@@ -1827,10 +1835,10 @@ ble_sm_verify_auth_requirements(uint8_t cmd)
             return false;
         }
     }
-    /* Fail if Secure Connections level forces MITM protection and remote does not
+    /* Fail if security level forces MITM protection and remote does not
      * support it
      */
-    if (MYNEWT_VAL(BLE_SM_SC_LVL) >= 3 && !(cmd & BLE_SM_PAIR_AUTHREQ_MITM)) {
+    if (MYNEWT_VAL(BLE_SM_LVL) >= 3 && !(cmd & BLE_SM_PAIR_AUTHREQ_MITM)) {
         return false;
     }
     return true;
@@ -1914,7 +1922,7 @@ ble_sm_pair_req_rx(uint16_t conn_handle, struct os_mbuf **om,
         if (conn->bhc_flags & BLE_HS_CONN_F_MASTER) {
             res->sm_err = BLE_SM_ERR_CMD_NOT_SUPP;
             res->app_status = BLE_HS_SM_US_ERR(BLE_SM_ERR_CMD_NOT_SUPP);
-        } else if (MYNEWT_VAL(BLE_SM_SC_LVL) == 1) {
+        } else if (MYNEWT_VAL(BLE_SM_LVL) == 1) {
             res->sm_err = BLE_SM_ERR_CMD_NOT_SUPP;
             res->app_status = BLE_HS_SM_US_ERR(BLE_SM_ERR_CMD_NOT_SUPP);
         } else if (req->max_enc_key_size < BLE_SM_PAIR_KEY_SZ_MIN) {
@@ -1923,12 +1931,18 @@ ble_sm_pair_req_rx(uint16_t conn_handle, struct os_mbuf **om,
         } else if (req->max_enc_key_size > BLE_SM_PAIR_KEY_SZ_MAX) {
             res->sm_err = BLE_SM_ERR_INVAL;
             res->app_status = BLE_HS_SM_US_ERR(BLE_SM_ERR_INVAL);
-        } else if (MYNEWT_VAL(BLE_SM_SC_ONLY) && (req->max_enc_key_size != BLE_SM_PAIR_KEY_SZ_MAX)) {
-            /* Fail if Secure Connections Only mode is on and remote does not meet
-            * key size requirements - MITM was checked in last step
-            */
+        } else if (ble_hs_cfg.sm_sc_only  && !(req->authreq & BLE_SM_PAIR_AUTHREQ_SC)) {
+            /* Fail if Secure Connections Only mode is on and SC is not supported by peer
+             */
+            res->sm_err = BLE_SM_ERR_AUTHREQ;
+            res->app_status = BLE_HS_SM_US_ERR(BLE_SM_ERR_AUTHREQ);
+            res->enc_cb = 1;
+        } else if (ble_hs_cfg.sm_sc_only && (req->max_enc_key_size != BLE_SM_PAIR_KEY_SZ_MAX)) {
+            /* Fail if Secure Connections Only mode is on and key size is too small
+             */
             res->sm_err = BLE_SM_ERR_ENC_KEY_SZ;
             res->app_status = BLE_HS_SM_US_ERR(BLE_SM_ERR_ENC_KEY_SZ);
+            res->enc_cb = 1;
         } else if (!ble_sm_verify_auth_requirements(req->authreq)) {
             res->sm_err = BLE_SM_ERR_AUTHREQ;
             res->app_status = BLE_HS_SM_US_ERR(BLE_SM_ERR_AUTHREQ);
@@ -1992,7 +2006,7 @@ ble_sm_pair_rsp_rx(uint16_t conn_handle, struct os_mbuf **om,
         } else if (rsp->max_enc_key_size > BLE_SM_PAIR_KEY_SZ_MAX) {
             res->sm_err = BLE_SM_ERR_INVAL;
             res->app_status = BLE_HS_SM_US_ERR(BLE_SM_ERR_INVAL);
-        } else if (MYNEWT_VAL(BLE_SM_SC_ONLY) && (rsp->max_enc_key_size != BLE_SM_PAIR_KEY_SZ_MAX)) {
+        } else if (ble_hs_cfg.sm_sc_only && (rsp->max_enc_key_size != BLE_SM_PAIR_KEY_SZ_MAX)) {
             /* Fail if Secure Connections Only mode is on and remote does not meet
             * key size requirements - MITM was checked in last step
             */
@@ -2161,6 +2175,7 @@ ble_sm_key_exch_success(struct ble_sm_proc *proc, struct ble_sm_result *res)
     res->app_status = 0;
     res->enc_cb = 1;
     res->bonded = bonded;
+    res->sm_err = BLE_SM_ERR_SUCCESS;
 }
 
 static void
@@ -2179,6 +2194,8 @@ ble_sm_key_exch_exec(struct ble_sm_proc *proc, struct ble_sm_result *res,
     uint8_t our_key_dist;
     struct os_mbuf *txom;
     const uint8_t *irk;
+    struct ble_store_gen_key gen_key;
+    int ltk_gen = 0;
     int rc;
 
     ble_sm_key_dist(proc, &init_key_dist, &resp_key_dist);
@@ -2196,15 +2213,37 @@ ble_sm_key_exch_exec(struct ble_sm_proc *proc, struct ble_sm_result *res,
             goto err;
         }
 
-        rc = ble_sm_gen_ltk(proc, enc_info->ltk);
-        if (rc != 0) {
-            os_mbuf_free_chain(txom);
-            goto err;
+        proc->our_keys.key_size = proc->key_size;
+
+        if (ble_hs_cfg.store_gen_key_cb) {
+            memset(&gen_key, 0, sizeof(gen_key));
+            rc = ble_hs_cfg.store_gen_key_cb(BLE_STORE_GEN_KEY_LTK, &gen_key,
+                                             proc->conn_handle);
+            if (rc == 0) {
+                /* Trim LRK to keysize */
+                memset(gen_key.ltk_periph + proc->key_size, 0,
+                       16 - proc->key_size);
+
+                proc->our_keys.ediv = gen_key.ediv;
+                proc->our_keys.rand_val = gen_key.rand;
+                memcpy(proc->our_keys.ltk, gen_key.ltk_periph, 16);
+
+                ltk_gen = 1;
+            }
         }
 
-        /* store LTK before sending since ble_sm_tx consumes tx mbuf */
-        memcpy(proc->our_keys.ltk, enc_info->ltk, 16);
-        proc->our_keys.key_size = proc->key_size;
+        if (!ltk_gen) {
+            rc = ble_sm_gen_ltk(proc, enc_info->ltk);
+            if (rc != 0) {
+                os_mbuf_free_chain(txom);
+                goto err;
+            }
+
+            /* store LTK before sending since ble_sm_tx consumes tx mbuf */
+            memcpy(proc->our_keys.ltk, enc_info->ltk, 16);
+        } else {
+            memcpy(enc_info->ltk, proc->our_keys.ltk, 16);
+        }
         proc->our_keys.ltk_valid = 1;
 
         rc = ble_sm_tx(proc->conn_handle, txom);
@@ -2220,20 +2259,25 @@ ble_sm_key_exch_exec(struct ble_sm_proc *proc, struct ble_sm_result *res,
             goto err;
         }
 
-        rc = ble_sm_gen_ediv(master_id);
-        if (rc != 0) {
-            os_mbuf_free_chain(txom);
-            goto err;
-        }
-        rc = ble_sm_gen_master_id_rand(master_id);
-        if (rc != 0) {
-            os_mbuf_free_chain(txom);
-            goto err;
-        }
+        if (!ltk_gen) {
+            rc = ble_sm_gen_ediv(master_id);
+            if (rc != 0) {
+                os_mbuf_free_chain(txom);
+                goto err;
+            }
+            rc = ble_sm_gen_master_id_rand(master_id);
+            if (rc != 0) {
+                os_mbuf_free_chain(txom);
+                goto err;
+            }
 
+            proc->our_keys.rand_val = master_id->rand_val;
+            proc->our_keys.ediv = master_id->ediv;
+        } else {
+            master_id->ediv = proc->our_keys.ediv;
+            master_id->rand_val = proc->our_keys.rand_val;
+        }
         proc->our_keys.ediv_rand_valid = 1;
-        proc->our_keys.rand_val = master_id->rand_val;
-        proc->our_keys.ediv = master_id->ediv;
 
         rc = ble_sm_tx(proc->conn_handle, txom);
         if (rc != 0) {
@@ -2311,12 +2355,28 @@ ble_sm_key_exch_exec(struct ble_sm_proc *proc, struct ble_sm_result *res,
             goto err;
         }
 
-        rc = ble_sm_gen_csrk(proc, sign_info->sig_key);
-        if (rc != 0) {
-            os_mbuf_free_chain(txom);
-            goto err;
+        if (ble_hs_cfg.store_gen_key_cb) {
+            memset(&gen_key, 0, sizeof(gen_key));
+            rc = ble_hs_cfg.store_gen_key_cb(BLE_STORE_GEN_KEY_CSRK, &gen_key,
+                                             proc->conn_handle);
+            if (rc == 0) {
+                memcpy(proc->our_keys.csrk, gen_key.csrk, 16);
+            }
+        } else {
+            rc = -1;
         }
 
+        if (rc != 0) {
+            rc = ble_sm_gen_csrk(proc, sign_info->sig_key);
+            if (rc != 0) {
+                os_mbuf_free_chain(txom);
+                goto err;
+            }
+
+            memcpy(proc->our_keys.csrk, sign_info->sig_key, 16);
+        } else {
+            memcpy(sign_info->sig_key, proc->our_keys.csrk, 16);
+        }
         proc->our_keys.csrk_valid = 1;
         proc->our_keys.sign_counter = 0;
         memcpy(proc->our_keys.csrk, sign_info->sig_key, 16);
@@ -2571,6 +2631,7 @@ ble_sm_fail_rx(uint16_t conn_handle, struct os_mbuf **om,
         cmd = (struct ble_sm_pair_fail *)(*om)->om_data;
 
         res->app_status = BLE_HS_SM_PEER_ERR(cmd->reason);
+        res->sm_err =  cmd->reason;
     }
 }
 
@@ -2590,42 +2651,42 @@ ble_sm_fail_rx(uint16_t conn_handle, struct os_mbuf **om,
 int
 ble_sm_incr_our_sign_counter(uint16_t conn_handle)
 {
-   struct ble_store_key_sec key_sec;
-   struct ble_store_value_sec value_sec;
-   struct ble_gap_conn_desc desc;
-   int rc;
+    struct ble_store_key_sec key_sec;
+    struct ble_store_value_sec value_sec;
+    struct ble_gap_conn_desc desc;
+    int rc;
 
-   rc = ble_gap_conn_find(conn_handle, &desc);
-   if (rc != 0) {
-      return rc;
-   }
+    rc = ble_gap_conn_find(conn_handle, &desc);
+    if (rc != 0) {
+        return rc;
+    }
 
-   memset(&key_sec, 0, sizeof key_sec);
-   key_sec.peer_addr = desc.peer_id_addr;
+    memset(&key_sec, 0, sizeof key_sec);
+    key_sec.peer_addr = desc.peer_id_addr;
 
-   rc = ble_store_read_our_sec(&key_sec, &value_sec);
-   if (rc != 0) {
-      return rc;
-   }
-   if (value_sec.csrk_present != 1) {
-      return BLE_HS_ENOENT;
-   }
-   if (value_sec.sign_counter == (uint32_t)0xffffffff) {
-      return BLE_HS_ENOMEM;
-   }
+    rc = ble_store_read_our_sec(&key_sec, &value_sec);
+    if (rc != 0) {
+        return rc;
+    }
+    if (value_sec.csrk_present != 1) {
+        return BLE_HS_ENOENT;
+    }
+    if (value_sec.sign_counter == (uint32_t)0xffffffff) {
+        return BLE_HS_ENOMEM;
+    }
 
-   rc = ble_store_delete_our_sec(&key_sec);
-   if (rc != 0) {
-      return rc;
-   }
+    rc = ble_store_delete_our_sec(&key_sec);
+    if (rc != 0) {
+        return rc;
+    }
 
-   value_sec.sign_counter += 1;
-   rc = ble_store_write_our_sec(&value_sec);
-   if (rc != 0) {
-      return rc;
-   }
+    value_sec.sign_counter += 1;
+    rc = ble_store_write_our_sec(&value_sec);
+    if (rc != 0) {
+        return rc;
+    }
 
-   return 0;
+    return 0;
 }
 
 /**
@@ -2640,42 +2701,48 @@ ble_sm_incr_our_sign_counter(uint16_t conn_handle)
 int
 ble_sm_incr_peer_sign_counter(uint16_t conn_handle)
 {
-   struct ble_store_key_sec key_sec;
-   struct ble_store_value_sec value_sec;
-   struct ble_gap_conn_desc desc;
-   int rc;
+    struct ble_store_key_sec key_sec;
+    struct ble_store_value_sec value_sec;
+    struct ble_gap_conn_desc desc;
+    int rc;
 
-   rc = ble_gap_conn_find(conn_handle, &desc);
-   if (rc != 0) {
-      return rc;
-   }
+    rc = ble_gap_conn_find(conn_handle, &desc);
+    if (rc != 0) {
+        return rc;
+    }
 
-   memset(&key_sec, 0, sizeof key_sec);
-   key_sec.peer_addr = desc.peer_id_addr;
+    memset(&key_sec, 0, sizeof key_sec);
+    key_sec.peer_addr = desc.peer_id_addr;
 
-   rc = ble_store_read_peer_sec(&key_sec, &value_sec);
-   if (rc != 0) {
-      return rc;
-   }
-   if (value_sec.csrk_present != 1) {
-      return BLE_HS_ENOENT;
-   }
-   if (value_sec.sign_counter == (uint32_t)0xffffffff) {
-      return BLE_HS_ENOMEM;
-   }
+    rc = ble_store_read_peer_sec(&key_sec, &value_sec);
+    if (rc != 0) {
+        return rc;
+    }
+    if (value_sec.csrk_present != 1) {
+        return BLE_HS_ENOENT;
+    }
+    if (value_sec.sign_counter == (uint32_t)0xffffffff) {
+        return BLE_HS_ENOMEM;
+    }
 
-   rc = ble_store_delete_peer_sec(&key_sec);
-   if (rc != 0) {
-      return rc;
-   }
+    rc = ble_store_delete_peer_sec(&key_sec);
+    if (rc != 0) {
+        return rc;
+    }
 
-   value_sec.sign_counter += 1;
-   rc = ble_store_write_peer_sec(&value_sec);
-   if (rc != 0) {
-      return rc;
-   }
+    if (value_sec.irk_present == 1) {
+        ble_hs_pvcy_remove_entry(value_sec.peer_addr.type, value_sec.peer_addr.val);
+        // No need to check if the above command fails or passes
+        // Proceed with trying to write the new sign counter
+    }
 
-   return 0;
+    value_sec.sign_counter += 1;
+    rc = ble_store_write_peer_sec(&value_sec);
+    if (rc != 0) {
+        return rc;
+    }
+
+    return 0;
 }
 
 /**
@@ -2758,7 +2825,7 @@ ble_sm_pair_initiate(uint16_t conn_handle)
     }
 
     if (proc != NULL) {
-        ble_sm_process_result(conn_handle, &res);
+        ble_sm_process_result(conn_handle, &res, true);
     }
 
     return res.app_status;
@@ -2797,7 +2864,7 @@ ble_sm_slave_initiate(uint16_t conn_handle)
     ble_hs_unlock();
 
     if (proc != NULL) {
-        ble_sm_process_result(conn_handle, &res);
+        ble_sm_process_result(conn_handle, &res, true);
     }
 
     return res.app_status;
@@ -2851,7 +2918,7 @@ ble_sm_enc_initiate(uint16_t conn_handle, uint8_t key_size,
 
     ble_hs_unlock();
 
-    ble_sm_process_result(conn_handle, &res);
+    ble_sm_process_result(conn_handle, &res, true);
 
     return res.app_status;
 }
@@ -2889,7 +2956,8 @@ ble_sm_rx(struct ble_l2cap_chan *chan)
         memset(&res, 0, sizeof res);
 
         rx_cb(conn_handle, om, &res);
-        ble_sm_process_result(conn_handle, &res);
+        ble_sm_process_result(conn_handle, &res, op == BLE_SM_OP_PAIR_FAIL ?
+                              false : true);
         rc = res.app_status;
     } else {
         rc = BLE_HS_ENOTSUP;
@@ -3001,7 +3069,7 @@ ble_sm_inject_io(uint16_t conn_handle, struct ble_sm_io *pkey)
         return rc;
     }
 
-    ble_sm_process_result(conn_handle, &res);
+    ble_sm_process_result(conn_handle, &res, true);
     return res.app_status;
 }
 
@@ -3014,7 +3082,7 @@ ble_sm_connection_broken(uint16_t conn_handle)
     res.app_status = BLE_HS_ENOTCONN;
     res.enc_cb = 1;
 
-    ble_sm_process_result(conn_handle, &res);
+    ble_sm_process_result(conn_handle, &res, true);
 }
 
 int

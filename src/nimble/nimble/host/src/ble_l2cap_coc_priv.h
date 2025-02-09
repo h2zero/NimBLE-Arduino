@@ -37,8 +37,14 @@ struct ble_l2cap_chan;
 
 #define BLE_L2CAP_COC_FLAG_STALLED              0x01
 
+#define BLE_L2CAP_SDU_BUFF_CNT        (MYNEWT_VAL(BLE_L2CAP_COC_SDU_BUFF_COUNT))
+
 struct ble_l2cap_coc_endpoint {
-    struct os_mbuf *sdu;
+    struct os_mbuf *sdus[BLE_L2CAP_SDU_BUFF_CNT];
+    /* Index for currently used sdu from sdus */
+    uint16_t current_sdu_idx;
+    /* Index indicating free sdus slot to allocate next sdu */
+    uint16_t next_sdu_alloc_idx;
     uint16_t mtu;
     uint16_t credits;
     uint16_t data_offset;

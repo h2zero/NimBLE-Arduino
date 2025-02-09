@@ -4,17 +4,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #include <stdlib.h>
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #define MESH_LOG_MODULE BLE_MESH_NET_KEYS_LOG
 
 #include "nimble/porting/nimble/include/log/log.h"
+
 #include "crypto.h"
 #include "adv.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "net.h"
 #include "mesh_priv.h"
 #include "lpn.h"
@@ -233,7 +231,7 @@ static void key_refresh(struct bt_mesh_subnet *sub, uint8_t new_phase)
 		if (sub->kr_phase == BT_MESH_KR_NORMAL) {
 			return;
 		}
-		/* __fallthrough; */
+		/* fall through */
 	case BT_MESH_KR_NORMAL:
 		sub->kr_phase = BT_MESH_KR_NORMAL;
 		memcpy(&sub->keys[0], &sub->keys[1], sizeof(sub->keys[0]));
@@ -428,7 +426,7 @@ uint8_t bt_mesh_subnet_update(uint16_t net_idx, const uint8_t key[16])
 		if (!memcmp(key, sub->keys[1].net, 16)) {
 			return STATUS_SUCCESS;
 		}
-		/* __fallthrough; */
+		/* fall through */
 	case BT_MESH_KR_PHASE_2:
 	case BT_MESH_KR_PHASE_3:
 		return STATUS_CANNOT_UPDATE;
@@ -885,4 +883,3 @@ void bt_mesh_net_key_init(void)
 				 "Failed to register bt_mesh_net_key conf");
 #endif
 }
-#endif /* MYNEWT_VAL(BLE_MESH) */
