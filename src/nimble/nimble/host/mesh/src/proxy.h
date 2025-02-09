@@ -9,7 +9,7 @@
 #ifndef __PROXY_H__
 #define __PROXY_H__
 
-#include "../include/mesh/slist.h"
+#include "nimble/nimble/host/mesh/include/mesh/slist.h"
 
 #if CONFIG_BT_MESH_DEBUG_USE_ID_ADDR
 #define ADV_OPT_USE_IDENTITY BT_LE_ADV_OPT_USE_IDENTITY

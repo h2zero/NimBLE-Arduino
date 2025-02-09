@@ -28,9 +28,10 @@
  */
 
 #include <inttypes.h>
-#include "ble_att.h"
-#include "ble_uuid.h"
-#include "ble_esp_gatt.h"
+#include "nimble/nimble/include/nimble/ble.h"
+#include "nimble/nimble/host/include/host/ble_att.h"
+#include "nimble/nimble/host/include/host/ble_uuid.h"
+#include "nimble/nimble/host/include/host/ble_esp_gatt.h"
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #ifdef __cplusplus
 extern "C" {
@@ -40,50 +41,155 @@ struct ble_hs_conn;
 struct ble_att_error_rsp;
 struct ble_hs_cfg;
 
+/**
+ * @defgroup ble_gatt_register_op_codes Generic Attribute Profile (GATT) Registration Operation Codes
+ * @{
+ */
+
+/** GATT Service registration. */
 #define BLE_GATT_REGISTER_OP_SVC                        1
+
+/** GATT Characteristic registration. */
 #define BLE_GATT_REGISTER_OP_CHR                        2
+
+/** GATT Descriptor registration. */
 #define BLE_GATT_REGISTER_OP_DSC                        3
 
+/** @} */
+
+/**
+ * @defgroup ble_gatt_uuid Generic Attribute Profile (GATT) Service and Descriptor UUIDs
+ * @{
+ */
+
+/** GATT service 16-bit UUID. */
 #define BLE_GATT_SVC_UUID16                             0x1801
+
+/** GATT Client Characteristic Configuration descriptor 16-bit UUID. */
 #define BLE_GATT_DSC_CLT_CFG_UUID16                     0x2902
 #define BLE_GATT_DSC_CLT_PRE_FMT16                      0x2904
 #define BLE_GATT_DSC_CLT_AGG_FMT16                      0x2905
 
-#define BLE_GATT_CHR_PROP_BROADCAST                     0x01
-#define BLE_GATT_CHR_PROP_READ                          0x02
-#define BLE_GATT_CHR_PROP_WRITE_NO_RSP                  0x04
-#define BLE_GATT_CHR_PROP_WRITE                         0x08
-#define BLE_GATT_CHR_PROP_NOTIFY                        0x10
-#define BLE_GATT_CHR_PROP_INDICATE                      0x20
-#define BLE_GATT_CHR_PROP_AUTH_SIGN_WRITE               0x40
-#define BLE_GATT_CHR_PROP_EXTENDED                      0x80
-
-#define BLE_GATT_ACCESS_OP_READ_CHR                     0
-#define BLE_GATT_ACCESS_OP_WRITE_CHR                    1
-#define BLE_GATT_ACCESS_OP_READ_DSC                     2
-#define BLE_GATT_ACCESS_OP_WRITE_DSC                    3
-
-#define BLE_GATT_CHR_F_BROADCAST                        0x0001
-#define BLE_GATT_CHR_F_READ                             0x0002
-#define BLE_GATT_CHR_F_WRITE_NO_RSP                     0x0004
-#define BLE_GATT_CHR_F_WRITE                            0x0008
-#define BLE_GATT_CHR_F_NOTIFY                           0x0010
-#define BLE_GATT_CHR_F_INDICATE                         0x0020
-#define BLE_GATT_CHR_F_AUTH_SIGN_WRITE                  0x0040
-#define BLE_GATT_CHR_F_RELIABLE_WRITE                   0x0080
-#define BLE_GATT_CHR_F_AUX_WRITE                        0x0100
-#define BLE_GATT_CHR_F_READ_ENC                         0x0200
-#define BLE_GATT_CHR_F_READ_AUTHEN                      0x0400
-#define BLE_GATT_CHR_F_READ_AUTHOR                      0x0800
-#define BLE_GATT_CHR_F_WRITE_ENC                        0x1000
-#define BLE_GATT_CHR_F_WRITE_AUTHEN                     0x2000
-#define BLE_GATT_CHR_F_WRITE_AUTHOR                     0x4000
-
-#define BLE_GATT_SVC_TYPE_END                           0
-#define BLE_GATT_SVC_TYPE_PRIMARY                       1
-#define BLE_GATT_SVC_TYPE_SECONDARY                     2
+/** @} */
 
 /**
+ * @defgroup ble_gatt_chr_properties Generic Attribute Profile (GATT) Characteristic Properties
+ * @{
+ */
+
+/** Characteristic property: Broadcast. */
+#define BLE_GATT_CHR_PROP_BROADCAST                     0x01
+
+/** Characteristic property: Read. */
+#define BLE_GATT_CHR_PROP_READ                          0x02
+
+/** Characteristic property: Write Without Response. */
+#define BLE_GATT_CHR_PROP_WRITE_NO_RSP                  0x04
+
+/** Characteristic property: Write. */
+#define BLE_GATT_CHR_PROP_WRITE                         0x08
+
+/** Characteristic property: Notify. */
+#define BLE_GATT_CHR_PROP_NOTIFY                        0x10
+
+/** Characteristic property: Indicate. */
+#define BLE_GATT_CHR_PROP_INDICATE                      0x20
+
+/** Characteristic property: Authenticated Signed Write. */
+#define BLE_GATT_CHR_PROP_AUTH_SIGN_WRITE               0x40
+
+/** Characteristic property: Extended Properties. */
+#define BLE_GATT_CHR_PROP_EXTENDED                      0x80
+
+/** @} */
+
+/** @defgroup ble_gatt_access_op_codes Generic Attribute Profile (GATT) Access Operation Codes
+ * @{
+ */
+
+/** GATT attribute access operation: Read characteristic. */
+#define BLE_GATT_ACCESS_OP_READ_CHR                     0
+
+/** GATT attribute access operation: Write characteristic. */
+#define BLE_GATT_ACCESS_OP_WRITE_CHR                    1
+
+/** GATT attribute access operation: Read descriptor. */
+#define BLE_GATT_ACCESS_OP_READ_DSC                     2
+
+/** GATT attribute access operation: Write descriptor. */
+#define BLE_GATT_ACCESS_OP_WRITE_DSC                    3
+
+/** @} */
+
+/**
+ * @defgroup ble_gatt_chr_flags Generic Attribute Profile (GATT) Characteristic Flags
+ * @{
+ */
+
+/** GATT Characteristic Flag: Broadcast. */
+#define BLE_GATT_CHR_F_BROADCAST                        0x0001
+
+/** GATT Characteristic Flag: Read. */
+#define BLE_GATT_CHR_F_READ                             0x0002
+
+/** GATT Characteristic Flag: Write without Response. */
+#define BLE_GATT_CHR_F_WRITE_NO_RSP                     0x0004
+
+/** GATT Characteristic Flag: Write. */
+#define BLE_GATT_CHR_F_WRITE                            0x0008
+
+/** GATT Characteristic Flag: Notify. */
+#define BLE_GATT_CHR_F_NOTIFY                           0x0010
+
+/** GATT Characteristic Flag: Indicate. */
+#define BLE_GATT_CHR_F_INDICATE                         0x0020
+
+/** GATT Characteristic Flag: Authenticated Signed Writes. */
+#define BLE_GATT_CHR_F_AUTH_SIGN_WRITE                  0x0040
+
+/** GATT Characteristic Flag: Reliable Writes. */
+#define BLE_GATT_CHR_F_RELIABLE_WRITE                   0x0080
+
+/** GATT Characteristic Flag: Auxiliary Writes. */
+#define BLE_GATT_CHR_F_AUX_WRITE                        0x0100
+
+/** GATT Characteristic Flag: Read Encrypted. */
+#define BLE_GATT_CHR_F_READ_ENC                         0x0200
+
+/** GATT Characteristic Flag: Read Authenticated. */
+#define BLE_GATT_CHR_F_READ_AUTHEN                      0x0400
+
+/** GATT Characteristic Flag: Read Authorized. */
+#define BLE_GATT_CHR_F_READ_AUTHOR                      0x0800
+
+/** GATT Characteristic Flag: Write Encrypted. */
+#define BLE_GATT_CHR_F_WRITE_ENC                        0x1000
+
+/** GATT Characteristic Flag: Write Authenticated. */
+#define BLE_GATT_CHR_F_WRITE_AUTHEN                     0x2000
+
+/** GATT Characteristic Flag: Write Authorized. */
+#define BLE_GATT_CHR_F_WRITE_AUTHOR                     0x4000
+
+
+/** @} */
+
+/**
+ * @defgroup ble_gatt_service_types Generic Attribute Profile (GATT) Service Types
+ * @{
+ */
+
+/** GATT Service Type: End of Services. */
+#define BLE_GATT_SVC_TYPE_END                           0
+
+/** GATT Service Type: Primary Service. */
+#define BLE_GATT_SVC_TYPE_PRIMARY                       1
+
+/** GATT Service Type: Secondary Service. */
+#define BLE_GATT_SVC_TYPE_SECONDARY                     2
+
+/** @} */
+/** 
  * Client Presentation Format
  * GATT Format Types
  * Ref: Assigned Numbers Specification
@@ -281,39 +387,83 @@ struct ble_hs_cfg;
 #define BLE_GATT_CHR_BT_SIG_DESC_INTERNAL               0x010F
 #define BLE_GATT_CHR_BT_SIG_DESC_EXTERNAL               0x0110
 
+/*** @server. */
+/** Represents one notification tuple in a multi notification PDU */
+struct ble_gatt_notif {
+    /** The attribute handle on which to notify. */
+    uint16_t handle;
+
+    /** The notification value. */
+    struct os_mbuf * value;
+};
+
 /*** @client. */
+/** Represents a GATT error. */
 struct ble_gatt_error {
+    /** The GATT status code indicating the type of error. */
     uint16_t status;
+
+    /** The attribute handle associated with the error. */
     uint16_t att_handle;
 };
 
+/** Represents a GATT Service. */
 struct ble_gatt_svc {
+    /** The start handle of the GATT service. */
     uint16_t start_handle;
+
+    /** The end handle of the GATT service. */
     uint16_t end_handle;
+
+    /** The UUID of the GATT service. */
     ble_uuid_any_t uuid;
 };
 
+
+/** Represents a GATT attribute. */
 struct ble_gatt_attr {
+    /** The handle of the GATT attribute. */
     uint16_t handle;
+
+    /** The offset of the data within the attribute. */
     uint16_t offset;
+
+    /** Pointer to the data buffer represented by an os_mbuf. */
     struct os_mbuf *om;
 };
 
+
+/** Represents a GATT characteristic. */
 struct ble_gatt_chr {
+    /** The handle of the GATT characteristic definition. */
     uint16_t def_handle;
+
+    /** The handle of the GATT characteristic value. */
     uint16_t val_handle;
+
+    /** The properties of the GATT characteristic. */
     uint8_t properties;
+
+    /** The UUID of the GATT characteristic. */
     ble_uuid_any_t uuid;
 };
 
+
+/** Represents a GATT descriptor. */
 struct ble_gatt_dsc {
+    /** The handle of the GATT descriptor. */
     uint16_t handle;
+
+    /** The UUID of the GATT descriptor. */
     ble_uuid_any_t uuid;
 };
 
+/** Function prototype for the GATT MTU exchange callback. */
 typedef int ble_gatt_mtu_fn(uint16_t conn_handle,
                             const struct ble_gatt_error *error,
                             uint16_t mtu, void *arg);
+
+/** Function prototype for the GATT service discovery callback. */
 typedef int ble_gatt_disc_svc_fn(uint16_t conn_handle,
                                  const struct ble_gatt_error *error,
                                  const struct ble_gatt_svc *service,
@@ -350,10 +500,12 @@ typedef int ble_gatt_reliable_attr_fn(uint16_t conn_handle,
                                       struct ble_gatt_attr *attrs,
                                       uint8_t num_attrs, void *arg);
 
+/** Function prototype for the GATT characteristic callback. */
 typedef int ble_gatt_chr_fn(uint16_t conn_handle,
                             const struct ble_gatt_error *error,
                             const struct ble_gatt_chr *chr, void *arg);
 
+/** Function prototype for the GATT descriptor callback. */
 typedef int ble_gatt_dsc_fn(uint16_t conn_handle,
                             const struct ble_gatt_error *error,
                             uint16_t chr_val_handle,
@@ -393,7 +545,7 @@ int ble_gattc_disc_all_svcs(uint16_t conn_handle,
  *
  * @param conn_handle           The connection over which to execute the
  *                                  procedure.
- * @param service_uuid128       The 128-bit UUID of the service to discover.
+ * @param uuid                  The 128-bit UUID of the service to discover.
  * @param cb                    The function to call to report procedure status
  *                                  updates; null for no callback.
  * @param cb_arg                The optional argument to pass to the callback
@@ -453,7 +605,7 @@ int ble_gattc_disc_all_chrs(uint16_t conn_handle, uint16_t start_handle,
  *                                  the service definition handle).
  * @param end_handle            The handle to end the search at (generally the
  *                                  last handle in the service).
- * @param chr_uuid128           The 128-bit UUID of the characteristic to
+ * @param uuid                  The 128-bit UUID of the characteristic to
  *                                  discover.
  * @param cb                    The function to call to report procedure status
  *                                  updates; null for no callback.
@@ -471,9 +623,9 @@ int ble_gattc_disc_chrs_by_uuid(uint16_t conn_handle, uint16_t start_handle,
  *
  * @param conn_handle           The connection over which to execute the
  *                                  procedure.
- * @param chr_val_handle        The handle of the characteristic value
+ * @param start_handle          The handle of the characteristic value
  *                                  attribute.
- * @param chr_end_handle        The last handle in the characteristic
+ * @param end_handle            The last handle in the characteristic
  *                                  definition.
  * @param cb                    The function to call to report procedure status
  *                                  updates; null for no callback.
@@ -511,6 +663,8 @@ int ble_gattc_read(uint16_t conn_handle, uint16_t attr_handle,
  *                                  handle of the service definition).
  * @param end_handle            The last handle to search (generally the
  *                                  last handle in the service definition).
+ * @param uuid                  The 128-bit UUID of the characteristic to
+ *                                  read.
  * @param cb                    The function to call to report procedure status
  *                                  updates; null for no callback.
  * @param cb_arg                The optional argument to pass to the callback
@@ -528,6 +682,8 @@ int ble_gattc_read_by_uuid(uint16_t conn_handle, uint16_t start_handle,
  * @param conn_handle           The connection over which to execute the
  *                                  procedure.
  * @param handle                The handle of the characteristic value to read.
+ * @param offset                The offset within the characteristic value to
+ *                                  start reading.
  * @param cb                    The function to call to report procedure status
  *                                  updates; null for no callback.
  * @param cb_arg                The optional argument to pass to the callback
@@ -568,7 +724,7 @@ int ble_gattc_read_mult_var(uint16_t conn_handle, const uint16_t *handles,
  *                                  procedure.
  * @param attr_handle           The handle of the characteristic value to write
  *                                  to.
- * @param txom                  The value to write to the characteristic.
+ * @param om                    The value to write to the characteristic.
  *
  * @return                      0 on success; nonzero on failure.
  */
@@ -583,8 +739,8 @@ int ble_gattc_write_no_rsp(uint16_t conn_handle, uint16_t attr_handle,
  *                                  procedure.
  * @param attr_handle           The handle of the characteristic value to write
  *                                  to.
- * @param value                 The value to write to the characteristic.
- * @param value_len             The number of bytes to write.
+ * @param data                  The value to write to the characteristic.
+ * @param data_len              The number of bytes to write.
  *
  * @return                      0 on success; nonzero on failure.
  */
@@ -614,7 +770,7 @@ int ble_gattc_signed_write(uint16_t conn_handle, uint16_t attr_handle,
  *                                  procedure.
  * @param attr_handle           The handle of the characteristic value to write
  *                                  to.
- * @param txom                  The value to write to the characteristic.
+ * @param om                    The value to write to the characteristic.
  * @param cb                    The function to call to report procedure status
  *                                  updates; null for no callback.
  * @param cb_arg                The optional argument to pass to the callback
@@ -633,8 +789,8 @@ int ble_gattc_write(uint16_t conn_handle, uint16_t attr_handle,
  *                                  procedure.
  * @param attr_handle           The handle of the characteristic value to write
  *                                  to.
- * @param value                 The value to write to the characteristic.
- * @param value_len             The number of bytes to write.
+ * @param data                  The value to write to the characteristic.
+ * @param data_len              The number of bytes to write.
  * @param cb                    The function to call to report procedure status
  *                                  updates; null for no callback.
  * @param cb_arg                The optional argument to pass to the callback
@@ -654,7 +810,8 @@ int ble_gattc_write_flat(uint16_t conn_handle, uint16_t attr_handle,
  *                                  procedure.
  * @param attr_handle           The handle of the characteristic value to write
  *                                  to.
- * @param txom                  The value to write to the characteristic.
+ * @param offset                The offset at which to begin writing the value.
+ * @param om                    The value to write to the characteristic.
  * @param cb                    The function to call to report procedure status
  *                                  updates; null for no callback.
  * @param cb_arg                The optional argument to pass to the callback
@@ -696,14 +853,41 @@ int ble_gattc_write_reliable(uint16_t conn_handle,
  *
  * @param conn_handle           The connection over which to execute the
  *                                  procedure.
- * @param chr_val_handle        The attribute handle to indicate in the
+ * @param att_handle            The attribute handle to indicate in the
  *                                  outgoing notification.
- * @param txom                  The value to write to the characteristic.
+ * @param om                    The value to write to the characteristic.
  *
  * @return                      0 on success; nonzero on failure.
  */
 int ble_gatts_notify_custom(uint16_t conn_handle, uint16_t att_handle,
                             struct os_mbuf *om);
+
+/**
+ * Sends a "free-form" multiple handle variable length characteristic
+ * notification. This function consumes supplied mbufs regardless of the
+ * outcome. Notifications are sent in order of supplied entries.
+ * Function tries to send minimum amount of PDUs. If PDU can't contain all
+ * of the characteristic values, multiple notifications are sent. If only one
+ * handle-value pair fits into PDU, or only one characteristic remains in the
+ * list, regular characteristic notification is sent.
+ *
+ * If GATT client doesn't support receiving multiple handle notifications,
+ * this will use GATT notification for each characteristic, separately.
+ *
+ * If value of characteristic is not specified it will be read from local
+ * GATT database.
+ *
+ * @param conn_handle           The connection over which to execute the
+ *                                  procedure.
+ * @param chr_count             Number of characteristics to notify about.
+ * @param tuples                Handle-value pairs in form of `ble_gatt_notif`
+ *                                  structures.
+ *
+ * @return                      0 on success; nonzero on failure.
+ */
+int ble_gatts_notify_multiple_custom(uint16_t conn_handle,
+                                     size_t chr_count,
+                                     struct ble_gatt_notif *tuples);
 
 /**
  * Deprecated. Should not be used. Use ble_gatts_notify_custom instead.
@@ -771,16 +955,23 @@ int ble_gatts_indicate(uint16_t conn_handle, uint16_t chr_val_handle);
  */
 int ble_gattc_indicate(uint16_t conn_handle, uint16_t chr_val_handle);
 
+void ble_gattc_cache_conn_undisc_all(ble_addr_t peer_addr);
+
+/** Initialize the BLE GATT client. */
 int ble_gattc_init(void);
 
 /*** @server. */
 
 struct ble_gatt_access_ctxt;
+
+/** Type definition for GATT access callback function. */
 typedef int ble_gatt_access_fn(uint16_t conn_handle, uint16_t attr_handle,
                                struct ble_gatt_access_ctxt *ctxt, void *arg);
 
+/** Type definition for GATT characteristic flags. */
 typedef uint16_t ble_gatt_chr_flags;
 
+/** Represents the definition of a GATT characteristic. */
 struct ble_gatt_chr_def {
     /**
      * Pointer to characteristic UUID; use BLE_UUIDxx_DECLARE macros to declare
@@ -820,6 +1011,7 @@ struct ble_gatt_chr_def {
     struct ble_gatt_cpfd *cpfd;
 };
 
+/** Represents the definition of a GATT service. */
 struct ble_gatt_svc_def {
     /**
      * One of the following:
@@ -849,6 +1041,7 @@ struct ble_gatt_svc_def {
     const struct ble_gatt_chr_def *characteristics;
 };
 
+/** Represents the definition of a GATT descriptor. */
 struct ble_gatt_dsc_def {
     /**
      * Pointer to descriptor UUID; use BLE_UUIDxx_DECLARE macros to declare
@@ -949,6 +1142,12 @@ struct ble_gatt_access_ctxt {
          */
         const struct ble_gatt_dsc_def *dsc;
     };
+
+    /**
+     * An offset in case of BLE_ATT_OP_READ_BLOB_REQ.
+     * If the value is greater than zero it's an indication of a long attribute read.
+     */
+    uint16_t offset;
 };
 
 /**
@@ -1028,6 +1227,7 @@ struct ble_gatt_register_ctxt {
     };
 };
 
+/** Type definition for GATT registration callback function. */
 typedef void ble_gatt_register_fn(struct ble_gatt_register_ctxt *ctxt,
                                   void *arg);
 
@@ -1056,7 +1256,7 @@ STAILQ_HEAD(ble_gatts_clt_cfg_list, ble_gatts_clt_cfg);
  *                              BLE_HS_ENOMEM on heap exhaustion.
  */
 int ble_gatts_add_svcs(const struct ble_gatt_svc_def *svcs);
-
+void ble_gatts_free_svcs(void);
 #if MYNEWT_VAL(BLE_DYNAMIC_SERVICE)
 /**
  * Adds a set of services for registration.  All services added
@@ -1161,7 +1361,7 @@ int ble_gatts_find_chr(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
  * @param svc_uuid              The UUID of the grandparent service.
  * @param chr_uuid              The UUID of the parent characteristic.
  * @param dsc_uuid              The UUID of the descriptor ro look up.
- * @param out_handle            On success, populated with the handle
+ * @param out_dsc_handle        On success, populated with the handle
  *                                  of the descriptor attribute.  Pass null if
  *                                  you don't need this value.
  *
@@ -1173,6 +1373,7 @@ int ble_gatts_find_chr(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
 int ble_gatts_find_dsc(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
                        const ble_uuid_t *dsc_uuid, uint16_t *out_dsc_handle);
 
+/** Type definition for GATT service iteration callback function. */
 typedef void (*ble_gatt_svc_foreach_fn)(const struct ble_gatt_svc_def *svc,
                                         uint16_t handle,
                                         uint16_t end_group_handle,
@@ -1183,6 +1384,14 @@ typedef void (*ble_gatt_svc_foreach_fn)(const struct ble_gatt_svc_def *svc,
  * database in human readable form.
  */
 void ble_gatts_show_local(void);
+
+#if MYNEWT_VAL(BLE_SVC_GAP_GATT_SECURITY_LEVEL)
+/**
+ * Calculates and returns the maximum
+ * Security Mode 1 Level requirement.
+ */
+uint8_t ble_gatts_security_mode_1_level(void);
+#endif
 
 /**
  * Resets the GATT server to its initial state.  On success, this function

@@ -23,8 +23,8 @@
 #include <stdint.h>
 
 #include "nimble/nimble/include/nimble/ble.h"
-#include "ble_ll_hci.h"
-#include "ble_ll_conn.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_hci.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_conn.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +34,7 @@ struct ble_ll_scan_addr_data;
 struct ble_ll_sync_sm;
 
 int ble_ll_sync_create(const uint8_t *cmdbuf, uint8_t len);
-int ble_ll_sync_cancel(ble_ll_hci_post_cmd_complete_cb *post_cmd_cb);
+int ble_ll_sync_cancel(void);
 int ble_ll_sync_terminate(const uint8_t *cmdbuf, uint8_t len);
 int ble_ll_sync_list_add(const uint8_t *cmdbuf, uint8_t len);
 int ble_ll_sync_list_remove(const uint8_t *cmdbuf, uint8_t len);

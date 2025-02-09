@@ -21,7 +21,7 @@
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "ble_hs_priv.h"
-#include "../include/host/ble_hs_stop.h"
+#include "nimble/nimble/host/include/host/ble_hs_stop.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
 #ifndef MYNEWT
 #include "nimble/porting/nimble/include/nimble/nimble_port.h"

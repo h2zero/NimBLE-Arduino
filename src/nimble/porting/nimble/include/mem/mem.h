@@ -100,6 +100,13 @@ struct os_mbuf *mem_split_frag(struct os_mbuf **om, uint16_t max_frag_sz,
 
 void *mem_pullup_obj(struct os_mbuf **om, uint16_t len);
 #endif
+
+#ifndef ESP_PLATFORM
+#define nimble_platform_mem_malloc malloc
+#define nimble_platform_mem_calloc calloc
+#define nimble_platform_mem_free free
+#endif
+
 #ifdef __cplusplus
 }
 #endif

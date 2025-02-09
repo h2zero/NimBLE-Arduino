@@ -24,6 +24,7 @@
 #include <inttypes.h>
 #include "ble_att_cmd_priv.h"
 #include "ble_att_priv.h"
+#include "ble_eatt_priv.h"
 #include "ble_gap_priv.h"
 #include "ble_gatt_priv.h"
 #include "ble_hs_hci_priv.h"
@@ -96,8 +97,6 @@ extern STATS_SECT_DECL(ble_hs_stats) ble_hs_stats;
 extern struct os_mbuf_pool ble_hs_mbuf_pool;
 extern uint8_t ble_hs_sync_state;
 extern uint8_t ble_hs_enabled_state;
-
-extern const uint8_t ble_hs_misc_null_addr[6];
 
 extern uint16_t ble_hs_max_attrs;
 extern uint16_t ble_hs_max_services;

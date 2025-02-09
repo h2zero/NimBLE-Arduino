@@ -38,7 +38,7 @@
 #include "nimble/nimble/host/src/ble_hs_hci_priv.h"
 
 #if MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS)
-#include "mbedtls/aes.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
 #include "mbedtls/cipher.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"

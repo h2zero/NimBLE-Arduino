@@ -24,7 +24,7 @@
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/nimble/host/include/host/ble_hs.h"
-#include "../include/store/config/ble_store_config.h"
+#include "nimble/nimble/host/store/config/include/store/config/ble_store_config.h"
 #include "ble_store_config_priv.h"
 
 #if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
@@ -49,6 +49,12 @@ struct ble_store_value_cccd
 #endif
 
 int ble_store_config_num_cccds;
+
+#if MYNEWT_VAL(BLE_STORE_MAX_CSFCS)
+struct ble_store_value_csfc
+    ble_store_config_csfcs[MYNEWT_VAL(BLE_STORE_MAX_CSFCS)];
+#endif
+int ble_store_config_num_csfcs;
 
 #if MYNEWT_VAL(ENC_ADV_DATA)
 struct ble_store_value_ead
@@ -205,10 +211,6 @@ ble_store_config_print_key_sec(const struct ble_store_key_sec *key_sec)
         ble_hs_log_flat_buf(key_sec->peer_addr.val, 6);
         BLE_HS_LOG(DEBUG, " ");
     }
-    if (key_sec->ediv_rand_present) {
-        BLE_HS_LOG(DEBUG, "ediv=0x%02x rand=0x%llx ",
-                       key_sec->ediv, key_sec->rand_num);
-    }
 }
 
 #if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
@@ -218,36 +220,20 @@ ble_store_config_find_sec(const struct ble_store_key_sec *key_sec,
                           int num_value_secs)
 {
     const struct ble_store_value_sec *cur;
-    int skipped;
     int i;
 
-    skipped = 0;
+    if (!ble_addr_cmp(&key_sec->peer_addr, BLE_ADDR_ANY)) {
+        if (key_sec->idx < num_value_secs) {
+            return key_sec->idx;
+        }
+    } else if (key_sec->idx == 0) {
+        for (i = 0; i < num_value_secs; i++) {
+            cur = &value_secs[i];
 
-    for (i = 0; i < num_value_secs; i++) {
-        cur = value_secs + i;
-
-        if (ble_addr_cmp(&key_sec->peer_addr, BLE_ADDR_ANY)) {
-            if (ble_addr_cmp(&cur->peer_addr, &key_sec->peer_addr)) {
-                continue;
+            if (!ble_addr_cmp(&cur->peer_addr, &key_sec->peer_addr)) {
+                return i;
             }
         }
-
-        if (key_sec->ediv_rand_present) {
-            if (cur->ediv != key_sec->ediv) {
-                continue;
-            }
-
-            if (cur->rand_num != key_sec->rand_num) {
-                continue;
-            }
-        }
-
-        if (key_sec->idx > skipped) {
-            skipped++;
-            continue;
-        }
-
-        return i;
     }
 
     return -1;
@@ -323,7 +309,6 @@ ble_store_config_write_our_sec(const struct ble_store_value_sec *value_sec)
 
 }
 
-#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
 static int
 ble_store_config_delete_obj(void *values, int value_size, int idx,
                             int *num_values)
@@ -345,6 +330,7 @@ ble_store_config_delete_obj(void *values, int value_size, int idx,
     return 0;
 }
 
+#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
 static int
 ble_store_config_delete_sec(const struct ble_store_key_sec *key_sec,
                             struct ble_store_value_sec *value_secs,
@@ -893,6 +879,7 @@ ble_store_config_write_rpa_rec(const struct ble_store_value_rpa_rec *value_rpa_r
 static int
 ble_store_config_delete_rpa_rec(const struct ble_store_key_rpa_rec *key_rpa_rec)
 {
+#if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
     int idx;
     int rc;
 
@@ -910,6 +897,113 @@ ble_store_config_delete_rpa_rec(const struct ble_store_key_rpa_rec *key_rpa_rec)
     }
 
     rc = ble_store_config_persist_rpa_recs();
+    if (rc != 0) {
+        return rc;
+    }
+
+    return 0;
+#else
+    return BLE_HS_ENOENT;
+#endif
+}
+
+/*****************************************************************************
+ * $csfc                                                                     *
+ *****************************************************************************/
+
+static int
+ble_store_config_find_csfc(const struct ble_store_key_csfc *key,
+                           const struct ble_store_value_csfc *value_csfc,
+                           int num_value_csfc)
+{
+    const struct ble_store_value_csfc *cur;
+    int i;
+
+    if (!ble_addr_cmp(&key->peer_addr, BLE_ADDR_ANY)) {
+        if (key->idx < num_value_csfc) {
+            return key->idx;
+        }
+    } else if (key->idx == 0) {
+        for (i = 0; i < num_value_csfc; i++) {
+            cur = &value_csfc[i];
+
+            if (!ble_addr_cmp(&cur->peer_addr, &key->peer_addr)) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+
+static int
+ble_store_config_delete_csfc(const struct ble_store_key_csfc *key_csfc)
+{
+    int idx;
+    int rc;
+
+    idx = ble_store_config_find_csfc(key_csfc, ble_store_config_csfcs,
+                                     ble_store_config_num_csfcs);
+    if (idx == -1) {
+        return BLE_HS_ENOENT;
+    }
+
+    rc = ble_store_config_delete_obj(ble_store_config_csfcs,
+                                     sizeof *ble_store_config_csfcs,
+                                     idx, &ble_store_config_num_csfcs);
+
+    if (rc != 0) {
+        return rc;
+    }
+
+    rc = ble_store_config_persist_csfcs();
+    if (rc != 0) {
+        return rc;
+    }
+
+    return 0;
+}
+
+static int
+ble_store_config_read_csfc(const struct ble_store_key_csfc *key_csfc,
+                           struct ble_store_value_csfc *value_csfc)
+{
+    int idx;
+
+    idx = ble_store_config_find_csfc(key_csfc, ble_store_config_csfcs,
+                                    ble_store_config_num_csfcs);
+    if (idx == -1) {
+        return BLE_HS_ENOENT;
+    }
+
+    *value_csfc = ble_store_config_csfcs[idx];
+    return 0;
+}
+
+static int
+ble_store_config_write_csfc(const struct ble_store_value_csfc *value_csfc)
+{
+    struct ble_store_key_csfc key_csfc;
+    int idx;
+    int rc;
+
+    ble_store_key_from_value_csfc(&key_csfc, value_csfc);
+    idx = ble_store_config_find_csfc(&key_csfc, ble_store_config_csfcs,
+                                     ble_store_config_num_csfcs);
+    if (idx == -1) {
+        if (ble_store_config_num_csfcs >= MYNEWT_VAL(BLE_STORE_MAX_CSFCS)) {
+            BLE_HS_LOG(DEBUG, "error persisting csfc; too many entries (%d)\n",
+                       ble_store_config_num_csfcs);
+            return BLE_HS_ESTORE_CAP;
+        }
+
+        idx = ble_store_config_num_csfcs;
+        ble_store_config_num_csfcs++;
+    }
+
+    ble_store_config_csfcs[idx] = *value_csfc;
+
+    rc = ble_store_config_persist_csfcs();
     if (rc != 0) {
         return rc;
     }
@@ -959,6 +1053,10 @@ ble_store_config_read(int obj_type, const union ble_store_key *key,
         rc = ble_store_config_read_cccd(&key->cccd, &value->cccd);
         return rc;
 
+    case BLE_STORE_OBJ_TYPE_CSFC:
+        rc = ble_store_config_read_csfc(&key->csfc, &value->csfc);
+        return rc;
+
 #if MYNEWT_VAL(ENC_ADV_DATA)
     case BLE_STORE_OBJ_TYPE_ENC_ADV_DATA:
         rc = ble_store_config_read_ead(&key->ead, &value->ead);
@@ -1000,6 +1098,10 @@ ble_store_config_write(int obj_type, const union ble_store_value *val)
         rc = ble_store_config_write_cccd(&val->cccd);
         return rc;
 
+    case BLE_STORE_OBJ_TYPE_CSFC:
+        rc = ble_store_config_write_csfc(&val->csfc);
+        return rc;
+
 #if MYNEWT_VAL(ENC_ADV_DATA)
     case BLE_STORE_OBJ_TYPE_ENC_ADV_DATA:
         rc = ble_store_config_write_ead(&val->ead);
@@ -1036,6 +1138,10 @@ ble_store_config_delete(int obj_type, const union ble_store_key *key)
         rc = ble_store_config_delete_cccd(&key->cccd);
         return rc;
 
+    case BLE_STORE_OBJ_TYPE_CSFC:
+        rc = ble_store_config_delete_csfc(&key->csfc);
+        return rc;
+
 #if MYNEWT_VAL(ENC_ADV_DATA)
     case BLE_STORE_OBJ_TYPE_ENC_ADV_DATA:
         rc = ble_store_config_delete_ead(&key->ead);
@@ -1068,6 +1174,7 @@ ble_store_config_init(void)
     ble_store_config_num_our_secs = 0;
     ble_store_config_num_peer_secs = 0;
     ble_store_config_num_cccds = 0;
+    ble_store_config_num_csfcs = 0;
 #if MYNEWT_VAL(ENC_ADV_DATA)
     ble_store_config_num_eads = 0;
 #endif

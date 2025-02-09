@@ -81,7 +81,7 @@ ble_hs_hci_util_rand(void *dst, int len)
             return rc;
         }
 
-        chunk_sz = min(len, sizeof(rsp));
+        chunk_sz = min(len, (int)sizeof(rsp));
         memcpy(u8ptr, &rsp.random_number, chunk_sz);
 
         len -= chunk_sz;
@@ -184,12 +184,14 @@ ble_hs_hci_util_read_sugg_def_data_len(uint16_t *out_sugg_max_tx_octets,
 
     if (*out_sugg_max_tx_octets < BLE_HCI_SUGG_DEF_DATALEN_TX_OCTETS_MIN ||
         *out_sugg_max_tx_octets > BLE_HCI_SUGG_DEF_DATALEN_TX_OCTETS_MAX) {
-        BLE_HS_LOG(WARN, "received suggested maximum tx octets is out of range\n");
+        BLE_HS_LOG(WARN,
+                   "received suggested maximum tx octets is out of range\n");
     }
 
     if (*out_sugg_max_tx_time < BLE_HCI_SUGG_DEF_DATALEN_TX_TIME_MIN ||
         *out_sugg_max_tx_time > BLE_HCI_SUGG_DEF_DATALEN_TX_TIME_MAX) {
-        BLE_HS_LOG(WARN, "received suggested maximum tx time is out of range\n");
+        BLE_HS_LOG(WARN,
+                   "received suggested maximum tx time is out of range\n");
     }
 
     return 0;

@@ -9,7 +9,7 @@
 #ifndef __FRIEND_H__
 #define __FRIEND_H__
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 enum bt_mesh_friend_pdu_type {
 	BT_MESH_FRIEND_PDU_SINGLE,

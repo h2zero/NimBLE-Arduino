@@ -22,8 +22,6 @@
 #include "nimble/porting/nimble/include/os/os.h"
 #include "ble_hs_priv.h"
 
-const uint8_t ble_hs_misc_null_addr[6];
-
 int
 ble_hs_misc_conn_chan_find(uint16_t conn_handle, uint16_t cid,
                            struct ble_hs_conn **out_conn,

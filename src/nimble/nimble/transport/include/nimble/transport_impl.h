@@ -31,17 +31,15 @@ extern "C" {
 extern void ble_transport_ll_init(void);
 extern void ble_transport_hs_init(void);
 
+extern void ble_transport_ll_deinit(void);
+
 /* APIs to be implemented by HS/LL side of transports */
 extern int ble_transport_to_ll_cmd_impl(void *buf);
 extern int ble_transport_to_ll_acl_impl(struct os_mbuf *om);
+extern int ble_transport_to_ll_iso_impl(struct os_mbuf *om);
 extern int ble_transport_to_hs_evt_impl(void *buf);
 extern int ble_transport_to_hs_acl_impl(struct os_mbuf *om);
-
-#if MYNEWT_VAL(BLE_TRANSPORT_INT_FLOW_CTL)
-/* To be implemented if transport supports internal flow control between cores */
-extern int ble_transport_int_flow_ctl_get(void);
-extern void ble_transport_int_flow_ctl_put(void);
-#endif
+extern int ble_transport_to_hs_iso_impl(struct os_mbuf *om);
 
 #ifdef __cplusplus
 }

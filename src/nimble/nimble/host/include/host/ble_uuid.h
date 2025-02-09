@@ -56,30 +56,55 @@ typedef struct {
 
 /** 16-bit UUID */
 typedef struct {
+    /** Generic UUID structure */
     ble_uuid_t u;
+
+    /** 16-bit UUID value */
     uint16_t value;
 } ble_uuid16_t;
 
 /** 32-bit UUID */
 typedef struct {
+    /** Generic UUID structure */
     ble_uuid_t u;
+
+    /** 32-bit UUID value */
     uint32_t value;
 } ble_uuid32_t;
 
 /** 128-bit UUID */
 typedef struct {
+    /** Generic UUID structure */
     ble_uuid_t u;
+
+    /** 128-bit UUID value  */
     uint8_t value[16];
 } ble_uuid128_t;
 
 /** Universal UUID type, to be used for any-UUID static allocation */
 typedef union {
+    /** Generic UUID structure */
     ble_uuid_t u;
+
+    /** 16-bit UUID structure */
     ble_uuid16_t u16;
+
+    /** 32-bit UUID structure */
     ble_uuid32_t u32;
+
+    /** 128-bit UUID structure */
     ble_uuid128_t u128;
 } ble_uuid_any_t;
 
+/**
+ * @brief Macro for initializing a 16-bit UUID.
+ *
+ * This macro initializes a 16-bit UUID with the provided value.
+ *
+ * @param uuid16    The value of the 16-bit UUID.
+ *
+ * @return          The initialized 16-bit UUID structure.
+ */
 #define BLE_UUID16_INIT(uuid16)         \
     {                                   \
         .u = {                          \
@@ -88,6 +113,15 @@ typedef union {
         .value = (uuid16),              \
     }
 
+/**
+ * @brief Macro for initializing a 32-bit UUID.
+ *
+ * This macro initializes a 32-bit UUID with the provided value.
+ *
+ * @param uuid32    The value of the 32-bit UUID.
+ *
+ * @return          The initialized 32-bit UUID structure.
+ */
 #define BLE_UUID32_INIT(uuid32)         \
     {                                   \
         .u = {                          \
@@ -104,21 +138,63 @@ typedef union {
         .value = { uuid128 },           \
     }
 
+/**
+ * @brief Macro for declaring a pointer to a 16-bit UUID structure initialized with a specific 16-bit UUID value.
+ *
+ * @param uuid16    The 16-bit UUID value to initialize the structure with.
+ *
+ * @return          Pointer to a `ble_uuid_t` structure.
+ */
 #define BLE_UUID16_DECLARE(uuid16) \
     ((ble_uuid_t *) (&(ble_uuid16_t) BLE_UUID16_INIT(uuid16)))
 
+/**
+ * @brief Macro for declaring a pointer to a 32-bit UUID structure initialized with a specific 32-bit UUID value.
+ *
+ * @param uuid32    The 32-bit UUID value to initialize the structure with.
+ *
+ * @return          Pointer to a `ble_uuid_t` structure.
+ */
 #define BLE_UUID32_DECLARE(uuid32) \
     ((ble_uuid_t *) (&(ble_uuid32_t) BLE_UUID32_INIT(uuid32)))
 
+/**
+ * @brief Macro for declaring a pointer to a 128-bit UUID structure initialized with specific 128-bit UUID values.
+ *
+ * @param uuid128   The 128-bit UUID value to initialize the structure with.
+ *
+ * @return          Pointer to a `ble_uuid_t` structure.
+ */
 #define BLE_UUID128_DECLARE(uuid128...) \
     ((ble_uuid_t *) (&(ble_uuid128_t) BLE_UUID128_INIT(uuid128)))
 
+/**
+ * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer to 16-bit UUID structure.
+ *
+ * @param u         Pointer to a `ble_uuid_t` structure.
+ *
+ * @return          Pointer to a `ble_uuid16_t` structure.
+ */
 #define BLE_UUID16(u) \
     ((ble_uuid16_t *) (u))
 
+/**
+ * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer to 32-bit UUID structure.
+ *
+ * @param u         Pointer to a `ble_uuid_t` structure.
+ *
+ * @return          Pointer to a `ble_uuid32_t` structure.
+ */
 #define BLE_UUID32(u) \
     ((ble_uuid32_t *) (u))
 
+/**
+ * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer to 128-bit UUID structure.
+ *
+ * @param u         Pointer to a `ble_uuid_t` structure.
+ *
+ * @return          Pointer to a `ble_uuid128_t` structure.
+ */
 #define BLE_UUID128(u) \
     ((ble_uuid128_t *) (u))
 
@@ -167,6 +243,25 @@ void ble_uuid_copy(ble_uuid_any_t *dst, const ble_uuid_t *src);
  * @return       A pointer to the supplied destination buffer.
  */
 char *ble_uuid_to_str(const ble_uuid_t *uuid, char *dst);
+
+/**
+ * @brief Converts the specified UUID string to ble_uuid_any_t representation.
+ *        If the UUID is recognised as Bluetooth SIG UUID, it will provide its
+ *        32-bit or 16-bit representation.
+ *
+ * Example 128-bit string representations:
+ *     o "12345678-1234-1234-1234-123456789abc"
+ *     o "12345678123412341234123456789abc"
+ *
+ * @param uuid  Destination UUID.
+ * @param str   The source string UUID.
+ *
+ * @return      0 on success,
+ *              BLE_HS_EINVAL if the specified UUID string has wrong size or
+ *              contains disallowed characters.
+ */
+int
+ble_uuid_from_str(ble_uuid_any_t *uuid, const char *str);
 
 /** @brief Converts the specified 16-bit UUID to a uint16_t.
  *

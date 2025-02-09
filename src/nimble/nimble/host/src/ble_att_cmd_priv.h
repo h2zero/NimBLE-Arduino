@@ -310,6 +310,20 @@ struct ble_att_exec_write_req {
 #define BLE_ATT_EXEC_WRITE_RSP_SZ       1
 
 /**
+ * | Parameter                                     | Size (octets)     |
+ * +-----------------------------------------------+-------------------+
+ * | Attribute Opcode                              | 1                 |
+ * | Attribute Handle Length Value Tuple List      | 8 to (ATT_MTU-1)  |
+ */
+#define BLE_ATT_NOTIFY_MULTI_REQ_BASE_SZ      9
+
+struct ble_att_tuple_list {
+    uint16_t handle;
+    uint16_t value_len;
+    uint8_t data[0];
+} __attribute__((packed));
+
+/**
  * | Parameter                          | Size (octets)     |
  * +------------------------------------+-------------------+
  * | Attribute Opcode                   | 1                 |
@@ -454,8 +468,15 @@ void ble_att_indicate_rsp_write(void *payload, int len);
 
 void *ble_att_cmd_prepare(uint8_t opcode, size_t len, struct os_mbuf *txom);
 void *ble_att_cmd_get(uint8_t opcode, size_t len, struct os_mbuf **txom);
-int ble_att_tx(uint16_t conn_handle, struct os_mbuf *txom);
+int ble_att_tx(uint16_t conn_handle, uint16_t cid, struct os_mbuf *txom);
 
+struct ble_l2cap_chan;
+struct ble_hs_conn;
+int ble_att_tx_with_conn(struct ble_hs_conn *conn, struct ble_l2cap_chan *chan,
+                         struct os_mbuf *txom);
+bool ble_att_is_response_op(uint8_t opcode);
+bool ble_att_is_request_op(uint8_t opcode);
+bool ble_att_is_att_pdu_op(uint8_t opcode);
 #ifdef __cplusplus
 }
 #endif

@@ -4,9 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_LOG
 #include "nimble/porting/nimble/include/log/log.h"
 #include <stdlib.h>
@@ -16,7 +13,7 @@
 #include "rpl.h"
 #include "settings.h"
 #include "mesh_priv.h"
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 
 #if MYNEWT_VAL(BLE_MESH_CDB)
 /* Tracking of what storage changes are pending for App and Net Keys. We
@@ -1143,5 +1140,3 @@ void bt_mesh_cdb_init(void)
 #endif
 }
 #endif
-
-#endif // MYNEWT_VAL(BLE_MESH)

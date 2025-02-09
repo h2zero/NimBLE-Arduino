@@ -11,7 +11,7 @@
 
 #include "prov_bearer.h"
 #include "nimble/porting/nimble/include/os/os_mbuf.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/nimble/host/src/ble_hs_conn_priv.h"
 
 #define PROV_ERR_NONE          0x00

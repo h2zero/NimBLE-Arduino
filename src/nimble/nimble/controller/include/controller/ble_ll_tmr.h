@@ -21,7 +21,7 @@
 #define H_BLE_LL_TMR_
 
 #include "nimble/porting/nimble/include/os/os_cputime.h"
-#include "ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -215,3 +215,13 @@ under the following license:
 This product bundles tinycrypt, which is available under the "3-clause BSD"
 license. For details, and bundled files see:
     * ext/tinycrypt/LICENSE
+
+This product bundles and partly derives from parts of the Nordic nRF52 SDK,
+which are available under a BSD style license.  Relevant files are:
+    * babblesim/hw/mcu/nordic/nrf52_bsim/src/system_nrf52.c
+
+This product bundles additional files from CMSIS-CORE, but these files are
+missing licensing information.  The BSD license was subsequently added to
+these files in later releases.  These files are:
+    * babblesim/hw/mcu/nordic/nrf52_bsim/include/mcu/cmsis_nvic.h
+

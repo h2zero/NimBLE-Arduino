@@ -795,14 +795,14 @@ ble_l2cap_sig_credit_base_reconfig_req_rx(uint16_t conn_handle,
     }
 
     if (hdr->length <= sizeof(*req)) {
-        rsp->result = htole16(BLE_L2CAP_ERR_RECONFIG_UNACCAPTED_PARAM);
+        rsp->result = htole16(BLE_L2CAP_ERR_RECONFIG_UNACCEPTED_PARAM);
         goto failed;
     }
 
     req = (struct ble_l2cap_sig_credit_base_reconfig_req *)(*om)->om_data;
 
     if ((req->mps < BLE_L2CAP_ECOC_MIN_MTU) || (req->mtu < BLE_L2CAP_ECOC_MIN_MTU)) {
-        rsp->result = htole16(BLE_L2CAP_ERR_RECONFIG_UNACCAPTED_PARAM);
+        rsp->result = htole16(BLE_L2CAP_ERR_RECONFIG_UNACCEPTED_PARAM);
         goto failed;
     }
 
@@ -811,7 +811,7 @@ ble_l2cap_sig_credit_base_reconfig_req_rx(uint16_t conn_handle,
 
     cid_cnt = (hdr->length - sizeof(*req)) / sizeof(uint16_t);
     if (cid_cnt > BLE_L2CAP_MAX_COC_CONN_REQ) {
-        rsp->result = htole16(BLE_L2CAP_ERR_RECONFIG_UNACCAPTED_PARAM);
+        rsp->result = htole16(BLE_L2CAP_ERR_RECONFIG_UNACCEPTED_PARAM);
         goto failed;
     }
 
@@ -1493,7 +1493,7 @@ done:
 
 int
 ble_l2cap_sig_coc_reconfig(uint16_t conn_handle, struct ble_l2cap_chan *chans[],
-                           uint8_t num, uint16_t new_mtu)
+                           uint8_t num, uint16_t new_mtu, uint16_t new_mps)
 {
     struct ble_hs_conn *conn;
     struct ble_l2cap_sig_proc *proc;
@@ -1529,7 +1529,7 @@ ble_l2cap_sig_coc_reconfig(uint16_t conn_handle, struct ble_l2cap_chan *chans[],
     proc->op = BLE_L2CAP_SIG_PROC_OP_RECONFIG;
     proc->reconfig.cid_cnt = num;
     proc->reconfig.new_mtu = new_mtu;
-    proc->reconfig.new_mps = MYNEWT_VAL(BLE_L2CAP_COC_MPS);
+    proc->reconfig.new_mps = new_mps;
     proc->id = ble_l2cap_sig_next_id();
     proc->conn_handle = conn_handle;
 

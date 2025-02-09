@@ -26,6 +26,10 @@
 #include "ble_hs_priv.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
 
+#define BLE_UUID16_STR_MAX_LEN          6
+#define BLE_UUID32_STR_MAX_LEN          10
+#define BLE_UUID128_STR_MAX_LEN         36
+
 static uint8_t ble_uuid_base[16] = {
     0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80,
     0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -39,6 +43,52 @@ static uint8_t ble_uuid_base[16] = {
 #else
 #define VERIFY_UUID(uuid)
 #endif
+
+static int
+hex2val(char c, uint8_t *value)
+{
+    if (c >= '0' && c <= '9') {
+        *value = c - '0';
+    } else if (c >= 'a' && c <= 'f') {
+        *value = c - 'a' + 10;
+    } else if (c >= 'A' && c <= 'F') {
+        *value = c - 'A' + 10;
+    } else {
+        return BLE_HS_EINVAL;
+    }
+    return 0;
+}
+
+
+static size_t
+hex2bin(const char *hex, uint8_t *bin, size_t bin_len)
+{
+    size_t len = 0;
+    uint8_t tmp_val;
+    int rc;
+
+    while (*hex && len < bin_len) {
+        rc = hex2val(*hex++, &tmp_val);
+        if (rc != 0) {
+            return 0;
+        }
+
+        bin[len] = tmp_val << 4;
+
+        if (!*hex) {
+            len++;
+            break;
+        }
+
+        rc = hex2val(*hex++, &tmp_val);
+        if (rc != 0) {
+            return 0;
+        }
+        bin[len++] |= tmp_val;
+    }
+
+    return len;
+}
 
 int
 ble_uuid_init_from_buf(ble_uuid_any_t *uuid, const void *buf, size_t len)
@@ -136,6 +186,106 @@ ble_uuid_to_str(const ble_uuid_t *uuid, char *dst)
     return dst;
 }
 
+int
+ble_uuid_from_str(ble_uuid_any_t *uuid, const char *str)
+{
+    uint8_t tmp_rslt = 0;
+    uint8_t *u8p;
+    const char *str_ptr;
+    uint16_t u16 = 0;
+    uint32_t u32 = 0;
+    int len = (int) strlen(str);
+
+    if ((len < 4) || (len % 2 != 0)) {
+        return BLE_HS_EINVAL;
+    }
+
+    str_ptr = &str[len - 2];
+
+    if (len <= BLE_UUID16_STR_MAX_LEN) {
+        uuid->u.type = BLE_UUID_TYPE_16;
+    } else if (len <= BLE_UUID32_STR_MAX_LEN) {
+        uuid->u.type = BLE_UUID_TYPE_32;
+    } else if (len <= BLE_UUID128_STR_MAX_LEN) {
+        uuid->u.type = BLE_UUID_TYPE_128;
+    } else {
+        return BLE_HS_EINVAL;
+    }
+
+    switch (uuid->u.type) {
+    case BLE_UUID_TYPE_128:
+        uuid->u.type = BLE_UUID_TYPE_128;
+        u8p = uuid->u128.value;
+        for (int i = 0; i < 16; i++) {
+            if (hex2bin(str_ptr, u8p, 1) != 1) {
+                return BLE_HS_EINVAL;
+            }
+
+            /* Check if string end */
+            if (str_ptr == str) {
+                break;
+            }
+
+            /* Remove '-' */
+            if (*(str_ptr - 1) == '-') {
+                str_ptr--;
+            }
+
+            str_ptr -= 2;
+            u8p++;
+        }
+
+        if (memcmp(ble_uuid_base, uuid->u128.value, 12) == 0) {
+            uint8_t *tmp_ptr = &uuid->u128.value[12];
+            uint32_t tmp_val32 = 0;
+            for (int i = 0; i < 4; i++) {
+                tmp_val32 |= ((uint32_t)(*tmp_ptr++) << 8 * i);
+            }
+
+            if (tmp_val32 <= UINT16_MAX) {
+                uuid->u.type = BLE_UUID_TYPE_16;
+                uuid->u16.value = (uint16_t) tmp_val32;
+            } else {
+                uuid->u.type = BLE_UUID_TYPE_32;
+                uuid->u32.value = tmp_val32;
+            }
+        }
+        break;
+    case BLE_UUID_TYPE_32:
+        for (int i = 0; i < 4; i++) {
+            if (hex2bin(str_ptr, &tmp_rslt, 1) != 1) {
+                return BLE_HS_EINVAL;
+            }
+            u32 |= ((uint32_t) tmp_rslt) << (i * 8);
+
+            if (str_ptr == str) {
+                break;
+            }
+            str_ptr -= 2;
+        }
+        uuid->u32.value = u32;
+        break;
+    case BLE_UUID_TYPE_16:
+        for (int i = 0; i < 2; i++) {
+            if (hex2bin(str_ptr, &tmp_rslt, 1) != 1) {
+                return BLE_HS_EINVAL;
+            }
+            u16 |= ((uint32_t) tmp_rslt) << (i * 8);
+
+            if (str_ptr == str) {
+                break;
+            }
+            str_ptr -= 2;
+        }
+        uuid->u16.value = u16;
+        break;
+    default:
+        return BLE_HS_EINVAL;
+    }
+
+    return 0;
+}
+
 uint16_t
 ble_uuid_u16(const ble_uuid_t *uuid)
 {
@@ -227,8 +377,6 @@ ble_uuid_to_mbuf(const ble_uuid_t *uuid, struct os_mbuf *om)
     return 0;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpointer-arith"
 int
 ble_uuid_flat(const ble_uuid_t *uuid, void *dst)
 {
@@ -251,7 +399,6 @@ ble_uuid_flat(const ble_uuid_t *uuid, void *dst)
 
     return 0;
 }
-#pragma GCC diagnostic pop
 
 int
 ble_uuid_length(const ble_uuid_t *uuid)

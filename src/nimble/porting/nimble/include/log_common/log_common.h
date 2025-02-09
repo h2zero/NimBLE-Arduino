@@ -21,7 +21,7 @@
 #define H_LOG_COMMON_
 
 #include <stdint.h>
-#include "ignore.h"
+#include "nimble/porting/nimble/include/log_common/ignore.h"
 
 #ifdef __cplusplus
 extern "C" {

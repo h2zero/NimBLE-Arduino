@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2015-2024 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,15 +9,22 @@
 #include <assert.h>
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
-#include "nimble/nimble/host/include/host/ble_hs.h"
+#if CONFIG_BT_NIMBLE_ENABLED
+#  include "nimble/nimble/host/include/host/ble_hs.h"
+#endif //CONFIG_BT_NIMBLE_ENABLED
 #include "nimble/porting/nimble/include/nimble/nimble_port.h"
 #include "nimble/porting/npl/freertos/include/nimble/nimble_port_freertos.h"
-#include "../include/esp_nimble_hci.h"
-#include "../../port/include/esp_nimble_mem.h"
-//#include "bt_osi_mem.h"
-#include <esp_bt.h>
-#include <freertos/semphr.h>
-#include "../include/esp_compiler.h"
+#include "nimble/esp_port/esp-hci/include/esp_nimble_hci.h"
+#include "nimble/esp_port/port/include/esp_nimble_mem.h"
+#include "nimble/esp_port/port/include/bt_osi_mem.h"
+#if CONFIG_BT_CONTROLLER_ENABLED
+#include "esp_bt.h"
+#endif
+#include "freertos/semphr.h"
+#include "esp_compiler.h"
+#include "soc/soc_caps.h"
+//#include "bt_common.h"
+//#include "hci_log/bt_hci_log.h"
 
 #define NIMBLE_VHCI_TIMEOUT_MS  2000
 #define BLE_HCI_EVENT_HDR_LEN               (2)
@@ -39,6 +46,7 @@ static void *ble_hci_rx_acl_hs_arg;
         + BLE_HCI_DATA_HDR_SZ, OS_ALIGNMENT)
 
 
+
 static SemaphoreHandle_t vhci_send_sem;
 const static char *LOG_TAG = "NimBLE";
 
@@ -47,9 +55,9 @@ void os_msys_buf_free(void);
 extern uint8_t ble_hs_enabled_state;
 
 void ble_hci_trans_cfg_hs(ble_hci_trans_rx_cmd_fn *cmd_cb,
-                     void *cmd_arg,
-                     ble_hci_trans_rx_acl_fn *acl_cb,
-                     void *acl_arg)
+                          void *cmd_arg,
+                          ble_hci_trans_rx_acl_fn *acl_cb,
+                          void *acl_arg)
 {
     ble_hci_rx_cmd_hs_cb = cmd_cb;
     ble_hci_rx_cmd_hs_arg = cmd_arg;
@@ -57,7 +65,14 @@ void ble_hci_trans_cfg_hs(ble_hci_trans_rx_cmd_fn *cmd_cb,
     ble_hci_rx_acl_hs_arg = acl_arg;
 }
 
-/* Modified to use ipc calls in arduino to correct performance issues */
+void esp_vhci_host_send_packet_wrapper(uint8_t *data, uint16_t len)
+{
+#if 0
+    bt_hci_log_record_hci_data(data[0], &data[1], len - 1);
+#endif
+    esp_vhci_host_send_packet(data, len);
+}
+
 int ble_hci_trans_hs_cmd_tx(uint8_t *cmd)
 {
     uint16_t len;
@@ -71,7 +86,7 @@ int ble_hci_trans_hs_cmd_tx(uint8_t *cmd)
     }
 
     if (xSemaphoreTake(vhci_send_sem, NIMBLE_VHCI_TIMEOUT_MS / portTICK_PERIOD_MS) == pdTRUE) {
-        esp_vhci_host_send_packet(cmd, len);
+        esp_vhci_host_send_packet_wrapper(cmd, len);
     } else {
         rc = BLE_HS_ETIMEOUT_HCI;
     }
@@ -88,28 +103,27 @@ int ble_hci_trans_ll_evt_tx(uint8_t *hci_ev)
     return rc;
 }
 
-/* Modified to use ipc calls in arduino to correct performance issues */
 int ble_hci_trans_hs_acl_tx(struct os_mbuf *om)
 {
     uint16_t len = 0;
-    uint8_t data[MYNEWT_VAL(BLE_TRANSPORT_ACL_SIZE) + 3], rc = 0;
-
+    uint8_t data[MYNEWT_VAL(BLE_TRANSPORT_ACL_SIZE) + 1], rc = 0;
     /* If this packet is zero length, just free it */
     if (OS_MBUF_PKTLEN(om) == 0) {
         os_mbuf_free_chain(om);
         return 0;
     }
+    data[0] = BLE_HCI_UART_H4_ACL;
+    len++;
 
     if (!esp_vhci_host_check_send_available()) {
         ESP_LOGD(LOG_TAG, "Controller not ready to receive packets");
     }
 
-    len = 1 + OS_MBUF_PKTLEN(om);
-    data[0] = BLE_HCI_UART_H4_ACL;
     os_mbuf_copydata(om, 0, OS_MBUF_PKTLEN(om), &data[1]);
+    len += OS_MBUF_PKTLEN(om);
 
     if (xSemaphoreTake(vhci_send_sem, NIMBLE_VHCI_TIMEOUT_MS / portTICK_PERIOD_MS) == pdTRUE) {
-        esp_vhci_host_send_packet(data, len);
+        esp_vhci_host_send_packet_wrapper(data, len);
     } else {
         rc = BLE_HS_ETIMEOUT_HCI;
     }
@@ -127,6 +141,8 @@ int ble_hci_trans_ll_acl_tx(struct os_mbuf *om)
     return rc;
 }
 
+
+
 int ble_hci_trans_reset(void)
 {
     /* No work to do.  All allocated buffers are owned by the host or
@@ -138,7 +154,7 @@ int ble_hci_trans_reset(void)
 
 static void ble_hci_rx_acl(uint8_t *data, uint16_t len)
 {
-    struct os_mbuf *m;
+    struct os_mbuf *m = NULL;
     int rc;
     int sr;
     if (len < BLE_HCI_DATA_HDR_SZ || len > MYNEWT_VAL(BLE_TRANSPORT_ACL_SIZE)) {
@@ -149,14 +165,14 @@ static void ble_hci_rx_acl(uint8_t *data, uint16_t len)
         m = ble_transport_alloc_acl_from_ll();
 
         if (!m) {
-            ESP_LOGD(LOG_TAG,"Failed to allocate buffer, retrying ");
-            /* Give some time to free buffer and try again */
-            vTaskDelay(1);
-	    }
-    } while(!m);
+            esp_rom_printf("Failed to allocate buffer, retrying ");
+	    /* Give some time to free buffer and try again */
+	    vTaskDelay(1);
+	}
+    }while(!m);
 
     if ((rc = os_mbuf_append(m, data, len)) != 0) {
-        ESP_LOGE(LOG_TAG, "%s failed to os_mbuf_append; rc = %d", __func__, rc);
+        esp_rom_printf("%s failed to os_mbuf_append; rc = %d", __func__, rc);
         os_mbuf_free_chain(m);
         return;
     }
@@ -176,14 +192,40 @@ static void controller_rcv_pkt_ready(void)
     }
 }
 
+static void dummy_controller_rcv_pkt_ready(void)
+{
+  /* Dummy function */
+}
+
+void bt_record_hci_data(uint8_t *data, uint16_t len)
+{
+#if 0
+    if ((data[0] == BLE_HCI_UART_H4_EVT) && (data[1] == BLE_HCI_EVCODE_LE_META) && ((data[3] ==  BLE_HCI_LE_SUBEV_ADV_RPT) || (data[3] == BLE_HCI_LE_SUBEV_DIRECT_ADV_RPT)
+        || (data[3] == BLE_HCI_LE_SUBEV_EXT_ADV_RPT) || (data[3] == BLE_HCI_LE_SUBEV_PERIODIC_ADV_RPT))) {
+        bt_hci_log_record_hci_adv(HCI_LOG_DATA_TYPE_ADV, &data[2], len - 2);
+    } else {
+        uint8_t data_type = ((data[0] == 2) ? HCI_LOG_DATA_TYPE_C2H_ACL : data[0]);
+        bt_hci_log_record_hci_data(data_type, &data[1], len - 1);
+    }
+#endif // (BT_HCI_LOG_INCLUDED == TRUE)
+}
+
+static int dummy_host_rcv_pkt(uint8_t *data, uint16_t len)
+{
+    /* Dummy function */
+    return 0;
+}
+
 /*
  * @brief: BT controller callback function, to transfer data packet to the host
  */
 static int host_rcv_pkt(uint8_t *data, uint16_t len)
 {
+    bt_record_hci_data(data, len);
+
     if(!ble_hs_enabled_state) {
         /* If host is not enabled, drop the packet */
-        ESP_LOGE(LOG_TAG, "Host not enabled. Dropping the packet!");
+        esp_rom_printf("Host not enabled. Dropping the packet!");
         return 0;
     }
 
@@ -196,7 +238,7 @@ static int host_rcv_pkt(uint8_t *data, uint16_t len)
         assert(totlen <= UINT8_MAX + BLE_HCI_EVENT_HDR_LEN);
 
         if (totlen > MYNEWT_VAL(BLE_TRANSPORT_EVT_SIZE)) {
-            ESP_LOGE(LOG_TAG, "Received HCI data length at host (%d) exceeds maximum configured HCI event buffer size (%d).",
+            esp_rom_printf("Received HCI data length at host (%d) exceeds maximum configured HCI event buffer size (%d).",
                      totlen, MYNEWT_VAL(BLE_TRANSPORT_EVT_SIZE));
             ble_hs_sched_reset(BLE_HS_ECONTROLLER);
             return 0;
@@ -234,6 +276,12 @@ static const esp_vhci_host_callback_t vhci_host_cb = {
     .notify_host_send_available = controller_rcv_pkt_ready,
     .notify_host_recv = host_rcv_pkt,
 };
+
+static const esp_vhci_host_callback_t dummy_vhci_host_cb = {
+    .notify_host_send_available = dummy_controller_rcv_pkt_ready,
+    .notify_host_recv = dummy_host_rcv_pkt,
+};
+
 
 extern void ble_transport_init(void);
 extern esp_err_t ble_buf_alloc(void);
@@ -283,6 +331,8 @@ esp_err_t esp_nimble_hci_deinit(void)
     }
     ble_transport_deinit();
 
+    esp_vhci_host_register_callback(&dummy_vhci_host_cb);
+
     ble_buf_free();
 
 #if MYNEWT_VAL(BLE_QUEUE_CONG_CHECK)
@@ -292,4 +342,4 @@ esp_err_t esp_nimble_hci_deinit(void)
     return ESP_OK;
 }
 
-#endif
+#endif //ESP_PLATFORM

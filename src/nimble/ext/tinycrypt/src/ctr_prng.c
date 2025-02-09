@@ -27,9 +27,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../include/tinycrypt/ctr_prng.h"
-#include "../include/tinycrypt/utils.h"
-#include "../include/tinycrypt/constants.h"
+#include <nimble/ext/tinycrypt/include/tinycrypt/ctr_prng.h>
+#include <nimble/ext/tinycrypt/include/tinycrypt/utils.h>
+#include <nimble/ext/tinycrypt/include/tinycrypt/constants.h>
 #include <string.h>
 
 /*

@@ -24,16 +24,16 @@
 #include <string.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
-#include "../include/ble/xcvr.h"
+#include "nimble/nimble/drivers/nrf51/include/ble/xcvr.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
-#include "nrf.h"
+#include "nrfx.h"
 #include "nimble/nimble/controller/include/controller/ble_hw.h"
 #if MYNEWT
 #include "mcu/cmsis_nvic.h"
 #else
 #include "core_cm0.h"
-#include "nimble/porting/npl/freertos/include/nimble/nimble_npl_os.h"
+#include <nimble/porting/npl/freertos/include/nimble/nimble_npl_os.h>
 #endif
 #include "nimble/porting/nimble/include/os/os_trace_api.h"
 
@@ -90,11 +90,17 @@ ble_hw_get_public_addr(ble_addr_t *addr)
 int
 ble_hw_get_static_addr(ble_addr_t *addr)
 {
+    uint32_t addr_high;
+    uint32_t addr_low;
     int rc;
 
     if ((NRF_FICR->DEVICEADDRTYPE & 1) == 1) {
-        memcpy(addr->val, (void *)&NRF_FICR->DEVICEADDR[0], 4);
-        memcpy(&addr->val[4], (void *)&NRF_FICR->DEVICEADDR[1], 2);
+        addr_low = NRF_FICR->DEVICEADDR[0];
+        addr_high = NRF_FICR->DEVICEADDR[1];
+
+        memcpy(addr->val, &addr_low, 4);
+        memcpy(&addr->val[4], &addr_high, 2);
+
         addr->val[5] |= 0xc0;
         addr->type = BLE_ADDR_RANDOM;
         rc = 0;
@@ -483,4 +489,5 @@ ble_hw_resolv_list_match(void)
     return -1;
 }
 #endif
-#endif
+
+#endif /* ARDUINO_ARCH_NRF5 && NRF51 */

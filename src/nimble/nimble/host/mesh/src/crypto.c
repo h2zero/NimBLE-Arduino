@@ -7,16 +7,15 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_CRYPTO_LOG
 
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 
 #if (MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS))
-#include "mbedtls/aes.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
 #include "mbedtls/cipher.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
@@ -25,11 +24,11 @@
 #include "mbedtls/ecp.h"
 
 #else
-#include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
-#include "nimble/ext/tinycrypt/include/tinycrypt/utils.h"
-#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
-#include "nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h"
-#include "nimble/ext/tinycrypt/include/tinycrypt/ccm_mode.h"
+#include <nimble/ext/tinycrypt/include/tinycrypt/constants.h>
+#include <nimble/ext/tinycrypt/include/tinycrypt/utils.h>
+#include <nimble/ext/tinycrypt/include/tinycrypt/aes.h>
+#include <nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h>
+#include <nimble/ext/tinycrypt/include/tinycrypt/ccm_mode.h>
 #endif
 
 #include "crypto.h"
@@ -604,4 +603,3 @@ int bt_mesh_beacon_auth(const uint8_t beacon_key[16], uint8_t flags,
 
 	return err;
 }
-#endif

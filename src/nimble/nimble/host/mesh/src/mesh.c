@@ -7,15 +7,13 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_LOG
 
 #include <stdbool.h>
 #include <errno.h>
 
 #include "nimble/porting/nimble/include/os/os_mbuf.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
 
 #include "adv.h"
@@ -416,4 +414,3 @@ int bt_mesh_start(void)
 
 	return 0;
 }
-#endif
