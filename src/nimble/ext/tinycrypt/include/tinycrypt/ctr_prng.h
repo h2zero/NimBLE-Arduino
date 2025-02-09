@@ -59,7 +59,7 @@
 #ifndef __TC_CTR_PRNG_H__
 #define __TC_CTR_PRNG_H__
 
-#include "aes.h"
+#include <nimble/ext/tinycrypt/include/tinycrypt/aes.h>
 
 #define TC_CTR_PRNG_RESEED_REQ -1
 

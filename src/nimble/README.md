@@ -25,7 +25,21 @@
 
 ## Overview
 
-Apache NimBLE is an open-source Bluetooth 5.1 stack (both Host & Controller)
+<a href="https://github.com/apache/mynewt-nimble/actions/workflows/build_targets.yml">
+  <img src="https://github.com/apache/mynewt-nimble/actions/workflows/build_targets.yml/badge.svg">
+<a/>
+
+<a href="https://github.com/apache/mynewt-nimble/actions/workflows/build_ports.yml">
+  <img src="https://github.com/apache/mynewt-nimble/actions/workflows/build_ports.yml/badge.svg">
+<a/>
+
+<a href="https://github.com/apache/mynewt-nimble/actions/workflows/newt_test_all.yml/badge.svg">
+  <img src="https://github.com/apache/mynewt-nimble/actions/workflows/newt_test_all.yml/badge.svg">
+<a/>
+
+<p>
+
+Apache NimBLE is an open-source Bluetooth 5.4 stack (both Host & Controller)
 that completely replaces the proprietary SoftDevice on Nordic chipsets. It is
 part of [Apache Mynewt project](https://github.com/apache/mynewt-core).
 
@@ -41,9 +55,9 @@ Feature highlight:
 
 ## Supported hardware
 
-Controller supports Nordic nRF51 and nRF52 chipsets. Host runs on any board
-and architecture [supported](https://github.com/apache/mynewt-core#overview)
-by Apache Mynewt OS.
+Controller supports Nordic nRF51, nRF52 and nRF5340 chipsets as well as DA1469x (cmac)
+from Renesas. Host runs on any board and architecture
+[supported](https://github.com/apache/mynewt-core#overview) by Apache Mynewt OS.
 
 
 ## Browsing
@@ -105,6 +119,16 @@ Implements a simple BLE peripheral that supports the Nordic
 UART / Serial Port Emulation service
 (https://developer.nordicsemi.com/nRF5_SDK/nRF51_SDK_v8.x.x/doc/8.0.0/s110/html/a00072.html).
 
+## External projects using NimBLE
+
+Several other projects provide support for using NimBLE either by [NPL port](https://github.com/apache/mynewt-nimble/tree/master/porting) or forking:
+
+ * [The Espressif ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/bluetooth/nimble/index.html) contains a NimBLE port for ESP-32 devices.
+ * [The RIOT](https://doc.riot-os.org/group__pkg__nimble.html) operating system contains a package for using NimBLE.
+ * [The Open IOT SDK](https://gitlab.arm.com/iot/open-iot-sdk/sdk) contains a NimBLE [port](https://gitlab.arm.com/iot/open-iot-sdk/sdk/-/tree/main/components/bluetooth) based on [CMSIS RTOSv2](https://www.keil.com/pack/doc/CMSIS/RTOS2/html/index.html), which is an RTOS interface implemented by either Amazon Freertos, CMSIS RTX or Azure ThreadX.
+
+ If you publish a NimBLE port, please let us know to include it here!
+
 # Getting Help
 
 If you are having trouble using or contributing to Apache Mynewt NimBLE, or just
@@ -114,7 +138,7 @@ want to talk to a human about what you're working on, you can contact us via the
 Although not a formal channel, you can also find a number of core developers
 on the #mynewt channel on Freenode IRC or #general channel on [Mynewt Slack](https://mynewt.slack.com/join/shared_invite/enQtNjA1MTg0NzgyNzg3LTcyMmZiOGQzOGMxM2U4ODFmMTIwNjNmYTE5Y2UwYjQwZWIxNTE0MTUzY2JmMTEzOWFjYWZkNGM0YmM4MzAxNWQ)
 
-Also, be sure to checkout the [Frequently Asked Questions](https://mynewt.apache.org/faq/answers)
+Also, be sure to checkout the [Frequently Asked Questions](https://mynewt.apache.org/latest/mynewt_faq)
 for some help troubleshooting first.
 
 # Contributing

@@ -27,7 +27,7 @@
 #include "cdb.h"
 #include "cfg.h"
 #include "heartbeat.h"
-#include "../../src/app_keys.h"
-#include "../../src/net.h"
+#include "nimble/nimble/host/mesh/src/app_keys.h"
+#include "nimble/nimble/host/mesh/src/net.h"
 
 #endif /* __BT_MESH_H */

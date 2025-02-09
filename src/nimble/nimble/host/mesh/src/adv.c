@@ -8,15 +8,14 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_ADV_LOG
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/nimble/host/include/host/ble_hs_adv.h"
 #include "nimble/nimble/host/include/host/ble_gap.h"
-#include "../include/mesh/porting.h"
+#include "nimble/nimble/host/mesh/include/mesh/porting.h"
 #include "nimble/porting/nimble/include/nimble/nimble_port.h"
+
 #include "adv.h"
 #include "net.h"
 #include "foundation.h"
@@ -256,4 +255,3 @@ int bt_mesh_scan_disable(void)
 
 	return 0;
 }
-#endif

@@ -8,14 +8,14 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH_PROXY)
-
 #define MESH_LOG_MODULE BLE_MESH_PROXY_LOG
 
-#include "../include/mesh/mesh.h"
+#if MYNEWT_VAL(BLE_MESH_PROXY)
+
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/nimble/host/include/host/ble_att.h"
 #include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
-#include "../../host/src/ble_hs_priv.h"
+#include "nimble/nimble/host/src/ble_hs_priv.h"
 
 #include "mesh_priv.h"
 #include "adv.h"

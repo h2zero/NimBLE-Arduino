@@ -21,21 +21,18 @@
 
 #include <stdint.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#include "../include/controller/ble_ll.h"
-#include "../include/controller/ble_ll_hci.h"
-#include "../include/controller/ble_ll_sync.h"
-#include "../include/controller/ble_ll_adv.h"
-#include "../include/controller/ble_ll_scan.h"
-#include "../include/controller/ble_hw.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_utils.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_hci.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sync.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_adv.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_scan.h"
+#include "nimble/nimble/controller/include/controller/ble_hw.h"
+#include "nimble/nimble/controller/include/controller/ble_fem.h"
 #include "ble_ll_conn_priv.h"
 #include "ble_ll_priv.h"
 
 #if MYNEWT_VAL(BLE_LL_HCI_VS)
-
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(array) \
-        (sizeof(array) / sizeof((array)[0]))
-#endif
 
 SLIST_HEAD(ble_ll_hci_vs_list, ble_ll_hci_vs_cmd);
 static struct ble_ll_hci_vs_list g_ble_ll_hci_vs_list;
@@ -63,56 +60,6 @@ ble_ll_hci_vs_rd_static_addr(uint16_t ocf,
     return BLE_ERR_SUCCESS;
 }
 
-/* disallow changing TX power if there is any radio activity
- * note: we could allow to change it if there is no TX activity (eg only
- * passive scan or sync) but lets just keep this simple for now
- */
-static int
-ble_ll_hci_vs_is_controller_busy(void)
-{
-#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL) || MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
-    struct ble_ll_conn_sm *cur;
-    int i = 0;
-#endif
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV) && MYNEWT_VAL(BLE_LL_ROLE_OBSERVER)
-    if (ble_ll_sync_enabled()) {
-        return 1;
-    }
-#endif
-
-#if MYNEWT_VAL(BLE_LL_ROLE_BROADCASTER)
-    if (ble_ll_adv_enabled()) {
-        return 1;
-    }
-#endif
-
-#if MYNEWT_VAL(BLE_LL_ROLE_OBSERVER)
-    if (ble_ll_scan_enabled()) {
-        return 1;
-    }
-#endif
-
-#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
-    if (g_ble_ll_conn_create_sm.connsm) {
-        return 1;
-    }
-#endif
-
-#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL) || MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
-    STAILQ_FOREACH(cur, &g_ble_ll_conn_free_list, free_stqe) {
-        i++;
-    }
-
-    /* check if all connection objects are free */
-    if (i < MYNEWT_VAL(BLE_MAX_CONNECTIONS)) {
-        return 1;
-    }
-#endif
-
-    return 0;
-}
-
 static int
 ble_ll_hci_vs_set_tx_power(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
                            uint8_t *rspbuf, uint8_t *rsplen)
@@ -124,18 +71,22 @@ ble_ll_hci_vs_set_tx_power(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
 
-    if (ble_ll_hci_vs_is_controller_busy()) {
+    if (ble_ll_is_busy(0)) {
         return BLE_ERR_CMD_DISALLOWED;
     }
 
     if (cmd->tx_power == 127) {
         /* restore reset default */
-        g_ble_ll_tx_power = MYNEWT_VAL(BLE_LL_TX_PWR_DBM);
+        g_ble_ll_tx_power = ble_ll_tx_power_round(MIN(MYNEWT_VAL(BLE_LL_TX_PWR_DBM),
+                                                      MYNEWT_VAL(BLE_LL_TX_PWR_MAX_DBM)) -
+                                                  g_ble_ll_tx_power_compensation);
     } else {
-        g_ble_ll_tx_power = ble_phy_txpower_round(cmd->tx_power);
+        g_ble_ll_tx_power = ble_ll_tx_power_round(MIN(cmd->tx_power,
+                                                      MYNEWT_VAL(BLE_LL_TX_PWR_MAX_DBM)) -
+                                                  g_ble_ll_tx_power_compensation);
     }
 
-    rsp->tx_power = g_ble_ll_tx_power;
+    rsp->tx_power = g_ble_ll_tx_power + g_ble_ll_tx_power_compensation;
     *rsplen = sizeof(*rsp);
 
     return BLE_ERR_SUCCESS;
@@ -145,7 +96,7 @@ ble_ll_hci_vs_set_tx_power(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
 #if MYNEWT_VAL(BLE_LL_HCI_VS_CONN_STRICT_SCHED)
 #if !MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED_FIXED)
 static int
-ble_ll_hci_vs_css_configure(const uint8_t *cmdbuf, uint8_t cmdlen,
+ble_ll_hci_vs_css_configure(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
                             uint8_t *rspbuf, uint8_t *rsplen)
 {
     const struct ble_hci_vs_css_configure_cp *cmd = (const void *)cmdbuf;
@@ -156,8 +107,8 @@ ble_ll_hci_vs_css_configure(const uint8_t *cmdbuf, uint8_t cmdlen,
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
 
-    if (!SLIST_EMPTY(&g_ble_ll_conn_active_list)) {
-        return BLE_ERR_CTLR_BUSY;
+    if (ble_ll_sched_css_is_enabled()) {
+        return BLE_ERR_CMD_DISALLOWED;
     }
 
     slot_us = le32toh(cmd->slot_us);
@@ -178,8 +129,32 @@ ble_ll_hci_vs_css_configure(const uint8_t *cmdbuf, uint8_t cmdlen,
 #endif
 
 static int
-ble_ll_hci_vs_css_set_next_slot(const uint8_t *cmdbuf, uint8_t cmdlen,
-                                uint8_t *rspbuf, uint8_t *rsplen)
+ble_ll_hci_vs_css_enable(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
+                         uint8_t *rspbuf, uint8_t *rsplen)
+{
+    const struct ble_hci_vs_css_enable_cp *cmd = (const void *)cmdbuf;
+
+    if (cmdlen != sizeof(*cmd)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    if (!SLIST_EMPTY(&g_ble_ll_conn_active_list)) {
+        return BLE_ERR_CMD_DISALLOWED;
+    }
+
+    if (cmd->enable & 0xfe) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    ble_ll_sched_css_set_enabled(cmd->enable);
+
+    return BLE_ERR_SUCCESS;
+}
+
+static int
+ble_ll_hci_vs_css_set_next_slot(uint16_t ocf, const uint8_t *cmdbuf,
+                                uint8_t cmdlen, uint8_t *rspbuf,
+                                uint8_t *rsplen)
 {
     const struct ble_hci_vs_css_set_next_slot_cp *cmd = (const void *)cmdbuf;
     uint16_t slot_idx;
@@ -204,8 +179,9 @@ ble_ll_hci_vs_css_set_next_slot(const uint8_t *cmdbuf, uint8_t cmdlen,
 }
 
 static int
-ble_ll_hci_vs_css_set_conn_slot(const uint8_t *cmdbuf, uint8_t cmdlen,
-                                uint8_t *rspbuf, uint8_t *rsplen)
+ble_ll_hci_vs_css_set_conn_slot(uint16_t ocf, const uint8_t *cmdbuf,
+                                uint8_t cmdlen, uint8_t *rspbuf,
+                                uint8_t *rsplen)
 {
     const struct ble_hci_vs_css_set_conn_slot_cp *cmd = (const void *)cmdbuf;
     struct ble_ll_conn_sm *connsm;
@@ -214,6 +190,10 @@ ble_ll_hci_vs_css_set_conn_slot(const uint8_t *cmdbuf, uint8_t cmdlen,
 
     if (cmdlen != sizeof(*cmd)) {
         return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    if (!ble_ll_sched_css_is_enabled()) {
+        return BLE_ERR_CMD_DISALLOWED;
     }
 
     slot_idx = le16toh(cmd->slot_idx);
@@ -227,7 +207,7 @@ ble_ll_hci_vs_css_set_conn_slot(const uint8_t *cmdbuf, uint8_t cmdlen,
     }
 
     conn_handle = le16toh(cmd->conn_handle);
-    connsm = ble_ll_conn_find_active_conn(conn_handle);
+    connsm = ble_ll_conn_find_by_handle(conn_handle);
     if (!connsm) {
         return BLE_ERR_UNK_CONN_ID;
     }
@@ -248,29 +228,105 @@ ble_ll_hci_vs_css_set_conn_slot(const uint8_t *cmdbuf, uint8_t cmdlen,
 }
 
 static int
-ble_ll_hci_vs_css(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
-                  uint8_t *rspbuf, uint8_t *rsplen)
+ble_ll_hci_vs_css_read_conn_slot(uint16_t ocf, const uint8_t *cmdbuf,
+                                 uint8_t cmdlen, uint8_t *rspbuf,
+                                 uint8_t *rsplen)
 {
-    const struct ble_hci_vs_css_cp *cmd = (const void *)cmdbuf;
+    const struct ble_hci_vs_css_read_conn_slot_cp *cmd = (const void *)cmdbuf;
+    struct ble_hci_vs_css_read_conn_slot_rp *rsp = (void *)rspbuf;
+    struct ble_ll_conn_sm *connsm;
+    uint16_t conn_handle;
 
-    if (cmdlen < sizeof(*cmd)) {
+    if (cmdlen != sizeof(*cmd)) {
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
 
-    *rsplen = 0;
-
-    switch (cmd->opcode) {
-#if !MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED_FIXED)
-    case BLE_HCI_VS_CSS_OP_CONFIGURE:
-        return ble_ll_hci_vs_css_configure(cmdbuf, cmdlen, rspbuf, rsplen);
-#endif
-    case BLE_HCI_VS_CSS_OP_SET_NEXT_SLOT:
-        return ble_ll_hci_vs_css_set_next_slot(cmdbuf, cmdlen, rspbuf, rsplen);
-    case BLE_HCI_VS_CSS_OP_SET_CONN_SLOT:
-        return ble_ll_hci_vs_css_set_conn_slot(cmdbuf, cmdlen, rspbuf, rsplen);
+    if (!ble_ll_sched_css_is_enabled()) {
+        return BLE_ERR_CMD_DISALLOWED;
     }
 
-    return BLE_ERR_INV_HCI_CMD_PARMS;
+    conn_handle = le16toh(cmd->conn_handle);
+    connsm = ble_ll_conn_find_by_handle(conn_handle);
+    if (!connsm) {
+        return BLE_ERR_UNK_CONN_ID;
+    }
+
+    *rsplen = sizeof(*rsp);
+    rsp->conn_handle = cmd->conn_handle;
+    rsp->slot_idx = htole16(connsm->css_slot_idx);
+
+    return BLE_ERR_SUCCESS;
+}
+#endif
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_DATA_LEN_EXT)
+static int
+ble_ll_hci_vs_set_data_len(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
+                           uint8_t *rspbuf, uint8_t *rsplen)
+{
+    const struct ble_hci_vs_set_data_len_cp *cmd = (const void *) cmdbuf;
+    struct ble_hci_vs_set_data_len_rp *rsp = (void *) rspbuf;
+    struct ble_ll_conn_sm *connsm;
+    uint16_t conn_handle;
+    uint16_t tx_octets;
+    uint16_t tx_time;
+    uint16_t rx_octets;
+    uint16_t rx_time;
+    int rc;
+
+    if (cmdlen != sizeof(*cmd)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    conn_handle = le16toh(cmd->conn_handle);
+    connsm = ble_ll_conn_find_by_handle(conn_handle);
+    if (!connsm) {
+        return BLE_ERR_UNK_CONN_ID;
+    }
+
+    tx_octets = le16toh(cmd->tx_octets);
+    tx_time = le16toh(cmd->tx_time);
+    rx_octets = le16toh(cmd->rx_octets);
+    rx_time = le16toh(cmd->rx_time);
+
+    if (!ble_ll_hci_check_dle(tx_octets, tx_time) ||
+        !ble_ll_hci_check_dle(rx_octets, rx_time)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    rc = ble_ll_conn_set_data_len(connsm, tx_octets, tx_time, rx_octets,
+                                  rx_time);
+    if (rc) {
+        return rc;
+    }
+
+    rsp->conn_handle = htole16(conn_handle);
+    *rsplen = sizeof(*rsp);
+
+    return 0;
+}
+#endif
+
+#if MYNEWT_VAL(BLE_FEM_ANTENNA)
+static int
+ble_ll_hci_vs_set_antenna(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
+                          uint8_t *rspbuf, uint8_t *rsplen)
+{
+    const struct ble_hci_vs_set_antenna_cp *cmd = (const void *) cmdbuf;
+
+    if (cmdlen != sizeof(*cmd)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    if (ble_ll_is_busy(0)) {
+        return BLE_ERR_CMD_DISALLOWED;
+    }
+
+    if (ble_fem_antenna(cmd->antenna)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    return BLE_ERR_SUCCESS;
 }
 #endif
 
@@ -280,8 +336,25 @@ static struct ble_ll_hci_vs_cmd g_ble_ll_hci_vs_cmds[] = {
     BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_SET_TX_PWR,
             ble_ll_hci_vs_set_tx_power),
 #if MYNEWT_VAL(BLE_LL_HCI_VS_CONN_STRICT_SCHED)
-    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_CSS,
-                      ble_ll_hci_vs_css),
+#if !MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED_FIXED)
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_CSS_CONFIGURE,
+                      ble_ll_hci_vs_css_configure),
+#endif
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_CSS_ENABLE,
+                      ble_ll_hci_vs_css_enable),
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_CSS_SET_NEXT_SLOT,
+                      ble_ll_hci_vs_css_set_next_slot),
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_CSS_SET_CONN_SLOT,
+                      ble_ll_hci_vs_css_set_conn_slot),
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_CSS_READ_CONN_SLOT,
+                      ble_ll_hci_vs_css_read_conn_slot),
+#endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_DATA_LEN_EXT)
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_SET_DATA_LEN,
+                      ble_ll_hci_vs_set_data_len),
+#endif
+#if MYNEWT_VAL(BLE_FEM_ANTENNA)
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_SET_ANTENNA, ble_ll_hci_vs_set_antenna),
 #endif
 };
 
@@ -347,4 +420,4 @@ ble_ll_hci_vs_init(void)
 
 #endif
 
-#endif /* !ESP_PLATFORM */
+#endif /* ESP_PLATFORM */

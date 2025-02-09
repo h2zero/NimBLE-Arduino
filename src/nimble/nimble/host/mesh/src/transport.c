@@ -7,16 +7,14 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_TRANS_LOG
 
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "../include/mesh/mesh.h"
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 #include "mesh_priv.h"
 
 #include "crypto.h"
@@ -31,7 +29,7 @@
 #include "settings.h"
 #include "heartbeat.h"
 #include "transport.h"
-#include "../include/mesh/testing.h"
+#include "testing.h"
 
 #define AID_MASK                    ((uint8_t)(BIT_MASK(6)))
 
@@ -1017,7 +1015,7 @@ static inline int32_t ack_timeout(struct seg_rx *rx)
 	/* Make sure we don't send more frequently than the duration for
 	 * each packet (default is 300ms).
 	 */
-	return max(to, K_MSEC(400));
+	return MAX(to, K_MSEC(400));
 }
 
 int bt_mesh_ctl_send(struct bt_mesh_net_tx *tx, uint8_t ctl_op, void *data,
@@ -1163,6 +1161,10 @@ static void seg_ack(struct ble_npl_event *work)
 		BT_WARN("Incomplete timer expired");
 		seg_rx_reset(rx, false);
 
+		if (IS_ENABLED(CONFIG_BT_TESTING)) {
+			bt_test_mesh_trans_incomp_timer_exp();
+		}
+
 		return;
 	}
 
@@ -1296,7 +1298,7 @@ static int trans_seg(struct os_mbuf *buf, struct bt_mesh_net_rx *net_rx,
 	}
 
 	if (bt_mesh_rpl_check(net_rx, &rpl)) {
-		BT_WARN("Replay: src 0x%04x dst 0x%04x seq 0x%06x",
+		BT_WARN("Replay: src 0x%04x dst 0x%04x seq 0x%06" PRIx32,
 			net_rx->ctx.addr, net_rx->ctx.recv_dst, net_rx->seq);
 		return -EINVAL;
 	}
@@ -1424,7 +1426,7 @@ static int trans_seg(struct os_mbuf *buf, struct bt_mesh_net_rx *net_rx,
 	 */
 	if (rpl && rpl->src && auth_seqnum <= rpl->seg &&
 	(!rpl->old_iv || net_rx->old_iv)) {
-		BT_WARN("Ignoring old SeqAuth 0x%06x", auth_seqnum);
+		BT_WARN("Ignoring old SeqAuth 0x%06" PRIx32, auth_seqnum);
 		return -EALREADY;
 	}
 
@@ -1574,6 +1576,11 @@ int bt_mesh_trans_recv(struct os_mbuf *buf, struct bt_mesh_net_rx *rx)
 	net_buf_simple_pull(buf, BT_MESH_NET_HDR_LEN);
 
 	BT_DBG("Payload %s", bt_hex(buf->om_data, buf->om_len));
+
+	if (IS_ENABLED(CONFIG_BT_TESTING)) {
+		bt_test_mesh_net_recv(rx->ctx.recv_ttl, rx->ctl, rx->ctx.addr,
+				      rx->ctx.recv_dst, buf->om_data, buf->om_len);
+	}
 
 	/* If LPN mode is enabled messages are only accepted when we've
 	 * requested the Friend to send them. The messages must also
@@ -1924,4 +1931,3 @@ void bt_mesh_va_pending_store(void)
 	/* Do nothing. */
 }
 #endif /* CONFIG_BT_MESH_LABEL_COUNT > 0 */
-#endif

@@ -52,8 +52,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../include/tinycrypt/ecc.h"
-#include "../include/tinycrypt/ecc_platform_specific.h"
+#include <nimble/ext/tinycrypt/include/tinycrypt/ecc.h>
+#include <nimble/ext/tinycrypt/include/tinycrypt/ecc_platform_specific.h>
 #include <string.h>
 
 /* IMPORTANT: Make sure a cryptographically-secure PRNG is set and the platform

@@ -19,14 +19,16 @@
 
 #include <assert.h>
 #include <string.h>
-#include "../include/host/ble_hs.h"
+#include "nimble/nimble/host/include/host/ble_hs.h"
 #include "ble_hs_conn_priv.h"
 #include "ble_hs_priv.h"
 #include "ble_gattc_cache_priv.h"
 
 #include "nimble/porting/nimble/include/nimble/storage_port.h"
 #include "nimble/nimble/host/include/host/ble_gatt.h"
+#ifdef ESP_PLATFORM
 #include "nimble/esp_port/port/include/esp_nimble_mem.h"
+#endif
 
 #define GATT_CACHE_PREFIX "gatt_"
 #define INVALID_ADDR_NUM 0xff
@@ -388,6 +390,7 @@ ble_gattc_cache_addr_save(uint8_t *out_index, ble_addr_t addr, uint8_t * hash_ke
                 address list.
              */
             if(num > MYNEWT_VAL(BLE_GATT_CACHING_MAX_CONNS)) {
+                nimble_platform_mem_free(p_buf);
                 return BLE_HS_ENOMEM;
             }
             BLE_HS_LOG(DEBUG, "BD addr not present");
@@ -396,6 +399,7 @@ ble_gattc_cache_addr_save(uint8_t *out_index, ble_addr_t addr, uint8_t * hash_ke
     } else {
         BLE_HS_LOG(DEBUG, "Hash key not present, saving new data");
         if(num > MYNEWT_VAL(BLE_GATT_CACHING_MAX_CONNS)) {
+            nimble_platform_mem_free(p_buf);
             return BLE_HS_ENOMEM;
         }
         insert_ind = num - 1;
@@ -485,6 +489,7 @@ ble_gattc_cache_save(struct ble_gattc_cache_conn *peer, size_t num_attr)
     if(rc != 0) {
         /* cannot save address, return */
         BLE_HS_LOG(ERROR, "Failed to save cache %d", rc);
+        nimble_platform_mem_free(nv_attr);
         return;
     }
 
@@ -530,6 +535,7 @@ static int
 ble_gattc_add_svc_from_cache(ble_addr_t peer_addr, struct ble_gatt_nv_attr nv_attr)
 {
     struct ble_gatt_svc *gatt_svc;
+    int rc;
 
     gatt_svc = (struct ble_gatt_svc *)nimble_platform_mem_malloc(sizeof(struct ble_gatt_svc));
     if (gatt_svc == NULL) {
@@ -540,13 +546,16 @@ ble_gattc_add_svc_from_cache(ble_addr_t peer_addr, struct ble_gatt_nv_attr nv_at
     gatt_svc->end_handle = nv_attr.e_handle;
     ble_uuid_copy(&gatt_svc->uuid, &nv_attr.uuid.u);
 
-    return ble_gattc_cache_conn_svc_add(peer_addr, gatt_svc);
+    rc = ble_gattc_cache_conn_svc_add(peer_addr, gatt_svc);
+    nimble_platform_mem_free(gatt_svc);
+    return rc;
 }
 
 static int
 ble_gattc_add_inc_from_cache(ble_addr_t peer_addr, struct ble_gatt_nv_attr nv_attr)
 {
     struct ble_gatt_svc *gatt_svc;
+    int rc;
 
     gatt_svc = (struct ble_gatt_svc *)nimble_platform_mem_malloc(sizeof(struct ble_gatt_svc));
     if (gatt_svc == NULL) {
@@ -556,13 +565,16 @@ ble_gattc_add_inc_from_cache(ble_addr_t peer_addr, struct ble_gatt_nv_attr nv_at
     gatt_svc->start_handle = nv_attr.s_handle;
     gatt_svc->end_handle = nv_attr.e_handle;
     ble_uuid_copy(&gatt_svc->uuid, &nv_attr.uuid.u);
-    return ble_gattc_cache_conn_inc_add(peer_addr, gatt_svc);
+    rc = ble_gattc_cache_conn_inc_add(peer_addr, gatt_svc);
+    nimble_platform_mem_free(gatt_svc);
+    return rc;
 }
 
 static int
 ble_gattc_add_chr_from_cache(ble_addr_t peer_addr, struct ble_gatt_nv_attr nv_attr)
 {
     struct ble_gatt_chr *gatt_chr;
+    int rc;
     gatt_chr = (struct ble_gatt_chr *)nimble_platform_mem_malloc(sizeof(struct ble_gatt_chr));
     if (gatt_chr == NULL) {
         return BLE_HS_ENOMEM;
@@ -573,13 +585,16 @@ ble_gattc_add_chr_from_cache(ble_addr_t peer_addr, struct ble_gatt_nv_attr nv_at
     ble_uuid_copy(&gatt_chr->uuid, &nv_attr.uuid.u);
     gatt_chr->properties = nv_attr.properties;
 
-    return ble_gattc_cache_conn_chr_add(peer_addr, 0, gatt_chr);
+    rc = ble_gattc_cache_conn_chr_add(peer_addr, 0, gatt_chr);
+    nimble_platform_mem_free(gatt_chr);
+    return rc;
 }
 
 static int
 ble_gattc_add_dsc_from_cache(ble_addr_t peer_addr, struct ble_gatt_nv_attr nv_attr)
 {
     struct ble_gatt_dsc *gatt_dsc;
+    int rc;
     gatt_dsc = (struct ble_gatt_dsc *)nimble_platform_mem_malloc(sizeof(struct ble_gatt_dsc));
     if (gatt_dsc == NULL) {
         return BLE_HS_ENOMEM;
@@ -588,7 +603,9 @@ ble_gattc_add_dsc_from_cache(ble_addr_t peer_addr, struct ble_gatt_nv_attr nv_at
     gatt_dsc->handle = nv_attr.s_handle;
     ble_uuid_copy(&gatt_dsc->uuid, &nv_attr.uuid.u);
 
-    return ble_gattc_cache_conn_dsc_add(peer_addr, 0, gatt_dsc);
+    rc = ble_gattc_cache_conn_dsc_add(peer_addr, 0, gatt_dsc);
+    nimble_platform_mem_free(gatt_dsc);
+    return rc;
 }
 
 int

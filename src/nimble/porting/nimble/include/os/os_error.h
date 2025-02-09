@@ -20,7 +20,7 @@
 #ifndef H_OS_ERROR_
 #define H_OS_ERROR_
 
-#include "os.h"
+#include "nimble/porting/nimble/include/os/os.h"
 
 #ifdef __cplusplus
 extern "C" {

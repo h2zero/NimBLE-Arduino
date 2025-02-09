@@ -30,6 +30,21 @@ typedef enum gap_status gap_status_t;
 #define BLE_DUPLICATE_SCAN_EXCEPTIONAL_INFO_MESH_PROV_SRV_ADV    3
 #define BLE_DUPLICATE_SCAN_EXCEPTIONAL_INFO_MESH_PROXY_SRV_ADV   4
 
+#define ESP_BLE_VENDOR_LEGACY_SCAN_REQ_EVT_MASK       BIT(0)
+#define ESP_BLE_VENDOR_CHAN_MAP_UPDATE_CMPL_EVT_MASK  BIT(1)
+#define ESP_BLE_VENDOR_TL_RUNNING_STATUS_EVT_MASK     BIT(2)
+#define ESP_BLE_VENDOR_SLEEP_WAKEUP_EVT_MASK         BIT(3)
+#define ESP_BLE_VENDOR_CONNECT_IND_REQ_EVT_MASK      BIT(4)
+#define ESP_BLE_VENDOR_AUX_CONNECT_RSP_EVT_MASK      BIT(5)
+
+#if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
+#ifdef CONFIG_BT_NIMBLE_MAX_CONN_REATTEMPT
+#define MAX_REATTEMPT_ALLOWED CONFIG_BT_NIMBLE_MAX_CONN_REATTEMPT
+#else
+#define MAX_REATTEMPT_ALLOWED 0
+#endif
+#endif
+
 /**
  * Configure LE Data Length in controller (OGF = 0x08, OCF = 0x0022).
  *
@@ -89,6 +104,15 @@ int ble_hs_hci_util_write_sugg_def_data_len(uint16_t sugg_max_tx_octets, uint16_
 int ble_gap_wl_tx_rmv(const ble_addr_t *addrs);
 
 /**
+ * Adds the address in controller's white list.
+ *
+ * @param addrs                 The entry to be added in the white list.
+ *
+ * @return                      0 on success; nonzero on failure.
+ */
+int ble_gap_wl_tx_add(const ble_addr_t *addrs);
+
+/**
  * Clears all addresses from controller's white list.
  *
  * @return                      0 on success; nonzero on failure.
@@ -125,12 +149,12 @@ int ble_gap_get_local_used_addr(ble_addr_t *addr);
  * This API is called to get ADV data for a specific type.
 
  *
- * @param adv_data                  Pointer of ADV data (unsigned 8 bit integer) which to be resolved.
+ * @param adv_data                  Pointer of ADV data which to be resolved.
  * @param adv_type                  Finding ADV data type.
  * @param adv_data_len              Total length of Advertising data.
  * @param length                    Return the length of ADV data not including type.
  *
- * @return                          Pointer (unsigned 8 bit integer) of type specific ADV data.
+ * @return                          Pointer of type specific ADV data.
  */
 uint8_t* ble_resolve_adv_data(const uint8_t *adv_data, uint8_t adv_type, uint8_t adv_data_len , uint8_t * length);
 
@@ -256,6 +280,20 @@ int ble_gap_set_chan_select(uint8_t select);
  */
 int
 ble_gap_dev_authorization(uint16_t conn_handle, bool authorized);
+
+/**
+ * Sets the vendor-specific event mask for BLE host.
+ *
+ * This function configures the vendor-specific event mask, enabling or disabling
+ * specific vendor-defined events from being reported by the controller.
+ *
+ * @param event_mask            Bitmask representing the events to enable.
+ *
+ * @return                      0 on success;
+ *                              A nonzero value indicating an error if the command fails.
+ */
+int
+ble_hs_send_vs_event_mask(uint32_t event_mask);
 
 void ble_gap_rx_test_evt(const void *buf, uint8_t len);
 void ble_gap_tx_test_evt(const void *buf, uint8_t len);

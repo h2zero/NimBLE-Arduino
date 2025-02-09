@@ -7,9 +7,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_ADV_LOG
 
 #include "adv.h"
@@ -18,7 +15,7 @@
 #include "beacon.h"
 #include "prov.h"
 #include "proxy.h"
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 #include "pb_gatt_srv.h"
 
 #ifndef min
@@ -51,7 +48,7 @@ static int adv_initialized = false;
 /* TinyCrypt PRNG consumes a lot of stack space, so we need to have
  * an increased call stack whenever it's used.
  */
-#if MYNEWT
+#ifdef MYNEWT
 OS_TASK_STACK_DEFINE(g_blemesh_stack, MYNEWT_VAL(BLE_MESH_ADV_STACK_SIZE));
 struct os_task adv_task;
 #endif
@@ -72,7 +69,7 @@ static inline void adv_send(struct os_mbuf *buf)
 	struct bt_data ad;
 	int err;
 
-	adv_int = max(adv_int_min,
+	adv_int = MAX(adv_int_min,
 		      BT_MESH_TRANSMIT_INT(BT_MESH_ADV(buf)->xmit));
 #if MYNEWT_VAL(BLE_CONTROLLER)
 	duration = ((BT_MESH_TRANSMIT_COUNT(BT_MESH_ADV(buf)->xmit) + 1) *
@@ -225,7 +222,7 @@ void bt_mesh_adv_init(void)
 
 	ble_npl_eventq_init(&bt_mesh_adv_queue);
 
-#if MYNEWT
+#ifdef MYNEWT
 	os_task_init(&adv_task, "mesh_adv", mesh_adv_thread, NULL,
 	             MYNEWT_VAL(BLE_MESH_ADV_TASK_PRIO), OS_WAIT_FOREVER,
 	             g_blemesh_stack, MYNEWT_VAL(BLE_MESH_ADV_STACK_SIZE));
@@ -253,5 +250,3 @@ int bt_mesh_adv_start(const struct ble_gap_adv_params *param, int32_t duration,
 	return bt_le_adv_start(param, ad, ad_len, sd, sd_len);
 }
 #endif
-
-#endif // MYNEWT_VAL(BLE_MESH_ADV_EXT)

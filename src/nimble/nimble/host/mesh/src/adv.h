@@ -10,7 +10,7 @@
 #define __ADV_H__
 
 /* Maximum advertising data payload for a single data type */
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 #define BT_MESH_ADV(om) (*(struct bt_mesh_adv **) OS_MBUF_USRHDR(om))
 

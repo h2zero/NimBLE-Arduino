@@ -20,8 +20,8 @@
 #ifndef H_BLE_LL_SCAN_
 #define H_BLE_LL_SCAN_
 
-#include "ble_ll_sched.h"
-#include "ble_ll_tmr.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sched.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_tmr.h"
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
 
@@ -234,11 +234,6 @@ void ble_ll_scan_wfr_timer_exp(void);
 
 /* Called when scan could be interrupted  */
 void ble_ll_scan_interrupted(struct ble_ll_scan_sm *scansm);
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-/* Called to parse extended advertising*/
-void ble_ll_scan_end_adv_evt(struct ble_ll_aux_data *aux_data);
-#endif
 
 /* Called to halt currently running scan */
 void ble_ll_scan_halt(void);

@@ -20,7 +20,7 @@
 #ifndef H_BLE_LL_CTRL_PRIV_
 #define H_BLE_LL_CTRL_PRIV_
 
-#include "../include/controller/ble_ll_conn.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_conn.h"
 
 #ifdef __cplusplus
 extern "C" {

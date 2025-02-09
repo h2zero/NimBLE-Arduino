@@ -51,11 +51,11 @@ ble_hs_pvcy_set_addr_timeout(uint16_t timeout)
                              &cmd, sizeof(cmd), NULL, 0);
 }
 
-void ble_hs_set_rpa_timeout (uint16_t timeout)
+int ble_hs_set_rpa_timeout (uint16_t timeout)
 {
     rpa_timeout = timeout;
 
-    ble_hs_pvcy_set_addr_timeout(rpa_timeout);
+    return ble_hs_pvcy_set_addr_timeout(rpa_timeout);
 }
 
 uint16_t ble_hs_get_rpa_timeout(void)

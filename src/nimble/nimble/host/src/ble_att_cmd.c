@@ -55,28 +55,67 @@ ble_att_cmd_get(uint8_t opcode, size_t len, struct os_mbuf **txom)
 }
 
 int
-ble_att_tx(uint16_t conn_handle, struct os_mbuf *txom)
+ble_att_tx_with_conn(struct ble_hs_conn *conn, struct ble_l2cap_chan *chan, struct os_mbuf *txom)
+{
+    int rc;
+    struct os_mbuf_pkthdr *omp;
+
+    if (!txom) {
+        if (conn->client_att_busy) {
+            return 0;
+        }
+        omp = STAILQ_FIRST(&conn->att_tx_q);
+        if (omp == NULL) {
+            return 0;
+        }
+        STAILQ_REMOVE_HEAD(&conn->att_tx_q, omp_next);
+        txom = OS_MBUF_PKTHDR_TO_MBUF(omp);
+        BLE_EATT_LOG_DEBUG("%s: wakeup will send %p\n", __func__, txom);
+    }
+
+    BLE_HS_DBG_ASSERT_EVAL(txom->om_len >= 1);
+
+    if (ble_att_is_request_op(txom->om_data[0])) {
+        if (conn->client_att_busy) {
+            BLE_EATT_LOG_DEBUG("ATT Queue %p, client busy %d\n", txom, conn->client_att_busy);
+            STAILQ_INSERT_TAIL(&conn->att_tx_q, OS_MBUF_PKTHDR(txom), omp_next);
+            return 0;
+        }
+        conn->client_att_busy = true;
+    }
+
+    ble_att_inc_tx_stat(txom->om_data[0]);
+
+    ble_att_truncate_to_mtu(chan, txom);
+    rc = ble_l2cap_tx(conn, chan, txom);
+    assert(rc == 0);
+    return rc;
+}
+
+int
+ble_att_tx(uint16_t conn_handle, uint16_t cid, struct os_mbuf *txom)
 {
     struct ble_l2cap_chan *chan;
     struct ble_hs_conn *conn;
     int rc;
 
-    BLE_HS_DBG_ASSERT_EVAL(txom->om_len >= 1);
-    ble_att_inc_tx_stat(txom->om_data[0]);
+#if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
+    if (ble_hs_cfg.eatt && cid != BLE_L2CAP_CID_ATT) {
+        return ble_eatt_tx(conn_handle, cid, txom);
+    }
+#endif
 
     ble_hs_lock();
-
     rc = ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_ATT, &conn,
                                          &chan);
     if (rc != 0) {
+        ble_hs_unlock();
         os_mbuf_free_chain(txom);
-    } else {
-        ble_att_truncate_to_mtu(chan, txom);
-        rc = ble_l2cap_tx(conn, chan, txom);
+        return rc;
     }
 
+    rc = ble_att_tx_with_conn(conn, chan, txom);
     ble_hs_unlock();
-
     return rc;
 }
 

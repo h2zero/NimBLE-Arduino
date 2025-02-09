@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#include "../include/os/endian.h"
+#include "nimble/porting/nimble/include/os/endian.h"
 
 void
 put_le16(void *buf, uint16_t x)

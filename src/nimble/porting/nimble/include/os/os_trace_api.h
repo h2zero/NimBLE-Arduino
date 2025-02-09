@@ -30,11 +30,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "../syscfg/syscfg.h"
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #if MYNEWT_VAL(OS_SYSVIEW)
 #include "sysview/vendor/SEGGER_SYSVIEW.h"
 #endif
-#include "os.h"
+#include "nimble/porting/nimble/include/os/os.h"
 
 #define OS_TRACE_ID_EVENTQ_PUT                  (40)
 #define OS_TRACE_ID_EVENTQ_GET_NO_WAIT          (41)

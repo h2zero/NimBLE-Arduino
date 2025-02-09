@@ -20,6 +20,13 @@
 #ifndef H_BLE_HS_STOP_
 #define H_BLE_HS_STOP_
 
+/**
+ * @brief Bluetooth Host Stop API
+ * @defgroup bt_hs_stop Bluetooth Host Stop
+ * @ingroup bt_host
+ * @{
+ */
+
 /** @typedef ble_hs_stop_fn
  * @brief Callback function; reports the result of a host stop procedure.
  *
@@ -38,8 +45,13 @@ typedef void ble_hs_stop_fn(int status, void *arg);
  * This should be used as an opaque structure and not modified manually.
  */
 struct ble_hs_stop_listener {
+    /** The callback function to be called when the stop procedure completes. */
     ble_hs_stop_fn *fn;
+
+    /** An optional argument to be passed to the callback function. */
     void *arg;
+
+    /** Singly-linked list entry. */
     SLIST_ENTRY(ble_hs_stop_listener) link;
 };
 
@@ -66,5 +78,9 @@ struct ble_hs_stop_listener {
  */
 int ble_hs_stop(struct ble_hs_stop_listener *listener,
                 ble_hs_stop_fn *fn, void *arg);
+
+/**
+* @}
+*/
 
 #endif

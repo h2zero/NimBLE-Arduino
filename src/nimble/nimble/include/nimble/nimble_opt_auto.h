@@ -113,6 +113,10 @@ extern "C" {
 #define NIMBLE_BLE_ATT_CLT_INDICATE             \
     (MYNEWT_VAL(BLE_GATT_INDICATE))
 
+#undef NIMBLE_BLE_ATT_CLT_NOTIFY_MULT
+#define NIMBLE_BLE_ATT_CLT_NOTIFY_MULT         \
+    (MYNEWT_VAL(BLE_GATT_NOTIFY_MULTIPLE))
+
 /** Security manager settings. */
 
 #undef NIMBLE_BLE_SM

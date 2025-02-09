@@ -4,10 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "mesh_priv.h"
 #include "net.h"
 #include "rpl.h"
@@ -16,7 +13,7 @@
 #include "heartbeat.h"
 #include "friend.h"
 #include "cfg.h"
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 
 #define MESH_LOG_MODULE BLE_MESH_LOG
 #include "nimble/porting/nimble/include/log/log.h"
@@ -389,5 +386,3 @@ void bt_mesh_cfg_default_set(void)
 		atomic_set_bit(bt_mesh.flags, BT_MESH_FRIEND);
 	}
 }
-
-#endif /* MYNEWT_VAL(BLE_MESH) */

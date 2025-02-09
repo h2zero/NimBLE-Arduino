@@ -29,9 +29,15 @@ extern "C" {
 
 struct ble_hs_cfg;
 
-#define BLE_SVC_GATT_CHR_SERVICE_CHANGED_UUID16     0x2a05
+#define BLE_SVC_GATT_CHR_SERVICE_CHANGED_UUID16         0x2a05
 #define BLE_SVC_GATT_CHR_SERVER_SUPPORTED_FEAT_UUID16   0x2b3a
 #define BLE_SVC_GATT_CHR_CLIENT_SUPPORTED_FEAT_UUID16   0x2b29
+
+#define BLE_SVR_GATT_CHR_SVR_SUP_FEAT_EATT_FLAG             0x01
+
+#define BLE_SVR_GATT_CHR_CLT_SUP_FEAT_ROBUST_CACHING_FLAG   0x01
+#define BLE_SVR_GATT_CHR_CLT_SUP_FEAT_EATT_FLAG             0x02
+#define BLE_SVR_GATT_CHR_CLT_SUP_FEAT_MULTI_NOTIF_FLAG      0x04
 
 #if MYNEWT_VAL(BLE_GATT_CACHING)
 #define BLE_SVC_GATT_CHR_DATABASE_HASH_UUID16               0x2b2a
@@ -45,7 +51,7 @@ uint8_t ble_svc_gatt_get_csfs(void);
 uint8_t ble_svc_gatt_get_local_cl_supported_feat(void);
 void ble_svc_gatt_changed(uint16_t start_handle, uint16_t end_handle);
 void ble_svc_gatt_init(void);
-
+void ble_svc_gatt_deinit(void);
 #ifdef __cplusplus
 }
 #endif

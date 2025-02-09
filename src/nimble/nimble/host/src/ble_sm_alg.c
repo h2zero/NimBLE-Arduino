@@ -30,7 +30,7 @@
 #include "ble_hs_priv.h"
 
 #if MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS)
-#include "mbedtls/aes.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
 
 #if MYNEWT_VAL(BLE_SM_SC)
 #include "mbedtls/cipher.h"
@@ -45,9 +45,9 @@
 #include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
 #include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
 #include "nimble/ext/tinycrypt/include/tinycrypt/utils.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h"
 
 #if MYNEWT_VAL(BLE_SM_SC)
-#include "nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h"
 #include "nimble/ext/tinycrypt/include/tinycrypt/ecc_dh.h"
 #if MYNEWT_VAL(TRNG)
 #include "trng/trng.h"
@@ -240,16 +240,6 @@ done:
     return rc;
 }
 
-#if MYNEWT_VAL(BLE_SM_SC)
-
-static void
-ble_sm_alg_log_buf(const char *name, const uint8_t *buf, int len)
-{
-    BLE_HS_LOG(DEBUG, "    %s=", name);
-    ble_hs_log_flat_buf(buf, len);
-    BLE_HS_LOG(DEBUG, "\n");
-}
-
 /**
  * Cypher based Message Authentication Code (CMAC) with AES 128 bit
  *
@@ -320,6 +310,16 @@ ble_sm_alg_aes_cmac(const uint8_t *key, const uint8_t *in, size_t len,
     return 0;
 }
 #endif
+
+#if MYNEWT_VAL(BLE_SM_SC)
+
+static void
+ble_sm_alg_log_buf(const char *name, const uint8_t *buf, int len)
+{
+    BLE_HS_LOG(DEBUG, "    %s=", name);
+    ble_hs_log_flat_buf(buf, len);
+    BLE_HS_LOG(DEBUG, "\n");
+}
 
 int
 ble_sm_alg_f4(const uint8_t *u, const uint8_t *v, const uint8_t *x,
@@ -510,7 +510,7 @@ ble_sm_alg_g2(const uint8_t *u, const uint8_t *v, const uint8_t *x,
     ble_sm_alg_log_buf("res", xs, 16);
 
     *passkey = get_be32(xs + 12) % 1000000;
-    BLE_HS_LOG(DEBUG, "    passkey=%" PRIu32"\n", *passkey);
+    BLE_HS_LOG(DEBUG, "    passkey=%" PRIu32 "\n", *passkey);
 
     return 0;
 }
@@ -598,11 +598,11 @@ exit:
     }
 
 #else
-    if (uECC_valid_public_key(pk, &curve_secp256r1) < 0) {
+    if (uECC_valid_public_key(pk, uECC_secp256r1()) < 0) {
         return BLE_HS_EUNKNOWN;
     }
 
-    rc = uECC_shared_secret(pk, priv, dh, &curve_secp256r1);
+    rc = uECC_shared_secret(pk, priv, dh, uECC_secp256r1());
     if (rc == TC_CRYPTO_FAIL) {
         return BLE_HS_EUNKNOWN;
     }
@@ -711,7 +711,7 @@ ble_sm_alg_gen_key_pair(uint8_t *pub, uint8_t *priv)
             return BLE_HS_EUNKNOWN;
         }
 #else
-        if (uECC_make_key(pk, priv, &curve_secp256r1) != TC_CRYPTO_SUCCESS) {
+        if (uECC_make_key(pk, priv, uECC_secp256r1()) != TC_CRYPTO_SUCCESS) {
             return BLE_HS_EUNKNOWN;
         }
 #endif

@@ -29,8 +29,8 @@ extern "C" {
 struct ble_ll_scan_aux_data;
 
 void ble_ll_scan_aux_init(void);
-int ble_ll_scan_aux_sched(struct ble_ll_scan_aux_data *aux, uint32_t pdu_time,
-                          uint8_t pdu_time_rem, uint32_t aux_ptr);
+int ble_ll_scan_aux_sched(struct ble_ll_scan_aux_data *aux, uint32_t pdu_ticks,
+                          uint8_t pdu_rem_us, uint32_t aux_ptr);
 int ble_ll_scan_aux_rx_isr_start(uint8_t pdu_type, struct ble_mbuf_hdr *rxhdr);
 int ble_ll_scan_aux_rx_isr_end(struct os_mbuf *rxpdu, uint8_t crcok);
 void ble_ll_scan_aux_rx_pkt_in(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *rxhdr);

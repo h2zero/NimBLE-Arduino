@@ -26,24 +26,17 @@
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
-#include "../include/controller/ble_ll.h"
-#include "../include/controller/ble_ll_hci.h"
-#include "../include/controller/ble_ll_ctrl.h"
-#include "../include/controller/ble_ll_trace.h"
-#include "../include/controller/ble_hw.h"
-#include "../include/controller/ble_ll_sync.h"
-#include "../include/controller/ble_ll_tmr.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_utils.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_hci.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_ctrl.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_trace.h"
+#include "nimble/nimble/controller/include/controller/ble_hw.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sync.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_tmr.h"
 #include "ble_ll_conn_priv.h"
 
 #if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
-
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
-
-#ifndef max
-#define max(a, b) ((a) > (b) ? (a) : (b))
-#endif
 
 /* To use spec sample data for testing */
 #undef BLE_LL_ENCRYPT_USE_TEST_DATA
@@ -55,7 +48,7 @@
  */
 #undef BLE_LL_ENCRYPT_DEBUG
 #ifdef BLE_LL_ENCRYPT_DEBUG
-#include "console/console.h"
+#include "nimble/console/console.h"
 #endif
 
 /*
@@ -207,13 +200,13 @@ ble_ll_ctrl_phy_update_cancel(struct ble_ll_conn_sm *connsm, uint8_t ble_err)
     CLR_PENDING_CTRL_PROC(connsm, BLE_LL_CTRL_PROC_PHY_UPDATE);
 
     /* Check if the host wants an event */
-    if (CONN_F_HOST_PHY_UPDATE(connsm)) {
+    if (connsm->flags.phy_update_host_initiated) {
         ble_ll_hci_ev_phy_update(connsm, ble_err);
-        CONN_F_HOST_PHY_UPDATE(connsm) = 0;
+        connsm->flags.phy_update_host_initiated = 0;
     }
 
     /* Clear any bits for phy updates that might be in progress */
-    CONN_F_CTRLR_PHY_UPDATE(connsm) = 0;
+    connsm->flags.phy_update_self_initiated = 0;
 }
 #endif
 
@@ -376,7 +369,7 @@ conn_parm_req_do_indicate:
          */
         ble_ll_hci_ev_rem_conn_parm_req(connsm, req);
         connsm->host_reply_opcode = opcode;
-        connsm->csmflags.cfbit.awaiting_host_reply = 1;
+        connsm->flags.conn_update_host_w4reply = 1;
         rsp_opcode = 255;
     } else {
         /* Create reply to connection request */
@@ -392,18 +385,29 @@ conn_param_pdu_exit:
     return rsp_opcode;
 }
 
-/**
- * Called to make a connection update request LL control PDU
- *
- * Context: Link Layer
- *
- * @param connsm
- * @param rsp
- */
 static void
-ble_ll_ctrl_conn_upd_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld,
-                          struct ble_ll_conn_params *cp)
+ble_ll_ctrl_conn_update_init_proc(struct ble_ll_conn_sm *connsm,
+                                  struct ble_ll_conn_params *cp)
 {
+    /* This only stores conn params, if any. The caller will enqueue LL Control
+     * PDU and we will calculate its contents when dequeued so we know that
+     * instant is in the future.
+     */
+
+    connsm->flags.conn_update_sched = 0;
+    connsm->flags.conn_update_use_cp = (cp != NULL);
+
+    if (cp) {
+        connsm->conn_cp = *cp;
+    }
+}
+
+static void
+ble_ll_ctrl_conn_update_make_ind_pdu(struct ble_ll_conn_sm *connsm,
+                                     uint8_t *ctrdata)
+{
+    struct ble_ll_conn_params *cp = NULL;
+    struct ble_ll_conn_params offset_cp = { };
     uint16_t instant;
     uint32_t dt;
     uint32_t num_old_ce;
@@ -411,6 +415,10 @@ ble_ll_ctrl_conn_upd_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld,
     uint32_t old_itvl_usecs;
     struct hci_conn_update *hcu;
     struct ble_ll_conn_upd_req *req;
+
+    if (connsm->flags.conn_update_use_cp) {
+        cp = &connsm->conn_cp;
+    }
 
     /*
      * Set instant. We set the instant to the current event counter plus
@@ -425,6 +433,18 @@ ble_ll_ctrl_conn_upd_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld,
 #else
     instant = connsm->event_cntr + connsm->periph_latency + 6 + 1;
 #endif
+
+    /* Check if this is a move anchor request and configure proper connection
+     * parameters */
+    if (connsm->conn_update_anchor_offset_req) {
+        offset_cp.interval_min = connsm->conn_itvl;
+        offset_cp.interval_max = connsm->conn_itvl;
+        offset_cp.latency = connsm->periph_latency;
+        offset_cp.timeout = connsm->supervision_tmo;
+        offset_cp.offset0 = connsm->conn_update_anchor_offset_req;
+        connsm->conn_update_anchor_offset_req = 0;
+        cp = &offset_cp;
+    }
 
     /*
      * XXX: This should change in the future, but for now we will just
@@ -471,15 +491,12 @@ ble_ll_ctrl_conn_upd_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld,
     req->instant = instant;
 
     /* XXX: make sure this works for the connection parameter request proc. */
-    pyld[0] = req->winsize;
-    put_le16(pyld + 1, req->winoffset);
-    put_le16(pyld + 3, req->interval);
-    put_le16(pyld + 5, req->latency);
-    put_le16(pyld + 7, req->timeout);
-    put_le16(pyld + 9, instant);
-
-    /* Set flag in state machine to denote we have scheduled an update */
-    connsm->csmflags.cfbit.conn_update_sched = 1;
+    ctrdata[0] = req->winsize;
+    put_le16(ctrdata + 1, req->winoffset);
+    put_le16(ctrdata + 3, req->interval);
+    put_le16(ctrdata + 5, req->latency);
+    put_le16(ctrdata + 7, req->timeout);
+    put_le16(ctrdata + 9, instant);
 }
 
 /**
@@ -515,12 +532,12 @@ ble_ll_ctrl_proc_unk_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr, uint8_t *
         BLE_LL_CONN_CLEAR_FEATURE(connsm, BLE_LL_FEAT_CONN_PARM_REQ);
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
         if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
-            ble_ll_ctrl_conn_upd_make(connsm, rspdata, NULL);
+            ble_ll_ctrl_conn_update_init_proc(connsm, NULL);
             connsm->reject_reason = BLE_ERR_SUCCESS;
             return BLE_LL_CTRL_CONN_UPDATE_IND;
         }
 #endif
-        /* Else falls through. */
+        /* fall through */
     case BLE_LL_CTRL_CONN_PARM_RSP:
         ctrl_proc = BLE_LL_CTRL_PROC_CONN_PARAM_REQ;
         break;
@@ -555,11 +572,11 @@ ble_ll_ctrl_proc_unk_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr, uint8_t *
         if (ctrl_proc == BLE_LL_CTRL_PROC_CONN_PARAM_REQ) {
             ble_ll_hci_ev_conn_update(connsm, BLE_ERR_UNSUPP_REM_FEATURE);
         } else if (ctrl_proc == BLE_LL_CTRL_PROC_FEATURE_XCHG) {
-            if (connsm->csmflags.cfbit.pending_hci_rd_features) {
+            if (connsm->flags.features_host_req) {
                 ble_ll_hci_ev_rd_rem_used_feat(connsm,
                                                    BLE_ERR_UNSUPP_REM_FEATURE);
             }
-            connsm->csmflags.cfbit.pending_hci_rd_features = 0;
+            connsm->flags.features_host_req = 0;
         }
     }
 
@@ -672,24 +689,24 @@ ble_ll_ctrl_phy_update_proc_complete(struct ble_ll_conn_sm *connsm)
 
     connsm->phy_tx_transition = 0;
 
-    if (CONN_F_PEER_PHY_UPDATE(connsm)) {
-        CONN_F_PEER_PHY_UPDATE(connsm) = 0;
-    } else if (CONN_F_CTRLR_PHY_UPDATE(connsm)) {
-        CONN_F_CTRLR_PHY_UPDATE(connsm) = 0;
+    if (connsm->flags.phy_update_peer_initiated) {
+        connsm->flags.phy_update_peer_initiated = 0;
+    } else if (connsm->flags.phy_update_self_initiated) {
+        connsm->flags.phy_update_self_initiated = 0;
     } else {
         /* Must be a host-initiated update */
-        CONN_F_HOST_PHY_UPDATE(connsm) = 0;
+        connsm->flags.phy_update_host_initiated = 0;
         chk_host_phy = 0;
-        if (CONN_F_PHY_UPDATE_EVENT(connsm) == 0) {
+        if (connsm->flags.phy_update_host_w4event == 0) {
             ble_ll_hci_ev_phy_update(connsm, BLE_ERR_SUCCESS);
         }
     }
 
     /* Must check if we need to start host procedure */
     if (chk_host_phy) {
-        if (CONN_F_HOST_PHY_UPDATE(connsm)) {
+        if (connsm->flags.phy_update_host_initiated) {
             if (ble_ll_conn_phy_update_if_needed(connsm)) {
-                CONN_F_HOST_PHY_UPDATE(connsm) = 0;
+                connsm->flags.phy_update_host_initiated = 0;
             } else {
                 chk_proc_stop = 0;
             }
@@ -814,14 +831,14 @@ ble_ll_ctrl_phy_update_ind_make(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
      * one running.
      */
     if ((m_to_s == 0) && (s_to_m == 0)) {
-        if (CONN_F_PEER_PHY_UPDATE(connsm)) {
-            CONN_F_PEER_PHY_UPDATE(connsm) = 0;
-        } else if (CONN_F_CTRLR_PHY_UPDATE(connsm)) {
-            CONN_F_CTRLR_PHY_UPDATE(connsm) = 0;
+        if (connsm->flags.phy_update_peer_initiated) {
+            connsm->flags.phy_update_peer_initiated = 0;
+        } else if (connsm->flags.phy_update_self_initiated) {
+            connsm->flags.phy_update_self_initiated = 0;
             ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_PHY_UPDATE);
         } else {
             ble_ll_hci_ev_phy_update(connsm, BLE_ERR_SUCCESS);
-            CONN_F_HOST_PHY_UPDATE(connsm) = 0;
+            connsm->flags.phy_update_host_initiated = 0;
             ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_PHY_UPDATE);
         }
         instant = 0;
@@ -829,7 +846,7 @@ ble_ll_ctrl_phy_update_ind_make(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
         /* Determine instant we will use. 6 more is minimum */
         instant = connsm->event_cntr + connsm->periph_latency + 6 + 1;
         connsm->phy_instant = instant;
-        CONN_F_PHY_UPDATE_SCHED(connsm) = 1;
+        connsm->flags.phy_update_sched = 1;
 
         /* Set new phys to use when instant occurs */
         connsm->phy_data.new_tx_phy = m_to_s;
@@ -906,7 +923,7 @@ ble_ll_ctrl_rx_phy_req(struct ble_ll_conn_sm *connsm, uint8_t *req,
              * NOTE: do not change order of these two lines as the call to
              * make the LL_PHY_UPDATE_IND pdu might clear the flag.
              */
-            CONN_F_PEER_PHY_UPDATE(connsm) = 1;
+            connsm->flags.phy_update_peer_initiated = 1;
             ble_ll_ctrl_phy_update_ind_make(connsm, req, rsp, 1);
             rsp_opcode = BLE_LL_CTRL_PHY_UPDATE_IND;
         }
@@ -925,14 +942,14 @@ ble_ll_ctrl_rx_phy_req(struct ble_ll_conn_sm *connsm, uint8_t *req,
             ble_ll_ctrl_phy_update_cancel(connsm, err);
 
             /* XXX: ? Should not be any phy update events */
-            CONN_F_PHY_UPDATE_EVENT(connsm) = 0;
+            connsm->flags.phy_update_host_w4event = 0;
         }
 
         /* XXX: TODO: if we started another procedure with an instant
          * why are we doing this? Need to look into this.*/
 
         /* Respond to central's phy update procedure */
-        CONN_F_PEER_PHY_UPDATE(connsm) = 1;
+        connsm->flags.phy_update_peer_initiated = 1;
         ble_ll_ctrl_phy_req_rsp_make(connsm, rsp);
         rsp_opcode = BLE_LL_CTRL_PHY_RSP;
 
@@ -1078,7 +1095,7 @@ ble_ll_ctrl_rx_phy_update_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
             connsm->phy_data.new_tx_phy = new_tx_phy;
             connsm->phy_data.new_rx_phy = new_rx_phy;
             connsm->phy_instant = instant;
-            CONN_F_PHY_UPDATE_SCHED(connsm) = 1;
+            connsm->flags.phy_update_sched = 1;
         }
         return BLE_ERR_MAX;
     }
@@ -1275,7 +1292,7 @@ ble_ll_ctrl_rx_subrate_ind(struct ble_ll_conn_sm *connsm, uint8_t *req,
 
     ble_ll_conn_subrate_set(connsm, sp);
     ble_ll_ctrl_proc_stop(connsm, BLE_LL_CTRL_PROC_SUBRATE_REQ);
-    connsm->csmflags.cfbit.subrate_host_req = 0;
+    connsm->flags.subrate_host_req = 0;
 
     return BLE_ERR_MAX;
 }
@@ -1716,7 +1733,7 @@ ble_ll_ctrl_rx_pause_enc_req(struct ble_ll_conn_sm *connsm)
 static uint8_t
 ble_ll_ctrl_rx_pause_enc_rsp(struct ble_ll_conn_sm *connsm)
 {
-    int rc;
+    int rc = 0;
 
     switch (connsm->conn_role) {
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
@@ -1757,7 +1774,7 @@ ble_ll_ctrl_rx_pause_enc_rsp(struct ble_ll_conn_sm *connsm)
 static uint8_t
 ble_ll_ctrl_rx_start_enc_rsp(struct ble_ll_conn_sm *connsm)
 {
-    int rc;
+    int rc = 0;
 
     /* Not in proper state. Discard */
     if (connsm->enc_data.enc_state != CONN_ENC_S_START_ENC_RSP_WAIT) {
@@ -1860,11 +1877,11 @@ static void
 ble_ll_ctrl_version_ind_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld)
 {
     /* Set flag to denote we have sent/received this */
-    connsm->csmflags.cfbit.version_ind_sent = 1;
+    connsm->flags.version_ind_txd = 1;
 
     /* Fill out response */
     pyld[0] = BLE_HCI_VER_BCS;
-    put_le16(pyld + 1, MYNEWT_VAL(BLE_LL_MFRG_ID));
+    put_le16(pyld + 1, MYNEWT_VAL(BLE_LL_MANUFACTURER_ID));
     put_le16(pyld + 3, BLE_LL_SUB_VERS_NR);
 }
 
@@ -1886,7 +1903,7 @@ ble_ll_ctrl_chanmap_req_make(struct ble_ll_conn_sm *connsm, uint8_t *pyld)
     put_le16(pyld + BLE_LL_CHAN_MAP_LEN, connsm->chanmap_instant);
 
     /* Set scheduled flag */
-    connsm->csmflags.cfbit.chanmap_update_scheduled = 1;
+    connsm->flags.chanmap_update_sched = 1;
 }
 
 /**
@@ -1903,13 +1920,12 @@ uint8_t
 ble_ll_ctrl_conn_param_reply(struct ble_ll_conn_sm *connsm, uint8_t *rsp,
                              struct ble_ll_conn_params *req)
 {
-    uint8_t rsp_opcode;
+    uint8_t rsp_opcode = 0;
 
     switch (connsm->conn_role) {
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     case BLE_LL_CONN_ROLE_CENTRAL:
-        /* Create a connection update pdu */
-        ble_ll_ctrl_conn_upd_make(connsm, rsp + 1, req);
+        ble_ll_ctrl_conn_update_init_proc(connsm, req);
         rsp_opcode = BLE_LL_CTRL_CONN_UPDATE_IND;
         break;
 #endif
@@ -1950,6 +1966,9 @@ ble_ll_ctrl_rx_reject_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
         ble_error = dptr[1];
     }
 
+    /* Suppress unused-but-set if not used by following code (due to syscfg) */
+    (void)ble_error;
+
     /* XXX: should I check to make sure the rejected opcode is sane
        if we receive ind ext? */
     switch (connsm->cur_ctrl_proc) {
@@ -1960,7 +1979,7 @@ ble_ll_ctrl_rx_reject_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
             case BLE_LL_CONN_ROLE_CENTRAL:
                 /* As a central we should send connection update indication in this point */
                 rsp_opcode = BLE_LL_CTRL_CONN_UPDATE_IND;
-                ble_ll_ctrl_conn_upd_make(connsm, rspdata, NULL);
+                ble_ll_ctrl_conn_update_init_proc(connsm, NULL);
                 connsm->reject_reason = BLE_ERR_SUCCESS;
                 break;
         #endif
@@ -2056,7 +2075,7 @@ ble_ll_ctrl_rx_conn_update(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     if (conn_events >= 32767) {
         ble_ll_conn_timeout(connsm, BLE_ERR_INSTANT_PASSED);
     } else {
-        connsm->csmflags.cfbit.conn_update_sched = 1;
+        connsm->flags.conn_update_sched = 1;
 
         /*
          * Errata says that receiving a connection update when the event
@@ -2078,7 +2097,7 @@ ble_ll_ctrl_rx_conn_update(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
 }
 
 void
-ble_ll_ctrl_initiate_dle(struct ble_ll_conn_sm *connsm)
+ble_ll_ctrl_initiate_dle(struct ble_ll_conn_sm *connsm, bool initial)
 {
     if (!(connsm->conn_features & BLE_LL_FEAT_DATA_LEN_EXT)) {
         return;
@@ -2087,12 +2106,15 @@ ble_ll_ctrl_initiate_dle(struct ble_ll_conn_sm *connsm)
     /*
      * Section 4.5.10 Vol 6 PART B. If the max tx/rx time or octets
      * exceeds the minimum, data length procedure needs to occur
+     * "at the earliest practical opportunity".
      */
-    if ((connsm->max_tx_octets <= BLE_LL_CONN_SUPP_BYTES_MIN) &&
-        (connsm->max_rx_octets <= BLE_LL_CONN_SUPP_BYTES_MIN) &&
-        (connsm->max_tx_time <= BLE_LL_CONN_SUPP_TIME_MIN) &&
-        (connsm->max_rx_time <= BLE_LL_CONN_SUPP_TIME_MIN)) {
-        return;
+    if (initial) {
+        if ((connsm->max_tx_octets <= BLE_LL_CONN_SUPP_BYTES_MIN) &&
+            (connsm->max_rx_octets <= BLE_LL_CONN_SUPP_BYTES_MIN) &&
+            (connsm->max_tx_time <= BLE_LL_CONN_SUPP_TIME_MIN) &&
+            (connsm->max_rx_time <= BLE_LL_CONN_SUPP_TIME_MIN)) {
+            return;
+        }
     }
 
     ble_ll_ctrl_proc_start(connsm, BLE_LL_CTRL_PROC_DATA_LEN_UPD, NULL);
@@ -2105,7 +2127,7 @@ ble_ll_ctrl_update_features(struct ble_ll_conn_sm *connsm, uint8_t *feat)
     memcpy(connsm->remote_features, feat + 1, 7);
 
     /* If we received peer's features for the 1st time, we should try DLE */
-    if (!connsm->csmflags.cfbit.rxd_features) {
+    if (!connsm->flags.features_rxd) {
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY)
         /*
          * If connection was established on uncoded PHY, by default we use
@@ -2116,17 +2138,25 @@ ble_ll_ctrl_update_features(struct ble_ll_conn_sm *connsm, uint8_t *feat)
          */
         if (ble_ll_conn_rem_feature_check(connsm, BLE_LL_FEAT_LE_CODED_PHY)) {
             if (connsm->host_req_max_tx_time) {
-                connsm->max_tx_time = max(connsm->max_tx_time,
+                connsm->max_tx_time = MAX(connsm->max_tx_time,
                                           connsm->host_req_max_tx_time);
             } else {
                 connsm->max_tx_time = g_ble_ll_conn_params.conn_init_max_tx_time_coded;
             }
-            connsm->max_rx_time = BLE_LL_CONN_SUPP_TIME_MAX_CODED;
+            if (connsm->host_req_max_rx_time) {
+                connsm->max_rx_time = MAX(connsm->max_rx_time,
+                                          connsm->host_req_max_rx_time);
+            } else {
+                connsm->max_rx_time = BLE_LL_CONN_SUPP_TIME_MAX_CODED;
+            }
         }
 #endif
 
-        connsm->csmflags.cfbit.pending_initiate_dle = 1;
-        connsm->csmflags.cfbit.rxd_features = 1;
+#if MYNEWT_VAL(BLE_LL_CONN_INIT_AUTO_DLE)
+        connsm->flags.pending_initiate_dle = 1;
+#endif
+
+        connsm->flags.features_rxd = 1;
     }
 }
 
@@ -2206,9 +2236,9 @@ ble_ll_ctrl_rx_feature_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     }
 
     /* Send event to host if pending features read */
-    if (connsm->csmflags.cfbit.pending_hci_rd_features) {
+    if (connsm->flags.features_host_req) {
         ble_ll_hci_ev_rd_rem_used_feat(connsm, BLE_ERR_SUCCESS);
-        connsm->csmflags.cfbit.pending_hci_rd_features = 0;
+        connsm->flags.features_host_req = 0;
     }
 }
 
@@ -2237,13 +2267,14 @@ ble_ll_ctrl_rx_conn_param_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
      * well. This is not expected to happen anyway. A return of BLE_ERR_MAX
      * means that we will simply discard the connection parameter request
      */
-    if (connsm->csmflags.cfbit.awaiting_host_reply) {
+    if (connsm->flags.conn_update_host_w4reply) {
         return BLE_ERR_MAX;
     }
 
 #if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
     /* Reject any attempts to change connection parameters by peripheral */
-    if (connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
+    if (ble_ll_sched_css_is_enabled() &&
+        connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) {
         rsp_opcode = BLE_LL_CTRL_REJECT_IND_EXT;
         rspbuf[1] = BLE_LL_CTRL_CONN_PARM_REQ;
         rspbuf[2] = BLE_ERR_UNSUPPORTED;
@@ -2297,7 +2328,7 @@ ble_ll_ctrl_rx_conn_param_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
      */
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     if ((connsm->conn_role == BLE_LL_CONN_ROLE_CENTRAL) &&
-        (connsm->csmflags.cfbit.chanmap_update_scheduled)) {
+        (connsm->flags.chanmap_update_sched)) {
         rsp_opcode = BLE_LL_CTRL_REJECT_IND_EXT;
         rspbuf[1] = BLE_LL_CTRL_CONN_PARM_REQ;
         rspbuf[2] = BLE_ERR_DIFF_TRANS_COLL;
@@ -2330,8 +2361,8 @@ ble_ll_ctrl_rx_conn_param_rsp(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
      * state just clear the awaiting reply. The peripheral will hopefully stop its
      * procedure when we reply.
      */
-    if (connsm->csmflags.cfbit.awaiting_host_reply) {
-        connsm->csmflags.cfbit.awaiting_host_reply = 0;
+    if (connsm->flags.conn_update_host_w4reply) {
+        connsm->flags.conn_update_host_w4reply = 0;
     }
 
     /* If we receive a response and no procedure is pending, just leave */
@@ -2366,10 +2397,10 @@ ble_ll_ctrl_rx_version_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
     connsm->vers_nr = dptr[0];
     connsm->comp_id = get_le16(dptr + 1);
     connsm->sub_vers_nr = get_le16(dptr + 3);
-    connsm->csmflags.cfbit.rxd_version_ind = 1;
+    connsm->flags.version_ind_rxd = 1;
 
     rsp_opcode = BLE_ERR_MAX;
-    if (!connsm->csmflags.cfbit.version_ind_sent) {
+    if (!connsm->flags.version_ind_txd) {
         rsp_opcode = BLE_LL_CTRL_VERSION_IND;
         ble_ll_ctrl_version_ind_make(connsm, rspbuf);
     }
@@ -2410,7 +2441,7 @@ ble_ll_ctrl_rx_chanmap_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     } else {
         connsm->chanmap_instant = instant;
         memcpy(connsm->req_chanmap, dptr, BLE_LL_CHAN_MAP_LEN);
-        connsm->csmflags.cfbit.chanmap_update_scheduled = 1;
+        connsm->flags.chanmap_update_sched = 1;
     }
 
     return BLE_ERR_MAX;
@@ -2432,7 +2463,7 @@ static struct os_mbuf *
 ble_ll_ctrl_proc_init(struct ble_ll_conn_sm *connsm, int ctrl_proc, void *data)
 {
     uint8_t len;
-    uint8_t opcode;
+    uint8_t opcode = 0;
     uint8_t *dptr;
     uint8_t *ctrdata;
     struct os_mbuf *om;
@@ -2448,7 +2479,7 @@ ble_ll_ctrl_proc_init(struct ble_ll_conn_sm *connsm, int ctrl_proc, void *data)
         switch (ctrl_proc) {
         case BLE_LL_CTRL_PROC_CONN_UPDATE:
             opcode = BLE_LL_CTRL_CONN_UPDATE_IND;
-            ble_ll_ctrl_conn_upd_make(connsm, ctrdata, data);
+            ble_ll_ctrl_conn_update_init_proc(connsm, data);
             break;
         case BLE_LL_CTRL_PROC_CHAN_MAP_UPD:
             opcode = BLE_LL_CTRL_CHANNEL_MAP_REQ;
@@ -2614,7 +2645,7 @@ ble_ll_ctrl_terminate_start(struct ble_ll_conn_sm *connsm)
     ctrl_proc = BLE_LL_CTRL_PROC_TERMINATE;
     om = ble_ll_ctrl_proc_init(connsm, ctrl_proc, NULL);
     if (om) {
-        CONN_F_TERMINATE_STARTED(connsm) = 1;
+        connsm->flags.terminate_started = 1;
 
         /* Set terminate "timeout" */
         usecs = connsm->supervision_tmo * BLE_HCI_CONN_SPVN_TMO_UNITS * 1000;
@@ -2680,7 +2711,7 @@ ble_ll_ctrl_chk_proc_start(struct ble_ll_conn_sm *connsm)
      * terminate if needed
      */
     if (connsm->disconnect_reason) {
-        if (!CONN_F_TERMINATE_STARTED(connsm)) {
+        if (!connsm->flags.terminate_started) {
             /*
              * If the terminate procedure has not started it means we were not
              * able to start it right away (no control pdu was available).
@@ -2705,7 +2736,7 @@ ble_ll_ctrl_chk_proc_start(struct ble_ll_conn_sm *connsm)
                  * received the information dont start it.
                  */
                 if ((i == BLE_LL_CTRL_PROC_VERSION_XCHG) &&
-                    (connsm->csmflags.cfbit.rxd_version_ind)) {
+                    (connsm->flags.version_ind_rxd)) {
                     ble_ll_hci_ev_rd_rem_ver(connsm, BLE_ERR_SUCCESS);
                     CLR_PENDING_CTRL_PROC(connsm, i);
                 } else {
@@ -2737,7 +2768,6 @@ ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om)
     uint64_t feature;
     uint8_t len;
     uint8_t opcode;
-    uint8_t rsp_opcode;
     uint8_t *dptr;
     uint8_t *rspbuf;
     uint8_t *rspdata;
@@ -2745,6 +2775,7 @@ ble_ll_ctrl_rx_pdu(struct ble_ll_conn_sm *connsm, struct os_mbuf *om)
     int restart_encryption;
 #endif
     int rc = 0;
+    uint8_t rsp_opcode = 0;
 
     /* XXX: where do we validate length received and packet header length?
      * do this in LL task when received. Someplace!!! What I mean
@@ -3037,10 +3068,12 @@ ll_ctrl_send_rsp:
 #endif
     }
 
-    if (connsm->csmflags.cfbit.pending_initiate_dle) {
-        connsm->csmflags.cfbit.pending_initiate_dle = 0;
-        ble_ll_ctrl_initiate_dle(connsm);
+#if MYNEWT_VAL(BLE_LL_CONN_INIT_AUTO_DLE)
+    if (connsm->flags.pending_initiate_dle) {
+        connsm->flags.pending_initiate_dle = 0;
+        ble_ll_ctrl_initiate_dle(connsm, true);
     }
+#endif
 
     return rc;
 }
@@ -3095,12 +3128,21 @@ int
 ble_ll_ctrl_tx_start(struct ble_ll_conn_sm *connsm, struct os_mbuf *txpdu)
 {
     uint8_t opcode;
+    uint8_t *ctrdata;
 
     opcode = txpdu->om_data[0];
+    ctrdata = &txpdu->om_data[1];
+
     switch (opcode) {
-    case BLE_LL_CTRL_SUBRATE_IND:
-        connsm->csmflags.cfbit.subrate_trans = 1;
+    case BLE_LL_CTRL_CONN_UPDATE_IND:
+        ble_ll_ctrl_conn_update_make_ind_pdu(connsm, ctrdata);
+        connsm->flags.conn_update_sched = 1;
         break;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
+    case BLE_LL_CTRL_SUBRATE_IND:
+        connsm->flags.subrate_trans = 1;
+        break;
+#endif
     }
 
     return 0;
@@ -3132,7 +3174,7 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
     opcode = txpdu->om_data[0];
     switch (opcode) {
     case BLE_LL_CTRL_TERMINATE_IND:
-        connsm->csmflags.cfbit.terminate_ind_txd = 1;
+        connsm->flags.terminate_ind_txd = 1;
         rc = -1;
         break;
     case BLE_LL_CTRL_REJECT_IND_EXT:
@@ -3144,7 +3186,7 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
             if (txpdu->om_data[1] == BLE_LL_CTRL_CONN_PARM_REQ &&
                             txpdu->om_data[2] != BLE_ERR_LMP_COLLISION) {
                 connsm->reject_reason = txpdu->om_data[2];
-                connsm->csmflags.cfbit.host_expects_upd_event = 1;
+                connsm->flags.conn_update_host_w4event = 1;
             }
         }
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_ENCRYPTION)
@@ -3166,13 +3208,13 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
         break;
     case BLE_LL_CTRL_ENC_RSP:
         connsm->enc_data.enc_state = CONN_ENC_S_LTK_REQ_WAIT;
-        connsm->csmflags.cfbit.send_ltk_req = 1;
+        connsm->flags.encrypt_ltk_req = 1;
         break;
 #if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
     case BLE_LL_CTRL_START_ENC_RSP:
         if (connsm->conn_role == BLE_LL_CONN_ROLE_PERIPHERAL) {
             connsm->enc_data.enc_state = CONN_ENC_S_ENCRYPTED;
-            if (CONN_F_LE_PING_SUPP(connsm)) {
+            if (connsm->flags.le_ping_supp) {
                 ble_ll_conn_auth_pyld_timer_start(connsm);
             }
         }
@@ -3202,8 +3244,8 @@ ble_ll_ctrl_tx_done(struct os_mbuf *txpdu, struct ble_ll_conn_sm *connsm)
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     case BLE_LL_CTRL_SUBRATE_IND:
-        connsm->csmflags.cfbit.subrate_trans = 0;
-        connsm->csmflags.cfbit.subrate_ind_txd = 1;
+        connsm->flags.subrate_trans = 0;
+        connsm->flags.subrate_ind_txd = 1;
         break;
 #endif /* BLE_LL_CTRL_SUBRATE_IND */
 #endif /* BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE */
@@ -3220,6 +3262,11 @@ ble_ll_ctrl_init_conn_sm(struct ble_ll_conn_sm *connsm)
 {
     ble_npl_callout_init(&connsm->ctrl_proc_rsp_timer, &g_ble_ll_data.ll_evq,
                          ble_ll_ctrl_proc_rsp_timer_cb, connsm);
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_PING)
+    ble_npl_callout_init(&connsm->auth_pyld_timer, &g_ble_ll_data.ll_evq,
+                         ble_ll_conn_auth_pyld_timer_cb, connsm);
+#endif
 }
 
 #endif

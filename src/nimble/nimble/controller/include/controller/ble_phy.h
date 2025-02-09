@@ -65,6 +65,7 @@ struct os_mbuf;
 #define BLE_PHY_TRANSITION_NONE     (0)
 #define BLE_PHY_TRANSITION_RX_TX    (1)
 #define BLE_PHY_TRANSITION_TX_RX    (2)
+#define BLE_PHY_TRANSITION_TX_TX    (3)
 
 /* PHY error codes */
 #define BLE_PHY_ERR_RADIO_STATE     (1)
@@ -85,6 +86,16 @@ int ble_phy_init(void);
 
 /* Set the PHY channel */
 int ble_phy_setchan(uint8_t chan, uint32_t access_addr, uint32_t crcinit);
+uint8_t ble_phy_chan_get(void);
+
+#if MYNEWT_VAL(BLE_PHY_VARIABLE_TIFS)
+/* Set T_ifs time for next transition */
+void ble_phy_tifs_set(uint16_t tifs);
+#endif
+
+/* Set T_ifs for tx-tx transitions. Anchor is 0 for start of previous PDU,
+ * non-zero for end of PDU */
+void ble_phy_tifs_txtx_set(uint16_t usecs, uint8_t anchor);
 
 /* Set transmit start time */
 int ble_phy_tx_set_start_time(uint32_t cputime, uint8_t rem_usecs);
@@ -101,23 +112,17 @@ typedef uint8_t (*ble_phy_tx_pducb_t)(uint8_t *dptr, void *pducb_arg,
 /* Place the PHY into transmit mode */
 int ble_phy_tx(ble_phy_tx_pducb_t pducb, void *pducb_arg, uint8_t end_trans);
 
-/* Place the PHY into receive mode */
-int ble_phy_rx(void);
-
 /* Copies the received PHY buffer into the allocated pdu */
 void ble_phy_rxpdu_copy(uint8_t *dptr, struct os_mbuf *rxpdu);
 
 /* Set the transmit power */
-int ble_phy_txpwr_set(int dbm);
+int ble_phy_tx_power_set(int dbm);
 
 /* Get highest allowed power from range */
-int ble_phy_txpower_round(int dbm);
+int ble_phy_tx_power_round(int dbm);
 
 /* Get the transmit power */
-int ble_phy_txpwr_get(void);
-
-/* Set RX path power compensation value rounded to integer dB */
-void ble_phy_set_rx_pwr_compensation(int8_t compensation);
+int ble_phy_tx_power_get(void);
 
 /* Disable the PHY */
 void ble_phy_disable(void);
@@ -160,14 +165,15 @@ uint8_t ble_phy_max_data_pdu_pyld(void);
 uint32_t ble_phy_access_addr_get(void);
 
 /* Enable encryption */
-void ble_phy_encrypt_enable(uint64_t pkt_counter, uint8_t *iv, uint8_t *key,
-                            uint8_t is_central);
-
+void ble_phy_encrypt_enable(const uint8_t *key);
+/* Set mask for PDU header (see Core 5.3, Vol 6, Part E, 2.2) */
+void ble_phy_encrypt_header_mask_set(uint8_t mask);
+/* Set encryption IV */
+void ble_phy_encrypt_iv_set(const uint8_t *iv);
+/* Set encryption packet counter and direction bit */
+void ble_phy_encrypt_counter_set(uint64_t counter, uint8_t dir_bit);
 /* Disable encryption */
 void ble_phy_encrypt_disable(void);
-
-/* Set the packet counters and dir used by LE encyption */
-void ble_phy_encrypt_set_pkt_cntr(uint64_t pkt_counter, int dir);
 
 /* Enable phy resolving list */
 void ble_phy_resolv_list_enable(void);
@@ -205,14 +211,9 @@ void ble_phy_resolv_list_disable(void);
 #define BLE_PHY_IDX_CODED           (2)
 
 #if (MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_2M_PHY) || MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY))
-uint32_t ble_phy_mode_pdu_start_off(int phy);
 void ble_phy_mode_set(uint8_t tx_phy_mode, uint8_t rx_phy_mode);
-#else
-#define ble_phy_mode_pdu_start_off(phy)     (40)
-
 #endif
 
-int ble_phy_get_cur_phy(void);
 static inline int ble_ll_phy_to_phy_mode(int phy, int phy_options)
 {
     int phy_mode;

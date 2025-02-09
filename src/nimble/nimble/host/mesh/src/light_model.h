@@ -7,7 +7,7 @@
 #define __BT_MESH_LIGHT_MODEL_H
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 int light_model_gen_onoff_get(struct bt_mesh_model *model, uint8_t *state);
 int light_model_gen_onoff_set(struct bt_mesh_model *model, uint8_t state);

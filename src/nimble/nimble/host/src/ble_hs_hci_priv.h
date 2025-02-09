@@ -79,6 +79,10 @@ struct hci_periodic_adv_params
 #endif
 #endif
 
+struct ble_hs_hci_sup_cmd {
+    uint8_t commands[64];
+};
+
 extern uint16_t ble_hs_hci_avail_pkts;
 
 /* This function is not waiting for command status/complete HCI events */
@@ -92,6 +96,8 @@ void ble_hs_hci_set_le_supported_feat(uint32_t feat);
 uint32_t ble_hs_hci_get_le_supported_feat(void);
 void ble_hs_hci_set_hci_version(uint8_t hci_version);
 uint8_t ble_hs_hci_get_hci_version(void);
+void ble_hs_hci_set_hci_supported_cmd(struct ble_hs_hci_sup_cmd sup_cmd);
+struct ble_hs_hci_sup_cmd ble_hs_hci_get_hci_supported_cmd(void);
 
 #if MYNEWT_VAL(BLE_HS_PHONY_HCI_ACKS)
 typedef int ble_hs_hci_phony_ack_fn(uint8_t *ack, int ack_buf_len);
@@ -102,6 +108,12 @@ int ble_hs_hci_util_read_adv_tx_pwr(int8_t *out_pwr);
 int ble_hs_hci_util_rand(void *dst, int len);
 int ble_hs_hci_util_read_rssi(uint16_t conn_handle, int8_t *out_rssi);
 int ble_hs_hci_util_set_random_addr(const uint8_t *addr);
+int ble_hs_hci_util_set_data_len(uint16_t conn_handle, uint16_t tx_octets,
+                                 uint16_t tx_time);
+int ble_hs_hci_util_read_sugg_def_data_len(uint16_t *out_sugg_max_tx_octets,
+                                           uint16_t *out_sugg_max_tx_time);
+int ble_hs_hci_util_write_sugg_def_data_len(uint16_t sugg_max_tx_octets,
+                                            uint16_t sugg_max_tx_time);
 int ble_hs_hci_util_data_hdr_strip(struct os_mbuf *om,
                                    struct hci_data_hdr *out_hdr);
 int ble_hs_hci_evt_process(struct ble_hci_ev *ev);

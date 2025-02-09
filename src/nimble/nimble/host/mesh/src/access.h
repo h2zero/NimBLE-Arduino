@@ -9,7 +9,7 @@
 #ifndef __ACCESS_H__
 #define __ACCESS_H__
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 /* Tree walk return codes */
 enum bt_mesh_walk {

@@ -7,13 +7,11 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_PROXY_LOG
 
 #if MYNEWT_VAL(BLE_MESH_PROXY)
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/nimble/host/include/host/ble_att.h"
 #include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
 #include "nimble/nimble/host/src/ble_hs_priv.h"
@@ -1576,4 +1574,3 @@ void bt_mesh_proxy_on_idle(struct bt_mesh_proxy_idle_cb *cb)
 }
 
 #endif /* MYNEWT_VAL(BLE_MESH_PROXY) */
-#endif
