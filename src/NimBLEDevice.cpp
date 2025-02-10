@@ -76,7 +76,8 @@ extern "C" void ble_store_config_init(void);
 /**
  * Singletons for the NimBLEDevice.
  */
-NimBLEDeviceCallbacks* NimBLEDevice::m_pDeviceCallbacks = nullptr;
+NimBLEDeviceCallbacks NimBLEDevice::defaultDeviceCallbacks{};
+NimBLEDeviceCallbacks* NimBLEDevice::m_pDeviceCallbacks = &defaultDeviceCallbacks;
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 NimBLEScan* NimBLEDevice::m_pScan = nullptr;
