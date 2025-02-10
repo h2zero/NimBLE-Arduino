@@ -22,7 +22,7 @@
 #ifndef H_BLE_HS_PVCY_
 #define H_BLE_HS_PVCY_
 
-#include "ble_hs.h"
+#include "nimble/nimble/host/include/host/ble_hs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,7 +69,7 @@ void ble_hs_resolv_deinit(void);
 #endif
 
 int ble_hs_pvcy_set_resolve_enabled(int enable);
-void ble_hs_set_rpa_timeout(uint16_t timeout);
+int ble_hs_set_rpa_timeout(uint16_t timeout);
 
 #ifdef __cplusplus
 }

@@ -9,8 +9,8 @@
 
 #define MESH_LOG_MODULE BLE_MESH_MODEL_LOG
 
-#include "../include/mesh/mesh.h"
-#include "../include/mesh/model_cli.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/model_cli.h"
 #include "mesh_priv.h"
 
 static int32_t msg_timeout = K_SECONDS(5);

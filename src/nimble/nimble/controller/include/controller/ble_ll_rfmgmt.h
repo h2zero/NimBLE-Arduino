@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#include "ble_ll_tmr.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_tmr.h"
 
 void ble_ll_rfmgmt_init(void);
 

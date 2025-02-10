@@ -25,13 +25,15 @@
 
 #include <assert.h>
 #include "nimble/porting/nimble/include/os/os.h"
-#include "nimble/nimble/porting/nimble/include/stats/stats.h"
-#include "../include/controller/ble_ll.h"
-#include "../include/controller/ble_phy.h"
-#include "../include/controller/ble_ll_sched.h"
-#include "../include/controller/ble_ll_rfmgmt.h"
-#include "../include/controller/ble_ll_tmr.h"
+#include "nimble/porting/nimble/include/stats/stats.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_pdu.h"
+#include "nimble/nimble/controller/include/controller/ble_phy.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sched.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_rfmgmt.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_tmr.h"
 #include "ble_ll_dtm_priv.h"
+#include "ble_ll_priv.h"
 
 STATS_SECT_START(ble_ll_dtm_stats)
     STATS_SECT_ENTRY(rx_count)
@@ -195,16 +197,6 @@ ble_ll_dtm_ev_tx_resched_cb(struct ble_npl_event *evt) {
     BLE_LL_ASSERT(rc == 0);
 }
 
-static int ble_ll_dtm_rx_start(void);
-
-static void
-ble_ll_dtm_ev_rx_restart_cb(struct ble_npl_event *evt) {
-    if (ble_ll_dtm_rx_start() != 0) {
-        ble_npl_eventq_put(&g_ble_ll_data.ll_evq, &g_ble_ll_dtm_ctx.evt);
-        STATS_INC(ble_ll_dtm_stats, rx_failed);
-    }
-}
-
 static void
 ble_ll_dtm_tx_done(void *arg)
 {
@@ -218,7 +210,7 @@ ble_ll_dtm_tx_done(void *arg)
     g_ble_ll_dtm_ctx.num_of_packets++;
 
     /* Reschedule event in LL context */
-    ble_npl_eventq_put(&g_ble_ll_data.ll_evq, &ctx->evt);
+    ble_ll_event_add(&ctx->evt);
 
     ble_ll_state_set(BLE_LL_STATE_STANDBY);
 }
@@ -244,7 +236,7 @@ ble_ll_dtm_tx_sched_cb(struct ble_ll_sched_item *sch)
     ble_phy_mode_set(ctx->phy_mode, ctx->phy_mode);
 #endif
     ble_phy_set_txend_cb(ble_ll_dtm_tx_done, ctx);
-    ble_phy_txpwr_set(0);
+    ble_ll_tx_power_set(g_ble_ll_tx_power);
 
     sch->start_time += g_ble_ll_sched_offset_ticks;
 
@@ -264,7 +256,7 @@ ble_ll_dtm_tx_sched_cb(struct ble_ll_sched_item *sch)
 
 resched:
     /* Reschedule from LL task if late for this PDU */
-    ble_npl_eventq_put(&g_ble_ll_data.ll_evq, &ctx->evt);
+    ble_ll_event_add(&ctx->evt);
 
     STATS_INC(ble_ll_dtm_stats, tx_failed);
 
@@ -279,7 +271,7 @@ ble_ll_dtm_calculate_itvl(struct dtm_ctx *ctx, uint8_t len,
     uint32_t itvl_usec;
 
     /* Calculate interval as per spec Bluetooth 5.0 Vol 6. Part F, 4.1.6 */
-    l = ble_ll_pdu_tx_time_get(len + BLE_LL_PDU_HDR_LEN, phy_mode);
+    l = ble_ll_pdu_us(len, phy_mode);
     itvl_usec = ((l + 249 + 624) / 625) * 625;
 
 #if MYNEWT_VAL(BLE_LL_DTM_EXTENSIONS)
@@ -402,7 +394,7 @@ ble_ll_dtm_rx_start(void)
 #endif
 
     OS_ENTER_CRITICAL(sr);
-    rc = ble_phy_rx_set_start_time(ble_ll_tmr_get(), 0);
+    rc = ble_phy_rx_set_start_time(ble_ll_rfmgmt_enable_now(), 0);
     OS_EXIT_CRITICAL(sr);
     if (rc && rc != BLE_PHY_ERR_RX_LATE) {
         return rc;
@@ -414,21 +406,8 @@ ble_ll_dtm_rx_start(void)
 }
 
 static int
-ble_ll_dtm_rx_sched_cb(struct ble_ll_sched_item *sch)
-{
-    if (ble_ll_dtm_rx_start() != 0) {
-        ble_npl_eventq_put(&g_ble_ll_data.ll_evq, &g_ble_ll_dtm_ctx.evt);
-        STATS_INC(ble_ll_dtm_stats, rx_failed);
-        return BLE_LL_SCHED_STATE_DONE;
-    }
-
-    return BLE_LL_SCHED_STATE_RUNNING;
-}
-
-static int
 ble_ll_dtm_rx_create_ctx(uint8_t rf_channel, uint8_t phy_mode)
 {
-    struct ble_ll_sched_item *sch = &g_ble_ll_dtm_ctx.sch;
     int rc;
 
     g_ble_ll_dtm_ctx.phy_mode = phy_mode;
@@ -436,16 +415,8 @@ ble_ll_dtm_rx_create_ctx(uint8_t rf_channel, uint8_t phy_mode)
 
     STATS_CLEAR(ble_ll_dtm_stats, rx_count);
 
-    ble_npl_event_init(&g_ble_ll_dtm_ctx.evt, ble_ll_dtm_ev_rx_restart_cb,
-                       NULL);
-
-    sch->sched_cb = ble_ll_dtm_rx_sched_cb;
-    sch->cb_arg = &g_ble_ll_dtm_ctx;
-    sch->sched_type = BLE_LL_SCHED_TYPE_DTM;
-    sch->start_time =  ble_ll_rfmgmt_enable_now();
-
-    rc = ble_ll_sched_dtm(sch);
-    BLE_LL_ASSERT(rc == 0);
+    rc = ble_ll_dtm_rx_start();
+    assert(rc == 0);
 
     ble_phy_enable_dtm();
 
@@ -465,7 +436,7 @@ ble_ll_dtm_ctx_free(struct dtm_ctx * ctx)
     }
 
     ble_ll_sched_rmv_elem(&ctx->sch);
-    ble_npl_eventq_remove(&g_ble_ll_data.ll_evq, &g_ble_ll_dtm_ctx.evt);
+    ble_ll_event_remove(&g_ble_ll_dtm_ctx.evt);
 
     ble_phy_disable();
     ble_phy_disable_dtm();
@@ -483,7 +454,7 @@ ble_ll_dtm_tx_test(uint8_t tx_chan, uint8_t len, uint8_t packet_payload,
 {
     uint8_t phy_mode;
 
-    if (g_ble_ll_dtm_ctx.active) {
+    if (g_ble_ll_dtm_ctx.active || ble_ll_is_busy(0)) {
         return BLE_ERR_CTLR_BUSY;
     }
 
@@ -585,7 +556,7 @@ ble_ll_dtm_rx_test(uint8_t rx_chan, uint8_t hci_phy)
 {
     uint8_t phy_mode;
 
-    if (g_ble_ll_dtm_ctx.active) {
+    if (g_ble_ll_dtm_ctx.active || ble_ll_is_busy(0)) {
         return BLE_ERR_CTLR_BUSY;
     }
 
@@ -665,10 +636,7 @@ ble_ll_dtm_rx_pkt_in(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *hdr)
         STATS_INC(ble_ll_dtm_stats, rx_count);
     }
 
-    if (ble_ll_dtm_rx_start() != 0) {
-        ble_npl_eventq_put(&g_ble_ll_data.ll_evq, &g_ble_ll_dtm_ctx.evt);
-        STATS_INC(ble_ll_dtm_stats, rx_failed);
-    }
+    ble_phy_restart_rx();
 }
 
 int
@@ -703,6 +671,12 @@ void
 ble_ll_dtm_reset(void)
 {
     ble_ll_dtm_ctx_free(&g_ble_ll_dtm_ctx);
+}
+
+int
+ble_ll_dtm_enabled(void)
+{
+    return g_ble_ll_dtm_ctx.active;
 }
 
 void

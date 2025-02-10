@@ -19,23 +19,28 @@
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 
+#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
+static const char *LOG_TAG = "Timer";
+#endif
+
 #if CONFIG_NIMBLE_STACK_USE_MEM_POOLS
 
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include <stdlib.h>
 #include "nimble/console/console.h"
 
 #include "nimble/nimble/include/nimble/nimble_npl.h"
 
 #include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
+#include "nimble/porting/nimble/include/os/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
 #include "freertos/portable.h"
-#include "../include/nimble/npl_freertos.h"
+#include "nimble/porting/npl/freertos/include/nimble/npl_freertos.h"
 
 #include "nimble/porting/nimble/include/os/os_mempool.h"
 
@@ -52,10 +57,6 @@ portMUX_TYPE ble_port_mutex = portMUX_INITIALIZER_UNLOCKED;
 static void *radio_isr_addr;
 static void *rng_isr_addr;
 static void *rtc0_isr_addr;
-#endif
-
-#if CONFIG_BT_NIMBLE_USE_ESP_TIMER
-static const char *LOG_TAG = "Timer";
 #endif
 
 #define OS_MEM_ALLOC (1)
@@ -1385,9 +1386,6 @@ void npl_freertos_funcs_deinit(void)
 #include "freertos/portable.h"
 #include "esp_log.h"
 portMUX_TYPE ble_port_mutex = portMUX_INITIALIZER_UNLOCKED;
-#  if CONFIG_BT_NIMBLE_USE_ESP_TIMER
-static const char *LOG_TAG = "Timer";
-#  endif
 
 #else
 #include "nrf.h"

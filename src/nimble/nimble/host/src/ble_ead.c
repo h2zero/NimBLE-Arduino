@@ -5,8 +5,8 @@
  */
 
 #include "nimble/porting/nimble/include/os/queue.h"
-#include "../include/host/ble_ead.h"
-#include "../include/host/ble_aes_ccm.h"
+#include "nimble/nimble/host/include/host/ble_ead.h"
+#include "nimble/nimble/host/include/host/ble_aes_ccm.h"
 
 #if MYNEWT_VAL(ENC_ADV_DATA)
 
@@ -68,15 +68,18 @@ static int ead_encrypt(const uint8_t session_key[BLE_EAD_KEY_SIZE], const uint8_
     int err;
     uint8_t nonce[BLE_EAD_NONCE_SIZE];
 
+    /** Nonce is concatenation of Randomizer and IV */
     err = ble_ead_generate_nonce(iv, randomizer, nonce);
     if (err != 0) {
         return -1;
     }
 
+    /** Copying Randomizer to the start of encrypted advertisment data */
     memcpy(encrypted_payload, nonce, BLE_EAD_RANDOMIZER_SIZE);
 
     err = ble_aes_ccm_encrypt(session_key, nonce, payload, payload_size, ble_ead_aad, BLE_EAD_AAD_SIZE,
                               &encrypted_payload[BLE_EAD_RANDOMIZER_SIZE], BLE_EAD_MIC_SIZE);
+    
     if (err != 0) {
         BLE_HS_LOG(DEBUG, "Failed to encrypt the payload (ble_ccm_encrypt err %d)", err);
         return -1;
@@ -176,30 +179,6 @@ int ble_ead_decrypt(const uint8_t session_key[BLE_EAD_KEY_SIZE], const uint8_t i
     }
 
     return ead_decrypt(session_key, iv, encrypted_payload, encrypted_payload_size, payload);
-}
-
-int ble_ead_serialize_data(const struct enc_adv_data *input, uint8_t *output)
-{
-    if ( input == NULL) {
-        BLE_HS_LOG(DEBUG, "input is NULL");
-        return 0;
-    }
-
-    if ( output == NULL) {
-        BLE_HS_LOG(DEBUG, "output is NULL");
-        return 0;
-    }
-
-    uint8_t adv_data_len = input->len;
-    uint8_t data_len = adv_data_len + 1;
-
-    output[0] = data_len;
-    output[1] = input->type;
-
-    memcpy(&output[2], input->data, adv_data_len);
-
-    return data_len + 1;
-
 }
 
 #endif /* ENC_ADV_DATA */

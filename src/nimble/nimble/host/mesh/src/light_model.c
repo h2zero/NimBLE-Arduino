@@ -1,8 +1,13 @@
+/*
+ * Copyright (c) 2017 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #if MYNEWT_VAL(BLE_MESH)
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/console/console.h"
 #include "light_model.h"
 

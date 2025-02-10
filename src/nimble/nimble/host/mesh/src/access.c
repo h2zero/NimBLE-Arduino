@@ -13,9 +13,9 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include "nimble/porting/nimble/include/os/os_mbuf.h"
+#include <nimble/porting/nimble/include/os/os_mbuf.h>
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 #include "mesh_priv.h"
 #include "adv.h"
@@ -26,7 +26,7 @@
 #include "foundation.h"
 #include "settings.h"
 #if MYNEWT_VAL(BLE_MESH_SHELL_MODELS)
-#include "../include/mesh/model_cli.h"
+#include "nimble/nimble/host/mesh/include/mesh/model_cli.h"
 #endif
 
 /* bt_mesh_model.flags */

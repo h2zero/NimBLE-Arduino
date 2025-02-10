@@ -18,12 +18,12 @@
  */
 
 #include <assert.h>
-#include "../include/os/os.h"
-#include "../include/mem/mem.h"
-#include "../include/sysinit/sysinit.h"
+#include "nimble/porting/nimble/include/os/os.h"
+#include "nimble/porting/nimble/include/mem/mem.h"
+#include "nimble/porting/nimble/include/sysinit/sysinit.h"
 
-#include "nimble/esp_port/port/include/esp_nimble_mem.h"
 #ifdef ESP_PLATFORM
+#include "nimble/esp_port/port/include/esp_nimble_mem.h"
 #include "esp_err.h"
 #endif
 

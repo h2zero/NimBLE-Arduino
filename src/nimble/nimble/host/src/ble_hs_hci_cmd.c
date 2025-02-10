@@ -24,6 +24,11 @@
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
 #include "ble_hs_priv.h"
+//#include "bt_common.h"
+#if (BT_HCI_LOG_INCLUDED == TRUE)
+//#include "hci_log/bt_hci_log.h"
+#endif // (BT_HCI_LOG_INCLUDED == TRUE)
+
 #ifdef ESP_PLATFORM
 #  if defined __has_include
 #    if __has_include ("soc/soc_caps.h")
@@ -94,6 +99,16 @@ ble_hs_hci_cmd_send(uint16_t opcode, uint8_t len, const void *cmddata)
     buf--;
 #endif
 
+#if ((BT_HCI_LOG_INCLUDED == TRUE) && SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED)
+    uint8_t *data;
+#if !(SOC_ESP_NIMBLE_CONTROLLER) && CONFIG_BT_CONTROLLER_ENABLED
+    data = (uint8_t *)buf + 1;
+#else
+    data = (uint8_t *)buf;
+#endif
+    bt_hci_log_record_hci_data(0x01, data, len + BLE_HCI_CMD_HDR_LEN);
+#endif
+
     rc = ble_hs_hci_cmd_transport((void *) buf);
 
     if (rc == 0) {
@@ -112,7 +127,7 @@ ble_hs_hci_cmd_send(uint16_t opcode, uint8_t len, const void *cmddata)
     struct ble_hci_cmd *cmd;
     int rc;
 
-    cmd = ble_transport_alloc_cmd();
+    cmd = (void *) ble_hci_trans_buf_alloc(BLE_HCI_TRANS_BUF_CMD);
     BLE_HS_DBG_ASSERT(cmd != NULL);
 
     cmd->opcode = htole16(opcode);
