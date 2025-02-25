@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.2] 2025-02-24
+
+## Fixed
+- Crash when calling `NimBLEClient::DiscoverAttributes`.
+
+## Added
+- `NimBLEDeviceCallbacks` class with a callback for handling bond storage.
+
 ## [2.2.1] 2025-01-26
 
 ## Fixed
@@ -14,7 +22,7 @@ All notable changes to this project will be documented in this file.
 - Crash when retrieving descriptors if more than one exists.
 - Incorrect TX power value being advertised.
 - New user guide code for 2.x
-- Potential race condition if `NimBLEScan::clearResults1 is called from multiple tasks.
+- Potential race condition if `NimBLEScan::clearResults` is called from multiple tasks.
 
 ## Changed
 - If privacy is not enabled identity keys will not be shared.
