@@ -117,6 +117,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFi
         return false;
     }
 
+    auto prevDscCount = m_vDescriptors.size();
     NimBLEUtils::taskWait(pFilter->taskData, BLE_NPL_TIME_FOREVER);
     rc = ((NimBLETaskData*)pFilter->taskData)->m_flags;
     if (rc != BLE_HS_EDONE) {
@@ -124,8 +125,11 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFi
         return false;
     }
 
-    pFilter->dsc = m_vDescriptors.back();
-    NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): found %d descriptors.", m_vDescriptors.size());
+    if (m_vDescriptors.size() > prevDscCount) {
+        pFilter->dsc = m_vDescriptors.back();
+    }
+
+    NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): found %d descriptors.", m_vDescriptors.size() - prevDscCount);
     return true;
 } // retrieveDescriptors
 
