@@ -127,6 +127,22 @@ size_t NimBLEClient::deleteService(const NimBLEUUID& uuid) {
 } // deleteService
 
 /**
+ * @brief Connect to an advertising device.
+ * @param [in] pDevice A pointer to the advertised device instance to connect to.
+ * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
+ * have created when last connected.
+ * @param [in] asyncConnect If true, the connection will be made asynchronously and this function will return immediately.\n
+ * If false, this function will block until the connection is established or the connection attempt times out.
+ * @param [in] exchangeMTU If true, the client will attempt to exchange MTU with the server after connection.\n
+ * If false, the client will use the default MTU size and the application will need to call exchangeMTU() later.
+ * @return true on success.
+ */
+bool NimBLEClient::connect(const NimBLEAdvertisedDevice* pDevice, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
+    NimBLEAddress address(pDevice->getAddress());
+    return connect(address, deleteAttributes, asyncConnect, exchangeMTU);
+} // connect
+
+/**
  * @brief Connect to the BLE Server using the address of the last connected device, or the address\n
  * passed to the constructor.
  * @param [in] deleteAttributes If true this will delete any attribute objects this client may already\n
