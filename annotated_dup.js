@@ -91,6 +91,7 @@ var annotated_dup =
     [ "NimBLEDescriptor", "class_nim_b_l_e_descriptor.html", "class_nim_b_l_e_descriptor" ],
     [ "NimBLEDescriptorCallbacks", "class_nim_b_l_e_descriptor_callbacks.html", "class_nim_b_l_e_descriptor_callbacks" ],
     [ "NimBLEDevice", "class_nim_b_l_e_device.html", null ],
+    [ "NimBLEDeviceCallbacks", "class_nim_b_l_e_device_callbacks.html", "class_nim_b_l_e_device_callbacks" ],
     [ "NimBLEEddystoneTLM", "class_nim_b_l_e_eddystone_t_l_m.html", "class_nim_b_l_e_eddystone_t_l_m" ],
     [ "NimBLEExtAdvertisement", "class_nim_b_l_e_ext_advertisement.html", "class_nim_b_l_e_ext_advertisement" ],
     [ "NimBLEExtAdvertising", "class_nim_b_l_e_ext_advertising.html", "class_nim_b_l_e_ext_advertising" ],

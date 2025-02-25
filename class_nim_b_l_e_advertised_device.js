@@ -50,5 +50,6 @@ var class_nim_b_l_e_advertised_device =
     [ "isConnectable", "class_nim_b_l_e_advertised_device.html#ab9710a6c3a141b6413d5159dfe4a4040", null ],
     [ "isLegacyAdvertisement", "class_nim_b_l_e_advertised_device.html#a49b445130f028b49175d01cd3f6db050", null ],
     [ "isScannable", "class_nim_b_l_e_advertised_device.html#a6f55263d4a86d3e2f6b23b71eb68ef98", null ],
+    [ "operator NimBLEAddress", "class_nim_b_l_e_advertised_device.html#a0e36b522584f14687657cd29739c491b", null ],
     [ "toString", "class_nim_b_l_e_advertised_device.html#ad46b9300d435e3d20997fbafa5305148", null ]
 ];

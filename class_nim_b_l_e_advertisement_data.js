@@ -16,7 +16,7 @@ var class_nim_b_l_e_advertisement_data =
     [ "setCompleteServices", "class_nim_b_l_e_advertisement_data.html#aafa437cd95751da68d6b8691ce3eea46", null ],
     [ "setCompleteServices16", "class_nim_b_l_e_advertisement_data.html#a89c45ddb804600bd6b6175687f6c1bb0", null ],
     [ "setCompleteServices32", "class_nim_b_l_e_advertisement_data.html#aef5e7a5b2d3dd9c09b6a55582d7d22d6", null ],
-    [ "setFlags", "class_nim_b_l_e_advertisement_data.html#a00c9c605b9a1054ad056fc0f0f7ebf0d", null ],
+    [ "setFlags", "class_nim_b_l_e_advertisement_data.html#afa3e54526ad926e0d13cb31c620361c6", null ],
     [ "setManufacturerData", "class_nim_b_l_e_advertisement_data.html#a043d49566c5d7a3e0808554587ad051b", null ],
     [ "setManufacturerData", "class_nim_b_l_e_advertisement_data.html#a9eb01ecb3973fa592effe6fdce39f602", null ],
     [ "setManufacturerData", "class_nim_b_l_e_advertisement_data.html#a0b076298058755149b4351727d70b198", null ],

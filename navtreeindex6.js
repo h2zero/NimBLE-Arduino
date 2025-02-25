@@ -1,5 +1,10 @@
 var NAVTREEINDEX6 =
 {
+"md__migration__guide.html#server-security-1":[5,1,3],
+"md__migration__guide.html#services-1":[5,1,0],
+"md__migration__guide.html#the-full-list-of-properties":[5,1,1,2],
+"md__new__user__guide.html":[6],
+"md__new__user__guide.html#creating-a-client":[6,3],
 "md__new__user__guide.html#creating-a-server":[6,2],
 "md__new__user__guide.html#include-files":[6,0],
 "md__new__user__guide.html#using-the-library":[6,1],
@@ -84,9 +89,9 @@ var NAVTREEINDEX6 =
 "src_2proxy_8h_source.html":[14,0,0,0,3,2,1,1,20],
 "stats_8h_source.html":[14,0,0,0,4,0,0,8,0],
 "storage__port_8h_source.html":[14,0,0,0,4,0,0,6,1],
-"struct_nim_b_l_e_task_data.html":[13,0,106],
-"struct_nim_b_l_e_task_data.html#a7b08f7ba2161d6309da1fc40c83027c4":[13,0,106,0],
-"struct_nim_b_l_e_task_data.html#af2d5d10d7cc8801cf4d001f89bf301c6":[13,0,106,1],
+"struct_nim_b_l_e_task_data.html":[13,0,107],
+"struct_nim_b_l_e_task_data.html#a7b08f7ba2161d6309da1fc40c83027c4":[13,0,107,0],
+"struct_nim_b_l_e_task_data.html#af2d5d10d7cc8801cf4d001f89bf301c6":[13,0,107,1],
 "structble__att__find__info__idata.html":[13,0,0],
 "structble__att__find__type__value__hinfo.html":[13,0,1],
 "structble__att__read__group__type__adata.html":[13,0,2],
@@ -244,10 +249,5 @@ var NAVTREEINDEX6 =
 "structble__hs__cfg.html#a872e5cb89845dced7d93ee4dd4834178":[12,1,5,1,2],
 "structble__hs__cfg.html#a888c3fad7bd53736b6f18f06f4161316":[12,1,5,1,14],
 "structble__hs__cfg.html#acdf8bf23bfba678b48757bc34b2cc6bb":[12,1,5,1,3],
-"structble__hs__cfg.html#ae635b3b539e5a3ac12ac0fdfeaf30cc3":[12,1,5,1,16],
-"structble__hs__cfg.html#aed26f89a022f6c72015efc12b15084cd":[12,1,5,1,13],
-"structble__hs__cfg.html#af89adcda7396b28cb3ba7dcd5b2b9651":[12,1,5,1,12],
-"structble__hs__hci__evt__dispatch__entry.html":[13,0,22],
-"structble__hs__stop__listener.html":[13,0,23],
-"structble__l2cap__event.html":[13,0,24]
+"structble__hs__cfg.html#ae635b3b539e5a3ac12ac0fdfeaf30cc3":[12,1,5,1,16]
 };

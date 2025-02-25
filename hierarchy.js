@@ -93,6 +93,7 @@ var hierarchy =
     [ "NimBLEConnInfo", "class_nim_b_l_e_conn_info.html", null ],
     [ "NimBLEDescriptorCallbacks", "class_nim_b_l_e_descriptor_callbacks.html", null ],
     [ "NimBLEDevice", "class_nim_b_l_e_device.html", null ],
+    [ "NimBLEDeviceCallbacks", "class_nim_b_l_e_device_callbacks.html", null ],
     [ "NimBLEEddystoneTLM", "class_nim_b_l_e_eddystone_t_l_m.html", null ],
     [ "NimBLEExtAdvertisement", "class_nim_b_l_e_ext_advertisement.html", null ],
     [ "NimBLEExtAdvertising", "class_nim_b_l_e_ext_advertising.html", null ],

@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.1</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.2</span>
    </div>
   </td>
  </tr>
@@ -108,7 +108,7 @@ Enabling extended advertising</h1>
 <p>Extended advertising is supported when enabled with the config option <code>CONFIG_BT_NIMBLE_EXT_ADV</code> set to a value of 1. This is done in menuconfig under <code>Component config &gt; Bluetooth &gt; NimBLE options &gt; Enable extended advertising</code>, or set in <code><a class="el" href="nimconfig_8h_source.html">nimconfig.h</a></code> for Arduino, or in <code>build_flags</code> in PlatformIO.</p>
 <p>When enabled the following will occur:</p><ul>
 <li><code><a class="el" href="class_nim_b_l_e_scan.html#ac1307f30a881688d3a4d57bac7abe02c" title="Start scanning.">NimBLEScan::start</a></code> method will scan on both the 1M PHY and the coded PHY standards automatically.</li>
-<li><code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a></code> will use the primary PHY the device is listening on, unless specified (see below).</li>
+<li><code><a class="el" href="class_nim_b_l_e_client.html#a27e53c3746bc2d20ea7cfcea1a123cbf" title="Connect to a BLE Server by address.">NimBLEClient::connect</a></code> will use the primary PHY the device is listening on, unless specified (see below).</li>
 <li><code><a class="el" href="class_nim_b_l_e_client.html#a004a85999b1ee4283e1e8e1e31090cca" title="Set the PHY types to use when connecting to a server.">NimBLEClient::setConnectPhy</a></code> becomes available to specify the PHY's to connect with (default is all).</li>
 <li><code><a class="el" href="class_nim_b_l_e_advertising.html" title="Perform and manage BLE advertising.">NimBLEAdvertising</a></code> is no longer available for use and is replaced by <code><a class="el" href="class_nim_b_l_e_ext_advertising.html" title="Extended advertising class.">NimBLEExtAdvertising</a></code>. <code><a class="el" href="class_nim_b_l_e_device.html#aa994b01b2b5bb9f677f3cffb2f05d140" title="Get the instance of the extended advertising object.">NimBLEDevice::getAdvertising</a></code> will now return an instance of <code><a class="el" href="class_nim_b_l_e_ext_advertising.html" title="Extended advertising class.">NimBLEExtAdvertising</a></code>.</li>
 <li><code><a class="el" href="class_nim_b_l_e_advertisement_data.html" title="Advertisement data set by the programmer to be published by the BLE server.">NimBLEAdvertisementData</a></code> is no longer available for use and is replaced by <code><a class="el" href="class_nim_b_l_e_ext_advertisement.html" title="Extended advertisement data.">NimBLEExtAdvertisement</a></code>. This new class is where everything about the advertisement is configured, including the advertisement intervals and advertisement ended callback. </li>

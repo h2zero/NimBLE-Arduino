@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.1</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.2</span>
    </div>
   </td>
  </tr>
@@ -238,6 +238,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a899abd2a02e0c9bf941a998f4184a9ee" id="r_a899abd2a02e0c9bf941a998f4184a9ee"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertised_device.html#a899abd2a02e0c9bf941a998f4184a9ee">getPeriodicInterval</a> () const</td></tr>
 <tr class="memdesc:a899abd2a02e0c9bf941a998f4184a9ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the periodic interval of the advertisement.  <br /></td></tr>
 <tr class="separator:a899abd2a02e0c9bf941a998f4184a9ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e36b522584f14687657cd29739c491b" id="r_a0e36b522584f14687657cd29739c491b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertised_device.html#a0e36b522584f14687657cd29739c491b">operator NimBLEAddress</a> () const</td></tr>
+<tr class="memdesc:a0e36b522584f14687657cd29739c491b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience operator to convert this <a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a> to <a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a> representation.  <br /></td></tr>
+<tr class="separator:a0e36b522584f14687657cd29739c491b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12971984cf749647c659b659bdfeda5d" id="r_a12971984cf749647c659b659bdfeda5d"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; uint8_t &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_advertised_device.html#a12971984cf749647c659b659bdfeda5d">getPayload</a> () const</td></tr>
 <tr class="memdesc:a12971984cf749647c659b659bdfeda5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the payload advertised by the device.  <br /></td></tr>
 <tr class="separator:a12971984cf749647c659b659bdfeda5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1446,6 +1449,26 @@ template&lt;typename T &gt; </div>
 
 <p>Check if this device is advertising as scannable. </p>
 <dl class="section return"><dt>Returns</dt><dd>True if the device is scannable. </dd></dl>
+
+</div>
+</div>
+<a id="a0e36b522584f14687657cd29739c491b" name="a0e36b522584f14687657cd29739c491b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e36b522584f14687657cd29739c491b">&#9670;&#160;</a></span>operator NimBLEAddress()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">NimBLEAdvertisedDevice::operator <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Convenience operator to convert this <a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a> to <a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a> representation. </p>
+<p>This allows passing <a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a> to functions that accept <a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a> and/or or it's methods as a parameter. </p>
 
 </div>
 </div>

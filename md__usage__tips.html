@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.1</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.2</span>
    </div>
   </td>
  </tr>
@@ -122,7 +122,7 @@ Only retrieve the services and characteristics needed</h1>
 </p>
 <h1><a class="anchor" id="check-return-values"></a>
 Check return values</h1>
-<p>Many user issues can be avoided by checking if a function returned successfully, by either testing for true/false such as when calling <code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a></code>, <br  />
+<p>Many user issues can be avoided by checking if a function returned successfully, by either testing for true/false such as when calling <code><a class="el" href="class_nim_b_l_e_client.html#a27e53c3746bc2d20ea7cfcea1a123cbf" title="Connect to a BLE Server by address.">NimBLEClient::connect</a></code>, <br  />
  or nullptr such as when calling <code><a class="el" href="class_nim_b_l_e_client.html#ae22379ab10bd82932d2303fb3753c366" title="Get the service BLE Remote Service instance corresponding to the uuid.">NimBLEClient::getService</a></code>. The latter being a must, as calling a method on a nullptr will surely result in a crash. <br  />
  Most of the functions in this library return something that should be checked before proceeding. <br  />
  <br  />

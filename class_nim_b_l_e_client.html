@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.1</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.2</span>
    </div>
   </td>
  </tr>
@@ -103,9 +103,6 @@ $(document).ready(function(){initNavTree('class_nim_b_l_e_client.html',''); init
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a2b49bc73802bf716cf3df3b5a93f0543" id="r_a2b49bc73802bf716cf3df3b5a93f0543"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543">connect</a> (const <a class="el" href="class_nim_b_l_e_advertised_device.html">NimBLEAdvertisedDevice</a> *device, bool deleteAttributes=true, bool asyncConnect=false, bool <a class="el" href="class_nim_b_l_e_client.html#a19d97b47f01f0862e04f3011752b2f2f">exchangeMTU</a>=true)</td></tr>
-<tr class="memdesc:a2b49bc73802bf716cf3df3b5a93f0543"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connect to an advertising device.  <br /></td></tr>
-<tr class="separator:a2b49bc73802bf716cf3df3b5a93f0543"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27e53c3746bc2d20ea7cfcea1a123cbf" id="r_a27e53c3746bc2d20ea7cfcea1a123cbf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_client.html#a27e53c3746bc2d20ea7cfcea1a123cbf">connect</a> (const <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> &amp;address, bool deleteAttributes=true, bool asyncConnect=false, bool <a class="el" href="class_nim_b_l_e_client.html#a19d97b47f01f0862e04f3011752b2f2f">exchangeMTU</a>=true)</td></tr>
 <tr class="memdesc:a27e53c3746bc2d20ea7cfcea1a123cbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Connect to a BLE Server by address.  <br /></td></tr>
 <tr class="separator:a27e53c3746bc2d20ea7cfcea1a123cbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -265,7 +262,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>deleteServices</b> ()
 </div>
 </div>
 <a id="a26c8117d56d8b637780390a6506716be" name="a26c8117d56d8b637780390a6506716be"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a26c8117d56d8b637780390a6506716be">&#9670;&#160;</a></span>connect() <span class="overload">[1/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a26c8117d56d8b637780390a6506716be">&#9670;&#160;</a></span>connect() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -314,7 +311,7 @@ If false, the client will use the default MTU size and the application will need
 </div>
 </div>
 <a id="a27e53c3746bc2d20ea7cfcea1a123cbf" name="a27e53c3746bc2d20ea7cfcea1a123cbf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a27e53c3746bc2d20ea7cfcea1a123cbf">&#9670;&#160;</a></span>connect() <span class="overload">[2/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a27e53c3746bc2d20ea7cfcea1a123cbf">&#9670;&#160;</a></span>connect() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -355,61 +352,6 @@ If false, the client will use the default MTU size and the application will need
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">address</td><td>The address of the server. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">deleteAttributes</td><td>If true this will delete any attribute objects this client may already<br  />
-have created when last connected. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">asyncConnect</td><td>If true, the connection will be made asynchronously and this function will return immediately.<br  />
-If false, this function will block until the connection is established or the connection attempt times out. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">exchangeMTU</td><td>If true, the client will attempt to exchange MTU with the server after connection.<br  />
-If false, the client will use the default MTU size and the application will need to call <a class="el" href="class_nim_b_l_e_client.html#a19d97b47f01f0862e04f3011752b2f2f" title="Begin the MTU exchange process with the server.">exchangeMTU()</a> later. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>true on success. </dd></dl>
-
-</div>
-</div>
-<a id="a2b49bc73802bf716cf3df3b5a93f0543" name="a2b49bc73802bf716cf3df3b5a93f0543"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2b49bc73802bf716cf3df3b5a93f0543">&#9670;&#160;</a></span>connect() <span class="overload">[3/3]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool NimBLEClient::connect </td>
-          <td>(</td>
-          <td class="paramtype">const <a class="el" href="class_nim_b_l_e_advertised_device.html">NimBLEAdvertisedDevice</a> *&#160;</td>
-          <td class="paramname"><em>device</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>deleteAttributes</em> = <code>true</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>asyncConnect</em> = <code>false</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>exchangeMTU</em> = <code>true</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Connect to an advertising device. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>The device to connect to. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">deleteAttributes</td><td>If true this will delete any attribute objects this client may already<br  />
 have created when last connected. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">asyncConnect</td><td>If true, the connection will be made asynchronously and this function will return immediately.<br  />
