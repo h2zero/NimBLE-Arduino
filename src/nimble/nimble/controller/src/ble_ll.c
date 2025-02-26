@@ -44,13 +44,23 @@
 #include "../include/controller/ble_ll_rfmgmt.h"
 #include "../include/controller/ble_ll_trace.h"
 #include "../include/controller/ble_ll_sync.h"
-#include "../include/controller/ble_ll_plna.h"
+#include "../include/controller/ble_fem.h"
+#include "../include/controller/ble_ll_isoal.h"
+#include "../include/controller/ble_ll_iso_big.h"
+#if MYNEWT_VAL(BLE_LL_EXT)
+#include "../include/controller/ble_ll_ext.h"
+#endif
 #include "ble_ll_conn_priv.h"
 #include "ble_ll_hci_priv.h"
 #include "ble_ll_priv.h"
+#include "nimble/porting/nimble/include/hal/hal_system.h"
 
 #if MYNEWT_VAL(BLE_LL_DTM)
 #include "ble_ll_dtm_priv.h"
+#endif
+
+#if MYNEWT_VAL(BLE_LL_EXT)
+#include <../include/controller/ble_ll_ext.h>
 #endif
 
 #ifndef min

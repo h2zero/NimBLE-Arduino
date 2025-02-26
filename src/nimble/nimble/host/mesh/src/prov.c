@@ -13,7 +13,7 @@
 
 #include <errno.h>
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "mesh_priv.h"
 
 #include "crypto.h"
@@ -22,7 +22,7 @@
 #include "access.h"
 #include "foundation.h"
 #include "prov.h"
-#include "../include/mesh/testing.h"
+#include "testing.h"
 
 struct bt_mesh_prov_link bt_mesh_prov_link;
 const struct bt_mesh_prov *bt_mesh_prov;

@@ -17,9 +17,9 @@
  * under the License.
  */
 
-#if MYNEWT
+#ifdef MYNEWT
 
-#include "nimble/porting/nimble/include/os/mynewt.h"
+#include "os/mynewt.h"
 #include "ble_hs_priv.h"
 
 static struct ble_hs_stop_listener ble_hs_shutdown_stop_listener;

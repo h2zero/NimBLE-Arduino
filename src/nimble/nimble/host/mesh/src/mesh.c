@@ -15,7 +15,7 @@
 #include <errno.h>
 
 #include "nimble/porting/nimble/include/os/os_mbuf.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
 
 #include "adv.h"

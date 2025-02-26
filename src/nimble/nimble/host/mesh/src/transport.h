@@ -7,7 +7,7 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 #define TRANS_SEQ_AUTH_NVAL 0xffffffffffffffff
 

@@ -20,6 +20,19 @@
 #ifndef H_BLE_HS_LOG_
 #define H_BLE_HS_LOG_
 
+/**
+ * @file ble_hs_log.h
+ *
+ * @brief Bluetooth Host Log
+ *
+ * This header file defines macros and functions used for logging messages
+ * within the BLE Host Stack.
+ *
+ * @defgroup bt_host_log Bluetooth Host Log
+ * @ingroup bt_host
+ * @{
+ */
+
 #include "nimble/porting/nimble/include/modlog/modlog.h"
 #include "nimble/porting/nimble/include/log/log.h"
 
@@ -34,20 +47,62 @@ extern "C" {
 
 struct os_mbuf;
 
+/**
+ * @brief Macro for logging messages at a specified log level.
+ *
+ * The BLE_HS_LOG macro allows logging messages with different severity levels,
+ * such as DEBUG, INFO, WARN, ERROR or CRITICAL.
+ *
+ * @param lvl           The log level of the message.
+ * @param ...           The format string and additional arguments for the log message.
+ */
 #define BLE_HS_LOG(lvl, ...) \
     BLE_HS_LOG_ ## lvl(__VA_ARGS__)
 
+/**
+ * @brief Macro for logging a Bluetooth address at a specified log level.
+ *
+ * The BLE_HS_LOG_ADDR macro allows logging Bluetooth addresses in the format
+ *  "XX:XX:XX:XX:XX:XX" at different severity levels, such as DEBUG, INFO, WARN, ERROR or CRITICAL.
+ *
+ *  @param lvl          The log level of the message.
+ *  @param addr         The Bluetooth address to be logged.
+ */
 #define BLE_HS_LOG_ADDR(lvl, addr)                      \
     BLE_HS_LOG_ ## lvl("%02x:%02x:%02x:%02x:%02x:%02x", \
                        (addr)[5], (addr)[4], (addr)[3], \
                        (addr)[2], (addr)[1], (addr)[0])
 
 
+/**
+ * @brief Logs the content of an `os_mbuf` structure.
+ *
+ * This function iterates over each byte in the provided `os_mbuf` and logs its
+ * value in hexadecimal format using the `BLE_HS_LOG` macro with the log level
+ * set to DEBUG.
+ *
+ * @param om            The `os_mbuf` to log.
+ */
 void ble_hs_log_mbuf(const struct os_mbuf *om);
+
+/**
+ * @brief Logs the content of a flat buffer.
+ *
+ * This function iterates over each byte in the provided buffer and logs its
+ * value in hexadecimal format using the `BLE_HS_LOG` macro with the log level
+ * set to DEBUG.
+ *
+ * @param data          Pointer to the buffer to log.
+ * @param len           Length of the buffer.
+ */
 void ble_hs_log_flat_buf(const void *data, int len);
 
 #ifdef __cplusplus
 }
 #endif
+
+/**
+ * @}
+ */
 
 #endif

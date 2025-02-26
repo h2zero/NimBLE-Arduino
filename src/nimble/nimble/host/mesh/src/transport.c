@@ -15,8 +15,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "../include/mesh/mesh.h"
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 #include "mesh_priv.h"
 
 #include "crypto.h"
@@ -31,7 +31,7 @@
 #include "settings.h"
 #include "heartbeat.h"
 #include "transport.h"
-#include "../include/mesh/testing.h"
+#include "testing.h"
 
 #define AID_MASK                    ((uint8_t)(BIT_MASK(6)))
 
@@ -1017,7 +1017,7 @@ static inline int32_t ack_timeout(struct seg_rx *rx)
 	/* Make sure we don't send more frequently than the duration for
 	 * each packet (default is 300ms).
 	 */
-	return max(to, K_MSEC(400));
+	return MAX(to, K_MSEC(400));
 }
 
 int bt_mesh_ctl_send(struct bt_mesh_net_tx *tx, uint8_t ctl_op, void *data,
@@ -1162,6 +1162,10 @@ static void seg_ack(struct ble_npl_event *work)
 	if (k_uptime_get_32() - rx->last > K_SECONDS(60)) {
 		BT_WARN("Incomplete timer expired");
 		seg_rx_reset(rx, false);
+
+		if (IS_ENABLED(CONFIG_BT_TESTING)) {
+			bt_test_mesh_trans_incomp_timer_exp();
+		}
 
 		return;
 	}
@@ -1574,6 +1578,11 @@ int bt_mesh_trans_recv(struct os_mbuf *buf, struct bt_mesh_net_rx *rx)
 	net_buf_simple_pull(buf, BT_MESH_NET_HDR_LEN);
 
 	BT_DBG("Payload %s", bt_hex(buf->om_data, buf->om_len));
+
+	if (IS_ENABLED(CONFIG_BT_TESTING)) {
+		bt_test_mesh_net_recv(rx->ctx.recv_ttl, rx->ctl, rx->ctx.addr,
+				      rx->ctx.recv_dst, buf->om_data, buf->om_len);
+	}
 
 	/* If LPN mode is enabled messages are only accepted when we've
 	 * requested the Friend to send them. The messages must also

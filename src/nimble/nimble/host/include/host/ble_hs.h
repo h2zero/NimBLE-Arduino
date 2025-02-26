@@ -28,28 +28,29 @@
 
 #include <inttypes.h>
 #include "nimble/nimble/include/nimble/hci_common.h"
-#include "ble_att.h"
-#include "ble_eddystone.h"
-#include "ble_gap.h"
-#include "ble_gatt.h"
-#include "ble_hs_adv.h"
-#include "ble_hs_id.h"
-#include "ble_hs_hci.h"
-#include "ble_hs_log.h"
-#include "ble_hs_mbuf.h"
-#include "ble_hs_stop.h"
-#include "ble_ibeacon.h"
-#include "ble_l2cap.h"
-#include "ble_sm.h"
-#include "ble_store.h"
-#include "ble_uuid.h"
+#include "nimble/nimble/host/include/host/ble_att.h"
+#include "nimble/nimble/host/include/host/ble_eddystone.h"
+#include "nimble/nimble/host/include/host/ble_gap.h"
+#include "nimble/nimble/host/include/host/ble_gatt.h"
+#include "nimble/nimble/host/include/host/ble_hs_adv.h"
+#include "nimble/nimble/host/include/host/ble_hs_id.h"
+#include "nimble/nimble/host/include/host/ble_hs_hci.h"
+#include "nimble/nimble/host/include/host/ble_hs_log.h"
+#include "nimble/nimble/host/include/host/ble_hs_mbuf.h"
+#include "nimble/nimble/host/include/host/ble_hs_stop.h"
+#include "nimble/nimble/host/include/host/ble_ibeacon.h"
+#include "nimble/nimble/host/include/host/ble_l2cap.h"
+#include "nimble/nimble/host/include/host/ble_sm.h"
+#include "nimble/nimble/host/include/host/ble_store.h"
+#include "nimble/nimble/host/include/host/ble_uuid.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
-#include "ble_esp_hs.h"
+#include "nimble/nimble/host/include/host/ble_esp_hs.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/** Represents an infinite value for timeouts or durations. */
 #define BLE_HS_FOREVER              INT32_MAX
 
 /** Connection handle not present */
@@ -67,36 +68,97 @@ extern "C" {
  * @{
  */
 
+/** Operation failed and should be retried later. */
 #define BLE_HS_EAGAIN               1
+
+/** Operation already in progress. */
 #define BLE_HS_EALREADY             2
+
+/** Invalid parameter. */
 #define BLE_HS_EINVAL               3
+
+/** Message too long. */
 #define BLE_HS_EMSGSIZE             4
+
+/** No such entry. */
 #define BLE_HS_ENOENT               5
+
+/** Out of memory. */
 #define BLE_HS_ENOMEM               6
+
+/** Not connected. */
 #define BLE_HS_ENOTCONN             7
+
+/** Not supported. */
 #define BLE_HS_ENOTSUP              8
+
+/** Application error. */
 #define BLE_HS_EAPP                 9
+
+/** Bad data. */
 #define BLE_HS_EBADDATA             10
+
+/** Operating System error. */
 #define BLE_HS_EOS                  11
+
+/** Controller error. */
 #define BLE_HS_ECONTROLLER          12
+
+/** Operation timed out. */
 #define BLE_HS_ETIMEOUT             13
+
+/** Operation completed. */
 #define BLE_HS_EDONE                14
+
+/** Resource busy. */
 #define BLE_HS_EBUSY                15
+
+/** Operation rejected. */
 #define BLE_HS_EREJECT              16
+
+/** Unknown error. */
 #define BLE_HS_EUNKNOWN             17
+
+/** Role error. */
 #define BLE_HS_EROLE                18
+
+/** HCI operation timed out. */
 #define BLE_HS_ETIMEOUT_HCI         19
+
+/** Out of memory to handle an event. */
 #define BLE_HS_ENOMEM_EVT           20
+
+/** No valid address. */
 #define BLE_HS_ENOADDR              21
+
+/** Not synchronized with the controller. */
 #define BLE_HS_ENOTSYNCED           22
+
+/** Authentication error. */
 #define BLE_HS_EAUTHEN              23
+
+/** Authorization error. */
 #define BLE_HS_EAUTHOR              24
+
+/** Encryption error. */
 #define BLE_HS_EENCRYPT             25
+
+/** Invalid encryption key size. */
 #define BLE_HS_EENCRYPT_KEY_SZ      26
+
+/** Storage capacity exceeded. */
 #define BLE_HS_ESTORE_CAP           27
+
+/** Storage operation failed. */
 #define BLE_HS_ESTORE_FAIL          28
+
+/** Operation was preempted. */
 #define BLE_HS_EPREEMPTED           29
+
+/** Operation disabled. */
 #define BLE_HS_EDISABLED            30
+
+/** Operation stalled. */
 #define BLE_HS_ESTALLED             31
 
 /** Error base for ATT errors */
@@ -172,6 +234,25 @@ extern "C" {
  * @}
  */
 
+/**
+ * @brief LE key distribution
+ * @defgroup bt_host_key_dist LE key distribution
+ *
+ * @{
+ */
+
+/** Distibute LTK */
+#define BLE_HS_KEY_DIST_ENC_KEY              0x01
+
+/** Distribute IRK */
+#define BLE_HS_KEY_DIST_ID_KEY               0x02
+
+/** CSRK distibution and LinkKey are not supported */
+
+/**
+ * @}
+ */
+
 /** @brief Stack reset callback
  *
  * @param reason Reason code for reset
@@ -234,11 +315,28 @@ struct ble_hs_cfg {
      */
     unsigned sm_sc:1;
 
+    /** @brief Security Manager - Enable/Disable Secure Connections Only flag
+     *
+     * If set, this will enforce P-256 elliptic curve encryption algorithm
+     * during pairing.
+     * It will force the max key size to be used during pairing.
+     */
+    unsigned sm_sc_only:1;
+
     /** @brief Security Manager Key Press Notification flag
      *
      * Currently unsupported and should not be set.
      */
     unsigned sm_keypress:1;
+
+    /** @brief Enable/Disable Enhanced ATT Support
+     *
+     * Primarily used to enable EATT behaviour; denotes the number of eatt
+     * channels. Set to 0 to disable eatt.
+     *
+     * Default value is CONFIG_BT_NIMBLE_EATT_CHAN_NUM.
+     */
+    uint8_t eatt;
 
     /** @brief Security Manager Local Key Distribution Mask */
     uint8_t sm_our_key_dist;
@@ -259,6 +357,9 @@ struct ble_hs_cfg {
      * This happens at startup and after a reset.
      */
     ble_hs_sync_fn *sync_cb;
+
+    /** Callback to handle generation of security keys */
+    ble_store_gen_key_fn *store_gen_key_cb;
 
     /* XXX: These need to go away. Instead, the nimble host package should
      * require the host-store API (not yet implemented)..
@@ -286,6 +387,7 @@ struct ble_hs_cfg {
     void *store_status_arg;
 };
 
+/** Configuration structure for the NimBLE Host stack. */
 extern struct ble_hs_cfg ble_hs_cfg;
 
 /**
@@ -374,7 +476,7 @@ void ble_hs_init(void);
  *                                  HAL_RESET_[...] codes or an
  *                                  implementation-defined value.
  *
- * @return                      SYSDOWN_IN_PROGRESS.
+ * @return                      SYSDOWN_IN_PROGRESS. 
  */
 int ble_hs_shutdown(int reason);
 

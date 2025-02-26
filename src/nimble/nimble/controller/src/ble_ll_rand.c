@@ -28,10 +28,14 @@
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
-#include "../include/controller/ble_hw.h"
-#include "../include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_hw.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
 #if MYNEWT_VAL(TRNG)
 #include "trng/trng.h"
+#endif
+
+#ifdef RIOT_VERSION
+#include "random.h"
 #endif
 
 #if BABBLESIM
@@ -135,6 +139,7 @@ ble_ll_rand_data_get(uint8_t *buf, uint8_t len)
 uint32_t
 ble_ll_rand(void)
 {
+#ifndef RIOT_VERSION
     static unsigned short xsubi[3];
     static bool init = true;
 
@@ -144,6 +149,9 @@ ble_ll_rand(void)
     }
 
     return (uint32_t) jrand48(xsubi);
+#else
+    return random_uint32();
+#endif
 }
 
 /**

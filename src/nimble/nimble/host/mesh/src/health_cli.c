@@ -15,13 +15,13 @@
 #include <errno.h>
 #include <stdbool.h>
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "mesh_priv.h"
 #include "adv.h"
 #include "net.h"
 #include "transport.h"
 #include "foundation.h"
-#include "../include/mesh/health_cli.h"
+#include "nimble/nimble/host/mesh/include/mesh/health_cli.h"
 
 static int32_t msg_timeout = K_SECONDS(5);
 

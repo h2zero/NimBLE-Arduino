@@ -18,7 +18,7 @@
 #include "transport.h"
 #include "heartbeat.h"
 #include "foundation.h"
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 
 /* Heartbeat Publication information for persistent storage. */
 struct hb_pub_val {
