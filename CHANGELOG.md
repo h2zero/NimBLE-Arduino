@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.3] 2025-02-28
+
+## Fixed
+- Added back `NimBLEClient::connect` overload with `NimBLEAdvertisedDevice` parameter to resolve connection error due to NULL address.
+- Crash caused by returning invalid vector entry when retrieving remote descriptors.
+
 ## [2.2.2] 2025-02-24
 
 ## Fixed
