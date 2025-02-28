@@ -1,5 +1,8 @@
 var NAVTREEINDEX6 =
 {
+"md__migration__guide.html#remote-services-1":[5,3,0],
+"md__migration__guide.html#security-api":[5,5],
+"md__migration__guide.html#server-api":[5,1],
 "md__migration__guide.html#server-security-1":[5,1,3],
 "md__migration__guide.html#services-1":[5,1,0],
 "md__migration__guide.html#the-full-list-of-properties":[5,1,1,2],
@@ -246,8 +249,5 @@ var NAVTREEINDEX6 =
 "structble__hs__cfg.html#a61bf85682e2982388885a6a703b559b5":[12,1,5,1,4],
 "structble__hs__cfg.html#a78ce3a70dbcfe4407a51ee009aa19324":[12,1,5,1,9],
 "structble__hs__cfg.html#a7f47f96dd3373dc0e689e7161a004eb2":[12,1,5,1,8],
-"structble__hs__cfg.html#a872e5cb89845dced7d93ee4dd4834178":[12,1,5,1,2],
-"structble__hs__cfg.html#a888c3fad7bd53736b6f18f06f4161316":[12,1,5,1,14],
-"structble__hs__cfg.html#acdf8bf23bfba678b48757bc34b2cc6bb":[12,1,5,1,3],
-"structble__hs__cfg.html#ae635b3b539e5a3ac12ac0fdfeaf30cc3":[12,1,5,1,16]
+"structble__hs__cfg.html#a872e5cb89845dced7d93ee4dd4834178":[12,1,5,1,2]
 };

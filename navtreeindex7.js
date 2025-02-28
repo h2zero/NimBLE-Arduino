@@ -1,5 +1,8 @@
 var NAVTREEINDEX7 =
 {
+"structble__hs__cfg.html#a888c3fad7bd53736b6f18f06f4161316":[12,1,5,1,14],
+"structble__hs__cfg.html#acdf8bf23bfba678b48757bc34b2cc6bb":[12,1,5,1,3],
+"structble__hs__cfg.html#ae635b3b539e5a3ac12ac0fdfeaf30cc3":[12,1,5,1,16],
 "structble__hs__cfg.html#aed26f89a022f6c72015efc12b15084cd":[12,1,5,1,13],
 "structble__hs__cfg.html#af89adcda7396b28cb3ba7dcd5b2b9651":[12,1,5,1,12],
 "structble__hs__hci__evt__dispatch__entry.html":[13,0,22],

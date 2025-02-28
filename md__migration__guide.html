@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.2</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.3</span>
    </div>
   </td>
  </tr>
@@ -304,10 +304,10 @@ Advertising API</h1>
 Client API</h1>
 <p>Client instances are created just as before with <code>BLEDevice::createClient</code> (<code><a class="el" href="class_nim_b_l_e_device.html#a010b12177917f33e7d3633736c0cc553" title="Creates a new client object, each client can connect to 1 peripheral device.">NimBLEDevice::createClient</a></code>).</p>
 <p>Multiple client instances can be created, up to the maximum number of connections set in the config file (default: 3). To delete a client instance you must use <code><a class="el" href="class_nim_b_l_e_device.html#a83aa0a3d9d57358d35082a442edf8549" title="Delete the client object and remove it from the list. Checks if it is connected or trying to connect ...">NimBLEDevice::deleteClient</a></code>.</p>
-<p><code>BLEClient::connect</code>(<code><a class="el" href="class_nim_b_l_e_client.html#a27e53c3746bc2d20ea7cfcea1a123cbf" title="Connect to a BLE Server by address.">NimBLEClient::connect</a></code>) Has had it's parameters altered. Defined as: </p><blockquote class="doxtable">
-<p>&zwj;<a class="el" href="class_nim_b_l_e_client.html#a27e53c3746bc2d20ea7cfcea1a123cbf" title="Connect to a BLE Server by address.">NimBLEClient::connect</a>(bool deleteServices = true, , bool asyncConnect = false, bool exchangeMTU = true); <br  />
- <a class="el" href="class_nim_b_l_e_client.html#a27e53c3746bc2d20ea7cfcea1a123cbf" title="Connect to a BLE Server by address.">NimBLEClient::connect</a>(const <a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a>&amp; address, bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true); <br  />
- <a class="el" href="class_nim_b_l_e_client.html#a27e53c3746bc2d20ea7cfcea1a123cbf" title="Connect to a BLE Server by address.">NimBLEClient::connect</a>(const NimBLEAdvertisedDevice* device, bool deleteServices = true, bool asyncConnect = false, bool exchangeMTU = true); </p>
+<p><code>BLEClient::connect</code>(<code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a></code>) Has had it's parameters altered. Defined as: </p><blockquote class="doxtable">
+<p>&zwj;<a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a>(bool deleteServices = true, , bool asyncConnect = false, bool exchangeMTU = true); <br  />
+ <a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a>(const <a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a>&amp; address, bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true); <br  />
+ <a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a>(const NimBLEAdvertisedDevice* device, bool deleteServices = true, bool asyncConnect = false, bool exchangeMTU = true); </p>
 </blockquote>
 <p>The type parameter has been removed and a new bool parameter has been added to indicate if the client should delete the attribute database previously retrieved (if applicable) for the peripheral, default value is true.</p>
 <p>If set to false the client will use the attribute database it retrieved from the peripheral when previously connected. This allows for faster connections and power saving if the devices dropped connection and are reconnecting. <br  />
