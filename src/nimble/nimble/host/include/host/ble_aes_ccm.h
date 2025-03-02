@@ -9,10 +9,10 @@
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/queue.h"
-#include "ble_hs.h"
+#include "nimble/nimble/host/include/host/ble_hs.h"
 
 #if MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS)
-#include "mbedtls/aes.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
 #else
 #include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
 #endif

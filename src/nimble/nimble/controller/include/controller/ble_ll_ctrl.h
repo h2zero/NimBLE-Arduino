@@ -333,8 +333,9 @@ void ble_ll_hci_ev_send_adv_set_terminated(uint8_t status, uint8_t adv_handle,
 int ble_ll_hci_ev_phy_update(struct ble_ll_conn_sm *connsm, uint8_t status);
 void ble_ll_calc_session_key(struct ble_ll_conn_sm *connsm);
 void ble_ll_ctrl_phy_update_proc_complete(struct ble_ll_conn_sm *connsm);
-void ble_ll_ctrl_initiate_dle(struct ble_ll_conn_sm *connsm);
+void ble_ll_ctrl_initiate_dle(struct ble_ll_conn_sm *connsm, bool initial);
 void ble_ll_hci_ev_send_vs_assert(const char *file, uint32_t line);
+void ble_ll_hci_ev_send_vs_printf(uint8_t id, const char *fmt, ...);
 void ble_ll_hci_ev_send_vs_llcp_trace(uint8_t type, uint16_t handle, uint16_t count,
                                       void *pdu, size_t length);
 
@@ -348,6 +349,11 @@ void ble_ll_hci_ev_sca_update(struct ble_ll_conn_sm *connsm,
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
 void ble_ll_hci_ev_subrate_change(struct ble_ll_conn_sm *connsm, uint8_t status);
+#endif
+
+#if MYNEWT_VAL(BLE_LL_HCI_VS_CONN_STRICT_SCHED)
+void ble_ll_hci_ev_send_vs_css_slot_changed(uint16_t conn_handle,
+                                            uint16_t slot_idx);
 #endif
 
 #ifdef __cplusplus

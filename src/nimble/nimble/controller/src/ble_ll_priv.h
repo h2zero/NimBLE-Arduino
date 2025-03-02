@@ -25,11 +25,39 @@ extern "C" {
 #endif
 
 extern int8_t g_ble_ll_tx_power;
+extern int8_t g_ble_ll_tx_power_compensation;
+extern int8_t g_ble_ll_rx_power_compensation;
+
+int ble_ll_tx_power_round(int tx_power);
+void ble_ll_tx_power_set(int tx_power);
+
+static inline int
+ble_ll_rx_gain(void)
+{
+    int gain = g_ble_ll_rx_power_compensation;
+
+#if MYNEWT_VAL(BLE_FEM_LNA)
+#if MYNEWT_VAL(BLE_FEM_LNA_GAIN_TUNABLE)
+    gain += ble_fem_lna_rx_gain();
+#else
+    gain += MYNEWT_VAL(BLE_FEM_LNA_GAIN);
+#endif
+#endif
+
+    return gain;
+}
+
+/* if there is any radio related activity enabled
+ * (scanning, advertising, connection etc)
+ */
+#define BLE_LL_BUSY_EXCLUDE_CONNECTIONS 0x01
+
+int ble_ll_is_busy(unsigned int flags);
 
 #ifdef MYNEWT
 
-#include "syscfg/syscfg.h"
-#include "hal/hal_gpio.h"
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "nimble/porting/nimble/include/hal/hal_gpio.h"
 
 #define BLE_LL_DEBUG_GPIO_INIT(_name)                                       \
     if (MYNEWT_VAL(BLE_LL_DEBUG_GPIO_ ## _name) >= 0) {                     \

@@ -12,7 +12,7 @@
 
 #define MESH_LOG_MODULE BLE_MESH_PROV_LOG
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "prov.h"
 #include "net.h"
 #include "proxy.h"

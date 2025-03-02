@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 #include <sys/types.h>
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 #define BT_MESH_NET_FLAG_KR       BIT(0)
 #define BT_MESH_NET_FLAG_IVU      BIT(1)
 

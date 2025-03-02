@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdbool.h>
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "mesh_priv.h"
 #include "adv.h"
 #include "net.h"

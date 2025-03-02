@@ -8,7 +8,7 @@
 #ifndef __CRYPTO_H__
 #define __CRYPTO_H__
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 
 struct bt_mesh_sg {
 	const void *data;

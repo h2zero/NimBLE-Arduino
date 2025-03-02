@@ -194,6 +194,7 @@ ble_hs_conn_alloc(uint16_t conn_handle)
     }
 
     STAILQ_INIT(&conn->bhc_tx_q);
+    STAILQ_INIT(&conn->att_tx_q);
 
     STATS_INC(ble_hs_stats, conn_create);
 
@@ -479,11 +480,13 @@ ble_hs_conn_addrs(const struct ble_hs_conn *conn,
     case BLE_ADDR_PUBLIC_ID:
         addrs->peer_id_addr.type = BLE_ADDR_PUBLIC;
         addrs->peer_ota_addr = conn->bhc_peer_rpa_addr;
+        addrs->peer_ota_addr.type = conn->bhc_peer_addr.type;
         break;
 
     case BLE_ADDR_RANDOM_ID:
         addrs->peer_id_addr.type = BLE_ADDR_RANDOM;
         addrs->peer_ota_addr = conn->bhc_peer_rpa_addr;
+        addrs->peer_ota_addr.type = conn->bhc_peer_addr.type;
         break;
 
     default:

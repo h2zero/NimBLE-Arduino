@@ -22,6 +22,9 @@
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/host/include/host/ble_hs_adv.h"
 #include "ble_hs_priv.h"
+#if MYNEWT_VAL(ENC_ADV_DATA)
+#include "nimble/nimble/host/include/host/ble_ead.h"
+#endif
 
 struct find_field_data {
     uint8_t type;
@@ -526,6 +529,33 @@ adv_set_fields(const struct ble_hs_adv_fields *adv_fields,
         }
     }
 
+    /*** 0x27 - LE Supported Features. */
+    if (adv_fields->le_supp_feat_is_present) {
+        rc = ble_hs_adv_set_flat_mbuf(BLE_HS_ADV_TYPE_LE_SUPP_FEAT,
+                                      BLE_HS_ADV_LE_SUPP_FEAT_LEN,
+                                      adv_fields->le_supp_feat, dst, &dst_len_local,
+                                      max_len, om);
+    }
+
+    /*** 0x2f - Advertising interval - long. */
+    if (adv_fields->adv_itvl_long_is_present && adv_fields->adv_itvl_long > 0xFFFF) {
+        rc = ble_hs_adv_set_flat_mbuf(BLE_HS_ADV_TYPE_ADV_ITVL_LONG,
+                                      BLE_HS_ADV_ADV_ITVL_LONG_LEN,
+                                      &adv_fields->adv_itvl_long, dst, &dst_len_local,
+                                      max_len, om);
+    }
+
+#if MYNEWT_VAL(ENC_ADV_DATA)
+    /*** 0x31 - Encrypted Advertising Data. */
+    if ((adv_fields->enc_adv_data != NULL) &&
+        (adv_fields->enc_adv_data_len > BLE_EAD_RANDOMIZER_SIZE + BLE_EAD_MIC_SIZE)) {
+        rc = ble_hs_adv_set_flat_mbuf(BLE_HS_ADV_TYPE_ENC_ADV_DATA,
+                                      adv_fields->enc_adv_data_len,
+                                      adv_fields->enc_adv_data, dst, &dst_len_local,
+                                      max_len, om);
+    }
+#endif
+
     /*** 0xff - Manufacturer specific data. */
     if ((adv_fields->mfg_data != NULL) && (adv_fields->mfg_data_len >= 2)) {
         rc = ble_hs_adv_set_flat_mbuf(BLE_HS_ADV_TYPE_MFG_DATA,
@@ -861,6 +891,13 @@ ble_hs_adv_parse_one_field(struct ble_hs_adv_fields *adv_fields,
             return rc;
         }
         break;
+
+#if MYNEWT_VAL(ENC_ADV_DATA)
+    case BLE_HS_ADV_TYPE_ENC_ADV_DATA:
+        adv_fields->enc_adv_data = data;
+        adv_fields->enc_adv_data_len = data_len;
+        break;
+#endif
 
     case BLE_HS_ADV_TYPE_MFG_DATA:
         adv_fields->mfg_data = data;

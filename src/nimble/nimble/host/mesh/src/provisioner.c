@@ -9,13 +9,14 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
+
 #if MYNEWT_VAL(BLE_MESH)
 
 #define MESH_LOG_MODULE BLE_MESH_PROV_LOG
 
 #include "crypto.h"
 #include "adv.h"
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "net.h"
 #include "rpl.h"
 #include "beacon.h"
@@ -24,6 +25,7 @@
 #include "proxy.h"
 #include "prov.h"
 #include "settings.h"
+#include "testing.h"
 
 static struct {
 	struct bt_mesh_cdb_node *node;

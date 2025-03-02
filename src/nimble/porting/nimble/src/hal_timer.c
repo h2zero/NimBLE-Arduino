@@ -22,10 +22,10 @@
 #include <stdint.h>
 #include <assert.h>
 #include <errno.h>
-#include "../include/os/os.h"
+#include "nimble/porting/nimble/include/os/os.h"
 #include "nrfx.h"
-#include "../include/hal/hal_timer.h"
-#include "../include/os/os_trace_api.h"
+#include "nimble/porting/nimble/include/hal/hal_timer.h"
+#include "nimble/porting/nimble/include/os/os_trace_api.h"
 
 /* IRQ prototype */
 typedef void (*hal_timer_irq_handler_t)(void);
@@ -185,7 +185,7 @@ nrf_timer_set_ocmp(struct nrf52_hal_timer *bsptimer, uint32_t expiry)
         } else {
             rtctimer->INTENCLR = RTC_INTENCLR_TICK_Msk;
 
-            if (delta_t < (1UL << 24)) {
+            if (delta_t < (1L << 24)) {
                 rtctimer->CC[NRF_RTC_TIMER_CC_INT] = expiry & 0x00ffffff;
             } else {
                 /* CC too far ahead. Just make sure we set compare far ahead */
@@ -539,8 +539,10 @@ hal_timer_init(int timer_num, void *cfg)
 
     /* Disable IRQ, set priority and set vector in table */
     NVIC_DisableIRQ(irq_num);
+#ifndef RIOT_VERSION
     NVIC_SetPriority(irq_num, (1 << __NVIC_PRIO_BITS) - 1);
-#if MYNEWT
+#endif
+#ifdef MYNEWT
     NVIC_SetVector(irq_num, (uint32_t)irq_isr);
 #else
     ble_npl_hw_set_isr(irq_num, irq_isr);

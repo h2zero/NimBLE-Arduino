@@ -25,7 +25,7 @@
 #include "nimble/porting/nimble/include/os/queue.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
 #if MYNEWT_VAL(ENC_ADV_DATA)
-#include "../include/host/ble_ead.h"
+#include "nimble/nimble/host/include/host/ble_ead.h"
 #endif
 
 #ifdef __cplusplus
@@ -386,7 +386,8 @@ uint8_t *ble_sm_our_pair_rand(struct ble_sm_proc *proc);
 uint8_t *ble_sm_peer_pair_rand(struct ble_sm_proc *proc);
 int ble_sm_ioact_state(uint8_t action);
 int ble_sm_proc_can_advance(struct ble_sm_proc *proc);
-void ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res);
+void ble_sm_process_result(uint16_t conn_handle, struct ble_sm_result *res,
+                           bool tx_fail);
 void ble_sm_confirm_advance(struct ble_sm_proc *proc);
 void ble_sm_ia_ra(struct ble_sm_proc *proc,
                   uint8_t *out_iat, uint8_t *out_ia,

@@ -74,7 +74,7 @@
 #ifndef __TC_CBC_MODE_H__
 #define __TC_CBC_MODE_H__
 
-#include "aes.h"
+#include <nimble/ext/tinycrypt/include/tinycrypt/aes.h>
 
 #ifdef __cplusplus
 extern "C" {

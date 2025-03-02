@@ -6,8 +6,8 @@
 
 #include <inttypes.h>
 #include <stddef.h>
-#include "../include/host/ble_aes_ccm.h"
-#include "../src/ble_hs_conn_priv.h"
+#include "nimble/nimble/host/include/host/ble_aes_ccm.h"
+#include "nimble/nimble/host/src/ble_hs_conn_priv.h"
 
 #if MYNEWT_VAL(ENC_ADV_DATA)
 
@@ -265,14 +265,20 @@ int ble_aes_ccm_decrypt(const uint8_t key[16], uint8_t nonce[13], const uint8_t 
                         uint8_t *out_msg, size_t mic_size)
 {
     uint8_t mic[16];
+    uint8_t key_reversed[16];
 
     if (aad_len >= 0xff00 || mic_size > sizeof(mic)) {
         return BLE_HS_EINVAL;
     }
 
-    ble_aes_ccm_crypt(key, nonce, enc_msg, out_msg, msg_len);
+    /** Setting the correct endian-ness of the key */
+    for (int i = 0; i < 16; i++) {
+        key_reversed[i] = key[15 - i];
+    }
 
-    ble_aes_ccm_auth(key, nonce, out_msg, msg_len, aad, aad_len, mic, mic_size);
+    ble_aes_ccm_crypt(key_reversed, nonce, enc_msg, out_msg, msg_len);
+
+    ble_aes_ccm_auth(key_reversed, nonce, out_msg, msg_len, aad, aad_len, mic, mic_size);
 
     /*if (memcmp(mic, enc_msg + msg_len, mic_size)) {
         printf("\n%s return here", __func__);
@@ -286,16 +292,25 @@ int ble_aes_ccm_encrypt(const uint8_t key[16], uint8_t nonce[13], const uint8_t 
                         size_t msg_len, const uint8_t *aad, size_t aad_len,
                         uint8_t *out_msg, size_t mic_size)
 {
+    /** MIC starts after encrypted message and is part of encrypted advertisement data */
     uint8_t *mic = out_msg + msg_len;
+    uint8_t key_reversed[16];
 
     /* Unsupported AAD size */
     if (aad_len >= 0xff00 || mic_size > 16) {
         return BLE_HS_EINVAL;
     }
 
-    ble_aes_ccm_auth(key, nonce, out_msg, msg_len, aad, aad_len, mic, mic_size);
+    /* Correcting the endian-ness of the key */
+    for (int i = 0; i < 16; i++) {
+        key_reversed[i] = key[15 - i];
+    }
 
-    ble_aes_ccm_crypt(key, nonce, msg, out_msg, msg_len);
+    /** Calculating MIC */
+    ble_aes_ccm_auth(key_reversed, nonce, msg, msg_len, aad, aad_len, mic, mic_size);
+
+    /** Encrypting advertisment */
+    ble_aes_ccm_crypt(key_reversed, nonce, msg, out_msg, msg_len);
 
     return 0;
 }
