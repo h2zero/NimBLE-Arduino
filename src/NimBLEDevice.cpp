@@ -844,7 +844,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
     if (!m_initialized) {
 # ifdef ESP_PLATFORM
 
-#  ifdef CONFIG_ENABLE_ARDUINO_DEPENDS
+#  if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED 
         // make sure the linker includes esp32-hal-bt.c so Arduino init doesn't release BLE memory.
         btStarted();
 #  endif
