@@ -620,13 +620,10 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
     switch (ctxt->op) {
         case BLE_GATT_ACCESS_OP_READ_DSC:
         case BLE_GATT_ACCESS_OP_READ_CHR: {
-            // Don't call readEvent if this is an internal read (handle is NONE)
-            if (connHandle != BLE_HS_CONN_HANDLE_NONE) {
-                // If the packet header is only 8 bytes then this is a follow up of a long read
-                // so we don't want to call the onRead() callback again.
-                if (ctxt->om->om_pkthdr_len > 8 || val.size() <= (ble_att_mtu(connHandle) - 3)) {
-                    pAtt->readEvent(peerInfo);
-                }
+            // Don't call readEvent if the buffer len is 0 (this is a follow up to a previous read),
+            // or if this is an internal read (handle is NONE)
+            if (ctxt->om->om_len > 0 && connHandle != BLE_HS_CONN_HANDLE_NONE) {
+                pAtt->readEvent(peerInfo);
             }
 
             ble_npl_hw_enter_critical();
