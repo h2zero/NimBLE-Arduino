@@ -445,7 +445,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
 
                         chr->m_pCallbacks->onSubscribe(chr,
                                                        peerInfo,
-                                                       event->subscribe.cur_notify + event->subscribe.cur_indicate);
+                                                       event->subscribe.cur_notify + (event->subscribe.cur_indicate << 1));
                     }
                 }
             }
