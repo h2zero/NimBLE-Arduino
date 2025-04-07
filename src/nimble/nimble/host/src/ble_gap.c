@@ -7941,7 +7941,7 @@ ble_gap_host_check_status(void)
 
     /* Check if privacy is disabled */
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
-    extern int is_ble_hs_resolv_enabled(void);
+    extern uint8_t is_ble_hs_resolv_enabled(void);
 
     if (is_ble_hs_resolv_enabled()) {
         BLE_HS_LOG(ERROR, "Host based Privacy not disabled \n");
