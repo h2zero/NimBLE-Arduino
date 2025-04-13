@@ -66,7 +66,7 @@ void setup() {
     Serial.printf("Deep sleep (%llds since last reset, %llds since last boot)\n",
                   nowTimeStruct.tv_sec,
                   nowTimeStruct.tv_sec - last);
-    last      = nowTimeStruct.tv_sec;
+    last = nowTimeStruct.tv_sec;
 
     NimBLEDevice::init("TLMBeacon");
     NimBLEDevice::setPower(BEACON_POWER);

@@ -29,8 +29,8 @@ void setup() {
     Serial.println("Starting NimBLE Client");
 
     NimBLEDevice::init("");
-    NimBLEDevice::setPower(3); /** +3db */
-    NimBLEDevice::setSecurityAuth(true, true, true); /** bonding, MITM, BLE secure connections */
+    NimBLEDevice::setPower(3);                               /** +3db */
+    NimBLEDevice::setSecurityAuth(true, true, true);         /** bonding, MITM, BLE secure connections */
     NimBLEDevice::setSecurityIOCap(BLE_HS_IO_KEYBOARD_ONLY); /** passkey */
     NimBLEScan*       pScan   = NimBLEDevice::getScan();
     NimBLEScanResults results = pScan->getResults(5 * 1000);

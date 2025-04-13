@@ -40,8 +40,8 @@ void setup() {
     NimBLEDevice::init("");                         // Initialize the device, you can specify a device name if you want.
     NimBLEScan* pBLEScan = NimBLEDevice::getScan(); // Create the scan object.
     pBLEScan->setScanCallbacks(&scanCallbacks, false); // Set the callback for when devices are discovered, no duplicates.
-    pBLEScan->setActiveScan(true);          // Set active scanning, this will get more data from the advertiser.
-    pBLEScan->setMaxResults(0);             // Do not store the scan results, use callback only.
+    pBLEScan->setActiveScan(true);            // Set active scanning, this will get more data from the advertiser.
+    pBLEScan->setMaxResults(0);               // Do not store the scan results, use callback only.
     pBLEScan->start(scanTimeMs, false, true); // duration, not a continuation of last scan, restart to get all devices again.
     printf("Scanning...\n");
 }

@@ -71,14 +71,14 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
     void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
         Serial.printf("%s : onRead(), value: %s\n",
-               pCharacteristic->getUUID().toString().c_str(),
-               pCharacteristic->getValue().c_str());
+                      pCharacteristic->getUUID().toString().c_str(),
+                      pCharacteristic->getValue().c_str());
     }
 
     void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
         Serial.printf("%s : onWrite(), value: %s\n",
-               pCharacteristic->getUUID().toString().c_str(),
-               pCharacteristic->getValue().c_str());
+                      pCharacteristic->getUUID().toString().c_str(),
+                      pCharacteristic->getValue().c_str());
     }
 
     /**

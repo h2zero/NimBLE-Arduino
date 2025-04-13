@@ -79,7 +79,8 @@ class AdvCallbacks : public NimBLEExtAdvertisingCallbacks {
 #ifdef ESP_PLATFORM
         esp_deep_sleep_start();
 #else
-        systemRestart(); // nRF platforms restart then sleep via delay in setup.
+        delay(sleepSeconds * 1000); // system ON sleep mode for nRF platforms to simulate the esp deep sleep with timer wakeup
+        systemRestart();            // nRF platforms restart then sleep via delay in setup.
 #endif
     }
 
@@ -99,9 +100,6 @@ class AdvCallbacks : public NimBLEExtAdvertisingCallbacks {
 } advCallbacks;
 
 void setup() {
-#ifndef ESP_PLATFORM
-    delay(sleepSeconds * 1000); // system ON sleep mode for nRF platforms to simulate the esp deep sleep with timer wakeup
-#endif
     Serial.begin(115200);
 
     /** Initialize NimBLE and set the device name */
@@ -143,7 +141,7 @@ void setup() {
     extScannable.enableScanRequestCallback(true);
 
     /** Optional custom address for this advertisment. */
-    legacyConnectable.setAddress(NimBLEAddress("DE:AD:BE:EF:BA:AD"));
+    legacyConnectable.setAddress(NimBLEAddress("DE:AD:BE:EF:BA:AD", BLE_ADDR_RANDOM));
 
     /** Set the advertising data. */
     legacyConnectable.setName("Legacy");

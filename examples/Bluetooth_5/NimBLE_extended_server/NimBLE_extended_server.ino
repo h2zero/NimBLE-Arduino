@@ -75,15 +75,13 @@ class AdvertisingCallbacks : public NimBLEExtAdvertisingCallbacks {
 #ifdef ESP_PLATFORM
         esp_deep_sleep_start();
 #else
-        systemRestart(); // nRF platforms restart then sleep via delay in setup.
+        delay(sleepSeconds * 1000); // system ON sleep mode for nRF platforms to simulate the esp deep sleep with timer wakeup
+        systemRestart();            // nRF platforms restart then sleep via delay in setup.
 #endif
     }
 } advertisingCallbacks;
 
 void setup() {
-#ifndef ESP_PLATFORM
-    delay(sleepSeconds * 1000); // system ON sleep mode for nRF platforms to simulate the esp deep sleep with timer wakeup
-#endif
     Serial.begin(115200);
 
     /** Initialize NimBLE and set the device name */

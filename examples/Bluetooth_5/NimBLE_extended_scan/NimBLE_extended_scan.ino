@@ -20,9 +20,9 @@ static NimBLEScan::Phy scanPhy  = NimBLEScan::Phy::SCAN_ALL;
 class ScanCallbacks : public NimBLEScanCallbacks {
     void onResult(const NimBLEAdvertisedDevice* advertisedDevice) {
         Serial.printf("Advertised Device found: %s\n PHY1: %d\n PHY2: %d\n",
-               advertisedDevice->toString().c_str(),
-               advertisedDevice->getPrimaryPhy(),
-               advertisedDevice->getSecondaryPhy());
+                      advertisedDevice->toString().c_str(),
+                      advertisedDevice->getPrimaryPhy(),
+                      advertisedDevice->getSecondaryPhy());
     }
 
     /** Callback to process the results of the completed scan or restart it */
@@ -52,6 +52,7 @@ class ScanCallbacks : public NimBLEScanCallbacks {
 } scanCallbacks;
 
 void setup() {
+    Serial.begin(115200);
     Serial.printf("Starting Extended Scanner\n");
 
     /** Initialize NimBLE and set the device name */
