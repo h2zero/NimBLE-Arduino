@@ -57,6 +57,11 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
     switch (event->type) {
         case BLE_GAP_EVENT_EXT_DISC:
         case BLE_GAP_EVENT_DISC: {
+            if (!pScan->isScanning()) {
+                NIMBLE_LOGI(LOG_TAG, "Scan stopped, ignoring event");
+                return 0;
+            }
+
 # if CONFIG_BT_NIMBLE_EXT_ADV
             const auto& disc        = event->ext_disc;
             const bool  isLegacyAdv = disc.props & BLE_HCI_ADV_LEGACY_MASK;
@@ -483,11 +488,11 @@ void NimBLEScan::clearResults() {
  * @brief Dump the scan results to the log.
  */
 void NimBLEScanResults::dump() const {
-#if CONFIG_NIMBLE_CPP_LOG_LEVEL >=3
+# if CONFIG_NIMBLE_CPP_LOG_LEVEL >= 3
     for (const auto& dev : m_deviceVec) {
         NIMBLE_LOGI(LOG_TAG, "- %s", dev->toString().c_str());
     }
-#endif
+# endif
 } // dump
 
 /**
