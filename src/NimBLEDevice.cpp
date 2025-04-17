@@ -76,7 +76,7 @@ extern "C" void ble_store_config_init(void);
 /**
  * Singletons for the NimBLEDevice.
  */
-NimBLEDeviceCallbacks NimBLEDevice::defaultDeviceCallbacks{};
+NimBLEDeviceCallbacks  NimBLEDevice::defaultDeviceCallbacks{};
 NimBLEDeviceCallbacks* NimBLEDevice::m_pDeviceCallbacks = &defaultDeviceCallbacks;
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
@@ -476,14 +476,14 @@ bool NimBLEDevice::setPower(int8_t dbm, NimBLETxPowerType type) {
         dbm++; // round up to the next multiple of 3 to be able to target 20dbm
     }
 
-    bool success = false;
-    esp_power_level_t espPwr = static_cast<esp_power_level_t>(dbm / 3 + ESP_PWR_LVL_N0);
+    bool              success = false;
+    esp_power_level_t espPwr  = static_cast<esp_power_level_t>(dbm / 3 + ESP_PWR_LVL_N0);
     if (type == NimBLETxPowerType::All) {
         success  = setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_ADV);
         success &= setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_SCAN);
         success &= setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_DEFAULT);
     } else if (type == NimBLETxPowerType::Advertise) {
-        success = setPowerLevel(espPwr,  ESP_BLE_PWR_TYPE_ADV);
+        success = setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_ADV);
     } else if (type == NimBLETxPowerType::Scan) {
         success = setPowerLevel(espPwr, ESP_BLE_PWR_TYPE_SCAN);
     } else if (type == NimBLETxPowerType::Connection) {
@@ -495,15 +495,13 @@ bool NimBLEDevice::setPower(int8_t dbm, NimBLETxPowerType type) {
 # else
     (void)type; // unused
     NIMBLE_LOGD(LOG_TAG, ">> setPower: %d", dbm);
-    ble_hci_vs_set_tx_pwr_cp cmd{dbm};
-    ble_hci_vs_set_tx_pwr_rp rsp{0};
-    int rc = ble_hs_hci_send_vs_cmd(BLE_HCI_OCF_VS_SET_TX_PWR, &cmd, sizeof(cmd), &rsp, sizeof(rsp));
+    int rc = ble_phy_tx_power_set(dbm);
     if (rc) {
         NIMBLE_LOGE(LOG_TAG, "failed to set TX power, rc: %04x\n", rc);
         return false;
     }
 
-    NIMBLE_LOGD(LOG_TAG, "TX power set to %d dBm\n", rsp.tx_power);
+    NIMBLE_LOGD(LOG_TAG, "TX power set to %d dBm\n", dbm);
     return true;
 # endif
 } // setPower
@@ -539,7 +537,7 @@ int NimBLEDevice::getPower(NimBLETxPowerType type) {
 #  endif
 # else
     (void)type; // unused
-    return ble_phy_txpwr_get();
+    return ble_phy_tx_power_get();
 # endif
 } // getPower
 
@@ -844,7 +842,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
     if (!m_initialized) {
 # ifdef ESP_PLATFORM
 
-#  if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED 
+#  if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED
         // make sure the linker includes esp32-hal-bt.c so Arduino init doesn't release BLE memory.
         btStarted();
 #  endif

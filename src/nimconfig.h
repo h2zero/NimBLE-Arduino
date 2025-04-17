@@ -4,6 +4,11 @@
 #include "sdkconfig.h"
 #else
 #include "ext_nimble_config.h"
+/* Clear redefinition warnings */
+#undef CONFIG_BT_NIMBLE_ROLE_CENTRAL
+#undef CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#undef CONFIG_BT_NIMBLE_ROLE_BROADCASTER
+#undef CONFIG_BT_NIMBLE_ROLE_OBSERVER
 #endif
 
 #include "nimconfig_rename.h"
