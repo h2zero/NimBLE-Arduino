@@ -95,12 +95,19 @@ struct ble_hs_conn {
     struct ble_gatts_conn bhc_gatt_svr;
 
     struct ble_gap_sec_state bhc_sec_state;
+    struct ble_gap_read_rem_ver_params bhc_rd_rem_ver_params;
 
     ble_gap_event_fn *bhc_cb;
     void *bhc_cb_arg;
 
 #if MYNEWT_VAL(BLE_PERIODIC_ADV)
     struct ble_hs_periodic_sync *psync;
+#endif
+
+    STAILQ_HEAD(, os_mbuf_pkthdr) att_tx_q;
+    bool client_att_busy;
+#if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
+    uint16_t default_cid;
 #endif
 };
 

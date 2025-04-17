@@ -27,7 +27,9 @@ struct ble_hs_cfg ble_hs_cfg = {
     .sm_bonding = MYNEWT_VAL(BLE_SM_BONDING),
     .sm_mitm = MYNEWT_VAL(BLE_SM_MITM),
     .sm_sc = MYNEWT_VAL(BLE_SM_SC),
+    .sm_sc_only = MYNEWT_VAL(BLE_SM_SC_ONLY),
     .sm_keypress = MYNEWT_VAL(BLE_SM_KEYPRESS),
     .sm_our_key_dist = MYNEWT_VAL(BLE_SM_OUR_KEY_DIST),
     .sm_their_key_dist = MYNEWT_VAL(BLE_SM_THEIR_KEY_DIST),
+    .eatt = MYNEWT_VAL(BLE_EATT_CHAN_NUM),
 };

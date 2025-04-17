@@ -35,7 +35,7 @@ static struct ble_l2cap_coc_srv_list ble_l2cap_coc_srvs;
 
 static os_membuf_t ble_l2cap_coc_srv_mem[
     OS_MEMPOOL_SIZE(MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM),
-                    sizeof (struct ble_l2cap_coc_srv))
+                    sizeof(struct ble_l2cap_coc_srv))
 ];
 
 static struct os_mempool ble_l2cap_coc_srv_pool;
@@ -75,9 +75,9 @@ ble_l2cap_coc_srv_alloc(void)
 
 int
 ble_l2cap_coc_create_server(uint16_t psm, uint16_t mtu,
-                                        ble_l2cap_event_fn *cb, void *cb_arg)
+                            ble_l2cap_event_fn *cb, void *cb_arg)
 {
-    struct ble_l2cap_coc_srv * srv;
+    struct ble_l2cap_coc_srv *srv;
 
     srv = ble_l2cap_coc_srv_alloc();
     if (!srv) {
@@ -111,7 +111,7 @@ ble_l2cap_clear_used_cid(uint32_t *cid_mask, int bit)
 static inline int
 ble_l2cap_get_first_available_bit(uint32_t *cid_mask)
 {
-    int i;
+    unsigned int i;
     int bit = 0;
 
     for (i = 0; i < BLE_HS_CONN_L2CAP_COC_CID_MASK_LEN; i++) {
@@ -121,7 +121,7 @@ ble_l2cap_get_first_available_bit(uint32_t *cid_mask)
          * a) If bit == 0 means all the bits are used
          * b) this function returns 1 + index
          */
-        bit = __builtin_ffs(~(unsigned int)(cid_mask[i]));
+        bit = __builtin_ffs(~(unsigned int) (cid_mask[i]));
         if (bit != 0) {
             break;
         }
@@ -156,8 +156,8 @@ ble_l2cap_coc_srv_find(uint16_t psm)
     srv = NULL;
     STAILQ_FOREACH(cur, &ble_l2cap_coc_srvs, next) {
         if (cur->psm == psm) {
-                srv = cur;
-                break;
+            srv = cur;
+            break;
         }
     }
 
@@ -183,6 +183,7 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
 {
     int rc;
     struct os_mbuf **om;
+    struct os_mbuf *rx_sdu;
     struct ble_l2cap_coc_endpoint *rx;
     uint16_t om_total;
 
@@ -194,10 +195,13 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
     rx = &chan->coc_rx;
     BLE_HS_DBG_ASSERT(rx != NULL);
 
+    rx_sdu = rx->sdus[chan->coc_rx.current_sdu_idx];
+    BLE_HS_DBG_ASSERT(rx_sdu != NULL);
+
     om_total = OS_MBUF_PKTLEN(*om);
 
     /* First LE frame */
-    if (OS_MBUF_PKTLEN(rx->sdu) == 0) {
+    if (OS_MBUF_PKTLEN(rx_sdu) == 0) {
         uint16_t sdu_len;
 
         rc = ble_hs_mbuf_pullup_base(om, BLE_L2CAP_SDU_SIZE);
@@ -207,12 +211,15 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
 
         sdu_len = get_le16((*om)->om_data);
 
+        BLE_HS_LOG(DEBUG, "First LE frame received %d, SDU len: %d\n",
+                   om_total, sdu_len + 2);
+
         /* We should receive payload of size sdu_len + 2 bytes of sdu_len field */
         if (om_total > sdu_len + 2) {
             BLE_HS_LOG(ERROR, "Payload larger than expected (%d>%d)\n",
                        om_total, sdu_len + 2);
             /* Disconnect peer with invalid behaviour */
-            rx->sdu = NULL;
+            rx_sdu = NULL;
             rx->data_offset = 0;
             ble_l2cap_disconnect(chan);
             return BLE_HS_EBADDATA;
@@ -226,12 +233,13 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
             return BLE_HS_EBADDATA;
         }
 
-        BLE_HS_LOG(DEBUG, "sdu_len=%d, received LE frame=%d, credits=%d\n",
-                   sdu_len, om_total, rx->credits);
+        BLE_HS_LOG(DEBUG,
+                   "sdu_len=%d, received LE frame=%d, credits=%d, current_sdu_idx=%d\n",
+                   sdu_len, om_total, rx->credits, chan->coc_rx.current_sdu_idx);
 
-        os_mbuf_adj(*om , BLE_L2CAP_SDU_SIZE);
+        os_mbuf_adj(*om, BLE_L2CAP_SDU_SIZE);
 
-        rc = os_mbuf_appendfrom(rx->sdu, *om, 0, om_total - BLE_L2CAP_SDU_SIZE);
+        rc = os_mbuf_appendfrom(rx_sdu, *om, 0, om_total - BLE_L2CAP_SDU_SIZE);
         if (rc != 0) {
             /* FIXME: User shall give us big enough buffer.
              * need to handle it better
@@ -246,16 +254,16 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
     } else {
         BLE_HS_LOG(DEBUG, "Continuation...received %d\n", (*om)->om_len);
 
-        if (OS_MBUF_PKTLEN(rx->sdu) + (*om)->om_len > rx->data_offset) {
+        if (OS_MBUF_PKTLEN(rx_sdu) + (*om)->om_len > rx->data_offset) {
             /* Disconnect peer with invalid behaviour */
             BLE_HS_LOG(ERROR, "Payload larger than expected (%d>%d)\n",
-                       OS_MBUF_PKTLEN(rx->sdu) + (*om)->om_len, rx->data_offset);
-            rx->sdu = NULL;
+                       OS_MBUF_PKTLEN(rx_sdu) + (*om)->om_len, rx->data_offset);
+            rx_sdu = NULL;
             rx->data_offset = 0;
             ble_l2cap_disconnect(chan);
             return BLE_HS_EBADDATA;
         }
-        rc  = os_mbuf_appendfrom(rx->sdu, *om, 0, om_total);
+        rc = os_mbuf_appendfrom(rx_sdu, *om, 0, om_total);
         if (rc != 0) {
             /* FIXME: need to handle it better */
             BLE_HS_LOG(DEBUG, "Could not append data rc=%d\n", rc);
@@ -265,17 +273,19 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
 
     rx->credits--;
 
-    if (OS_MBUF_PKTLEN(rx->sdu) == rx->data_offset) {
-        struct os_mbuf *sdu_rx = rx->sdu;
+    if (OS_MBUF_PKTLEN(rx_sdu) == rx->data_offset) {
+        struct os_mbuf *sdu_rx = rx_sdu;
 
         BLE_HS_LOG(DEBUG, "Received sdu_len=%d, credits left=%d\n",
-                   OS_MBUF_PKTLEN(rx->sdu), rx->credits);
+                   OS_MBUF_PKTLEN(rx_sdu), rx->credits);
 
         /* Lets get back control to os_mbuf to application.
          * Since it this callback application might want to set new sdu
          * we need to prepare space for this. Therefore we need sdu_rx
          */
-        rx->sdu = NULL;
+        rx_sdu = NULL;
+        chan->coc_rx.current_sdu_idx =
+            (chan->coc_rx.current_sdu_idx + 1) % BLE_L2CAP_SDU_BUFF_CNT;
         rx->data_offset = 0;
 
         ble_l2cap_event_coc_received_data(chan, sdu_rx);
@@ -288,7 +298,7 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
      * However, we still have buffer to for next LE Frame so lets give one more
      * credit to peer so it can send us full SDU
      */
-    if (rx->credits == 0) {
+    if (chan->disable_auto_credit_update == false && rx->credits == 0) {
         /* Remote did not send full SDU. Lets give him one more credits to do
          * so since we have still buffer to handle it
          */
@@ -296,14 +306,16 @@ ble_l2cap_coc_rx_fn(struct ble_l2cap_chan *chan)
         ble_l2cap_sig_le_credits(chan->conn_handle, chan->scid, rx->credits);
     }
 
-    BLE_HS_LOG(DEBUG, "Received partial sdu_len=%d, credits left=%d\n",
-               OS_MBUF_PKTLEN(rx->sdu), rx->credits);
+    BLE_HS_LOG(DEBUG,
+               "Received partial sdu_len=%d, credits left=%d, current_sdu_idx=%d\n",
+               OS_MBUF_PKTLEN(rx_sdu), rx->credits, chan->coc_rx.current_sdu_idx);
 
     return 0;
 }
 
 void
-ble_l2cap_coc_set_new_mtu_mps(struct ble_l2cap_chan *chan, uint16_t mtu, uint16_t mps)
+ble_l2cap_coc_set_new_mtu_mps(struct ble_l2cap_chan *chan, uint16_t mtu,
+                              uint16_t mps)
 {
     chan->my_coc_mps = mps;
     chan->coc_rx.mtu = mtu;
@@ -332,7 +344,17 @@ ble_l2cap_coc_chan_alloc(struct ble_hs_conn *conn, uint16_t psm, uint16_t mtu,
     chan->my_coc_mps = MYNEWT_VAL(BLE_L2CAP_COC_MPS);
     chan->rx_fn = ble_l2cap_coc_rx_fn;
     chan->coc_rx.mtu = mtu;
-    chan->coc_rx.sdu = sdu_rx;
+    chan->coc_rx.sdus[0] = sdu_rx;
+    for (int i = 1; i < BLE_L2CAP_SDU_BUFF_CNT; i++) {
+        chan->coc_rx.sdus[i] = NULL;
+    }
+    chan->coc_rx.current_sdu_idx = 0;
+
+    if (BLE_L2CAP_SDU_BUFF_CNT == 1) {
+        chan->coc_rx.next_sdu_alloc_idx = 0;
+    } else {
+        chan->coc_rx.next_sdu_alloc_idx = chan->coc_rx.sdus[0] == NULL ? 0 : 1;
+    }
 
     /* Number of credits should allow to send full SDU with on given
      * L2CAP MTU
@@ -370,7 +392,7 @@ ble_l2cap_coc_create_srv_chan(struct ble_hs_conn *conn, uint16_t psm,
 static void
 ble_l2cap_event_coc_disconnected(struct ble_l2cap_chan *chan)
 {
-    struct ble_l2cap_event event = { };
+    struct ble_l2cap_event event = {};
 
     /* FIXME */
     if (!chan->cb) {
@@ -389,7 +411,7 @@ ble_l2cap_coc_cleanup_chan(struct ble_hs_conn *conn, struct ble_l2cap_chan *chan
 {
     /* PSM 0 is used for fixed channels. */
     if (chan->psm == 0) {
-            return;
+        return;
     }
 
     ble_l2cap_event_coc_disconnected(chan);
@@ -399,14 +421,16 @@ ble_l2cap_coc_cleanup_chan(struct ble_hs_conn *conn, struct ble_l2cap_chan *chan
                                  chan->scid - BLE_L2CAP_COC_CID_START);
     }
 
-    os_mbuf_free_chain(chan->coc_rx.sdu);
-    os_mbuf_free_chain(chan->coc_tx.sdu);
+    for (int i = 0; i < BLE_L2CAP_SDU_BUFF_CNT; i++) {
+        os_mbuf_free_chain(chan->coc_rx.sdus[i]);
+    }
+    os_mbuf_free_chain(chan->coc_tx.sdus[0]);
 }
 
 static void
 ble_l2cap_event_coc_unstalled(struct ble_l2cap_chan *chan, int status)
 {
-    struct ble_l2cap_event event = { };
+    struct ble_l2cap_event event = {};
 
     if (!chan->cb) {
         return;
@@ -435,7 +459,7 @@ ble_l2cap_coc_continue_tx(struct ble_l2cap_chan *chan)
 
     /* If there is no data to send, just return success */
     tx = &chan->coc_tx;
-    if (!tx->sdu) {
+    if (!tx->sdus[0]) {
         ble_hs_unlock();
         return 0;
     }
@@ -446,7 +470,7 @@ ble_l2cap_coc_continue_tx(struct ble_l2cap_chan *chan)
         BLE_HS_LOG(DEBUG, "Available credits %d\n", tx->credits);
 
         /* lets calculate data we are going to send */
-        left_to_send = OS_MBUF_PKTLEN(tx->sdu) - tx->data_offset;
+        left_to_send = OS_MBUF_PKTLEN(tx->sdus[0]) - tx->data_offset;
 
         if (tx->data_offset == 0) {
             sdu_size_offset = BLE_L2CAP_SDU_SIZE;
@@ -466,9 +490,10 @@ ble_l2cap_coc_continue_tx(struct ble_l2cap_chan *chan)
 
         if (tx->data_offset == 0) {
             /* First packet needs SDU len first. Left to send */
-            uint16_t l = htole16(OS_MBUF_PKTLEN(tx->sdu));
+            uint16_t l = htole16(OS_MBUF_PKTLEN(tx->sdus[0]));
 
-            BLE_HS_LOG(DEBUG, "Sending SDU len=%d\n", OS_MBUF_PKTLEN(tx->sdu));
+            BLE_HS_LOG(DEBUG, "Sending SDU len=%d\n",
+                       OS_MBUF_PKTLEN(tx->sdus[0]));
             rc = os_mbuf_append(txom, &l, sizeof(uint16_t));
             if (rc) {
                 rc = BLE_HS_ENOMEM;
@@ -481,7 +506,7 @@ ble_l2cap_coc_continue_tx(struct ble_l2cap_chan *chan)
          * that for first packet we need to decrease data size by 2 bytes for sdu
          * size
          */
-        rc = os_mbuf_appendfrom(txom, tx->sdu, tx->data_offset,
+        rc = os_mbuf_appendfrom(txom, tx->sdus[0], tx->data_offset,
                                 len - sdu_size_offset);
         if (rc) {
             rc = BLE_HS_ENOMEM;
@@ -502,18 +527,19 @@ ble_l2cap_coc_continue_tx(struct ble_l2cap_chan *chan)
         }
 
         BLE_HS_LOG(DEBUG, "Sent %d bytes, credits=%d, to send %d bytes \n",
-                  len, tx->credits, OS_MBUF_PKTLEN(tx->sdu)- tx->data_offset);
+                   len, tx->credits,
+                   OS_MBUF_PKTLEN(tx->sdus[0]) - tx->data_offset);
 
-        if (tx->data_offset == OS_MBUF_PKTLEN(tx->sdu)) {
+        if (tx->data_offset == OS_MBUF_PKTLEN(tx->sdus[0])) {
             BLE_HS_LOG(DEBUG, "Complete package sent\n");
-            os_mbuf_free_chain(tx->sdu);
-            tx->sdu = NULL;
+            os_mbuf_free_chain(tx->sdus[0]);
+            tx->sdus[0] = NULL;
             tx->data_offset = 0;
             break;
         }
     }
 
-    if (tx->sdu) {
+    if (tx->sdus[0]) {
         /* Not complete SDU sent, wait for credits */
         tx->flags |= BLE_L2CAP_COC_FLAG_STALLED;
         ble_hs_unlock();
@@ -531,8 +557,8 @@ ble_l2cap_coc_continue_tx(struct ble_l2cap_chan *chan)
     return 0;
 
 failed:
-    os_mbuf_free_chain(tx->sdu);
-    tx->sdu = NULL;
+    os_mbuf_free_chain(tx->sdus[0]);
+    tx->sdus[0] = NULL;
 
     os_mbuf_free_chain(txom);
     if (tx->flags & BLE_L2CAP_COC_FLAG_STALLED) {
@@ -590,7 +616,15 @@ ble_l2cap_coc_recv_ready(struct ble_l2cap_chan *chan, struct os_mbuf *sdu_rx)
         return BLE_HS_EINVAL;
     }
 
-    chan->coc_rx.sdu = sdu_rx;
+    if (chan->coc_rx.sdus[0] != NULL &&
+        chan->coc_rx.next_sdu_alloc_idx == chan->coc_rx.current_sdu_idx &&
+        BLE_L2CAP_SDU_BUFF_CNT != 1) {
+        return BLE_HS_EBUSY;
+    }
+
+    chan->coc_rx.sdus[chan->coc_rx.next_sdu_alloc_idx] = sdu_rx;
+    chan->coc_rx.next_sdu_alloc_idx =
+        (chan->coc_rx.next_sdu_alloc_idx + 1) % BLE_L2CAP_SDU_BUFF_CNT;
 
     ble_hs_lock();
     conn = ble_hs_conn_find_assert(chan->conn_handle);
@@ -603,7 +637,7 @@ ble_l2cap_coc_recv_ready(struct ble_l2cap_chan *chan, struct os_mbuf *sdu_rx)
     /* We want to back only that much credits which remote side is missing
      * to be able to send complete SDU.
      */
-    if (chan->coc_rx.credits < c->initial_credits) {
+    if (chan->disable_auto_credit_update == false && chan->coc_rx.credits < c->initial_credits) {
         ble_hs_unlock();
         ble_l2cap_sig_le_credits(chan->conn_handle, chan->scid,
                                  c->initial_credits - chan->coc_rx.credits);
@@ -633,11 +667,11 @@ ble_l2cap_coc_send(struct ble_l2cap_chan *chan, struct os_mbuf *sdu_tx)
     }
 
     ble_hs_lock();
-    if (tx->sdu) {
+    if (tx->sdus[0]) {
         ble_hs_unlock();
         return BLE_HS_EBUSY;
     }
-    tx->sdu = sdu_tx;
+    tx->sdus[0] = sdu_tx;
 
 
     /* leave the host locked on purpose when ble_l2cap_coc_continue_tx() */
@@ -650,10 +684,10 @@ ble_l2cap_coc_init(void)
     STAILQ_INIT(&ble_l2cap_coc_srvs);
 
     return os_mempool_init(&ble_l2cap_coc_srv_pool,
-                         MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM),
-                         sizeof (struct ble_l2cap_coc_srv),
-                         ble_l2cap_coc_srv_mem,
-                         "ble_l2cap_coc_srv_pool");
+                           MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM),
+                           sizeof(struct ble_l2cap_coc_srv),
+                           ble_l2cap_coc_srv_mem,
+                           "ble_l2cap_coc_srv_pool");
 }
 
 #endif

@@ -20,13 +20,10 @@
 #ifndef _NPL_FREERTOS_H_
 #define _NPL_FREERTOS_H_
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if CONFIG_NIMBLE_STACK_USE_MEM_POOLS
 typedef void ble_npl_event_fn(struct ble_npl_event *ev);
 
 struct ble_npl_event_freertos {
@@ -58,7 +55,6 @@ struct ble_npl_sem_freertos {
 };
 
 typedef void ble_npl_event_fn_freertos(struct ble_npl_event_freertos *ev);
-#endif
 
 struct ble_npl_eventq *npl_freertos_eventq_dflt_get(void);
 
@@ -110,8 +106,11 @@ ble_npl_error_t npl_freertos_time_ms_to_ticks(uint32_t ms,
 
 ble_npl_error_t npl_freertos_time_ticks_to_ms(ble_npl_time_t ticks,
                                               uint32_t *out_ms);
-
+#ifdef ESP_PLATFORM
+void npl_freertos_hw_set_isr(int irqn, uint32_t addr);
+#else
 void npl_freertos_hw_set_isr(int irqn, void (*addr)(void));
+#endif
 
 uint32_t npl_freertos_hw_enter_critical(void);
 

@@ -495,15 +495,13 @@ bool NimBLEDevice::setPower(int8_t dbm, NimBLETxPowerType type) {
 # else
     (void)type; // unused
     NIMBLE_LOGD(LOG_TAG, ">> setPower: %d", dbm);
-    ble_hci_vs_set_tx_pwr_cp cmd{dbm};
-    ble_hci_vs_set_tx_pwr_rp rsp{0};
-    int rc = ble_hs_hci_send_vs_cmd(BLE_HCI_OCF_VS_SET_TX_PWR, &cmd, sizeof(cmd), &rsp, sizeof(rsp));
+    int rc = ble_phy_tx_power_set(dbm);
     if (rc) {
         NIMBLE_LOGE(LOG_TAG, "failed to set TX power, rc: %04x\n", rc);
         return false;
     }
 
-    NIMBLE_LOGD(LOG_TAG, "TX power set to %d dBm\n", rsp.tx_power);
+    NIMBLE_LOGD(LOG_TAG, "TX power set to %d dBm\n", dbm);
     return true;
 # endif
 } // setPower
@@ -539,7 +537,7 @@ int NimBLEDevice::getPower(NimBLETxPowerType type) {
 #  endif
 # else
     (void)type; // unused
-    return ble_phy_txpwr_get();
+    return ble_phy_tx_power_get();
 # endif
 } // getPower
 
@@ -844,7 +842,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
     if (!m_initialized) {
 # ifdef ESP_PLATFORM
 
-#  if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED 
+#  if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED
         // make sure the linker includes esp32-hal-bt.c so Arduino init doesn't release BLE memory.
         btStarted();
 #  endif

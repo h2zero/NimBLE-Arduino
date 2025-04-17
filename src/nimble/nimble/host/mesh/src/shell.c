@@ -10,19 +10,18 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
 
 #if MYNEWT_VAL(BLE_MESH_SHELL)
 
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
-#include "shell/shell.h"
-#include "console/console.h"
-#include "mesh/mesh.h"
-#include "mesh/main.h"
-#include "mesh/glue.h"
-#include "../include/mesh/testing.h"
+#include "nimble/nimble/host/mesh/src/shell.h"
+#include "nimble/console/console.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/main.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/testing.h"
 
 /* Private includes for raw Network & Transport layer access */
 #include "net.h"
@@ -32,11 +31,12 @@
 #include "lpn.h"
 #include "transport.h"
 #include "foundation.h"
+#include "testing.h"
 #include "settings.h"
 
 #if MYNEWT_VAL(BLE_MESH_SHELL_MODELS)
-#include "mesh/model_srv.h"
-#include "mesh/model_cli.h"
+#include "nimble/nimble/host/mesh/include/mesh/model_srv.h"
+#include "nimble/nimble/host/mesh/include/mesh/model_cli.h"
 #include "light_model.h"
 #endif
 
@@ -3688,4 +3688,3 @@ void ble_mesh_shell_init(void)
 
 #endif
 }
-#endif

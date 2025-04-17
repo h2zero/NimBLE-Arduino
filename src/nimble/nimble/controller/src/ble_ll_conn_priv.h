@@ -20,8 +20,8 @@
 #ifndef H_BLE_LL_CONN_PRIV_
 #define H_BLE_LL_CONN_PRIV_
 
-#include "../include/controller/ble_ll_conn.h"
-#include "../include/controller/ble_ll_hci.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_conn.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_hci.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -104,6 +104,11 @@ STAILQ_HEAD(ble_ll_conn_free_list, ble_ll_conn_sm);
 extern struct ble_ll_conn_active_list g_ble_ll_conn_active_list;
 extern struct ble_ll_conn_free_list g_ble_ll_conn_free_list;
 
+#if MYNEWT_VAL(BLE_LL_CONN_STRICT_SCHED)
+SLIST_HEAD(ble_ll_conn_css_list, ble_ll_conn_sm);
+extern struct ble_ll_conn_css_list g_ble_ll_conn_css_list;
+#endif
+
 struct ble_ll_conn_create_scan {
     uint8_t filter_policy;
     uint8_t own_addr_type;
@@ -177,7 +182,6 @@ int ble_ll_conn_periph_start(uint8_t *rxbuf, uint8_t pat,
 
 /* Link Layer interface */
 void ble_ll_conn_module_init(void);
-void ble_ll_conn_set_global_chanmap(uint8_t num_used_chans, const uint8_t *chanmap);
 void ble_ll_conn_module_reset(void);
 void ble_ll_conn_tx_pkt_in(struct os_mbuf *om, uint16_t handle, uint16_t len);
 int ble_ll_conn_rx_isr_start(struct ble_mbuf_hdr *rxhdr, uint32_t aa);
@@ -200,7 +204,7 @@ int ble_ll_conn_hci_param_rr(const uint8_t *cmdbuf, uint8_t len,
                              uint8_t *rspbuf, uint8_t *rsplen);
 int ble_ll_conn_hci_param_nrr(const uint8_t *cmdbuf, uint8_t len,
                              uint8_t *rspbuf, uint8_t *rsplen);
-int ble_ll_conn_create_cancel(ble_ll_hci_post_cmd_complete_cb *post_cmd_cb);
+int ble_ll_conn_create_cancel(void);
 void ble_ll_conn_num_comp_pkts_event_send(struct ble_ll_conn_sm *connsm);
 void ble_ll_conn_comp_event_send(struct ble_ll_conn_sm *connsm, uint8_t status,
                                  uint8_t *evbuf, struct ble_ll_adv_sm *advsm);
@@ -236,6 +240,7 @@ int ble_ll_conn_hci_subrate_req(const uint8_t *cmdbuf, uint8_t len,
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_PING)
 void ble_ll_conn_auth_pyld_timer_start(struct ble_ll_conn_sm *connsm);
+void ble_ll_conn_auth_pyld_timer_cb(struct ble_npl_event *ev);
 #else
 #define ble_ll_conn_auth_pyld_timer_start(x)
 #endif
@@ -246,11 +251,14 @@ bool ble_ll_conn_cth_flow_enable(bool enabled);
 void ble_ll_conn_cth_flow_process_cmd(const uint8_t *cmdbuf);
 #endif
 
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_DATA_LEN_EXT)
+int ble_ll_conn_set_data_len(struct ble_ll_conn_sm *connsm,
+                             uint16_t tx_octets, uint16_t tx_time,
+                             uint16_t rx_octets, uint16_t rx_time);
+#endif
+
 void ble_ll_conn_itvl_to_ticks(uint32_t itvl,
                                uint32_t *itvl_ticks, uint8_t *itvl_usecs);
-
-int ble_ll_hci_cmd_rx(uint8_t *cmd, void *arg);
-int ble_ll_hci_acl_rx(struct os_mbuf *om, void *arg);
 
 int ble_ll_conn_hci_le_rd_phy(const uint8_t *cmdbuf, uint8_t len,
                               uint8_t *rsp, uint8_t *rsplen);

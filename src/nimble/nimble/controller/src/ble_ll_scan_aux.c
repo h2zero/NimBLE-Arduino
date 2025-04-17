@@ -17,9 +17,7 @@
  * under the License.
  */
 
-#ifndef ESP_PLATFORM
-
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include <nimble/porting/nimble/include/syscfg/syscfg.h>
 
 #if MYNEWT_VAL(BLE_LL_ROLE_OBSERVER) && MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
 
@@ -30,16 +28,19 @@
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
-#include "../include/controller/ble_phy.h"
-#include "../include/controller/ble_hw.h"
-#include "../include/controller/ble_ll.h"
-#include "../include/controller/ble_ll_sched.h"
-#include "../include/controller/ble_ll_scan.h"
-#include "../include/controller/ble_ll_scan_aux.h"
-#include "../include/controller/ble_ll_hci.h"
-#include "../include/controller/ble_ll_whitelist.h"
-#include "../include/controller/ble_ll_resolv.h"
-#include "../include/controller/ble_ll_sync.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_utils.h"
+#include "nimble/nimble/controller/include/controller/ble_phy.h"
+#include "nimble/nimble/controller/include/controller/ble_hw.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_pdu.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sched.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_scan.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_scan_aux.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_hci.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_whitelist.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_resolv.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sync.h"
+#include "ble_ll_priv.h"
 
 #define BLE_LL_SCAN_AUX_F_AUX_ADV           0x0001
 #define BLE_LL_SCAN_AUX_F_AUX_CHAIN         0x0002
@@ -58,10 +59,6 @@
 #define BLE_LL_SCAN_AUX_H_DONE              0x02
 #define BLE_LL_SCAN_AUX_H_TRUNCATED         0x04
 
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif
-
 struct ble_ll_scan_aux_data {
     uint16_t flags;
     uint8_t hci_state;
@@ -71,7 +68,7 @@ struct ble_ll_scan_aux_data {
     uint8_t pri_phy;
     uint8_t sec_phy;
     uint8_t chan;
-    uint8_t offset_unit : 1;
+    uint16_t wfr_us;
     uint32_t aux_ptr;
     struct ble_ll_sched_item sch;
     struct ble_npl_event break_ev;
@@ -114,7 +111,6 @@ static int
 ble_ll_scan_aux_sched_cb(struct ble_ll_sched_item *sch)
 {
     struct ble_ll_scan_aux_data *aux = sch->cb_arg;
-    uint32_t wfr_us;
 #if BLE_LL_BT5_PHY_SUPPORTED
     uint8_t phy_mode;
 #endif
@@ -146,6 +142,14 @@ ble_ll_scan_aux_sched_cb(struct ble_ll_sched_item *sch)
     ble_phy_mode_set(phy_mode, phy_mode);
 #endif
 
+    /* if scan is not passive we need to set tx power as we may end up sending
+     * package
+     */
+    /* TODO do this only on first AUX? */
+    if (aux->scan_type != BLE_SCAN_TYPE_PASSIVE) {
+        ble_ll_tx_power_set(g_ble_ll_tx_power);
+    }
+
     rc = ble_phy_rx_set_start_time(sch->start_time + g_ble_ll_sched_offset_ticks,
                                    sch->remainder);
     if (rc != 0 && rc != BLE_PHY_ERR_RX_LATE) {
@@ -161,8 +165,7 @@ ble_ll_scan_aux_sched_cb(struct ble_ll_sched_item *sch)
         ble_ll_whitelist_disable();
     }
 
-    wfr_us = aux->offset_unit ? 300 : 30;
-    ble_phy_wfr_enable(BLE_PHY_WFR_ENABLE_RX, 0, wfr_us);
+    ble_phy_wfr_enable(BLE_PHY_WFR_ENABLE_RX, 0, aux->wfr_us);
 
     aux_data_current = aux;
 
@@ -204,21 +207,6 @@ ble_ll_scan_aux_free(struct ble_ll_scan_aux_data *aux)
     os_memblock_put(&aux_data_pool, aux);
 }
 
-static void
-ble_ll_scan_aux_update_scan_backoff(struct ble_ll_scan_aux_data *aux)
-{
-    if (!(aux->flags & BLE_LL_SCAN_AUX_F_W4_SCAN_RSP) &&
-        !(aux->flags & BLE_LL_SCAN_AUX_F_SCANNED)) {
-        return;
-    }
-
-    if ((aux->hci_state & BLE_LL_SCAN_AUX_H_DONE) &&
-        !(aux->hci_state & BLE_LL_SCAN_AUX_H_TRUNCATED)) {
-        ble_ll_scan_backoff_update(1);
-    } else {
-        ble_ll_scan_backoff_update(0);
-    }
-}
 
 static inline bool
 ble_ll_scan_aux_need_truncation(struct ble_ll_scan_aux_data *aux)
@@ -276,6 +264,8 @@ ble_ll_hci_ev_alloc_ext_adv_report_for_aux(struct ble_ll_scan_addr_data *addrd,
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
         if (addrd->targeta_resolved) {
             report->dir_addr_type += 2;
+        } else if (ble_ll_is_rpa(addrd->targeta, addrd->targeta_type)) {
+            report->dir_addr_type = 0xfe;
         }
 #endif
     }
@@ -427,7 +417,7 @@ ble_ll_hci_ev_update_ext_adv_report_from_ext(struct ble_hci_ev *hci_ev,
     report->pri_phy = rxinfo->phy;
     report->sec_phy = 0;
     report->sid = 0xff;
-    report->rssi = rxhdr->rxinfo.rssi;
+    report->rssi = rxhdr->rxinfo.rssi - ble_ll_rx_gain();
     report->periodic_itvl = 0;
     report->data_len = 0;
 
@@ -457,7 +447,12 @@ ble_ll_hci_ev_update_ext_adv_report_from_ext(struct ble_hci_ev *hci_ev,
             report->dir_addr_type = (ble_ll_scan_get_own_addr_type() & 1) + 2;
             memcpy(report->dir_addr, ble_ll_scan_aux_get_own_addr(), 6);
         } else {
-            report->dir_addr_type = !!(pdu_hdr & BLE_ADV_PDU_HDR_RXADD_MASK);
+            if (ble_ll_is_rpa(eh_data, pdu_hdr & BLE_ADV_PDU_HDR_RXADD_MASK)) {
+                report->dir_addr_type = 0xfe;
+            } else {
+                report->dir_addr_type = !!(pdu_hdr &
+                                           BLE_ADV_PDU_HDR_RXADD_MASK);
+            }
             memcpy(report->dir_addr, eh_data, 6);
         }
 #else
@@ -543,9 +538,9 @@ ble_ll_hci_ev_send_ext_adv_report(struct os_mbuf *rxpdu,
         hci_subev = (void *)(*hci_ev)->data;
         report = hci_subev->reports;
 
-        report->rssi = rxinfo->rssi;
+        report->rssi = rxinfo->rssi - ble_ll_rx_gain();
 
-        report->data_len = min(max_data_len, data_len - offset);
+        report->data_len = MIN(max_data_len, data_len - offset);
         os_mbuf_copydata(rxpdu, offset, report->data_len, report->data);
         (*hci_ev)->length += report->data_len;
 
@@ -563,12 +558,14 @@ ble_ll_hci_ev_send_ext_adv_report(struct os_mbuf *rxpdu,
             } else {
                 report->evt_type |= BLE_HCI_ADV_DATA_STATUS_TRUNCATED;
             }
+        } else if (rxinfo->flags & BLE_MBUF_HDR_F_AUX_PTR_FAILED) {
+            report->evt_type |= BLE_HCI_ADV_DATA_STATUS_TRUNCATED;
         }
 
         switch (report->evt_type & BLE_HCI_ADV_DATA_STATUS_MASK) {
         case BLE_HCI_ADV_DATA_STATUS_TRUNCATED:
             truncated = true;
-            /* Else falls through. */
+            /* fall through */
         case BLE_HCI_ADV_DATA_STATUS_COMPLETE:
             BLE_LL_ASSERT(!hci_ev_next);
             break;
@@ -599,6 +596,7 @@ ble_ll_hci_ev_send_ext_adv_report_for_aux(struct os_mbuf *rxpdu,
     int rc;
 
     if (!ble_ll_hci_is_le_event_enabled(BLE_HCI_LE_SUBEV_EXT_ADV_RPT)) {
+        aux->hci_state = BLE_LL_SCAN_AUX_H_DONE;
         return -1;
     }
 
@@ -613,6 +611,7 @@ ble_ll_hci_ev_send_ext_adv_report_for_aux(struct os_mbuf *rxpdu,
     } else {
         hci_ev = ble_ll_hci_ev_alloc_ext_adv_report_for_aux(addrd, aux);
         if (!hci_ev) {
+            aux->hci_state = BLE_LL_SCAN_AUX_H_DONE;
             return -1;
         }
     }
@@ -667,7 +666,10 @@ ble_ll_scan_aux_break_ev(struct ble_npl_event *ev)
         ble_ll_hci_ev_send_ext_adv_truncated_report(aux);
     }
 
-    ble_ll_scan_aux_update_scan_backoff(aux);
+    /* Update backoff if we were waiting for scan response */
+    if (aux->flags & BLE_LL_SCAN_AUX_F_W4_SCAN_RSP) {
+        ble_ll_scan_backoff_update(0);
+    }
 
     ble_ll_scan_aux_free(aux);
     ble_ll_scan_chk_resume();
@@ -683,81 +685,91 @@ ble_ll_scan_aux_break(struct ble_ll_scan_aux_data *aux)
 #endif
 
     ble_npl_event_init(&aux->break_ev, ble_ll_scan_aux_break_ev, aux);
-    ble_ll_event_send(&aux->break_ev);
+    ble_ll_event_add(&aux->break_ev);
 }
 
 static int
-ble_ll_scan_aux_parse_aux_ptr(struct ble_ll_scan_aux_data *aux,
-                              uint32_t aux_ptr, uint32_t *offset_us)
+ble_ll_scan_aux_phy_to_phy(uint8_t aux_phy, uint8_t *phy)
 {
-    uint8_t offset_unit;
-    uint32_t offset;
-    uint8_t chan;
-    uint8_t phy;
-
-    phy = (aux_ptr >> 21) & 0x07;
-    switch (phy) {
+    switch (aux_phy) {
     case 0:
-        phy = BLE_PHY_1M;
+        *phy = BLE_PHY_1M;
         break;
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_2M_PHY)
     case 1:
-        phy = BLE_PHY_2M;
+        *phy = BLE_PHY_2M;
         break;
 #endif
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY)
     case 2:
-        phy = BLE_PHY_CODED;
+        *phy = BLE_PHY_CODED;
         break;
 #endif
     default:
         return -1;
     }
 
-    chan = aux_ptr & 0x3f;
-    if (chan >= BLE_PHY_NUM_DATA_CHANS) {
-        return -1;
-    }
-
-    offset = 30 * ((aux_ptr >> 8) & 0x1fff);
-    if ((aux_ptr >> 7) & 0x01) {
-        offset *= 10;
-        offset_unit = 1;
-    } else {
-        offset_unit = 0;
-    }
-
-    if (offset < BLE_LL_MAFS) {
-        return -1;
-    }
-
-    aux->sec_phy = phy;
-    aux->chan = chan;
-    aux->offset_unit = offset_unit;
-
-    *offset_us = offset;
-
     return 0;
 }
 
 int
-ble_ll_scan_aux_sched(struct ble_ll_scan_aux_data *aux, uint32_t pdu_time,
-                      uint8_t pdu_time_rem, uint32_t aux_ptr)
+ble_ll_scan_aux_sched(struct ble_ll_scan_aux_data *aux, uint32_t pdu_ticks,
+                      uint8_t pdu_rem_us, uint32_t aux_ptr)
 {
+    struct ble_ll_sched_item *sch;
+    uint32_t aux_offset;
+    uint8_t offset_unit;
+    uint8_t aux_phy;
+    uint8_t chan;
+    uint8_t ca;
+    uint8_t phy;
     uint32_t offset_us;
-    int rc;
+    uint16_t pdu_rx_us;
+    uint16_t aux_ww_us;
+    uint16_t aux_tx_win_us;
 
-    rc = ble_ll_scan_aux_parse_aux_ptr(aux, aux_ptr, &offset_us);
-    if (rc < 0) {
+    /* Parse AuxPtr */
+    chan = aux_ptr & 0x3f;
+    ca = aux_ptr & 0x40;
+    offset_unit = aux_ptr & 0x80;
+    aux_offset = (aux_ptr >> 8) & 0x1fff;
+    aux_phy = (aux_ptr >> 21) & 0x07;
+
+    if (chan >= BLE_PHY_NUM_DATA_CHANS) {
         return -1;
     }
 
-    rc = ble_ll_sched_scan_aux(&aux->sch, pdu_time, pdu_time_rem, offset_us);
-    if (rc < 0) {
+    if (ble_ll_scan_aux_phy_to_phy(aux_phy, &phy) < 0) {
         return -1;
     }
 
-    return 0;
+    /* Actual offset */
+    offset_us = aux_offset * (offset_unit ? 300 : 30);
+    /* Time to scan aux PDU */
+    pdu_rx_us = ble_ll_pdu_us(MYNEWT_VAL(BLE_LL_SCHED_SCAN_AUX_PDU_LEN),
+                              ble_ll_phy_to_phy_mode(phy, 0));
+    /* Transmit window */
+    aux_tx_win_us = offset_unit ? 300 : 30;
+    /* Window widening to include drift due to sleep clock accuracy and jitter */
+    aux_ww_us = offset_us * (ca ? 50 : 500) / 1000000 + BLE_LL_JITTER_USECS;
+
+    aux->sec_phy = phy;
+    aux->chan = chan;
+    aux->wfr_us = aux_ww_us + aux_tx_win_us;
+
+    sch = &aux->sch;
+
+    sch->start_time = pdu_ticks;
+    sch->remainder = pdu_rem_us;
+    ble_ll_tmr_add(&sch->start_time, &sch->remainder, offset_us - aux_ww_us);
+
+    sch->end_time = sch->start_time +
+                    ble_ll_tmr_u2t_up(sch->remainder + 2 * aux_ww_us +
+                                      aux_tx_win_us + pdu_rx_us);
+
+    sch->start_time -= g_ble_ll_sched_offset_ticks;
+
+    return ble_ll_sched_scan_aux(&aux->sch);
 }
 
 int
@@ -1243,7 +1255,10 @@ ble_ll_scan_aux_rx_isr_end(struct os_mbuf *rxpdu, uint8_t crcok)
     rxinfo = &rxhdr->rxinfo;
     rxinfo->user_data = aux;
 
-    if (!crcok) {
+    /* It's possible that we received aux while scan was just being disabled in
+     * LL task. In such case simply ignore aux.
+     */
+    if (!crcok || !ble_ll_scan_enabled()) {
         rxinfo->flags |= BLE_MBUF_HDR_F_IGNORED;
         goto done;
     }
@@ -1491,6 +1506,7 @@ ble_ll_scan_aux_check_connect_rsp(uint8_t *rxbuf,
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
     struct ble_ll_resolv_entry *rl = NULL;
 #endif
+    uint8_t match_adva = 1;
 
     pdu_hdr = rxbuf[0];
     pdu_len = rxbuf[1];
@@ -1523,33 +1539,33 @@ ble_ll_scan_aux_check_connect_rsp(uint8_t *rxbuf,
     targeta_type = !!(pdu_hdr & BLE_ADV_PDU_HDR_RXADD_RAND);
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-    /* If we have IRK for peer and AdvA is an RPA, we need to check if current
-     * RPA resolves using that IRK. This is to verify AdvA in case RPS changed
-     * due to timeout or AdvA in advertising was an identity address but is an
-     * RPA in AUX_CONNECT_RSP.
-     * Otherwise, it shall be the same as in AUX_CONNECT_REQ.
+    /* If AdvA is an RPA and we have peer IRK, we need to check if it resolves
+     * using that RPA because peer can change RPA between advertising PDU and
+     * AUX_CONNECT_RSP. In other case, we expect AdvA to be the same as in
+     * advertising PDU.
      */
     if ((addrd->rpa_index >= 0) && ble_ll_is_rpa(adva, adva_type)) {
         rl = &g_ble_ll_resolv_list[addrd->rpa_index];
 
-        if (!ble_ll_resolv_rpa(adva, rl->rl_peer_irk)) {
-            return -1;
-        }
+        if (rl->rl_has_peer) {
+            if (!ble_ll_resolv_rpa(adva, rl->rl_peer_irk)) {
+                return -1;
+            }
 
-        addrd->adva_resolved = 1;
-        addrd->adva = adva;
-        addrd->adva_type = adva_type;
-    } else if ((adva_type !=
-                !!(pdu_data->hdr_byte & BLE_ADV_PDU_HDR_RXADD_MASK)) ||
-               (memcmp(adva, pdu_data->adva, 6) != 0)) {
-            return -1;
-    }
-#else
-    if ((adva_type != !!(pdu_data->hdr_byte & BLE_ADV_PDU_HDR_RXADD_MASK)) ||
-        (memcmp(adva, pdu_data->adva, 6) != 0)) {
-            return -1;
+            addrd->adva_resolved = 1;
+            addrd->adva = adva;
+            addrd->adva_type = adva_type;
+
+            match_adva = 0;
+        }
     }
 #endif /* BLE_LL_CFG_FEAT_LL_PRIVACY */
+
+    if (match_adva &&
+        ((adva_type != !!(pdu_data->hdr_byte & BLE_ADV_PDU_HDR_RXADD_MASK)) ||
+         (memcmp(adva, pdu_data->adva, 6) != 0))) {
+        return -1;
+    }
 
     if ((targeta_type != !!(pdu_data->hdr_byte & BLE_ADV_PDU_HDR_TXADD_MASK)) ||
         (memcmp(targeta, pdu_data->inita, 6) != 0)) {
@@ -1571,6 +1587,9 @@ ble_ll_scan_aux_rx_pkt_in_for_initiator(struct os_mbuf *rxpdu,
     aux = rxinfo->user_data;
 
     if (rxinfo->flags & BLE_MBUF_HDR_F_IGNORED) {
+        if (aux->flags & BLE_LL_SCAN_AUX_F_W4_CONNECT_RSP) {
+            ble_ll_conn_send_connect_req_cancel();
+        }
         ble_ll_scan_aux_free(aux);
         ble_ll_scan_chk_resume();
         return;
@@ -1643,7 +1662,15 @@ ble_ll_scan_aux_rx_pkt_in(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *rxhdr)
             aux->hci_state |= BLE_LL_SCAN_AUX_H_DONE;
         }
 
-        ble_ll_scan_aux_update_scan_backoff(aux);
+        /* Update backoff if we were waiting for scan response */
+        if (aux->flags & BLE_LL_SCAN_AUX_F_W4_SCAN_RSP) {
+            ble_ll_scan_backoff_update(0);
+        }
+    } else if (rxinfo->flags & BLE_MBUF_HDR_F_SCAN_RSP_RXD) {
+        /* We assume scan success when AUX_SCAN_RSP is received, no need to
+         * wait for complete chain (Core 5.3, Vol 6, Part B, 4.4.3.1).
+         */
+        ble_ll_scan_backoff_update(1);
     }
 
     if (aux->hci_state & BLE_LL_SCAN_AUX_H_DONE) {
@@ -1658,6 +1685,7 @@ ble_ll_scan_aux_rx_pkt_in(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *rxhdr)
                                    aux->aux_ptr);
         if (rc < 0) {
             rxinfo->flags &= ~BLE_MBUF_HDR_F_AUX_PTR_WAIT;
+            rxinfo->flags |= BLE_MBUF_HDR_F_AUX_PTR_FAILED;
         }
     }
 
@@ -1712,15 +1740,16 @@ ble_ll_scan_aux_rx_pkt_in(struct os_mbuf *rxpdu, struct ble_mbuf_hdr *rxhdr)
         aux->hci_state |= BLE_LL_SCAN_AUX_H_DONE;
     }
 
-    /*
-     * If we are done processing this chain and aux scan was not scheduled or
-     * we removed it from scheduler, we can remove aux_data now. Otherwise we
-     * will remove on next pkt_in.
+    /* If we are done processing this chain we can remove aux_data now if:
+     * - we did not send AUX_SCAN_REQ for this PDU
+     * - there was no aux scan scheduled from this PDU
+     * - there was aux scan scheduled from this PDU but we removed it
+     * In other cases, we'll remove aux_data on next pkt_in.
      */
     if ((aux->hci_state & BLE_LL_SCAN_AUX_H_DONE) &&
+        !(rxinfo->flags & BLE_MBUF_HDR_F_SCAN_REQ_TXD) &&
         (!(rxinfo->flags & BLE_MBUF_HDR_F_AUX_PTR_WAIT) ||
          (ble_ll_sched_rmv_elem(&aux->sch) == 0))) {
-        ble_ll_scan_aux_update_scan_backoff(aux);
         ble_ll_scan_aux_free(aux);
     }
 
@@ -1767,5 +1796,3 @@ ble_ll_scan_aux_init(void)
 }
 
 #endif /* BLE_LL_CFG_FEAT_LL_EXT_ADV */
-
-#endif /* !ESP_PLATFORM */

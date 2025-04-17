@@ -5,12 +5,10 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_MODEL_LOG
 
-#include "../include/mesh/mesh.h"
-#include "../include/mesh/model_cli.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/model_cli.h"
 #include "mesh_priv.h"
 
 static int32_t msg_timeout = K_SECONDS(5);
@@ -304,4 +302,3 @@ done:
 	os_mbuf_free_chain(msg);
 	return err;
 }
-#endif

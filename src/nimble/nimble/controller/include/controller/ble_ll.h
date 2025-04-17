@@ -23,14 +23,14 @@
 #include "nimble/porting/nimble/include/stats/stats.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
-#include "ble_phy.h"
+#include "nimble/nimble/controller/include/controller/ble_phy.h"
 
 #ifdef MYNEWT
-#include "./ble_ll_ctrl.h"
-#include "hal/hal_system.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_ctrl.h"
+#include "nimble/porting/nimble/include/hal/hal_system.h"
 #endif
 #ifdef RIOT_VERSION
-#include "hal/hal_timer.h"
+#include "nimble/porting/nimble/include/hal/hal_timer.h"
 #endif
 
 #ifdef __cplusplus
@@ -50,9 +50,7 @@ void ble_ll_assert(const char *file, unsigned line) __attribute((noreturn));
     }
 #endif
 #else
-#ifndef BLE_LL_ASSERT
 #define BLE_LL_ASSERT(cond) assert(cond)
-#endif
 #endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_2M_PHY) || MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY)
@@ -109,8 +107,8 @@ struct ble_ll_obj
     uint8_t ll_state;
 
     /* Global channel map */
-    uint8_t chan_map_num_used;
     uint8_t chan_map[BLE_LL_CHAN_MAP_LEN];
+    uint8_t chan_map_used;
 
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL) || MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
     /* Number of ACL data packets supported */
@@ -118,6 +116,11 @@ struct ble_ll_obj
 
     /* ACL data packet size */
     uint16_t ll_acl_pkt_size;
+#endif
+
+#if MYNEWT_VAL(BLE_LL_ISO)
+    uint8_t ll_num_iso_pkts;
+    uint16_t ll_iso_pkt_size;
 #endif
 
     /* Preferred PHY's */
@@ -239,6 +242,12 @@ extern STATS_SECT_DECL(ble_ll_stats) ble_ll_stats;
 #if MYNEWT_VAL(BLE_LL_ROLE_OBSERVER) && MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
 #define BLE_LL_STATE_SCAN_AUX       (7)
 #endif
+#if MYNEWT_VAL(BLE_LL_EXT)
+#define BLE_LL_STATE_EXTERNAL       (8)
+#endif
+#if MYNEWT_VAL(BLE_LL_ISO_BROADCASTER)
+#define BLE_LL_STATE_BIG            (9)
+#endif
 
 /* LL Features */
 #define BLE_LL_FEAT_LE_ENCRYPTION       (0x0000000001)
@@ -291,11 +300,16 @@ extern STATS_SECT_DECL(ble_ll_stats) ble_ll_stats;
 #define BLE_LL_CONN_CLEAR_FEATURE(connsm, feature)   (connsm->conn_features &= ~(feature))
 
 /* All the features which can be controlled by the Host */
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
 #define BLE_LL_HOST_CONTROLLED_FEATURES (BLE_LL_FEAT_CONN_SUBRATING_HOST)
+#else
+#define BLE_LL_HOST_CONTROLLED_FEATURES (0)
+#endif
 
 /* LL timing */
 #define BLE_LL_IFS                  (150)       /* usecs */
 #define BLE_LL_MAFS                 (300)       /* usecs */
+#define BLE_LL_MSS                  (150)       /* usecs */
 
 /*
  * BLE LL device address. Note that element 0 of the array is the LSB and
@@ -329,6 +343,27 @@ struct ble_dev_addr
 #define BLE_LL_MIN_PDU_LEN      (BLE_LL_PDU_HDR_LEN)
 #define BLE_LL_MAX_PDU_LEN      ((BLE_LL_PDU_HDR_LEN) + (BLE_LL_MAX_PAYLOAD_LEN))
 #define BLE_LL_CRCINIT_ADV      (0x555555)
+
+#define BLE_LL_CONN_HANDLE(t, h)            ((((t) << 8) & BLE_LL_CONN_HANDLE_TYPE_MASK) | \
+                                             ((h) & BLE_LL_CONN_HANDLE_IDX_MASK))
+#define BLE_LL_CONN_HANDLE_TYPE_MASK        (0x0700)
+#define BLE_LL_CONN_HANDLE_IDX_MASK         (0x00ff)
+#define BLE_LL_CONN_HANDLE_TYPE(conn_h)     (((conn_h) & BLE_LL_CONN_HANDLE_TYPE_MASK) >> 8)
+#define BLE_LL_CONN_HANDLE_IDX(conn_h)      ((conn_h) & BLE_LL_CONN_HANDLE_IDX_MASK)
+
+#define BLE_LL_CONN_HANDLE_TYPE_ACL         (0x00)
+#define BLE_LL_CONN_HANDLE_TYPE_CIS         (0x01)
+#define BLE_LL_CONN_HANDLE_TYPE_BIS         (0x02)
+#define BLE_LL_CONN_HANDLE_TYPE_BIS_SYNC    (0x03)
+
+#define BLE_LL_CONN_HANDLE_IS_ACL(ch) \
+    (BLE_LL_CONN_HANDLE_TYPE(ch) == BLE_LL_CONN_HANDLE_TYPE_ACL)
+#define BLE_LL_CONN_HANDLE_IS_CIS(ch) \
+    (BLE_LL_CONN_HANDLE_TYPE(ch) == BLE_LL_CONN_HANDLE_TYPE_CIS)
+#define BLE_LL_CONN_HANDLE_IS_BIS(ch) \
+    (BLE_LL_CONN_HANDLE_TYPE(ch) == BLE_LL_CONN_HANDLE_TYPE_BIS)
+#define BLE_LL_CONN_HANDLE_IS_BIS_SYNC(ch) \
+    (BLE_LL_CONN_HANDLE_TYPE(ch) == BLE_LL_CONN_HANDLE_TYPE_BIS_SYNC)
 
 /* Access address for advertising channels */
 #define BLE_ACCESS_ADDR_ADV             (0x8E89BED6)
@@ -470,6 +505,7 @@ struct ble_dev_addr
 
 /* ACAD data types */
 #define BLE_LL_ACAD_CHANNEL_MAP_UPDATE_IND 0x28
+#define BLE_LL_ACAD_BIGINFO                0x2C
 
 struct ble_ll_acad_channel_map_update_ind {
     uint8_t map[5];
@@ -489,10 +525,6 @@ int ble_ll_is_valid_random_addr(const uint8_t *addr);
  */
 int ble_ll_is_valid_own_addr_type(uint8_t own_addr_type,
                                   const uint8_t *random_addr);
-
-/* Calculate the amount of time in microseconds a PDU with payload length of
- * 'payload_len' will take to transmit on a PHY 'phy_mode'. */
-uint32_t ble_ll_pdu_tx_time_get(uint16_t payload_len, int phy_mode);
 
 /* Calculate maximum octets of PDU payload which can be transmitted during
  * 'usecs' on a PHY 'phy_mode'. */
@@ -561,8 +593,11 @@ void ble_ll_state_set(uint8_t ll_state);
 /* Get the link layer state */
 uint8_t ble_ll_state_get(void);
 
-/* Send an event to LL task */
-void ble_ll_event_send(struct ble_npl_event *ev);
+/* Add an event to LL task */
+void ble_ll_event_add(struct ble_npl_event *ev);
+
+/* Remove an event from LL task */
+void ble_ll_event_remove(struct ble_npl_event *ev);
 
 /* Hand received pdu's to LL task  */
 void ble_ll_rx_pdu_in(struct os_mbuf *rxpdu);
@@ -590,10 +625,6 @@ int ble_ll_set_host_feat(const uint8_t *cmdbuf, uint8_t len);
 
 /* Read set of states supported by the Link Layer */
 uint64_t ble_ll_read_supp_states(void);
-
-/* Check if octets and time are valid. Returns 0 if not valid */
-int ble_ll_chk_txrx_octets(uint16_t octets);
-int ble_ll_chk_txrx_time(uint16_t time);
 
 /* Random numbers */
 int ble_ll_rand_init(void);

@@ -102,6 +102,8 @@ STATS_SECT_START(ble_att_stats)
     STATS_SECT_ENTRY(indicate_req_tx)
     STATS_SECT_ENTRY(indicate_rsp_rx)
     STATS_SECT_ENTRY(indicate_rsp_tx)
+    STATS_SECT_ENTRY(multi_notify_req_rx)
+    STATS_SECT_ENTRY(multi_notify_req_tx)
     STATS_SECT_ENTRY(write_cmd_rx)
     STATS_SECT_ENTRY(write_cmd_tx)
 STATS_SECT_END
@@ -171,13 +173,15 @@ SLIST_HEAD(ble_att_clt_entry_list, ble_att_clt_entry);
 /*** @gen */
 
 struct ble_l2cap_chan *ble_att_create_chan(uint16_t conn_handle);
-int ble_att_conn_chan_find(uint16_t conn_handle, struct ble_hs_conn **out_conn,
+int ble_att_conn_chan_find(uint16_t conn_handle, uint16_t cid,
+                           struct ble_hs_conn **out_conn,
                            struct ble_l2cap_chan **out_chan);
 void ble_att_inc_tx_stat(uint8_t att_op);
 void ble_att_truncate_to_mtu(const struct ble_l2cap_chan *att_chan,
                              struct os_mbuf *txom);
 void ble_att_set_peer_mtu(struct ble_l2cap_chan *chan, uint16_t peer_mtu);
 uint16_t ble_att_chan_mtu(const struct ble_l2cap_chan *chan);
+uint16_t ble_att_mtu_by_cid(uint16_t conn_handle, uint16_t cid);
 int ble_att_init(void);
 
 /*** @svr */
@@ -190,38 +194,38 @@ ble_att_svr_find_by_uuid(struct ble_att_svr_entry *start_at,
                          const ble_uuid_t *uuid,
                          uint16_t end_handle);
 uint16_t ble_att_svr_prev_handle(void);
-int ble_att_svr_rx_mtu(uint16_t conn_handle, struct os_mbuf **rxom);
+int ble_att_svr_rx_mtu(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
 struct ble_att_svr_entry *ble_att_svr_find_by_handle(uint16_t handle_id);
 int32_t ble_att_svr_ticks_until_tmo(const struct ble_att_svr_conn *svr,
                                     ble_npl_time_t now);
-int ble_att_svr_rx_find_info(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_svr_rx_find_type_value(uint16_t conn_handle,
+int ble_att_svr_rx_find_info(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_svr_rx_find_type_value(uint16_t conn_handle, uint16_t cid,
                                    struct os_mbuf **rxom);
-int ble_att_svr_rx_read_type(uint16_t conn_handle,
+int ble_att_svr_rx_read_type(uint16_t conn_handle, uint16_t cid,
                              struct os_mbuf **rxom);
-int ble_att_svr_rx_read_group_type(uint16_t conn_handle,
+int ble_att_svr_rx_read_group_type(uint16_t conn_handle, uint16_t cid,
                                    struct os_mbuf **rxom);
-int ble_att_svr_rx_read(uint16_t conn_handle,
+int ble_att_svr_rx_read(uint16_t conn_handle, uint16_t cid,
                         struct os_mbuf **rxom);
-int ble_att_svr_rx_read_blob(uint16_t conn_handle,
+int ble_att_svr_rx_read_blob(uint16_t conn_handle, uint16_t cid,
                              struct os_mbuf **rxom);
-int ble_att_svr_rx_read_mult_var(uint16_t conn_handle,
+int ble_att_svr_rx_read_mult_var(uint16_t conn_handle, uint16_t cid,
                                  struct os_mbuf **rxom);
-int ble_att_svr_rx_read_mult(uint16_t conn_handle,
+int ble_att_svr_rx_read_mult(uint16_t conn_handle, uint16_t cid,
                              struct os_mbuf **rxom);
-int ble_att_svr_rx_write(uint16_t conn_handle,
+int ble_att_svr_rx_write(uint16_t conn_handle, uint16_t cid,
                          struct os_mbuf **rxom);
-int ble_att_svr_rx_write_no_rsp(uint16_t conn_handle, struct os_mbuf **rxom);
-#ifdef ESP_PLATFORM
-int ble_att_svr_rx_signed_write(uint16_t conn_handle, struct os_mbuf **rxom);
-#endif
-int ble_att_svr_rx_prep_write(uint16_t conn_handle,
+int ble_att_svr_rx_write_no_rsp(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_svr_rx_signed_write(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_svr_rx_prep_write(uint16_t conn_handle, uint16_t cid,
                               struct os_mbuf **rxom);
-int ble_att_svr_rx_exec_write(uint16_t conn_handle,
+int ble_att_svr_rx_exec_write(uint16_t conn_handle, uint16_t cid,
                               struct os_mbuf **rxom);
-int ble_att_svr_rx_notify(uint16_t conn_handle,
+int ble_att_svr_rx_notify(uint16_t conn_handle, uint16_t cid,
                           struct os_mbuf **rxom);
-int ble_att_svr_rx_indicate(uint16_t conn_handle,
+int ble_att_svr_rx_notify_multi(uint16_t conn_handle, uint16_t cid,
+                                struct os_mbuf **rxom);
+int ble_att_svr_rx_indicate(uint16_t conn_handle, uint16_t cid,
                             struct os_mbuf **rxom);
 void ble_att_svr_prep_clear(struct ble_att_prep_entry_list *prep_list);
 int ble_att_svr_read_handle(uint16_t conn_handle, uint16_t attr_handle,
@@ -233,9 +237,12 @@ int ble_att_svr_init(void);
 void ble_att_svr_hide_range(uint16_t start_handle, uint16_t end_handle);
 void ble_att_svr_restore_range(uint16_t start_handle, uint16_t end_handle);
 
-int ble_att_svr_tx_error_rsp(uint16_t conn_handle, struct os_mbuf *txom,
+int ble_att_svr_tx_error_rsp(uint16_t conn_handle, uint16_t cid, struct os_mbuf *txom,
                              uint8_t req_op, uint16_t handle,
                              uint8_t error_code);
+#if MYNEWT_VAL(BLE_SVC_GAP_GATT_SECURITY_LEVEL)
+uint8_t ble_att_svr_security_mode_1_level(void);
+#endif
 /*** $clt */
 
 /** An information-data entry in a find information response. */
@@ -266,52 +273,56 @@ struct ble_att_read_group_type_adata {
     uint8_t *value;
 };
 
-int ble_att_clt_rx_error(uint16_t conn_handle, struct os_mbuf **rxom);
+int ble_att_clt_rx_error(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
 int ble_att_clt_tx_mtu(uint16_t conn_handle, uint16_t mtu);
-int ble_att_clt_rx_mtu(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_tx_read(uint16_t conn_handle, uint16_t handle);
-int ble_att_clt_rx_read(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_tx_read_blob(uint16_t conn_handle, uint16_t handle,
+int ble_att_clt_rx_mtu(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_tx_read(uint16_t conn_handle, uint16_t cid, uint16_t handle);
+int ble_att_clt_rx_read(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_tx_read_blob(uint16_t conn_handle, uint16_t cid, uint16_t handle,
                              uint16_t offset);
-int ble_att_clt_rx_read_blob(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_tx_read_mult(uint16_t conn_handle,
+int ble_att_clt_rx_read_blob(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_tx_read_mult(uint16_t conn_handle, uint16_t cid,
                              const uint16_t *handles, int num_handles, bool variable);
-int ble_att_clt_rx_read_mult(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_rx_read_mult_var(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_tx_read_type(uint16_t conn_handle, uint16_t start_handle,
+int ble_att_clt_rx_read_mult(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_rx_read_mult_var(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_tx_read_type(uint16_t conn_handle, uint16_t cid, uint16_t start_handle,
                              uint16_t end_handle, const ble_uuid_t *uuid);
-int ble_att_clt_rx_read_type(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_tx_read_group_type(uint16_t conn_handle,
+int ble_att_clt_rx_read_type(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_tx_read_group_type(uint16_t conn_handle, uint16_t cid,
                                    uint16_t start_handle, uint16_t end_handle,
                                    const ble_uuid_t *uuid128);
-int ble_att_clt_rx_read_group_type(uint16_t conn_handle,
+int ble_att_clt_rx_read_group_type(uint16_t conn_handle, uint16_t cid,
                                    struct os_mbuf **rxom);
-int ble_att_clt_tx_find_info(uint16_t conn_handle, uint16_t start_handle,
+int ble_att_clt_tx_find_info(uint16_t conn_handle, uint16_t cid, uint16_t start_handle,
                              uint16_t end_handle);
-int ble_att_clt_rx_find_info(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_tx_find_type_value(uint16_t conn_handle, uint16_t start_handle,
+int ble_att_clt_rx_find_info(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_tx_find_type_value(uint16_t conn_handle, uint16_t cid, uint16_t start_handle,
                                    uint16_t end_handle, uint16_t attribute_type,
                                    const void *attribute_value, int value_len);
-int ble_att_clt_rx_find_type_value(uint16_t conn_handle,
+int ble_att_clt_rx_find_type_value(uint16_t conn_handle, uint16_t cid,
                                    struct os_mbuf **rxom);
-int ble_att_clt_tx_write_req(uint16_t conn_handle, uint16_t handle,
-                             struct os_mbuf *txom);
-int ble_att_clt_tx_write_cmd(uint16_t conn_handle, uint16_t handle,
-                             struct os_mbuf *txom);
-int ble_att_clt_tx_prep_write(uint16_t conn_handle, uint16_t handle,
-                              uint16_t offset, struct os_mbuf *txom);
-int ble_att_clt_rx_prep_write(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_tx_exec_write(uint16_t conn_handle, uint8_t flags);
-int ble_att_clt_tx_signed_write_cmd(uint16_t conn_handle, uint16_t handle,
-                                    uint8_t * csrk, uint32_t counter,
-                                    struct os_mbuf * txom);
-int ble_att_clt_rx_exec_write(uint16_t conn_handle, struct os_mbuf **rxom);
-int ble_att_clt_rx_write(uint16_t conn_handle, struct os_mbuf **rxom);
+int ble_att_clt_tx_write_req(uint16_t conn_handle, uint16_t cid,
+                             uint16_t handle, struct os_mbuf *txom);
+int ble_att_clt_tx_write_cmd(uint16_t conn_handle, uint16_t cid,
+                             uint16_t handle, struct os_mbuf *txom);
+int ble_att_clt_tx_prep_write(uint16_t conn_handle, uint16_t cid,
+                              uint16_t handle, uint16_t offset,
+                              struct os_mbuf *txom);
+int ble_att_clt_rx_prep_write(uint16_t conn_handle, uint16_t cid,
+                              struct os_mbuf **rxom);
+int ble_att_clt_tx_exec_write(uint16_t conn_handle, uint16_t cid,
+                              uint8_t flags);
+int ble_att_clt_tx_signed_write_cmd(uint16_t conn_handle, uint16_t cid,
+                                    uint16_t handle, uint8_t * csrk,
+                                    uint32_t counter, struct os_mbuf * txom);
+int ble_att_clt_rx_exec_write(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_rx_write(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
 int ble_att_clt_tx_notify(uint16_t conn_handle, uint16_t handle,
                           struct os_mbuf *txom);
-int ble_att_clt_tx_indicate(uint16_t conn_handle, uint16_t handle,
-                            struct os_mbuf *txom);
-int ble_att_clt_rx_indicate(uint16_t conn_handle, struct os_mbuf **rxom);
+int ble_att_clt_tx_indicate(uint16_t conn_handle, uint16_t cid,
+                            uint16_t handle, struct os_mbuf *txom);
+int ble_att_clt_rx_indicate(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom);
+int ble_att_clt_tx_notify_mult(uint16_t conn_handle, struct os_mbuf *txom);
 
 #ifdef __cplusplus
 }

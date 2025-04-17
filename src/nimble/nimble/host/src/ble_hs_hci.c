@@ -25,8 +25,238 @@
 #include "ble_hs_priv.h"
 
 #include "nimble/nimble/transport/include/nimble/transport.h"
+// #include "bt_common.h"
+// #if (BT_HCI_LOG_INCLUDED == TRUE)
+// #include "hci_log/bt_hci_log.h"
+// #endif // (BT_HCI_LOG_INCLUDED == TRUE)
 
 #define BLE_HCI_CMD_TIMEOUT_MS  2000
+
+/* HCI ERROR */
+#define BLE_ERR_UNKNOWN_HCI_CMD      0x01
+#define BLE_ERR_UNK_CONN_ID          0x02
+#define BLE_ERR_HW_FAIL              0x03
+#define BLE_ERR_PAGE_TMO             0x04
+#define BLE_ERR_AUTH_FAIL            0x05
+#define BLE_ERR_PINKEY_MISSING       0x06
+#define BLE_ERR_MEM_CAPACITY         0x07
+#define BLE_ERR_CONN_SPVN_TMO        0x08
+#define BLE_ERR_CONN_LIMIT           0x09
+#define BLE_ERR_SYNCH_CONN_LIMIT     0x0a
+#define BLE_ERR_ACL_CONN_EXISTS      0x0b
+#define BLE_ERR_CMD_DISALLOWED       0x0c
+#define BLE_ERR_CONN_REJ_RESOURCES   0x0d
+#define BLE_ERR_CONN_REJ_SECURITY    0x0e
+#define BLE_ERR_CONN_REJ_BD_ADDR     0x0f
+#define BLE_ERR_CONN_ACCEPT_TMO      0x10
+#define BLE_ERR_UNSUPPORTED          0x11
+#define BLE_ERR_INV_HCI_CMD_PARMS    0x12
+#define BLE_ERR_REM_USER_CONN_TERM   0x13
+#define BLE_ERR_RD_CONN_TERM_RESRCS  0x14
+#define BLE_ERR_RD_CONN_TERM_PWROFF  0x15
+#define BLE_ERR_CONN_TERM_LOCAL      0x16
+#define BLE_ERR_REPEATED_ATTEMPTS    0x17
+#define BLE_ERR_NO_PAIRING           0x18
+#define BLE_ERR_UNK_LMP              0x19
+#define BLE_ERR_UNSUPP_REM_FEATURE   0x1a
+#define BLE_ERR_SCO_OFFSET           0x1b
+#define BLE_ERR_SCO_ITVL             0x1c
+#define BLE_ERR_SCO_AIR_MODE         0x1d
+#define BLE_ERR_INV_LMP_LL_PARM      0x1e
+#define BLE_ERR_UNSPECIFIED          0x1f
+#define BLE_ERR_UNSUPP_LMP_LL_PARM   0x20
+#define BLE_ERR_NO_ROLE_CHANGE       0x21
+#define BLE_ERR_LMP_LL_RSP_TMO       0x22
+#define BLE_ERR_LMP_COLLISION        0x23
+#define BLE_ERR_LMP_PDU              0x24
+#define BLE_ERR_ENCRYPTION_MODE      0x25
+#define BLE_ERR_LINK_KEY_CHANGE      0x26
+#define BLE_ERR_UNSUPP_QOS           0x27
+#define BLE_ERR_INSTANT_PASSED       0x28
+#define BLE_ERR_UNIT_KEY_PAIRING     0x29
+#define BLE_ERR_DIFF_TRANS_COLL      0x2a
+/*#define BLE_ERR_RESERVED             0x2b*/
+#define BLE_ERR_QOS_PARM             0x2c
+#define BLE_ERR_QOS_REJECTED         0x2d
+#define BLE_ERR_CHAN_CLASS           0x2e
+#define BLE_ERR_INSUFFICIENT_SEC     0x2f
+#define BLE_ERR_PARM_OUT_OF_RANGE    0x30
+/*#define BLE_ERR_RESERVED             0x31*/
+#define BLE_ERR_PENDING_ROLE_SW      0x32
+/*#define BLE_ERR_RESERVED             0x33*/
+#define BLE_ERR_RESERVED_SLOT        0x34
+#define BLE_ERR_ROLE_SW_FAIL         0x35
+#define BLE_ERR_INQ_RSP_TOO_BIG      0x36
+#define BLE_ERR_SEC_SIMPLE_PAIR      0x37
+#define BLE_ERR_HOST_BUSY_PAIR       0x38
+#define BLE_ERR_CONN_REJ_CHANNEL     0x39
+#define BLE_ERR_CTLR_BUSY            0x3a
+#define BLE_ERR_CONN_PARMS           0x3b
+#define BLE_ERR_DIR_ADV_TMO          0x3c
+#define BLE_ERR_CONN_TERM_MIC        0x3d
+#define BLE_ERR_CONN_ESTABLISHMENT   0x3e
+#define BLE_ERR_MAC_CONN_FAIL        0x3f
+#define BLE_ERR_COARSE_CLK_ADJ       0x40
+#define BLE_ERR_TYPE0_SUBMAP_NDEF    0x41
+#define BLE_ERR_UNK_ADV_INDENT       0x42
+#define BLE_ERR_LIMIT_REACHED        0x43
+#define BLE_ERR_OPERATION_CANCELLED  0x44
+#define BLE_ERR_PACKET_TOO_LONG      0x45
+#define BLE_ERR_MAX                  0xff
+
+struct err_code {
+    int error_code;
+    const char *msg;
+};
+
+static struct err_code core_err_code_list[] = {
+      { BLE_HS_EAGAIN,                                ": BLE_HS_EAGAIN (Temporary failure; try again)" },
+      { BLE_HS_EALREADY,                              ": BLE_HS_EALREADY (Operation already in progress or completed)" },
+      { BLE_HS_EINVAL,                                ": BLE_HS_EINVAL (One or more arguments are invalid)" },
+      { BLE_HS_EMSGSIZE,                              ": BLE_HS_EMSGSIZE (The provided buffer is too small)" },
+      { BLE_HS_ENOENT,                                ": BLE_HS_ENOENT (No entry matching the specified criteria)" },
+      { BLE_HS_ENOMEM,                                ": BLE_HS_ENOMEM (Operation failed due to resource exhaustion)" },
+      { BLE_HS_ENOTCONN,                              ": BLE_HS_ENOTCONN (No open connection with the specified handle)" },
+      { BLE_HS_ENOTSUP,                               ": BLE_HS_ENOTSUP (Operation disabled at compile time)" },
+      { BLE_HS_EAPP,                                  ": BLE_HS_EAPP (Application callback behaved unexpectedly)" },
+      { BLE_HS_EBADDATA,                              ": BLE_HS_EBADDATA (Command from peer is invalid)" },
+      { BLE_HS_EOS,                                   ": BLE_HS_EOS (Mynewt OS error)" },
+      { BLE_HS_ECONTROLLER,                           ": BLE_HS_ECONTROLLER (Event from controller is invalid)" },
+      { BLE_HS_ETIMEOUT,                              ": BLE_HS_ETIMEOUT (Operation timed out)" },
+      { BLE_HS_EDONE,                                 ": BLE_HS_EDONE (Operation completed successfully)" },
+      { BLE_HS_EBUSY,                                 ": BLE_HS_EBUSY (Operation cannot be performed until procedure completes)" },
+      { BLE_HS_EREJECT,                               ": BLE_HS_EREJECT (Peer rejected a connection parameter update request)" },
+      { BLE_HS_EUNKNOWN,                              ": BLE_HS_EUNKNOWN (Unexpected failure; catch all)" },
+      { BLE_HS_EROLE,                                 ": BLE_HS_EROLE (Operation requires different role (e.g., central vs. peripheral))" },
+      { BLE_HS_ETIMEOUT_HCI,                          ": BLE_HS_ETIMEOUT_HCI (HCI request timed out; controller unresponsive)" },
+      { BLE_HS_ENOMEM_EVT,                            ": BLE_HS_ENOMEM_EVT (Controller failed to send event due to memory exhaustion)" },
+      { BLE_HS_ENOADDR,                               ": BLE_HS_ENOADDR (Operation requires an identity address but none configured)" },
+      { BLE_HS_ENOTSYNCED,                            ": BLE_HS_ENOTSYNCED (Attempt to use the host before it is synced with controller)" },
+      { BLE_HS_EAUTHEN,                               ": BLE_HS_EAUTHEN (Insufficient authentication)" },
+      { BLE_HS_EAUTHOR,                               ": BLE_HS_EAUTHOR (Insufficient authorization)" },
+      { BLE_HS_EENCRYPT,                              ": BLE_HS_EENCRYPT (Insufficient encryption level)" },
+      { BLE_HS_EENCRYPT_KEY_SZ,                       ": BLE_HS_EENCRYPT_KEY_SZ (Insufficient key size" },
+      { BLE_HS_ESTORE_CAP,                            ": BLE_HS_ESTORE_CAP (BLE_HS_ESTORE_FAIL,)" },
+      { BLE_HS_ESTORE_FAIL,                           ": BLE_HS_ESTORE_FAIL (Storage IO error)" },
+      { BLE_HS_EPREEMPTED,                            ": BLE_HS_EPREEMPTED (ation was preempted)" },
+      { BLE_HS_EDISABLED,                             ": BLE_HS_EDISABLED (Operation disabled)" },
+      { BLE_HS_ESTALLED,                              ": BLE_HS_ESTALLED (Operation stalled)" }
+};
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+static struct err_code err_code_list[] = {
+      { BLE_HS_HCI_ERR(BLE_ERR_UNKNOWN_HCI_CMD),      ": BLE_ERR_UNKNOWN_HCI_CMD (Unknown HCI Command)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_UNK_CONN_ID),          ": BLE_ERR_UNK_CONN_ID (Unknown Connection Identifier)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_HW_FAIL),              ": BLE_ERR_HW_FAIL (Hardware Failure)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_PAGE_TMO),             ": BLE_ERR_PAGE_TMO (Page Timeout)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_AUTH_FAIL),            ": BLE_ERR_AUTH_FAIL (Authentication Failure)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING),       ": BLE_ERR_PINKEY_MISSING (PIN or Key Missing)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_MEM_CAPACITY),         ": BLE_ERR_MEM_CAPACITY (Memory Capacity Exceeded)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_SPVN_TMO),        ": BLE_ERR_CONN_SPVN_TMO (Connection Timeout)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_LIMIT),           ": BLE_ERR_CONN_LIMIT (Connection Limit Exceeded)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_SYNCH_CONN_LIMIT),     ": BLE_ERR_SYNCH_CONN_LIMIT (Synchronous Connection Limit To A Device Exceeded)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_ACL_CONN_EXISTS),      ": BLE_ERR_ACL_CONN_EXISTS (ACL Connection Already Exists)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_CMD_DISALLOWED),       ": BLE_ERR_CMD_DISALLOWED (Command Disallowed)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_REJ_RESOURCES),   ": BLE_ERR_CONN_REJ_RESOURCES (Connection Rejected due to Limited Resources)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_REJ_SECURITY),    ": BLE_ERR_CONN_REJ_SECURITY (Connection Rejected Due To Security Reasons)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_REJ_BD_ADDR),     ": BLE_ERR_CONN_REJ_BD_ADDR (Connection Rejected due to Unacceptable BD_ADDR)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_ACCEPT_TMO),      ": BLE_ERR_CONN_ACCEPT_TMO (Connection Accept Timeout Exceeded)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_UNSUPPORTED),          ": BLE_ERR_UNSUPPORTED (Unsupported Feature or Parameter Value)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_INV_HCI_CMD_PARMS),    ": BLE_ERR_INV_HCI_CMD_PARMS (Invalid HCI Command Parameters)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_REM_USER_CONN_TERM),   ": BLE_ERR_REM_USER_CONN_TERM (Remote User Terminated Connection)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_RD_CONN_TERM_RESRCS),  ": BLE_ERR_RD_CONN_TERM_RESRCS (Remote Device Terminated Connection due to Low Resources)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_RD_CONN_TERM_PWROFF),  ": BLE_ERR_RD_CONN_TERM_PWROFF (Remote Device Terminated Connection due to Power Off)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_TERM_LOCAL),      ": BLE_ERR_CONN_TERM_LOCAL (Connection Terminated By Local Host)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_REPEATED_ATTEMPTS),    ": BLE_ERR_REPEATED_ATTEMPTS (Repeated Attempts)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_NO_PAIRING),           ": BLE_ERR_NO_PAIRING (Pairing Not Allowed)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_UNK_LMP),              ": BLE_ERR_UNK_LMP (Unknown LMP PDU)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_UNSUPP_REM_FEATURE),   ": BLE_ERR_UNSUPP_REM_FEATURE (Unsupported Remote Feature / Unsupported LMP Feature)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_SCO_OFFSET),           ": BLE_ERR_SCO_OFFSET (SCO Offset Rejected)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_SCO_ITVL),             ": BLE_ERR_SCO_ITVL (SCO Interval Rejected)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_SCO_AIR_MODE),         ": BLE_ERR_SCO_AIR_MODE (SCO Air Mode Rejected)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_INV_LMP_LL_PARM),      ": BLE_ERR_INV_LMP_LL_PARM (Invalid LMP Parameters / Invalid LL Parameters)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_UNSPECIFIED),          ": BLE_ERR_UNSPECIFIED (Unspecified Error)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_UNSUPP_LMP_LL_PARM),   ": BLE_ERR_UNSUPP_LMP_LL_PARM (Unsupported LMP Parameter Value / Unsupported LL Parameter Value)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_NO_ROLE_CHANGE),       ": BLE_ERR_NO_ROLE_CHANGE (Role Change Not Allowed)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_LMP_LL_RSP_TMO),       ": BLE_ERR_LMP_LL_RSP_TMO (LMP Response Timeout / LL Response Timeout)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_LMP_COLLISION),        ": BLE_ERR_LMP_COLLISION (LMP Error Transaction Collision)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_LMP_PDU),              ": BLE_ERR_LMP_PDU (LMP PDU Not Allowed)" },
+      { BLE_HS_HCI_ERR(BLE_ERR_ENCRYPTION_MODE),      ": BLE_ERR_ENCRYPTION_MODE (Encryption Mode Not Acceptable)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_LINK_KEY_CHANGE),      ": BLE_ERR_LINK_KEY_CHANGE (Link Key cannot be Changed)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_UNSUPP_QOS),           ": BLE_ERR_UNSUPP_QOS (Requested QoS Not Supported)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_INSTANT_PASSED),       ": BLE_ERR_INSTANT_PASSED (Instant Passed)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_UNIT_KEY_PAIRING),     ": BLE_ERR_UNIT_KEY_PAIRING (Pairing With Unit Key Not Supported)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_DIFF_TRANS_COLL),      ": BLE_ERR_DIFF_TRANS_COLL (Different Transaction Collision)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_QOS_PARM),             ": BLE_ERR_QOS_PARM (QoS Unacceptable Parameter)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_QOS_REJECTED),         ": BLE_ERR_QOS_REJECTED (QoS Rejected)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_CHAN_CLASS),           ": BLE_ERR_CHAN_CLASS (Channel Classification Not Supported)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_INSUFFICIENT_SEC),     ": BLE_ERR_INSUFFICIENT_SEC (Insufficient Security)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_PARM_OUT_OF_RANGE),    ": BLE_ERR_PARM_OUT_OF_RANGE (Parameter Out Of Mandatory Range)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_PENDING_ROLE_SW),      ": BLE_ERR_PENDING_ROLE_SW (Role Switch Pending)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_RESERVED_SLOT),        ": BLE_ERR_RESERVED_SLOT (Reserved Slot Violation)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_ROLE_SW_FAIL),         ": BLE_ERR_ROLE_SW_FAIL (Role Switch Failed)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_INQ_RSP_TOO_BIG),      ": BLE_ERR_INQ_RSP_TOO_BIG (Extended Inquiry Response Too Large)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_SEC_SIMPLE_PAIR),      ": BLE_ERR_SEC_SIMPLE_PAIR (Secure Simple Pairing Not Supported By Host)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_HOST_BUSY_PAIR),       ": BLE_ERR_HOST_BUSY_PAIR (Host Busy - Pairing)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_REJ_CHANNEL),     ": BLE_ERR_CONN_REJ_CHANNEL (Connection Rejected due to No Suitable Channel Found)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_CTLR_BUSY),            ": BLE_ERR_CTLR_BUSY (Controller Busy)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_PARMS),           ": BLE_ERR_CONN_PARMS (Unacceptable Connection Parameters)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_DIR_ADV_TMO),          ": BLE_ERR_DIR_ADV_TMO (Directed Advertising Timeout)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_TERM_MIC),        ": BLE_ERR_CONN_TERM_MIC (Connection Terminated due to MIC Failure)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_CONN_ESTABLISHMENT),   ": BLE_ERR_CONN_ESTABLISHMENT (Connection Failed to be Established)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_MAC_CONN_FAIL),        ": BLE_ERR_MAC_CONN_FAIL (MAC Connection Failed)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_COARSE_CLK_ADJ),       ": BLE_ERR_COARSE_CLK_ADJ (Coarse Clock Adjustment Rejected but Will Try to Adjust Using Clock Dragging)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_TYPE0_SUBMAP_NDEF),    ": BLE_ERR_TYPE0_SUBMAP_NDEF (Type0 Submap Not Defined)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_UNK_ADV_INDENT),       ": BLE_ERR_UNK_ADV_INDENT (Unknown Advertising Identifier)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_LIMIT_REACHED),        ": BLE_ERR_LIMIT_REACHED (Limit Reached)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_OPERATION_CANCELLED),  ": BLE_ERR_OPERATION_CANCELLED (Operation Cancelled by Host)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_PACKET_TOO_LONG),      ": BLE_ERR_PACKET_TOO_LONG (Packet Too Long)"},
+      { BLE_HS_HCI_ERR(BLE_ERR_MAX),                  ": BLE_ERR_MAX"}
+};
+#pragma GCC diagnostic pop
+
+static void esp_core_err_to_name(int error_code, uint16_t *opcode)
+{
+    for (int i = 0; i<sizeof(core_err_code_list) / sizeof(core_err_code_list[0]); i++) {
+        if (core_err_code_list[i].error_code == error_code) {
+            if (opcode == NULL) {
+                  MODLOG_DFLT(INFO, "core_err=0x%02X %s\n", error_code, core_err_code_list[i].msg);
+            }
+            else {
+                  MODLOG_DFLT(INFO, "ogf=0x%02x, ocf=0x%04x, core_err=0x%02X %s\n",
+                              BLE_HCI_OGF(*opcode), BLE_HCI_OCF(*opcode), error_code, core_err_code_list[i].msg);
+            }
+            break;
+        }
+    }
+    return;
+}
+
+static void esp_hci_err_to_name(int error_code, uint16_t *opcode)
+{
+    if (error_code == 0) {
+        return;
+    }
+    else if (error_code <  0x20) {
+       esp_core_err_to_name(error_code, opcode);
+       return;
+    }
+
+    for (int i = 0; i<sizeof(err_code_list) / sizeof(err_code_list[0]); i++) {
+        if (err_code_list[i].error_code == error_code) {
+            if (opcode == NULL) {
+                  MODLOG_DFLT(INFO, "hci_err=0x%02X %s\n", error_code, err_code_list[i].msg);
+            }
+            else {
+                  MODLOG_DFLT(INFO, "ogf=0x%02x, ocf=0x%04x, hci_err=0x%02X %s\n",
+                              BLE_HCI_OGF(*opcode), BLE_HCI_OCF(*opcode), error_code, err_code_list[i].msg);
+            }
+            break;
+        }
+    }
+    return;
+}
 
 static struct ble_npl_mutex ble_hs_hci_mutex;
 static struct ble_npl_sem ble_hs_hci_sem;
@@ -39,6 +269,8 @@ static uint8_t ble_hs_hci_max_pkts;
 static uint32_t ble_hs_hci_sup_feat;
 
 static uint8_t ble_hs_hci_version;
+
+static struct ble_hs_hci_sup_cmd ble_hs_hci_sup_cmd;
 
 #if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
 #define BLE_HS_HCI_FRAG_DATABUF_SIZE    \
@@ -147,8 +379,8 @@ ble_hs_hci_rx_cmd_complete(const void *data, int len,
     const struct ble_hci_ev_command_complete_nop *nop = data;
     uint16_t opcode;
 
-    if (len < sizeof(*ev)) {
-        if (len < sizeof(*nop)) {
+    if (len < (int)sizeof(*ev)) {
+        if (len < (int)sizeof(*nop)) {
             return BLE_HS_ECONTROLLER;
         }
 
@@ -290,7 +522,6 @@ ble_hs_hci_wait_for_ack(void)
         break;
     }
 #endif
-
     return rc;
 }
 
@@ -325,14 +556,14 @@ ble_hs_hci_cmd_tx(uint16_t opcode, const void *cmd, uint8_t cmd_len,
 
     rc = ble_hs_hci_wait_for_ack();
     if (rc != 0) {
-        BLE_HS_LOG(INFO, "HCI wait for ack returned %d \n", rc);
+        BLE_HS_LOG(ERROR, "HCI wait for ack returned %d \n", rc);
         ble_hs_sched_reset(rc);
         goto done;
     }
 
     rc = ble_hs_hci_process_ack(opcode, rsp, rsp_len, &ack);
     if (rc != 0) {
-        BLE_HS_LOG(INFO, "HCI process ack returned %d \n", rc);
+        BLE_HS_LOG(ERROR, "HCI process ack returned %d \n", rc);
         ble_hs_sched_reset(rc);
         goto done;
     }
@@ -341,11 +572,10 @@ ble_hs_hci_cmd_tx(uint16_t opcode, const void *cmd, uint8_t cmd_len,
 
     /* on success we should always get full response */
     if (!rc && (ack.bha_params_len != rsp_len)) {
-        BLE_HS_LOG(INFO, "Received status %d \n", rc);
+        BLE_HS_LOG(ERROR, "Received status %d \n", rc);
         ble_hs_sched_reset(rc);
         goto done;
     }
-
 done:
     if (ble_hs_hci_ack != NULL) {
         ble_transport_free((uint8_t *) ble_hs_hci_ack);
@@ -353,6 +583,7 @@ done:
     }
 
     ble_hs_hci_unlock();
+    esp_hci_err_to_name(rc, &opcode);
     return rc;
 }
 
@@ -387,6 +618,24 @@ ble_hs_hci_rx_ack(uint8_t *ack_ev)
     ble_npl_sem_release(&ble_hs_hci_sem);
 }
 
+// #if (BT_HCI_LOG_INCLUDED == TRUE)
+// bool host_recv_adv_packet(uint8_t *data)
+// {
+//     assert(data);
+//     if(data[0] == BLE_HCI_EVCODE_LE_META) {
+//         if((data[2] ==  BLE_HCI_LE_SUBEV_ADV_RPT) || (data[2] == BLE_HCI_LE_SUBEV_DIRECT_ADV_RPT) ||
+//         (data[2] == BLE_HCI_LE_SUBEV_EXT_ADV_RPT) || (data[2] == BLE_HCI_LE_SUBEV_PERIODIC_ADV_RPT)
+// #if (BLE_ADV_REPORT_FLOW_CONTROL == TRUE)
+//         || (data[2] ==  BLE_HCI_LE_SUBEV_DISCARD_REPORT_EVT)
+// #endif
+//         ) {
+//             return true;
+//         }
+//     }
+//     return false;
+// }
+// #endif // (BT_HCI_LOG_INCLUDED == TRUE)
+
 int
 ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
 {
@@ -396,6 +645,15 @@ ble_hs_hci_rx_evt(uint8_t *hci_ev, void *arg)
     int enqueue;
 
     BLE_HS_DBG_ASSERT(hci_ev != NULL);
+
+// #if ((BT_HCI_LOG_INCLUDED == TRUE) && SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED)
+//     uint16_t len = hci_ev[1] + 3;
+//     if (host_recv_adv_packet(hci_ev)) {
+//         bt_hci_log_record_hci_adv(HCI_LOG_DATA_TYPE_ADV, &hci_ev[1], len - 2);
+//     } else {
+//         bt_hci_log_record_hci_data(0x04, &hci_ev[0], len - 1);
+//     }
+// #endif // #if (BT_HCI_LOG_INCLUDED == TRUE)
 
     switch (ev->opcode) {
     case BLE_HCI_EVCODE_COMMAND_COMPLETE:
@@ -657,6 +915,18 @@ uint8_t
 ble_hs_hci_get_hci_version(void)
 {
     return ble_hs_hci_version;
+}
+
+void
+ble_hs_hci_set_hci_supported_cmd(struct ble_hs_hci_sup_cmd sup_cmd)
+{
+    ble_hs_hci_sup_cmd = sup_cmd;
+}
+
+struct ble_hs_hci_sup_cmd
+ble_hs_hci_get_hci_supported_cmd(void)
+{
+    return ble_hs_hci_sup_cmd;
 }
 
 void

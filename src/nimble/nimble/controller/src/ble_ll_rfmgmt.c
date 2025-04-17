@@ -21,13 +21,12 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
-#include <stddef.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#include "../include/controller/ble_phy.h"
-#include "../include/controller/ble_ll.h"
-#include "../include/controller/ble_ll_sched.h"
-#include "../include/controller/ble_ll_rfmgmt.h"
-#include "../include/controller/ble_ll_tmr.h"
+#include "nimble/nimble/controller/include/controller/ble_phy.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sched.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_rfmgmt.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_tmr.h"
 #include "ble_ll_priv.h"
 
 #if MYNEWT_VAL(BLE_LL_RFMGMT_ENABLE_TIME) > 0
@@ -198,8 +197,7 @@ ble_ll_rfmgmt_ticks_to_enabled(void)
             break;
         }
         rfmgmt->state = RFMGMT_STATE_ENABLED;
-        /* Else falls through. */
-        /* no break */
+        /* fall through */
     case RFMGMT_STATE_ENABLED:
         rem_ticks = 0;
         break;
@@ -239,7 +237,7 @@ ble_ll_rfmgmt_reset(void)
     rfmgmt->timer_scheduled_at = 0;
     ble_ll_tmr_stop(&rfmgmt->timer);
 
-    ble_npl_eventq_remove(&g_ble_ll_data.ll_evq, &rfmgmt->release_ev);
+    ble_ll_event_remove(&rfmgmt->release_ev);
 
     ble_ll_rfmgmt_disable();
 
@@ -293,10 +291,10 @@ ble_ll_rfmgmt_release(void)
 
     OS_ENTER_CRITICAL(sr);
 
-    ble_npl_eventq_remove(&g_ble_ll_data.ll_evq, &rfmgmt->release_ev);
+    ble_ll_event_remove(&rfmgmt->release_ev);
 
     if (g_ble_ll_rfmgmt_data.state != RFMGMT_STATE_OFF) {
-        ble_npl_eventq_put(&g_ble_ll_data.ll_evq, &rfmgmt->release_ev);
+        ble_ll_event_add(&rfmgmt->release_ev);
     }
 
     OS_EXIT_CRITICAL(sr);

@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os_trace_api.h"
-#include "../include/controller/ble_ll_trace.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_trace.h"
 
 #if MYNEWT_VAL(BLE_LL_SYSVIEW)
 

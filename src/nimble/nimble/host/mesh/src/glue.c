@@ -18,13 +18,11 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_LOG
 
-#include "../include/mesh/glue.h"
+#include "nimble/nimble/host/mesh/include/mesh/glue.h"
 #include "adv.h"
-#include "../../src/ble_hs_conn_priv.h"
+#include "nimble/nimble/host/src/ble_hs_conn_priv.h"
 #ifndef MYNEWT
 #include "nimble/porting/nimble/include/nimble/nimble_port.h"
 #endif
@@ -63,7 +61,7 @@ bt_hex(const void *buf, size_t len)
     str = hexbufs[curbuf++];
     curbuf %= ARRAY_SIZE(hexbufs);
 
-    len = min(len, (sizeof(hexbufs[0]) - 1) / 2);
+    len = MIN(len, (sizeof(hexbufs[0]) - 1) / 2);
 
     for (i = 0; i < len; i++) {
         str[i * 2] = hex[b[i] >> 4];
@@ -1039,4 +1037,3 @@ char *settings_str_from_bytes(const void *vp, int vp_len,
 }
 
 #endif /* MYNEWT_VAL(BLE_MESH_SETTINGS) */
-#endif /* MYNEWT_VAL(BLE_MESH) */

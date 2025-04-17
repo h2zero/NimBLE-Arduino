@@ -154,7 +154,7 @@ int ble_l2cap_sig_ecoc_connect(uint16_t conn_handle,
                                        uint8_t num, struct os_mbuf *sdu_rx[],
                                        ble_l2cap_event_fn *cb, void *cb_arg);
 int ble_l2cap_sig_coc_reconfig(uint16_t conn_handle, struct ble_l2cap_chan *chans[],
-                               uint8_t num, uint16_t new_mtu);
+                               uint8_t num, uint16_t new_mtu, uint16_t new_mps);
 #else
 static inline int
 ble_l2cap_sig_ecoc_connect(uint16_t conn_handle,
@@ -166,7 +166,7 @@ ble_l2cap_sig_ecoc_connect(uint16_t conn_handle,
 }
 static inline int
 ble_l2cap_sig_coc_reconfig(uint16_t conn_handle, struct ble_l2cap_chan *chans[],
-                           uint8_t num, uint16_t new_mtu)
+                           uint8_t num, uint16_t new_mtu, uint16_t new_mps)
 {
     return BLE_HS_ENOTSUP;
 }

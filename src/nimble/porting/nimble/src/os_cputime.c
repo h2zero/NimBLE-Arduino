@@ -20,9 +20,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
-#include "../include/syscfg/syscfg.h"
-#include "../include/os/os_cputime.h"
-#include "../include/hal/hal_timer.h"
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "nimble/porting/nimble/include/os/os_cputime.h"
+#include "nimble/porting/nimble/include/hal/hal_timer.h"
 
 #if defined(OS_CPUTIME_FREQ_HIGH)
 struct os_cputime_data g_os_cputime;

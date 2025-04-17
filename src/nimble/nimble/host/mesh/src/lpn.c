@@ -7,15 +7,13 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
-#if MYNEWT_VAL(BLE_MESH)
-
 #define MESH_LOG_MODULE BLE_MESH_LOW_POWER_LOG
 
 #if MYNEWT_VAL(BLE_MESH_LOW_POWER)
 
 #include <stdint.h>
 
-#include "../include/mesh/mesh.h"
+#include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "mesh_priv.h"
 #include "crypto.h"
 #include "adv.h"
@@ -34,7 +32,7 @@
 #endif
 
 #define LPN_RECV_DELAY            MYNEWT_VAL(BLE_MESH_LPN_RECV_DELAY)
-#define SCAN_LATENCY              min(MYNEWT_VAL(BLE_MESH_LPN_SCAN_LATENCY), \
+#define SCAN_LATENCY              MIN(MYNEWT_VAL(BLE_MESH_LPN_SCAN_LATENCY), \
 				      LPN_RECV_DELAY)
 
 #define FRIEND_REQ_RETRY_TIMEOUT  K_SECONDS(MYNEWT_VAL(BLE_MESH_LPN_RETRY_TIMEOUT))
@@ -154,12 +152,12 @@ static int32_t poll_timeout(struct bt_mesh_lpn *lpn)
 {
 	/* If we're waiting for segment acks keep polling at high freq */
 	if (bt_mesh_tx_in_progress()) {
-		return min(POLL_TIMEOUT_MAX(lpn), K_SECONDS(1));
+		return MIN(POLL_TIMEOUT_MAX(lpn), K_SECONDS(1));
 	}
 
 	if (lpn->poll_timeout < POLL_TIMEOUT_MAX(lpn)) {
 		lpn->poll_timeout *= 2;
-		lpn->poll_timeout = min(lpn->poll_timeout,
+		lpn->poll_timeout = MIN(lpn->poll_timeout,
 					POLL_TIMEOUT_MAX(lpn));
 	}
 
@@ -1002,7 +1000,7 @@ int bt_mesh_lpn_friend_update(struct bt_mesh_net_rx *rx,
 		}
 
 		/* Set initial poll timeout */
-		lpn->poll_timeout = min(POLL_TIMEOUT_MAX(lpn),
+		lpn->poll_timeout = MIN(POLL_TIMEOUT_MAX(lpn),
 					POLL_TIMEOUT_INIT);
 	}
 
@@ -1101,4 +1099,3 @@ int bt_mesh_lpn_init(void)
 }
 
 #endif /* MYNEWT_VAL(BLE_MESH_LOW_POWER) */
-#endif
