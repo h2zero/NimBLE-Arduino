@@ -23,6 +23,12 @@
 #include "../../../nimble/include/nimble/nimble_port.h"
 #ifdef ESP_PLATFORM
 #include "esp_bt.h"
+
+#ifdef CONFIG_BT_NIMBLE_HOST_TASK_PRIORITY
+# define NIMBLE_HOST_TASK_PRIORITY (CONFIG_BT_NIMBLE_HOST_TASK_PRIORITY)
+#else
+# define NIMBLE_HOST_TASK_PRIORITY (configMAX_PRIORITIES - 4)
+#endif
 #endif
 
 #ifndef ESP_PLATFORM
@@ -39,17 +45,6 @@ static TaskHandle_t ll_task_h;
 
 static StackType_t hs_xStack[ NIMBLE_HS_STACK_SIZE ];
 static StaticTask_t hs_xTaskBuffer;
-#endif
-
-// configMAX_PRIORITIES - 1 is Tmr builtin task
-#ifndef NIMBLE_LL_PRIORITY
-#define NIMBLE_LL_PRIORITY (configMAX_PRIORITIES - 2)
-#endif
-#ifndef NIMBLE_BLE_PRIORITY
-#define NIMBLE_BLE_PRIORITY (configMAX_PRIORITIES - 3)
-#endif
-#ifndef NIMBLE_HOST_PRIORITY
-#define NIMBLE_HOST_PRIORITY (configMAX_PRIORITIES - 4)
 #endif
 
 static TaskHandle_t host_task_h = NULL;
@@ -69,7 +64,7 @@ esp_err_t esp_nimble_enable(void *host_task)
      * default queue it is just easier to make separate task which does this.
      */
     xTaskCreatePinnedToCore(host_task, "nimble_host", NIMBLE_HS_STACK_SIZE,
-                            NULL, NIMBLE_HOST_PRIORITY, &host_task_h, NIMBLE_CORE);
+                            NULL, NIMBLE_HOST_TASK_PRIORITY, &host_task_h, NIMBLE_CORE);
     return ESP_OK;
 
 }
@@ -112,6 +107,19 @@ nimble_port_freertos_deinit(void)
 
 #else // !ESP_PLATFORM
 
+// configMAX_PRIORITIES - 1 is Tmr builtin task
+#ifdef CONFIG_BT_NIMBLE_LL_TASK_PRIORITY
+# define NIMBLE_LL_TASK_PRIORITY (CONFIG_BT_NIMBLE_LL_TASK_PRIORITY)
+#else
+# define NIMBLE_LL_TASK_PRIORITY (configMAX_PRIORITIES - 1)
+#endif
+
+#ifdef CONFIG_BT_NIMBLE_HOST_TASK_PRIORITY
+# define NIMBLE_HOST_TASK_PRIORITY (CONFIG_BT_NIMBLE_HOST_TASK_PRIORITY)
+#else
+# define NIMBLE_HOST_TASK_PRIORITY (configMAX_PRIORITIES - 2)
+#endif
+
 void
 nimble_port_freertos_init(TaskFunction_t host_task_fn)
 {
@@ -123,7 +131,7 @@ nimble_port_freertos_init(TaskFunction_t host_task_fn)
      * since it has compatible prototype.
      */
     ll_task_h = xTaskCreateStatic(nimble_port_ll_task_func, "ll", NIMBLE_LL_STACK_SIZE,
-                                  NULL, NIMBLE_LL_PRIORITY, ll_xStack, &ll_xTaskBuffer);
+                                NULL, NIMBLE_LL_TASK_PRIORITY, ll_stack, &ll_task_buffer);
 #endif
     /*
      * Create task where NimBLE host will run. It is not strictly necessary to
@@ -131,7 +139,7 @@ nimble_port_freertos_init(TaskFunction_t host_task_fn)
      * default queue it is just easier to make separate task which does this.
      */
     host_task_h = xTaskCreateStatic(host_task_fn, "ble", NIMBLE_HS_STACK_SIZE,
-                                    NULL, NIMBLE_BLE_PRIORITY, hs_xStack, &hs_xTaskBuffer);
+                                    NULL, NIMBLE_HOST_TASK_PRIORITY, hs_xStack, &hs_xTaskBuffer);
 }
 
 void
