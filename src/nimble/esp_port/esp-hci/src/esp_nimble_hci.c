@@ -5,6 +5,8 @@
  */
 
 #ifdef ESP_PLATFORM
+#include "syscfg/syscfg.h"
+#if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
 
 #include <assert.h>
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
@@ -342,4 +344,5 @@ esp_err_t esp_nimble_hci_deinit(void)
     return ESP_OK;
 }
 
+#endif
 #endif //ESP_PLATFORM

@@ -891,11 +891,13 @@ bool NimBLEDevice::init(const std::string& deviceName) {
             return false;
         }
 
+#   if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
         err = esp_nimble_hci_init();
         if (err != ESP_OK) {
             NIMBLE_LOGE(LOG_TAG, "esp_nimble_hci_init() failed; err=%d", err);
             return false;
         }
+#   endif
 #  endif
 # endif
         nimble_port_init();
