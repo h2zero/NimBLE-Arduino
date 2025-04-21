@@ -162,7 +162,12 @@ ble_npl_get_current_task_id(void)
 static inline void
 ble_npl_eventq_init(struct ble_npl_eventq *evq)
 {
+#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+    void na_npl_freertos_eventq_init(struct ble_npl_eventq *evq);
+    na_npl_freertos_eventq_init(evq);
+#else
     return npl_funcs->p_ble_npl_eventq_init(evq);
+#endif
 }
 
 static inline void
