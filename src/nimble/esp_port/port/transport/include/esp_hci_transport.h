@@ -48,11 +48,14 @@ typedef int hci_transport_host_recv_fn(hci_trans_pkt_ind_t type, uint8_t *data, 
  * @return int    Returns 0 on success, or a non-zero error code on failure.
  */
 int hci_transport_init(uint8_t hci_transport_mode);
+int na_hci_transport_init(uint8_t hci_transport_mode);
+
 
 /**
  * @brief Deinitialize the HCI transport layer for releasing any allocated resources.
  */
 void hci_transport_deinit(void);
+void na_hci_transport_deinit(void);
 
 /**
  * @brief Set the host's HCI callback which will be invoked when receiving ACL/Events from controller.
@@ -60,6 +63,7 @@ void hci_transport_deinit(void);
  * @return int 0 on success, non-zero error code on failure.
  */
 int hci_transport_host_callback_register(hci_transport_host_recv_fn *callback);
+int na_hci_transport_host_callback_register(hci_transport_host_recv_fn *callback);
 
 /**
  * @brief Called to send HCI commands form host to controller.
@@ -68,6 +72,7 @@ int hci_transport_host_callback_register(hci_transport_host_recv_fn *callback);
  * @return int 0 on success, non-zero error code on failure.
  */
 int hci_transport_host_cmd_tx(uint8_t *data, uint32_t length);
+int na_hci_transport_host_cmd_tx(uint8_t *data, uint32_t length);
 
 /**
  * @brief Called to send HCI ACL form host to controller.
@@ -76,6 +81,7 @@ int hci_transport_host_cmd_tx(uint8_t *data, uint32_t length);
  * @return int 0 on success, non-zero error code on failure.
  */
 int hci_transport_host_acl_tx(uint8_t *data, uint32_t length);
+int na_hci_transport_host_acl_tx(uint8_t *data, uint32_t length);
 
 #ifdef __cplusplus
 }

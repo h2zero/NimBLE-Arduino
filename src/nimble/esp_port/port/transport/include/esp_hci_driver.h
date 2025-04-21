@@ -39,7 +39,7 @@ typedef struct hci_driver_ops {
 
 
 #if CONFIG_BT_LE_HCI_INTERFACE_USE_RAM
-extern hci_driver_ops_t hci_driver_vhci_ops;
+extern hci_driver_ops_t na_hci_driver_vhci_ops;
 #endif // CONFIG_BT_LE_HCI_INTERFACE_USE_RAM
 
 #if CONFIG_BT_LE_HCI_INTERFACE_USE_UART
