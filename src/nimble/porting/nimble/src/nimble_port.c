@@ -126,6 +126,9 @@ esp_err_t esp_nimble_init(void)
 #elif CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
     hci_transport_deinit();
     na_hci_transport_init(HCI_TRANSPORT_VHCI);
+    int na_npl_freertos_mempool_init(void);
+    na_npl_freertos_mempool_init();
+    ble_npl_eventq_init(&g_eventq_dflt);
 #endif
 
     ble_transport_ll_init();
