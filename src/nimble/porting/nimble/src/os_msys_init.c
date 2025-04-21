@@ -17,6 +17,10 @@
  * under the License.
  */
 
+#include "syscfg/syscfg.h"
+
+#if !CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+
 #include <assert.h>
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/porting/nimble/include/mem/mem.h"
@@ -220,3 +224,5 @@ void os_msys_init(void)
     SYSINIT_PANIC_ASSERT(rc == 0);
 #endif
 }
+
+#endif

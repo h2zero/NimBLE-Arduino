@@ -33,6 +33,10 @@
  *
  */
 
+#include "syscfg/syscfg.h"
+
+#if !CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/porting/nimble/include/os/os_trace_api.h"
 #include "nimble/porting/nimble/include/modlog/modlog.h"
@@ -1262,3 +1266,5 @@ os_mbuf_pack_chains(struct os_mbuf *m1, struct os_mbuf *m2)
 
     return m1;
 }
+
+#endif

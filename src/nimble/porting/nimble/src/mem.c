@@ -17,6 +17,10 @@
  * under the License.
  */
 
+#include "syscfg/syscfg.h"
+
+#if !CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+
 #include <stdlib.h>
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/porting/nimble/include/mem/mem.h"
@@ -326,3 +330,5 @@ mem_pullup_obj(struct os_mbuf **om, uint16_t len)
     return (*om)->om_data;
 
 }
+
+#endif

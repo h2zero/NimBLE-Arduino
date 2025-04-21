@@ -17,11 +17,14 @@
  * under the License.
  */
 
+#include "syscfg/syscfg.h"
+
+#if !CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
 #include "nimble/console/console.h"
 
 #include "nimble/nimble/include/nimble/nimble_npl.h"
@@ -1405,3 +1408,5 @@ void npl_freertos_funcs_deinit(void)
     }
     npl_funcs = NULL;
 }
+
+#endif
