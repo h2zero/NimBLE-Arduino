@@ -42,6 +42,9 @@
 #if !CONFIG_BT_CONTROLLER_ENABLED
 #include "nimble/nimble/transport/include/nimble/transport.h"
 #endif
+#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+#include "nimble/esp_port/port/transport/include/esp_hci_transport.h"
+#endif
 // #if (BT_HCI_LOG_INCLUDED == TRUE)
 // #include "hci_log/bt_hci_log.h"
 // #endif // (BT_HCI_LOG_INCLUDED == TRUE)
@@ -120,6 +123,9 @@ esp_err_t esp_nimble_init(void)
     os_mempool_module_init();
     os_msys_init();
 
+#elif CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+    hci_transport_deinit();
+    na_hci_transport_init(HCI_TRANSPORT_VHCI);
 #endif
 
     ble_transport_ll_init();
@@ -251,6 +257,10 @@ nimble_port_deinit(void)
         ESP_LOGE(NIMBLE_PORT_LOG_TAG, "controller deinit failed\n");
         return ret;
     }
+#endif
+
+#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+    na_hci_transport_deinit();
 #endif
 
 #if (BT_HCI_LOG_INCLUDED == TRUE)

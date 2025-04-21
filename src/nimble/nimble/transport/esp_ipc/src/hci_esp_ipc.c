@@ -41,25 +41,25 @@ ble_transport_host_recv_cb(hci_trans_pkt_ind_t type, uint8_t *data, uint16_t len
 int
 ble_transport_to_ll_cmd_impl(void *buf)
 {
-    return hci_transport_host_cmd_tx(buf, 0);
+    return na_hci_transport_host_cmd_tx(buf, 0);
 }
 
 int
 ble_transport_to_ll_acl_impl(struct os_mbuf *om)
 {
-    return hci_transport_host_acl_tx((uint8_t *)om, 0);
+    return na_hci_transport_host_acl_tx((uint8_t *)om, 0);
 }
 
 void
 ble_transport_ll_init(void)
 {
-    hci_transport_host_callback_register(ble_transport_host_recv_cb);
+    na_hci_transport_host_callback_register(ble_transport_host_recv_cb);
 }
 
 void
 ble_transport_ll_deinit(void)
 {
-    hci_transport_host_callback_register(ble_transport_dummy_host_recv_cb);
+    na_hci_transport_host_callback_register(ble_transport_dummy_host_recv_cb);
 }
 
 void *
