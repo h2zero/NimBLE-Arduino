@@ -65,5 +65,30 @@ hci_driver_ops_t na_hci_driver_vhci_ops = {
     .hci_driver_deinit = hci_driver_vhci_deinit,
 };
 
+// Prevent linking errors when using arduino + bluedroid with esp32c2
+#if defined (CONFIG_IDF_TARGET_ESP32C2)
+void adv_stack_enableClearLegacyAdvVsCmd(bool en){}
+void scan_stack_enableAdvFlowCtrlVsCmd(bool en){}
+void advFilter_stack_enableDupExcListVsCmd(bool en){}
+void arr_stack_enableMultiConnVsCmd(bool en){}
+void pcl_stack_enableSetRssiThreshVsCmd(bool en){}
+void chanSel_stack_enableSetCsaVsCmd(bool en){}
+void log_stack_enableLogsRelatedVsCmd(bool en){}
+void hci_stack_enableSetVsEvtMaskVsCmd(bool en){}
+void winWiden_stack_enableSetConstPeerScaVsCmd(bool en){}
+#if CONFIG_IDF_TARGET_ESP32C61_ECO3
+void conn_stack_enableSetPrefTxRxCntVsCmd(bool en){}
+#endif // CONFIG_IDF_TARGET_ESP32C61_ECO3
+
+void adv_stack_enableScanReqRxdVsEvent(bool en){}
+void conn_stack_enableChanMapUpdCompVsEvent(bool en){}
+void sleep_stack_enableWakeupVsEvent(bool en){}
+
+#ifdef SOC_ECC_SUPPORTED
+void esp_crypto_ecc_lock_acquire(void) {}
+void esp_crypto_ecc_lock_release(void) {}
+#endif
+#endif
+
 #endif
 #endif
