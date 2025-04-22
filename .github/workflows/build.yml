@@ -8,7 +8,7 @@ on:
       - master
 
 jobs:
-  build_esp_pio:
+  build_esp_pio_legacy:
     strategy:
       fail-fast: false
       matrix:
@@ -48,16 +48,13 @@ jobs:
           cp ${{ matrix.example }}/* example/src/
           platformio run -d example
 
-  build_bt5_esp_pio:
+  build_bt5_esp_pio_legacy:
     strategy:
       fail-fast: false
       matrix:
         example:
           - "examples/Bluetooth_5/NimBLE_extended_client"
           - "examples/Bluetooth_5/NimBLE_extended_server"
-        variant:
-          - esp32c3
-          - esp32s3
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -90,6 +87,99 @@ jobs:
           cp ${{ matrix.example }}/* example/src/
           platformio run -d example
 
+  build_esp_pioarduino:
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - "examples/NimBLE_Client"
+          - "examples/NimBLE_Server"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install platformio
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+      - name: Build esp PIO
+        run: |
+          mkdir -p example/lib
+          rsync -Rr . example/lib/
+          mkdir example/src
+          cat > example/platformio.ini << EOF
+            [env]
+            platform = https://github.com/pioarduino/platform-espressif32/releases/download/stable/platform-espressif32.zip
+            framework = arduino
+
+            [env:esp32dev]
+            board = esp32dev
+
+            [env:esp32c3]
+            board = esp32-c3-devkitm-1
+
+            [env:esp32s3]
+            board = esp32-s3-devkitc-1
+
+            [env:esp32c6]
+            board = esp32-c6-devkitc-1
+
+            [env:esp32h2]
+            board = esp32-h2-devkitm-1
+          EOF
+          cp ${{ matrix.example }}/* example/src/
+          platformio run -d example
+
+  build_bt5_esp_pioarduino:
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          - "examples/Bluetooth_5/NimBLE_extended_client"
+          - "examples/Bluetooth_5/NimBLE_extended_server"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install platformio
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+      - name: Build esp PIO
+        run: |
+          mkdir -p example/lib
+          rsync -Rr . example/lib/
+          mkdir example/src
+          cat > example/platformio.ini << EOF
+            [env]
+            platform = https://github.com/pioarduino/platform-espressif32/releases/download/stable/platform-espressif32.zip
+            framework = arduino
+
+            [env:esp32c3]
+            board = esp32-c3-devkitm-1
+            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+
+            [env:esp32s3]
+            board = esp32-s3-devkitc-1
+            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+
+            [env:esp32c6]
+            board = esp32-c6-devkitc-1
+            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+
+            [env:esp32h2]
+            board = esp32-h2-devkitm-1
+            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+          EOF
+          cp ${{ matrix.example }}/* example/src/
+            platformio run -d example
+
   build_arduino-esp32:
     strategy:
       fail-fast: false
@@ -101,6 +191,8 @@ jobs:
           - esp32
           - esp32c3
           - esp32s3
+          - esp32c6
+          - esp32h2
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -125,6 +217,8 @@ jobs:
         variant:
           - esp32c3
           - esp32s3
+          - esp32c6
+          - esp32h2
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -219,7 +313,7 @@ jobs:
           mkdir example/src
           cat > example/platformio.ini << EOF
             [env]
-            platform = https://github.com/h2zero/platform-n-able.git#1.0.0
+            platform = https://github.com/h2zero/platform-n-able.git#1.1.1
             framework = arduino
 
             [env:generic_nrf51822_xxaa
@@ -262,7 +356,7 @@ jobs:
           mkdir example/src
           cat > example/platformio.ini << EOF
             [env]
-            platform = https://github.com/h2zero/platform-n-able.git#1.0.0
+            platform = https://github.com/h2zero/platform-n-able.git#1.1.1
             framework = arduino
 
             [env:generic_nrf52840]
