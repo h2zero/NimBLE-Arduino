@@ -305,9 +305,6 @@ class NimBLEAttValue {
      */
     template <typename T>
     T getValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
-        if (!skipSizeCheck && size() < sizeof(T)) {
-            return T();
-        }
         if (timestamp != nullptr) {
 # if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
             *timestamp = m_timestamp;
@@ -316,7 +313,14 @@ class NimBLEAttValue {
 # endif
         }
 
-        return *(reinterpret_cast<const T*>(m_attr_value));
+        if (std::is_convertible<NimBLEAttValue, T>::value) {
+            return *this;
+        } else {
+            if (!skipSizeCheck && size() < sizeof(T)) {
+                return T();
+            }
+            return *(reinterpret_cast<const T*>(m_attr_value));
+        }
     }
 
     /*********************** Operators ************************/
