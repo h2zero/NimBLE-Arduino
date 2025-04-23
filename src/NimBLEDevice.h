@@ -59,6 +59,9 @@ class NimBLEAdvertising;
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 class NimBLEServer;
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+class NimBLEL2CAPServer;
+#  endif
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL) || defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
@@ -95,6 +98,13 @@ class NimBLEDeviceCallbacks;
 # define BLEEddystoneTLM              NimBLEEddystoneTLM
 # define BLEEddystoneURL              NimBLEEddystoneURL
 # define BLEConnInfo                  NimBLEConnInfo
+# define BLEL2CAPServer               NimBLEL2CAPServer
+# define BLEL2CAPService              NimBLEL2CAPService
+# define BLEL2CAPServiceCallbacks     NimBLEL2CAPServiceCallbacks
+# define BLEL2CAPClient               NimBLEL2CAPClient
+# define BLEL2CAPClientCallbacks      NimBLEL2CAPClientCallbacks
+# define BLEL2CAPChannel              NimBLEL2CAPChannel
+# define BLEL2CAPChannelCallbacks     NimBLEL2CAPChannelCallbacks
 
 # ifdef CONFIG_BT_NIMBLE_MAX_CONNECTIONS
 #  define NIMBLE_MAX_CONNECTIONS CONFIG_BT_NIMBLE_MAX_CONNECTIONS
@@ -160,6 +170,10 @@ class NimBLEDevice {
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     static NimBLEServer* createServer();
     static NimBLEServer* getServer();
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+    static NimBLEL2CAPServer* createL2CAPServer();
+    static NimBLEL2CAPServer* getL2CAPServer();
+#  endif
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL) || defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
@@ -216,6 +230,9 @@ class NimBLEDevice {
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
     static NimBLEServer* m_pServer;
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+    static NimBLEL2CAPServer* m_pL2CAPServer;
+#  endif
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
@@ -275,6 +292,10 @@ class NimBLEDevice {
 #  include "NimBLEService.h"
 #  include "NimBLECharacteristic.h"
 #  include "NimBLEDescriptor.h"
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+#   include "NimBLEL2CAPServer.h"
+#   include "NimBLEL2CAPChannel.h"
+#  endif
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)

@@ -255,6 +255,11 @@
 #define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 0
 #endif
 
+/** @brief Maximum number of connection oriented channels */
+#ifndef CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
+#define CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM 0
+#endif
+
 /** @brief Set if CCCD's and bond data should be stored in NVS */
 #define CONFIG_BT_NIMBLE_NVS_PERSIST 1
 
@@ -286,8 +291,6 @@
 /** @brief Number of low priority HCI event buffers */
 #define CONFIG_BT_NIMBLE_TRANSPORT_EVT_DISCARD_COUNT 8
 
-/** @brief Maximum number of connection oriented channels */
-#define CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM 0
 #define CONFIG_BT_NIMBLE_L2CAP_COC_SDU_BUFF_COUNT 1
 #define CONFIG_BT_NIMBLE_EATT_CHAN_NUM 0
 #define CONFIG_BT_NIMBLE_SVC_GAP_CENT_ADDR_RESOLUTION -1
