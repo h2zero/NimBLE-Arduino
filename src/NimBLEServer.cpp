@@ -635,12 +635,12 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
         case BLE_GATT_ACCESS_OP_WRITE_DSC:
         case BLE_GATT_ACCESS_OP_WRITE_CHR: {
             uint16_t maxLen = val.max_size();
-            if (ctxt->om->om_len > maxLen) {
+            uint16_t len    = ctxt->om->om_len;
+            if (len > maxLen) {
                 return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             }
 
-            uint8_t  buf[maxLen];
-            uint16_t len = ctxt->om->om_len;
+            uint8_t buf[maxLen];
             memcpy(buf, ctxt->om->om_data, len);
 
             os_mbuf* next;
