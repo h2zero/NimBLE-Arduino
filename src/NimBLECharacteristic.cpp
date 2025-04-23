@@ -268,17 +268,32 @@ bool NimBLECharacteristic::sendValue(const uint8_t* value, size_t length, bool i
     int rc = 0;
 
     if (value != nullptr && length > 0) { // custom notification value
-        // Notify all connected peers unless a specific handle is provided
-        for (const auto& ch : NimBLEDevice::getServer()->getPeerDevices()) {
-            if (connHandle != BLE_HS_CONN_HANDLE_NONE && ch != connHandle) {
-                continue; // only send to the specific handle, minor inefficiency but saves code.
+        os_mbuf* om = nullptr;
+
+        if (connHandle != BLE_HS_CONN_HANDLE_NONE) { // only sending to specific peer
+            om = ble_hs_mbuf_from_flat(value, length);
+            if (!om) {
+                rc = BLE_HS_ENOMEM;
+                goto done;
             }
 
+            // Null buffer will read the value from the characteristic
+            if (isNotification) {
+                rc = ble_gattc_notify_custom(connHandle, m_handle, om);
+            } else {
+                rc = ble_gattc_indicate_custom(connHandle, m_handle, om);
+            }
+
+            goto done;
+        }
+
+        // Notify all connected peers unless a specific handle is provided
+        for (const auto& ch : NimBLEDevice::getServer()->getPeerDevices()) {
             // Must re-create the data buffer on each iteration because it is freed by the calls bellow.
-            os_mbuf* om = ble_hs_mbuf_from_flat(value, length);
+            om = ble_hs_mbuf_from_flat(value, length);
             if (!om) {
-                NIMBLE_LOGE(LOG_TAG, "<< sendValue: failed to allocate mbuf");
-                return false;
+                rc = BLE_HS_ENOMEM;
+                goto done;
             }
 
             if (isNotification) {
@@ -286,24 +301,25 @@ bool NimBLECharacteristic::sendValue(const uint8_t* value, size_t length, bool i
             } else {
                 rc = ble_gattc_indicate_custom(ch, m_handle, om);
             }
-
-            if (rc != 0) {
-                NIMBLE_LOGE(LOG_TAG, "<< sendValue: failed to send value, rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-                break;
-            }
         }
-    } else if (connHandle != BLE_HS_CONN_HANDLE_NONE) { // only sending to specific peer
+    } else if (connHandle != BLE_HS_CONN_HANDLE_NONE) {
         // Null buffer will read the value from the characteristic
         if (isNotification) {
-            rc = ble_gattc_notify_custom(connHandle, m_handle, NULL);
+            rc = ble_gattc_notify_custom(connHandle, m_handle, nullptr);
         } else {
-            rc = ble_gattc_indicate_custom(connHandle, m_handle, NULL);
+            rc = ble_gattc_indicate_custom(connHandle, m_handle, nullptr);
         }
     } else { // Notify or indicate to all connected peers the characteristic value
         ble_gatts_chr_updated(m_handle);
     }
 
-    return rc == 0;
+done:
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "failed to send value, rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+        return false;
+    }
+
+    return true;
 } // sendValue
 
 void NimBLECharacteristic::readEvent(NimBLEConnInfo& connInfo) {
