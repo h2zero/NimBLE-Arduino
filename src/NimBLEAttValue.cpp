@@ -105,7 +105,8 @@ void NimBLEAttValue::deepCopy(const NimBLEAttValue& source) {
 
 // Set the value of the attribute.
 bool NimBLEAttValue::setValue(const uint8_t* value, uint16_t len) {
-    m_attr_len = 0; // Just set the value length to 0 and append instead of repeating code.
+    m_attr_len      = 0; // Just set the value length to 0 and append instead of repeating code.
+    m_attr_value[0] = '\0'; // Set the first byte to 0 incase the len of the new value is 0.
     append(value, len);
     return memcmp(m_attr_value, value, len) == 0 && m_attr_len == len;
 }
