@@ -102,12 +102,7 @@ class NimBLEDeviceCallbacks;
 #  define NIMBLE_MAX_CONNECTIONS CONFIG_NIMBLE_MAX_CONNECTIONS
 # endif
 
-enum class NimBLETxPowerType {
-    All  = 0,
-    Advertise  = 1,
-    Scan = 2,
-    Connection = 3
-};
+enum class NimBLETxPowerType { All = 0, Advertise = 1, Scan = 2, Connection = 3 };
 
 typedef int (*gap_event_handler)(ble_gap_event* event, void* arg);
 
@@ -149,16 +144,13 @@ class NimBLEDevice {
     static void          host_task(void* param);
     static int           getPower(NimBLETxPowerType type = NimBLETxPowerType::All);
     static bool          setPower(int8_t dbm, NimBLETxPowerType type = NimBLETxPowerType::All);
+    static bool          setDefaultPhy(uint8_t txPhyMask, uint8_t rxPhyMask);
 
 # ifdef ESP_PLATFORM
 #  ifndef CONFIG_IDF_TARGET_ESP32P4
     static esp_power_level_t getPowerLevel(esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
     static bool setPowerLevel(esp_power_level_t powerLevel, esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
 #  endif
-# endif
-
-# if CONFIG_BT_NIMBLE_EXT_ADV
-    static bool setDefaultPhy(uint8_t txPhyMask, uint8_t rxPhyMask);
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)

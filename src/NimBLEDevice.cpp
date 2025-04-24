@@ -737,7 +737,6 @@ NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
 /*                               STACK FUNCTIONS                              */
 /* -------------------------------------------------------------------------- */
 
-# if CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
 /**
  * @brief Set the preferred default phy to use for connections.
  * @param [in] txPhyMask TX PHY. Can be mask of following:
@@ -760,7 +759,6 @@ bool NimBLEDevice::setDefaultPhy(uint8_t txPhyMask, uint8_t rxPhyMask) {
 
     return rc == 0;
 }
-# endif
 
 /**
  * @brief Host reset, we pass the message so we don't make calls until re-synced.
