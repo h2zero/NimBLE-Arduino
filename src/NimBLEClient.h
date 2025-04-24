@@ -95,9 +95,9 @@ class NimBLEClient {
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
     void setConnectPhy(uint8_t phyMask);
+# endif
     bool updatePhy(uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions = 0);
     bool getPhy(uint8_t* txPhy, uint8_t* rxPhy);
-# endif
 
     struct Config {
         uint8_t deleteCallbacks : 1;     // Delete the callback object when the client is deleted.
@@ -213,7 +213,6 @@ class NimBLEClientCallbacks {
      */
     virtual void onMTUChange(NimBLEClient* pClient, uint16_t MTU);
 
-# if CONFIG_BT_NIMBLE_EXT_ADV
     /**
      * @brief Called when the PHY update procedure is complete.
      * @param [in] pClient A pointer to the client whose PHY was updated.
@@ -226,7 +225,6 @@ class NimBLEClientCallbacks {
      * * BLE_GAP_LE_PHY_CODED
      */
     virtual void onPhyUpdate(NimBLEClient* pClient, uint8_t txPhy, uint8_t rxPhy);
-# endif
 };
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */

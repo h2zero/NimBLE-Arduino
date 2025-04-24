@@ -79,6 +79,8 @@ class NimBLEServer {
     NimBLEConnInfo        getPeerInfoByHandle(uint16_t connHandle) const;
     void                  advertiseOnDisconnect(bool enable);
     void                  setDataLen(uint16_t connHandle, uint16_t tx_octets) const;
+    bool                  updatePhy(uint16_t connHandle, uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions);
+    bool                  getPhy(uint16_t connHandle, uint8_t* txPhy, uint8_t* rxPhy);
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
     NimBLEClient* getClient(uint16_t connHandle);
@@ -90,8 +92,6 @@ class NimBLEServer {
     NimBLEExtAdvertising* getAdvertising() const;
     bool                  startAdvertising(uint8_t instanceId, int duration = 0, int maxEvents = 0) const;
     bool                  stopAdvertising(uint8_t instanceId) const;
-    bool                  updatePhy(uint16_t connHandle, uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions);
-    bool                  getPhy(uint16_t connHandle, uint8_t* txPhy, uint8_t* rxPhy);
 # endif
 
 # if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
@@ -203,7 +203,6 @@ class NimBLEServerCallbacks {
      */
     virtual void onConnParamsUpdate(NimBLEConnInfo& connInfo);
 
-# if CONFIG_BT_NIMBLE_EXT_ADV
     /**
      * @brief Called when the PHY update procedure is complete.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance with information
@@ -216,7 +215,6 @@ class NimBLEServerCallbacks {
      * * BLE_GAP_LE_PHY_CODED
      */
     virtual void onPhyUpdate(NimBLEConnInfo& connInfo, uint8_t txPhy, uint8_t rxPhy);
-# endif
 }; // NimBLEServerCallbacks
 
 #endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL

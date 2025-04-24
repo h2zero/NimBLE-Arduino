@@ -408,6 +408,7 @@ void NimBLEClient::setConfig(NimBLEClient::Config config) {
 void NimBLEClient::setConnectPhy(uint8_t mask) {
     m_phyMask = mask;
 } // setConnectPhy
+# endif
 
 /**
  * @brief Request a change to the PHY used for this peer connection.
@@ -450,7 +451,6 @@ bool NimBLEClient::getPhy(uint8_t* txPhy, uint8_t* rxPhy) {
 
     return rc == 0;
 } // getPhy
-# endif
 
 /**
  * @brief Set the connection parameters to use when connecting to a server.
@@ -1141,7 +1141,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             break;
         } // BLE_GAP_EVENT_IDENTITY_RESOLVED
 
-# if CONFIG_BT_NIMBLE_EXT_ADV
         case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE: {
             NimBLEConnInfo peerInfo;
             rc = ble_gap_conn_find(event->phy_updated.conn_handle, &peerInfo.m_desc);
@@ -1152,7 +1151,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             pClient->m_pClientCallbacks->onPhyUpdate(pClient, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
             return 0;
         } // BLE_GAP_EVENT_PHY_UPDATE_COMPLETE
-# endif
 
         case BLE_GAP_EVENT_MTU: {
             if (pClient->m_connHandle != event->mtu.conn_handle) {
@@ -1298,10 +1296,9 @@ void NimBLEClientCallbacks::onMTUChange(NimBLEClient* pClient, uint16_t mtu) {
     NIMBLE_LOGD(CB_TAG, "onMTUChange: default");
 } // onMTUChange
 
-# if CONFIG_BT_NIMBLE_EXT_ADV
 void NimBLEClientCallbacks::onPhyUpdate(NimBLEClient* pClient, uint8_t txPhy, uint8_t rxPhy) {
     NIMBLE_LOGD(CB_TAG, "onPhyUpdate: default, txPhy: %d, rxPhy: %d", txPhy, rxPhy);
 } // onPhyUpdate
-# endif
+#
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
