@@ -606,6 +606,8 @@ ble_gap_read_rem_ver_info(uint16_t conn_handle, uint8_t *version, uint16_t *manu
     *subversion = conn->bhc_rd_rem_ver_params.subversion;
 
     return 0;
+#else
+    return BLE_HS_ENOTSUP;
 #endif
 }
 
@@ -2783,6 +2785,7 @@ ble_gap_rx_conn_complete(struct ble_gap_conn_complete *evt, uint8_t instance)
 void
 ble_gap_event_connect_call(uint16_t conn_handle, int status)
 {
+#if NIMBLE_BLE_CONNECT
     struct ble_gap_event event;
     uint16_t handle = le16toh(conn_handle);
 
@@ -2814,6 +2817,7 @@ ble_gap_event_connect_call(uint16_t conn_handle, int status)
 
     ble_hs_hci_util_set_data_len(le16toh(conn_handle), BLE_HCI_SUGG_DEF_DATALEN_TX_OCTETS_MAX,
             BLE_HCI_SUGG_DEF_DATALEN_TX_TIME_MAX);
+#endif
 }
 
 void
@@ -8016,6 +8020,7 @@ int
 ble_gap_set_data_len(uint16_t conn_handle, uint16_t tx_octets,
                      uint16_t tx_time)
 {
+#if NIMBLE_BLE_CONNECT
     /* Check if host has triggered Set data len for same parameters
      * which are currently set in controller.
      * If yes, then just return event to host indicating success
@@ -8040,6 +8045,9 @@ ble_gap_set_data_len(uint16_t conn_handle, uint16_t tx_octets,
     }
 
     return ble_hs_hci_util_set_data_len(conn_handle, tx_octets, tx_time);
+#else
+    return BLE_HS_ENOTSUP;
+#endif
 }
 
 int
