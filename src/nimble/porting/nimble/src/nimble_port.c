@@ -312,7 +312,7 @@ nimble_port_stop(void)
 }
 
 void
-IRAM_ATTR nimble_port_run(void)
+ARDUINO_ISR_ATTR nimble_port_run(void)
 {
     struct ble_npl_event *ev;
 
@@ -328,7 +328,7 @@ IRAM_ATTR nimble_port_run(void)
 }
 
 struct ble_npl_eventq *
-IRAM_ATTR nimble_port_get_dflt_eventq(void)
+ARDUINO_ISR_ATTR nimble_port_get_dflt_eventq(void)
 {
     return &g_eventq_dflt;
 }
