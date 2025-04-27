@@ -19,7 +19,7 @@
 #define MYNEWT_VAL_CHOICE(_name, _val)          MYNEWT_VAL_ ## _name ## __ ## _val
 
 #ifndef IRAM_ATTR_64MCPU
-#define IRAM_ATTR_64MCPU IRAM_ATTR
+#define IRAM_ATTR_64MCPU ARDUINO_ISR_ATTR
 #endif
 
 
