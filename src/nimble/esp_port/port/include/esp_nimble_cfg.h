@@ -18,11 +18,6 @@
 #define MYNEWT_VAL(x)                           MYNEWT_VAL_ ## x
 #define MYNEWT_VAL_CHOICE(_name, _val)          MYNEWT_VAL_ ## _name ## __ ## _val
 
-#ifndef IRAM_ATTR_64MCPU
-#define IRAM_ATTR_64MCPU
-#endif
-
-
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
 #define NIMBLE_CFG_CONTROLLER    0
 #else
