@@ -98,7 +98,7 @@ static struct os_sanity_check os_msys_sc;
  * @return                      The msys pool's minimum safe buffer count.
  */
 static int
-IRAM_ATTR os_msys_sanity_min_count(int idx)
+os_msys_sanity_min_count(int idx)
 {
     switch (idx) {
     case 0:
@@ -114,7 +114,7 @@ IRAM_ATTR os_msys_sanity_min_count(int idx)
 }
 
 static int
-IRAM_ATTR os_msys_sanity(struct os_sanity_check *sc, void *arg)
+os_msys_sanity(struct os_sanity_check *sc, void *arg)
 {
     const struct os_mbuf_pool *omp;
     int min_count;

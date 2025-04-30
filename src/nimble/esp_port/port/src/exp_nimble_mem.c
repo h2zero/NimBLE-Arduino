@@ -11,7 +11,7 @@
  #include "nimconfig.h"
  #include "../include/esp_nimble_mem.h"
 
- IRAM_ATTR void *nimble_platform_mem_malloc(size_t size)
+ void *nimble_platform_mem_malloc(size_t size)
  {
  #ifdef CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_INTERNAL
      return heap_caps_malloc(size, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
@@ -24,7 +24,7 @@
  #endif
  }
 
- IRAM_ATTR void *nimble_platform_mem_calloc(size_t n, size_t size)
+ void *nimble_platform_mem_calloc(size_t n, size_t size)
  {
  #ifdef CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_INTERNAL
      return heap_caps_calloc(n, size, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
@@ -37,7 +37,7 @@
  #endif
  }
 
- IRAM_ATTR void nimble_platform_mem_free(void *ptr)
+ void nimble_platform_mem_free(void *ptr)
  {
      heap_caps_free(ptr);
  }
