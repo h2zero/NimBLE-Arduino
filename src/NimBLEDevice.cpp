@@ -96,7 +96,7 @@ NimBLEAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-std::array<NimBLEClient*, NIMBLE_MAX_CONNECTIONS> NimBLEDevice::m_pClients{nullptr};
+std::array<NimBLEClient*, NIMBLE_MAX_CONNECTIONS> NimBLEDevice::m_pClients{};
 # endif
 
 bool                       NimBLEDevice::m_initialized{false};
