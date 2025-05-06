@@ -97,11 +97,18 @@ class NimBLEScan {
     static int handleGapEvent(ble_gap_event* event, void* arg);
     void       onHostSync();
 
+# if CONFIG_NIMBLE_CPP_SCAN_RSP_TIMEOUT
+    static void srTimerCb(ble_npl_event* event);
+# endif
+
     NimBLEScanCallbacks* m_pScanCallbacks;
     ble_gap_disc_params  m_scanParams;
     NimBLEScanResults    m_scanResults;
     NimBLETaskData*      m_pTaskData;
     uint8_t              m_maxResults;
+# if CONFIG_NIMBLE_CPP_SCAN_RSP_TIMEOUT
+    ble_npl_callout m_srTimer{};
+# endif
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
     uint8_t  m_phy{SCAN_ALL};

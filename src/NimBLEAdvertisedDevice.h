@@ -162,7 +162,9 @@ class NimBLEAdvertisedDevice {
     int8_t        m_rssi{};
     uint8_t       m_callbackSent{};
     uint8_t       m_advLength{};
-
+# if CONFIG_NIMBLE_CPP_SCAN_RSP_TIMEOUT
+    ble_npl_time_t m_time{};
+# endif
 # if CONFIG_BT_NIMBLE_EXT_ADV
     bool     m_isLegacyAdv{};
     uint8_t  m_sid{};

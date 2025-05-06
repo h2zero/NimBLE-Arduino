@@ -176,6 +176,14 @@
  */
 // #define CONFIG_BT_NIMBLE_CRYPTO_STACK_MBEDTLS 1
 
+/**
+ * @brief Un-comment to change the timeout, in milliseconds.
+ * @details This is the time to wait for a scan response before calling the onResult scan callback,
+ * lower values increase callback rates but will lose data more often, higher values give full data more
+ * often. Setting this to 0 will disable the scan response timeout.
+ */
+ // #define CONFIG_NIMBLE_CPP_SCAN_RSP_TIMEOUT (30)
+
 /**********************************
  End Arduino user-config
 **********************************/
@@ -253,6 +261,10 @@
 
 #ifndef CONFIG_NIMBLE_STACK_USE_MEM_POOLS
 #define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 0
+#endif
+
+#ifndef CONFIG_NIMBLE_CPP_SCAN_RSP_TIMEOUT
+#define CONFIG_NIMBLE_CPP_SCAN_RSP_TIMEOUT (30)
 #endif
 
 /** @brief Set if CCCD's and bond data should be stored in NVS */
