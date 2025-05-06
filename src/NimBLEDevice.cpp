@@ -889,7 +889,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
 #  endif
 
-#  if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0) | !defined(CONFIG_NIMBLE_CPP_IDF)
+#  if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0) || !defined(CONFIG_NIMBLE_CPP_IDF)
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 #   if defined(CONFIG_IDF_TARGET_ESP32)
         bt_cfg.mode         = ESP_BT_MODE_BLE;
