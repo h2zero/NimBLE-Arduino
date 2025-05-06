@@ -65,6 +65,9 @@
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 #  include "NimBLEServer.h"
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+#  include "NimBLEL2CAPServer.h"
+#  endif
 # endif
 
 # include "NimBLELog.h"
@@ -85,6 +88,9 @@ NimBLEScan* NimBLEDevice::m_pScan = nullptr;
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 NimBLEServer* NimBLEDevice::m_pServer = nullptr;
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+NimBLEL2CAPServer* NimBLEDevice::m_pL2CAPServer = nullptr;
+#  endif
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
@@ -140,6 +146,27 @@ NimBLEServer* NimBLEDevice::createServer() {
 NimBLEServer* NimBLEDevice::getServer() {
     return m_pServer;
 } // getServer
+
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+/**
+ * @brief Create an instance of a L2CAP server.
+ * @return A pointer to the instance of the L2CAP server.
+ */
+NimBLEL2CAPServer* NimBLEDevice::createL2CAPServer() {
+    if (NimBLEDevice::m_pL2CAPServer == nullptr) {
+        NimBLEDevice::m_pL2CAPServer = new NimBLEL2CAPServer();
+    }
+    return m_pL2CAPServer;
+} // createL2CAPServer
+
+/**
+ * @brief Get the instance of the L2CAP server.
+ * @return A pointer to the L2CAP server instance or nullptr if none have been created.
+ */
+NimBLEL2CAPServer* NimBLEDevice::getL2CAPServer() {
+    return m_pL2CAPServer;
+} // getL2CAPServer
+#  endif
 # endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
 /* -------------------------------------------------------------------------- */
@@ -965,6 +992,12 @@ bool NimBLEDevice::deinit(bool clearAll) {
             delete NimBLEDevice::m_pServer;
             NimBLEDevice::m_pServer = nullptr;
         }
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+        if (NimBLEDevice::m_pL2CAPServer != nullptr) {
+            delete NimBLEDevice::m_pL2CAPServer;
+            NimBLEDevice::m_pL2CAPServer = nullptr;
+        }
+#  endif
 # endif
 
 # if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
