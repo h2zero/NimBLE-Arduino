@@ -118,7 +118,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFi
     }
 
     auto prevDscCount = m_vDescriptors.size();
-    NimBLEUtils::taskWait(pFilter->taskData, BLE_NPL_TIME_FOREVER);
+    NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
     rc = ((NimBLETaskData*)pFilter->taskData)->m_flags;
     if (rc != BLE_HS_EDONE) {
         NIMBLE_LOGE(LOG_TAG, "<< retrieveDescriptors(): failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
