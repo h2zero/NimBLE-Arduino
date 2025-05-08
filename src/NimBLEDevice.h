@@ -248,7 +248,7 @@ class NimBLEDevice {
 # endif
 
 # ifdef ESP_PLATFORM
-#  ifdef CONFIG_BTDM_BLE_SCAN_DUPL
+#  if CONFIG_BTDM_BLE_SCAN_DUPL || CONFIG_BT_LE_SCAN_DUPL
     static uint16_t m_scanDuplicateSize;
     static uint8_t  m_scanFilterMode;
 #  endif
