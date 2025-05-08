@@ -116,9 +116,11 @@ uint8_t                    NimBLEDevice::m_ownAddrType{BLE_OWN_ADDR_PUBLIC};
 #  if CONFIG_BTDM_BLE_SCAN_DUPL
 uint16_t NimBLEDevice::m_scanDuplicateSize{CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE};
 uint8_t  NimBLEDevice::m_scanFilterMode{CONFIG_BTDM_SCAN_DUPL_TYPE};
+uint16_t NimBLEDevice::m_scanDuplicateResetTime{0};
 #  elif CONFIG_BT_LE_SCAN_DUPL
-uint16_t NimBLEDevice::m_scanDuplicateSize{CONFIG_BT_LE_LL_DUP_SCAN_LIST_COUNT};
-uint8_t  NimBLEDevice::m_scanFilterMode{CONFIG_BT_LE_SCAN_DUPL_TYPE};
+uint16_t       NimBLEDevice::m_scanDuplicateSize{CONFIG_BT_LE_LL_DUP_SCAN_LIST_COUNT};
+uint8_t        NimBLEDevice::m_scanFilterMode{CONFIG_BT_LE_SCAN_DUPL_TYPE};
+uint16_t       NimBLEDevice::m_scanDuplicateResetTime{0};
 extern "C" int ble_vhci_disc_duplicate_set_max_cache_size(int max_cache_size);
 extern "C" int ble_vhci_disc_duplicate_set_period_refresh_time(int refresh_period_time);
 extern "C" int ble_vhci_disc_duplicate_mode_disable(int mode);
@@ -312,7 +314,26 @@ void NimBLEDevice::setScanFilterMode(uint8_t mode) {
 
     m_scanFilterMode = mode;
 }
-#   endif // CONFIG_BTDM_BLE_SCAN_DUPL
+
+/**
+ * @brief Set the time in seconds to reset the duplicate cache.
+ * @param [in] time The time in seconds to reset the cache.
+ * @details When the cache is reset all scanned devices will be reported again
+ * even if already seen in the current scan. If set to 0 the cache will never be reset.
+ */
+void NimBLEDevice::setScanDuplicateCacheResetTime(uint16_t time) {
+    if (m_initialized) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot change scan cache reset time while initialized");
+        return;
+    } else if (time > 1000) {
+        NIMBLE_LOGE(LOG_TAG, "Invalid scan cache reset time");
+        return;
+    }
+
+    NIMBLE_LOGD(LOG_TAG, "Set duplicate cache reset time to: %u", time);
+    m_scanDuplicateResetTime = time;
+}
+#   endif // CONFIG_BTDM_BLE_SCAN_DUPL || CONFIG_BT_LE_SCAN_DUPL
 #  endif  // ESP_PLATFORM
 # endif   // #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
 
@@ -908,8 +929,9 @@ bool NimBLEDevice::init(const std::string& deviceName) {
 #   endif
 
 #   if CONFIG_BTDM_BLE_SCAN_DUPL
-        bt_cfg.normal_adv_size     = m_scanDuplicateSize;
-        bt_cfg.scan_duplicate_type = m_scanFilterMode;
+        bt_cfg.normal_adv_size         = m_scanDuplicateSize;
+        bt_cfg.scan_duplicate_type     = m_scanFilterMode;
+        bt_cfg.dup_list_refresh_period = m_scanDuplicateResetTime;
 #   elif CONFIG_BT_LE_SCAN_DUPL
         bt_cfg.ble_ll_rsp_dup_list_count = m_scanDuplicateSize;
         bt_cfg.ble_ll_adv_dup_list_count = m_scanDuplicateSize;
@@ -936,6 +958,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         ble_vhci_disc_duplicate_mode_disable(0xFFFFFFFF);
         ble_vhci_disc_duplicate_mode_enable(mode);
         ble_vhci_disc_duplicate_set_max_cache_size(m_scanDuplicateSize);
+        ble_vhci_disc_duplicate_set_period_refresh_time(m_scanDuplicateResetTime);
 #   endif
 
         err = esp_bt_controller_enable(ESP_BT_MODE_BLE);

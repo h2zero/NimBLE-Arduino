@@ -138,6 +138,7 @@ class NimBLEDevice {
     static void          setDeviceCallbacks(NimBLEDeviceCallbacks* cb);
     static void          setScanDuplicateCacheSize(uint16_t cacheSize);
     static void          setScanFilterMode(uint8_t type);
+    static void          setScanDuplicateCacheResetTime(uint16_t time);
     static bool          setCustomGapHandler(gap_event_handler handler);
     static void          setSecurityAuth(bool bonding, bool mitm, bool sc);
     static void          setSecurityAuth(uint8_t auth);
@@ -251,6 +252,7 @@ class NimBLEDevice {
 #  if CONFIG_BTDM_BLE_SCAN_DUPL || CONFIG_BT_LE_SCAN_DUPL
     static uint16_t m_scanDuplicateSize;
     static uint8_t  m_scanFilterMode;
+    static uint16_t m_scanDuplicateResetTime;
 #  endif
 # endif
 
