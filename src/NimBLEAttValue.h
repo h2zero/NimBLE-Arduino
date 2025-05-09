@@ -313,14 +313,10 @@ class NimBLEAttValue {
 # endif
         }
 
-        if (std::is_convertible<NimBLEAttValue, T>::value) {
-            return *this;
-        } else {
-            if (!skipSizeCheck && size() < sizeof(T)) {
-                return T();
-            }
-            return *(reinterpret_cast<const T*>(m_attr_value));
+        if (!skipSizeCheck && size() < sizeof(T)) {
+            return T();
         }
+        return *(reinterpret_cast<const T*>(m_attr_value));
     }
 
     /*********************** Operators ************************/

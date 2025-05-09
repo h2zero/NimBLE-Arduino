@@ -32,32 +32,19 @@
 # undef max
 /**************************/
 
-# include "NimBLEAttribute.h"
+# include "NimBLEValueAttribute.h"
 # include "NimBLEAttValue.h"
 
 class NimBLEClient;
 
-class NimBLERemoteValueAttribute : public NimBLEAttribute {
+class NimBLERemoteValueAttribute : public NimBLEValueAttribute, public NimBLEAttribute {
   public:
     /**
      * @brief Read the value of the remote attribute.
      * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
      * @return The value of the remote attribute.
      */
-    NimBLEAttValue readValue(time_t* timestamp = nullptr) const;
-
-    /**
-     * @brief Get the length of the remote attribute value.
-     * @return The length of the remote attribute value.
-     */
-    size_t getLength() const { return m_value.size(); }
-
-    /**
-     * @brief Get the value of the remote attribute.
-     * @return The value of the remote attribute.
-     * @details This returns a copy of the value to avoid potential race conditions.
-     */
-    NimBLEAttValue getValue() const { return m_value; }
+    NimBLEAttValue readValue(time_t* timestamp = nullptr);
 
     /**
      * Get the client instance that owns this attribute.
@@ -160,33 +147,19 @@ class NimBLERemoteValueAttribute : public NimBLEAttribute {
      * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
      * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
      * less than <tt>sizeof(<type\>)</tt>.
-     * @details <b>Use:</b> <tt>getValue<type>(&timestamp, skipSizeCheck);</tt>
-     */
-    template <typename T>
-    T getValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
-        return m_value.getValue<T>(timestamp, skipSizeCheck);
-    }
-
-    /**
-     * @brief Template to convert the remote characteristic data to <type\>.
-     * @tparam T The type to convert the data to.
-     * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
-     * @param [in] skipSizeCheck If true it will skip checking if the data size is less than <tt>sizeof(<type\>)</tt>.
-     * @return The data converted to <type\> or NULL if skipSizeCheck is false and the data is
-     * less than <tt>sizeof(<type\>)</tt>.
      * @details <b>Use:</b> <tt>readValue<type>(&timestamp, skipSizeCheck);</tt>
      */
     template <typename T>
-    T readValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
+    T readValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) {
         readValue();
-        return m_value.getValue<T>(timestamp, skipSizeCheck);
+        return getValue<T>(timestamp, skipSizeCheck);
     }
 
   protected:
     /**
      * @brief Construct a new NimBLERemoteValueAttribute object.
      */
-    NimBLERemoteValueAttribute(const ble_uuid_any_t& uuid, uint16_t handle) : NimBLEAttribute(uuid, handle) {}
+    NimBLERemoteValueAttribute(const ble_uuid_any_t& uuid, uint16_t handle) : NimBLEAttribute{uuid, handle} {}
 
     /**
      * @brief Destroy the NimBLERemoteValueAttribute object.
@@ -195,8 +168,6 @@ class NimBLERemoteValueAttribute : public NimBLEAttribute {
 
     static int onReadCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg);
     static int onWriteCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg);
-
-    mutable NimBLEAttValue m_value{};
 };
 
 #endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */

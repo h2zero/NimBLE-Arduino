@@ -122,7 +122,7 @@ int NimBLERemoteValueAttribute::onWriteCB(uint16_t conn_handle, const ble_gatt_e
  * @param [in] timestamp A pointer to a time_t struct to store the time the value was read.
  * @return The value of the remote characteristic.
  */
-NimBLEAttValue NimBLERemoteValueAttribute::readValue(time_t* timestamp) const {
+NimBLEAttValue NimBLERemoteValueAttribute::readValue(time_t* timestamp) {
     NIMBLE_LOGD(LOG_TAG, ">> readValue()");
 
     NimBLEAttValue      value{};
