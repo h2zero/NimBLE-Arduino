@@ -279,7 +279,7 @@ bool NimBLECharacteristic::sendValue(const uint8_t* value, size_t length, bool i
 
             // Null buffer will read the value from the characteristic
             if (isNotification) {
-                rc = ble_gattc_notify_custom(connHandle, m_handle, om);
+                rc = ble_gattc_notify_custom(connHandle, this->m_handle, om);
             } else {
                 rc = ble_gattc_indicate_custom(connHandle, m_handle, om);
             }
