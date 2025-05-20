@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.3</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
    </div>
   </td>
  </tr>
@@ -189,11 +189,11 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_advertising_8h_source.html'
 <div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_class" href="class_nim_b_l_e_server.html">NimBLEServer</a>;</div>
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span> </div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>    <span class="keywordtype">void</span>       onHostSync();</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> handleGapEvent(<a class="code hl_struct" href="structble__gap__event.html">ble_gap_event</a>* event, <span class="keywordtype">void</span>* arg);</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>    <span class="keyword">static</span> <span class="keywordtype">int</span> handleGapEvent(ble_gap_event* event, <span class="keywordtype">void</span>* arg);</div>
 <div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span> </div>
 <div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>    <a class="code hl_class" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> m_advData;</div>
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>    <a class="code hl_class" href="class_nim_b_l_e_advertisement_data.html">NimBLEAdvertisementData</a> m_scanData;</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    <a class="code hl_struct" href="structble__gap__adv__params.html">ble_gap_adv_params</a>      m_advParams;</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>    ble_gap_adv_params      m_advParams;</div>
 <div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    advCompleteCB_t         m_advCompCb;</div>
 <div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    uint8_t                 m_slaveItvl[4];</div>
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>    uint32_t                m_duration;</div>
@@ -236,11 +236,9 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_advertising_8h_source.html'
 <div class="ttc" id="aclass_nim_b_l_e_advertising_html_ae0e7d64d51882830750bcb87e2d9678c"><div class="ttname"><a href="class_nim_b_l_e_advertising.html#ae0e7d64d51882830750bcb87e2d9678c">NimBLEAdvertising::getScanData</a></div><div class="ttdeci">const NimBLEAdvertisementData &amp; getScanData()</div><div class="ttdoc">Get the current scan response data.</div><div class="ttdef"><b>Definition</b> NimBLEAdvertising.cpp:375</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_advertising_html_ae49d2bd91cabca46ec7c4bbd7fc49407"><div class="ttname"><a href="class_nim_b_l_e_advertising.html#ae49d2bd91cabca46ec7c4bbd7fc49407">NimBLEAdvertising::setConnectableMode</a></div><div class="ttdeci">bool setConnectableMode(uint8_t mode)</div><div class="ttdoc">Set the type of connectable mode to advertise.</div><div class="ttdef"><b>Definition</b> NimBLEAdvertising.cpp:77</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_advertising_html_af7cee42f24ad38872936a0bbc9e2ac1e"><div class="ttname"><a href="class_nim_b_l_e_advertising.html#af7cee42f24ad38872936a0bbc9e2ac1e">NimBLEAdvertising::clearData</a></div><div class="ttdeci">void clearData()</div><div class="ttdoc">Clear the advertisement and scan response data and set the flags to BLE_HS_ADV_F_DISC_GEN.</div><div class="ttdef"><b>Definition</b> NimBLEAdvertising.cpp:382</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_device_html"><div class="ttname"><a href="class_nim_b_l_e_device.html">NimBLEDevice</a></div><div class="ttdoc">A model of a BLE Device from which all the BLE roles are created.</div><div class="ttdef"><b>Definition</b> NimBLEDevice.h:117</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_device_html"><div class="ttname"><a href="class_nim_b_l_e_device.html">NimBLEDevice</a></div><div class="ttdoc">A model of a BLE Device from which all the BLE roles are created.</div><div class="ttdef"><b>Definition</b> NimBLEDevice.h:122</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_server_html"><div class="ttname"><a href="class_nim_b_l_e_server.html">NimBLEServer</a></div><div class="ttdoc">The model of a BLE server.</div><div class="ttdef"><b>Definition</b> NimBLEServer.h:60</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_u_u_i_d_html"><div class="ttname"><a href="class_nim_b_l_e_u_u_i_d.html">NimBLEUUID</a></div><div class="ttdoc">A model of a BLE UUID.</div><div class="ttdef"><b>Definition</b> NimBLEUUID.h:41</div></div>
-<div class="ttc" id="astructble__gap__adv__params_html"><div class="ttname"><a href="structble__gap__adv__params.html">ble_gap_adv_params</a></div><div class="ttdef"><b>Definition</b> ble_gap.h:220</div></div>
-<div class="ttc" id="astructble__gap__event_html"><div class="ttname"><a href="structble__gap__event.html">ble_gap_event</a></div><div class="ttdef"><b>Definition</b> ble_gap.h:510</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

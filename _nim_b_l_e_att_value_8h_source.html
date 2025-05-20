@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.3</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
    </div>
   </td>
  </tr>
@@ -315,17 +315,17 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_att_value_8h_source.html','
 <div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="foldopen" id="foldopen00307" data-start="{" data-end="}">
 <div class="line"><a id="l00307" name="l00307"></a><span class="lineno"><a class="line" href="class_nim_b_l_e_att_value.html#ab16b9901e6ff9374c7d2e1afa5aa4671">  307</a></span>    T <a class="code hl_function" href="class_nim_b_l_e_att_value.html#ab16b9901e6ff9374c7d2e1afa5aa4671">getValue</a>(time_t* timestamp = <span class="keyword">nullptr</span>, <span class="keywordtype">bool</span> skipSizeCheck = <span class="keyword">false</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        <span class="keywordflow">if</span> (!skipSizeCheck &amp;&amp; <a class="code hl_function" href="class_nim_b_l_e_att_value.html#aa8c75101d9898c3ff4646d84521ed61c">size</a>() &lt; <span class="keyword">sizeof</span>(T)) {</div>
-<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>            <span class="keywordflow">return</span> T();</div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>        }</div>
-<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>        <span class="keywordflow">if</span> (timestamp != <span class="keyword">nullptr</span>) {</div>
-<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span><span class="preprocessor"># if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED</span></div>
-<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>            *timestamp = m_timestamp;</div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span><span class="preprocessor"># else</span></div>
-<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>            *timestamp = 0;</div>
-<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span><span class="preprocessor"># endif</span></div>
-<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>        }</div>
-<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span> </div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        <span class="keywordflow">if</span> (timestamp != <span class="keyword">nullptr</span>) {</div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span><span class="preprocessor"># if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED</span></div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>            *timestamp = m_timestamp;</div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span><span class="preprocessor"># else</span></div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>            *timestamp = 0;</div>
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span><span class="preprocessor"># endif</span></div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        }</div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span> </div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>        <span class="keywordflow">if</span> (!skipSizeCheck &amp;&amp; <a class="code hl_function" href="class_nim_b_l_e_att_value.html#aa8c75101d9898c3ff4646d84521ed61c">size</a>() &lt; <span class="keyword">sizeof</span>(T)) {</div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>            <span class="keywordflow">return</span> T();</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>        }</div>
 <div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span>        <span class="keywordflow">return</span> *(<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>T*<span class="keyword">&gt;</span>(m_attr_value));</div>
 <div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>    }</div>
 </div>
@@ -383,10 +383,10 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_att_value_8h_source.html','
 <div class="ttc" id="aclass_nim_b_l_e_att_value_html_a7473ad95c2240e0d1ce5c2d57f8914c2"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#a7473ad95c2240e0d1ce5c2d57f8914c2">NimBLEAttValue::NimBLEAttValue</a></div><div class="ttdeci">NimBLEAttValue(const NimBLEAttValue &amp;source)</div><div class="ttdoc">Copy constructor.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:140</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_att_value_html_a778d1da5334049292fdfba221bcd5772"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#a778d1da5334049292fdfba221bcd5772">NimBLEAttValue::NimBLEAttValue</a></div><div class="ttdeci">NimBLEAttValue(NimBLEAttValue &amp;&amp;source)</div><div class="ttdoc">Move constructor.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:143</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_att_value_html_a86acbb5ab3a35b3d5692c2e05fdccadd"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#a86acbb5ab3a35b3d5692c2e05fdccadd">NimBLEAttValue::data</a></div><div class="ttdeci">const uint8_t * data() const</div><div class="ttdoc">Returns a pointer to the internal buffer of the value.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:161</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_att_value_html_a8ca8d07c06a79e30bf6279e6817e4881"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#a8ca8d07c06a79e30bf6279e6817e4881">NimBLEAttValue::operator[]</a></div><div class="ttdeci">uint8_t operator[](int pos) const</div><div class="ttdoc">Subscript operator.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.cpp:153</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_att_value_html_a8ca8d07c06a79e30bf6279e6817e4881"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#a8ca8d07c06a79e30bf6279e6817e4881">NimBLEAttValue::operator[]</a></div><div class="ttdeci">uint8_t operator[](int pos) const</div><div class="ttdoc">Subscript operator.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.cpp:154</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_att_value_html_a91cbe0ba44781943390a80514383ee58"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#a91cbe0ba44781943390a80514383ee58">NimBLEAttValue::end</a></div><div class="ttdeci">const uint8_t * end() const</div><div class="ttdoc">Iterator end.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:170</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_att_value_html_a98da1765d9cfd2d93cdac2fb7a108a79"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#a98da1765d9cfd2d93cdac2fb7a108a79">NimBLEAttValue::setValue</a></div><div class="ttdeci">bool setValue(const T &amp;v)</div><div class="ttdoc">Template to set value to the value of &lt;type&gt;val.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:244</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_att_value_html_aa217dfc649daed50eb75c7168442f86e"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#aa217dfc649daed50eb75c7168442f86e">NimBLEAttValue::append</a></div><div class="ttdeci">NimBLEAttValue &amp; append(const uint8_t *value, uint16_t len)</div><div class="ttdoc">Append data to the value.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.cpp:114</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_att_value_html_aa217dfc649daed50eb75c7168442f86e"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#aa217dfc649daed50eb75c7168442f86e">NimBLEAttValue::append</a></div><div class="ttdeci">NimBLEAttValue &amp; append(const uint8_t *value, uint16_t len)</div><div class="ttdoc">Append data to the value.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.cpp:115</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_att_value_html_aa8c75101d9898c3ff4646d84521ed61c"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#aa8c75101d9898c3ff4646d84521ed61c">NimBLEAttValue::size</a></div><div class="ttdeci">uint16_t size() const</div><div class="ttdoc">Returns the current size of the value in bytes.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:158</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_att_value_html_aade512f55c6f962941aee7078677356b"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#aade512f55c6f962941aee7078677356b">NimBLEAttValue::setValue</a></div><div class="ttdeci">bool setValue(const char *s, uint16_t len=0)</div><div class="ttdoc">Set value to the value of const char*.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:203</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_att_value_html_ab16b9901e6ff9374c7d2e1afa5aa4671"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#ab16b9901e6ff9374c7d2e1afa5aa4671">NimBLEAttValue::getValue</a></div><div class="ttdeci">T getValue(time_t *timestamp=nullptr, bool skipSizeCheck=false) const</div><div class="ttdoc">Template to return the value as a &lt;type&gt;.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:307</div></div>

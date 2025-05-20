@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.3</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
    </div>
   </td>
  </tr>
@@ -130,16 +130,16 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a29dc2505e1d3b4a7d6800d1547965d17" id="r_a29dc2505e1d3b4a7d6800d1547965d17"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a29dc2505e1d3b4a7d6800d1547965d17">setCallbacks</a> (<a class="el" href="class_nim_b_l_e_characteristic_callbacks.html">NimBLECharacteristicCallbacks</a> *pCallbacks)</td></tr>
 <tr class="memdesc:a29dc2505e1d3b4a7d6800d1547965d17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the callback handlers for this characteristic.  <br /></td></tr>
 <tr class="separator:a29dc2505e1d3b4a7d6800d1547965d17"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aabdc2745d2523239a9ab3f02e39aa3cf" id="r_aabdc2745d2523239a9ab3f02e39aa3cf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aabdc2745d2523239a9ab3f02e39aa3cf">indicate</a> (uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:aabdc2745d2523239a9ab3f02e39aa3cf" id="r_aabdc2745d2523239a9ab3f02e39aa3cf"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aabdc2745d2523239a9ab3f02e39aa3cf">indicate</a> (uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:aabdc2745d2523239a9ab3f02e39aa3cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send an indication.  <br /></td></tr>
 <tr class="separator:aabdc2745d2523239a9ab3f02e39aa3cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5eb7de28ee6ec5661acac5c07abb11c" id="r_aa5eb7de28ee6ec5661acac5c07abb11c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aa5eb7de28ee6ec5661acac5c07abb11c">indicate</a> (const uint8_t *value, size_t length, uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:aa5eb7de28ee6ec5661acac5c07abb11c" id="r_aa5eb7de28ee6ec5661acac5c07abb11c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aa5eb7de28ee6ec5661acac5c07abb11c">indicate</a> (const uint8_t *value, size_t length, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:aa5eb7de28ee6ec5661acac5c07abb11c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send an indication.  <br /></td></tr>
 <tr class="separator:aa5eb7de28ee6ec5661acac5c07abb11c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4482e038124724d8bb6d147bcdb5481" id="r_ac4482e038124724d8bb6d147bcdb5481"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#ac4482e038124724d8bb6d147bcdb5481">notify</a> (uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:ac4482e038124724d8bb6d147bcdb5481" id="r_ac4482e038124724d8bb6d147bcdb5481"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#ac4482e038124724d8bb6d147bcdb5481">notify</a> (uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:ac4482e038124724d8bb6d147bcdb5481"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a notification.  <br /></td></tr>
 <tr class="separator:ac4482e038124724d8bb6d147bcdb5481"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7676bd1b73979101c394471299d71c0b" id="r_a7676bd1b73979101c394471299d71c0b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a7676bd1b73979101c394471299d71c0b">notify</a> (const uint8_t *value, size_t length, uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:a7676bd1b73979101c394471299d71c0b" id="r_a7676bd1b73979101c394471299d71c0b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a7676bd1b73979101c394471299d71c0b">notify</a> (const uint8_t *value, size_t length, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:a7676bd1b73979101c394471299d71c0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a notification.  <br /></td></tr>
 <tr class="separator:a7676bd1b73979101c394471299d71c0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9817ffdcc2d57e65e4ec3d88836af3f" id="r_aa9817ffdcc2d57e65e4ec3d88836af3f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_descriptor.html">NimBLEDescriptor</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aa9817ffdcc2d57e65e4ec3d88836af3f">createDescriptor</a> (const char *uuid, uint32_t properties=NIMBLE_PROPERTY::READ|NIMBLE_PROPERTY::WRITE, uint16_t maxLen=BLE_ATT_ATTR_MAX_LEN)</td></tr>
@@ -169,27 +169,27 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ac194f58f909f9e447949a41c2a7cdf00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the callback handlers for this characteristic. <br /></td></tr>
 <tr class="separator:ac194f58f909f9e447949a41c2a7cdf00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95e454eacf23ae8e1e251b76d7857954" id="r_a95e454eacf23ae8e1e251b76d7857954"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a95e454eacf23ae8e1e251b76d7857954"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a95e454eacf23ae8e1e251b76d7857954">notify</a> (const T &amp;v, uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:a95e454eacf23ae8e1e251b76d7857954"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a95e454eacf23ae8e1e251b76d7857954">notify</a> (const T &amp;v, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:a95e454eacf23ae8e1e251b76d7857954"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send a notification with a value from a struct or array.  <br /></td></tr>
 <tr class="separator:a95e454eacf23ae8e1e251b76d7857954"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab05a81528522e7f12acff65fa86f9a28" id="r_ab05a81528522e7f12acff65fa86f9a28"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:ab05a81528522e7f12acff65fa86f9a28"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#ab05a81528522e7f12acff65fa86f9a28">notify</a> (const T &amp;s, uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:ab05a81528522e7f12acff65fa86f9a28"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#ab05a81528522e7f12acff65fa86f9a28">notify</a> (const T &amp;s, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:ab05a81528522e7f12acff65fa86f9a28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send a notification with a value from a class that has a c_str() and length() method.  <br /></td></tr>
 <tr class="separator:ab05a81528522e7f12acff65fa86f9a28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95e454eacf23ae8e1e251b76d7857954" id="r_a95e454eacf23ae8e1e251b76d7857954"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a95e454eacf23ae8e1e251b76d7857954"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a95e454eacf23ae8e1e251b76d7857954">notify</a> (const T &amp;v, uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:a95e454eacf23ae8e1e251b76d7857954"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a95e454eacf23ae8e1e251b76d7857954">notify</a> (const T &amp;v, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:a95e454eacf23ae8e1e251b76d7857954"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send a notification with a value from a class that has a data() and size() method.  <br /></td></tr>
 <tr class="separator:a95e454eacf23ae8e1e251b76d7857954"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa824e4b90d8f9418d7c9ccc8735a6e31" id="r_aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31">indicate</a> (const T &amp;v, uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31">indicate</a> (const T &amp;v, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send an indication with a value from a struct or array.  <br /></td></tr>
 <tr class="separator:aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ae5959f98c503de42660e195470192b" id="r_a3ae5959f98c503de42660e195470192b"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a3ae5959f98c503de42660e195470192b"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a3ae5959f98c503de42660e195470192b">indicate</a> (const T &amp;s, uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:a3ae5959f98c503de42660e195470192b"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#a3ae5959f98c503de42660e195470192b">indicate</a> (const T &amp;s, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:a3ae5959f98c503de42660e195470192b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send a indication with a value from a class that has a c_str() and length() method.  <br /></td></tr>
 <tr class="separator:a3ae5959f98c503de42660e195470192b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa824e4b90d8f9418d7c9ccc8735a6e31" id="r_aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31">indicate</a> (const T &amp;v, uint16_t connHandle=<a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a>) const</td></tr>
+<tr class="memitem:aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31">indicate</a> (const T &amp;v, uint16_t connHandle=BLE_HS_CONN_HANDLE_NONE) const</td></tr>
 <tr class="memdesc:aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to send a indication with a value from a class that has a data() and size() method.  <br /></td></tr>
 <tr class="separator:aa824e4b90d8f9418d7c9ccc8735a6e31"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -558,7 +558,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code>&#160;</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -605,7 +605,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code>&#160;</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -653,7 +653,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code>&#160;</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -701,7 +701,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code>&#160;</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -734,7 +734,7 @@ template&lt;typename T &gt; </div>
           <td class="memname">bool NimBLECharacteristic::indicate </td>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code></td><td>)</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
@@ -772,7 +772,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code>&#160;</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -819,7 +819,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code>&#160;</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -867,7 +867,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code>&#160;</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -915,7 +915,7 @@ template&lt;typename T &gt; </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code>&#160;</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -948,7 +948,7 @@ template&lt;typename T &gt; </div>
           <td class="memname">bool NimBLECharacteristic::notify </td>
           <td>(</td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>connHandle</em> = <code><a class="el" href="group__bt__host.html#gaa92ebcd7ec84341e7c760a0f0f1e57d4">BLE_HS_CONN_HANDLE_NONE</a></code></td><td>)</td>
+          <td class="paramname"><em>connHandle</em> = <code>BLE_HS_CONN_HANDLE_NONE</code></td><td>)</td>
           <td> const</td>
         </tr>
       </table>

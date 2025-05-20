@@ -38,5 +38,6 @@ var searchData=
   ['15_35',['[1.3.7] - 2022-02-15',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md137---2022-02-15',1,'']]],
   ['16_36',['[2.1.1] 2024-12-16',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md211-2024-12-16',1,'']]],
   ['17_37',['[1.4.2] 2024-06-17',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md142-2024-06-17',1,'']]],
-  ['18_38',['[1.3.6] - 2022-01-18',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md136---2022-01-18',1,'']]]
+  ['18_38',['[1.3.6] - 2022-01-18',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md136---2022-01-18',1,'']]],
+  ['19_39',['[2.3.0] 2025-05-19',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md230-2025-05-19',1,'']]]
 ];

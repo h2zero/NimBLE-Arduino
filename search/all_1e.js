@@ -1,7 +1,10 @@
 var searchData=
 [
-  ['val_5fhandle_0',['val_handle',['../structble__gatt__register__ctxt.html#a42e08c47233db6f02547d176de85e5b5',1,'ble_gatt_register_ctxt']]],
-  ['validity_1',['for checking random address validity',['../group___mask.html',1,'']]],
-  ['values_2',['Check return values',['../md__usage__tips.html#check-return-values',1,'']]],
-  ['variables_20and_20macros_3',['Variables and Macros',['../md__2github_2workspace_2src_2nimble_2_c_o_d_i_n_g___s_t_a_n_d_a_r_d_s.html#variables-and-macros',1,'']]]
+  ['_7enimbleattribute_0',['~NimBLEAttribute',['../class_nim_b_l_e_attribute.html#a8a060f480742cfb09ed47c1f5421d00f',1,'NimBLEAttribute']]],
+  ['_7enimbleattvalue_1',['~NimBLEAttValue',['../class_nim_b_l_e_att_value.html#a08f3b04d05cf0c2b76a24cc37cd1f8ab',1,'NimBLEAttValue']]],
+  ['_7enimblecharacteristic_2',['~NimBLECharacteristic',['../class_nim_b_l_e_characteristic.html#a7fe29c5ec571d0513c51b8cbac942f4a',1,'NimBLECharacteristic']]],
+  ['_7enimbleextadvertising_3',['~NimBLEExtAdvertising',['../class_nim_b_l_e_ext_advertising.html#a477c57db99ce3b5e987d6838b661808f',1,'NimBLEExtAdvertising']]],
+  ['_7enimblelocalattribute_4',['~NimBLELocalAttribute',['../class_nim_b_l_e_local_attribute.html#af3a224e382c76e2bc2040d033e4f165b',1,'NimBLELocalAttribute']]],
+  ['_7enimbleservice_5',['~NimBLEService',['../class_nim_b_l_e_service.html#a8904838e785b967c770a240e6c5099e7',1,'NimBLEService']]],
+  ['_7enimbletaskdata_6',['~NimBLETaskData',['../struct_nim_b_l_e_task_data.html#af2d5d10d7cc8801cf4d001f89bf301c6',1,'NimBLETaskData']]]
 ];

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['style_20for_20apache_20nimble_0',['Coding Style for Apache NimBLE',['../md__2github_2workspace_2src_2nimble_2_c_o_d_i_n_g___s_t_a_n_d_a_r_d_s.html',1,'']]]
+  ['usage_20tips_0',['Usage Tips',['../md__usage__tips.html',1,'']]],
+  ['user_20guide_1',['New User Guide',['../md__new__user__guide.html',1,'']]]
 ];

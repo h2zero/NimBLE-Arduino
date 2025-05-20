@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.3</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
    </div>
   </td>
  </tr>
@@ -164,6 +164,12 @@ or created and later added to services list.  <br /></td></tr>
 <tr class="memitem:afbffb933eed8142bd24222e3cacc138a" id="r_afbffb933eed8142bd24222e3cacc138a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#afbffb933eed8142bd24222e3cacc138a">setDataLen</a> (uint16_t connHandle, uint16_t tx_octets) const</td></tr>
 <tr class="memdesc:afbffb933eed8142bd24222e3cacc138a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Request an update of the data packet length.  <br /></td></tr>
 <tr class="separator:afbffb933eed8142bd24222e3cacc138a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfd159ff5f10848bd611733835ddf215" id="r_abfd159ff5f10848bd611733835ddf215"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#abfd159ff5f10848bd611733835ddf215">updatePhy</a> (uint16_t connHandle, uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions)</td></tr>
+<tr class="memdesc:abfd159ff5f10848bd611733835ddf215"><td class="mdescLeft">&#160;</td><td class="mdescRight">Request an update to the PHY used for a peer connection.  <br /></td></tr>
+<tr class="separator:abfd159ff5f10848bd611733835ddf215"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a709eb11532ec43a35f8653845b3158fc" id="r_a709eb11532ec43a35f8653845b3158fc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a709eb11532ec43a35f8653845b3158fc">getPhy</a> (uint16_t connHandle, uint8_t *txPhy, uint8_t *rxPhy)</td></tr>
+<tr class="memdesc:a709eb11532ec43a35f8653845b3158fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the PHY used for a peer connection.  <br /></td></tr>
+<tr class="separator:a709eb11532ec43a35f8653845b3158fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a31f73892bcf7eb66ee540bf1da9c419c" id="r_a31f73892bcf7eb66ee540bf1da9c419c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_client.html">NimBLEClient</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a31f73892bcf7eb66ee540bf1da9c419c">getClient</a> (uint16_t connHandle)</td></tr>
 <tr class="memdesc:a31f73892bcf7eb66ee540bf1da9c419c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a client instance from the connection handle.  <br /></td></tr>
 <tr class="separator:a31f73892bcf7eb66ee540bf1da9c419c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -183,12 +189,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>deleteClient</b> ()</
 <tr class="memitem:a3e3ca166e06c0b3dfc7c69a2c8bee681" id="r_a3e3ca166e06c0b3dfc7c69a2c8bee681"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a3e3ca166e06c0b3dfc7c69a2c8bee681">stopAdvertising</a> (uint8_t instanceId) const</td></tr>
 <tr class="memdesc:a3e3ca166e06c0b3dfc7c69a2c8bee681"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience function to stop advertising a data set.  <br /></td></tr>
 <tr class="separator:a3e3ca166e06c0b3dfc7c69a2c8bee681"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfd159ff5f10848bd611733835ddf215" id="r_abfd159ff5f10848bd611733835ddf215"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#abfd159ff5f10848bd611733835ddf215">updatePhy</a> (uint16_t connHandle, uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions)</td></tr>
-<tr class="memdesc:abfd159ff5f10848bd611733835ddf215"><td class="mdescLeft">&#160;</td><td class="mdescRight">Request an update to the PHY used for a peer connection.  <br /></td></tr>
-<tr class="separator:abfd159ff5f10848bd611733835ddf215"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a709eb11532ec43a35f8653845b3158fc" id="r_a709eb11532ec43a35f8653845b3158fc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a709eb11532ec43a35f8653845b3158fc">getPhy</a> (uint16_t connHandle, uint8_t *txPhy, uint8_t *rxPhy)</td></tr>
-<tr class="memdesc:a709eb11532ec43a35f8653845b3158fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the PHY used for a peer connection.  <br /></td></tr>
-<tr class="separator:a709eb11532ec43a35f8653845b3158fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0697fab04372df6412d3e948f3d55654" id="r_a0697fab04372df6412d3e948f3d55654"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a0697fab04372df6412d3e948f3d55654">startAdvertising</a> (uint32_t duration=0) const</td></tr>
 <tr class="memdesc:a0697fab04372df6412d3e948f3d55654"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start advertising.  <br /></td></tr>
 <tr class="separator:a0697fab04372df6412d3e948f3d55654"><td class="memSeparator" colspan="2">&#160;</td></tr>

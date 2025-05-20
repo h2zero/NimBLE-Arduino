@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.2.3</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
    </div>
   </td>
  </tr>
@@ -128,7 +128,7 @@ General changes</h1>
 <ul>
 <li>All functions that take a time parameter now require the time in milliseconds instead of seconds, i.e. <code>NimBLEScan::start(10000); // 10 seconds</code></li>
 <li><code>NimBLESecurity</code> class has been removed it's functionality has been merged into the <code><a class="el" href="class_nim_b_l_e_server.html" title="The model of a BLE server.">NimBLEServer</a></code> and <code><a class="el" href="class_nim_b_l_e_client.html" title="A model of a BLE client.">NimBLEClient</a></code> classes.</li>
-<li>All connection oriented callbacks now receive a reference to <code><a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a></code> and the <code><a class="el" href="structble__gap__conn__desc.html" title="Connection descriptor.">ble_gap_conn_desc</a></code> parameter has been replaced with <code><a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a></code> in the functions that received it. <br  />
+<li>All connection oriented callbacks now receive a reference to <code><a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a></code> and the <code>ble_gap_conn_desc</code> parameter has been replaced with <code><a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a></code> in the functions that received it. <br  />
  For instance <code>onAuthenticationComplete(ble_gap_conn_desc* desc)</code> signature is now <code>onAuthenticationComplete(<a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a>&amp; connInfo)</code> and <br  />
  <code>NimBLEServerCallbacks::onConnect(NimBLEServer* pServer)</code> signature is now <code><a class="el" href="class_nim_b_l_e_server_callbacks.html#a11d48696c2121eb301a76301555df2c5" title="Handle a client connection. This is called when a client connects.">NimBLEServerCallbacks::onConnect</a>(NimBLEServer* pServer, <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a>&amp; connInfo)</code>. <br  />
  <br  />
@@ -160,7 +160,7 @@ BLE Addresses</h1>
 <h1><a class="anchor" id="ble-uuids"></a>
 BLE UUID's</h1>
 <ul>
-<li><code>NimBLEUUID::getNative</code> method replaced with <code><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a68c61ae225675ac84d60f76058a5bdd4" title="Get a pointer to the NimBLE UUID base structure.">NimBLEUUID::getBase</a></code> which returns a read-only pointer to the underlying <code><a class="el" href="structble__uuid__t.html">ble_uuid_t</a></code> struct.</li>
+<li><code><a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af" title="Get the uuid value.">NimBLEUUID::getNative</a></code> method replaced with <code><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a68c61ae225675ac84d60f76058a5bdd4" title="Get a pointer to the NimBLE UUID base structure.">NimBLEUUID::getBase</a></code> which returns a read-only pointer to the underlying <code>ble_uuid_t</code> struct.</li>
 <li><code><a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID</a></code>; <code>msbFirst</code> parameter has been removed from constructor, caller should reverse the data first or call the new <code><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a9b96d90463f02f6a21afbaebcc242dd9" title="Reverse the byte order of the UUID.">NimBLEUUID::reverseByteOrder</a></code> method after. <br  />
  <br  />
 </li>
@@ -209,7 +209,7 @@ Server Security</h2>
 Client</h1>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_client.html#adefe48b87e8a814e1643cdb8c3759298" title="Get a pointer to the vector of found services.">NimBLEClient::getServices</a></code> now returns a const reference to std::vector&lt;NimBLERemoteService*&gt; instead of a pointer to the internal vector.</li>
-<li><code>NimBLEClient::getConnId</code> has been renamed to <code>getConnHandle</code> to be consistent with bluetooth terminology.</li>
+<li><code><a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83" title="Get the value of a specific characteristic associated with a specific service.">NimBLEClient::getConnId</a></code> has been renamed to <code>getConnHandle</code> to be consistent with bluetooth terminology.</li>
 <li><code><a class="el" href="class_nim_b_l_e_client.html#a36b298b70a42d32b8d578869b0763140" title="Disconnect from the peer.">NimBLEClient::disconnect</a></code> now returns a <code>bool</code>, true on success, instead of an <code>int</code> to be consistent with the rest of the library. <br  />
  <br  />
 </li>

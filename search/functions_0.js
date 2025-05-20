@@ -1,5 +1,12 @@
 var searchData=
 [
-  ['_5fcopy_0',['_copy',['../utils_8h.html#a9e29f0e39ec1eefecf952eda0bcb5e47',1,'utils.c']]],
-  ['_5fset_1',['_set',['../utils_8h.html#a75155ea0e2843cba5911485777834f48',1,'utils.c']]]
+  ['addcharacteristic_0',['addCharacteristic',['../class_nim_b_l_e_service.html#af8215dbfdaf7ced32d6158f8ff5116e8',1,'NimBLEService']]],
+  ['adddata_1',['adddata',['../class_nim_b_l_e_advertisement_data.html#a67f4d6869eb2797bc78389adf20cb59e',1,'NimBLEAdvertisementData::addData(const uint8_t *data, size_t length)'],['../class_nim_b_l_e_advertisement_data.html#a051d8f4ae66d2caa39351af8277bf0ed',1,'NimBLEAdvertisementData::addData(const std::vector&lt; uint8_t &gt; &amp;data)'],['../class_nim_b_l_e_ext_advertisement.html#a1f449f67deca3d7ef66c07d61c12d28e',1,'NimBLEExtAdvertisement::addData(const uint8_t *data, size_t length)'],['../class_nim_b_l_e_ext_advertisement.html#ab387e2739a3b8b207b965ba0cda70595',1,'NimBLEExtAdvertisement::addData(const std::string &amp;data)']]],
+  ['adddescriptor_2',['addDescriptor',['../class_nim_b_l_e_characteristic.html#aed4b2241c89ad2a8f49117e2b9433e5b',1,'NimBLECharacteristic']]],
+  ['addservice_3',['addService',['../class_nim_b_l_e_server.html#a6eda4c9e0ac1dd031c678d4bf7da1d56',1,'NimBLEServer']]],
+  ['addserviceuuid_4',['addserviceuuid',['../class_nim_b_l_e_advertising.html#a67c9589dff7e0ee3ec24f2c930d56c06',1,'NimBLEAdvertising::addServiceUUID()'],['../class_nim_b_l_e_ext_advertisement.html#a4b4bea2600ee592ffe6877fe8eac7872',1,'NimBLEExtAdvertisement::addServiceUUID(const char *serviceUUID)'],['../class_nim_b_l_e_ext_advertisement.html#a0e7a8731b021ba8813a3a9024171e926',1,'NimBLEExtAdvertisement::addServiceUUID(const NimBLEUUID &amp;serviceUUID)'],['../class_nim_b_l_e_advertising.html#a1bacfa32690f7e0c6f1172ea03c68c0d',1,'NimBLEAdvertising::addServiceUUID()'],['../class_nim_b_l_e_advertisement_data.html#a4119cfc1dafeee9c32f9a08dbb213139',1,'NimBLEAdvertisementData::addServiceUUID(const char *serviceUUID)'],['../class_nim_b_l_e_advertisement_data.html#acbea9f95711b329a427919ecd9cbeb23',1,'NimBLEAdvertisementData::addServiceUUID(const NimBLEUUID &amp;serviceUUID)']]],
+  ['addtxpower_5',['addtxpower',['../class_nim_b_l_e_advertisement_data.html#a3f227c597ec00f639e4bd26b80ce404b',1,'NimBLEAdvertisementData::addTxPower()'],['../class_nim_b_l_e_advertising.html#a0d3c5cb3a93416a4206abb1f8e443ebf',1,'NimBLEAdvertising::addTxPower()'],['../class_nim_b_l_e_ext_advertisement.html#aa423a004e031744463e82623142195d6',1,'NimBLEExtAdvertisement::addTxPower()']]],
+  ['advertiseondisconnect_6',['advertiseOnDisconnect',['../class_nim_b_l_e_server.html#aecf5b57888c55249a9c207d318a0495b',1,'NimBLEServer']]],
+  ['advtypetostring_7',['advTypeToString',['../class_nim_b_l_e_utils.html#a6de9354eeba9f126aa14cfa7ed43cda4',1,'NimBLEUtils']]],
+  ['append_8',['append',['../class_nim_b_l_e_att_value.html#aa217dfc649daed50eb75c7168442f86e',1,'NimBLEAttValue']]]
 ];

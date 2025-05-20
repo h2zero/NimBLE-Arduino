@@ -1,27 +1,5 @@
 var searchData=
 [
-  ['uecc_5fmake_5fkey_0',['uECC_make_key',['../ecc__dh_8h.html#ac7c322ad05c27d7ba2eab494d7f1a105',1,'ecc_dh.c']]],
-  ['uecc_5fshared_5fsecret_1',['uECC_shared_secret',['../ecc__dh_8h.html#a73ef345f4ff2af27a16ad1fc4dcadae0',1,'ecc_dh.c']]],
-  ['uecc_5fsign_2',['uECC_sign',['../ecc__dsa_8h.html#ad1aedf4ecf6c2f802b0b4070c0412f60',1,'ecc_dsa.c']]],
-  ['uecc_5fverify_3',['uECC_verify',['../ecc__dsa_8h.html#af6d1fee4db80d9aeec4676eb4301de18',1,'ecc_dsa.h']]],
-  ['unit_4',['unit',['../structble__gatt__cpfd.html#a488dab4f68a386cc77f384caae638f6b',1,'ble_gatt_cpfd']]],
-  ['unless_20necessary_20or_20unused_5',['Do not delete client instances unless necessary or unused',['../md__usage__tips.html#do-not-delete-client-instances-unless-necessary-or-unused',1,'']]],
-  ['unprovisioned_5fbeacon_6',['unprovisioned_beacon',['../structbt__mesh__prov.html#a8142a3b8120b1686f68513caeac09497',1,'bt_mesh_prov']]],
-  ['unsubscribe_7',['unsubscribe',['../class_nim_b_l_e_remote_characteristic.html#a64a74ffc6612cf4a42f33836e34887f0',1,'NimBLERemoteCharacteristic']]],
-  ['unused_8',['Do not delete client instances unless necessary or unused',['../md__usage__tips.html#do-not-delete-client-instances-unless-necessary-or-unused',1,'']]],
-  ['update_9',['update',['../structbt__mesh__model__pub.html#a20fe8f8697f48a51e1e1c8374c1d3b3d',1,'bt_mesh_model_pub']]],
-  ['updateconnparams_10',['updateconnparams',['../class_nim_b_l_e_server.html#a56add4759f7df045f51b70a026897975',1,'NimBLEServer::updateConnParams()'],['../class_nim_b_l_e_client.html#ad168d34de0f57f91824a78688b88b2b8',1,'NimBLEClient::updateConnParams()']]],
-  ['updatephy_11',['updatephy',['../class_nim_b_l_e_server.html#abfd159ff5f10848bd611733835ddf215',1,'NimBLEServer::updatePhy()'],['../class_nim_b_l_e_client.html#a165957953c2773dacc6a203c969f6069',1,'NimBLEClient::updatePhy()']]],
-  ['uri_12',['uri',['../structbt__mesh__prov.html#a6a11cc0d36ca2f4c5aee67a023c295a2',1,'bt_mesh_prov']]],
-  ['usage_20tips_13',['Usage Tips',['../md__usage__tips.html',1,'']]],
-  ['use_20with_20esp32c3_20esp32s3_20esp32h2_20only_14',['Extended advertising settings, For use with ESP32C3, ESP32S3, ESP32H2 ONLY!',['../md__command__line__config.html#extended-advertising-settings-for-use-with-esp32c3-esp32s3-esp32h2-only',1,'']]],
-  ['user_20guide_15',['New User Guide',['../md__new__user__guide.html',1,'']]],
-  ['user_5fdata_16',['user_data',['../structbt__mesh__msg__ack__ctx.html#a510baede03d53b2419ade8da6d02fa10',1,'bt_mesh_msg_ack_ctx']]],
-  ['using_17',['Using',['../index.html#using',1,'']]],
-  ['using_20the_20library_18',['Using the Library',['../md__new__user__guide.html#using-the-library',1,'']]],
-  ['utilities_19',['Utilities',['../md_1_8x__to2_8x__migration__guide.html#utilities',1,'']]],
-  ['utils_20',['Bluetooth Host HCI utils',['../group__bt__host__hci.html',1,'']]],
-  ['utils_2eh_21',['utils.h',['../utils_8h.html',1,'']]],
-  ['uuid_22',['uuid',['../group__bt__uuid.html',1,'Bluetooth UUID'],['../structbt__mesh__prov.html#a1152d77c4c4d9271bbd72514d94052f2',1,'bt_mesh_prov::uuid']]],
-  ['uuid_20s_23',['BLE UUID&apos;s',['../md_1_8x__to2_8x__migration__guide.html#ble-uuids',1,'']]]
+  ['x_20features_0',['Bluetooth 5.x features',['../md__bluetooth_015_01features.html',1,'']]],
+  ['x_20to_202_20x_1',['Migrating from 1.x to 2.x',['../md_1_8x__to2_8x__migration__guide.html',1,'']]]
 ];

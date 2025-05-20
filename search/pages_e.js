@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['readme_0',['README',['../readme.html',1,'']]],
-  ['release_20notes_1',['RELEASE NOTES',['../md__2github_2workspace_2src_2nimble_2_r_e_l_e_a_s_e___n_o_t_e_s.html',1,'']]]
+  ['tips_0',['Usage Tips',['../md__usage__tips.html',1,'']]],
+  ['to_202_20x_1',['Migrating from 1.x to 2.x',['../md_1_8x__to2_8x__migration__guide.html',1,'']]],
+  ['to_20nimble_2',['Migrating from Bluedroid to NimBLE',['../md__migration__guide.html',1,'']]]
 ];

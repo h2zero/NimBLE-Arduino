@@ -1,6 +1,5 @@
 var dir_68267d1309a1af8e8297ef4c3efbcdba =
 [
-    [ "nimble", "dir_8a4ef983cd6e7971a81a7ccd222f569e.html", "dir_8a4ef983cd6e7971a81a7ccd222f569e" ],
     [ "HIDKeyboardTypes.h", "_h_i_d_keyboard_types_8h_source.html", null ],
     [ "HIDTypes.h", "_h_i_d_types_8h_source.html", null ],
     [ "NimBLE2904.h", "_nim_b_l_e2904_8h_source.html", null ],
@@ -19,6 +18,8 @@ var dir_68267d1309a1af8e8297ef4c3efbcdba =
     [ "NimBLEEddystoneTLM.h", "_nim_b_l_e_eddystone_t_l_m_8h_source.html", null ],
     [ "NimBLEExtAdvertising.h", "_nim_b_l_e_ext_advertising_8h_source.html", null ],
     [ "NimBLEHIDDevice.h", "_nim_b_l_e_h_i_d_device_8h_source.html", null ],
+    [ "NimBLEL2CAPChannel.h", "_nim_b_l_e_l2_c_a_p_channel_8h_source.html", null ],
+    [ "NimBLEL2CAPServer.h", "_nim_b_l_e_l2_c_a_p_server_8h_source.html", null ],
     [ "NimBLELocalAttribute.h", "_nim_b_l_e_local_attribute_8h_source.html", null ],
     [ "NimBLELocalValueAttribute.h", "_nim_b_l_e_local_value_attribute_8h_source.html", null ],
     [ "NimBLELog.h", "_nim_b_l_e_log_8h_source.html", null ],
@@ -31,5 +32,6 @@ var dir_68267d1309a1af8e8297ef4c3efbcdba =
     [ "NimBLEService.h", "_nim_b_l_e_service_8h_source.html", null ],
     [ "NimBLEUtils.h", "_nim_b_l_e_utils_8h_source.html", null ],
     [ "NimBLEUUID.h", "_nim_b_l_e_u_u_i_d_8h_source.html", null ],
+    [ "NimBLEValueAttribute.h", "_nim_b_l_e_value_attribute_8h_source.html", null ],
     [ "nimconfig.h", "nimconfig_8h_source.html", null ]
 ];
