@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_REMOTE_DESCRIPTOR_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
 # include "NimBLERemoteValueAttribute.h"
 
@@ -44,5 +44,5 @@ class NimBLERemoteDescriptor : public NimBLERemoteValueAttribute {
     const NimBLERemoteCharacteristic* m_pRemoteCharacteristic;
 };
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
-#endif /* NIMBLE_CPP_REMOTE_DESCRIPTOR_H_ */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
+#endif // NIMBLE_CPP_REMOTE_DESCRIPTOR_H_

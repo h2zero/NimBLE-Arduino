@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#include "NimBLERemoteValueAttribute.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
-# include "NimBLERemoteValueAttribute.h"
 # include "NimBLEClient.h"
 # include "NimBLEUtils.h"
 # include "NimBLELog.h"

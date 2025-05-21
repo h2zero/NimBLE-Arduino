@@ -1,21 +1,29 @@
 //
 // (C) Dr. Michael 'Mickey' Lauer <mickey@vanille-media.de>
 //
-#include "NimBLEL2CAPChannel.h"
 
-#include "NimBLEClient.h"
-#include "NimBLELog.h"
-#include "NimBLEUtils.h"
+#include "NimBLEL2CAPChannel.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
+
+# include "NimBLEClient.h"
+# include "NimBLELog.h"
+# include "NimBLEUtils.h"
+
+# if defined(CONFIG_NIMBLE_CPP_IDF)
+#  include "host/ble_gap.h"
+# else
+#  include "nimble/nimble/host/include/host/ble_gap.h"
+# endif
 
 // L2CAP buffer block size
-#define L2CAP_BUF_BLOCK_SIZE            (250)
-#define L2CAP_BUF_SIZE_MTUS_PER_CHANNEL (3)
+# define L2CAP_BUF_BLOCK_SIZE            (250)
+# define L2CAP_BUF_SIZE_MTUS_PER_CHANNEL (3)
 // Round-up integer division
-#define CEIL_DIVIDE(a, b)               (((a) + (b) - 1) / (b))
-#define ROUND_DIVIDE(a, b)              (((a) + (b) / 2) / (b))
+# define CEIL_DIVIDE(a, b)               (((a) + (b) - 1) / (b))
+# define ROUND_DIVIDE(a, b)              (((a) + (b) / 2) / (b))
 // Retry
 constexpr uint32_t RetryTimeout = 50;
-constexpr int RetryCounter = 3;
+constexpr int      RetryCounter = 3;
 
 NimBLEL2CAPChannel::NimBLEL2CAPChannel(uint16_t psm, uint16_t mtu, NimBLEL2CAPChannelCallbacks* callbacks)
     : psm(psm), mtu(mtu), callbacks(callbacks) {
@@ -84,7 +92,7 @@ int NimBLEL2CAPChannel::writeFragment(std::vector<uint8_t>::const_iterator begin
         m_pTaskData = &taskData;
         NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
         m_pTaskData = nullptr;
-        stalled = false;
+        stalled     = false;
         NIMBLE_LOGD(LOG_TAG, "L2CAP Channel unstalled!");
     }
 
@@ -141,7 +149,7 @@ int NimBLEL2CAPChannel::writeFragment(std::vector<uint8_t>::const_iterator begin
     return -BLE_HS_EREJECT;
 }
 
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
 NimBLEL2CAPChannel* NimBLEL2CAPChannel::connect(NimBLEClient*                client,
                                                 uint16_t                     psm,
                                                 uint16_t                     mtu,
@@ -166,7 +174,7 @@ NimBLEL2CAPChannel* NimBLEL2CAPChannel::connect(NimBLEClient*                cli
     }
     return channel;
 }
-#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
+# endif // CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
 bool NimBLEL2CAPChannel::write(const std::vector<uint8_t>& bytes) {
     if (!this->channel) {
@@ -302,3 +310,5 @@ int NimBLEL2CAPChannel::handleL2capEvent(struct ble_l2cap_event* event, void* ar
 
     return returnValue;
 }
+
+#endif // #if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM

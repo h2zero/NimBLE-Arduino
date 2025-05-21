@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_CLIENT_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "host/ble_gap.h"
@@ -48,10 +48,12 @@ struct NimBLETaskData;
  */
 class NimBLEClient {
   public:
+# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
     bool connect(const NimBLEAdvertisedDevice* device,
                  bool                          deleteAttributes = true,
                  bool                          asyncConnect     = false,
                  bool                          exchangeMTU      = true);
+# endif
     bool connect(const NimBLEAddress& address, bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           connect(bool deleteAttributes = true, bool asyncConnect = false, bool exchangeMTU = true);
     bool           disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
@@ -227,5 +229,5 @@ class NimBLEClientCallbacks {
     virtual void onPhyUpdate(NimBLEClient* pClient, uint8_t txPhy, uint8_t rxPhy);
 };
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
-#endif /* NIMBLE_CPP_CLIENT_H_ */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
+#endif // NIMBLE_CPP_CLIENT_H_

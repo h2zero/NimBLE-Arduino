@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#include "NimBLEUtils.h"
+#if CONFIG_BT_ENABLED
 
-# include "NimBLEUtils.h"
 # include "NimBLEAddress.h"
 # include "NimBLELog.h"
 

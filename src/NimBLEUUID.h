@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_UUID_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if CONFIG_BT_ENABLED
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "host/ble_uuid.h"
@@ -70,5 +70,5 @@ class NimBLEUUID {
     ble_uuid_any_t m_uuid{};
 }; // NimBLEUUID
 
-#endif /* CONFIG_BT_ENABLED */
-#endif /* NIMBLE_CPP_UUID_H_ */
+#endif // CONFIG_BT_ENABLED
+#endif // NIMBLE_CPP_UUID_H_

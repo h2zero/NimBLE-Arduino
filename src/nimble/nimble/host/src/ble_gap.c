@@ -9403,10 +9403,12 @@ ble_gap_host_check_status(void)
     }
 
 #else
+#if NIMBLE_BLE_ADVERTISE || NIMBLE_BLE_CONNECT
     if (ble_gap_adv_active_instance(0)) {
         BLE_HS_LOG(ERROR, "Gap Advertising is active \n");
 	status |= BIT(BLE_GAP_STATUS_ADV);
     }
+#endif
 #endif
 
     /* Stop scanning */

@@ -9,6 +9,8 @@
 #undef CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 #undef CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #undef CONFIG_BT_NIMBLE_ROLE_OBSERVER
+#undef CONFIG_BT_ENABLED
+#define CONFIG_BT_ENABLED 1
 #endif
 
 #include "nimconfig_rename.h"
@@ -104,22 +106,22 @@
  /** @brief Un-comment if not using NimBLE Client functions \n
  *  Reduces flash size by approx. 7kB.
  */
-// #define CONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED
+// #define CONFIG_BT_NIMBLE_ROLE_CENTRAL 0
 
 /** @brief Un-comment if not using NimBLE Scan functions \n
  *  Reduces flash size by approx. 26kB.
  */
-// #define CONFIG_BT_NIMBLE_ROLE_OBSERVER_DISABLED
+// #define CONFIG_BT_NIMBLE_ROLE_OBSERVER 0
 
 /** @brief Un-comment if not using NimBLE Server functions \n
  *  Reduces flash size by approx. 16kB.
  */
-// #define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED
+// #define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL 0
 
 /** @brief Un-comment if not using NimBLE Advertising functions \n
  *  Reduces flash size by approx. 5kB.
  */
-// #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER_DISABLED
+// #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER 0
 
 /** @brief Un-comment to change the number of devices allowed to store/bond with */
 // #define CONFIG_BT_NIMBLE_MAX_BONDS 3
@@ -181,20 +183,36 @@
 **********************************/
 
 /* This section should not be altered */
+#ifndef CONFIG_BT_NIMBLE_ROLE_CENTRAL
 #ifndef CONFIG_BT_NIMBLE_ROLE_CENTRAL_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_CENTRAL 1
+#else
+#define CONFIG_BT_NIMBLE_ROLE_CENTRAL 0
+#endif
 #endif
 
+#ifndef CONFIG_BT_NIMBLE_ROLE_OBSERVER
 #ifndef CONFIG_BT_NIMBLE_ROLE_OBSERVER_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_OBSERVER 1
+#else
+#define CONFIG_BT_NIMBLE_ROLE_OBSERVER 0
+#endif
 #endif
 
+#ifndef CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 #ifndef CONFIG_BT_NIMBLE_ROLE_PERIPHERAL_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL 1
+#else
+#define CONFIG_BT_NIMBLE_ROLE_PERIPHERAL 0
+#endif
 #endif
 
+#ifndef CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #ifndef CONFIG_BT_NIMBLE_ROLE_BROADCASTER_DISABLED
 #define CONFIG_BT_NIMBLE_ROLE_BROADCASTER 1
+#else
+#define CONFIG_BT_NIMBLE_ROLE_BROADCASTER 0
+#endif
 #endif
 
 #ifndef CONFIG_BT_NIMBLE_PINNED_TO_CORE
@@ -383,16 +401,6 @@ defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
 /* Must set max number of syncs if periodic advertising is enabled */
 #if CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV && !defined(CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS)
 #  define CONFIG_BT_NIMBLE_MAX_PERIODIC_SYNCS 1
-#endif
-
-/* Cannot use client without scan */
-#if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) && !defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
-#define CONFIG_BT_NIMBLE_ROLE_OBSERVER
-#endif
-
-/* Cannot use server without advertise */
-#if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL) && !defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
-#define CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #endif
 
 /* Enables the use of Arduino String class for attribute values */

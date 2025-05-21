@@ -15,10 +15,8 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-
-# include "NimBLE2904.h"
+#include "NimBLE2904.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
 NimBLE2904::NimBLE2904(NimBLECharacteristic* pChr)
     : NimBLEDescriptor(NimBLEUUID((uint16_t)0x2904), BLE_GATT_CHR_F_READ, sizeof(NimBLE2904Data), pChr) {
@@ -71,4 +69,4 @@ void NimBLE2904::setUnit(uint16_t unit) {
     setValue(m_data);
 } // setUnit
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL

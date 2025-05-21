@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#include "NimBLEHIDDevice.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
-# include "NimBLEHIDDevice.h"
 # include "NimBLEServer.h"
 # include "NimBLEService.h"
 # include "NimBLE2904.h"
@@ -341,4 +340,4 @@ NimBLEService* NimBLEHIDDevice::getBatteryService() {
     return m_batterySvc;
 } // getBatteryService
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL

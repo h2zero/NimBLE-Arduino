@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_SERVER_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "host/ble_gap.h"
@@ -45,12 +45,14 @@ class NimBLEConnInfo;
 class NimBLEAddress;
 class NimBLEService;
 class NimBLECharacteristic;
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if CONFIG_BT_NIMBLE_ROLE_BROADCASTER
+#  if CONFIG_BT_NIMBLE_EXT_ADV
 class NimBLEExtAdvertising;
-# else
+#  else
 class NimBLEAdvertising;
+#  endif
 # endif
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
 class NimBLEClient;
 # endif
 
@@ -82,32 +84,36 @@ class NimBLEServer {
     bool                  updatePhy(uint16_t connHandle, uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions);
     bool                  getPhy(uint16_t connHandle, uint8_t* txPhy, uint8_t* rxPhy);
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
     NimBLEClient* getClient(uint16_t connHandle);
     NimBLEClient* getClient(const NimBLEConnInfo& connInfo);
     void          deleteClient();
 # endif
 
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if CONFIG_BT_NIMBLE_ROLE_BROADCASTER
+#  if CONFIG_BT_NIMBLE_EXT_ADV
     NimBLEExtAdvertising* getAdvertising() const;
     bool                  startAdvertising(uint8_t instanceId, int duration = 0, int maxEvents = 0) const;
     bool                  stopAdvertising(uint8_t instanceId) const;
-# endif
+#  endif
 
-# if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
+#  if !CONFIG_BT_NIMBLE_EXT_ADV || defined(_DOXYGEN_)
     NimBLEAdvertising* getAdvertising() const;
     bool               startAdvertising(uint32_t duration = 0) const;
     bool               stopAdvertising() const;
+#  endif
 # endif
 
   private:
     friend class NimBLEDevice;
     friend class NimBLEService;
     friend class NimBLECharacteristic;
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if CONFIG_BT_NIMBLE_ROLE_BROADCASTER
+#  if CONFIG_BT_NIMBLE_EXT_ADV
     friend class NimBLEExtAdvertising;
-# else
+#  else
     friend class NimBLEAdvertising;
+#  endif
 # endif
 
     NimBLEServer();
@@ -123,7 +129,7 @@ class NimBLEServer {
     std::vector<NimBLEService*>                            m_svcVec;
     std::array<uint16_t, CONFIG_BT_NIMBLE_MAX_CONNECTIONS> m_connectedPeers;
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
     NimBLEClient* m_pClient{nullptr};
 # endif
 
