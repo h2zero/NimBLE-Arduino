@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER) && CONFIG_BT_NIMBLE_EXT_ADV
+#include "NimBLEExtAdvertising.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && CONFIG_BT_NIMBLE_EXT_ADV
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "services/gap/ble_svc_gap.h"
@@ -24,7 +24,6 @@
 #  include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
 # endif
 
-# include "NimBLEExtAdvertising.h"
 # include "NimBLEDevice.h"
 # include "NimBLEServer.h"
 # include "NimBLEUtils.h"
@@ -69,7 +68,7 @@ bool NimBLEExtAdvertising::setInstanceData(uint8_t instId, NimBLEExtAdvertisemen
         adv.m_params.scan_req_notif = false;
     }
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+# if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
     NimBLEServer* pServer = NimBLEDevice::getServer();
     if (pServer != nullptr) {
         pServer->start(); // make sure the GATT server is ready before advertising
@@ -392,7 +391,7 @@ void NimBLEExtAdvertisement::setTxPower(int8_t dbm) {
  * @param [in] enable True = connectable.
  */
 void NimBLEExtAdvertisement::setConnectable(bool enable) {
-# if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+# if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
     m_params.connectable = enable;
 # endif
 } // setConnectable
@@ -1091,4 +1090,4 @@ std::string NimBLEExtAdvertisement::toString() const {
     return str;
 } // toString
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && CONFIG_BT_NIMBLE_EXT_ADV */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && CONFIG_BT_NIMBLE_EXT_ADV

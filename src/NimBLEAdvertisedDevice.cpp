@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+#include "NimBLEAdvertisedDevice.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER
 
 # include "NimBLEDevice.h"
-# include "NimBLEAdvertisedDevice.h"
 # include "NimBLEUtils.h"
 # include "NimBLELog.h"
 
@@ -814,4 +813,4 @@ const std::vector<uint8_t>::const_iterator NimBLEAdvertisedDevice::end() const {
     return m_payload.cend();
 }
 
-#endif /* CONFIG_BT_ENABLED  && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER

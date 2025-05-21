@@ -15,11 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if (defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER) && !CONFIG_BT_NIMBLE_EXT_ADV) || \
-    defined(_DOXYGEN_)
+#include "NimBLEAdvertisementData.h"
+#if (CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && !CONFIG_BT_NIMBLE_EXT_ADV) || defined(_DOXYGEN_)
 
-# include "NimBLEAdvertisementData.h"
 # include "NimBLEDevice.h"
 # include "NimBLEUtils.h"
 # include "NimBLEUUID.h"
@@ -585,4 +583,4 @@ std::string NimBLEAdvertisementData::toString() const {
     return str;
 } // toString
 
-#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && !CONFIG_BT_NIMBLE_EXT_ADV
+#endif // (CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && !CONFIG_BT_NIMBLE_EXT_ADV) || defined(_DOXYGEN_)

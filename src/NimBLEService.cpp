@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#include "NimBLEService.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
-# include "NimBLEService.h"
 # if CONFIG_BT_NIMBLE_EXT_ADV
 #  include "NimBLEExtAdvertising.h"
 # else
@@ -376,4 +375,4 @@ bool NimBLEService::isStarted() const {
     return m_pSvcDef->type > 0;
 } // isStarted
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL

@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#include "NimBLEAddress.h"
+#if CONFIG_BT_ENABLED
 
-# include "NimBLEAddress.h"
 # include "NimBLELog.h"
 
 # include <algorithm>
@@ -224,11 +223,16 @@ NimBLEAddress::operator std::string() const {
     snprintf(buffer,
              sizeof(buffer),
              NIMBLE_CPP_ADDR_FMT,
-             this->val[5], NIMBLE_CPP_ADDR_DELIMITER,
-             this->val[4], NIMBLE_CPP_ADDR_DELIMITER,
-             this->val[3], NIMBLE_CPP_ADDR_DELIMITER,
-             this->val[2], NIMBLE_CPP_ADDR_DELIMITER,
-             this->val[1], NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[5],
+             NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[4],
+             NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[3],
+             NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[2],
+             NIMBLE_CPP_ADDR_DELIMITER,
+             this->val[1],
+             NIMBLE_CPP_ADDR_DELIMITER,
              this->val[0]);
     return std::string{buffer};
 } // operator std::string

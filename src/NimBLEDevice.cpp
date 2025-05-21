@@ -15,11 +15,8 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED)
-
-# include "NimBLEDevice.h"
-# include "NimBLEUtils.h"
+#include "NimBLEDevice.h"
+#if CONFIG_BT_ENABLED
 
 # ifdef ESP_PLATFORM
 #  include "esp_err.h"
@@ -59,17 +56,6 @@
 #  include "esp32-hal-bt.h"
 # endif
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
-#  include "NimBLEClient.h"
-# endif
-
-# if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
-#  include "NimBLEServer.h"
-#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
-#   include "NimBLEL2CAPServer.h"
-#  endif
-# endif
-
 # include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLEDevice";
@@ -82,18 +68,18 @@ extern "C" void ble_store_config_init(void);
 NimBLEDeviceCallbacks  NimBLEDevice::defaultDeviceCallbacks{};
 NimBLEDeviceCallbacks* NimBLEDevice::m_pDeviceCallbacks = &defaultDeviceCallbacks;
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
 NimBLEScan* NimBLEDevice::m_pScan = nullptr;
 # endif
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+# if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 NimBLEServer* NimBLEDevice::m_pServer = nullptr;
 #  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
 NimBLEL2CAPServer* NimBLEDevice::m_pL2CAPServer = nullptr;
 #  endif
 # endif
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+# if CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #  if CONFIG_BT_NIMBLE_EXT_ADV
 NimBLEExtAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
 #  else
@@ -101,7 +87,7 @@ NimBLEAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
 #  endif
 # endif
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
 std::array<NimBLEClient*, NIMBLE_MAX_CONNECTIONS> NimBLEDevice::m_pClients{};
 # endif
 
@@ -132,7 +118,7 @@ extern "C" int ble_vhci_disc_duplicate_mode_enable(int mode);
 /*                              SERVER FUNCTIONS                              */
 /* -------------------------------------------------------------------------- */
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+# if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 /**
  * @brief Create an instance of a server.
  * @return A pointer to the instance of the server.
@@ -156,7 +142,7 @@ NimBLEServer* NimBLEDevice::getServer() {
     return m_pServer;
 } // getServer
 
-#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
 /**
  * @brief Create an instance of a L2CAP server.
  * @return A pointer to the instance of the L2CAP server.
@@ -175,14 +161,14 @@ NimBLEL2CAPServer* NimBLEDevice::createL2CAPServer() {
 NimBLEL2CAPServer* NimBLEDevice::getL2CAPServer() {
     return m_pL2CAPServer;
 } // getL2CAPServer
-#  endif
-# endif // #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#  endif // #if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
+# endif  // #if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
 /* -------------------------------------------------------------------------- */
 /*                            ADVERTISING FUNCTIONS                           */
 /* -------------------------------------------------------------------------- */
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+# if CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 #  if CONFIG_BT_NIMBLE_EXT_ADV
 /**
  * @brief Get the instance of the extended advertising object.
@@ -246,7 +232,7 @@ bool NimBLEDevice::startAdvertising(uint32_t duration) {
 bool NimBLEDevice::stopAdvertising() {
     return getAdvertising()->stop();
 } // stopAdvertising
-# endif // #if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+# endif // #if CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 
 /* -------------------------------------------------------------------------- */
 /*                               SCAN FUNCTIONS                               */
@@ -257,7 +243,7 @@ bool NimBLEDevice::stopAdvertising() {
  * @return The scanning object reference.  This is a singleton object.  The caller should not
  * try and release/delete it.
  */
-# if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
 NimBLEScan* NimBLEDevice::getScan() {
     if (m_pScan == nullptr) {
         m_pScan = new NimBLEScan();
@@ -335,13 +321,13 @@ void NimBLEDevice::setScanDuplicateCacheResetTime(uint16_t time) {
 }
 #   endif // CONFIG_BTDM_BLE_SCAN_DUPL || CONFIG_BT_LE_SCAN_DUPL
 #  endif  // ESP_PLATFORM
-# endif   // #if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+# endif   // CONFIG_BT_NIMBLE_ROLE_OBSERVER
 
 /* -------------------------------------------------------------------------- */
 /*                              CLIENT FUNCTIONS                              */
 /* -------------------------------------------------------------------------- */
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
 /**
  * @brief Creates a new client object, each client can connect to 1 peripheral device.
  * @return A pointer to the new client object, or nullptr on error.
@@ -476,7 +462,7 @@ std::vector<NimBLEClient*> NimBLEDevice::getConnectedClients() {
     return clients;
 } // getConnectedClients
 
-# endif // #if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+# endif // CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
 /* -------------------------------------------------------------------------- */
 /*                               TRANSMIT POWER                               */
@@ -627,7 +613,7 @@ uint16_t NimBLEDevice::getMTU() {
 /*                               BOND MANAGEMENT                              */
 /* -------------------------------------------------------------------------- */
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL || CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 /**
  * @brief Gets the number of bonded peers stored
  */
@@ -864,13 +850,13 @@ void NimBLEDevice::onSync(void) {
     m_synced = true;
 
     if (m_initialized) {
-# if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
         if (m_pScan != nullptr) {
             m_pScan->onHostSync();
         }
 # endif
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+# if CONFIG_BT_NIMBLE_ROLE_BROADCASTER
         if (m_bleAdvertising != nullptr) {
             m_bleAdvertising->onHostSync();
         }
@@ -1038,12 +1024,12 @@ bool NimBLEDevice::deinit(bool clearAll) {
     }
 
     if (clearAll) {
-# if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+# if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
         if (NimBLEDevice::m_pServer != nullptr) {
             delete NimBLEDevice::m_pServer;
             NimBLEDevice::m_pServer = nullptr;
         }
-#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM > 0
+#  if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
         if (NimBLEDevice::m_pL2CAPServer != nullptr) {
             delete NimBLEDevice::m_pL2CAPServer;
             NimBLEDevice::m_pL2CAPServer = nullptr;
@@ -1051,21 +1037,21 @@ bool NimBLEDevice::deinit(bool clearAll) {
 #  endif
 # endif
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+# if CONFIG_BT_NIMBLE_ROLE_BROADCASTER
         if (NimBLEDevice::m_bleAdvertising != nullptr) {
             delete NimBLEDevice::m_bleAdvertising;
             NimBLEDevice::m_bleAdvertising = nullptr;
         }
 # endif
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
         if (NimBLEDevice::m_pScan != nullptr) {
             delete NimBLEDevice::m_pScan;
             NimBLEDevice::m_pScan = nullptr;
         }
 # endif
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
         for (auto clt : m_pClients) {
             deleteClient(clt);
         }
@@ -1266,7 +1252,7 @@ bool NimBLEDevice::startSecurity(uint16_t connHandle, int* rcPtr) {
     return rc == 0 || rc == BLE_HS_EALREADY;
 } // startSecurity
 
-# if defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL) || defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL || CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 /**
  * @brief Inject the provided passkey into the Security Manager.
  * @param [in] peerInfo Connection information for the peer.

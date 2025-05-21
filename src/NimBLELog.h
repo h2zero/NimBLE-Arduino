@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_LOG_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if CONFIG_BT_ENABLED
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "esp_log.h"
