@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_VALUE_ATTRIBUTE_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && (defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL) || defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL))
+#if CONFIG_BT_ENABLED && (CONFIG_BT_NIMBLE_ROLE_PERIPHERAL || CONFIG_BT_NIMBLE_ROLE_CENTRAL)
 
 # include "NimBLEAttribute.h"
 # include "NimBLEAttValue.h"

@@ -1,12 +1,14 @@
 //
 // (C) Dr. Michael 'Mickey' Lauer <mickey@vanille-media.de>
 //
-#ifndef NIMBLEL2CAPSERVER_H
-#define NIMBLEL2CAPSERVER_H
-#pragma once
 
-#include "inttypes.h"
-#include <vector>
+#ifndef NIMBLE_CPP_L2CAPSERVER_H_
+#define NIMBLE_CPP_L2CAPSERVER_H_
+#include "nimconfig.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
+
+# include "inttypes.h"
+# include <vector>
 
 class NimBLEL2CAPChannel;
 class NimBLEL2CAPChannelCallbacks;
@@ -35,4 +37,5 @@ class NimBLEL2CAPServer {
     friend class NimBLEDevice;
 };
 
-#endif
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
+#endif // NIMBLE_CPP_L2CAPSERVER_H_

@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NIMBLECONNINFO_H_
-#define NIMBLECONNINFO_H_
+#ifndef NIMBLE_CPP_CONNINFO_H_
+#define NIMBLE_CPP_CONNINFO_H_
 
 #if defined(CONFIG_NIMBLE_CPP_IDF)
 # include "host/ble_gap.h"
@@ -80,4 +80,5 @@ class NimBLEConnInfo {
     NimBLEConnInfo() {};
     NimBLEConnInfo(ble_gap_conn_desc desc) { m_desc = desc; }
 };
-#endif
+
+#endif // NIMBLE_CPP_CONNINFO_H_

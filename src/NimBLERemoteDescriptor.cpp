@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#include "NimBLERemoteDescriptor.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
-# include "NimBLERemoteDescriptor.h"
 # include "NimBLERemoteCharacteristic.h"
 
 /**
@@ -57,4 +56,4 @@ NimBLEClient* NimBLERemoteDescriptor::getClient() const {
     return m_pRemoteCharacteristic->getClient();
 }
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL

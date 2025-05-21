@@ -19,7 +19,8 @@
 #define NIMBLE_CPP_UTILS_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED)
+#if CONFIG_BT_ENABLED
+
 # include <string>
 
 class NimBLEAddress;

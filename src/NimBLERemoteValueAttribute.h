@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_REMOTE_VALUE_ATTRIBUTE_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include <host/ble_gatt.h>
@@ -170,5 +170,5 @@ class NimBLERemoteValueAttribute : public NimBLEValueAttribute, public NimBLEAtt
     static int onWriteCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg);
 };
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
 #endif // NIMBLE_CPP_REMOTE_VALUE_ATTRIBUTE_H_
