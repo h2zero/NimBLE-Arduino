@@ -47,10 +47,11 @@ void setBeacon() {
                   eddystoneTLM.getTemp() / 256,
                   eddystoneTLM.getTemp() % 256 * 100 / 256);
 
-    NimBLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-    NimBLEAdvertisementData oScanResponseData  = BLEAdvertisementData();
+    NimBLEAdvertisementData        oAdvertisementData = BLEAdvertisementData();
+    NimBLEAdvertisementData        oScanResponseData  = BLEAdvertisementData();
+    NimBLEEddystoneTLM::BeaconData beaconData         = eddystoneTLM.getData();
     oScanResponseData.setServiceData(NimBLEUUID("FEAA"),
-                                     reinterpret_cast<const uint8_t*>(&eddystoneTLM.getData()),
+                                     reinterpret_cast<const uint8_t*>(&beaconData),
                                      sizeof(NimBLEEddystoneTLM::BeaconData));
 
     oAdvertisementData.setName("ESP32 TLM Beacon");
