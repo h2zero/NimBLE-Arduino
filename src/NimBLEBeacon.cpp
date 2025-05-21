@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_BROADCASTER)
+#include "NimBLEBeacon.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER
 
-# include "NimBLEBeacon.h"
 # include "NimBLEUUID.h"
 # include "NimBLELog.h"
 

@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+#include "NimBLEScan.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER
 
-# include "NimBLEScan.h"
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
 
@@ -73,7 +72,7 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
 # endif
             NimBLEAddress advertisedAddress(disc.addr);
 
-# ifdef CONFIG_BT_NIMBLE_ROLE_CENTRAL
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
             // stop processing if already connected
             NimBLEClient* pClient = NimBLEDevice::getClientByPeerAddress(advertisedAddress);
             if (pClient != nullptr && pClient->isConnected()) {
@@ -559,4 +558,4 @@ void NimBLEScanCallbacks::onScanEnd(const NimBLEScanResults& results, int reason
     NIMBLE_LOGD(CB_TAG, "Scan ended; reason %d, num results: %d", reason, results.getCount());
 }
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER

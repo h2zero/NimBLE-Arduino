@@ -1,10 +1,13 @@
 //
 // (C) Dr. Michael 'Mickey' Lauer <mickey@vanille-media.de>
 //
+
 #include "NimBLEL2CAPServer.h"
-#include "NimBLEL2CAPChannel.h"
-#include "NimBLEDevice.h"
-#include "NimBLELog.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
+
+# include "NimBLEL2CAPChannel.h"
+# include "NimBLEDevice.h"
+# include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLEL2CAPServer";
 
@@ -33,3 +36,5 @@ NimBLEL2CAPChannel* NimBLEL2CAPServer::createService(const uint16_t             
     this->services.push_back(service);
     return service;
 }
+
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM

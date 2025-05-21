@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_LOCAL_ATTRIBUTE_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
 # include "NimBLEAttribute.h"
 

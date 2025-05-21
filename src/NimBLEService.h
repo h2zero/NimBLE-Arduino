@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_SERVICE_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
 class NimBLEService;
 
@@ -69,5 +69,5 @@ class NimBLEService : public NimBLELocalAttribute {
     ble_gatt_svc_def                   m_pSvcDef[2]{};
 }; // NimBLEService
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL */
-#endif /* NIMBLE_CPP_SERVICE_H_ */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#endif // NIMBLE_CPP_SERVICE_H_

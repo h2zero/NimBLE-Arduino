@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#include "NimBLERemoteService.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
-# include "NimBLERemoteService.h"
 # include "NimBLERemoteCharacteristic.h"
 # include "NimBLEClient.h"
 # include "NimBLEAttValue.h"
@@ -303,4 +302,4 @@ std::string NimBLERemoteService::toString() const {
     return res;
 } // toString
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL

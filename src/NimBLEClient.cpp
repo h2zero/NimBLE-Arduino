@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)
+#include "NimBLEClient.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
 
-# include "NimBLEClient.h"
 # include "NimBLERemoteService.h"
 # include "NimBLERemoteCharacteristic.h"
 # include "NimBLEDevice.h"
@@ -126,6 +125,7 @@ size_t NimBLEClient::deleteService(const NimBLEUUID& uuid) {
     return m_svcVec.size();
 } // deleteService
 
+# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
 /**
  * @brief Connect to an advertising device.
  * @param [in] pDevice A pointer to the advertised device instance to connect to.
@@ -141,6 +141,7 @@ bool NimBLEClient::connect(const NimBLEAdvertisedDevice* pDevice, bool deleteAtt
     NimBLEAddress address(pDevice->getAddress());
     return connect(address, deleteAttributes, asyncConnect, exchangeMTU);
 } // connect
+# endif
 
 /**
  * @brief Connect to the BLE Server using the address of the last connected device, or the address\n
@@ -227,10 +228,15 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
                 break;
 
             case BLE_HS_EBUSY:
+# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
+
                 // Scan was active, stop it through the NimBLEScan API to release any tasks and call the callback.
                 if (!NimBLEDevice::getScan()->stop()) {
                     rc = BLE_HS_EUNKNOWN;
                 }
+# else
+                rc = BLE_HS_EUNKNOWN;
+# endif
                 break;
 
             case BLE_HS_EDONE:
@@ -1301,4 +1307,4 @@ void NimBLEClientCallbacks::onPhyUpdate(NimBLEClient* pClient, uint8_t txPhy, ui
 } // onPhyUpdate
 #
 
-#endif /* CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL */
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL

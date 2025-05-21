@@ -1,11 +1,12 @@
 //
 // (C) Dr. Michael 'Mickey' Lauer <mickey@vanille-media.de>
 //
-#pragma once
-#ifndef NIMBLEL2CAPCHANNEL_H
-# define NIMBLEL2CAPCHANNEL_H
 
-# include "nimconfig.h"
+#ifndef NIMBLE_CPP_L2CAPCHANNEL_H_
+#define NIMBLE_CPP_L2CAPCHANNEL_H_
+
+#include "nimconfig.h"
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
 
 # include "inttypes.h"
 # if defined(CONFIG_NIMBLE_CPP_IDF)
@@ -85,7 +86,7 @@ class NimBLEL2CAPChannel {
 
     // Runtime handling
     std::atomic<bool> stalled{false};
-    NimBLETaskData* m_pTaskData{nullptr};
+    NimBLETaskData*   m_pTaskData{nullptr};
 
     // Allocate / deallocate NimBLE memory pool
     bool setupMemPool();
@@ -121,4 +122,5 @@ class NimBLEL2CAPChannelCallbacks {
     virtual void onDisconnect(NimBLEL2CAPChannel* channel) {};
 };
 
-#endif
+#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM
+#endif // NIMBLE_CPP_L2CAPCHANNEL_H_

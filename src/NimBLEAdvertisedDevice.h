@@ -19,7 +19,7 @@
 #define NIMBLE_CPP_ADVERTISED_DEVICE_H_
 
 #include "nimconfig.h"
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BT_NIMBLE_ROLE_OBSERVER)
+#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER
 
 # include "NimBLEAddress.h"
 # include "NimBLEScan.h"
