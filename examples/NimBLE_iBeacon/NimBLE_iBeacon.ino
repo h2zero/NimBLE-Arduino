@@ -1,0 +1,46 @@
+/**
+ *  iBeacon example
+ *
+ *  This example demonstrates how to publish an Apple-compatible iBeacon
+ *
+ *  Created: on May 26 2025
+ *      Author: lazd
+ */
+
+#include <Arduino.h>
+#include <NimBLEDevice.h>
+#include <NimBLEBeacon.h>
+
+// According to Apple, it's important to have a 100ms advertising time
+#define BEACON_ADVERTISING_TIME	160   // 100ms
+
+// Hey, you! Replace this with your own unique UUID with something like https://www.uuidgenerator.net/
+const char* iBeaconUUID = "26D0814C-F81C-4B2D-AC57-032E2AFF8642";
+
+void setup() {
+	NimBLEDevice::init("NimBLEiBeacon");
+
+	// Create beacon object
+	NimBLEBeacon beacon;
+	beacon.setManufacturerId(0x4C00); // fake Apple 0x004C LSB (ENDIAN_CHANGE_U16!)
+	beacon.setMajor(1);
+	beacon.setMinor(1);
+	beacon.setSignalPower(0xC5); // Not required
+	beacon.setProximityUUID(BLEUUID(iBeaconUUID)); // Unlike Bluedroid, you do not need to reverse endianness here
+
+	// Extract beacon data
+	NimBLEBeacon::BeaconData beaconData = beacon.getData();
+
+	// Create advertisement data
+ 	NimBLEAdvertisementData beaconAdvertisementData;
+	beaconAdvertisementData.setFlags(0x04); // BR_EDR_NOT_SUPPORTED
+	beaconAdvertisementData.setManufacturerData(reinterpret_cast<const uint8_t*>(&beaconData), sizeof(NimBLEBeacon::BeaconData));
+
+	// Start advertising
+	NimBLEAdvertising *advertising = NimBLEDevice::getAdvertising();
+	advertising->setAdvertisingInterval(BEACON_ADVERTISING_TIME);
+	advertising->setAdvertisementData(beaconAdvertisementData);
+	advertising->start();
+}
+
+void loop() {}
