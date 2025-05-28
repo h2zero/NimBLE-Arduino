@@ -22,10 +22,9 @@ void setup() {
 
 	// Create beacon object
 	NimBLEBeacon beacon;
-	beacon.setManufacturerId(0x4C00); // fake Apple 0x004C LSB (ENDIAN_CHANGE_U16!)
 	beacon.setMajor(1);
 	beacon.setMinor(1);
-	beacon.setSignalPower(0xC5); // Not required
+	beacon.setSignalPower(0xC5); // Optional
 	beacon.setProximityUUID(BLEUUID(iBeaconUUID)); // Unlike Bluedroid, you do not need to reverse endianness here
 
 	// Extract beacon data
