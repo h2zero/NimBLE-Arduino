@@ -27,13 +27,10 @@ void setup() {
 	beacon.setSignalPower(0xC5); // Optional
 	beacon.setProximityUUID(BLEUUID(iBeaconUUID)); // Unlike Bluedroid, you do not need to reverse endianness here
 
-	// Extract beacon data
-	NimBLEBeacon::BeaconData beaconData = beacon.getData();
-
 	// Create advertisement data
  	NimBLEAdvertisementData beaconAdvertisementData;
 	beaconAdvertisementData.setFlags(0x04); // BR_EDR_NOT_SUPPORTED
-	beaconAdvertisementData.setManufacturerData(reinterpret_cast<const uint8_t*>(&beaconData), sizeof(NimBLEBeacon::BeaconData));
+	beaconAdvertisementData.setManufacturerData(beacon.getData());
 
 	// Start advertising
 	NimBLEAdvertising *advertising = NimBLEDevice::getAdvertising();
