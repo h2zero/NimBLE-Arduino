@@ -24,6 +24,7 @@
 class NimBLEUUID;
 
 # include <cstdint>
+# include <vector>
 
 /**
  * @brief Representation of a beacon.
@@ -40,6 +41,10 @@ class NimBLEBeacon {
         uint16_t major{};
         uint16_t minor{};
         int8_t   signalPower{};
+        operator std::vector<uint8_t> () const {
+            return std::vector<uint8_t>(reinterpret_cast<const uint8_t*>(this),
+                                        reinterpret_cast<const uint8_t*>(this) + sizeof(BeaconData));
+        }
     } __attribute__((packed));
 
     const BeaconData& getData();
