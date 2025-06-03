@@ -530,6 +530,11 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
             }
 
             pServer->m_pServerCallbacks->onAuthenticationComplete(peerInfo);
+# if CONFIG_BT_NIMBLE_ROLE_CENTRAL
+            if (pServer->m_pClient && pServer->m_pClient->m_connHandle == event->enc_change.conn_handle) {
+                NimBLEClient::handleGapEvent(event, pServer->m_pClient);
+            }
+# endif
             break;
         } // BLE_GAP_EVENT_ENC_CHANGE
 
