@@ -199,9 +199,9 @@ static void dummy_controller_rcv_pkt_ready(void)
   /* Dummy function */
 }
 
+#if 0
 void bt_record_hci_data(uint8_t *data, uint16_t len)
 {
-#if 0
     if ((data[0] == BLE_HCI_UART_H4_EVT) && (data[1] == BLE_HCI_EVCODE_LE_META) && ((data[3] ==  BLE_HCI_LE_SUBEV_ADV_RPT) || (data[3] == BLE_HCI_LE_SUBEV_DIRECT_ADV_RPT)
         || (data[3] == BLE_HCI_LE_SUBEV_EXT_ADV_RPT) || (data[3] == BLE_HCI_LE_SUBEV_PERIODIC_ADV_RPT))) {
         bt_hci_log_record_hci_adv(HCI_LOG_DATA_TYPE_ADV, &data[2], len - 2);
@@ -209,8 +209,8 @@ void bt_record_hci_data(uint8_t *data, uint16_t len)
         uint8_t data_type = ((data[0] == 2) ? HCI_LOG_DATA_TYPE_C2H_ACL : data[0]);
         bt_hci_log_record_hci_data(data_type, &data[1], len - 1);
     }
-#endif // (BT_HCI_LOG_INCLUDED == TRUE)
 }
+#endif // (BT_HCI_LOG_INCLUDED == TRUE)
 
 static int dummy_host_rcv_pkt(uint8_t *data, uint16_t len)
 {
@@ -223,8 +223,9 @@ static int dummy_host_rcv_pkt(uint8_t *data, uint16_t len)
  */
 static int host_rcv_pkt(uint8_t *data, uint16_t len)
 {
+#if 0
     bt_record_hci_data(data, len);
-
+#endif
     if(!ble_hs_enabled_state) {
         /* If host is not enabled, drop the packet */
         esp_rom_printf("Host not enabled. Dropping the packet!");
