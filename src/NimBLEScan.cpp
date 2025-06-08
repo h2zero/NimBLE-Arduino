@@ -41,7 +41,9 @@ NimBLEScan::NimBLEScan()
  * @brief Scan destructor, release any allocated resources.
  */
 NimBLEScan::~NimBLEScan() {
-    clearResults();
+    for (const auto& dev : m_scanResults.m_deviceVec) {
+        delete dev;
+    }
 }
 
 /**
