@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.1] 2025-06-11
+
+## Fixed
+- EddystoneTLM example not setting the data.
+- Build errors when disabling BLE roles.
+- esp32c2 build issues due to multiple definitions of various functions.
+- `NimBLEClient::readValue` call not returning when the instance was created with a`NimBLEServer` and reading a secured characteristic.
+- `NimBLEScan` destructor potentially causing a crash.
+
+## Added
+- iBeacon example.
+- `NimBLEBeacon::BeaconData` `std::vector<uint8_t>` operator to allow it to be used as a parameter to `NimBLEAdvertisementData::setManufacturerData`.
+
 ## [2.3.0] 2025-05-19
 
 ## Fixed
