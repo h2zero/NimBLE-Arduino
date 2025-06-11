@@ -84,7 +84,7 @@ void adv_stack_enableScanReqRxdVsEvent(bool en){}
 void conn_stack_enableChanMapUpdCompVsEvent(bool en){}
 void sleep_stack_enableWakeupVsEvent(bool en){}
 
-#ifdef SOC_ECC_SUPPORTED
+#if SOC_ECC_SUPPORTED && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0)
 void esp_crypto_ecc_lock_acquire(void) {}
 void esp_crypto_ecc_lock_release(void) {}
 #endif
