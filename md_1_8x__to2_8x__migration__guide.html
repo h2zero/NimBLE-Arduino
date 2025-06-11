@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.1</span>
    </div>
   </td>
  </tr>
@@ -144,8 +144,7 @@ BLE Device</h1>
 <li><code><a class="el" href="class_nim_b_l_e_device.html#a31acb43c150014f06bad74b57c2335ff" title="Sets the address type to use.">NimBLEDevice::setOwnAddrType</a></code> no longer takes a <code>bool nrpa</code> parameter, the random address type will be determined by the bits the in the address instead. <br  />
  Note: If setting a custom address, it should be set with <code><a class="el" href="class_nim_b_l_e_device.html#a0f6521729222f9e55e40325824786070" title="Set the device address to use.">NimBLEDevice::setOwnAddr</a></code> first before calling <code><a class="el" href="class_nim_b_l_e_device.html#a31acb43c150014f06bad74b57c2335ff" title="Sets the address type to use.">NimBLEDevice::setOwnAddrType</a></code>.</li>
 <li><code>NimBLEDevice::getClientListSize</code> replaced with <code><a class="el" href="class_nim_b_l_e_device.html#a0944f3f6eca16ed4b7fd96d88b2906d9" title="Get the number of created client objects.">NimBLEDevice::getCreatedClientCount</a></code>.</li>
-<li><code>NimBLEDevice::getClientList</code> was removed and <code><a class="el" href="class_nim_b_l_e_device.html#acb098c56b7d08636e1745052eb184fb2" title="Get a list of connected clients.">NimBLEDevice::getConnectedClients</a></code> can be used instead which returns a <code>std::vector</code> of pointers to the connected client instances. This was done because internally the clients are managed in a <code>std::array</code> which replaced the 'std::list`. <br  />
- <br  />
+<li><code>NimBLEDevice::getClientList</code> was removed and <code><a class="el" href="class_nim_b_l_e_device.html#acb098c56b7d08636e1745052eb184fb2" title="Get a list of connected clients.">NimBLEDevice::getConnectedClients</a></code> can be used instead which returns a <code>std::vector</code> of pointers to the connected client instances. This was done because internally the clients are managed in a <code>std::array</code> which replaced the 'std::list<code>. &lt;br&gt; -</code>NimBLEDevice::getClientByID(uint16_t conn_id);<code>has been changed to</code><a class="el" href="class_nim_b_l_e_device.html#a9c15d6b767091fae4412428436827c4e" title="Get a reference to a client by connection handle.">NimBLEDevice::getClientByHandle(uint16_t connHandle)</a>` <br  />
 </li>
 </ul>
 <h1><a class="anchor" id="ble-addresses"></a>
@@ -256,7 +255,8 @@ Scan</h1>
 <li>- <code><a class="el" href="class_nim_b_l_e_scan_callbacks.html#a962d8b08cf14ac3091e6fd6962d7e283" title="Called when a new scan result is complete, including scan response data (if applicable).">NimBLEScanCallbacks::onResult</a></code>, functions the same as the old <code>NimBLEAdvertisedDeviceCallbacks::onResult</code> but now takes aa <code>const NimBLEAdvertisedDevice*</code> instead of non-const.</li>
 <li>- <code><a class="el" href="class_nim_b_l_e_scan_callbacks.html#a61c11db405e87ec847066ca3b6ad8375" title="Called when a scan operation ends.">NimBLEScanCallbacks::onScanEnd</a></code>, replaces the scanEnded callback passed to <code><a class="el" href="class_nim_b_l_e_scan.html#ac1307f30a881688d3a4d57bac7abe02c" title="Start scanning.">NimBLEScan::start</a></code> and now takes a <code>const <a class="el" href="class_nim_b_l_e_scan_results.html" title="A class that contains and operates on the results of a BLE scan.">NimBLEScanResults</a>&amp;</code> and <code>int reason</code> parameter.</li>
 <li>- <code><a class="el" href="class_nim_b_l_e_scan_callbacks.html#a1f9b5eac5982340afbb84954a4c06277" title="Called when a new device is discovered, before the scan result is received (if applicable).">NimBLEScanCallbacks::onDiscovered</a></code>, This is called immediately when a device is first scanned, before any scan response data is available and takes a <code>const NimBLEAdvertisedDevice*</code> parameter. <br  />
- <br  />
+</li>
+<li><code>NimBLEScan::setAdvertisedDeviceCallbacks(NimBLEAdvertisedDeviceCallbacks* callbacks, bool wantDuplicates)</code> has been changed to <code><a class="el" href="class_nim_b_l_e_scan.html#a3b0d41fc5d9113a02357c1b2a43c5d1d" title="Set the call backs to be invoked.">NimBLEScan::setScanCallbacks(NimBLEScanCallbacks* callbacks, bool wantDuplicates)</a>;</code> <br  />
 </li>
 </ul>
 <h2><a class="anchor" id="advertised-device"></a>

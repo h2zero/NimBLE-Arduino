@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.1</span>
    </div>
   </td>
  </tr>
@@ -118,7 +118,7 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_value_attribute_8h_source.h
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#define NIMBLE_CPP_VALUE_ATTRIBUTE_H_</span></div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &quot;nimconfig.h&quot;</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#if defined(CONFIG_BT_ENABLED) &amp;&amp; (defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL) || defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL))</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#if CONFIG_BT_ENABLED &amp;&amp; (CONFIG_BT_NIMBLE_ROLE_PERIPHERAL || CONFIG_BT_NIMBLE_ROLE_CENTRAL)</span></div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor"># include &quot;NimBLEAttribute.h&quot;</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor"># include &quot;NimBLEAttValue.h&quot;</span></div>
@@ -152,8 +152,8 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_value_attribute_8h_source.h
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="preprocessor">#endif </span><span class="comment">// CONFIG_BT_ENABLED &amp;&amp; (CONFIG_BT_NIMBLE_ROLE_PERIPHERAL || CONFIG_BT_NIMBLE_ROLE_CENTRAL)</span></div>
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="preprocessor">#endif </span><span class="comment">// NIMBLE_CPP_ATTRIBUTE_H_</span></div>
-<div class="ttc" id="aclass_nim_b_l_e_att_value_html"><div class="ttname"><a href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a></div><div class="ttdoc">A specialized container class to hold BLE attribute values.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:71</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_att_value_html_aa8c75101d9898c3ff4646d84521ed61c"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#aa8c75101d9898c3ff4646d84521ed61c">NimBLEAttValue::size</a></div><div class="ttdeci">uint16_t size() const</div><div class="ttdoc">Returns the current size of the value in bytes.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:158</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_att_value_html"><div class="ttname"><a href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a></div><div class="ttdoc">A specialized container class to hold BLE attribute values.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:72</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_att_value_html_aa8c75101d9898c3ff4646d84521ed61c"><div class="ttname"><a href="class_nim_b_l_e_att_value.html#aa8c75101d9898c3ff4646d84521ed61c">NimBLEAttValue::size</a></div><div class="ttdeci">uint16_t size() const</div><div class="ttdoc">Returns the current size of the value in bytes.</div><div class="ttdef"><b>Definition</b> NimBLEAttValue.h:159</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

@@ -17,7 +17,7 @@ var searchData=
   ['isauthenticated_14',['isAuthenticated',['../class_nim_b_l_e_conn_info.html#a8a1174d706ae36e99adc9498bf30d68f',1,'NimBLEConnInfo']]],
   ['isbonded_15',['isbonded',['../class_nim_b_l_e_device.html#a16bf4f5394735ed8d7f0bb32ca5d269a',1,'NimBLEDevice::isBonded()'],['../class_nim_b_l_e_conn_info.html#afefcdd1c560a307632c15394497c436f',1,'NimBLEConnInfo::isBonded()']]],
   ['isconnectable_16',['isConnectable',['../class_nim_b_l_e_advertised_device.html#ab9710a6c3a141b6413d5159dfe4a4040',1,'NimBLEAdvertisedDevice']]],
-  ['isconnected_17',['isconnected',['../class_nim_b_l_e_l2_c_a_p_channel.html#adca49cca95fc06b2491d4e59df620e69',1,'NimBLEL2CAPChannel::isConnected()'],['../class_nim_b_l_e_client.html#a0bdaf55b06367d1abd6f59bfbe1e8689',1,'NimBLEClient::isConnected()']]],
+  ['isconnected_17',['isConnected',['../class_nim_b_l_e_client.html#a0bdaf55b06367d1abd6f59bfbe1e8689',1,'NimBLEClient']]],
   ['isencrypted_18',['isEncrypted',['../class_nim_b_l_e_conn_info.html#a1a29242623a50989c7a03ee209ac2cf4',1,'NimBLEConnInfo']]],
   ['isinitialized_19',['isInitialized',['../class_nim_b_l_e_device.html#a425561f1e23856756ab9c1c330da5737',1,'NimBLEDevice']]],
   ['islegacyadvertisement_20',['isLegacyAdvertisement',['../class_nim_b_l_e_advertised_device.html#a49b445130f028b49175d01cd3f6db050',1,'NimBLEAdvertisedDevice']]],

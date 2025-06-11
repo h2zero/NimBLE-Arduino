@@ -83,7 +83,7 @@ var searchData=
   ['getremoved_80',['getRemoved',['../class_nim_b_l_e_local_attribute.html#a7664b8e5353f33ebfcff20a63273fe55',1,'NimBLELocalAttribute']]],
   ['getreportmap_81',['getReportMap',['../class_nim_b_l_e_h_i_d_device.html#afe75c42779aef757cd3ba84ec281efb5',1,'NimBLEHIDDevice']]],
   ['getresults_82',['getresults',['../class_nim_b_l_e_scan.html#a2ae53719546e2d410c816e12c56aad61',1,'NimBLEScan::getResults()'],['../class_nim_b_l_e_scan.html#ade1492b5d1b5d97efa76cd41583bfc96',1,'NimBLEScan::getResults(uint32_t duration, bool is_continue=false)']]],
-  ['getrssi_83',['getrssi',['../class_nim_b_l_e_client.html#a2645d4a2f8e381bf9bbffdfca846ae17',1,'NimBLEClient::getRssi()'],['../class_nim_b_l_e_advertised_device.html#a749abe7ac0331c0c0f80bc145591a392',1,'NimBLEAdvertisedDevice::getRSSI() const']]],
+  ['getrssi_83',['getrssi',['../class_nim_b_l_e_advertised_device.html#a749abe7ac0331c0c0f80bc145591a392',1,'NimBLEAdvertisedDevice::getRSSI()'],['../class_nim_b_l_e_client.html#a2645d4a2f8e381bf9bbffdfca846ae17',1,'NimBLEClient::getRssi()']]],
   ['getscan_84',['getscan',['../class_nim_b_l_e_advertised_device.html#a29f6e671bffb6d431d183a63074709b3',1,'NimBLEAdvertisedDevice::getScan()'],['../class_nim_b_l_e_device.html#af93d92316454b051125460056368baec',1,'NimBLEDevice::getScan()']]],
   ['getscandata_85',['getScanData',['../class_nim_b_l_e_advertising.html#ae0e7d64d51882830750bcb87e2d9678c',1,'NimBLEAdvertising']]],
   ['getseckeysize_86',['getSecKeySize',['../class_nim_b_l_e_conn_info.html#a3a555ccfc6fe678a2603942022a8cd5c',1,'NimBLEConnInfo']]],

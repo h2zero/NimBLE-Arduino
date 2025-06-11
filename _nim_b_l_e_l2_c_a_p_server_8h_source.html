@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.1</span>
    </div>
   </td>
  </tr>
@@ -100,37 +100,34 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_l2_c_a_p_server_8h_source.h
 <div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">//</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="comment">// (C) Dr. Michael &#39;Mickey&#39; Lauer &lt;mickey@vanille-media.de&gt;</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="comment">//</span></div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#ifndef NIMBLEL2CAPSERVER_H</span></div>
-<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#define NIMBLEL2CAPSERVER_H</span></div>
-<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#pragma once</span></div>
-<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
-<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;inttypes.h&quot;</span></div>
-<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">class </span><a class="code hl_class" href="class_nim_b_l_e_l2_c_a_p_channel.html">NimBLEL2CAPChannel</a>;</div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="keyword">class </span><a class="code hl_class" href="class_nim_b_l_e_l2_c_a_p_channel_callbacks.html">NimBLEL2CAPChannelCallbacks</a>;</div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
-<div class="foldopen" id="foldopen00020" data-start="{" data-end="};">
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="class_nim_b_l_e_l2_c_a_p_server.html">   20</a></span><span class="keyword">class </span><a class="code hl_class" href="class_nim_b_l_e_l2_c_a_p_server.html">NimBLEL2CAPServer</a> {</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <a class="code hl_class" href="class_nim_b_l_e_l2_c_a_p_channel.html">NimBLEL2CAPChannel</a>* <a class="code hl_function" href="class_nim_b_l_e_l2_c_a_p_server.html#a9328df1e0b29beb0492469ca6ebc969c">createService</a>(<span class="keyword">const</span> uint16_t psm, <span class="keyword">const</span> uint16_t mtu, <a class="code hl_class" href="class_nim_b_l_e_l2_c_a_p_channel_callbacks.html">NimBLEL2CAPChannelCallbacks</a>* callbacks);</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <a class="code hl_class" href="class_nim_b_l_e_l2_c_a_p_server.html">NimBLEL2CAPServer</a>();</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <a class="code hl_class" href="class_nim_b_l_e_l2_c_a_p_server.html">~NimBLEL2CAPServer</a>();</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    std::vector&lt;NimBLEL2CAPChannel*&gt; services;</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_class" href="class_nim_b_l_e_l2_c_a_p_channel.html">NimBLEL2CAPChannel</a>;</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_class" href="class_nim_b_l_e_device.html">NimBLEDevice</a>;</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>};</div>
-</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span> </div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#ifndef NIMBLE_CPP_L2CAPSERVER_H_</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#define NIMBLE_CPP_L2CAPSERVER_H_</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;nimconfig.h&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#if CONFIG_BT_ENABLED &amp;&amp; CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor"># include &quot;inttypes.h&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="preprocessor"># include &lt;vector&gt;</span></div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">class </span>NimBLEL2CAPChannel;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">class </span>NimBLEL2CAPChannelCallbacks;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="keyword">class </span>NimBLEL2CAPServer {</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    NimBLEL2CAPChannel* createService(<span class="keyword">const</span> uint16_t psm, <span class="keyword">const</span> uint16_t mtu, NimBLEL2CAPChannelCallbacks* callbacks);</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    NimBLEL2CAPServer();</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    ~NimBLEL2CAPServer();</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    std::vector&lt;NimBLEL2CAPChannel*&gt; services;</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keyword">friend</span> <span class="keyword">class </span>NimBLEL2CAPChannel;</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_class" href="class_nim_b_l_e_device.html">NimBLEDevice</a>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>};</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span><span class="preprocessor">#endif </span><span class="comment">// CONFIG_BT_ENABLED &amp;&amp; CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="preprocessor">#endif </span><span class="comment">// NIMBLE_CPP_L2CAPSERVER_H_</span></div>
 <div class="ttc" id="aclass_nim_b_l_e_device_html"><div class="ttname"><a href="class_nim_b_l_e_device.html">NimBLEDevice</a></div><div class="ttdoc">A model of a BLE Device from which all the BLE roles are created.</div><div class="ttdef"><b>Definition</b> NimBLEDevice.h:122</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_l2_c_a_p_channel_callbacks_html"><div class="ttname"><a href="class_nim_b_l_e_l2_c_a_p_channel_callbacks.html">NimBLEL2CAPChannelCallbacks</a></div><div class="ttdoc">Callbacks base class for the L2CAP channel.</div><div class="ttdef"><b>Definition</b> NimBLEL2CAPChannel.h:104</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_l2_c_a_p_channel_html"><div class="ttname"><a href="class_nim_b_l_e_l2_c_a_p_channel.html">NimBLEL2CAPChannel</a></div><div class="ttdoc">Encapsulates a L2CAP channel.</div><div class="ttdef"><b>Definition</b> NimBLEL2CAPChannel.h:38</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_l2_c_a_p_server_html"><div class="ttname"><a href="class_nim_b_l_e_l2_c_a_p_server.html">NimBLEL2CAPServer</a></div><div class="ttdoc">L2CAP server class.</div><div class="ttdef"><b>Definition</b> NimBLEL2CAPServer.h:20</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_l2_c_a_p_server_html_a9328df1e0b29beb0492469ca6ebc969c"><div class="ttname"><a href="class_nim_b_l_e_l2_c_a_p_server.html#a9328df1e0b29beb0492469ca6ebc969c">NimBLEL2CAPServer::createService</a></div><div class="ttdeci">NimBLEL2CAPChannel * createService(const uint16_t psm, const uint16_t mtu, NimBLEL2CAPChannelCallbacks *callbacks)</div><div class="ttdoc">Register a new L2CAP service instance.</div><div class="ttdef"><b>Definition</b> NimBLEL2CAPServer.cpp:22</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

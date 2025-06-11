@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.1</span>
    </div>
   </td>
  </tr>
@@ -118,7 +118,7 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_remote_descriptor_8h_source
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="preprocessor">#define NIMBLE_CPP_REMOTE_DESCRIPTOR_H_</span></div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &quot;nimconfig.h&quot;</span></div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#if defined(CONFIG_BT_ENABLED) &amp;&amp; defined(CONFIG_BT_NIMBLE_ROLE_CENTRAL)</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#if CONFIG_BT_ENABLED &amp;&amp; CONFIG_BT_NIMBLE_ROLE_CENTRAL</span></div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor"># include &quot;NimBLERemoteValueAttribute.h&quot;</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
@@ -142,13 +142,13 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_remote_descriptor_8h_source
 <div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>};</div>
 </div>
 <div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span> </div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#endif </span><span class="comment">/* CONFIG_BT_ENABLED &amp;&amp; CONFIG_BT_NIMBLE_ROLE_CENTRAL */</span><span class="preprocessor"></span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#endif </span><span class="comment">/* NIMBLE_CPP_REMOTE_DESCRIPTOR_H_ */</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="preprocessor">#endif </span><span class="comment">// CONFIG_BT_ENABLED &amp;&amp; CONFIG_BT_NIMBLE_ROLE_CENTRAL</span></div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#endif </span><span class="comment">// NIMBLE_CPP_REMOTE_DESCRIPTOR_H_</span></div>
 <div class="ttc" id="aclass_nim_b_l_e_client_html"><div class="ttname"><a href="class_nim_b_l_e_client.html">NimBLEClient</a></div><div class="ttdoc">A model of a BLE client.</div><div class="ttdef"><b>Definition</b> NimBLEClient.h:49</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_remote_characteristic_html"><div class="ttname"><a href="class_nim_b_l_e_remote_characteristic.html">NimBLERemoteCharacteristic</a></div><div class="ttdoc">A model of a remote BLE characteristic.</div><div class="ttdef"><b>Definition</b> NimBLERemoteCharacteristic.h:36</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_remote_descriptor_html"><div class="ttname"><a href="class_nim_b_l_e_remote_descriptor.html">NimBLERemoteDescriptor</a></div><div class="ttdoc">A model of remote BLE descriptor.</div><div class="ttdef"><b>Definition</b> NimBLERemoteDescriptor.h:32</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_remote_descriptor_html_a05befb3c020c14f6b49439fd784a868c"><div class="ttname"><a href="class_nim_b_l_e_remote_descriptor.html#a05befb3c020c14f6b49439fd784a868c">NimBLERemoteDescriptor::getRemoteCharacteristic</a></div><div class="ttdeci">NimBLERemoteCharacteristic * getRemoteCharacteristic() const</div><div class="ttdoc">Get the characteristic that owns this descriptor.</div><div class="ttdef"><b>Definition</b> NimBLERemoteDescriptor.cpp:38</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_remote_descriptor_html_aeea50cff665118bfa5ac755934755735"><div class="ttname"><a href="class_nim_b_l_e_remote_descriptor.html#aeea50cff665118bfa5ac755934755735">NimBLERemoteDescriptor::toString</a></div><div class="ttdeci">std::string toString(void) const</div><div class="ttdoc">Return a string representation of this Remote Descriptor.</div><div class="ttdef"><b>Definition</b> NimBLERemoteDescriptor.cpp:46</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_remote_descriptor_html_a05befb3c020c14f6b49439fd784a868c"><div class="ttname"><a href="class_nim_b_l_e_remote_descriptor.html#a05befb3c020c14f6b49439fd784a868c">NimBLERemoteDescriptor::getRemoteCharacteristic</a></div><div class="ttdeci">NimBLERemoteCharacteristic * getRemoteCharacteristic() const</div><div class="ttdoc">Get the characteristic that owns this descriptor.</div><div class="ttdef"><b>Definition</b> NimBLERemoteDescriptor.cpp:37</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_remote_descriptor_html_aeea50cff665118bfa5ac755934755735"><div class="ttname"><a href="class_nim_b_l_e_remote_descriptor.html#aeea50cff665118bfa5ac755934755735">NimBLERemoteDescriptor::toString</a></div><div class="ttdeci">std::string toString(void) const</div><div class="ttdoc">Return a string representation of this Remote Descriptor.</div><div class="ttdef"><b>Definition</b> NimBLERemoteDescriptor.cpp:45</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
