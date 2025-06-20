@@ -93,30 +93,6 @@ esp_err_t esp_nimble_init(void)
     esp_err_t ret;
 #endif
 #if !SOC_ESP_NIMBLE_CONTROLLER || !CONFIG_BT_CONTROLLER_ENABLED
-    /* Initialize the function pointers for OS porting */
-    npl_freertos_funcs_init();
-
-    npl_freertos_mempool_init();
-
-#if false // Arduino disable
-#if CONFIG_BT_CONTROLLER_ENABLED
-    if(esp_nimble_hci_init() != ESP_OK) {
-        ESP_LOGE(NIMBLE_PORT_LOG_TAG, "hci inits failed\n");
-        return ESP_FAIL;
-    }
-#else
-    ret = ble_buf_alloc();
-    if (ret != ESP_OK) {
-        ble_buf_free();
-        return ESP_FAIL;
-    }
-    ble_transport_init();
-#if MYNEWT_VAL(BLE_QUEUE_CONG_CHECK)
-    ble_adv_list_init();
-#endif
-#endif
-#endif // Arduino disable
-
     /* Initialize default event queue */
     ble_npl_eventq_init(&g_eventq_dflt);
     /* Initialize the global memory pool */
@@ -345,9 +321,6 @@ nimble_port_get_dflt_eventq(void)
 void
 nimble_port_init(void)
 {
-    npl_freertos_funcs_init();
-    npl_freertos_mempool_init();
-
     /* Initialize default event queue */
     ble_npl_eventq_init(&g_eventq_dflt);
     /* Initialize the global memory pool */

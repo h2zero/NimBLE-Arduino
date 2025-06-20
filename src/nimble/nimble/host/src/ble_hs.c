@@ -609,7 +609,11 @@ ble_hs_enqueue_hci_event(uint8_t *hci_evt)
     struct ble_npl_event *ev;
 
     ev = os_memblock_get(&ble_hs_hci_ev_pool);
+#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
     if (ev && ble_hs_evq->eventq) {
+#else
+    if (ev && ble_hs_evq->q) {
+#endif
         memset (ev, 0, sizeof *ev);
         ble_npl_event_init(ev, ble_hs_event_rx_hci_ev, hci_evt);
         ble_npl_eventq_put(ble_hs_evq, ev);
