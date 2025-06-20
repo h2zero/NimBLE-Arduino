@@ -231,6 +231,11 @@
 #define CONFIG_BT_NIMBLE_MAX_CONNECTIONS 3
 #endif
 
+// bugfix: max connections macro renamed upstream
+#ifndef CONFIG_NIMBLE_MAX_CONNECTIONS
+#define CONFIG_NIMBLE_MAX_CONNECTIONS CONFIG_BT_NIMBLE_MAX_CONNECTIONS
+#endif
+
 #ifndef CONFIG_BT_NIMBLE_MAX_BONDS
 #define CONFIG_BT_NIMBLE_MAX_BONDS 3
 #endif
