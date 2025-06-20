@@ -150,12 +150,6 @@
 // #define CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE 4096
 
 /**
- * @brief Un-comment to use memory pools for stack operations
- * @details this will use slightly more RAM but may provide more stability.
- */
-// #define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 1
-
-/**
  * @brief Un-comment to change the bit used to block tasks during BLE operations
  * that call NimBLEUtils::taskWait. This should be different than any other
  * task notification flag used in the system.
@@ -272,10 +266,6 @@
 
 #ifndef CONFIG_BT_NIMBLE_LOG_LEVEL
 #define CONFIG_BT_NIMBLE_LOG_LEVEL 5
-#endif
-
-#ifndef CONFIG_NIMBLE_STACK_USE_MEM_POOLS
-#define CONFIG_NIMBLE_STACK_USE_MEM_POOLS 0
 #endif
 
 /** @brief Maximum number of connection oriented channels */
