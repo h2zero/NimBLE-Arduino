@@ -30,7 +30,7 @@ void setup() {
 
     NimBLEDevice::init("");
     NimBLEDevice::setPower(3);                               /** +3db */
-    NimBLEDevice::setSecurityAuth(true, true, true);         /** bonding, MITM, BLE secure connections */
+    NimBLEDevice::setSecurityAuth(true, true, false);        /** bonding, MITM, don't need BLE secure connections as we are using passkey pairing */
     NimBLEDevice::setSecurityIOCap(BLE_HS_IO_KEYBOARD_ONLY); /** passkey */
     NimBLEScan*       pScan   = NimBLEDevice::getScan();
     NimBLEScanResults results = pScan->getResults(5 * 1000);
