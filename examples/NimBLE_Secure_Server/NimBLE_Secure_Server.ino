@@ -19,7 +19,7 @@ void setup() {
     NimBLEDevice::init("NimBLE");
     NimBLEDevice::setPower(3); /** +3db */
 
-    NimBLEDevice::setSecurityAuth(true, true, true); /** bonding, MITM, BLE secure connections */
+    NimBLEDevice::setSecurityAuth(true, true, false); /** bonding, MITM, don't need BLE secure connections as we are using passkey pairing */
     NimBLEDevice::setSecurityPasskey(123456);
     NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY); /** Display only passkey */
     NimBLEServer*         pServer                  = NimBLEDevice::createServer();
