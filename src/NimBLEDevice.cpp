@@ -915,9 +915,11 @@ bool NimBLEDevice::init(const std::string& deviceName) {
 #   endif
 
 #   if CONFIG_BTDM_BLE_SCAN_DUPL
-        bt_cfg.normal_adv_size         = m_scanDuplicateSize;
-        bt_cfg.scan_duplicate_type     = m_scanFilterMode;
+        bt_cfg.normal_adv_size     = m_scanDuplicateSize;
+        bt_cfg.scan_duplicate_type = m_scanFilterMode;
+#    if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
         bt_cfg.dup_list_refresh_period = m_scanDuplicateResetTime;
+#    endif
 #   elif CONFIG_BT_LE_SCAN_DUPL
         bt_cfg.ble_ll_rsp_dup_list_count = m_scanDuplicateSize;
         bt_cfg.ble_ll_adv_dup_list_count = m_scanDuplicateSize;
