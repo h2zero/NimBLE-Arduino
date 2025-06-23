@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #include <stddef.h>
 
 #include "nimble/console/console.h"
@@ -203,3 +206,5 @@ int bt_test_bind_app_key_to_model(struct bt_mesh_model *model, uint16_t key_idx,
 
 	return mod_bind(found_model, key_idx);
 }
+
+#endif /* MYNEWT_VAL(BLE_MESH) */

@@ -5,6 +5,7 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
 
 #include "nimble/nimble/host/mesh/include/mesh/mesh.h"
 #include "nimble/console/console.h"
@@ -60,3 +61,5 @@ int light_model_light_lightness_set(struct bt_mesh_model *model, int16_t lightne
 {
 	return light_model_gen_level_set(model, lightness);
 }
+
+#endif /* MYNEWT_VAL(BLE_MESH) */

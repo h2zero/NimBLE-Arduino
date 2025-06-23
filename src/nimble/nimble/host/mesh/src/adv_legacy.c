@@ -7,6 +7,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #define MESH_LOG_MODULE BLE_MESH_ADV_LOG
 
 #include "adv.h"
@@ -250,3 +253,5 @@ int bt_mesh_adv_start(const struct ble_gap_adv_params *param, int32_t duration,
 	return bt_le_adv_start(param, ad, ad_len, sd, sd_len);
 }
 #endif
+
+#endif /* MYNEWT_VAL(BLE_MESH) */

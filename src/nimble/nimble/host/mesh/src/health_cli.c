@@ -7,6 +7,8 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #define MESH_LOG_MODULE BLE_MESH_MODEL_LOG
 
 #include <string.h>
@@ -523,3 +525,5 @@ static int health_cli_init(struct bt_mesh_model *model)
 const struct bt_mesh_model_cb bt_mesh_health_cli_cb = {
 	.init = health_cli_init,
 };
+
+#endif /* MYNEWT_VAL(BLE_MESH) */
