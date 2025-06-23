@@ -354,8 +354,15 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
 
     switch (event->type) {
         case BLE_GAP_EVENT_CONNECT: {
-            if (event->connect.status != 0) {
-                NIMBLE_LOGE(LOG_TAG, "Connection failed");
+            rc = event->connect.status;
+            if (rc == BLE_ERR_UNSUPP_REM_FEATURE) {
+                rc = 0; // Workaround: Ignore unsupported remote feature error as it is not a real error.
+            }
+
+            if (rc != 0) {
+                NIMBLE_LOGE(LOG_TAG, "Connection failed rc = %d %s",
+                            rc,
+                            NimBLEUtils::returnCodeToString(rc));
 # if !CONFIG_BT_NIMBLE_EXT_ADV && CONFIG_BT_NIMBLE_ROLE_BROADCASTER
                 NimBLEDevice::startAdvertising();
 # endif

@@ -988,6 +988,10 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             }
 
             rc = event->connect.status;
+            if (rc == BLE_ERR_UNSUPP_REM_FEATURE) {
+                rc = 0; // Workaround: Ignore unsupported remote feature error as it is not a real error.
+            }
+
             if (rc == 0) {
                 pClient->m_connHandle = event->connect.conn_handle;
 
