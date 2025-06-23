@@ -7,6 +7,8 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #define MESH_LOG_MODULE BLE_MESH_ACCESS_LOG
 
 #include <errno.h>
@@ -1311,3 +1313,5 @@ void bt_mesh_access_init(void)
 				 "Failed to register bt_mesh_access conf");
     #endif
 }
+
+#endif /* MYNEWT_VAL(BLE_MESH) */
