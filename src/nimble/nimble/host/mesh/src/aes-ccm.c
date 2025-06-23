@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #include "crypto.h"
 #define MESH_LOG_MODULE BLE_MESH_LOG
 
@@ -222,3 +225,5 @@ int bt_ccm_encrypt(const uint8_t key[16], uint8_t nonce[13], const uint8_t *msg,
 
 	return 0;
 }
+
+#endif /* MYNEWT_VAL(BLE_MESH) */

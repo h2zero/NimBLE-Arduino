@@ -7,6 +7,8 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #define MESH_LOG_MODULE BLE_MESH_NET_LOG
 
 #include <string.h>
@@ -1221,3 +1223,5 @@ void bt_mesh_net_settings_commit(void)
 		k_work_reschedule(&bt_mesh.ivu_timer, BT_MESH_IVU_TIMEOUT);
 	}
 }
+
+#endif /* MYNEWT_VAL(BLE_MESH) */

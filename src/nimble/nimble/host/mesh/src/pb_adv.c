@@ -8,6 +8,8 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #define MESH_LOG_MODULE BLE_MESH_PROV_LOG
 
 #include <stdint.h>
@@ -916,3 +918,5 @@ const struct prov_bearer pb_adv = {
 	.send = prov_send_adv,
 	.clear_tx = prov_clear_tx,
 };
+
+#endif /* MYNEWT_VAL(BLE_MESH) */

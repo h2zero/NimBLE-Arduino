@@ -7,6 +7,8 @@
  */
 
 #include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #define MESH_LOG_MODULE BLE_MESH_PROV_LOG
 
 #include <errno.h>
@@ -457,3 +459,5 @@ int bt_mesh_prov_init(const struct bt_mesh_prov *prov_info)
 
 	return bt_mesh_prov_reset_state(NULL);
 }
+
+#endif /* MYNEWT_VAL(BLE_MESH) */

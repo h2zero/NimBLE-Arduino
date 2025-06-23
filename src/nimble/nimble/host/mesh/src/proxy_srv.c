@@ -7,6 +7,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#if MYNEWT_VAL(BLE_MESH)
+
 #define MESH_LOG_MODULE BLE_MESH_PROXY_LOG
 
 #include "nimble/nimble/host/mesh/include/mesh/slist.h"
@@ -1013,3 +1016,5 @@ int bt_mesh_proxy_init(void)
 
 	return 0;
 }
+
+#endif /* MYNEWT_VAL(BLE_MESH) */
