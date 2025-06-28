@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.2] 2025-06-27
+
+## Fixed
+- Max connections not being applied correctly above 4.
+- Build errors with arduino cores using IDF v4.x
+- `onConnect` callback not being called when the status is `BLE_ERR_UNSUPP_REM_FEATURE`, workaround for upstream issue.
+
+## Changed
+- FreeRTOS port uses the old porting layer for all but the latest esp32 mcus.
+- By default BLE secure connections is disabled now to reduce issues when it's enabled but not used by the application.
+- BLE mesh files are now only compiled if mesh is enabled in the project configuration.
+
 ## [2.3.1] 2025-06-11
 
 ## Fixed
