@@ -16,7 +16,7 @@
  */
 
 #include "NimBLEClient.h"
-#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
+#if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)
 
 # include "NimBLERemoteService.h"
 # include "NimBLERemoteCharacteristic.h"
@@ -68,7 +68,7 @@ NimBLEClient::NimBLEClient(const NimBLEAddress& peerAddress)
       m_terminateFailCount{0},
       m_asyncSecureAttempt{0},
       m_config{},
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if MYNEWT_VAL(BLE_EXT_ADV)
       m_phyMask{BLE_GAP_LE_PHY_1M_MASK | BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_CODED_MASK},
 # endif
       m_connParams{16,
@@ -125,7 +125,7 @@ size_t NimBLEClient::deleteService(const NimBLEUUID& uuid) {
     return m_svcVec.size();
 } // deleteService
 
-# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
+# if MYNEWT_VAL(BLE_ROLE_OBSERVER)
 /**
  * @brief Connect to an advertising device.
  * @param [in] pDevice A pointer to the advertised device instance to connect to.
@@ -204,7 +204,7 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
     m_config.exchangeMTU  = exchangeMTU;
 
     do {
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if MYNEWT_VAL(BLE_EXT_ADV)
         rc = ble_gap_ext_connect(NimBLEDevice::m_ownAddrType,
                                  peerAddr,
                                  m_connectTimeout,
@@ -228,7 +228,7 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
                 break;
 
             case BLE_HS_EBUSY:
-# if CONFIG_BT_NIMBLE_ROLE_OBSERVER
+# if MYNEWT_VAL(BLE_ROLE_OBSERVER)
 
                 // Scan was active, stop it through the NimBLEScan API to release any tasks and call the callback.
                 if (!NimBLEDevice::getScan()->stop()) {
@@ -402,7 +402,7 @@ void NimBLEClient::setConfig(NimBLEClient::Config config) {
     m_config = config;
 } // setConfig
 
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if MYNEWT_VAL(BLE_EXT_ADV)
 /**
  * @brief Set the PHY types to use when connecting to a server.
  * @param [in] mask A bitmask indicating what PHYS to connect with.\n
@@ -1311,4 +1311,4 @@ void NimBLEClientCallbacks::onPhyUpdate(NimBLEClient* pClient, uint8_t txPhy, ui
 } // onPhyUpdate
 #
 
-#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_CENTRAL
+#endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)

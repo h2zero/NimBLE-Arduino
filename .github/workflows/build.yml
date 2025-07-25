@@ -78,11 +78,11 @@ jobs:
 
             [env:esp32c3]
             board = esp32-c3-devkitm-1
-            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+            build_flags = '-DMYNEWT_VAL_BLE_EXT_ADV=1'
 
             [env:esp32s3]
             board = esp32-s3-devkitc-1
-            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+            build_flags = '-DMYNEWT_VAL_BLE_EXT_ADV=1'
           EOF
           cp ${{ matrix.example }}/* example/src/
           platformio run -d example
@@ -163,19 +163,19 @@ jobs:
 
             [env:esp32c3]
             board = esp32-c3-devkitm-1
-            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+            build_flags = '-DMYNEWT_VAL_BLE_EXT_ADV=1'
 
             [env:esp32s3]
             board = esp32-s3-devkitc-1
-            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+            build_flags = '-DMYNEWT_VAL_BLE_EXT_ADV=1'
 
             [env:esp32c6]
             board = esp32-c6-devkitc-1
-            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+            build_flags = '-DMYNEWT_VAL_BLE_EXT_ADV=1'
 
             [env:esp32h2]
             board = esp32-h2-devkitm-1
-            build_flags = '-DCONFIG_BT_NIMBLE_EXT_ADV=1'
+            build_flags = '-DMYNEWT_VAL_BLE_EXT_ADV=1'
           EOF
           cp ${{ matrix.example }}/* example/src/
             platformio run -d example
@@ -224,7 +224,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set config for BT5
         run: |
-          sed -i '0,/#include \"nimconfig_rename.h\"/a #define CONFIG_BT_NIMBLE_EXT_ADV 1' ./src/nimconfig.h
+          sed -i '0,/#include \"nimconfig_rename.h\"/a #define MYNEWT_VAL_BLE_EXT_ADV 1' ./src/nimconfig.h
       - name: Build BT5 arduino-esp32
         uses: arduino/compile-sketches@v1.1.0
         with:
@@ -276,7 +276,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set config for BT5
         run: |
-          echo "-DCONFIG_BT_NIMBLE_EXT_ADV=1" > ${{ matrix.example }}/build_opt.h
+          echo "-DMYNEWT_VAL_BLE_EXT_ADV=1" > ${{ matrix.example }}/build_opt.h
       - name: Build BT5 n-able Arduino
         uses: arduino/compile-sketches@v1.1.0
         with:
