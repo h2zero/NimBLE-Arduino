@@ -18,8 +18,8 @@
 #ifndef NIMBLE_LOCAL_VALUE_ATTRIBUTE_H_
 #define NIMBLE_LOCAL_VALUE_ATTRIBUTE_H_
 
-#include "nimconfig.h"
-#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#include "syscfg/syscfg.h"
+#if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "host/ble_hs.h"
@@ -140,5 +140,5 @@ class NimBLELocalValueAttribute : public NimBLELocalAttribute, public NimBLEValu
     uint16_t m_properties{0};
 };
 
-#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 #endif // NIMBLE_LOCAL_VALUE_ATTRIBUTE_H_

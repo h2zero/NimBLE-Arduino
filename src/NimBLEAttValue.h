@@ -18,8 +18,8 @@
 #ifndef NIMBLE_CPP_ATTVALUE_H
 #define NIMBLE_CPP_ATTVALUE_H
 
-#include "nimconfig.h"
-#if CONFIG_BT_ENABLED
+#include "syscfg/syscfg.h"
+#if CONFIG_BT_NIMBLE_ENABLED
 
 # ifdef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
 #  include <Arduino.h>
@@ -363,5 +363,5 @@ class NimBLEAttValue {
 # endif
 };
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BT_NIMBLE_ENABLED
 #endif // NIMBLE_CPP_ATTVALUE_H_

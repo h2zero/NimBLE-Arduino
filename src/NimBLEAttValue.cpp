@@ -16,7 +16,7 @@
  */
 
 #include "NimBLEAttValue.h"
-#if CONFIG_BT_ENABLED
+#if CONFIG_BT_NIMBLE_ENABLED
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "nimble/nimble_npl.h"
@@ -24,6 +24,7 @@
 #  include "nimble/nimble/include/nimble/nimble_npl.h"
 # endif
 
+# include "NimBLEUtils.h"
 # include "NimBLELog.h"
 
 static const char* LOG_TAG = "NimBLEAttValue";
@@ -159,4 +160,4 @@ uint8_t NimBLEAttValue::operator[](int pos) const {
     return m_attr_value[pos];
 }
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BT_NIMBLE_ENABLED

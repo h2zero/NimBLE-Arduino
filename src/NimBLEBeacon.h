@@ -18,8 +18,8 @@
 #ifndef NIMBLE_CPP_BEACON_H_
 #define NIMBLE_CPP_BEACON_H_
 
-#include "nimconfig.h"
-#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER
+#include "syscfg/syscfg.h"
+#if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
 
 class NimBLEUUID;
 
@@ -65,5 +65,5 @@ class NimBLEBeacon {
     BeaconData m_beaconData;
 }; // NimBLEBeacon
 
-#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 #endif // NIMBLE_CPP_BEACON_H_

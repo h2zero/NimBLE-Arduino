@@ -18,8 +18,8 @@
 #ifndef NIMBLE_CPP_LOG_H_
 #define NIMBLE_CPP_LOG_H_
 
-#include "nimconfig.h"
-#if CONFIG_BT_ENABLED
+#include "syscfg/syscfg.h"
+#if CONFIG_BT_NIMBLE_ENABLED
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "esp_log.h"
@@ -179,5 +179,5 @@
 #  define NIMBLE_LOGE_IF(cond, tag, format, ...) { if (cond) { NIMBLE_LOGE(tag, format, ##__VA_ARGS__); }}
 #  define NIMBLE_LOGE_RC(rc, tag, format, ...) { if (rc) { NIMBLE_LOGE(tag, format "; rc=%d %s", ##__VA_ARGS__, rc, NimBLEUtils::returnCodeToString(rc)); }}
 
-#endif   /* CONFIG_BT_ENABLED */
+#endif   /* CONFIG_BT_NIMBLE_ENABLED */
 #endif   /* NIMBLE_CPP_LOG_H_ */
