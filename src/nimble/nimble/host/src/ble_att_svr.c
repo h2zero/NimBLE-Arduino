@@ -2467,7 +2467,7 @@ ble_att_svr_rx_signed_write(uint16_t conn_handle, uint16_t cid, struct os_mbuf *
 
     /* Using AES-CMAC to get the CMAC from the message and CSRK of this device */
     memset(cmac, 0, sizeof cmac);
-    rc = ble_sm_alg_aes_cmac(csrk, message, len, cmac);
+    rc = na_ble_sm_alg_aes_cmac(csrk, message, len, cmac);
     if (rc != 0) {
         goto err;
     }
