@@ -301,21 +301,21 @@ void ble_sm_dbg_set_sc_keys(uint8_t *pubkey, uint8_t *privkey);
 
 int ble_sm_num_procs(void);
 
-int ble_sm_alg_s1(const uint8_t *k, const uint8_t *r1, const uint8_t *r2,
+int na_ble_sm_alg_s1(const uint8_t *k, const uint8_t *r1, const uint8_t *r2,
                   uint8_t *out);
-int ble_sm_alg_c1(const uint8_t *k, const uint8_t *r,
+int na_ble_sm_alg_c1(const uint8_t *k, const uint8_t *r,
                   const uint8_t *preq, const uint8_t *pres,
                   uint8_t iat, uint8_t rat,
                   const uint8_t *ia, const uint8_t *ra,
                   uint8_t *out_enc_data);
-int ble_sm_alg_f4(const uint8_t *u, const uint8_t *v, const uint8_t *x,
+int na_ble_sm_alg_f4(const uint8_t *u, const uint8_t *v, const uint8_t *x,
                   uint8_t z, uint8_t *out_enc_data);
-int ble_sm_alg_g2(const uint8_t *u, const uint8_t *v, const uint8_t *x,
+int na_ble_sm_alg_g2(const uint8_t *u, const uint8_t *v, const uint8_t *x,
                   const uint8_t *y, uint32_t *passkey);
-int ble_sm_alg_f5(const uint8_t *w, const uint8_t *n1, const uint8_t *n2,
+int na_ble_sm_alg_f5(const uint8_t *w, const uint8_t *n1, const uint8_t *n2,
                   uint8_t a1t, const uint8_t *a1, uint8_t a2t,
                   const uint8_t *a2, uint8_t *mackey, uint8_t *ltk);
-int ble_sm_alg_f6(const uint8_t *w, const uint8_t *n1, const uint8_t *n2,
+int na_ble_sm_alg_f6(const uint8_t *w, const uint8_t *n1, const uint8_t *n2,
                   const uint8_t *r, const uint8_t *iocap, uint8_t a1t,
                   const uint8_t *a1, uint8_t a2t, const uint8_t *a2,
                   uint8_t *check);
@@ -323,7 +323,7 @@ int ble_sm_alg_gen_dhkey(const uint8_t *peer_pub_key_x,
                          const uint8_t *peer_pub_key_y,
                          const uint8_t *our_priv_key, uint8_t *out_dhkey);
 int ble_sm_alg_gen_key_pair(uint8_t *pub, uint8_t *priv);
-void ble_sm_alg_ecc_init(void);
+void na_ble_sm_alg_ecc_init(void);
 
 void ble_sm_enc_change_rx(const struct ble_hci_ev_enrypt_chg *ev);
 void ble_sm_enc_key_refresh_rx(const struct ble_hci_ev_enc_key_refresh *ev);
@@ -395,7 +395,7 @@ void ble_sm_ia_ra(struct ble_sm_proc *proc,
 
 int ble_sm_incr_our_sign_counter(uint16_t conn_handle);
 int ble_sm_incr_peer_sign_counter(uint16_t conn_handle);
-int ble_sm_alg_aes_cmac(const uint8_t *key, const uint8_t *in, size_t len,
+int na_ble_sm_alg_aes_cmac(const uint8_t *key, const uint8_t *in, size_t len,
                         uint8_t *out);
 int32_t ble_sm_timer(void);
 void ble_sm_connection_broken(uint16_t conn_handle);
@@ -404,14 +404,14 @@ int ble_sm_slave_initiate(uint16_t conn_handle);
 int ble_sm_enc_initiate(uint16_t conn_handle, uint8_t key_size,
                         const uint8_t *ltk, uint16_t ediv,
                         uint64_t rand_val, int auth);
-int ble_sm_alg_encrypt(const uint8_t *key, const uint8_t *plaintext,
+int na_ble_sm_alg_encrypt(const uint8_t *key, const uint8_t *plaintext,
                        uint8_t *enc_data);
 int ble_sm_init(void);
 #else
 
 #define ble_sm_incr_our_sign_counter(conn_handle) BLE_HS_ENOTSUP
 #define ble_sm_incr_peer_sign_counter(conn_handle) BLE_HS_ENOTSUP
-#define ble_sm_alg_aes_cmac(key, in, len, out) BLE_HS_ENOTSUP
+#define na_ble_sm_alg_aes_cmac(key, in, len, out) BLE_HS_ENOTSUP
 #define ble_sm_enc_change_rx(evt) ((void)(evt))
 #define ble_sm_ltk_req_rx(evt) ((void)(evt))
 #define ble_sm_enc_key_refresh_rx(evt) ((void)(evt))
@@ -425,7 +425,7 @@ int ble_sm_init(void);
 
 #define ble_sm_init() 0
 
-#define ble_sm_alg_encrypt(key, plaintext, enc_data) \
+#define na_ble_sm_alg_encrypt(key, plaintext, enc_data) \
         BLE_HS_ENOTSUP
 
 #endif
