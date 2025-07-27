@@ -829,7 +829,7 @@ ble_att_clt_tx_signed_write_cmd(uint16_t conn_handle, uint16_t cid, uint16_t han
     /** Copying sign counter */
     memcpy(&message[BLE_ATT_SIGNED_WRITE_DATA_OFFSET + OS_MBUF_PKTLEN(txom)], &counter, sizeof(counter));
 
-    /* ble_sm_alg_aes_cmac takes data in little-endian format,
+    /* na_ble_sm_alg_aes_cmac takes data in little-endian format,
      * so converting it to LE.
      */
     swap_in_place(message, len);
@@ -838,7 +838,7 @@ ble_att_clt_tx_signed_write_cmd(uint16_t conn_handle, uint16_t cid, uint16_t han
      * for the message using our CSRK for this connection.
      */
     memset(cmac, 0, sizeof cmac);
-    rc = ble_sm_alg_aes_cmac(csrk, message, len, cmac);
+    rc = na_ble_sm_alg_aes_cmac(csrk, message, len, cmac);
     if (rc != 0) {
         goto err;
     }

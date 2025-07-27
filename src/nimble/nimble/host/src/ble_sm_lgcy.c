@@ -127,7 +127,7 @@ ble_sm_lgcy_confirm_exec(struct ble_sm_proc *proc, struct ble_sm_result *res)
 
     ble_sm_ia_ra(proc, &iat, ia, &rat, ra);
 
-    rc = ble_sm_alg_c1(proc->tk, ble_sm_our_pair_rand(proc), proc->pair_req,
+    rc = na_ble_sm_alg_c1(proc->tk, ble_sm_our_pair_rand(proc), proc->pair_req,
                        proc->pair_rsp, iat, rat, ia, ra, cmd->value);
     if (rc != 0) {
         goto err;
@@ -160,7 +160,7 @@ ble_sm_gen_stk(struct ble_sm_proc *proc)
     uint8_t key[16];
     int rc;
 
-    rc = ble_sm_alg_s1(proc->tk, proc->rands, proc->randm, key);
+    rc = na_ble_sm_alg_s1(proc->tk, proc->rands, proc->randm, key);
     if (rc != 0) {
         return rc;
     }
@@ -215,7 +215,7 @@ ble_sm_lgcy_random_rx(struct ble_sm_proc *proc, struct ble_sm_result *res)
 
     ble_sm_ia_ra(proc, &iat, ia, &rat, ra);
 
-    rc = ble_sm_alg_c1(proc->tk, ble_sm_peer_pair_rand(proc), proc->pair_req,
+    rc = na_ble_sm_alg_c1(proc->tk, ble_sm_peer_pair_rand(proc), proc->pair_req,
                        proc->pair_rsp, iat, rat, ia, ra, confirm_val);
     if (rc != 0) {
         res->app_status = rc;

@@ -619,7 +619,7 @@ ble_gatts_calculate_hash(uint8_t *out_hash_key)
         goto done;
     }
 
-    rc = ble_sm_alg_aes_cmac(key, buf, size, out_hash_key);
+    rc = na_ble_sm_alg_aes_cmac(key, buf, size, out_hash_key);
     if(rc != 0) {
         goto done;
     }
