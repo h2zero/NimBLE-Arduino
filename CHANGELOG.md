@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.3] 2025-07-27
+
+## Fixed
+- Multiple definition errors for some functions with esp32c6/h2/c2 with Arduino core 3.3+.
+
 ## [2.3.2] 2025-06-27
 
 ## Fixed
