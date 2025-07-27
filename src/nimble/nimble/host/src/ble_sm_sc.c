@@ -269,7 +269,7 @@ ble_sm_sc_oob_confirm(struct ble_sm_proc *proc, struct ble_sm_result *res)
 
     /* Authentication stage 1: Step 5 */
     if (proc->oob_data_remote) {
-        err = ble_sm_alg_f4(proc->pub_key_peer.x, proc->pub_key_peer.x,
+        err = na_ble_sm_alg_f4(proc->pub_key_peer.x, proc->pub_key_peer.x,
                             proc->oob_data_remote->r, 0, c);
         if (err) {
             res->sm_err = BLE_SM_ERR_UNSPECIFIED;
@@ -321,7 +321,7 @@ ble_sm_sc_confirm_exec(struct ble_sm_proc *proc, struct ble_sm_result *res)
         return;
     }
 
-    rc = ble_sm_alg_f4(ble_sm_sc_pub_key, proc->pub_key_peer.x,
+    rc = na_ble_sm_alg_f4(ble_sm_sc_pub_key, proc->pub_key_peer.x,
                        ble_sm_our_pair_rand(proc), proc->ri, cmd->value);
     if (rc != 0) {
         os_mbuf_free_chain(txom);
@@ -357,7 +357,7 @@ ble_sm_sc_gen_numcmp(struct ble_sm_proc *proc, struct ble_sm_result *res)
         pka = proc->pub_key_peer.x;
         pkb = ble_sm_sc_pub_key;
     }
-    res->app_status = ble_sm_alg_g2(pka, pkb, proc->randm, proc->rands,
+    res->app_status = na_ble_sm_alg_g2(pka, pkb, proc->randm, proc->rands,
                                     &res->passkey_params.numcmp);
     if (res->app_status != 0) {
         res->sm_err = BLE_SM_ERR_UNSPECIFIED;
@@ -456,7 +456,7 @@ ble_sm_sc_random_rx(struct ble_sm_proc *proc, struct ble_sm_result *res)
         ble_hs_log_flat_buf(proc->tk, 16);
         BLE_HS_LOG(DEBUG, "\n");
 
-        rc = ble_sm_alg_f4(proc->pub_key_peer.x, ble_sm_sc_pub_key,
+        rc = na_ble_sm_alg_f4(proc->pub_key_peer.x, ble_sm_sc_pub_key,
                            ble_sm_peer_pair_rand(proc), proc->ri,
                            confirm_val);
         if (rc != 0) {
@@ -477,7 +477,7 @@ ble_sm_sc_random_rx(struct ble_sm_proc *proc, struct ble_sm_result *res)
 
     /* Calculate the mac key and ltk. */
     ble_sm_ia_ra(proc, &iat, ia, &rat, ra);
-    rc = ble_sm_alg_f5(proc->dhkey, proc->randm, proc->rands,
+    rc = na_ble_sm_alg_f5(proc->dhkey, proc->randm, proc->rands,
                        iat, ia, rat, ra, proc->mackey, proc->ltk);
     if (rc != 0) {
         res->app_status = rc;
@@ -725,7 +725,7 @@ ble_sm_sc_dhkey_check_exec(struct ble_sm_proc *proc, struct ble_sm_result *res,
         goto err;
     }
 
-    rc = ble_sm_alg_f6(proc->mackey, ble_sm_our_pair_rand(proc),
+    rc = na_ble_sm_alg_f6(proc->mackey, ble_sm_our_pair_rand(proc),
                        ble_sm_peer_pair_rand(proc), proc->tk, iocap,
                        our_addr.type, our_addr.val, peer_addr.type,
                        peer_addr.val, cmd->value);
@@ -796,7 +796,7 @@ ble_sm_dhkey_check_process(struct ble_sm_proc *proc,
     ble_hs_log_flat_buf(proc->tk, 16);
     BLE_HS_LOG(DEBUG, "\n");
 
-    res->app_status = ble_sm_alg_f6(proc->mackey,
+    res->app_status = na_ble_sm_alg_f6(proc->mackey,
                                     ble_sm_peer_pair_rand(proc),
                                     ble_sm_our_pair_rand(proc),
                                     proc->tk, iocap,
@@ -908,7 +908,7 @@ ble_sm_sc_oob_generate_data(struct ble_sm_sc_oob_data *oob_data)
         return rc;
     }
 
-    rc = ble_sm_alg_f4(ble_sm_sc_pub_key, ble_sm_sc_pub_key, oob_data->r, 0,
+    rc = na_ble_sm_alg_f4(ble_sm_sc_pub_key, ble_sm_sc_pub_key, oob_data->r, 0,
                        oob_data->c);
     if (rc) {
         return rc;
@@ -920,7 +920,7 @@ ble_sm_sc_oob_generate_data(struct ble_sm_sc_oob_data *oob_data)
 void
 ble_sm_sc_init(void)
 {
-    ble_sm_alg_ecc_init();
+    na_ble_sm_alg_ecc_init();
     ble_sm_sc_keys_generated = 0;
 }
 
