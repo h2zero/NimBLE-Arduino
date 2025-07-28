@@ -113,7 +113,7 @@ bool connectToServer() {
 
     /** No client to reuse? Create a new one. */
     if (!pClient) {
-        if (NimBLEDevice::getCreatedClientCount() >= NIMBLE_MAX_CONNECTIONS) {
+        if (NimBLEDevice::getCreatedClientCount() >= MYNEWT_VAL(BLE_MAX_CONNECTIONS)) {
             Serial.printf("Max clients reached - no more connections available\n");
             return false;
         }

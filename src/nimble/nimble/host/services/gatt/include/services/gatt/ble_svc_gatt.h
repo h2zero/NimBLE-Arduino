@@ -21,7 +21,7 @@
 #define H_BLE_SVC_GATT_
 
 #include <inttypes.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 
 #ifdef __cplusplus
 extern "C" {

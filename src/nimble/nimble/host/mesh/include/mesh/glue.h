@@ -23,7 +23,7 @@
 #include <assert.h>
 #include <errno.h>
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/logcfg/logcfg.h"
 #include "nimble/porting/nimble/include/modlog/modlog.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
@@ -659,7 +659,7 @@ settings_load(void)
 struct k_mem_slab {
     /**
      * _wait_q_t is not required now, as we don't implement zephyr timeouts -
-     * if slab couldn't be allocated, we simply return error  
+     * if slab couldn't be allocated, we simply return error
      */
     uint32_t num_blocks; /** number of memory blocks available for allocation */
     size_t block_size; /** size of single block */

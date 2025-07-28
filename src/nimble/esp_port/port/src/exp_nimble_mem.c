@@ -8,16 +8,16 @@
 
  #include "esp_attr.h"
  #include "esp_heap_caps.h"
- #include "nimconfig.h"
+ #include "syscfg/syscfg.h"
  #include "../include/esp_nimble_mem.h"
 
  void *nimble_platform_mem_malloc(size_t size)
  {
- #ifdef CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_INTERNAL
+ #if MYNEWT_VAL(NIMBLE_MEM_ALLOC_MODE_INTERNAL)
      return heap_caps_malloc(size, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
- #elif CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL
+ #elif MYNEWT_VAL(NIMBLE_MEM_ALLOC_MODE_EXTERNAL)
      return heap_caps_malloc(size, MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
- #elif CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_IRAM_8BIT
+ #elif MYNEWT_VAL(NIMBLE_MEM_ALLOC_MODE_IRAM_8BIT)
      return heap_caps_malloc_prefer(size, 2, MALLOC_CAP_INTERNAL|MALLOC_CAP_IRAM_8BIT, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
  #else
      return malloc(size);
@@ -26,11 +26,11 @@
 
  void *nimble_platform_mem_calloc(size_t n, size_t size)
  {
- #ifdef CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_INTERNAL
+ #if MYNEWT_VAL(NIMBLE_MEM_ALLOC_MODE_INTERNAL)
      return heap_caps_calloc(n, size, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
- #elif CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_EXTERNAL
+ #elif MYNEWT_VAL(NIMBLE_MEM_ALLOC_MODE_EXTERNAL)
      return heap_caps_calloc(n, size, MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT);
- #elif CONFIG_BT_NIMBLE_MEM_ALLOC_MODE_IRAM_8BIT
+ #elif MYNEWT_VAL(NIMBLE_MEM_ALLOC_MODE_IRAM_8BIT)
      return heap_caps_calloc_prefer(n, size, 2, MALLOC_CAP_INTERNAL|MALLOC_CAP_IRAM_8BIT, MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT);
  #else
      return calloc(n, size);
