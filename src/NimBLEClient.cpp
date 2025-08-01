@@ -933,16 +933,16 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
     switch (event->type) {
         case BLE_GAP_EVENT_DISCONNECT: {
-            NimBLEConnInfo peerInfo;
-            rc = ble_gap_conn_find(event->disconnect.conn.conn_handle, &peerInfo.m_desc);
-            if (rc != 0) {
-                NIMBLE_LOGE(LOG_TAG, "Failed to find connection info; rc=%d", rc);
-                return 0;
-            }
 
             // workaround for bug in NimBLE stack where disconnect event argument is not passed correctly
-            pClient = NimBLEDevice::getClientByPeerAddress(peerInfo.m_desc.peer_id_addr);
+            pClient = NimBLEDevice::getClientByPeerAddress(event->disconnect.conn.peer_ota_addr);
             if (pClient == nullptr) {
+                pClient = NimBLEDevice::getClientByPeerAddress(event->disconnect.conn.peer_id_addr);
+            }
+
+            if (pClient == nullptr) {
+                NIMBLE_LOGE(LOG_TAG, "Disconnected client not found, conn_handle=%d",
+                            event->disconnect.conn.conn_handle);
                 return 0;
             }
 
