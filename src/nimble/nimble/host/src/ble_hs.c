@@ -21,7 +21,7 @@
 #include <errno.h>
 #include <string.h>
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/stats/stats.h"
 #include "nimble/nimble/host/include/host/ble_hs.h"
 #include "ble_hs_priv.h"
