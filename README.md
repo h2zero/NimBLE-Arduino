@@ -48,8 +48,6 @@ If you already use this library and need to migrate your code to version 2.x see
 
 For added performance and optimizations see [Usage tips](docs/Usage_tips.md).
 
-Check the Refactored_original_examples in the examples folder for highlights of the differences with the original library.
-
 More advanced examples highlighting many available features are in examples/ NimBLE_Server, NimBLE_Client.
 
 Beacon examples provided by @beegee-tokyo are in examples/ BLE_Beacon_Scanner, BLE_EddystoneTLM_Beacon.
