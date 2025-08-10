@@ -27,104 +27,108 @@ var NAVTREE =
   [ "NimBLE-Arduino", "index.html", [
     [ "Overview", "index.html", "index" ],
     [ "Changelog", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html", [
-      [ "[2.3.2] 2025-06-27", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md232-2025-06-27", null ],
+      [ "[2.3.4] 2025-08-10", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md234-2025-08-10", null ],
       [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed", null ],
+      [ "[2.3.3] 2025-07-27", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md233-2025-07-27", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-1", null ],
+      [ "[2.3.2] 2025-06-27", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md232-2025-06-27", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-2", null ],
       [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed", null ],
       [ "[2.3.1] 2025-06-11", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md231-2025-06-11", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-1", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-3", null ],
       [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added", null ],
       [ "[2.3.0] 2025-05-19", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md230-2025-05-19", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-2", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-4", null ],
       [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-1", null ],
       [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-1", null ],
       [ "[2.2.3] 2025-02-28", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md223-2025-02-28", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-3", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-5", null ],
       [ "[2.2.2] 2025-02-24", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md222-2025-02-24", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-4", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-6", null ],
       [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-2", null ],
       [ "[2.2.1] 2025-01-26", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md221-2025-01-26", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-5", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-7", null ],
       [ "[2.2.0] 2025-01-12", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md220-2025-01-12", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-6", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-8", null ],
       [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-2", null ],
       [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-3", null ],
       [ "[2.1.3] 2025-01-05", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md213-2025-01-05", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-7", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-9", null ],
       [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-3", null ],
       [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-4", null ],
       [ "[2.1.2] 2024-12-21", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md212-2024-12-21", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-8", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-10", null ],
       [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-4", null ],
       [ "[2.1.1] 2024-12-16", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md211-2024-12-16", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-9", null ],
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-11", null ],
       [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-5", null ],
       [ "[2.1.0] 2024-12-14", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md210-2024-12-14", null ],
       [ "<strong>Breaking changes</strong>", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#breaking-changes", null ],
-      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-10", [
+      [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-12", [
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-6", null ],
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-5", null ]
       ] ],
       [ "[1.4.3] 2024-11-27", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md143-2024-11-27", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-11", null ],
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-13", null ],
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-6", null ]
       ] ],
       [ "[1.4.2] 2024-06-17", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md142-2024-06-17", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-12", null ],
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-14", null ],
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-7", null ],
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-7", null ]
       ] ],
       [ "[1.4.1] - 2022-10-23", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md141---2022-10-23", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-13", null ],
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-15", null ],
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-8", null ],
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-8", null ]
       ] ],
       [ "[1.4.0] - 2022-07-10", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md140---2022-07-10", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-14", null ],
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-16", null ],
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-9", null ],
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-9", null ]
       ] ],
       [ "[1.3.8] - 2022-04-27", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md138---2022-04-27", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-15", null ],
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-17", null ],
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-10", null ]
       ] ],
       [ "[1.3.7] - 2022-02-15", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md137---2022-02-15", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-16", null ]
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-18", null ]
       ] ],
       [ "[1.3.6] - 2022-01-18", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md136---2022-01-18", [
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-11", null ],
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-17", null ]
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-19", null ]
       ] ],
       [ "[1.3.5] - 2022-01-14", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md135---2022-01-14", [
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-10", null ],
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-18", null ]
-      ] ],
-      [ "[1.3.4] - 2022-01-09", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md134---2022-01-09", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-19", null ]
-      ] ],
-      [ "[1.3.3] - 2021-11-24", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md133---2021-11-24", [
         [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-20", null ]
       ] ],
+      [ "[1.3.4] - 2022-01-09", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md134---2022-01-09", [
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-21", null ]
+      ] ],
+      [ "[1.3.3] - 2021-11-24", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md133---2021-11-24", [
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-22", null ]
+      ] ],
       [ "[1.3.2] - 2021-11-20", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md132---2021-11-20", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-21", null ],
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-23", null ],
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-11", null ]
       ] ],
       [ "[1.3.1] - 2021-08-04", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md131---2021-08-04", [
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-22", null ]
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-24", null ]
       ] ],
       [ "[1.3.0] - 2021-08-02", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md130---2021-08-02", [
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-12", null ],
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-12", null ],
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-23", null ]
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-25", null ]
       ] ],
       [ "[1.2.0] - 2021-02-08", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md120---2021-02-08", [
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-13", null ],
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-13", null ],
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-24", null ]
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-26", null ]
       ] ],
       [ "[1.1.0] - 2021-01-20", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md110---2021-01-20", [
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-14", null ],
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-14", null ],
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-25", null ]
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-27", null ]
       ] ],
       [ "[1.0.2] - 2020-09-13", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md102---2020-09-13", [
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-15", null ]
@@ -132,7 +136,7 @@ var NAVTREE =
       [ "[1.0.1] - 2020-09-02", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md101---2020-09-02", [
         [ "Added", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#added-15", null ],
         [ "Changed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#changed-16", null ],
-        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-26", null ]
+        [ "Fixed", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-28", null ]
       ] ],
       [ "[1.0.0] - 2020-08-22", "md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md100---2020-08-22", null ]
     ] ],
@@ -230,7 +234,7 @@ var NAVTREEINDEX =
 "_h_i_d_keyboard_types_8h_source.html",
 "class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31",
 "class_nim_b_l_e_scan.html#aad9cd2462d00d7c0fa39d095aa2d8e81",
-"md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-21"
+"md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#fixed-2"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
