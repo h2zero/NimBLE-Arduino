@@ -21,7 +21,7 @@
 
 #include <assert.h>
 #include <string.h>
-#include <nimble/porting/nimble/include/syscfg/syscfg.h>
+#include <syscfg/syscfg.h>
 #include <nimble/porting/nimble/include/sysinit/sysinit.h>
 #include <nimble/nimble/include/nimble/ble.h>
 #include <ipc_nrf5340/ipc_nrf5340.h>

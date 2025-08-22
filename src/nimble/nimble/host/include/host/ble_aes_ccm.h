@@ -7,7 +7,7 @@
 #ifndef _BLE_AES_CCM_
 #define _BLE_AES_CCM_
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/queue.h"
 #include "nimble/nimble/host/include/host/ble_hs.h"
 

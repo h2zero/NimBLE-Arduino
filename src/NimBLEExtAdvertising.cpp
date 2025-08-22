@@ -16,7 +16,7 @@
  */
 
 #include "NimBLEExtAdvertising.h"
-#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && CONFIG_BT_NIMBLE_EXT_ADV
+#if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_BROADCASTER) && MYNEWT_VAL(BLE_EXT_ADV)
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
 #  include "services/gap/ble_svc_gap.h"
@@ -38,7 +38,7 @@ static const char*                   LOG_TAG = "NimBLEExtAdvertising";
 NimBLEExtAdvertising::NimBLEExtAdvertising()
     : m_deleteCallbacks{false},
       m_pCallbacks{&defaultCallbacks},
-      m_advStatus(CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES + 1, false) {}
+      m_advStatus(MYNEWT_VAL(BLE_MULTI_ADV_INSTANCES) + 1, false) {}
 
 /**
  * @brief Destructor: deletes callback instances if requested.
@@ -68,7 +68,7 @@ bool NimBLEExtAdvertising::setInstanceData(uint8_t instId, NimBLEExtAdvertisemen
         adv.m_params.scan_req_notif = false;
     }
 
-# if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+# if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
     NimBLEServer* pServer = NimBLEDevice::getServer();
     if (pServer != nullptr) {
         pServer->start(); // make sure the GATT server is ready before advertising
@@ -391,7 +391,7 @@ void NimBLEExtAdvertisement::setTxPower(int8_t dbm) {
  * @param [in] enable True = connectable.
  */
 void NimBLEExtAdvertisement::setConnectable(bool enable) {
-# if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+# if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
     m_params.connectable = enable;
 # endif
 } // setConnectable
@@ -531,7 +531,7 @@ void NimBLEExtAdvertisement::clearData() {
  * @details This will completely replace any data that was previously set.
  */
 bool NimBLEExtAdvertisement::setData(const uint8_t* data, size_t length) {
-    if (length > CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN) {
+    if (length > MYNEWT_VAL(BLE_EXT_ADV_MAX_SIZE)) {
         return false;
     }
 
@@ -546,7 +546,7 @@ bool NimBLEExtAdvertisement::setData(const uint8_t* data, size_t length) {
  * @return True if successful, false if the data is too large.
  */
 bool NimBLEExtAdvertisement::addData(const uint8_t* data, size_t length) {
-    if (m_payload.size() + length > CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN) {
+    if (m_payload.size() + length > MYNEWT_VAL(BLE_EXT_ADV_MAX_SIZE)) {
         return false;
     }
 
@@ -560,7 +560,7 @@ bool NimBLEExtAdvertisement::addData(const uint8_t* data, size_t length) {
  * @return True if successful, false if the data is too large.
  */
 bool NimBLEExtAdvertisement::addData(const std::string& data) {
-    if (m_payload.size() + data.length() > CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN) {
+    if (m_payload.size() + data.length() > MYNEWT_VAL(BLE_EXT_ADV_MAX_SIZE)) {
         return false;
     }
 
@@ -710,7 +710,7 @@ bool NimBLEExtAdvertisement::addServiceUUID(const NimBLEUUID& serviceUUID) {
         length += 2;
     }
 
-    if (length + getDataSize() > CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN) {
+    if (length + getDataSize() > MYNEWT_VAL(BLE_EXT_ADV_MAX_SIZE)) {
         NIMBLE_LOGE(LOG_TAG, "Cannot add UUID, data length exceeded!");
         return false;
     }
@@ -919,7 +919,7 @@ bool NimBLEExtAdvertisement::setServiceData(const NimBLEUUID& uuid, const uint8_
     uint8_t uuidBytes = uuid.bitSize() / 8;
     uint8_t sDataLen  = 2 + uuidBytes + length;
 
-    if (m_payload.size() + sDataLen > CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN) {
+    if (m_payload.size() + sDataLen > MYNEWT_VAL(BLE_EXT_ADV_MAX_SIZE)) {
         return false;
     }
 
@@ -1090,4 +1090,4 @@ std::string NimBLEExtAdvertisement::toString() const {
     return str;
 } // toString
 
-#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_BROADCASTER && CONFIG_BT_NIMBLE_EXT_ADV
+#endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_BROADCASTER) && MYNEWT_VAL(BLE_EXT_ADV)

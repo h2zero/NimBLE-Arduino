@@ -5,8 +5,8 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 
-#if CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM <= 0
-# error "CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM must be set to 1 or greater"
+#if MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM) < 1
+# error "MYNEWT_VAL_BLE_L2CAP_COC_MAX_NUM must be set to 1 or greater"
 #endif
 
 // See the following for generating UUIDs:
