@@ -30,7 +30,7 @@ extern "C" {
 #define static_assert _Static_assert
 #endif
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
 
 #define OS_ALIGN(__n, __a) (                             \

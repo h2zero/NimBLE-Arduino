@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include <nimble/porting/nimble/include/syscfg/syscfg.h>
+#include <syscfg/syscfg.h>
 
 #define XCVR_RX_RADIO_RAMPUP_USECS  (40)
 #define XCVR_TX_RADIO_RAMPUP_USECS  (40)
