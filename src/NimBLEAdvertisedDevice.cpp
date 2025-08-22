@@ -16,7 +16,7 @@
  */
 
 #include "NimBLEAdvertisedDevice.h"
-#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER
+#if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_OBSERVER)
 
 # include "NimBLEDevice.h"
 # include "NimBLEUtils.h"
@@ -31,7 +31,7 @@ static const char* LOG_TAG = "NimBLEAdvertisedDevice";
  * @param [in] event The advertisement event data.
  */
 NimBLEAdvertisedDevice::NimBLEAdvertisedDevice(const ble_gap_event* event, uint8_t eventType)
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if MYNEWT_VAL(BLE_EXT_ADV)
     : m_address{event->ext_disc.addr},
       m_advType{eventType},
       m_rssi{event->ext_disc.rssi},
@@ -58,7 +58,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice(const ble_gap_event* event, uint8
  * @param [in] event The advertisement event data.
  */
 void NimBLEAdvertisedDevice::update(const ble_gap_event* event, uint8_t eventType) {
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if MYNEWT_VAL(BLE_EXT_ADV)
     const auto& disc = event->ext_disc;
     m_isLegacyAdv    = disc.props & BLE_HCI_ADV_LEGACY_MASK;
 # else
@@ -580,7 +580,7 @@ bool NimBLEAdvertisedDevice::haveTXPower() const {
     return findAdvField(BLE_HS_ADV_TYPE_TX_PWR_LVL) > 0;
 } // haveTXPower
 
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if MYNEWT_VAL(BLE_EXT_ADV)
 /**
  * @brief Get the set ID of the extended advertisement.
  * @return The set ID.
@@ -751,7 +751,7 @@ uint8_t NimBLEAdvertisedDevice::getAddressType() const {
  * @return True if the device is connectable.
  */
 bool NimBLEAdvertisedDevice::isConnectable() const {
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if MYNEWT_VAL(BLE_EXT_ADV)
     if (m_isLegacyAdv) {
         return m_advType == BLE_HCI_ADV_RPT_EVTYPE_ADV_IND || m_advType == BLE_HCI_ADV_RPT_EVTYPE_DIR_IND;
     }
@@ -772,7 +772,7 @@ bool NimBLEAdvertisedDevice::isScannable() const {
  * @return True if legacy (Bluetooth 4.x), false if extended (bluetooth 5.x).
  */
 bool NimBLEAdvertisedDevice::isLegacyAdvertisement() const {
-# if CONFIG_BT_NIMBLE_EXT_ADV
+# if MYNEWT_VAL(BLE_EXT_ADV)
     return m_isLegacyAdv;
 # else
     return true;
@@ -813,4 +813,4 @@ const std::vector<uint8_t>::const_iterator NimBLEAdvertisedDevice::end() const {
     return m_payload.cend();
 }
 
-#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_OBSERVER
+#endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_OBSERVER)

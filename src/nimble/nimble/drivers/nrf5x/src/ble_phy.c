@@ -28,7 +28,7 @@
 #include <hal/nrf_aar.h>
 #include <hal/nrf_timer.h>
 #include <hal/nrf_rtc.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
 /* Keep os_cputime explicitly to enable build on non-Mynewt platforms */
 #include "nimble/porting/nimble/include/os/os_cputime.h"

@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #if MYNEWT_VAL(BLE_MESH)
 
 #define MESH_LOG_MODULE BLE_MESH_CRYPTO_LOG
@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 
 #if (MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS))
 #include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"

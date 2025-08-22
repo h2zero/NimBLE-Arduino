@@ -16,7 +16,7 @@
  */
 
 #include "NimBLEAddress.h"
-#if CONFIG_BT_ENABLED
+#if CONFIG_BT_NIMBLE_ENABLED
 
 # include "NimBLELog.h"
 

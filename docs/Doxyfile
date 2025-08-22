@@ -2416,7 +2416,7 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = _DOXYGEN_ \
-                         CONFIG_BT_ENABLED \
+                         CONFIG_BT_NIMBLE_ENABLED \
                          CONFIG_BT_NIMBLE_ROLE_CENTRAL \
                          CONFIG_BT_NIMBLE_ROLE_OBSERVER \
                          CONFIG_BT_NIMBLE_ROLE_PERIPHERAL \
