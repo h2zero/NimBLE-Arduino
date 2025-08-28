@@ -10,7 +10,7 @@
 
 #include <Arduino.h>
 #include <NimBLEDevice.h>
-#if !CONFIG_BT_NIMBLE_EXT_ADV
+#if !MYNEWT_VAL(BLE_EXT_ADV)
 # error Must enable extended advertising, see nimconfig.h file.
 #endif
 

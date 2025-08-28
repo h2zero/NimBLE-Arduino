@@ -16,7 +16,7 @@
  */
 
 #include "NimBLEUtils.h"
-#if CONFIG_BT_ENABLED
+#if CONFIG_BT_NIMBLE_ENABLED
 
 # include "NimBLEAddress.h"
 # include "NimBLELog.h"
@@ -576,4 +576,4 @@ NimBLEAddress NimBLEUtils::generateAddr(bool nrpa) {
     return NimBLEAddress{addr};
 } // generateAddr
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BT_NIMBLE_ENABLED

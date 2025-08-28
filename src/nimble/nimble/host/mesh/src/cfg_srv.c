@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #if MYNEWT_VAL(BLE_MESH)
 
 #define MESH_LOG_MODULE BLE_MESH_MODEL_LOG

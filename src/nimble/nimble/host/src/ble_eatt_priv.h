@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os_mbuf.h"
 #include "nimble/nimble/host/include/host/ble_l2cap.h"
 

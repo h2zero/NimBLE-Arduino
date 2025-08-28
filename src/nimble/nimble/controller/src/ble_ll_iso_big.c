@@ -21,7 +21,7 @@
 
 #include <errno.h>
 #include <stdint.h>
-#include <nimble/porting/nimble/include/syscfg/syscfg.h>
+#include <syscfg/syscfg.h>
 #include <nimble/nimble/include/nimble/ble.h>
 #include <nimble/nimble/include/nimble/hci_common.h>
 #include <nimble/nimble/transport/include/nimble/transport.h>
