@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.5] 2025-09-02
+
+## Fixed
+- esp32c3/s3 max connections not being properly applied.
+
 ## [2.3.4] 2025-08-10
 
 ## Fixed
