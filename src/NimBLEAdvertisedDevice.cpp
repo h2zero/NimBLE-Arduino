@@ -86,11 +86,11 @@ const NimBLEAddress& NimBLEAdvertisedDevice::getAddress() const {
 /**
  * @brief Get the advertisement type.
  * @return The advertising type the device is reporting:
- * * BLE_HCI_ADV_TYPE_ADV_IND            (0) - indirect advertising
- * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_HD  (1) - direct advertising - high duty cycle
- * * BLE_HCI_ADV_TYPE_ADV_SCAN_IND       (2) - indirect scan response
- * * BLE_HCI_ADV_TYPE_ADV_NONCONN_IND    (3) - indirect advertising - not connectable
- * * BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_LD  (4) - direct advertising - low duty cycle
+ * * BLE_HCI_ADV_RPT_EVTYPE_ADV_IND      (0) - indirect advertising - connectable and scannable
+ * * BLE_HCI_ADV_RPT_EVTYPE_DIR_IND      (1) - direct advertising - connectable
+ * * BLE_HCI_ADV_RPT_EVTYPE_SCAN_IND     (2) - indirect scan response - not connectable - scannable
+ * * BLE_HCI_ADV_RPT_EVTYPE_NONCONN_IND  (3) - beacon only - not connectable - not scannable
+ * * BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP     (4) - scan response
  */
 uint8_t NimBLEAdvertisedDevice::getAdvType() const {
     return m_advType;
@@ -752,11 +752,12 @@ uint8_t NimBLEAdvertisedDevice::getAddressType() const {
  */
 bool NimBLEAdvertisedDevice::isConnectable() const {
 # if CONFIG_BT_NIMBLE_EXT_ADV
-    if (m_isLegacyAdv) {
-        return m_advType == BLE_HCI_ADV_RPT_EVTYPE_ADV_IND || m_advType == BLE_HCI_ADV_RPT_EVTYPE_DIR_IND;
+    if (!m_isLegacyAdv) {
+        return (m_advType & BLE_HCI_ADV_CONN_MASK) || (m_advType & BLE_HCI_ADV_DIRECT_MASK);
     }
 # endif
-    return (m_advType & BLE_HCI_ADV_CONN_MASK) || (m_advType & BLE_HCI_ADV_DIRECT_MASK);
+
+    return m_advType == BLE_HCI_ADV_RPT_EVTYPE_ADV_IND || m_advType == BLE_HCI_ADV_RPT_EVTYPE_DIR_IND;
 } // isConnectable
 
 /**
