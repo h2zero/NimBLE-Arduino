@@ -92,6 +92,7 @@ class NimBLEAdvertisedDevice {
     uint8_t  getPrimaryPhy() const;
     uint8_t  getSecondaryPhy() const;
     uint16_t getPeriodicInterval() const;
+    uint8_t  getDataStatus() const;
 # endif
     operator NimBLEAddress() const;
 
@@ -165,6 +166,7 @@ class NimBLEAdvertisedDevice {
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
     bool     m_isLegacyAdv{};
+    uint8_t  m_dataStatus{};
     uint8_t  m_sid{};
     uint8_t  m_primPhy{};
     uint8_t  m_secPhy{};
