@@ -23,7 +23,7 @@
 #include <assert.h>
 #include <string.h>
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/porting/nimble/include/stats/stats.h"
 #include "nimble/nimble/include/nimble/ble.h"

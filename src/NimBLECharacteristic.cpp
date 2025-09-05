@@ -16,7 +16,14 @@
  */
 
 # include "NimBLECharacteristic.h"
-#if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
+
+#if defined(CONFIG_NIMBLE_CPP_IDF)
+# if !defined(ESP_IDF_VERSION_MAJOR) || ESP_IDF_VERSION_MAJOR < 5
+#  define ble_gatts_notify_custom ble_gattc_notify_custom
+#  define ble_gatts_indicate_custom ble_gattc_indicate_custom
+# endif
+#endif
 
 # include "NimBLE2904.h"
 # include "NimBLEDevice.h"
@@ -278,9 +285,9 @@ bool NimBLECharacteristic::sendValue(const uint8_t* value, size_t length, bool i
 
             // Null buffer will read the value from the characteristic
             if (isNotification) {
-                rc = ble_gattc_notify_custom(connHandle, m_handle, om);
+                rc = ble_gatts_notify_custom(connHandle, m_handle, om);
             } else {
-                rc = ble_gattc_indicate_custom(connHandle, m_handle, om);
+                rc = ble_gatts_indicate_custom(connHandle, m_handle, om);
             }
 
             goto done;
@@ -296,17 +303,17 @@ bool NimBLECharacteristic::sendValue(const uint8_t* value, size_t length, bool i
             }
 
             if (isNotification) {
-                rc = ble_gattc_notify_custom(ch, m_handle, om);
+                rc = ble_gatts_notify_custom(ch, m_handle, om);
             } else {
-                rc = ble_gattc_indicate_custom(ch, m_handle, om);
+                rc = ble_gatts_indicate_custom(ch, m_handle, om);
             }
         }
     } else if (connHandle != BLE_HS_CONN_HANDLE_NONE) {
         // Null buffer will read the value from the characteristic
         if (isNotification) {
-            rc = ble_gattc_notify_custom(connHandle, m_handle, nullptr);
+            rc = ble_gatts_notify_custom(connHandle, m_handle, nullptr);
         } else {
-            rc = ble_gattc_indicate_custom(connHandle, m_handle, nullptr);
+            rc = ble_gatts_indicate_custom(connHandle, m_handle, nullptr);
         }
     } else { // Notify or indicate to all connected peers the characteristic value
         ble_gatts_chr_updated(m_handle);
@@ -414,4 +421,4 @@ void NimBLECharacteristicCallbacks::onSubscribe(NimBLECharacteristic* pCharacter
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onSubscribe: default");
 }
 
-#endif // CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
+#endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)

@@ -400,8 +400,6 @@ static inline bool ble_npl_hw_is_in_critical(void)
 #define BLE_NPL_TIME_FOREVER    portMAX_DELAY
 
 #ifndef ESP_PLATFORM
-#define IRAM_ATTR
-#define NIMBLE_CFG_CONTROLLER 1
 #define NIMBLE_EVT_QUEUE_SIZE 4
 #else
 #define NIMBLE_EVT_QUEUE_SIZE 32

@@ -21,7 +21,7 @@
 #define H_BLE_SM_PRIV_
 
 #include <inttypes.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/queue.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
 #if MYNEWT_VAL(ENC_ADV_DATA)

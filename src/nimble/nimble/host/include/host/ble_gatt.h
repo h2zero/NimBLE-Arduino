@@ -32,7 +32,7 @@
 #include "nimble/nimble/host/include/host/ble_att.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
 #include "nimble/nimble/host/include/host/ble_esp_gatt.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -189,7 +189,7 @@ struct ble_hs_cfg;
 #define BLE_GATT_SVC_TYPE_SECONDARY                     2
 
 /** @} */
-/** 
+/**
  * Client Presentation Format
  * GATT Format Types
  * Ref: Assigned Numbers Specification

@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/controller/include/controller/ble_phy.h"
 #include "nimble/nimble/controller/include/controller/ble_ll.h"
 #include "nimble/nimble/controller/include/controller/ble_ll_sched.h"
