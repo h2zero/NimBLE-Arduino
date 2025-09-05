@@ -25,7 +25,7 @@
 #include "nimble/nimble/host/include/host/ble_att.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 
 #ifdef __cplusplus
 extern "C" {

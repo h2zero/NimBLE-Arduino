@@ -22,7 +22,7 @@
 
 #include "nimble/nimble/controller/include/controller/ble_ll_sched.h"
 #include "nimble/nimble/controller/include/controller/ble_ll_tmr.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
 
 #ifdef __cplusplus

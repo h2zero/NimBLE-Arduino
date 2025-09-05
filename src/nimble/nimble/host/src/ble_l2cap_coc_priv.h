@@ -21,7 +21,7 @@
 #define H_L2CAP_COC_PRIV_
 
 #include <inttypes.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/queue.h"
 #include "nimble/porting/nimble/include/os/os_mbuf.h"
 #include "nimble/nimble/host/include/host/ble_l2cap.h"

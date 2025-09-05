@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/nimble/drivers/nrf51/include/ble/xcvr.h"
 #include "nimble/nimble/include/nimble/ble.h"

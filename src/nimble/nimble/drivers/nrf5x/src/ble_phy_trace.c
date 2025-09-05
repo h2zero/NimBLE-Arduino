@@ -20,7 +20,7 @@
 #if defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES) || defined(NRF53_SERIES))
 
 #include <stdint.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os_trace_api.h"
 
 #if MYNEWT_VAL(BLE_PHY_SYSVIEW)

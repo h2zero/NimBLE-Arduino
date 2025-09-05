@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os_cputime.h"
 #include "nimble/porting/nimble/include/hal/hal_timer.h"
 
