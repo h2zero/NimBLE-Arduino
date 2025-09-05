@@ -115,12 +115,20 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                 advertisedDevice = new NimBLEAdvertisedDevice(event, event_type);
                 pScan->m_scanResults.m_deviceVec.push_back(advertisedDevice);
                 NIMBLE_LOGI(LOG_TAG, "New advertiser: %s", advertisedAddress.toString().c_str());
+#if CONFIG_BT_NIMBLE_EXT_ADV
+                if (advertisedDevice->getDataStatus() == BLE_GAP_EXT_ADV_DATA_STATUS_INCOMPLETE) {
+                    NIMBLE_LOGI(LOG_TAG, " EXT ADV data incomplete, waiting for more...");
+                    return 0;
+                }
+#endif
             } else {
                 advertisedDevice->update(event, event_type);
-                if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
-                    NIMBLE_LOGI(LOG_TAG, "Scan response from: %s", advertisedAddress.toString().c_str());
-                } else {
-                    NIMBLE_LOGI(LOG_TAG, "Duplicate; updated: %s", advertisedAddress.toString().c_str());
+                if (isLegacyAdv) {
+                    if (event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                        NIMBLE_LOGI(LOG_TAG, "Scan response from: %s", advertisedAddress.toString().c_str());
+                    } else {
+                        NIMBLE_LOGI(LOG_TAG, "Duplicate; updated: %s", advertisedAddress.toString().c_str());
+                    }
                 }
             }
 
