@@ -51,7 +51,7 @@
 // #define CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES 1
 
 /** @brief Un-comment to set the max extended advertising data size (Range: 31 - 1650) */
-// #define CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN 251
+// #define CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN 1650
 
 /** @brief Un-comment to enable periodic advertising */
 // #define CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV 1
@@ -391,7 +391,10 @@ defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
 #    define CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES 1
 #  endif
 #  if !defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN)
-#    define CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN 251
+#    define CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN 1650
+#  endif
+#  if !defined(CONFIG_BT_NIMBLE_EXT_ADV_MAX_SIZE)
+#    define CONFIG_BT_NIMBLE_EXT_ADV_MAX_SIZE CONFIG_BT_NIMBLE_MAX_EXT_ADV_DATA_LEN
 #  endif
 #endif
 
