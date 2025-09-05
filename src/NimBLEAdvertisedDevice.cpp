@@ -752,7 +752,7 @@ std::string NimBLEAdvertisedDevice::toString() const {
  * @brief Get the length of the advertisement data in the payload.
  * @return The number of bytes in the payload that is from the advertisement.
  */
-uint8_t NimBLEAdvertisedDevice::getAdvLength() const {
+uint16_t NimBLEAdvertisedDevice::getAdvLength() const {
     return m_advLength;
 }
 
