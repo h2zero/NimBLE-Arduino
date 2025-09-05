@@ -19,7 +19,7 @@
 #include "proxy.h"
 #include "proxy_msg.h"
 #include "pb_gatt_srv.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
 #include "nimble/nimble/host/src/ble_hs_priv.h"
 

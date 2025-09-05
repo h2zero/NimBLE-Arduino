@@ -20,7 +20,7 @@
 #ifndef H_BLE_SVC_GAP_
 #define H_BLE_SVC_GAP_
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include <inttypes.h>
 #if MYNEWT_VAL(ENC_ADV_DATA)
 #include "nimble/nimble/host/include/host/ble_ead.h"

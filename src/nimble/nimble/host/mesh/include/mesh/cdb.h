@@ -6,7 +6,7 @@
 #ifndef _BLUETOOTH_MESH_CDB_H_
 #define _BLUETOOTH_MESH_CDB_H_
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 
 #if MYNEWT_VAL(BLE_MESH_CDB)
 #define NODE_COUNT    CONFIG_BT_MESH_NODE_COUNT

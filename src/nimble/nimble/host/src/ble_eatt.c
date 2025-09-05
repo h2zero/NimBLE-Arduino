@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 
 #if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
 
@@ -518,7 +518,7 @@ ble_eatt_tx(uint16_t conn_handle, uint16_t cid, struct os_mbuf *txom)
         goto error;
     }
 
-    ble_att_truncate_to_mtu(eatt->chan, txom);    
+    ble_att_truncate_to_mtu(eatt->chan, txom);
     rc = ble_l2cap_send(eatt->chan, txom);
     if (rc == 0) {
         goto done;

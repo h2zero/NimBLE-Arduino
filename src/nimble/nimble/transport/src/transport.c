@@ -18,7 +18,7 @@
  */
 
 #include <stdint.h>
-#include <nimble/porting/nimble/include/syscfg/syscfg.h>
+#include <syscfg/syscfg.h>
 #include <nimble/porting/nimble/include/sysinit/sysinit.h>
 #include <nimble/porting/nimble/include/os/os_mbuf.h>
 #include <nimble/porting/nimble/include/os/os_mempool.h>

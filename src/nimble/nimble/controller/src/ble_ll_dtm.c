@@ -18,7 +18,7 @@
  */
 #ifndef ESP_PLATFORM
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
 
 #if MYNEWT_VAL(BLE_LL_DTM)

@@ -20,7 +20,7 @@
 #ifndef H_BLE_MONITOR_
 #define H_BLE_MONITOR_
 
-#include <nimble/porting/nimble/include/syscfg/syscfg.h>
+#include <syscfg/syscfg.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -30,7 +30,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #if MYNEWT_VAL(OS_SYSVIEW)
 #include "sysview/vendor/SEGGER_SYSVIEW.h"
 #endif

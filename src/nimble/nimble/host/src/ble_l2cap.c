@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include <errno.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/nimble/host/include/host/ble_l2cap.h"
 #include "nimble/nimble/include/nimble/ble.h"

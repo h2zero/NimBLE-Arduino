@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 
 #if defined(ARCH_sim)
 #define BLE_USES_HW_WHITELIST   (0)

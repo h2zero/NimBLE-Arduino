@@ -18,7 +18,7 @@
  */
 #ifndef ESP_PLATFORM
 #include <stdint.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os_trace_api.h"
 #include "nimble/nimble/controller/include/controller/ble_ll_trace.h"
 

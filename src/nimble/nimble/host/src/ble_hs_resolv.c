@@ -19,7 +19,7 @@
  * under the License.
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
 
 #include <stdint.h>

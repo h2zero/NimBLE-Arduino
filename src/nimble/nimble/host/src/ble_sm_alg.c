@@ -20,7 +20,7 @@
 
 #include <inttypes.h>
 #include <string.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
 
 #if NIMBLE_BLE_CONNECT

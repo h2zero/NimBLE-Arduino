@@ -17,7 +17,7 @@
  * under the License.
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/host/include/host/ble_hs.h"
 
 struct ble_hs_cfg ble_hs_cfg = {

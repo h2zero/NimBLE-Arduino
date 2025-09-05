@@ -18,8 +18,8 @@
 #ifndef NIMBLE_CPP_ATTVALUE_H
 #define NIMBLE_CPP_ATTVALUE_H
 
-#include "nimconfig.h"
-#if CONFIG_BT_ENABLED
+#include "syscfg/syscfg.h"
+#if CONFIG_BT_NIMBLE_ENABLED
 
 # ifdef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
 #  include <Arduino.h>
@@ -31,20 +31,30 @@
 # include <cstring>
 # include <cstdint>
 
-# ifndef CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
-#  define CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED 0
+# ifndef MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
+#  ifndef CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
+#   define MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED 0
+#  else
+#   define MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
+#  endif
 # endif
 
 # ifndef BLE_ATT_ATTR_MAX_LEN
 #  define BLE_ATT_ATTR_MAX_LEN 512
 # endif
 
-# if !defined(CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH)
-#  define CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH 20
-# elif CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH > BLE_ATT_ATTR_MAX_LEN
-#  error CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH cannot be larger than 512 (BLE_ATT_ATTR_MAX_LEN)
-# elif CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH < 1
-#  error CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH cannot be less than 1; Range = 1 : 512
+# ifndef MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH
+#  ifndef CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH
+#   define MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH 20
+#  else
+#   define MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH
+#  endif
+# endif
+
+# if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH) > BLE_ATT_ATTR_MAX_LEN
+#  error NIMBLE_CPP_ATT_VALUE_INIT_LENGTH cannot be larger than 512 (BLE_ATT_ATTR_MAX_LEN)
+# elif MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH) < 1
+#  error NIMBLE_CPP_ATT_VALUE_INIT_LENGTH cannot be less than 1; Range = 1 : 512
 # endif
 
 /* Used to determine if the type passed to a template has a data() and size() method. */
@@ -74,7 +84,7 @@ class NimBLEAttValue {
     uint16_t m_attr_max_len{};
     uint16_t m_attr_len{};
     uint16_t m_capacity{};
-# if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
+# if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED)
     time_t m_timestamp{};
 # endif
     void deepCopy(const NimBLEAttValue& source);
@@ -85,7 +95,7 @@ class NimBLEAttValue {
      * @param[in] init_len The initial size in bytes.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(uint16_t init_len = CONFIG_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN);
+    NimBLEAttValue(uint16_t init_len = MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH), uint16_t max_len = BLE_ATT_ATTR_MAX_LEN);
 
     /**
      * @brief Construct with an initial value from a buffer.
@@ -170,7 +180,7 @@ class NimBLEAttValue {
     /** @brief Iterator end */
     const uint8_t* end() const { return m_attr_value + m_attr_len; }
 
-# if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
+# if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED)
     /** @brief Returns a timestamp of when the value was last updated */
     time_t getTimeStamp() const { return m_timestamp; }
 
@@ -210,7 +220,7 @@ class NimBLEAttValue {
 
     const NimBLEAttValue& getValue(time_t* timestamp = nullptr) const {
         if (timestamp != nullptr) {
-# if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
+# if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED)
             *timestamp = m_timestamp;
 # else
             *timestamp = 0;
@@ -307,7 +317,7 @@ class NimBLEAttValue {
     template <typename T>
     T getValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
         if (timestamp != nullptr) {
-# if CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
+# if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED)
             *timestamp = m_timestamp;
 # else
             *timestamp = 0;
@@ -363,5 +373,5 @@ class NimBLEAttValue {
 # endif
 };
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BT_NIMBLE_ENABLED
 #endif // NIMBLE_CPP_ATTVALUE_H_

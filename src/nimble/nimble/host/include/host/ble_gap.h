@@ -30,7 +30,7 @@
 #include <inttypes.h>
 #include "nimble/nimble/host/include/host/ble_hs.h"
 #include "nimble/nimble/host/include/host/ble_hs_adv.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/host/include/host/ble_esp_gap.h"
 
 #if MYNEWT_VAL(ENC_ADV_DATA)
@@ -1059,7 +1059,7 @@ struct ble_gap_event {
             /** Advertiser clock accuracy */
             uint8_t adv_clk_accuracy;
 #if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-            /** Number of subevents. If zero, the periodic advertiser will be a broadcaster, 
+            /** Number of subevents. If zero, the periodic advertiser will be a broadcaster,
              * without responses.
              */
             uint8_t num_subevents;
@@ -1667,29 +1667,29 @@ struct ble_gap_multi_conn_params {
     /** The duration of the discovery procedure. */
     int32_t duration_ms;
 
-    /** 
-     * Additional arguments specifying the particulars of the connect procedure. When extended 
-     * adv is disabled or BLE_GAP_LE_PHY_1M_MASK is set in phy_mask this parameter can't be 
+    /**
+     * Additional arguments specifying the particulars of the connect procedure. When extended
+     * adv is disabled or BLE_GAP_LE_PHY_1M_MASK is set in phy_mask this parameter can't be
      * specified to null.
      */
     const struct ble_gap_conn_params *phy_1m_conn_params;
 
 #if MYNEWT_VAL(BLE_EXT_ADV)
-    /** 
+    /**
      * Additional arguments specifying the particulars of the connect procedure. When
      * BLE_GAP_LE_PHY_2M_MASK is set in phy_mask this parameter can't be specified to null.
      */
     const struct ble_gap_conn_params *phy_2m_conn_params;
-    
-    /** 
+
+    /**
      * Additional arguments specifying the particulars of the connect procedure. When
      * BLE_GAP_LE_PHY_CODED_MASK is set in phy_mask this parameter can't be specified to null.
      */
     const struct ble_gap_conn_params *phy_coded_conn_params;
 #endif // MYNEWT_VAL(BLE_EXT_ADV)
 
-    /** 
-     * The minimum length occupied by this connection in scheduler. 0 means disable the 
+    /**
+     * The minimum length occupied by this connection in scheduler. 0 means disable the
      * optimization for this connection.
      */
     uint32_t scheduling_len_us;
@@ -2192,10 +2192,10 @@ struct ble_gap_periodic_sync_params {
     unsigned int filter_duplicates:1;
 #endif
 #if MYNEWT_VAL(BLE_AOA_AOD)
-    /** 
+    /**
      * Specifies the type of Constant Tone Extension (CTE) to which the receiver should not synchronize.
      * This parameter determines which types of packets with specific CTE configurations are ignored during synchronization.
-     * 
+     *
      * Possible values:
      *   0: Do not sync to packets with an AoA Constant Tone Extension.
      *   1: Do not sync to packets with an AoD Constant Tone Extension with 1 μs slots.
@@ -2223,7 +2223,7 @@ struct ble_gap_periodic_adv_cte_params {
     /**
      * Constant Tone Extension length in 8 µs units (Range: 0x02 to 0x14)
      */
-    uint8_t cte_length; 
+    uint8_t cte_length;
 
     /**
      * Constant Tone Extension type
@@ -2231,19 +2231,19 @@ struct ble_gap_periodic_adv_cte_params {
      *  0x01 : AoD Constant Tone Extension with 1 µs slots
      *  0x02 : AoD Constant Tone Extension with 2 µs slots
      */
-    uint8_t cte_type;   
-    
+    uint8_t cte_type;
+
     /**
-     *  The number of Constant Tone Extensions to transmit in each periodic 
+     *  The number of Constant Tone Extensions to transmit in each periodic
      *  advertising interval (Range: 0x01 to 0x10)
      */
-    uint8_t cte_count;   
-    
+    uint8_t cte_count;
+
     /**
      * The number of Antenna IDs in the pattern
      * (Range: 0x02 to 0x4B)
      */
-    uint8_t switching_pattern_length; 
+    uint8_t switching_pattern_length;
 
     /**
      * Antenna ID in the pattern.
@@ -2259,13 +2259,13 @@ struct ble_gap_cte_sampling_params {
      *  0x01 : Switching and sampling slots are 1 μs each
      *  0x02 : Switching and sampling slots are 2 μs each
      */
-    uint8_t slot_durations; 
-    
+    uint8_t slot_durations;
+
     /**
      * The number of Antenna IDs in the pattern
      * (Range: 0x02 to 0x4B)
      */
-    uint8_t switching_pattern_length; 
+    uint8_t switching_pattern_length;
 
     /**
      * Antenna ID in the pattern.
@@ -2548,7 +2548,7 @@ int ble_gap_read_periodic_adv_list_size(uint8_t *per_adv_list_size);
  *
  * @return                   0 on success; nonzero on failure.
  */
-int ble_gap_set_connless_cte_transmit_params(uint8_t instance, 
+int ble_gap_set_connless_cte_transmit_params(uint8_t instance,
                                              const struct ble_gap_periodic_adv_cte_params *params);
 
 /**
@@ -2571,7 +2571,7 @@ int ble_gap_set_connless_cte_transmit_enable(uint8_t instance, uint8_t cte_enabl
  *
  * @return                   0 on success; nonzero on failure.
  */
-int ble_gap_set_connless_iq_sampling_enable(uint16_t sync_handle, uint8_t sampling_enable, 
+int ble_gap_set_connless_iq_sampling_enable(uint16_t sync_handle, uint8_t sampling_enable,
                                             uint8_t max_sampled_ctes,
                                             const struct ble_gap_cte_sampling_params *cte_sampling_params);
 
@@ -2584,7 +2584,7 @@ int ble_gap_set_connless_iq_sampling_enable(uint16_t sync_handle, uint8_t sampli
  *
  * @return                   0 on success; nonzero on failure.
  */
-int ble_gap_set_conn_cte_recv_param(uint16_t conn_handle, uint8_t sampling_enable, 
+int ble_gap_set_conn_cte_recv_param(uint16_t conn_handle, uint8_t sampling_enable,
                                     const struct ble_gap_cte_sampling_params *cte_sampling_params);
 
 /**
@@ -2597,7 +2597,7 @@ int ble_gap_set_conn_cte_recv_param(uint16_t conn_handle, uint8_t sampling_enabl
  *
  * @return                   0 on success; nonzero on failure.
  */
-int ble_gap_set_conn_cte_transmit_param(uint16_t conn_handle, uint8_t cte_types, 
+int ble_gap_set_conn_cte_transmit_param(uint16_t conn_handle, uint8_t cte_types,
                                         uint8_t switching_pattern_len, const uint8_t *antenna_ids);
 
 /**
@@ -2634,7 +2634,7 @@ int ble_gap_conn_cte_rsp_enable(uint16_t conn_handle, uint8_t enable);
  *
  * @return                     0 on success; nonzero on failure.
  */
-int ble_gap_read_antenna_information(uint8_t *switch_sampling_rates, uint8_t *num_antennae, 
+int ble_gap_read_antenna_information(uint8_t *switch_sampling_rates, uint8_t *num_antennae,
                                      uint8_t *max_switch_pattern_len, uint8_t *max_cte_len);
 
 #endif // MYNEWT_VAL(BLE_AOA_AOD)
@@ -2932,11 +2932,11 @@ int ble_gap_ext_connect(uint8_t own_addr_type, const ble_addr_t *peer_addr,
 #if MYNEWT_VAL(OPTIMIZE_MULTI_CONN)
 /**
  * @brief Enable the optimization of multiple connections.
- * 
+ *
  * @param enable                Enable or disable the optimization.
  * @param common_factor         The greatest common factor of all intervals in 0.625ms units.
- * @return                      0 on success; 
- * 
+ * @return                      0 on success;
+ *
  */
 int ble_gap_common_factor_set(bool enable, uint32_t common_factor);
 
@@ -2953,7 +2953,7 @@ int ble_gap_common_factor_set(bool enable, uint32_t common_factor);
  *                                  callback as its event-reporting mechanism.
  * @param cb_arg                The optional argument to pass to the callback
  *                                  function.
- * 
+ *
  * @return                      0 on success;
  *                              BLE_HS_EALREADY if a connection attempt is
  *                                  already in progress;
@@ -2963,7 +2963,7 @@ int ble_gap_common_factor_set(bool enable, uint32_t common_factor);
  *                                  connected;
  *                              Other nonzero on error.
  */
-int ble_gap_multi_connect(struct ble_gap_multi_conn_params *multi_conn_params, 
+int ble_gap_multi_connect(struct ble_gap_multi_conn_params *multi_conn_params,
                           ble_gap_event_fn *cb, void *cb_arg);
 #endif
 

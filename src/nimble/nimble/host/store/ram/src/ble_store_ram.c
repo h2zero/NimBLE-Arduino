@@ -32,7 +32,7 @@
 #include <string.h>
 
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/host/include/host/ble_hs.h"
 #include "nimble/nimble/host/store/ram/include/store/ram/ble_store_ram.h"
 
