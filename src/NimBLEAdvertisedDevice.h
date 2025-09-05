@@ -69,7 +69,7 @@ class NimBLEAdvertisedDevice {
     NimBLEAddress        getTargetAddress(uint8_t index = 0) const;
     uint8_t              getTargetAddressCount() const;
     int8_t               getTXPower() const;
-    uint8_t              getAdvLength() const;
+    uint16_t             getAdvLength() const;
     uint8_t              getAddressType() const;
     bool                 isAdvertisingService(const NimBLEUUID& uuid) const;
     bool                 haveAppearance() const;
@@ -162,7 +162,7 @@ class NimBLEAdvertisedDevice {
     uint8_t       m_advType{};
     int8_t        m_rssi{};
     uint8_t       m_callbackSent{};
-    uint8_t       m_advLength{};
+    uint16_t      m_advLength{};
 
 # if CONFIG_BT_NIMBLE_EXT_ADV
     bool     m_isLegacyAdv{};
