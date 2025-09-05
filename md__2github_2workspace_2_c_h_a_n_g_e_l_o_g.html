@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.5</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.6</span>
    </div>
   </td>
  </tr>
@@ -93,16 +93,29 @@ $(document).ready(function(){initNavTree('md__2github_2workspace_2_c_h_a_n_g_e_l
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="changelog"></a>All notable changes to this project will be documented in this file.</p>
+<h1><a class="anchor" id="autotoc_md236-2025-09-05"></a>
+[2.3.6] 2025-09-05</h1>
+<h1><a class="anchor" id="fixed"></a>
+Fixed</h1>
+<ul>
+<li><a class="el" href="class_nim_b_l_e_advertised_device.html#ab9710a6c3a141b6413d5159dfe4a4040" title="Check if this device is advertising as connectable.">NimBLEAdvertisedDevice::isConnectable</a> returning incorrect result.</li>
+<li>Extended advertisements not reporting full data.</li>
+</ul>
+<h1><a class="anchor" id="added"></a>
+Added</h1>
+<ul>
+<li>Support up to 1650 bytes of advertisement with extended advertising.</li>
+</ul>
 <h1><a class="anchor" id="autotoc_md235-2025-09-02"></a>
 [2.3.5] 2025-09-02</h1>
-<h1><a class="anchor" id="fixed"></a>
+<h1><a class="anchor" id="fixed-1"></a>
 Fixed</h1>
 <ul>
 <li>esp32c3/s3 max connections not being properly applied.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md234-2025-08-10"></a>
 [2.3.4] 2025-08-10</h1>
-<h1><a class="anchor" id="fixed-1"></a>
+<h1><a class="anchor" id="fixed-2"></a>
 Fixed</h1>
 <ul>
 <li><code>NimBLEClientCallbacks::OnConnectFail</code> not called when connection not established.</li>
@@ -111,14 +124,14 @@ Fixed</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md233-2025-07-27"></a>
 [2.3.3] 2025-07-27</h1>
-<h1><a class="anchor" id="fixed-2"></a>
+<h1><a class="anchor" id="fixed-3"></a>
 Fixed</h1>
 <ul>
 <li>Multiple definition errors for some functions with esp32c6/h2/c2 with Arduino core 3.3+.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md232-2025-06-27"></a>
 [2.3.2] 2025-06-27</h1>
-<h1><a class="anchor" id="fixed-3"></a>
+<h1><a class="anchor" id="fixed-4"></a>
 Fixed</h1>
 <ul>
 <li>Max connections not being applied correctly above 4.</li>
@@ -134,7 +147,7 @@ Changed</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md231-2025-06-11"></a>
 [2.3.1] 2025-06-11</h1>
-<h1><a class="anchor" id="fixed-4"></a>
+<h1><a class="anchor" id="fixed-5"></a>
 Fixed</h1>
 <ul>
 <li>EddystoneTLM example not setting the data.</li>
@@ -143,7 +156,7 @@ Fixed</h1>
 <li><code>NimBLEClient::readValue</code> call not returning when the instance was created with a<code><a class="el" href="class_nim_b_l_e_server.html" title="The model of a BLE server.">NimBLEServer</a></code> and reading a secured characteristic.</li>
 <li><code><a class="el" href="class_nim_b_l_e_scan.html" title="Perform and manage BLE scans.">NimBLEScan</a></code> destructor potentially causing a crash.</li>
 </ul>
-<h1><a class="anchor" id="added"></a>
+<h1><a class="anchor" id="added-1"></a>
 Added</h1>
 <ul>
 <li>iBeacon example.</li>
@@ -151,7 +164,7 @@ Added</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md230-2025-05-19"></a>
 [2.3.0] 2025-05-19</h1>
-<h1><a class="anchor" id="fixed-5"></a>
+<h1><a class="anchor" id="fixed-6"></a>
 Fixed</h1>
 <ul>
 <li>Incorrect <code>NimBLECharacteristic::onSubscribe</code> value when indications are set.</li>
@@ -163,7 +176,7 @@ Fixed</h1>
 <li>Attribute getValue failing with some data types</li>
 <li>Incorrectly passing a pointer to a function taking const reference.</li>
 </ul>
-<h1><a class="anchor" id="added-1"></a>
+<h1><a class="anchor" id="added-2"></a>
 Added</h1>
 <ul>
 <li>Support for esp32c2, esp32c5, esp32c6, esp32h2</li>
@@ -181,7 +194,7 @@ Changed</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md223-2025-02-28"></a>
 [2.2.3] 2025-02-28</h1>
-<h1><a class="anchor" id="fixed-6"></a>
+<h1><a class="anchor" id="fixed-7"></a>
 Fixed</h1>
 <ul>
 <li>Added back <code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a></code> overload with <code><a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a></code> parameter to resolve connection error due to NULL address.</li>
@@ -189,19 +202,19 @@ Fixed</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md222-2025-02-24"></a>
 [2.2.2] 2025-02-24</h1>
-<h1><a class="anchor" id="fixed-7"></a>
+<h1><a class="anchor" id="fixed-8"></a>
 Fixed</h1>
 <ul>
 <li>Crash when calling <code><a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83" title="Get the value of a specific characteristic associated with a specific service.">NimBLEClient::DiscoverAttributes</a></code>.</li>
 </ul>
-<h1><a class="anchor" id="added-2"></a>
+<h1><a class="anchor" id="added-3"></a>
 Added</h1>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_device_callbacks.html" title="Callbacks associated with a BLE device.">NimBLEDeviceCallbacks</a></code> class with a callback for handling bond storage.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md221-2025-01-26"></a>
 [2.2.1] 2025-01-26</h1>
-<h1><a class="anchor" id="fixed-8"></a>
+<h1><a class="anchor" id="fixed-9"></a>
 Fixed</h1>
 <ul>
 <li>remote descriptor discovery error when no descriptors exist.</li>
@@ -210,7 +223,7 @@ Fixed</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md220-2025-01-12"></a>
 [2.2.0] 2025-01-12</h1>
-<h1><a class="anchor" id="fixed-9"></a>
+<h1><a class="anchor" id="fixed-10"></a>
 Fixed</h1>
 <ul>
 <li>Crash when retrieving descriptors if more than one exists.</li>
@@ -225,7 +238,7 @@ Changed</h1>
 <li><code><a class="el" href="class_nim_b_l_e_device.html#ac4c78fbf7344fbc0d6189e92a756db91" title="Set the transmission power.">NimBLEDevice::setPower</a></code> and <code><a class="el" href="class_nim_b_l_e_device.html#a58742d313c683b98b47396383cb6ddfa" title="Get the transmission power.">NimBLEDevice::getPower</a></code> now take an additional parameter <code>NimBLETxPowerType</code> to set/get the power level for different operations.</li>
 <li>ESP32 devices now use esp_timer instead of freeRTOS timers for BLE operations by default.</li>
 </ul>
-<h1><a class="anchor" id="added-3"></a>
+<h1><a class="anchor" id="added-4"></a>
 Added</h1>
 <ul>
 <li>Config option to use mbedtls instead of tinycrypt for crypto operations, this will save approximately 8k of flash if already using mbedtls for other applications (https, mqtts, etc..).</li>
@@ -234,7 +247,7 @@ Added</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md213-2025-01-05"></a>
 [2.1.3] 2025-01-05</h1>
-<h1><a class="anchor" id="fixed-10"></a>
+<h1><a class="anchor" id="fixed-11"></a>
 Fixed</h1>
 <ul>
 <li>Unused variable warning when log level is below info.</li>
@@ -248,7 +261,7 @@ Changed</h1>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_h_i_d_device.html" title="A model of a BLE Human Interface Device.">NimBLEHIDDevice</a></code> now allows for the same report ID in multiple input/output/feature reports.</li>
 </ul>
-<h1><a class="anchor" id="added-4"></a>
+<h1><a class="anchor" id="added-5"></a>
 Added</h1>
 <ul>
 <li>Error logs in the case that NIMBLE_CPP_DEBUG_ASSERT is not defined.</li>
@@ -257,7 +270,7 @@ Added</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md212-2024-12-21"></a>
 [2.1.2] 2024-12-21</h1>
-<h1><a class="anchor" id="fixed-11"></a>
+<h1><a class="anchor" id="fixed-12"></a>
 Fixed</h1>
 <ul>
 <li>Compile error when only advertising role is enabled.</li>
@@ -270,7 +283,7 @@ Changed</h1>
 </ul>
 <h1><a class="anchor" id="autotoc_md211-2024-12-16"></a>
 [2.1.1] 2024-12-16</h1>
-<h1><a class="anchor" id="fixed-12"></a>
+<h1><a class="anchor" id="fixed-13"></a>
 Fixed</h1>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#ace0ea997b5c986bb8a56cd8673163203" title="Get the output report characteristic.">NimBLEHIDDevice::getOutputReport</a></code> will now return the correct characteristic.</li>
@@ -323,7 +336,7 @@ Changed</h1>
 <li><code>-</code><a class="el" href="class_nim_b_l_e_scan_callbacks.html#a1f9b5eac5982340afbb84954a4c06277" title="Called when a new device is discovered, before the scan result is received (if applicable).">NimBLEScanCallbacks::onDiscovered</a><code>, This is called immediately when a device is first scanned, before any scan response data is available and takes a</code>const NimBLEAdvertisedDevice*<code>parameter. -</code><a class="el" href="class_nim_b_l_e_scan.html#a68fa5cc715f62a9a97ac0dccfb8557c1" title="Stop an in progress scan.">NimBLEScan::stop</a><code>will no longer call the</code>onScanEnd<code>callback as the caller should know its been stopped when this is called. -</code>NimBLEScan::clearDuplicateCache<code>has been removed as it was problematic and only for the esp32. Stop and start the scanner for the same effect. -</code><a class="el" href="class_nim_b_l_e_scan_results.html#a98b106a3929919bf2c80cc0dfff59ba1" title="Return the specified device at the given index. The index should be between 0 and getCount()-1.">NimBLEScanResults::getDevice</a><code>methods now return</code>const NimBLEAdvertisedDevice*<code>. -</code><a class="el" href="class_nim_b_l_e_scan_results.html" title="A class that contains and operates on the results of a BLE scan.">NimBLEScanResults</a><code>iterators are now</code>const_iterator<code>. -</code><a class="el" href="class_nim_b_l_e_service.html#a8219ccefd97180bee485b62572c62e58">NimBLEService::getCharacteristics</a><code>now returns a</code>const std::vector&lt;NimBLECharacteristic*&gt;&amp;<code>instead of std::vector&lt;<a class="el" href="class_nim_b_l_e_characteristic.html" title="The model of a BLE Characteristic.">NimBLECharacteristic</a> *&gt;. -</code><a class="el" href="class_nim_b_l_e_characteristic.html#ac4482e038124724d8bb6d147bcdb5481" title="Send a notification.">NimBLECharacteristic::notify</a><code>no longer takes a</code>bool is_notification<code>parameter, instead</code>indicate()<code>should be called to send indications. -</code>NimBLECharacteristicCallbacks::onNotify<code>removed as unnecessary, the library does not call notify without app input. -</code><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a6f9b1f0f15492e3d47662e5e2ff0baee" title="Callback function to support a Notify/Indicate Status report.">NimBLECharacteristicCallbacks::onStatus</a><code>No longer takes a</code>status<code>parameter, refer to the return code for success/failure. -</code><a class="el" href="class_nim_b_l_e_remote_service.html#a5b07f0756c401d40396886e80d64b03b" title="Get a pointer to the vector of found characteristics.">NimBLERemoteService::getCharacteristics</a><code>now returns a</code>const std::vector&lt;NimBLERemoteCharacteristic*&gt;&amp;<code>instead of non-const</code>std::vector&lt;NimBLERemoteCharacteristic*&gt;*<code>. -</code><a class="el" href="class_nim_b_l_e_remote_service.html#ac2f19f76f0c0ac9b0efe2baa2ad2f7ec" title="Read the value of a characteristic associated with this service.">NimBLERemoteService::getValue</a><code>now returns</code><a class="el" href="class_nim_b_l_e_att_value.html" title="A specialized container class to hold BLE attribute values.">NimBLEAttValue</a><code>instead of</code>std::string<code>. -</code><a class="el" href="class_nim_b_l_e_remote_characteristic.html#a1b3bbd1bcdde6dd952ee69ebad0ffc58" title="Get the remote service associated with this characteristic.">NimBLERemoteCharacteristic::getRemoteService</a><code>now returns a</code>const NimBLERemoteService*<code>instead of non-const. -</code>NimBLERemoteCharacteristic::readUInt32<code>Has been removed. -</code>NimBLERemoteCharacteristic::readUInt16<code>Has been removed. -</code>NimBLERemoteCharacteristic::readUInt8<code>Has been removed. -</code>NimBLERemoteCharacteristic::readFloat<code>Has been removed. -</code>NimBLERemoteCharacteristic::registerForNotify<code>Has been removed. -</code>NimBLEAdvertisedDevice::hasRSSI<code>removed as redundant, RSSI is always available. -</code><a class="el" href="class_nim_b_l_e_advertised_device.html#a12971984cf749647c659b659bdfeda5d" title="Get the payload advertised by the device.">NimBLEAdvertisedDevice::getPayload</a><code>now returns</code>const std::vector&lt;uint8_t&gt;<code>instead of a pointer to internal memory. -</code><a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a><code>Timestamp removed, if needed then the app should track the time from the callback. -</code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a><code>constructor; default value for the</code>type<code>parameter removed, caller should know the address type and specify it. -</code>NimBLEAddress::getNative<code>replaced with</code><a class="el" href="class_nim_b_l_e_address.html#a31b466293f6cb752d5aba6b6ffb95351" title="Get the NimBLE base struct of the address.">NimBLEAddress::getBase</a><code>and now returns a pointer to</code>const ble_addr_t<code>instead of a pointer to the address value. -</code><a class="el" href="class_nim_b_l_e_address.html#a826fe8850cbc7d54f0696b8af4637169" title="Determine if this address equals another.">NimBLEAddress::equals</a><code>method and</code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a>::== operator<code>will now also test if the address types are the same. -</code><a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af" title="Get the uuid value.">NimBLEUUID::getNative</a><code>method replaced with</code><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a68c61ae225675ac84d60f76058a5bdd4" title="Get a pointer to the NimBLE UUID base structure.">NimBLEUUID::getBase</a><code>which returns a read-only pointer to the underlying</code>ble_uuid_t<code>struct. -</code><a class="el" href="class_nim_b_l_e_u_u_i_d.html" title="A model of a BLE UUID.">NimBLEUUID</a><code>;</code>msbFirst<code>parameter has been removed from constructor, caller should reverse the data first or call the new</code>reverseByteOrder<code>method after. -</code>NimBLEUtils::dumpGapEvent<code>function removed. -</code>NimBLEUtils::buildHexData<code>replaced with</code><a class="el" href="class_nim_b_l_e_utils.html#a53f0b19687b0706ec48d6b630e209acb" title="Create a hexadecimal string representation of the input data.">NimBLEUtils::dataToHexString</a><code>, which returns a</code>std::string<code>containing the hex string.</code></li>
 <li><code>Removed Eddystone URL as it has been shutdown by google since 2021. -</code><a class="el" href="class_nim_b_l_e_eddystone_t_l_m.html#af5ff73359f3c7f7e76395d32f4efe575" title="Set the temperature to advertise.">NimBLEEddystoneTLM::setTemp</a><code>now takes an</code>int16_t<code>parameter instead of float to be friendly to devices without floating point support. -</code><a class="el" href="class_nim_b_l_e_eddystone_t_l_m.html#a72589029e329c3939b05f9df5e8113ce" title="Get the temperature being advertised.">NimBLEEddystoneTLM::getTemp</a><code>now returns</code>int16_t<code>to work with devices that don't have floating point support. -</code><a class="el" href="class_nim_b_l_e_eddystone_t_l_m.html#a05989cc6df5d5dc423c878d2317ddb89" title="Set the raw data for the beacon advertisement.">NimBLEEddystoneTLM::setData</a><code>now takes a reference to *</code>NimBLEEddystoneTLM::BeaconData<code>instead of</code>std::string<code>. -</code><a class="el" href="class_nim_b_l_e_eddystone_t_l_m.html#a32c448f92ce2e61a9589d1cb0d149d07" title="Retrieve the data that is being advertised.">NimBLEEddystoneTLM::getData</a><code>now returns a reference to *</code>NimBLEEddystoneTLM::BeaconData<code>instead of</code>std::string<code>. -</code><a class="el" href="class_nim_b_l_e_beacon.html#ab6475aaa5d8a93e24401da3b4b272496" title="Set the beacon data.">NimBLEBeacon::setData</a><code>now takes</code>const NimBLEBeacon::BeaconData&amp;<code>instead of</code>std::string<code>. -</code><a class="el" href="class_nim_b_l_e_beacon.html#a8ac2cd99dd5a8a996f3556f9e5d20bbb" title="Retrieve the data that is being advertised.">NimBLEBeacon::getData</a><code>now returns</code>const NimBLEBeacon::BeaconData&amp;<code>instead of</code>std::string<code>. -</code>NimBLEHIDDevice::reportMap<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#afe75c42779aef757cd3ba84ec281efb5" title="Get the report map characteristic.">NimBLEHIDDevice::getReportMap</a><code>. -</code>NimBLEHIDDevice::hidControl<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#ab29c3d71cd592aa867b8c6655d586f24" title="Get the HID control point characteristic.">NimBLEHIDDevice::getHidControl</a><code>. -</code>NimBLEHIDDevice::inputReport<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#af2f973843304c2d513963a9dbbc48714" title="Get the input report characteristic.">NimBLEHIDDevice::getInputReport</a><code>. -</code>NimBLEHIDDevice::outputReport<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#ace0ea997b5c986bb8a56cd8673163203" title="Get the output report characteristic.">NimBLEHIDDevice::getOutputReport</a><code>. -</code>NimBLEHIDDevice::featureReport<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#ac34cb2703dc655220270604e2a28cf41" title="Get the feature report characteristic.">NimBLEHIDDevice::getFeatureReport</a><code>. -</code>NimBLEHIDDevice::protocolMode<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#a1bdd21f3cc61d0128b06cdfd9588d6f5" title="Get the HID protocol mode characteristic.">NimBLEHIDDevice::getProtocolMode</a><code>. -</code>NimBLEHIDDevice::bootOutput<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#ad2584be6dfe497dc83686a51ff0194f6" title="Create a keyboard boot output report characteristic.">NimBLEHIDDevice::getBootOutput</a><code>. -</code>NimBLEHIDDevice::pnp<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#ab0495fb5fbee85277a14a0b9476a0239" title="Sets the Plug n Play characteristic value.">NimBLEHIDDevice::setPnp</a><code>. -</code>NimBLEHIDDevice::hidInfo<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#aea007674892608877cdbf9122208ba28" title="Sets the HID Information characteristic value.">NimBLEHIDDevice::setHidInfo</a><code>. -</code>NimBLEHIDDevice::deviceInfo<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#a7d6592bba748b4be7ed1e4fb9275d346" title="Get the manufacturer characteristic.">NimBLEHIDDevice::getDeviceInfoService</a><code>. -</code>NimBLEHIDDevice::hidService<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#a2aea1e924f327152db713834bc2ad5a6" title="Get the HID service.">NimBLEHIDDevice::getHidService</a><code>. -</code>NimBLEHIDDevice::batteryService<code>renamed to</code><a class="el" href="class_nim_b_l_e_h_i_d_device.html#adce27e45dc04de669c512f6550efadc7" title="Get the battery service.">NimBLEHIDDevice::getBatteryService</a>`.</li>
 </ul>
-<h1><a class="anchor" id="fixed-13"></a>
+<h1><a class="anchor" id="fixed-14"></a>
 Fixed</h1>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_device.html#a58742d313c683b98b47396383cb6ddfa" title="Get the transmission power.">NimBLEDevice::getPower</a></code> and <code>NimBLEDevice::getPowerLevel</code> bug worked around for the esp32s3 and esp32c3.</li>
@@ -384,7 +397,7 @@ Changed</h2>
 <li><code><a class="el" href="class_nim_b_l_e_att_value.html" title="A specialized container class to hold BLE attribute values.">NimBLEAttValue</a></code> cleanup and optimization.</li>
 <li>cleaned up code, removed assert/abort calls, replaced with a configurable option to enable debug asserts.</li>
 </ul>
-<h2><a class="anchor" id="added-5"></a>
+<h2><a class="anchor" id="added-6"></a>
 Added</h2>
 <ul>
 <li>(esp32 specific) <code>NimBLEDevice::setPowerLevel</code> and <code>NimBLEDevice::getPowerLevel</code> which take and return the related <code>esp_power_level*</code> types.</li>
@@ -433,20 +446,20 @@ Added</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md143-2024-11-27"></a>
 [1.4.3] 2024-11-27</h1>
-<h2><a class="anchor" id="fixed-14"></a>
+<h2><a class="anchor" id="fixed-15"></a>
 Fixed</h2>
 <ul>
 <li>BT5 examples for non-esp devices.</li>
 <li>Build errors when configured as a non-connecting device</li>
 </ul>
-<h2><a class="anchor" id="added-6"></a>
+<h2><a class="anchor" id="added-7"></a>
 Added</h2>
 <ul>
 <li>Coded PHY support for nRF52833 and nRF52820</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md142-2024-06-17"></a>
 [1.4.2] 2024-06-17</h1>
-<h2><a class="anchor" id="fixed-15"></a>
+<h2><a class="anchor" id="fixed-16"></a>
 Fixed</h2>
 <ul>
 <li><code>CONFIG_BT_NIMBLE_NVS_PERSIST</code> value not being used to enable/disable persistance.</li>
@@ -460,7 +473,7 @@ Fixed</h2>
 <li>Espressif log tag renamed from "TAG" to "LOG_TAG" to avoid conflict with Arduino core definition.</li>
 <li>Removed broken links in docs</li>
 </ul>
-<h2><a class="anchor" id="added-7"></a>
+<h2><a class="anchor" id="added-8"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a></code> new method: <code>getAdvFlags</code>, to read the flags advertised.</li>
@@ -487,7 +500,7 @@ Changed</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md141---2022-10-23"></a>
 [1.4.1] - 2022-10-23</h1>
-<h2><a class="anchor" id="fixed-16"></a>
+<h2><a class="anchor" id="fixed-17"></a>
 Fixed</h2>
 <ul>
 <li>Compile warning removed for esp32c3</li>
@@ -499,7 +512,7 @@ Changed</h2>
 <ul>
 <li>Revert previous change that forced writing with response when subscribing in favor of allowing the application to decide.</li>
 </ul>
-<h2><a class="anchor" id="added-8"></a>
+<h2><a class="anchor" id="added-9"></a>
 Added</h2>
 <ul>
 <li>Added NimBLEHIDDevice::batteryLevel.</li>
@@ -509,7 +522,7 @@ Added</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md140---2022-07-10"></a>
 [1.4.0] - 2022-07-10</h1>
-<h2><a class="anchor" id="fixed-17"></a>
+<h2><a class="anchor" id="fixed-18"></a>
 Fixed</h2>
 <ul>
 <li>Fixed missing data from long notification values.</li>
@@ -524,7 +537,7 @@ Changed</h2>
 <li>Config option CONFIG_NIMBLE_CPP_ENABLE_ADVERTISMENT_TYPE_TEXT renamed to CONFIG_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT</li>
 <li>Config option CONFIG_BT_NIMBLE_TASK_STACK_SIZE renamed to CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE</li>
 </ul>
-<h2><a class="anchor" id="added-9"></a>
+<h2><a class="anchor" id="added-10"></a>
 Added</h2>
 <ul>
 <li>Preliminary support for non-esp devices, NRF51 and NRF52 devices supported with <a href="https://github.com/h2zero/n-able-Arduino">n-able arduino core</a></li>
@@ -534,7 +547,7 @@ Added</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md138---2022-04-27"></a>
 [1.3.8] - 2022-04-27</h1>
-<h2><a class="anchor" id="fixed-18"></a>
+<h2><a class="anchor" id="fixed-19"></a>
 Fixed</h2>
 <ul>
 <li>Fix compile error with ESP32S3.</li>
@@ -549,7 +562,7 @@ Changed</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md137---2022-02-15"></a>
 [1.3.7] - 2022-02-15</h1>
-<h2><a class="anchor" id="fixed-19"></a>
+<h2><a class="anchor" id="fixed-20"></a>
 Fixed</h2>
 <ul>
 <li>Crash when retrieving an attribute that does not exist on the peer.</li>
@@ -563,7 +576,7 @@ Changed</h2>
 <ul>
 <li>When retrieving attributes from a server fails with a 128bit UUID containing the ble base UUID another attempt will be made with the 16bit version of the UUID.</li>
 </ul>
-<h2><a class="anchor" id="fixed-20"></a>
+<h2><a class="anchor" id="fixed-21"></a>
 Fixed</h2>
 <ul>
 <li>Memory leak when services are changed on server devices.</li>
@@ -573,19 +586,19 @@ Fixed</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md135---2022-01-14"></a>
 [1.3.5] - 2022-01-14</h1>
-<h2><a class="anchor" id="added-10"></a>
+<h2><a class="anchor" id="added-11"></a>
 Added</h2>
 <ul>
 <li>CONFIG_NIMBLE_CPP_DEBUG_LEVEL macro in <a class="el" href="nimconfig_8h_source.html">nimconfig.h</a> to allow setting the log level separately from the Arduino core log level.</li>
 </ul>
-<h2><a class="anchor" id="fixed-21"></a>
+<h2><a class="anchor" id="fixed-22"></a>
 Fixed</h2>
 <ul>
 <li>Memory leak when initializing/deinitializing the BLE stack caused by new FreeRTOS timers be created on each initialization.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md134---2022-01-09"></a>
 [1.3.4] - 2022-01-09</h1>
-<h2><a class="anchor" id="fixed-22"></a>
+<h2><a class="anchor" id="fixed-23"></a>
 Fixed</h2>
 <ul>
 <li>Workaround for latest Arduino-esp32 core that causes tasks not to block when required, which caused functions to return prematurely resulting in exceptions/crashing.</li>
@@ -593,33 +606,33 @@ Fixed</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md133---2021-11-24"></a>
 [1.3.3] - 2021-11-24</h1>
-<h2><a class="anchor" id="fixed-23"></a>
+<h2><a class="anchor" id="fixed-24"></a>
 Fixed</h2>
 <ul>
 <li>Workaround added for FreeRTOS bug that affected timers, causing scan and advertising timer expirations to not correctly trigger callbacks.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md132---2021-11-20"></a>
 [1.3.2] - 2021-11-20</h1>
-<h2><a class="anchor" id="fixed-24"></a>
+<h2><a class="anchor" id="fixed-25"></a>
 Fixed</h2>
 <ul>
 <li>Added missing macros for scan filter.</li>
 </ul>
-<h2><a class="anchor" id="added-11"></a>
+<h2><a class="anchor" id="added-12"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_client.html#aeb0593ebffa7e8833e5854480e41cce5" title="Get the last error code reported by the NimBLE host.">NimBLEClient::getLastError</a></code> : Gets the error code of the last function call that produces a return code from the stack.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md131---2021-08-04"></a>
 [1.3.1] - 2021-08-04</h1>
-<h2><a class="anchor" id="fixed-25"></a>
+<h2><a class="anchor" id="fixed-26"></a>
 Fixed</h2>
 <ul>
 <li>Corrected a compiler/linker error when an application or a library uses bluetooth classic due to the redefinition of <code>btInUse</code>.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md130---2021-08-02"></a>
 [1.3.0] - 2021-08-02</h1>
-<h2><a class="anchor" id="added-12"></a>
+<h2><a class="anchor" id="added-13"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_characteristic.html#a2c0ed8932ee257a8632e3d72e353489b" title="Remove a descriptor from the characteristic.">NimBLECharacteristic::removeDescriptor</a></code>: Dynamically remove a descriptor from a characteristic. Takes effect after all connections are closed and sends a service changed indication.</li>
@@ -653,7 +666,7 @@ Changed</h2>
 <li>Excess logging and some asserts removed.</li>
 <li>Use ESP_LOGx macros to enable using local log level filtering.</li>
 </ul>
-<h2><a class="anchor" id="fixed-26"></a>
+<h2><a class="anchor" id="fixed-27"></a>
 Fixed</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a024951384bb777d7ee71bfd1d5eff185" title="Callback function called when a client changes subscription status.">NimBLECharacteristicCallbacks::onSubscribe</a></code> Is now called after the connection is added to the vector.</li>
@@ -667,7 +680,7 @@ Fixed</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md120---2021-02-08"></a>
 [1.2.0] - 2021-02-08</h1>
-<h2><a class="anchor" id="added-13"></a>
+<h2><a class="anchor" id="added-14"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_characteristic.html#a283bd1661b5865dd247b1b59bcbf46d6" title="Return the BLE Descriptor for the given handle.">NimBLECharacteristic::getDescriptorByHandle</a></code>: Return the BLE Descriptor for the given handle.</li>
@@ -716,14 +729,14 @@ Changed</h2>
 <li><code><a class="el" href="class_nim_b_l_e_scan.html" title="Perform and manage BLE scans.">NimBLEScan</a></code> Now uses the controller duplicate filter.</li>
 <li><code><a class="el" href="class_nim_b_l_e_advertised_device.html" title="A representation of a BLE advertised device found by a scan.">NimBLEAdvertisedDevice</a></code> Has been refactored to store the complete advertisement payload and no longer parses the data from each advertisement. Instead the data will be parsed on-demand when the user application asks for specific data.</li>
 </ul>
-<h2><a class="anchor" id="fixed-27"></a>
+<h2><a class="anchor" id="fixed-28"></a>
 Fixed</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_h_i_d_device.html" title="A model of a BLE Human Interface Device.">NimBLEHIDDevice</a></code> Characteristics now use encryption, this resolves an issue with communicating with devices requiring encryption for HID devices.</li>
 </ul>
 <h1><a class="anchor" id="autotoc_md110---2021-01-20"></a>
 [1.1.0] - 2021-01-20</h1>
-<h2><a class="anchor" id="added-14"></a>
+<h2><a class="anchor" id="added-15"></a>
 Added</h2>
 <ul>
 <li><code><a class="el" href="class_nim_b_l_e_device.html#a31acb43c150014f06bad74b57c2335ff" title="Sets the address type to use.">NimBLEDevice::setOwnAddrType</a></code> added to enable the use of random and random-resolvable addresses, by asukiaaa</li>
@@ -746,7 +759,7 @@ Changed</h2>
 <li>Advertising tx power level is now sent in the advertisement packet instead of scan response.</li>
 <li><code><a class="el" href="class_nim_b_l_e_scan.html" title="Perform and manage BLE scans.">NimBLEScan</a></code> When the scan ends the scan stopped flag is now set before calling the scan complete callback (if used) this allows the starting of a new scan from the callback function.</li>
 </ul>
-<h2><a class="anchor" id="fixed-28"></a>
+<h2><a class="anchor" id="fixed-29"></a>
 Fixed</h2>
 <ul>
 <li>Sometimes <code><a class="el" href="class_nim_b_l_e_client.html#a2b49bc73802bf716cf3df3b5a93f0543" title="Connect to an advertising device.">NimBLEClient::connect</a></code> would hang on the task block if no event arrived to unblock. A time limit has been added to timeout appropriately.</li>
@@ -773,7 +786,7 @@ Changed</h2>
 </ul>
 <h1><a class="anchor" id="autotoc_md101---2020-09-02"></a>
 [1.0.1] - 2020-09-02</h1>
-<h2><a class="anchor" id="added-15"></a>
+<h2><a class="anchor" id="added-16"></a>
 Added</h2>
 <ul>
 <li>Empty <code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a></code> constructor: <code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress()</a></code> produces an address of 00:00:00:00:00:00 type 0.</li>
@@ -784,7 +797,7 @@ Changed</h2>
 <ul>
 <li>notify_callback typedef is now defined as std::function to enable the use of std::bind to call a class member function.</li>
 </ul>
-<h2><a class="anchor" id="fixed-29"></a>
+<h2><a class="anchor" id="fixed-30"></a>
 Fixed</h2>
 <ul>
 <li>Fix advertising start delay when first called.</li>
