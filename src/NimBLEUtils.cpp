@@ -16,7 +16,7 @@
  */
 
 #include "NimBLEUtils.h"
-#if CONFIG_BT_ENABLED
+#if CONFIG_BT_NIMBLE_ENABLED
 
 # include "NimBLEAddress.h"
 # include "NimBLELog.h"
@@ -35,13 +35,41 @@
 # include <stdlib.h>
 # include <climits>
 
-# if defined INC_FREERTOS_H
-#  ifndef CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
-#   define CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT 31
+# ifndef MYNEWT_VAL_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT
+#  ifdef CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT
+#   define MYNEWT_VAL_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT
+#  else
+#   define MYNEWT_VAL_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT (0)
 #  endif
-constexpr uint32_t TASK_BLOCK_BIT = (1 << CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT);
 # endif
 
+# ifndef MYNEWT_VAL_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT
+#  ifdef CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT
+#   define MYNEWT_VAL_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT
+#  else
+#   define MYNEWT_VAL_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT (0)
+#  endif
+# endif
+
+# ifndef MYNEWT_VAL_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT
+#  ifdef CONFIG_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT
+#   define MYNEWT_VAL_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT CONFIG_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT
+#  else
+#   define MYNEWT_VAL_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT (0)
+#  endif
+# endif
+
+# if defined INC_FREERTOS_H
+#  ifndef MYNEWT_VAL_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
+#   ifndef CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
+#    define MYNEWT_VAL_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT 31
+#   else
+#    define MYNEWT_VAL_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
+#   endif
+#  endif
+# endif
+
+constexpr uint32_t TASK_BLOCK_BIT = (1 << MYNEWT_VAL(NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT));
 static const char* LOG_TAG = "NimBLEUtils";
 
 /**
@@ -54,11 +82,11 @@ NimBLETaskData::NimBLETaskData(void* pInstance, int flags, void* buf)
     : m_pInstance{pInstance},
       m_flags{flags},
       m_pBuf{buf}
-# if defined INC_FREERTOS_H
+#if defined INC_FREERTOS_H
       ,
       m_pHandle{xTaskGetCurrentTaskHandle()} {
 }
-# else
+#else
 {
     ble_npl_sem* sem = new ble_npl_sem;
     if (ble_npl_sem_init(sem, 0) != BLE_NPL_OK) {
@@ -69,18 +97,18 @@ NimBLETaskData::NimBLETaskData(void* pInstance, int flags, void* buf)
         m_pHandle = sem;
     }
 }
-# endif
+#endif
 
 /**
  * @brief Destructor.
  */
 NimBLETaskData::~NimBLETaskData() {
-# if !defined INC_FREERTOS_H
+#if !defined INC_FREERTOS_H
     if (m_pHandle != nullptr) {
         ble_npl_sem_deinit(static_cast<ble_npl_sem*>(m_pHandle));
         delete static_cast<ble_npl_sem*>(m_pHandle);
     }
-# endif
+#endif
 }
 
 /**
@@ -97,7 +125,7 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
         ble_npl_time_ms_to_ticks(timeout, &ticks);
     }
 
-# if defined INC_FREERTOS_H
+#if defined INC_FREERTOS_H
     uint32_t notificationValue;
     xTaskNotifyWait(0, TASK_BLOCK_BIT, &notificationValue, 0);
     if (notificationValue & TASK_BLOCK_BIT) {
@@ -106,9 +134,9 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
 
     return xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
 
-# else
+#else
     return ble_npl_sem_pend(static_cast<ble_npl_sem*>(taskData.m_pHandle), ticks) == BLE_NPL_OK;
-# endif
+#endif
 } // taskWait
 
 /**
@@ -119,11 +147,11 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
 void NimBLEUtils::taskRelease(const NimBLETaskData& taskData, int flags) {
     taskData.m_flags = flags;
     if (taskData.m_pHandle != nullptr) {
-# if defined INC_FREERTOS_H
+#if defined INC_FREERTOS_H
         xTaskNotify(static_cast<TaskHandle_t>(taskData.m_pHandle), TASK_BLOCK_BIT, eSetBits);
-# else
+#else
         ble_npl_sem_release(static_cast<ble_npl_sem*>(taskData.m_pHandle));
-# endif
+#endif
     }
 } // taskRelease
 
@@ -133,7 +161,7 @@ void NimBLEUtils::taskRelease(const NimBLETaskData& taskData, int flags) {
  * @return A string representation of the return code.
  */
 const char* NimBLEUtils::returnCodeToString(int rc) {
-# if defined(CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT)
+#if MYNEWT_VAL(NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT)
     switch (rc) {
         case 0:
             return "SUCCESS";
@@ -416,10 +444,10 @@ const char* NimBLEUtils::returnCodeToString(int rc) {
         default:
             return "Unknown";
     }
-# else  // #if defined(CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT)
+#else  // #if MYNEWT_VAL(NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT)
     (void)rc;
     return "";
-# endif // #if defined(CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT)
+#endif // #if MYNEWT_VAL(NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT)
 }
 
 /**
@@ -428,7 +456,7 @@ const char* NimBLEUtils::returnCodeToString(int rc) {
  * @return A string representation of the advertising flags.
  */
 const char* NimBLEUtils::advTypeToString(uint8_t advType) {
-# if defined(CONFIG_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT)
+#if MYNEWT_VAL(NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT)
     switch (advType) {
         case BLE_HCI_ADV_TYPE_ADV_IND: // 0
             return "Undirected - Connectable / Scannable";
@@ -443,10 +471,10 @@ const char* NimBLEUtils::advTypeToString(uint8_t advType) {
         default:
             return "Unknown flag";
     }
-# else  // #if defined(CONFIG_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT)
+#else  // #if MYNEWT_VAL(NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT)
     (void)advType;
     return "";
-# endif // #if defined(CONFIG_NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT)
+#endif // #if MYNEWT_VAL(NIMBLE_CPP_ENABLE_ADVERTISEMENT_TYPE_TEXT)
 } // adFlagsToString
 
 /**
@@ -455,7 +483,7 @@ const char* NimBLEUtils::advTypeToString(uint8_t advType) {
  * @return A string representation of the event type.
  */
 const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
-# if defined(CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
+#if MYNEWT_VAL(NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
     switch (eventType) {
         case BLE_GAP_EVENT_CONNECT: // 0
             return "BLE_GAP_EVENT_CONNECT ";
@@ -495,7 +523,7 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             return "BLE_GAP_EVENT_PHY_UPDATE_COMPLETE";
         case BLE_GAP_EVENT_EXT_DISC: // 19
             return "BLE_GAP_EVENT_EXT_DISC";
-#  ifdef BLE_GAP_EVENT_PERIODIC_SYNC      // IDF 4.0 does not support these
+# ifdef BLE_GAP_EVENT_PERIODIC_SYNC       // IDF 4.0 does not support these
         case BLE_GAP_EVENT_PERIODIC_SYNC: // 20
             return "BLE_GAP_EVENT_PERIODIC_SYNC";
         case BLE_GAP_EVENT_PERIODIC_REPORT: // 21
@@ -522,23 +550,23 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             return "BLE_GAP_EVENT_AUTHORIZE";
         case BLE_GAP_EVENT_TEST_UPDATE: // 33
             return "BLE_GAP_EVENT_TEST_UPDATE";
-#   ifdef BLE_GAP_EVENT_DATA_LEN_CHG
+#  ifdef BLE_GAP_EVENT_DATA_LEN_CHG
         case BLE_GAP_EVENT_DATA_LEN_CHG: // 34
             return "BLE_GAP_EVENT_DATA_LEN_CHG";
-#   endif
-#   ifdef BLE_GAP_EVENT_LINK_ESTAB
+#  endif
+#  ifdef BLE_GAP_EVENT_LINK_ESTAB
         case BLE_GAP_EVENT_LINK_ESTAB: // 38
             return "BLE_GAP_EVENT_LINK_ESTAB";
-#   endif
 #  endif
+# endif
         default:
             NIMBLE_LOGD(LOG_TAG, "Unknown event type %d 0x%.2x", eventType, eventType);
             return "Unknown event type";
     }
-# else  // #if defined(CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
+#else  // MYNEWT_VAL(NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
     (void)eventType;
     return "";
-# endif // #if defined(CONFIG_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
+#endif // #if  MYNEWT_VAL(NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
 } // gapEventToString
 
 /**
@@ -576,4 +604,4 @@ NimBLEAddress NimBLEUtils::generateAddr(bool nrpa) {
     return NimBLEAddress{addr};
 } // generateAddr
 
-#endif // CONFIG_BT_ENABLED
+#endif // CONFIG_BT_NIMBLE_ENABLED

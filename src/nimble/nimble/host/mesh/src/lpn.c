@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #define MESH_LOG_MODULE BLE_MESH_LOW_POWER_LOG
 
 #if MYNEWT_VAL(BLE_MESH_LOW_POWER)
@@ -745,7 +745,7 @@ static bool sub_update(uint8_t op)
 
 	req.xact = lpn->xact_next++;
 
-	if (bt_mesh_ctl_send(&tx, op, &req, 1 + g * 2, 
+	if (bt_mesh_ctl_send(&tx, op, &req, 1 + g * 2,
 						 &req_sent_cb, NULL) < 0) {
 		group_zero(lpn->pending);
 		return false;

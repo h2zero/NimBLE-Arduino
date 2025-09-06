@@ -14,7 +14,7 @@
 #include "net.h"
 #include "proxy.h"
 #include "adv.h"
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "pb_gatt_srv.h"
 
 #if MYNEWT_VAL(BLE_MESH_PB_GATT)

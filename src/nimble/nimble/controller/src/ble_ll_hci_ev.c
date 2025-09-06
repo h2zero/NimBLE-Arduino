@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "nimble/porting/nimble/include/syscfg/syscfg.h"
+#include "syscfg/syscfg.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
 #include "nimble/nimble/controller/include/controller/ble_ll.h"
