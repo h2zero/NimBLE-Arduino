@@ -240,7 +240,7 @@ jobs:
           - "examples/NimBLE_Client"
           - "examples/NimBLE_Server"
         variant:
-          # - Generic_nRF51822:chip=xxaa
+          - Generic_nRF51822:chip=xxaa
           - Generic_nRF52832
           - Generic_nRF52833
           - Generic_nRF52840
@@ -312,8 +312,8 @@ jobs:
             platform = https://github.com/h2zero/platform-n-able.git
             framework = arduino
 
-            ; [env:generic_nrf51822_xxaa
-            ; board = generic_nrf51822_xxaa
+            [env:generic_nrf51822_xxaa
+            board = generic_nrf51822_xxaa
 
             [env:generic_nrf52832]
             board = generic_nrf52832
