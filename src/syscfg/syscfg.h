@@ -1452,7 +1452,11 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_LL__native
+#ifdef ESP_PLATFORM
 #define MYNEWT_VAL_BLE_TRANSPORT_LL__native (0)
+#else
+#define MYNEWT_VAL_BLE_TRANSPORT_LL__native (1)
+#endif
 #endif
 
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_LL__nrf5340
@@ -1460,7 +1464,11 @@
 #endif
 
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_LL__socket
+#ifdef ESP_PLATFORM
 #define MYNEWT_VAL_BLE_TRANSPORT_LL__socket (1)
+#else
+#define MYNEWT_VAL_BLE_TRANSPORT_LL__socket (0)
+#endif
 #endif
 
 #ifndef MYNEWT_VAL_BLE_TRANSPORT_LL
