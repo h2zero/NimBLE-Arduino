@@ -74,6 +74,10 @@ extern void tm_tick(void);
 
 #include <nimble/nimble/controller/include/controller/ble_ll_pdu.h>
 
+#ifndef min
+#define min(a, b) ((a)<(b)?(a):(b))
+#endif
+
 /*
  * NOTE: This code uses a couple of PPI channels so care should be taken when
  *       using PPI somewhere else.

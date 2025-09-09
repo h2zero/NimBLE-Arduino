@@ -1,0 +1,21 @@
+#ifndef _NRF52833CFG_H
+#define _NRF52833CFG_H
+
+#ifndef NRF52833_XXAA
+# error NRF52833_XXAA not defined
+#else
+
+# ifndef MYNEWT_VAL_MCU_TARGET__nRF52833
+#  define MYNEWT_VAL_MCU_TARGET__nRF52833 (1)
+# endif
+
+# ifndef MYNEWT_VAL_BLE_ATT_PREFERRED_MTU
+#  define MYNEWT_VAL_BLE_ATT_PREFERRED_MTU (256)
+# endif
+
+# ifndef MYNEWT_VAL_NIMBLE_HOST_TASK_STACK_SIZE
+#  define MYNEWT_VAL_NIMBLE_HOST_TASK_STACK_SIZE (2048)
+# endif
+
+#endif // NRF52833_XXAA
+#endif // _NRF52833CFG_H

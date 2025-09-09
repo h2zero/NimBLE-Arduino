@@ -49,6 +49,10 @@
 #error LE Coded PHY cannot be enabled on nRF51
 #endif
 
+#ifndef min
+#define min(a, b) ((a)<(b)?(a):(b))
+#endif
+
 static uint32_t
 ble_phy_mode_pdu_start_off(int phy_mode)
 {

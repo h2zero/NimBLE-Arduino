@@ -1,0 +1,17 @@
+#ifndef _NRF52840CFG_H
+#define _NRF52840CFG_H
+
+#ifndef NRF52840_XXAA
+# error NRF52840_XXAA not defined
+#else
+
+# ifndef MYNEWT_VAL_MCU_TARGET__nRF52840
+#  define MYNEWT_VAL_MCU_TARGET__nRF52840 (1)
+# endif
+
+# ifndef MYNEWT_VAL_NIMBLE_HOST_TASK_STACK_SIZE
+#  define MYNEWT_VAL_NIMBLE_HOST_TASK_STACK_SIZE (2048)
+# endif
+
+#endif // NRF52840_XXAA
+#endif // _NRF52840CFG_H
