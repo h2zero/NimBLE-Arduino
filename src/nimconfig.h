@@ -1,12 +1,6 @@
 #ifndef NIMCONFIG_H
 #define NIMCONFIG_H
 
-#ifdef ESP_PLATFORM
-#include "sdkconfig.h"
-#else
-#include "ext_nimble_config.h"
-#endif
-
 /***********************************************
  *            Arduino User Options             *
  **********************************************/
@@ -24,12 +18,12 @@
  *  Values: 0 = DEBUG, 1 = INFO, 2 = WARNING, 3 = ERROR, 4 = CRITICAL, 5+ = NONE\n
  *  Uses approx. 32kB of flash memory.
  */
- // #define MYNEWT_VAL_BLE_HS_LOG_LVL 5
+// #define MYNEWT_VAL_BLE_HS_LOG_LVL 5
 
 /** @brief Un-comment to change the default GAP appearance */
 // #define  MYNEWT_VAL_BLE_SVC_GAP_APPEARANCE 0x0
 
- /** @brief Un-comment if not using NimBLE Client functions \n
+/** @brief Un-comment if not using NimBLE Client functions \n
  *  Reduces flash size by approx. 7kB.
  */
 // #define MYNEWT_VAL_BLE_ROLE_CENTRAL 0
@@ -108,11 +102,11 @@
  */
 // #define MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_INIT_LENGTH 20
 
- /** @brief Un-comment to set the debug log messages level from the NimBLE CPP Wrapper.\n
+/** @brief Un-comment to set the debug log messages level from the NimBLE CPP Wrapper.\n
  *  Values: 0 = NONE, 1 = ERROR, 2 = WARNING, 3 = INFO, 4+ = DEBUG\n
  *  Uses approx. 32kB of flash memory.
  */
- // #define MYNEWT_VAL_NIMBLE_CPP_LOG_LEVEL 0
+// #define MYNEWT_VAL_NIMBLE_CPP_LOG_LEVEL 0
 
 /** @brief Un-comment to enable the debug asserts in NimBLE CPP wrapper.*/
 // #define MYNEWT_VAL_NIMBLE_CPP_DEBUG_ASSERT_ENABLED 1
@@ -153,53 +147,81 @@
 /* This section should not be altered */
 
 #ifdef ESP_PLATFORM
-#include "sdkconfig.h"
+# include "sdkconfig.h"
 
-#ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE
-#define CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE (0)
-#endif
+# ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE
+#  define CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE (0)
+# endif
 
-#ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DATA
-#define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA (1)
-#endif
+# ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DATA
+#  define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA (1)
+# endif
 
-#ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE
-#define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE (2)
-#endif
+# ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE
+#  define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE (2)
+# endif
 
-#if !defined(CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE) && (defined(CONFIG_IDF_TARGET_ESP32) || \
-defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3))
-#define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE (1)
-#endif
+# if !defined(CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE) && \
+     (defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3))
+#  define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE (1)
+# endif
 
-#if !defined(CONFIG_BT_CONTROLLER_DISABLED)
-#define CONFIG_BT_CONTROLLER_DISABLED (0)
-#endif
+# if !defined(CONFIG_BT_CONTROLLER_DISABLED)
+#  define CONFIG_BT_CONTROLLER_DISABLED (0)
+# endif
 
-#ifndef CONFIG_BT_NIMBLE_USE_ESP_TIMER
-#define CONFIG_BT_NIMBLE_USE_ESP_TIMER (1)
-#endif
+# if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+#  define NIMBLE_CFG_CONTROLLER 0
+# else
+#  define NIMBLE_CFG_CONTROLLER CONFIG_BT_CONTROLLER_ENABLED
+# endif
+
+# ifndef CONFIG_BT_NIMBLE_USE_ESP_TIMER
+#  define CONFIG_BT_NIMBLE_USE_ESP_TIMER (1)
+# endif
+
+#define MYNEWT_VAL_BLE_USE_ESP_TIMER (CONFIG_BT_NIMBLE_USE_ESP_TIMER)
+
+#else // !ESP_PLATFORM
+# if defined(NRF51)
+#  include "syscfg/devcfg/nrf51cfg.h"
+# elif defined(NRF52810_XXAA)
+#  include "syscfg/devcfg/nrf52810cfg.h"
+# elif defined(NRF52832_XXAA) || defined(NRF52832_XXAB)
+#  include "syscfg/devcfg/nrf52832cfg.h"
+# elif defined(NRF52833_XXAA)
+#  include "syscfg/devcfg/nrf52833cfg.h"
+# elif defined(NRF52840_XXAA)
+#  include "syscfg/devcfg/nrf52840cfg.h"
+# else
+#  error No supported mcu config specified
+# endif
+
+# ifdef USE_LFRC
+#  define MYNEWT_VAL_BLE_LL_SCA (500)
+# endif
+
+/* Required definitions for NimBLE */
+# define NIMBLE_CFG_CONTROLLER               (1)
+# define MYNEWT_VAL_BLE_CONTROLLER           (1)
+# define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE (1)
 #endif // ESP_PLATFORM
 
 /* Enables the use of Arduino String class for attribute values */
 #if defined __has_include
-#  if __has_include (<Arduino.h>)
-#    define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE (1)
-#  endif
+# if __has_include(<Arduino.h>)
+#  define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE (1)
+# endif
 #endif
 
+/* Required macros for all supported devices */
+
 #ifndef CONFIG_BT_NIMBLE_ENABLED
-#define CONFIG_BT_NIMBLE_ENABLED (1)
+# define CONFIG_BT_NIMBLE_ENABLED (1)
 #endif
 
 #ifndef CONFIG_BT_CONTROLLER_ENABLED
-#define CONFIG_BT_CONTROLLER_ENABLED (1)
-#endif
-
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
-#define NIMBLE_CFG_CONTROLLER    0
-#else
-#define NIMBLE_CFG_CONTROLLER    CONFIG_BT_CONTROLLER_ENABLED
+# define CONFIG_BT_CONTROLLER_ENABLED (1)
 #endif
 
 #endif // NIMCONFIG_H

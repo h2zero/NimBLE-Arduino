@@ -312,7 +312,7 @@ jobs:
             platform = https://github.com/h2zero/platform-n-able.git
             framework = arduino
 
-            [env:generic_nrf51822_xxaa
+            [env:generic_nrf51822_xxaa]
             board = generic_nrf51822_xxaa
 
             [env:generic_nrf52832]
@@ -357,7 +357,7 @@ jobs:
 
             [env:generic_nrf52840]
             board = generic_nrf52840
-            build_flags = '-DMYNEWT_VAL_BLE_EXT_ADV=1'
+            build_flags = -D MYNEWT_VAL_BLE_EXT_ADV=1
           EOF
           cp ${{ matrix.example }}/* example/src/
           platformio run -d example
