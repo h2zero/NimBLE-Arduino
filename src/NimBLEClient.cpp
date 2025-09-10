@@ -940,6 +940,11 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 pClient = NimBLEDevice::getClientByPeerAddress(event->disconnect.conn.peer_id_addr);
             }
 
+            // try by connection handle
+            if (pClient == nullptr) {
+                pClient = NimBLEDevice::getClientByHandle(event->disconnect.conn.conn_handle);
+            }
+
             if (pClient == nullptr) {
                 NIMBLE_LOGE(LOG_TAG, "Disconnected client not found, conn_handle=%d",
                             event->disconnect.conn.conn_handle);
