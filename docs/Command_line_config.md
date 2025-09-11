@@ -114,7 +114,9 @@ If defined, advertisement types will be printed as text while scanning in debug 
 ## Extended advertising settings (ESP32C3, ESP32S3, ESP32H2 ONLY)
 
 `MYNEWT_VAL_BLE_EXT_ADV`  
-Set to 1 to enable extended advertising features
+Set to 1 to enable extended advertising features.
+For Platformio this may cause a redefinition warning with the latest arduino cores,
+to avoid this `CONFIG_BT_NIMBLE_EXT_ADV` can be used instead.
 
 `MYNEWT_VAL_BLE_MULTI_ADV_INSTANCES`  
 Sets the max number of extended advertising instances  

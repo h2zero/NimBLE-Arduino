@@ -182,6 +182,11 @@
 
 #define MYNEWT_VAL_BLE_USE_ESP_TIMER (CONFIG_BT_NIMBLE_USE_ESP_TIMER)
 
+#ifdef CONFIG_BT_NIMBLE_EXT_ADV // Workaround for PlatformIO build flags causing redefinition warnings
+# undef MYNEWT_VAL_BLE_EXT_ADV
+# define MYNEWT_VAL_BLE_EXT_ADV (CONFIG_BT_NIMBLE_EXT_ADV)
+#endif
+
 #else // !ESP_PLATFORM
 # if defined(NRF51)
 #  include "syscfg/devcfg/nrf51cfg.h"
