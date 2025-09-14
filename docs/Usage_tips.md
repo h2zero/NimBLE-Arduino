@@ -43,6 +43,30 @@ CCCDs values results in those bonds being lost.
 Fix: Increase CONFIG_BT_NIMBLE_MAX_CCCDS. These take approximately 40 bytes in NVS, 2 bytes for the CCCD value and the NVS metadata overhead. The value of
 CONFIG_BT_NIMBLE_MAX_CCCDS should conservatively be no less than (CONFIG_BT_NIMBLE_MAX_BONDS * {maximum number of characteristics that can be subscribed to}).
 
+## Device 'Local Name'
+
+'Local name' refers to how the device is seen and displayed.
+
+A devices 'Local name' can be thought of as coming from two places, the <i>Advertising "Local name"</i> and the <i>the GATT Device Name</i>.
+
+### Advertising "Local name"
+
+Field found in the advertising data payload. Value is set via NimBLEAdvertising::setName().
+
+### GATT Device Name
+
+Characteristic UUID 0x2A00 in the Generic Access service. Set via NimBLEDevice::init() or NimBLEDevice::setDeviceName().
+
+This characteristic is read <b>after</b> connecting to the device.
+
+### Important considerations
+
+* OSes cache the <i>'GATT Device Name'</i>.
+* OSes update the device name based on the <i>'GATT Device Name'</i> after connecting to a device. This means that if you set the <i>Advertising 'Local name'</i> to "ABCD" but the <i>'GATT Device Name'</i> to "12345", the device will be seen as "ABCD" until connecting to the device, at which time the devices name will change to "12345".
+* If no <i>'Advertising "Local name"'</i> is set, OSes, such as iOS, may display the devices name as 'Unnamed' until the device is connected to, at which time the <i>'GATT Device Name'</i> is read and used instead.
+
+It is recommended that both <i>'Advertising "Local name"'</i> <b>and</b> <i>'GATT Device Name'</i> be set appropriately, after considering the above described behavior.
+
 ## There will be bugs - please report them
 
 No code is bug free and unit testing will not find them all on it's own. If you encounter a bug, please report it along with any logs and decoded backtrace if applicable.  
