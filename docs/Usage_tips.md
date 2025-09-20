@@ -32,6 +32,17 @@ or nullptr such as when  calling `NimBLEClient::getService`. The latter being a 
 Most of the functions in this library return something that should be checked before proceeding.  
 <br/>  
 
+## Persisted bonds can be lost due to low MAX_CCCDS
+
+The symptom: CONFIG_BT_NIMBLE_MAX_BONDS is set to N, but a smaller number of bonds is preserved, perhaps even a single bond. The limitation of persisted bonds can be observed via NimBLEDevice::getNumBonds(). The number may not reach CONFIG_BT_NIMBLE_MAX_BONDS.
+
+Cause: For each bond, NimBLE persists each of the CCCD (client characteristic configuration descriptor) values that have been subscribed
+to by the client. If CONFIG_BT_NIMBLE_MAX_CCCDS is too low, the older CCCD values are overwritten by the newer ones. The loss of the older
+CCCDs values results in those bonds being lost.
+
+Fix: Increase CONFIG_BT_NIMBLE_MAX_CCCDS. These take approximately 40 bytes in NVS, 2 bytes for the CCCD value and the NVS metadata overhead. The value of
+CONFIG_BT_NIMBLE_MAX_CCCDS should conservatively be no less than (CONFIG_BT_NIMBLE_MAX_BONDS * {maximum number of characteristics that can be subscribed to}).
+
 ## There will be bugs - please report them
 
 No code is bug free and unit testing will not find them all on it's own. If you encounter a bug, please report it along with any logs and decoded backtrace if applicable.  
