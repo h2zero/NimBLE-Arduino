@@ -72,6 +72,7 @@ class NimBLEServer {
     NimBLEService*        getServiceByUUID(const char* uuid, uint16_t instanceId = 0) const;
     NimBLEService*        getServiceByUUID(const NimBLEUUID& uuid, uint16_t instanceId = 0) const;
     NimBLEService*        getServiceByHandle(uint16_t handle) const;
+    NimBLECharacteristic* getCharacteristicByHandle(uint16_t handle) const;
     void                  removeService(NimBLEService* service, bool deleteSvc = false);
     void                  addService(NimBLEService* service);
     uint16_t              getPeerMTU(uint16_t connHandle) const;
@@ -118,6 +119,10 @@ class NimBLEServer {
 
     NimBLEServer();
     ~NimBLEServer();
+    static int handleGapEvent(struct ble_gap_event* event, void* arg);
+    static int handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
+    void       serviceChanged();
+    void       resetGATT();
 
     bool m_gattsStarted : 1;
     bool m_svcChanged : 1;
@@ -125,19 +130,13 @@ class NimBLEServer {
 # if !MYNEWT_VAL(BLE_EXT_ADV)
     bool m_advertiseOnDisconnect : 1;
 # endif
-    NimBLEServerCallbacks*                                 m_pServerCallbacks;
-    std::vector<NimBLEService*>                            m_svcVec;
+    NimBLEServerCallbacks*                                m_pServerCallbacks;
+    std::vector<NimBLEService*>                           m_svcVec;
     std::array<uint16_t, MYNEWT_VAL(BLE_MAX_CONNECTIONS)> m_connectedPeers;
 
 # if MYNEWT_VAL(BLE_ROLE_CENTRAL)
     NimBLEClient* m_pClient{nullptr};
 # endif
-
-    static int handleGapEvent(struct ble_gap_event* event, void* arg);
-    static int handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
-    void       serviceChanged();
-    void       resetGATT();
-
 }; // NimBLEServer
 
 /**
