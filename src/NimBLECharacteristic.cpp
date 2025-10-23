@@ -26,6 +26,7 @@
 # endif
 
 # include "NimBLE2904.h"
+# include "NimBLE2905.h"
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
 
@@ -86,7 +87,10 @@ NimBLEDescriptor* NimBLECharacteristic::createDescriptor(const NimBLEUUID& uuid,
     if (uuid == NimBLEUUID(static_cast<uint16_t>(0x2904))) {
         NIMBLE_LOGW(LOG_TAG, "0x2904 descriptor should be created with create2904()");
         pDescriptor = create2904();
-    } else {
+    } else if (uuid == NimBLEUUID(static_cast<uint16_t>(0x2905))) {
+        NIMBLE_LOGW(LOG_TAG, "0x2905 descriptor should be created with create2905()");
+        pDescriptor = create2905();
+    } else{
         pDescriptor = new NimBLEDescriptor(uuid, properties, maxLen, this);
     }
 
@@ -103,6 +107,16 @@ NimBLE2904* NimBLECharacteristic::create2904() {
     addDescriptor(pDescriptor);
     return pDescriptor;
 } // create2904
+
+/**
+ * @brief Create a Characteristic Aggregate Format Descriptor for this characteristic.
+ * @return A pointer to a NimBLE2905 descriptor.
+ */
+NimBLE2905* NimBLECharacteristic::create2905() {
+    NimBLE2905* pDescriptor = new NimBLE2905(this);
+    addDescriptor(pDescriptor);
+    return pDescriptor;
+} // create2905
 
 /**
  * @brief Add a descriptor to the characteristic.

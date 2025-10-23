@@ -2740,7 +2740,7 @@ ble_gatts_find_chr(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
 
 int
 ble_gatts_find_dsc(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
-                   const ble_uuid_t *dsc_uuid, uint16_t *out_handle)
+                   const ble_uuid_t *dsc_uuid, const void* dsc_arg, uint16_t *out_handle)
 {
     struct ble_gatts_svc_entry *svc_entry;
     struct ble_att_svr_entry *att_chr;
@@ -2772,7 +2772,10 @@ ble_gatts_find_dsc(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
             return BLE_HS_ENOENT;
         }
 
-        if (ble_uuid_cmp(cur->ha_uuid, dsc_uuid) == 0) {
+        if (ble_uuid_cmp(cur->ha_uuid, dsc_uuid) == 0 && (
+           dsc_arg == NULL || // Skip descriptor pointer comparison if none is provided
+            (cur->ha_cb_arg != NULL && ((struct ble_gatt_dsc_def*)cur->ha_cb_arg)->arg /* it is actually NimBLEDescriptor* */  == dsc_arg)))
+        {
             if (out_handle != NULL) {
                 *out_handle = cur->ha_handle_id;
                 return 0;
