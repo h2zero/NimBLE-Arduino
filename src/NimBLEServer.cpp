@@ -143,10 +143,25 @@ NimBLEService* NimBLEServer::getServiceByHandle(uint16_t handle) const {
     return nullptr;
 }
 
+/**
+ * @brief Get a BLE Characteristic by its handle
+ * @param handle The handle of the characteristic.
+ * @return A pointer to the characteristic object or nullptr if not found.
+ */
+NimBLECharacteristic* NimBLEServer::getCharacteristicByHandle(uint16_t handle) const {
+    for (const auto& svc : m_svcVec) {
+        NimBLECharacteristic* pChr = svc->getCharacteristicByHandle(handle);
+        if (pChr != nullptr) {
+            return pChr;
+        }
+    }
+    return nullptr;
+} // getCharacteristicByHandle
+
 # if MYNEWT_VAL(BLE_EXT_ADV)
 /**
  * @brief Retrieve the advertising object that can be used to advertise the existence of the server.
- * @return A pinter to an advertising object.
+ * @return A pointer to an advertising object.
  */
 NimBLEExtAdvertising* NimBLEServer::getAdvertising() const {
     return NimBLEDevice::getAdvertising();
@@ -305,7 +320,7 @@ NimBLEConnInfo NimBLEServer::getPeerInfo(uint8_t index) const {
     for (const auto& peer : m_connectedPeers) {
         if (peer != BLE_HS_CONN_HANDLE_NONE) {
             if (count == index) {
-                return getPeerInfoByHandle(m_connectedPeers[count]);
+                return getPeerInfoByHandle(peer);
             }
             count++;
         }
@@ -360,9 +375,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
             }
 
             if (rc != 0) {
-                NIMBLE_LOGE(LOG_TAG, "Connection failed rc = %d %s",
-                            rc,
-                            NimBLEUtils::returnCodeToString(rc));
+                NIMBLE_LOGE(LOG_TAG, "Connection failed rc = %d %s", rc, NimBLEUtils::returnCodeToString(rc));
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
                 NimBLEDevice::startAdvertising();
 # endif
@@ -429,33 +442,21 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
         } // BLE_GAP_EVENT_DISCONNECT
 
         case BLE_GAP_EVENT_SUBSCRIBE: {
-            NIMBLE_LOGI(LOG_TAG,
-                        "subscribe event; attr_handle=%d, subscribed: %s",
-                        event->subscribe.attr_handle,
-                        ((event->subscribe.cur_notify || event->subscribe.cur_indicate) ? "true" : "false"));
-
-            for (const auto& svc : pServer->m_svcVec) {
-                for (const auto& chr : svc->m_vChars) {
-                    if (chr->getHandle() == event->subscribe.attr_handle) {
-                        rc = ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc);
-                        if (rc != 0) {
-                            break;
-                        }
-
-                        auto chrProps = chr->getProperties();
-                        if (!peerInfo.isEncrypted() &&
-                            (chrProps & BLE_GATT_CHR_F_READ_AUTHEN || chrProps & BLE_GATT_CHR_F_READ_AUTHOR ||
-                             chrProps & BLE_GATT_CHR_F_READ_ENC)) {
-                            NimBLEDevice::startSecurity(event->subscribe.conn_handle);
-                        }
-
-                        chr->m_pCallbacks->onSubscribe(chr,
-                                                       peerInfo,
-                                                       event->subscribe.cur_notify + (event->subscribe.cur_indicate << 1));
-                    }
-                }
+            rc = ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc);
+            if (rc != 0) {
+                break;
             }
 
+            uint8_t subVal = event->subscribe.cur_notify + (event->subscribe.cur_indicate << 1);
+            NIMBLE_LOGI(LOG_TAG, "subscribe event; attr_handle=%d, subscribed: %d", event->subscribe.attr_handle, subVal);
+
+            auto pChar = pServer->getCharacteristicByHandle(event->subscribe.attr_handle);
+            if (!pChar) {
+                NIMBLE_LOGE(LOG_TAG, "subscribe event; attr_handle=%d, not found", event->subscribe.attr_handle);
+                break;
+            }
+
+            pChar->processSubRequest(peerInfo, subVal);
             break;
         } // BLE_GAP_EVENT_SUBSCRIBE
 
@@ -469,18 +470,14 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
         } // BLE_GAP_EVENT_MTU
 
         case BLE_GAP_EVENT_NOTIFY_TX: {
-            NimBLECharacteristic* pChar = nullptr;
-
-            for (const auto& svc : pServer->m_svcVec) {
-                for (auto& chr : svc->m_vChars) {
-                    if (chr->getHandle() == event->notify_tx.attr_handle) {
-                        pChar = chr;
-                    }
-                }
+            rc = ble_gap_conn_find(event->notify_tx.conn_handle, &peerInfo.m_desc);
+            if (rc != 0) {
+                break;
             }
 
+            auto pChar = pServer->getCharacteristicByHandle(event->notify_tx.attr_handle);
             if (pChar == nullptr) {
-                return 0;
+                break;
             }
 
             if (event->notify_tx.indication) {
@@ -551,6 +548,13 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 NimBLEClient::handleGapEvent(event, pServer->m_pClient);
             }
 # endif
+            // update the secured status of the peer in each characteristic's subscribed peers list
+            for (const auto& svc : pServer->m_svcVec) {
+                for (const auto& chr : svc->m_vChars) {
+                    chr->updatePeerStatus(peerInfo);
+                }
+            }
+
             break;
         } // BLE_GAP_EVENT_ENC_CHANGE
 

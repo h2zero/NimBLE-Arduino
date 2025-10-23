@@ -31,6 +31,7 @@ class NimBLE2904;
 
 # include <string>
 # include <vector>
+# include <array>
 
 /**
  * @brief The model of a BLE Characteristic.
@@ -281,9 +282,34 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
                    bool           is_notification = true,
                    uint16_t       connHandle      = BLE_HS_CONN_HANDLE_NONE) const;
 
+    struct SubPeerEntry {
+        enum : uint8_t { AWAITING_SECURE = 1 << 0, SECURE = 1 << 1, SUB_NOTIFY = 1 << 2, SUB_INDICATE = 1 << 3 };
+        void     setConnHandle(uint16_t connHandle) { m_connHandle = connHandle; }
+        uint16_t getConnHandle() const { return m_connHandle; }
+        void setAwaitingSecure(bool awaiting) { awaiting ? m_flags |= AWAITING_SECURE : m_flags &= ~AWAITING_SECURE; }
+        void setSecured(bool secure) { secure ? m_flags |= SECURE : m_flags &= ~SECURE; }
+        void setSubNotify(bool notify) { notify ? m_flags |= SUB_NOTIFY : m_flags &= ~SUB_NOTIFY; }
+        void setSubIndicate(bool indicate) { indicate ? m_flags |= SUB_INDICATE : m_flags &= ~SUB_INDICATE; }
+        bool isSubNotify() const { return m_flags & SUB_NOTIFY; }
+        bool isSubIndicate() const { return m_flags & SUB_INDICATE; }
+        bool isSecured() const { return m_flags & SECURE; }
+        bool isAwaitingSecure() const { return m_flags & AWAITING_SECURE; }
+
+      private:
+        uint16_t m_connHandle{BLE_HS_CONN_HANDLE_NONE};
+        uint8_t  m_flags{0};
+    };
+    __attribute__((packed));
+
+    using SubPeerArray = std::array<SubPeerEntry, MYNEWT_VAL(BLE_MAX_CONNECTIONS)>;
+    SubPeerArray getSubscribers() const { return m_subPeers; }
+    void         processSubRequest(NimBLEConnInfo& connInfo, uint8_t subVal) const;
+    void         updatePeerStatus(const NimBLEConnInfo& peerInfo) const;
+
     NimBLECharacteristicCallbacks* m_pCallbacks{nullptr};
     NimBLEService*                 m_pService{nullptr};
     std::vector<NimBLEDescriptor*> m_vDescriptors{};
+    mutable SubPeerArray           m_subPeers{};
 }; // NimBLECharacteristic
 
 /**
