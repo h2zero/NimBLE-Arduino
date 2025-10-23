@@ -118,6 +118,27 @@ class NimBLEServer {
 
     NimBLEServer();
     ~NimBLEServer();
+    static int handleGapEvent(struct ble_gap_event* event, void* arg);
+    static int handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
+    void       serviceChanged();
+    void       resetGATT();
+
+    using ConnHandleArray = std::array<uint16_t, MYNEWT_VAL(BLE_MAX_CONNECTIONS)>;
+    struct AttSubChar {
+        AttSubChar() = delete;
+        AttSubChar(uint16_t attHandle) : m_attHandle(attHandle) { m_connHandles.fill(BLE_HS_CONN_HANDLE_NONE); }
+        uint16_t        m_attHandle;
+        ConnHandleArray m_connHandles;
+    };
+
+    ConnHandleArray* getSubscribers(uint16_t attHandle) {
+        for (auto& s : m_subChars) {
+            if (s.m_attHandle == attHandle) {
+                return &s.m_connHandles;
+            }
+        }
+        return nullptr;
+    }
 
     bool m_gattsStarted : 1;
     bool m_svcChanged : 1;
@@ -125,19 +146,14 @@ class NimBLEServer {
 # if !MYNEWT_VAL(BLE_EXT_ADV)
     bool m_advertiseOnDisconnect : 1;
 # endif
-    NimBLEServerCallbacks*                                 m_pServerCallbacks;
-    std::vector<NimBLEService*>                            m_svcVec;
-    std::array<uint16_t, MYNEWT_VAL(BLE_MAX_CONNECTIONS)> m_connectedPeers;
+    NimBLEServerCallbacks*      m_pServerCallbacks;
+    std::vector<NimBLEService*> m_svcVec;
+    std::vector<AttSubChar>     m_subChars;
+    ConnHandleArray             m_connectedPeers;
 
 # if MYNEWT_VAL(BLE_ROLE_CENTRAL)
     NimBLEClient* m_pClient{nullptr};
 # endif
-
-    static int handleGapEvent(struct ble_gap_event* event, void* arg);
-    static int handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
-    void       serviceChanged();
-    void       resetGATT();
-
 }; // NimBLEServer
 
 /**

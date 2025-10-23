@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-# include "NimBLECharacteristic.h"
+#include "NimBLECharacteristic.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
-#if defined(CONFIG_NIMBLE_CPP_IDF)
-# if !defined(ESP_IDF_VERSION_MAJOR) || ESP_IDF_VERSION_MAJOR < 5
-#  define ble_gatts_notify_custom ble_gattc_notify_custom
-#  define ble_gatts_indicate_custom ble_gattc_indicate_custom
+# if defined(CONFIG_NIMBLE_CPP_IDF)
+#  if !defined(ESP_IDF_VERSION_MAJOR) || ESP_IDF_VERSION_MAJOR < 5
+#   define ble_gatts_notify_custom   ble_gattc_notify_custom
+#   define ble_gatts_indicate_custom ble_gattc_indicate_custom
+#  endif
 # endif
-#endif
 
 # include "NimBLE2904.h"
 # include "NimBLEDevice.h"
@@ -225,7 +225,8 @@ void NimBLECharacteristic::setService(NimBLEService* pService) {
  * @return True if the indication was sent successfully, false otherwise.
  */
 bool NimBLECharacteristic::indicate(uint16_t connHandle) const {
-    return sendValue(nullptr, 0, false, connHandle);
+    auto value{m_value}; // make a copy to avoid issues if the value is changed while indicating
+    return sendValue(value.data(), value.size(), false, connHandle);
 } // indicate
 
 /**
@@ -247,7 +248,8 @@ bool NimBLECharacteristic::indicate(const uint8_t* value, size_t length, uint16_
  * @return True if the notification was sent successfully, false otherwise.
  */
 bool NimBLECharacteristic::notify(uint16_t connHandle) const {
-    return sendValue(nullptr, 0, true, connHandle);
+    auto value{m_value}; // make a copy to avoid issues if the value is changed while notifying
+    return sendValue(value.data(), value.size(), true, connHandle);
 } // notify
 
 /**
@@ -271,55 +273,36 @@ bool NimBLECharacteristic::notify(const uint8_t* value, size_t length, uint16_t 
  * @return True if the value was sent successfully, false otherwise.
  */
 bool NimBLECharacteristic::sendValue(const uint8_t* value, size_t length, bool isNotification, uint16_t connHandle) const {
-    int rc = 0;
-
-    if (value != nullptr && length > 0) { // custom notification value
-        os_mbuf* om = nullptr;
-
-        if (connHandle != BLE_HS_CONN_HANDLE_NONE) { // only sending to specific peer
-            om = ble_hs_mbuf_from_flat(value, length);
-            if (!om) {
-                rc = BLE_HS_ENOMEM;
-                goto done;
-            }
-
-            // Null buffer will read the value from the characteristic
-            if (isNotification) {
-                rc = ble_gatts_notify_custom(connHandle, m_handle, om);
-            } else {
-                rc = ble_gatts_indicate_custom(connHandle, m_handle, om);
-            }
-
-            goto done;
-        }
-
-        // Notify all connected peers unless a specific handle is provided
-        for (const auto& ch : NimBLEDevice::getServer()->getPeerDevices()) {
-            // Must re-create the data buffer on each iteration because it is freed by the calls bellow.
-            om = ble_hs_mbuf_from_flat(value, length);
-            if (!om) {
-                rc = BLE_HS_ENOMEM;
-                goto done;
-            }
-
-            if (isNotification) {
-                rc = ble_gatts_notify_custom(ch, m_handle, om);
-            } else {
-                rc = ble_gatts_indicate_custom(ch, m_handle, om);
-            }
-        }
-    } else if (connHandle != BLE_HS_CONN_HANDLE_NONE) {
-        // Null buffer will read the value from the characteristic
-        if (isNotification) {
-            rc = ble_gatts_notify_custom(connHandle, m_handle, nullptr);
-        } else {
-            rc = ble_gatts_indicate_custom(connHandle, m_handle, nullptr);
-        }
-    } else { // Notify or indicate to all connected peers the characteristic value
-        ble_gatts_chr_updated(m_handle);
+    const auto subs = NimBLEDevice::getServer()->getSubscribers(m_handle);
+    if (subs == nullptr) {
+        return true;
     }
 
-done:
+    // Notify all connected peers unless a specific handle is provided
+    int rc = 0;
+    for (auto ch : *subs) {
+        if (ch == BLE_HS_CONN_HANDLE_NONE || (connHandle != BLE_HS_CONN_HANDLE_NONE && ch != connHandle)) {
+            continue;
+        }
+
+        // Must re-create the data buffer on each iteration because it is freed by the calls bellow.
+        os_mbuf* om = ble_hs_mbuf_from_flat(value, length);
+        if (!om) {
+            rc = BLE_HS_ENOMEM;
+            break;
+        }
+
+        if (isNotification) {
+            rc = ble_gatts_notify_custom(ch, m_handle, om);
+        } else {
+            rc = ble_gatts_indicate_custom(ch, m_handle, om);
+        }
+
+        if (rc != 0 || connHandle != BLE_HS_CONN_HANDLE_NONE) {
+            break;
+        }
+    }
+
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "failed to send value, rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;

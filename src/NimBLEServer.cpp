@@ -205,6 +205,20 @@ void NimBLEServer::start() {
                             svc->isStarted() ? "missing" : "not started");
                 continue; // Skip this service as it was not started
             }
+
+            for (const auto& chr : svc->m_vChars) {
+                if (chr->getRemoved() != 0) {
+                    continue;
+                }
+
+                if ((chr->getProperties() & BLE_GATT_CHR_F_INDICATE) || (chr->getProperties() & BLE_GATT_CHR_F_NOTIFY)) {
+                    NIMBLE_LOGD(LOG_TAG,
+                                "Adding Notify/Indicate characteristic: %s, handle=%d",
+                                chr->getUUID().toString().c_str(),
+                                chr->getHandle());
+                    m_subChars.emplace_back(chr->getHandle());
+                }
+            }
         }
 
         // Set the descriptor handles now as the stack does not set these when the service is started
@@ -360,9 +374,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
             }
 
             if (rc != 0) {
-                NIMBLE_LOGE(LOG_TAG, "Connection failed rc = %d %s",
-                            rc,
-                            NimBLEUtils::returnCodeToString(rc));
+                NIMBLE_LOGE(LOG_TAG, "Connection failed rc = %d %s", rc, NimBLEUtils::returnCodeToString(rc));
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
                 NimBLEDevice::startAdvertising();
 # endif
@@ -429,33 +441,72 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
         } // BLE_GAP_EVENT_DISCONNECT
 
         case BLE_GAP_EVENT_SUBSCRIBE: {
-            NIMBLE_LOGI(LOG_TAG,
-                        "subscribe event; attr_handle=%d, subscribed: %s",
-                        event->subscribe.attr_handle,
-                        ((event->subscribe.cur_notify || event->subscribe.cur_indicate) ? "true" : "false"));
+            rc = ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc);
+            if (rc != 0) {
+                break;
+            }
 
+            uint8_t subVal = event->subscribe.cur_notify + (event->subscribe.cur_indicate << 1);
+            NIMBLE_LOGI(LOG_TAG, "subscribe event; attr_handle=%d, subscribed: %d", event->subscribe.attr_handle, subVal);
+
+            NimBLECharacteristic* pChar = nullptr;
             for (const auto& svc : pServer->m_svcVec) {
                 for (const auto& chr : svc->m_vChars) {
                     if (chr->getHandle() == event->subscribe.attr_handle) {
-                        rc = ble_gap_conn_find(event->subscribe.conn_handle, &peerInfo.m_desc);
-                        if (rc != 0) {
-                            break;
-                        }
-
-                        auto chrProps = chr->getProperties();
-                        if (!peerInfo.isEncrypted() &&
-                            (chrProps & BLE_GATT_CHR_F_READ_AUTHEN || chrProps & BLE_GATT_CHR_F_READ_AUTHOR ||
-                             chrProps & BLE_GATT_CHR_F_READ_ENC)) {
-                            NimBLEDevice::startSecurity(event->subscribe.conn_handle);
-                        }
-
-                        chr->m_pCallbacks->onSubscribe(chr,
-                                                       peerInfo,
-                                                       event->subscribe.cur_notify + (event->subscribe.cur_indicate << 1));
+                        pChar = chr;
+                        break;
                     }
+                }
+
+                if (pChar) {
+                    break;
                 }
             }
 
+            if (!pChar) {
+                NIMBLE_LOGE(LOG_TAG, "subscribe event; attr_handle=%d, not found", event->subscribe.attr_handle);
+                break;
+            }
+
+            auto subs = pServer->getSubscribers(pChar->getHandle());
+            if (subs == nullptr) {
+                NIMBLE_LOGE(LOG_TAG, "No subscriber list for handle %d", pChar->getHandle());
+                break;
+            }
+
+            bool found     = false;
+            int  firstFree = -1;
+            for (auto i = 0; i < subs->size(); i++) {
+                if ((*subs)[i] == event->subscribe.conn_handle) {
+                    found = true;
+                    if (subVal == 0) { // remove subscriber
+                        (*subs)[i] = BLE_HS_CONN_HANDLE_NONE;
+                        break;
+                    }
+                }
+
+                if (firstFree < 0 && (*subs)[i] == BLE_HS_CONN_HANDLE_NONE) {
+                    firstFree = i;
+                }
+            }
+
+            if (!found) {
+                if (firstFree >= 0) {
+                    (*subs)[firstFree] = event->subscribe.conn_handle;
+                } else {
+                    // This should never happen
+                    NIMBLE_LOGE(LOG_TAG, "Unable to add subscriber for handle %d", pChar->getHandle());
+                    break;
+                }
+            }
+
+            auto chrProps = pChar->getProperties();
+            if (!peerInfo.isEncrypted() && (chrProps & BLE_GATT_CHR_F_READ_AUTHEN ||
+                                            chrProps & BLE_GATT_CHR_F_READ_AUTHOR || chrProps & BLE_GATT_CHR_F_READ_ENC)) {
+                NimBLEDevice::startSecurity(event->subscribe.conn_handle);
+            }
+
+            pChar->m_pCallbacks->onSubscribe(pChar, peerInfo, subVal);
             break;
         } // BLE_GAP_EVENT_SUBSCRIBE
 
