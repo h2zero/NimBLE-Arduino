@@ -63,6 +63,14 @@ template <typename T>
 struct Has_c_str_length<T, decltype(void(std::declval<T&>().c_str())), decltype(void(std::declval<T&>().length()))>
     : std::true_type {};
 
+/* Used to determine if the type passed to a template has a value_type member (std::vector, std::array, std::string, etc.). */
+template <typename T, typename = void>
+struct Has_value_type : std::false_type {};
+
+template <typename T>
+struct Has_value_type<T, decltype(void(sizeof(typename T::value_type)))>
+    : std::true_type {};
+
 /**
  * @brief A specialized container class to hold BLE attribute values.
  * @details This class is designed to be more memory efficient than using\n
@@ -264,13 +272,32 @@ class NimBLEAttValue {
     /**
      * @brief Template to set value to the value of <type\>val.
      * @param [in] v The <type\>value to set.
-     * @details Only used if the <type\> has a `data()` and `size()` method.
+     * @details Only used if the <type\> has a `data()` and `size()` method with `value_type`.
+     * Correctly calculates byte size for containers with multi-byte element types.
      */
     template <typename T>
 #  ifdef _DOXYGEN_
     bool
 #  else
-    typename std::enable_if<Has_data_size<T>::value, bool>::type
+    typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
+#  endif
+    setValue(const T& v) {
+        return setValue(
+            reinterpret_cast<const uint8_t*>(v.data()),
+            v.size() * sizeof(typename T::value_type)
+        );
+    }
+
+    /**
+     * @brief Template to set value to the value of <type\>val.
+     * @param [in] v The <type\>value to set.
+     * @details Only used if the <type\> has a `data()` and `size()` method without `value_type`.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_data_size<T>::value && !Has_value_type<T>::value, bool>::type
 #  endif
     setValue(const T& v) {
         return setValue(reinterpret_cast<const uint8_t*>(v.data()), v.size());
@@ -285,7 +312,11 @@ class NimBLEAttValue {
     template <typename T>
     typename std::enable_if<!std::is_pointer<T>::value, bool>::type setValue(const T& s) {
         if constexpr (Has_data_size<T>::value) {
-            return setValue(reinterpret_cast<const uint8_t*>(s.data()), s.size());
+            if constexpr (Has_value_type<T>::value) {
+                return setValue(reinterpret_cast<const uint8_t*>(s.data()), s.size() * sizeof(typename T::value_type));
+            } else {
+                return setValue(reinterpret_cast<const uint8_t*>(s.data()), s.size());
+            }
         } else if constexpr (Has_c_str_length<T>::value) {
             return setValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length());
         } else {
