@@ -112,7 +112,27 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     }
 
     /**
-     * @brief Template to send a notification with a value from a class that has a data() and size() method.
+         * @brief Template to send a notification with a value from a class that has a data() and size() method with value_type.
+     * @param [in] v The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     * @details Correctly calculates byte size for containers with multi-byte element types.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
+#  endif
+    notify(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        return notify(
+            reinterpret_cast<const uint8_t*>(v.data()),
+            v.size() * sizeof(typename T::value_type),
+            connHandle
+        );
+    }
+
+    /**
+     * @brief Template to send a notification with a value from a class that has a data() and size() method without value_type.
      * @param [in] v The value to send.
      * @param [in] connHandle Optional, a connection handle to send the notification to.
      */
@@ -120,7 +140,7 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 #  ifdef _DOXYGEN_
     bool
 #  else
-    typename std::enable_if<Has_data_size<T>::value, bool>::type
+    typename std::enable_if<Has_data_size<T>::value && !Has_value_type<T>::value, bool>::type
 #  endif
     notify(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
         return notify(reinterpret_cast<const uint8_t*>(v.data()), v.size(), connHandle);
@@ -160,7 +180,27 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     }
 
     /**
-     * @brief Template to send a indication with a value from a class that has a data() and size() method.
+     * @brief Template to send a indication with a value from a class that has a data() and size() method with value_type.
+     * @param [in] v The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     * @details Correctly calculates byte size for containers with multi-byte element types.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
+#  endif
+    indicate(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        return indicate(
+            reinterpret_cast<const uint8_t*>(v.data()),
+            v.size() * sizeof(typename T::value_type),
+            connHandle
+        );
+    }
+
+    /**
+     * @brief Template to send a indication with a value from a class that has a data() and size() method without value_type.
      * @param [in] v The value to send.
      * @param [in] connHandle Optional, a connection handle to send the notification to.
      */
@@ -168,7 +208,7 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 #  ifdef _DOXYGEN_
     bool
 #  else
-    typename std::enable_if<Has_data_size<T>::value, bool>::type
+    typename std::enable_if<Has_data_size<T>::value && !Has_value_type<T>::value, bool>::type
 #  endif
     indicate(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
         return indicate(reinterpret_cast<const uint8_t*>(v.data()), v.size(), connHandle);
@@ -190,7 +230,11 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     typename std::enable_if<!std::is_pointer<T>::value && !std::is_array<T>::value, bool>::type notify(
         const T& value, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
         if constexpr (Has_data_size<T>::value) {
-            return notify(reinterpret_cast<const uint8_t*>(value.data()), value.size(), connHandle);
+            if constexpr (Has_value_type<T>::value) {
+                return notify(reinterpret_cast<const uint8_t*>(value.data()), value.size() * sizeof(typename T::value_type), connHandle);
+            } else {
+                return notify(reinterpret_cast<const uint8_t*>(value.data()), value.size(), connHandle);
+            }
         } else if constexpr (Has_c_str_length<T>::value) {
             return notify(reinterpret_cast<const uint8_t*>(value.c_str()), value.length(), connHandle);
         } else {
@@ -212,7 +256,11 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     typename std::enable_if<!std::is_pointer<T>::value && !std::is_array<T>::value, bool>::type indicate(
         const T& value, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
         if constexpr (Has_data_size<T>::value) {
-            return indicate(reinterpret_cast<const uint8_t*>(value.data()), value.size(), connHandle);
+            if constexpr (Has_value_type<T>::value) {
+                return indicate(reinterpret_cast<const uint8_t*>(value.data()), value.size() * sizeof(typename T::value_type), connHandle);
+            } else {
+                return indicate(reinterpret_cast<const uint8_t*>(value.data()), value.size(), connHandle);
+            }
         } else if constexpr (Has_c_str_length<T>::value) {
             return indicate(reinterpret_cast<const uint8_t*>(value.c_str()), value.length(), connHandle);
         } else {
