@@ -109,13 +109,34 @@ class NimBLERemoteValueAttribute : public NimBLEValueAttribute, public NimBLEAtt
      * @brief Template to set the remote characteristic value to <type\>val.
      * @param [in] v The value to write.
      * @param [in] response True == request write response.
-     * @details Only used if the <type\> has a `data()` and `size()` method.
+     * @details Only used if the <type\> has a `data()` and `size()` method with `value_type`.
+     * Correctly calculates byte size for containers with multi-byte element types.
      */
     template <typename T>
 #  ifdef _DOXYGEN_
     bool
 #  else
-    typename std::enable_if<Has_data_size<T>::value, bool>::type
+    typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
+#  endif
+    writeValue(const T& v, bool response = false) const {
+        return writeValue(
+            reinterpret_cast<const uint8_t*>(v.data()),
+            v.size() * sizeof(typename T::value_type),
+            response
+        );
+    }
+
+    /**
+     * @brief Template to set the remote characteristic value to <type\>val.
+     * @param [in] v The value to write.
+     * @param [in] response True == request write response.
+     * @details Only used if the <type\> has a `data()` and `size()` method without `value_type`.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<Has_data_size<T>::value && !Has_value_type<T>::value, bool>::type
 #  endif
     writeValue(const T& v, bool response = false) const {
         return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size(), response);
@@ -131,7 +152,11 @@ class NimBLERemoteValueAttribute : public NimBLEValueAttribute, public NimBLEAtt
     template <typename T>
     typename std::enable_if<!std::is_pointer<T>::value, bool>::type writeValue(const T& v, bool response = false) const {
         if constexpr (Has_data_size<T>::value) {
-            return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size(), response);
+            if constexpr (Has_value_type<T>::value) {
+                return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size() * sizeof(typename T::value_type), response);
+            } else {
+                return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size(), response);
+            }
         } else if constexpr (Has_c_str_length<T>::value) {
             return writeValue(reinterpret_cast<const uint8_t*>(v.c_str()), v.length(), response);
         } else {
