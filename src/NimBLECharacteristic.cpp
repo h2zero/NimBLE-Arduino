@@ -501,6 +501,18 @@ void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacterist
 } // onStatus
 
 /**
+ * @brief Callback function to support a Notify/Indicate Status report.
+ * @param [in] pCharacteristic The characteristic that is the source of the event.
+ * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
+ * @param [in] code Status return code from the NimBLE stack.
+ * @details The status code for success is 0 for notifications and BLE_HS_EDONE for indications,
+ * any other value is an error.
+ */
+void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code) {
+    NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onStatus: default");
+} // onStatus
+
+/**
  * @brief Callback function called when a client changes subscription status.
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
