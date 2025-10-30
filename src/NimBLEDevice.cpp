@@ -1302,10 +1302,11 @@ bool NimBLEDevice::setDeviceName(const std::string& deviceName) {
 /**
  * @brief Set a custom callback for gap events.
  * @param [in] handler The function to call when gap events occur.
+ * @param [in] arg Argument to pass to the handler.
  * @returns
  */
-bool NimBLEDevice::setCustomGapHandler(gap_event_handler handler) {
-    int rc = ble_gap_event_listener_register(&m_listener, handler, NULL);
+bool NimBLEDevice::setCustomGapHandler(gap_event_handler handler, void* arg) {
+    int rc = ble_gap_event_listener_register(&m_listener, handler, arg);
     if (rc == BLE_HS_EALREADY) {
         NIMBLE_LOGI(LOG_TAG, "Already listening to GAP events.");
         return true;
