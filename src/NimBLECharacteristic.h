@@ -276,7 +276,8 @@ class NimBLECharacteristicCallbacks {
     virtual ~NimBLECharacteristicCallbacks() {}
     virtual void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
     virtual void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
-    virtual void onStatus(NimBLECharacteristic* pCharacteristic, int code);
+    virtual void onStatus(NimBLECharacteristic* pCharacteristic, int code); // deprecated
+    virtual void onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code);
     virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue);
 };
 

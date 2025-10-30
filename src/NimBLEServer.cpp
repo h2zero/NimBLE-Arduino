@@ -487,6 +487,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
             }
 
             pChar->m_pCallbacks->onStatus(pChar, event->notify_tx.status);
+            pChar->m_pCallbacks->onStatus(pChar, peerInfo, event->notify_tx.status);
             break;
         } // BLE_GAP_EVENT_NOTIFY_TX
 
