@@ -1,2 +1,4 @@
 docs/doxydocs
 dist
+.development
+_codeql_detected_source_root

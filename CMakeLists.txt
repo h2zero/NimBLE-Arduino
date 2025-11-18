@@ -66,6 +66,7 @@ idf_component_register(
     "src/NimBLEScan.cpp"
     "src/NimBLEServer.cpp"
     "src/NimBLEService.cpp"
+    "src/NimBLEStream.cpp"
     "src/NimBLEUtils.cpp"
     "src/NimBLEUUID.cpp"
   REQUIRES
