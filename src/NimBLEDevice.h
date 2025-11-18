@@ -315,6 +315,7 @@ class NimBLEDevice {
 
 # if CONFIG_BT_NIMBLE_ROLE_CENTRAL || CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 #  include "NimBLEConnInfo.h"
+#  include "NimBLEStream.h"
 # endif
 
 # include "NimBLEAddress.h"
