@@ -298,8 +298,7 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
       private:
         uint16_t m_connHandle{BLE_HS_CONN_HANDLE_NONE};
         uint8_t  m_flags{0};
-    };
-    __attribute__((packed));
+    } __attribute__((packed));
 
     using SubPeerArray = std::array<SubPeerEntry, MYNEWT_VAL(BLE_MAX_CONNECTIONS)>;
     SubPeerArray getSubscribers() const { return m_subPeers; }
