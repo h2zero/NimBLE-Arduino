@@ -387,7 +387,6 @@ void NimBLECharacteristic::processSubRequest(NimBLEConnInfo& connInfo, uint8_t s
 
 /**
  * @brief Update the security status of a subscribed peer.
- * @param[in] connHandle The connection handle of the peer.
  * @param[in] peerInfo A reference to the connection info of the peer.
  */
 void NimBLECharacteristic::updatePeerStatus(const NimBLEConnInfo& peerInfo) const {
