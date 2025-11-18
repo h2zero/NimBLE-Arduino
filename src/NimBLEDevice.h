@@ -245,7 +245,7 @@ class NimBLEDevice {
 # endif
 
 # ifdef ESP_PLATFORM
-#  if NIMBLE_CPP_SCAN_DUPL_ENABLED 
+#  if NIMBLE_CPP_SCAN_DUPL_ENABLED
     static uint16_t m_scanDuplicateSize;
     static uint8_t  m_scanFilterMode;
     static uint16_t m_scanDuplicateResetTime;
@@ -306,6 +306,7 @@ class NimBLEDevice {
 
 # if MYNEWT_VAL(BLE_ROLE_CENTRAL) || MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 #  include "NimBLEConnInfo.h"
+#  include "NimBLEStream.h"
 # endif
 
 # include "NimBLEAddress.h"
