@@ -1,2 +1,9 @@
 docs/doxydocs
 .development
+
+# Editor/IDE (all directories)
+.idea/
+.vscode/
+
+# PlatformIO build
+.pio/
