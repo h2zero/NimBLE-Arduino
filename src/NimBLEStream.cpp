@@ -472,7 +472,11 @@ int uart_log_printfv(const char* format, va_list arg) {
 
     int wlen = vsnprintf(temp, len + 1, format, arg);
     for (int i = 0; i < wlen; i++) {
+#  if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S3)
         ets_write_char_uart(temp[i]);
+#  else
+        esp_rom_output_to_channels(temp[i]);
+#  endif
     }
 
     if (len >= sizeof(loc_buf)) {
