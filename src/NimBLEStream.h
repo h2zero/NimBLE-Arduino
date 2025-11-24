@@ -187,7 +187,7 @@ class NimBLEStreamClient : public NimBLEStream {
 
 #  endif // CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
 
-// These logging macros exist to provide log output over UART so that it stream classes can
+// These logging macros exist to provide log output over UART so that the stream classes can
 // be used to redirect logs without causing recursion issues.
 static int uart_log_printfv(const char* format, va_list arg);
 static int uart_log_printf(const char* format, ...);
