@@ -26,6 +26,8 @@ static const char* LOG_TAG = "NimBLEStream";
 
 // Stub Print/Stream implementations when Arduino not available
 #  if !NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#   include <cstring>
+
 size_t Print::print(const char* s) {
     if (!s) return 0;
     return write(reinterpret_cast<const uint8_t*>(s), strlen(s));
@@ -245,7 +247,7 @@ size_t NimBLEStream::pushRx(const uint8_t* data, size_t len) {
     m_hasPeek = false;
 
     if (xRingbufferSend(m_rxBuf, data, len, 0) != pdTRUE) {
-        NIMBLE_UART_LOGE(LOG_TAG, "RX buffer full, dropping %u bytes", len);
+        NIMBLE_UART_LOGE(LOG_TAG, "RX buffer full, dropping %zu bytes", len);
         return 0;
     }
     return len;
@@ -481,7 +483,7 @@ int uart_log_printfv(const char* format, va_list arg) {
         free(temp);
     }
 
-    return len;
+    return wlen;
 }
 
 int uart_log_printf(const char* format, ...) {
