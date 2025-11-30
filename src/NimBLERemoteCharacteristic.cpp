@@ -94,8 +94,24 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
 bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFilter) const {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveDescriptors() for characteristic: %s", getUUID().toString().c_str());
 
+    const auto pSvc      = getRemoteService();
+    uint16_t   endHandle = pSvc->getEndHandle();
+
+    // Find the handle of the next characteristic to limit the descriptor search range.
+    const auto& chars = pSvc->getCharacteristics(false);
+    for (auto it = chars.begin(); it != chars.end(); ++it) {
+        if ((*it)->getHandle() == this->getHandle()) {
+            auto next_it = std::next(it);
+            if (next_it != chars.end()) {
+                endHandle = (*next_it)->getHandle() - 1;
+                NIMBLE_LOGD(LOG_TAG, "Search range limited to handle 0x%04X", endHandle);
+            }
+            break;
+        }
+    }
+
     // If this is the last handle then there are no descriptors
-    if (getHandle() == getRemoteService()->getEndHandle()) {
+    if (getHandle() == endHandle) {
         NIMBLE_LOGD(LOG_TAG, "<< retrieveDescriptors(): found 0 descriptors.");
         return true;
     }
@@ -108,7 +124,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFi
 
     int rc = ble_gattc_disc_all_dscs(getClient()->getConnHandle(),
                                      getHandle(),
-                                     getRemoteService()->getEndHandle(),
+                                     endHandle,
                                      NimBLERemoteCharacteristic::descriptorDiscCB,
                                      pFilter);
     if (rc != 0) {
