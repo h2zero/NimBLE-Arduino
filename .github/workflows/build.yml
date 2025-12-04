@@ -313,7 +313,7 @@ jobs:
           mkdir example/src
           cat > example/platformio.ini << EOF
             [env]
-            platform = https://github.com/h2zero/platform-n-able.git#1.1.1
+            platform = https://github.com/h2zero/platform-n-able.git
             framework = arduino
 
             [env:generic_nrf51822_xxaa
@@ -356,7 +356,7 @@ jobs:
           mkdir example/src
           cat > example/platformio.ini << EOF
             [env]
-            platform = https://github.com/h2zero/platform-n-able.git#1.1.1
+            platform = https://github.com/h2zero/platform-n-able.git
             framework = arduino
 
             [env:generic_nrf52840]
