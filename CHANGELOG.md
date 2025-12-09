@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+##  [2.3.7] 2025-12-08
+
+## Fixed
+- Server created client instance will now receive notifications/indications from the peer.
+- Improper HCI delay when ACL buffers are full (esp32)
+- `NimBLEClient` disconnect event not triggered if the peer address doesn't match a connection.
+- Attribute value sizes now correctly calculated for types larger than 8 bits.
+- `NimBLERemoteCharacteristic::retrieveDescriptors` will now use the handle range of the characteristic.
+
+## Added
+- `NimBLECharacteristicCallbacks::onStatus` overload that takes a `NimBLEConnInfo&` parameter to indicate which client the status is for.
+
+## Changed
+- `NimBLEDevice::setCustomGapHandler` added a void pointer parameter to allow passing user data to the custom handler.
+
 ## [2.3.6] 2025-09-05
 
 ## Fixed
