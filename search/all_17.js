@@ -16,6 +16,5 @@ var searchData=
   ['retrieve_20the_20services_20and_20characteristics_20needed_13',['Only retrieve the services and characteristics needed',['../md__usage__tips.html#only-retrieve-the-services-and-characteristics-needed',1,'']]],
   ['return_20values_14',['Check return values',['../md__usage__tips.html#check-return-values',1,'']]],
   ['returncodetostring_15',['returnCodeToString',['../class_nim_b_l_e_utils.html#a9885eda5c51477aefc0ba9e1c96d5a34',1,'NimBLEUtils']]],
-  ['reversebyteorder_16',['reversebyteorder',['../class_nim_b_l_e_address.html#a0f390fb5f422db8ced1938bd40f87c4d',1,'NimBLEAddress::reverseByteOrder()'],['../class_nim_b_l_e_u_u_i_d.html#a9b96d90463f02f6a21afbaebcc242dd9',1,'NimBLEUUID::reverseByteOrder()']]],
-  ['running_20on_20the_20nimble_20stack_20core_17',['Put BLE functions in a task running on the NimBLE stack core',['../md__usage__tips.html#put-ble-functions-in-a-task-running-on-the-nimble-stack-core',1,'']]]
+  ['reversebyteorder_16',['reversebyteorder',['../class_nim_b_l_e_address.html#a0f390fb5f422db8ced1938bd40f87c4d',1,'NimBLEAddress::reverseByteOrder()'],['../class_nim_b_l_e_u_u_i_d.html#a9b96d90463f02f6a21afbaebcc242dd9',1,'NimBLEUUID::reverseByteOrder()']]]
 ];

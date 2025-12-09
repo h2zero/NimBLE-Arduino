@@ -32,6 +32,7 @@ var class_nim_b_l_e_att_value =
     [ "setValue", "class_nim_b_l_e_att_value.html#ac94a41f0c0d42d48b29d5b18d7ad7bd8", null ],
     [ "setValue", "class_nim_b_l_e_att_value.html#a98da1765d9cfd2d93cdac2fb7a108a79", null ],
     [ "setValue", "class_nim_b_l_e_att_value.html#a98da1765d9cfd2d93cdac2fb7a108a79", null ],
+    [ "setValue", "class_nim_b_l_e_att_value.html#a98da1765d9cfd2d93cdac2fb7a108a79", null ],
     [ "setValue", "class_nim_b_l_e_att_value.html#a5c8c5ecfa3864d45ea5b155385e3f9fa", null ],
     [ "size", "class_nim_b_l_e_att_value.html#aa8c75101d9898c3ff4646d84521ed61c", null ]
 ];

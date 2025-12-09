@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.6</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.7</span>
    </div>
   </td>
  </tr>
@@ -153,7 +153,7 @@ BLE Addresses</h1>
 <p>&zwj;Whenever two device addresses are compared, the comparison shall include the device address type (i.e. if the two addresses have different types, they are different even if the two 48-bit addresses are the same). </p>
 </blockquote>
 <p>This means that if in your application you create a <a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a> instance and are comparing a scan result or some other address created by the library and you did not define the address type then the comparison may fail. The default address type is public <code>0</code>, whereas many devices use a random <code>1</code> address type. If you experience this issue please create your address instances with the address type specified, i.e. <code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a> address("11:22:33:44:55:66", TYPE_HERE)</code></p>
-<p><code>NimBLEAddress::getNative</code> has been removed and replaced with <code><a class="el" href="class_nim_b_l_e_address.html#a31b466293f6cb752d5aba6b6ffb95351" title="Get the NimBLE base struct of the address.">NimBLEAddress::getBase</a></code>. This returns a pointer to <code>const ble_addr_t</code> instead of a pointer to the address value that <code>getNative</code> did. The value can be accessed through this struct via <code>ble_addr_t.value</code> and type is in <code>ble_addr_t.type</code>. <br  />
+<p><code>NimBLEAddress::getNative</code> has been removed and replaced with <code><a class="el" href="class_nim_b_l_e_address.html#a31b466293f6cb752d5aba6b6ffb95351" title="Get the NimBLE base struct of the address.">NimBLEAddress::getBase</a></code>. This returns a pointer to <code>const ble_addr_t</code> instead of a pointer to the address value that <code>getNative</code> did. The value can be accessed through this struct via <code>ble_addr_t.val</code> and type is in <code>ble_addr_t.type</code>. <br  />
  <br  />
 </p>
 <h1><a class="anchor" id="ble-uuids"></a>

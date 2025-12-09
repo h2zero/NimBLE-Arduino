@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.6</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.7</span>
    </div>
   </td>
  </tr>
@@ -93,13 +93,9 @@ $(document).ready(function(){initNavTree('md__usage__tips.html',''); initResizab
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="usage-tips"></a> </p>
-<h1><a class="anchor" id="put-ble-functions-in-a-task-running-on-the-nimble-stack-core"></a>
-Put BLE functions in a task running on the NimBLE stack core</h1>
-<p>When commands are sent to the stack from a different core they can experience delays in execution. <br  />
- This library detects this and invokes the esp32 IPC to reroute these commands through the correct core but this also increases overhead. <br  />
- Therefore it is highly recommended to create tasks for BLE to run on the same core, the macro <code>CONFIG_BT_NIMBLE_PINNED_TO_CORE</code> can be used to set the core. <br  />
- <br  />
-</p>
+<h1><a class="anchor" id="threadsafety"></a>
+Threadsafety</h1>
+<p>This library is threadsafe. Attribues can be manipulated freely.</p>
 <h1><a class="anchor" id="do-not-delete-client-instances-unless-necessary-or-unused"></a>
 Do not delete client instances unless necessary or unused</h1>
 <p>When a client instance has been created and has connected to a peer device and it has retrieved service/characteristic information it will store that data for the life of the client instance. <br  />
@@ -128,6 +124,30 @@ Check return values</h1>
  <br  />
  <br  />
 </p>
+<h1><a class="anchor" id="persisted-bonds-can-be-lost-due-to-low-max_cccds"></a>
+Persisted bonds can be lost due to low MAX_CCCDS</h1>
+<p>The symptom: CONFIG_BT_NIMBLE_MAX_BONDS is set to N, but a smaller number of bonds is preserved, perhaps even a single bond. The limitation of persisted bonds can be observed via <a class="el" href="class_nim_b_l_e_device.html#a7fe0f568c17130150660e6307851be48" title="Gets the number of bonded peers stored.">NimBLEDevice::getNumBonds()</a>. The number may not reach CONFIG_BT_NIMBLE_MAX_BONDS.</p>
+<p>Cause: For each bond, NimBLE persists each of the CCCD (client characteristic configuration descriptor) values that have been subscribed to by the client. If CONFIG_BT_NIMBLE_MAX_CCCDS is too low, the older CCCD values are overwritten by the newer ones. The loss of the older CCCDs values results in those bonds being lost.</p>
+<p>Fix: Increase CONFIG_BT_NIMBLE_MAX_CCCDS. These take approximately 40 bytes in NVS, 2 bytes for the CCCD value and the NVS metadata overhead. The value of CONFIG_BT_NIMBLE_MAX_CCCDS should conservatively be no less than (CONFIG_BT_NIMBLE_MAX_BONDS * {maximum number of characteristics that can be subscribed to}).</p>
+<h1><a class="anchor" id="device-local-name"></a>
+Device 'Local Name'</h1>
+<p>'Local name' refers to how the device is seen and displayed.</p>
+<p>A devices 'Local name' can be thought of as coming from two places, the <em>Advertising "Local name"</em> and the <em>the GATT Device Name</em>.</p>
+<h2><a class="anchor" id="advertising-local-name"></a>
+Advertising "Local name"</h2>
+<p>Field found in the advertising data payload. Value is set via <a class="el" href="class_nim_b_l_e_advertising.html#a7fb4b74eb7acb1f46e57ff772baccd88" title="Set the advertised name of the device.">NimBLEAdvertising::setName()</a>.</p>
+<h2><a class="anchor" id="gatt-device-name"></a>
+GATT Device Name</h2>
+<p>Characteristic UUID 0x2A00 in the Generic Access service. Set via <a class="el" href="class_nim_b_l_e_device.html#a2e8bb71daabbffd9eab8787493a45ce7" title="Initialize the BLE environment.">NimBLEDevice::init()</a> or <a class="el" href="class_nim_b_l_e_device.html#aaa64b6baff54c010eb8b4d0ba338cc01" title="Set the BLEDevice name.">NimBLEDevice::setDeviceName()</a>.</p>
+<p>This characteristic is read <b>after</b> connecting to the device.</p>
+<h2><a class="anchor" id="important-considerations"></a>
+Important considerations</h2>
+<ul>
+<li>OSes cache the <em>'GATT Device Name'</em>.</li>
+<li>OSes update the device name based on the <em>'GATT Device Name'</em> after connecting to a device. This means that if you set the <em>Advertising 'Local name'</em> to "ABCD" but the <em>'GATT Device Name'</em> to "12345", the device will be seen as "ABCD" until connecting to the device, at which time the devices name will change to "12345".</li>
+<li>If no <em>'Advertising "Local name"'</em> is set, OSes, such as iOS, may display the devices name as 'Unnamed' until the device is connected to, at which time the <em>'GATT Device Name'</em> is read and used instead.</li>
+</ul>
+<p>It is recommended that both <em>'Advertising "Local name"'</em> <b>and</b> <em>'GATT Device Name'</em> be set appropriately, after considering the above described behavior.</p>
 <h1><a class="anchor" id="there-will-be-bugs---please-report-them"></a>
 There will be bugs - please report them</h1>
 <p>No code is bug free and unit testing will not find them all on it's own. If you encounter a bug, please report it along with any logs and decoded backtrace if applicable. <br  />

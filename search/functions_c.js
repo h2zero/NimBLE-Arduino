@@ -18,7 +18,7 @@ var searchData=
   ['onresult_15',['onResult',['../class_nim_b_l_e_scan_callbacks.html#a962d8b08cf14ac3091e6fd6962d7e283',1,'NimBLEScanCallbacks']]],
   ['onscanend_16',['onScanEnd',['../class_nim_b_l_e_scan_callbacks.html#a61c11db405e87ec847066ca3b6ad8375',1,'NimBLEScanCallbacks']]],
   ['onscanrequest_17',['onScanRequest',['../class_nim_b_l_e_ext_advertising_callbacks.html#aeec59f9c28ef5e257e4e8fd306d92ccd',1,'NimBLEExtAdvertisingCallbacks']]],
-  ['onstatus_18',['onStatus',['../class_nim_b_l_e_characteristic_callbacks.html#a6f9b1f0f15492e3d47662e5e2ff0baee',1,'NimBLECharacteristicCallbacks']]],
+  ['onstatus_18',['onstatus',['../class_nim_b_l_e_characteristic_callbacks.html#a6f9b1f0f15492e3d47662e5e2ff0baee',1,'NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic *pCharacteristic, int code)'],['../class_nim_b_l_e_characteristic_callbacks.html#a0c0d00610b20a17f98f57e9596f24187',1,'NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic *pCharacteristic, NimBLEConnInfo &amp;connInfo, int code)']]],
   ['onstopped_19',['onStopped',['../class_nim_b_l_e_ext_advertising_callbacks.html#add0646acf63c19e96c499b737144d8fe',1,'NimBLEExtAdvertisingCallbacks']]],
   ['onstorestatus_20',['onStoreStatus',['../class_nim_b_l_e_device_callbacks.html#aa0584e7aee6b90e377fc7ef34e89b419',1,'NimBLEDeviceCallbacks']]],
   ['onsubscribe_21',['onSubscribe',['../class_nim_b_l_e_characteristic_callbacks.html#a024951384bb777d7ee71bfd1d5eff185',1,'NimBLECharacteristicCallbacks']]],

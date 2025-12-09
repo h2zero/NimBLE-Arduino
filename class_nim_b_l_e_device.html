@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.6</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.7</span>
    </div>
   </td>
  </tr>
@@ -145,9 +145,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a462f908708d9eff0562447197cee5d16" id="r_a462f908708d9eff0562447197cee5d16"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#a462f908708d9eff0562447197cee5d16">setOwnAddr</a> (const uint8_t *addr)</td></tr>
 <tr class="memdesc:a462f908708d9eff0562447197cee5d16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the device address to use.  <br /></td></tr>
 <tr class="separator:a462f908708d9eff0562447197cee5d16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a179d1199badd67464cab921672a44405" id="r_a179d1199badd67464cab921672a44405"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#a179d1199badd67464cab921672a44405">setCustomGapHandler</a> (gap_event_handler handler)</td></tr>
-<tr class="memdesc:a179d1199badd67464cab921672a44405"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set a custom callback for gap events.  <br /></td></tr>
-<tr class="separator:a179d1199badd67464cab921672a44405"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf9b3f725c8e8dd0c1d1c99f0c8c4a3a" id="r_aaf9b3f725c8e8dd0c1d1c99f0c8c4a3a"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#aaf9b3f725c8e8dd0c1d1c99f0c8c4a3a">setCustomGapHandler</a> (gap_event_handler handler, void *arg=nullptr)</td></tr>
+<tr class="memdesc:aaf9b3f725c8e8dd0c1d1c99f0c8c4a3a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set a custom callback for gap events.  <br /></td></tr>
+<tr class="separator:aaf9b3f725c8e8dd0c1d1c99f0c8c4a3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8e340c02418771ce72dec758d560938" id="r_aa8e340c02418771ce72dec758d560938"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#aa8e340c02418771ce72dec758d560938">setSecurityAuth</a> (bool bonding, bool mitm, bool sc)</td></tr>
 <tr class="memdesc:aa8e340c02418771ce72dec758d560938"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the authorization mode for this device.  <br /></td></tr>
 <tr class="separator:aa8e340c02418771ce72dec758d560938"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1206,8 +1206,8 @@ A pointer to the advertising object. </dd></dl>
 
 </div>
 </div>
-<a id="a179d1199badd67464cab921672a44405" name="a179d1199badd67464cab921672a44405"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a179d1199badd67464cab921672a44405">&#9670;&#160;</a></span>setCustomGapHandler()</h2>
+<a id="aaf9b3f725c8e8dd0c1d1c99f0c8c4a3a" name="aaf9b3f725c8e8dd0c1d1c99f0c8c4a3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf9b3f725c8e8dd0c1d1c99f0c8c4a3a">&#9670;&#160;</a></span>setCustomGapHandler()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1219,8 +1219,18 @@ A pointer to the advertising object. </dd></dl>
           <td class="memname">bool NimBLEDevice::setCustomGapHandler </td>
           <td>(</td>
           <td class="paramtype">gap_event_handler&#160;</td>
-          <td class="paramname"><em>handler</em></td><td>)</td>
+          <td class="paramname"><em>handler</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>arg</em> = <code>nullptr</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -1234,6 +1244,7 @@ A pointer to the advertising object. </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">handler</td><td>The function to call when gap events occur. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Argument to pass to the handler. </td></tr>
   </table>
   </dd>
 </dl>

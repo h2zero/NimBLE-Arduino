@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.6</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.7</span>
    </div>
   </td>
  </tr>
@@ -112,6 +112,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a6f9b1f0f15492e3d47662e5e2ff0baee" id="r_a6f9b1f0f15492e3d47662e5e2ff0baee"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a6f9b1f0f15492e3d47662e5e2ff0baee">onStatus</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, int code)</td></tr>
 <tr class="memdesc:a6f9b1f0f15492e3d47662e5e2ff0baee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a Notify/Indicate Status report.  <br /></td></tr>
 <tr class="separator:a6f9b1f0f15492e3d47662e5e2ff0baee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c0d00610b20a17f98f57e9596f24187" id="r_a0c0d00610b20a17f98f57e9596f24187"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a0c0d00610b20a17f98f57e9596f24187">onStatus</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, <a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo, int code)</td></tr>
+<tr class="memdesc:a0c0d00610b20a17f98f57e9596f24187"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function to support a Notify/Indicate Status report.  <br /></td></tr>
+<tr class="separator:a0c0d00610b20a17f98f57e9596f24187"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a024951384bb777d7ee71bfd1d5eff185" id="r_a024951384bb777d7ee71bfd1d5eff185"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_characteristic_callbacks.html#a024951384bb777d7ee71bfd1d5eff185">onSubscribe</a> (<a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *pCharacteristic, <a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo, uint16_t subValue)</td></tr>
 <tr class="memdesc:a024951384bb777d7ee71bfd1d5eff185"><td class="mdescLeft">&#160;</td><td class="mdescRight">Callback function called when a client changes subscription status.  <br /></td></tr>
 <tr class="separator:a024951384bb777d7ee71bfd1d5eff185"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,7 +169,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="a6f9b1f0f15492e3d47662e5e2ff0baee" name="a6f9b1f0f15492e3d47662e5e2ff0baee"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f9b1f0f15492e3d47662e5e2ff0baee">&#9670;&#160;</a></span>onStatus()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f9b1f0f15492e3d47662e5e2ff0baee">&#9670;&#160;</a></span>onStatus() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -203,6 +206,59 @@ Public Member Functions</h2></td></tr>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">code</td><td>Status return code from the NimBLE stack.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>The status code for success is 0 for notifications and BLE_HS_EDONE for indications, any other value is an error. </p>
+
+</div>
+</div>
+<a id="a0c0d00610b20a17f98f57e9596f24187" name="a0c0d00610b20a17f98f57e9596f24187"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c0d00610b20a17f98f57e9596f24187">&#9670;&#160;</a></span>onStatus() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLECharacteristicCallbacks::onStatus </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td>
+          <td class="paramname"><em>pCharacteristic</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;&#160;</td>
+          <td class="paramname"><em>connInfo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>code</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Callback function to support a Notify/Indicate Status report. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pCharacteristic</td><td>The characteristic that is the source of the event. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">connInfo</td><td>A reference to a <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a> instance containing the peer info. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">code</td><td>Status return code from the NimBLE stack.</td></tr>
   </table>
   </dd>
