@@ -1360,7 +1360,10 @@ int ble_gatts_find_chr(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
  *
  * @param svc_uuid              The UUID of the grandparent service.
  * @param chr_uuid              The UUID of the parent characteristic.
- * @param dsc_uuid              The UUID of the descriptor ro look up.
+ * @param dsc_uuid              The UUID of the descriptor to look up.
+ * @param dsc_arg               Pointer to a NimBLEDescriptor instance.
+ *                              Used to identify a specific descriptor when
+ *                              multiple descriptors share the same UUID.
  * @param out_dsc_handle        On success, populated with the handle
  *                                  of the descriptor attribute.  Pass null if
  *                                  you don't need this value.
@@ -1371,7 +1374,7 @@ int ble_gatts_find_chr(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
  *                                  found.
  */
 int ble_gatts_find_dsc(const ble_uuid_t *svc_uuid, const ble_uuid_t *chr_uuid,
-                       const ble_uuid_t *dsc_uuid, uint16_t *out_dsc_handle);
+                       const ble_uuid_t *dsc_uuid, const void* dsc_arg, uint16_t *out_dsc_handle);
 
 /** Type definition for GATT service iteration callback function. */
 typedef void (*ble_gatt_svc_foreach_fn)(const struct ble_gatt_svc_def *svc,
