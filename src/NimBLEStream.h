@@ -86,6 +86,9 @@ class NimBLEStream : public Stream {
     virtual int read() override;
     virtual int peek() override;
 
+    // Read up to len bytes into buffer (non-blocking)
+    size_t read(uint8_t* buffer, size_t len);
+
     // Serial-like helpers
     bool ready() const { return isReady(); }
          operator bool() const { return ready(); }
@@ -225,4 +228,4 @@ static int uart_log_printf(const char* format, ...);
 #  endif
 
 # endif // NIMBLE_CPP_STREAM_H
-#endif // ESP_PLATFORM
+#endif  // ESP_PLATFORM

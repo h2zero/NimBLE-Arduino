@@ -235,6 +235,42 @@ int NimBLEStream::peek() {
     return static_cast<int>(m_peekByte);
 }
 
+size_t NimBLEStream::read(uint8_t* buffer, size_t len) {
+    if (!m_rxBuf || !buffer || len == 0) {
+        return 0;
+    }
+
+    size_t total = 0;
+
+    // Consume peeked byte first if present
+    if (m_hasPeek && total < len) {
+        buffer[total++] = m_peekByte;
+        m_hasPeek       = false;
+    }
+
+    // Drain RX ringbuffer items up to requested length (non-blocking)
+    while (total < len) {
+        size_t   itemSize = 0;
+        uint8_t* item     = static_cast<uint8_t*>(xRingbufferReceive(m_rxBuf, &itemSize, 0));
+        if (!item || itemSize == 0) {
+            break;
+        }
+
+        size_t copyLen = std::min(len - total, itemSize);
+        memcpy(buffer + total, item, copyLen);
+        total += copyLen;
+
+        // If there are leftover bytes from this item, push them back to RX
+        if (itemSize > copyLen) {
+            xRingbufferSend(m_rxBuf, item + copyLen, itemSize - copyLen, 0);
+        }
+
+        vRingbufferReturnItem(m_rxBuf, item);
+    }
+
+    return total;
+}
+
 size_t NimBLEStream::pushRx(const uint8_t* data, size_t len) {
     if (!m_rxBuf || !data || len == 0) {
         NIMBLE_UART_LOGE(LOG_TAG, "Invalid RX buffer or data");
