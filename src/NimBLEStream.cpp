@@ -486,7 +486,7 @@ void NimBLEStreamClient::notifyCallback(NimBLERemoteCharacteristic* pChar, uint8
 }
 
 // UART logging support
-int uart_log_printfv(const char* format, va_list arg) {
+int NimBLEStream::uart_log_printfv(const char* format, va_list arg) {
     static char loc_buf[64];
     char*       temp = loc_buf;
     uint32_t    len;
@@ -513,11 +513,11 @@ int uart_log_printfv(const char* format, va_list arg) {
     return len;
 }
 
-int uart_log_printf(const char* format, ...) {
+int NimBLEStream::uart_log_printf(const char* format, ...) {
     int     len;
     va_list arg;
     va_start(arg, format);
-    len = uart_log_printfv(format, arg);
+    len = NimBLEStream::uart_log_printfv(format, arg);
     va_end(arg);
     return len;
 }
