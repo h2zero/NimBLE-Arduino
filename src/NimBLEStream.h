@@ -73,8 +73,8 @@ class NimBLEStream : public Stream {
     virtual size_t write(uint8_t data) override { return write(&data, 1); }
 
     // Template for other integral types (char, int, long, etc.)
-    template <typename T>
-    typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, uint8_t>::value, size_t>::type write(T data) {
+    template <typename T, typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, uint8_t>::value, int>::type = 0>
+    size_t write(T data) {
         return write(static_cast<uint8_t>(data));
     }
 
@@ -138,6 +138,8 @@ class NimBLEStreamServer : public NimBLEStream {
     size_t   getMaxLength() const { return m_charCallbacks.m_maxLen; }
     void     setCallbacks(NimBLECharacteristicCallbacks* pCallbacks) { m_charCallbacks.m_userCallbacks = pCallbacks; }
 
+    using NimBLEStream::write; // Inherit template write overloads
+
   private:
     bool send(const uint8_t* data, size_t len) override;
     bool isReady() const override { return hasSubscriber(); }
@@ -179,11 +181,12 @@ class NimBLEStreamClient : public NimBLEStream {
 
     // Attach a discovered remote characteristic; app owns discovery/connection.
     // Set subscribeNotify=true to receive notifications into RX buffer.
-    bool   init(NimBLERemoteCharacteristic* pChr, bool subscribeNotify = false);
-    void   deinit();
-    size_t write(const uint8_t* data, size_t len) override;
-    void   setWriteWithResponse(bool useWithRsp) { m_writeWithRsp = useWithRsp; }
-    void   setNotifyCallback(NimBLERemoteCharacteristic::notify_callback cb) { m_userNotifyCallback = cb; }
+    bool init(NimBLERemoteCharacteristic* pChr, bool subscribeNotify = false);
+    void deinit();
+    void setWriteWithResponse(bool useWithRsp) { m_writeWithRsp = useWithRsp; }
+    void setNotifyCallback(NimBLERemoteCharacteristic::notify_callback cb) { m_userNotifyCallback = cb; }
+
+    using NimBLEStream::write; // Inherit template write overloads
 
   private:
     bool send(const uint8_t* data, size_t len) override;
