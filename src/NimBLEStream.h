@@ -68,6 +68,11 @@ class NimBLEStream : public Stream {
     void setTxTaskStackSize(uint32_t size) { m_txTaskStackSize = size; }
     void setTxTaskPriority(uint32_t priority) { m_txTaskPriority = priority; }
 
+    // These logging macros exist to provide log output over UART so that the stream class can
+    // be used to redirect logs without causing recursion issues.
+    static int uart_log_printfv(const char* format, va_list arg);
+    static int uart_log_printf(const char* format, ...);
+
     // Print/Stream TX methods
     virtual size_t write(const uint8_t* data, size_t len) override;
     virtual size_t write(uint8_t data) override { return write(&data, 1); }
@@ -201,31 +206,26 @@ class NimBLEStreamClient : public NimBLEStream {
 
 #  endif // CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
 
-// These logging macros exist to provide log output over UART so that it stream classes can
-// be used to redirect logs without causing recursion issues.
-static int uart_log_printfv(const char* format, va_list arg);
-static int uart_log_printf(const char* format, ...);
-
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
-#   define NIMBLE_UART_LOGD(tag, format, ...) uart_log_printf("D %s: " format "\n", tag, ##__VA_ARGS__)
+#   define NIMBLE_UART_LOGD(tag, format, ...) NimBLEStream::uart_log_printf("D %s: " format "\n", tag, ##__VA_ARGS__)
 #  else
 #   define NIMBLE_UART_LOGD(tag, format, ...) (void)tag
 #  endif
 
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 3
-#   define NIMBLE_UART_LOGI(tag, format, ...) uart_log_printf("I %s: " format "\n", tag, ##__VA_ARGS__)
+#   define NIMBLE_UART_LOGI(tag, format, ...) NimBLEStream::uart_log_printf("I %s: " format "\n", tag, ##__VA_ARGS__)
 #  else
 #   define NIMBLE_UART_LOGI(tag, format, ...) (void)tag
 #  endif
 
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 2
-#   define NIMBLE_UART_LOGW(tag, format, ...) uart_log_printf("W %s: " format "\n", tag, ##__VA_ARGS__)
+#   define NIMBLE_UART_LOGW(tag, format, ...) NimBLEStream::uart_log_printf("W %s: " format "\n", tag, ##__VA_ARGS__)
 #  else
 #   define NIMBLE_UART_LOGW(tag, format, ...) (void)tag
 #  endif
 
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 1
-#   define NIMBLE_UART_LOGE(tag, format, ...) uart_log_printf("E %s: " format "\n", tag, ##__VA_ARGS__)
+#   define NIMBLE_UART_LOGE(tag, format, ...) NimBLEStream::uart_log_printf("E %s: " format "\n", tag, ##__VA_ARGS__)
 #  else
 #   define NIMBLE_UART_LOGE(tag, format, ...) (void)tag
 #  endif
