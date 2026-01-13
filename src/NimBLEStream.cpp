@@ -468,13 +468,6 @@ void NimBLEStreamClient::deinit() {
     m_pChr = nullptr;
 }
 
-size_t NimBLEStreamClient::write(const uint8_t* data, size_t len) {
-    if (!m_pChr || !data || len == 0) {
-        return 0;
-    }
-    return NimBLEStream::write(data, len);
-}
-
 bool NimBLEStreamClient::send(const uint8_t* data, size_t len) {
     if (!m_pChr || !data || len == 0) {
         return false;
