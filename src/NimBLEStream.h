@@ -84,7 +84,7 @@ class NimBLEStream : public Stream {
     }
 
     size_t availableForWrite() const;
-    void   flush() override;
+    void   flush(uint32_t timeout_ms = 0);
 
     // Stream RX methods
     virtual int available() override;
@@ -108,6 +108,13 @@ class NimBLEStream : public Stream {
     // Push received data into RX ring (called by subclass callbacks)
     size_t pushRx(const uint8_t* data, size_t len);
 
+    // RX buffering state: avoids requeueing/fragmentation
+    struct RxState {
+        uint8_t* item{nullptr};
+        size_t itemSize{0};
+        size_t offset{0};
+    };
+
     RingbufHandle_t m_txBuf{nullptr};
     RingbufHandle_t m_rxBuf{nullptr};
     TaskHandle_t    m_txTask{nullptr};
@@ -116,9 +123,7 @@ class NimBLEStream : public Stream {
     uint32_t        m_txBufSize{1024};
     uint32_t        m_rxBufSize{1024};
 
-    // RX peek state
-    mutable uint8_t m_peekByte{0};
-    mutable bool    m_hasPeek{false};
+    mutable RxState m_rxState{};  // Track current RX item to avoid requeueing
 };
 
 #   if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
