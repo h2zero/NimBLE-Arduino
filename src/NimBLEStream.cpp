@@ -127,19 +127,29 @@ bool NimBLEStream::begin() {
 }
 
 bool NimBLEStream::end() {
+    // Release any buffered RX item
+    if (m_rxState.item && m_rxBuf) {
+        vRingbufferReturnItem(m_rxBuf, m_rxState.item);
+        m_rxState.item = nullptr;
+    }
+    m_rxState.itemSize = 0;
+    m_rxState.offset   = 0;
+
     if (m_txTask) {
         vTaskDelete(m_txTask);
         m_txTask = nullptr;
     }
+
     if (m_txBuf) {
         vRingbufferDelete(m_txBuf);
         m_txBuf = nullptr;
     }
+
     if (m_rxBuf) {
         vRingbufferDelete(m_rxBuf);
         m_rxBuf = nullptr;
     }
-    m_hasPeek = false;
+
     return true;
 }
 
@@ -161,9 +171,18 @@ size_t NimBLEStream::availableForWrite() const {
     return m_txBuf ? xRingbufferGetCurFreeSize(m_txBuf) : 0;
 }
 
-void NimBLEStream::flush() {
+void NimBLEStream::flush(uint32_t timeout_ms) {
+    if (!m_txBuf) {
+        return;
+    }
+
+    ble_npl_time_t deadline = timeout_ms > 0 ? ble_npl_time_get() + ble_npl_time_ms_to_ticks32(timeout_ms) : 0;
+
     // Wait until TX ring is drained
     while (m_txBuf && xRingbufferGetCurFreeSize(m_txBuf) < m_txBufSize) {
+        if (deadline > 0 && ble_npl_time_get() >= deadline) {
+            break;
+        }
         ble_npl_time_delay(ble_npl_time_ms_to_ticks32(1));
     }
 }
@@ -174,14 +193,14 @@ int NimBLEStream::available() {
         return 0;
     }
 
-    if (m_hasPeek) {
-        return 1; // at least the peeked byte
-    }
+    // Count buffered RX item remainder
+    size_t buffered = m_rxState.itemSize > m_rxState.offset ? m_rxState.itemSize - m_rxState.offset : 0;
 
     // Query items in RX ring
     UBaseType_t waiting = 0;
     vRingbufferGetInfo(m_rxBuf, nullptr, nullptr, nullptr, nullptr, &waiting);
-    return static_cast<int>(waiting);
+
+    return static_cast<int>(buffered + waiting);
 }
 
 int NimBLEStream::read() {
@@ -189,25 +208,34 @@ int NimBLEStream::read() {
         return -1;
     }
 
-    // Return peeked byte if available
-    if (m_hasPeek) {
-        m_hasPeek = false;
-        return static_cast<int>(m_peekByte);
+    // Return from buffered item if available
+    if (m_rxState.item && m_rxState.offset < m_rxState.itemSize) {
+        uint8_t byte = m_rxState.item[m_rxState.offset++];
+
+        // Release item if we've consumed it all
+        if (m_rxState.offset >= m_rxState.itemSize) {
+            vRingbufferReturnItem(m_rxBuf, m_rxState.item);
+            m_rxState.item     = nullptr;
+            m_rxState.itemSize = 0;
+            m_rxState.offset   = 0;
+        }
+
+        return static_cast<int>(byte);
     }
 
+    // Fetch next item from ringbuffer
     size_t   itemSize = 0;
     uint8_t* item     = static_cast<uint8_t*>(xRingbufferReceive(m_rxBuf, &itemSize, 0));
-    if (!item || itemSize == 0) return -1;
-
-    uint8_t byte = item[0];
-
-    // If item has more bytes, put the rest back
-    if (itemSize > 1) {
-        xRingbufferSend(m_rxBuf, item + 1, itemSize - 1, 0);
+    if (!item || itemSize == 0) {
+        return -1;
     }
 
-    vRingbufferReturnItem(m_rxBuf, item);
-    return static_cast<int>(byte);
+    // Store in buffer state and return first byte
+    m_rxState.item     = item;
+    m_rxState.itemSize = itemSize;
+    m_rxState.offset   = 1; // Already consumed first byte
+
+    return static_cast<int>(item[0]);
 }
 
 int NimBLEStream::peek() {
@@ -215,24 +243,26 @@ int NimBLEStream::peek() {
         return -1;
     }
 
-    if (m_hasPeek) {
-        return static_cast<int>(m_peekByte);
+    // Return from buffered item if available
+    if (m_rxState.item && m_rxState.offset < m_rxState.itemSize) {
+        return static_cast<int>(m_rxState.item[m_rxState.offset]);
     }
 
-    size_t   itemSize = 0;
-    uint8_t* item     = static_cast<uint8_t*>(xRingbufferReceive(m_rxBuf, &itemSize, 0));
-    if (!item || itemSize == 0) {
-        return -1;
+    // Fetch next item from ringbuffer if not already buffered
+    if (!m_rxState.item) {
+        size_t   itemSize = 0;
+        uint8_t* item     = static_cast<uint8_t*>(xRingbufferReceive(m_rxBuf, &itemSize, 0));
+        if (!item || itemSize == 0) {
+            return -1;
+        }
+
+        // Store in buffer state
+        m_rxState.item     = item;
+        m_rxState.itemSize = itemSize;
+        m_rxState.offset   = 0;
     }
 
-    m_peekByte = item[0];
-    m_hasPeek  = true;
-
-    // Put the entire item back
-    xRingbufferSend(m_rxBuf, item, itemSize, 0);
-    vRingbufferReturnItem(m_rxBuf, item);
-
-    return static_cast<int>(m_peekByte);
+    return static_cast<int>(m_rxState.item[m_rxState.offset]);
 }
 
 size_t NimBLEStream::read(uint8_t* buffer, size_t len) {
@@ -242,13 +272,28 @@ size_t NimBLEStream::read(uint8_t* buffer, size_t len) {
 
     size_t total = 0;
 
-    // Consume peeked byte first if present
-    if (m_hasPeek && total < len) {
-        buffer[total++] = m_peekByte;
-        m_hasPeek       = false;
+    // First, consume any buffered RX item remainder
+    if (m_rxState.item && m_rxState.offset < m_rxState.itemSize) {
+        size_t available = m_rxState.itemSize - m_rxState.offset;
+        size_t copyLen   = std::min(len, available);
+        memcpy(buffer, m_rxState.item + m_rxState.offset, copyLen);
+        m_rxState.offset += copyLen;
+        total            += copyLen;
+
+        // Release item if fully consumed
+        if (m_rxState.offset >= m_rxState.itemSize) {
+            vRingbufferReturnItem(m_rxBuf, m_rxState.item);
+            m_rxState.item     = nullptr;
+            m_rxState.itemSize = 0;
+            m_rxState.offset   = 0;
+        }
+
+        if (total >= len) {
+            return total;
+        }
     }
 
-    // Drain RX ringbuffer items up to requested length (non-blocking)
+    // Drain additional RX ringbuffer items
     while (total < len) {
         size_t   itemSize = 0;
         uint8_t* item     = static_cast<uint8_t*>(xRingbufferReceive(m_rxBuf, &itemSize, 0));
@@ -260,12 +305,15 @@ size_t NimBLEStream::read(uint8_t* buffer, size_t len) {
         memcpy(buffer + total, item, copyLen);
         total += copyLen;
 
-        // If there are leftover bytes from this item, push them back to RX
-        if (itemSize > copyLen) {
-            xRingbufferSend(m_rxBuf, item + copyLen, itemSize - copyLen, 0);
+        // If we didn't consume the entire item, buffer it
+        if (copyLen < itemSize) {
+            m_rxState.item     = item;
+            m_rxState.itemSize = itemSize;
+            m_rxState.offset   = copyLen;
+        } else {
+            // Item fully consumed
+            vRingbufferReturnItem(m_rxBuf, item);
         }
-
-        vRingbufferReturnItem(m_rxBuf, item);
     }
 
     return total;
@@ -276,9 +324,6 @@ size_t NimBLEStream::pushRx(const uint8_t* data, size_t len) {
         NIMBLE_UART_LOGE(LOG_TAG, "Invalid RX buffer or data");
         return 0;
     }
-
-    // Clear peek state when new data arrives
-    m_hasPeek = false;
 
     if (xRingbufferSend(m_rxBuf, data, len, 0) != pdTRUE) {
         NIMBLE_UART_LOGE(LOG_TAG, "RX buffer full, dropping %u bytes", len);
