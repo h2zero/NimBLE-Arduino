@@ -228,15 +228,15 @@ nimble_port_deinit(void)
         return ret;
     }
 
+#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+    na_hci_transport_deinit();
+#endif
+
     ret = esp_bt_controller_deinit();
     if(ret != ESP_OK) {
         ESP_LOGE(NIMBLE_PORT_LOG_TAG, "controller deinit failed\n");
         return ret;
     }
-#endif
-
-#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
-    na_hci_transport_deinit();
 #endif
 
 #if (BT_HCI_LOG_INCLUDED == TRUE)
