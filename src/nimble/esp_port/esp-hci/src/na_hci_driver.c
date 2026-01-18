@@ -66,7 +66,7 @@ hci_driver_ops_t na_hci_driver_vhci_ops = {
 };
 
 // Prevent linking errors when using arduino + bluedroid with esp32c2
-#if defined (CONFIG_IDF_TARGET_ESP32C2)
+#if defined(CONFIG_IDF_TARGET_ESP32C2) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 1)
 void adv_stack_enableClearLegacyAdvVsCmd(bool en){}
 void scan_stack_enableAdvFlowCtrlVsCmd(bool en){}
 void advFilter_stack_enableDupExcListVsCmd(bool en){}
