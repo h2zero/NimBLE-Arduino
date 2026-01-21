@@ -4,6 +4,8 @@
 /***********************************************
  *            Arduino User Options             *
  **********************************************/
+/**  @brief Uncomment to change the maximum number of aggregated presentation format descriptors; 5 by default. */
+// #define NIMBLE_MAX_AGGREGATE_FORMAT_DESCRIPTORS 5
 
 /** @brief Un-comment to change the number of simultaneous connections (esp controller max is 9) */
 // #define MYNEWT_VAL_BLE_MAX_CONNECTIONS 3

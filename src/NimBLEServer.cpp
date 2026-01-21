@@ -18,6 +18,7 @@
 #include "NimBLEServer.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
+# include "NimBLE2905.h"
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
 
@@ -222,10 +223,18 @@ void NimBLEServer::start() {
             }
         }
 
-        // Set the descriptor handles now as the stack does not set these when the service is started
+        // Phase 1: Set the descriptor handles (including those with duplicate UUIDs) now,
+        // as the stack does not initialize them when the service starts.
         for (const auto& chr : svc->m_vChars) {
             for (auto& desc : chr->m_vDescriptors) {
-                ble_gatts_find_dsc(svc->getUUID().getBase(), chr->getUUID().getBase(), desc->getUUID().getBase(), &desc->m_handle);
+                ble_gatts_find_dsc(svc->getUUID().getBase(), chr->getUUID().getBase(), desc->getUUID().getBase(), desc, &desc->m_handle);
+            }
+
+            // Phase 2: Once all handles have been assigned, proceed to initialize the Aggregate Format Descriptor (0295) values.
+            for (auto& desc : chr->m_vDescriptors) {
+                if (desc->getUUID() == NimBLEUUID(static_cast<uint16_t>(0x2905))) {
+                    static_cast<NimBLE2905*>(desc)->initValue();
+                }
             }
         }
     }
