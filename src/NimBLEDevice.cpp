@@ -762,7 +762,7 @@ size_t NimBLEDevice::getWhiteListCount() {
  * @returns The NimBLEAddress at the whitelist index or null address if not found.
  */
 NimBLEAddress NimBLEDevice::getWhiteListAddress(size_t index) {
-    if (index > m_whiteList.size()) {
+    if (index >= m_whiteList.size()) {
         NIMBLE_LOGE(LOG_TAG, "Invalid index; %u", index);
         return NimBLEAddress{};
     }
