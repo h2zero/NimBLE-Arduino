@@ -1348,4 +1348,10 @@ int NimBLEDeviceCallbacks::onStoreStatus(struct ble_store_status_event* event, v
     return ble_store_util_status_rr(event, arg);
 }
 
+# if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED
+bool btInUse(void) {
+  return true;
+}
+# endif
+
 #endif // CONFIG_BT_NIMBLE_ENABLED
