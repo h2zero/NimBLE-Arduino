@@ -54,6 +54,9 @@
 
 # if defined(ESP_PLATFORM) && defined(CONFIG_ENABLE_ARDUINO_DEPENDS)
 #  include "esp32-hal-bt.h"
+#  if __has_include("esp32-hal-bt-mem.h")
+#   include "esp32-hal-bt-mem.h"
+#  endif
 # endif
 
 # include "NimBLELog.h"
@@ -909,7 +912,8 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         bt_cfg.mode         = ESP_BT_MODE_BLE;
         bt_cfg.ble_max_conn = CONFIG_BT_NIMBLE_MAX_CONNECTIONS;
 #   elif defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-        bt_cfg.ble_max_act = MYNEWT_VAL(BLE_MAX_CONNECTIONS) + MYNEWT_VAL(BLE_ROLE_BROADCASTER) + MYNEWT_VAL(BLE_ROLE_OBSERVER);
+        bt_cfg.ble_max_act =
+            MYNEWT_VAL(BLE_MAX_CONNECTIONS) + MYNEWT_VAL(BLE_ROLE_BROADCASTER) + MYNEWT_VAL(BLE_ROLE_OBSERVER);
 #   else
         bt_cfg.nimble_max_connections = CONFIG_BT_NIMBLE_MAX_CONNECTIONS;
 #   endif
@@ -1346,11 +1350,5 @@ int NimBLEDeviceCallbacks::onStoreStatus(struct ble_store_status_event* event, v
     NIMBLE_LOGD("NimBLEDeviceCallbacks", "onStoreStatus: default");
     return ble_store_util_status_rr(event, arg);
 }
-
-# if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED
-bool btInUse(void) {
-  return true;
-}
-# endif
 
 #endif // CONFIG_BT_ENABLED
