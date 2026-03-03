@@ -1,7 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-##  [2.3.7] 2025-12-08
+## [2.3.8] 2026-03-02
+
+## Fixed
+- Crash on init with esp32 devices with Arduino core 3.3.7 and later.
+- Crash on deinit with esp32c6/c5/c2/h2.
+- Memory leak on init/deinit with esp32c6/c5/c2/h2 when NimBLE is enabled in the Arduino core.
+- Multiple definition compilation errors with esp32c2 when using an Arduino core with NimBLE enabled.
+
+## [2.3.7] 2025-12-08
 
 ## Fixed
 - Server created client instance will now receive notifications/indications from the peer.
