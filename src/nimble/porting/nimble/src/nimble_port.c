@@ -45,12 +45,8 @@
 #if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
 #include "nimble/esp_port/port/transport/include/esp_hci_transport.h"
 #endif
-// #if (BT_HCI_LOG_INCLUDED == TRUE)
-// #include "hci_log/bt_hci_log.h"
-// #endif // (BT_HCI_LOG_INCLUDED == TRUE)
-// #include "bt_common.h"
-
-#define NIMBLE_PORT_LOG_TAG          "BLE_INIT"
+#include "esp_log.h"
+#define NIMBLE_PORT_LOG_TAG "BLE_INIT"
 #endif // ESP_PLATFORM
 
 extern void os_msys_init(void);
@@ -204,10 +200,6 @@ nimble_port_init(void)
         return ret;
     }
 
-// #if MYNEWT_VAL(BT_HCI_LOG_INCLUDED)
-//     bt_hci_log_init();
-// #endif // (BT_HCI_LOG_INCLUDED == TRUE)
-
     return ESP_OK;
 }
 
@@ -242,9 +234,6 @@ nimble_port_deinit(void)
     }
 #endif
 
-#if (BT_HCI_LOG_INCLUDED == TRUE)
-    //bt_hci_log_deinit();
-#endif // (BT_HCI_LOG_INCLUDED == TRUE)
 
     return ESP_OK;
 }
@@ -326,6 +315,11 @@ nimble_port_init(void)
     /* Initialize the global memory pool */
     os_mempool_module_init();
     os_msys_init();
+
+#if NIMBLE_CFG_CONTROLLER
+    ble_ll_init();
+#endif
+
     /* Initialize transport */
     ble_transport_init();
     /* Initialize the host */
@@ -336,8 +330,10 @@ nimble_port_init(void)
     hal_timer_init(5, NULL);
     os_cputime_init(32768);
 #endif
-    ble_transport_ll_init();
 #endif
+
+    /* Initialize the controller */
+    ble_transport_ll_init();
 }
 
 void

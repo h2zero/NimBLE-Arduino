@@ -355,7 +355,7 @@ ble_hs_rand_prand_get(uint8_t *prand)
 
     while (1) {
         /* Get 24 bits of random data */
-        rc = ble_hs_hci_util_rand(prand, 3);
+        rc = ble_hs_hci_rand(prand, 3);
         if (rc != 0) {
             return;
         }
@@ -410,7 +410,7 @@ ble_hs_resolv_gen_priv_addr(struct ble_hs_resolv_entry *rl, int local)
     swap_in_place(ecb.plain_text, 16);
 
     /* Calculate hash */
-    if (na_ble_sm_alg_encrypt(ecb.key, ecb.plain_text, ecb.cipher_text) != 0) {
+    if (ble_sm_alg_encrypt(ecb.key, ecb.plain_text, ecb.cipher_text) != 0) {
         /* We can't do much here if the encryption fails */
         return;
     }
@@ -768,8 +768,8 @@ ble_hs_resolv_rpa(uint8_t *rpa, uint8_t *irk)
 
     swap_in_place(ecb.plain_text, 16);
 
-    /* Send the data to na_ble_sm_alg_encrypt in little-endian style */
-    rc = na_ble_sm_alg_encrypt(ecb.key, ecb.plain_text, ecb.cipher_text);
+    /* Send the data to ble_sm_alg_encrypt in little-endian style */
+    rc = ble_sm_alg_encrypt(ecb.key, ecb.plain_text, ecb.cipher_text);
     if (rc != 0) {
         return rc;
     }

@@ -64,9 +64,17 @@ ble_ll_tmr_u2t(uint32_t usecs)
     return usecs / 32;
 #endif
 #if MYNEWT_VAL(OS_CPUTIME_FREQ) == 32768
+#if __ARM_FEATURE_IDIV
+    if (usecs < 131072) {
+        return (usecs * 32768) / 1000000;
+    } else {
+        return ((uint64_t)usecs * 32768) / 1000000;
+    }
+#else
     if (usecs <= 31249) {
         return (usecs * 137439) / 4194304;
     }
+#endif
 #endif
 
     return os_cputime_usecs_to_ticks(usecs);

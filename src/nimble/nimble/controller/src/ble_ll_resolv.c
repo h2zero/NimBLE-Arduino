@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ESP_PLATFORM
-
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
@@ -50,6 +50,16 @@ struct ble_ll_resolv_data g_ble_ll_resolv_data;
 __attribute__((aligned(4)))
 struct ble_ll_resolv_entry g_ble_ll_resolv_list[MYNEWT_VAL(BLE_LL_RESOLV_LIST_SIZE)];
 
+#if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
+struct local_irk_data {
+    uint8_t is_set;
+    uint8_t irk[16];
+    uint8_t rpa[6];
+};
+/* 0 is for public, 1 is for static address */
+static struct local_irk_data g_local_irk[2];
+#endif
+
 /**
  * Called to determine if a change is allowed to the resolving list at this
  * time. We are not allowed to modify the resolving list if address translation
@@ -72,33 +82,14 @@ ble_ll_resolv_list_chg_allowed(void)
     return rc;
 }
 
-
-/**
- * Called to generate a resolvable private address in rl structure
- *
- * @param rl
- * @param local
- */
 static void
-ble_ll_resolv_gen_priv_addr(struct ble_ll_resolv_entry *rl, int local)
+generate_rpa(const uint8_t *irk, uint8_t *rpa)
 {
-    uint8_t *irk;
     uint8_t *prand;
     struct ble_encryption_block ecb;
-    uint8_t *addr;
-
-    BLE_LL_ASSERT(rl != NULL);
-
-    if (local) {
-        addr = rl->rl_local_rpa;
-        irk = rl->rl_local_irk;
-    } else {
-        addr = rl->rl_peer_rpa;
-        irk = rl->rl_peer_irk;
-    }
 
     /* Get prand */
-    prand = addr + 3;
+    prand = rpa + 3;
     ble_ll_rand_prand_get(prand);
 
     /* Calculate hash, hash = ah(local IRK, prand) */
@@ -111,9 +102,34 @@ ble_ll_resolv_gen_priv_addr(struct ble_ll_resolv_entry *rl, int local)
     /* Calculate hash */
     ble_hw_encrypt_block(&ecb);
 
-    addr[0] = ecb.cipher_text[15];
-    addr[1] = ecb.cipher_text[14];
-    addr[2] = ecb.cipher_text[13];
+    rpa[0] = ecb.cipher_text[15];
+    rpa[1] = ecb.cipher_text[14];
+    rpa[2] = ecb.cipher_text[13];
+}
+
+/**
+ * Called to generate a resolvable private address in rl structure
+ *
+ * @param rl
+ * @param local
+ */
+static void
+ble_ll_resolv_gen_priv_addr(struct ble_ll_resolv_entry *rl, int local)
+{
+    uint8_t *irk;
+    uint8_t *addr;
+
+    BLE_LL_ASSERT(rl != NULL);
+
+    if (local) {
+        addr = rl->rl_local_rpa;
+        irk = rl->rl_local_irk;
+    } else {
+        addr = rl->rl_peer_rpa;
+        irk = rl->rl_peer_irk;
+    }
+
+    generate_rpa(irk, addr);
 }
 
 /**
@@ -126,6 +142,10 @@ ble_ll_resolv_rpa_timer_cb(struct ble_npl_event *ev)
     int i;
     os_sr_t sr;
     struct ble_ll_resolv_entry *rl;
+#if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
+    struct local_irk_data *irk_data;
+    uint8_t rpa[6];
+#endif
 
     rl = &g_ble_ll_resolv_list[0];
     for (i = 0; i < g_ble_ll_resolv_data.rl_cnt; ++i) {
@@ -142,6 +162,18 @@ ble_ll_resolv_rpa_timer_cb(struct ble_npl_event *ev)
         }
         ++rl;
     }
+
+#if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
+    for (i = 0; i < ARRAY_SIZE(g_local_irk); i++) {
+        irk_data = &g_local_irk[i];
+        if (irk_data->is_set) {
+            generate_rpa(irk_data->irk, rpa);
+            OS_ENTER_CRITICAL(sr);
+            memcpy(irk_data->rpa, rpa, 6);
+            OS_EXIT_CRITICAL(sr);
+        }
+    }
+#endif
 
     ble_npl_callout_reset(&g_ble_ll_resolv_data.rpa_timer,
                           g_ble_ll_resolv_data.rpa_tmo);
@@ -639,6 +671,58 @@ ble_ll_resolv_gen_rpa(uint8_t *addr, uint8_t addr_type, uint8_t *rpa, int local)
     return 0;
 }
 
+#if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
+int
+ble_ll_resolv_local_irk_set(uint8_t own_addr_type, const uint8_t *irk)
+{
+    struct local_irk_data *irk_data;
+    int i;
+
+    if (own_addr_type >= 2) {
+        return -1;
+    }
+
+    irk_data = &g_local_irk[own_addr_type];
+
+    memcpy(irk_data->irk, irk, 16);
+
+    irk_data->is_set = 0;
+
+    for (i = 0; i < 16; i++) {
+        if (irk[i]) {
+            irk_data->is_set = 1;
+            break;
+        }
+    }
+
+    if (irk_data->is_set) {
+        generate_rpa(irk_data->irk, irk_data->rpa);
+    }
+
+    return 0;
+}
+
+int
+ble_ll_resolv_local_rpa_get(uint8_t own_addr_type, uint8_t *rpa)
+{
+    struct local_irk_data *irk_data;
+
+    if (own_addr_type >= 2) {
+        return -1;
+    }
+
+    irk_data = &g_local_irk[own_addr_type];
+
+    if (!irk_data->is_set) {
+        return -1;
+    }
+
+    memcpy(rpa, irk_data->rpa, 6);
+
+    return 0;
+}
+#endif
+
 /**
  * Resolve a Resolvable Private Address
  *
@@ -740,7 +824,13 @@ ble_ll_resolv_init(void)
                          &g_ble_ll_data.ll_evq,
                          ble_ll_resolv_rpa_timer_cb,
                          NULL);
+
+#if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
+    memset(&g_local_irk, 0, sizeof(g_local_irk));
+#endif
 }
 
 #endif  /* if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY) */
-#endif
+
+
+#endif /* ESP_PLATFORM */

@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,26 +19,24 @@
  * under the License.
  */
 
-#ifndef ESP_PLATFORM
-
 #include <errno.h>
 #include <stdint.h>
 #include <syscfg/syscfg.h>
-#include <nimble/nimble/include/nimble/ble.h>
-#include <nimble/nimble/include/nimble/hci_common.h>
-#include <nimble/nimble/transport/include/nimble/transport.h>
-#include <nimble/nimble/controller/include/controller/ble_ll.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_adv.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_crypto.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_hci.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_isoal.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_iso_big.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_pdu.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_sched.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_rfmgmt.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_tmr.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_utils.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_whitelist.h>
+#include "nimble/nimble/include/nimble/ble.h"
+#include "nimble/nimble/include/nimble/hci_common.h"
+#include "nimble/nimble/transport/include/nimble/transport.h"
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_adv.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_crypto.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_hci.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_iso.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_iso_big.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_pdu.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_sched.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_rfmgmt.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_tmr.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_utils.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_whitelist.h"
 #include "ble_ll_priv.h"
 
 #if MYNEWT_VAL(BLE_LL_ISO_BROADCASTER)
@@ -55,7 +55,6 @@ struct ble_ll_iso_big;
 struct ble_ll_iso_bis {
     struct ble_ll_iso_big *big;
     uint8_t num;
-    uint16_t conn_handle;
 
     uint32_t aa;
     uint32_t crc_init;
@@ -71,8 +70,7 @@ struct ble_ll_iso_bis {
         uint8_t g;
     } tx;
 
-    struct ble_ll_isoal_mux mux;
-    uint16_t num_completed_pkt;
+    struct ble_ll_iso_conn conn;
 
     STAILQ_ENTRY(ble_ll_iso_bis) bis_q_next;
 };
@@ -86,12 +84,12 @@ struct big_params {
     uint8_t pto; /* 0-15, mandatory 0 */
     uint32_t sdu_interval;
     uint16_t iso_interval;
-    uint16_t max_transport_latency;
+    uint16_t max_transport_latency_ms;
     uint16_t max_sdu;
     uint8_t max_pdu;
     uint8_t phy;
+    uint8_t framing;
     uint8_t interleaved : 1;
-    uint8_t framed : 1;
     uint8_t encrypted : 1;
     uint8_t broadcast_code[16];
 };
@@ -114,6 +112,7 @@ struct ble_ll_iso_big {
     uint8_t nse; /* 1-31 */
     uint8_t interleaved : 1;
     uint8_t framed : 1;
+    uint8_t framing_mode : 1;
     uint8_t encrypted : 1;
     uint8_t giv[8];
     uint8_t gskd[16];
@@ -134,8 +133,12 @@ struct ble_ll_iso_big {
     uint64_t bis_counter;
 
     uint32_t sync_delay;
+    uint32_t transport_latency_us;
     uint32_t event_start;
     uint8_t event_start_us;
+    uint32_t anchor_base_ticks;
+    uint8_t anchor_base_rem_us;
+    uint16_t anchor_offset;
     struct ble_ll_sched_item sch;
     struct ble_npl_event event_done;
 
@@ -145,6 +148,10 @@ struct ble_ll_iso_big {
     } tx;
 
     struct ble_ll_iso_bis_q bis_q;
+
+#if MYNEWT_VAL(BLE_LL_ISO_HCI_FEEDBACK_INTERVAL_MS)
+    uint32_t last_feedback;
+#endif
 
     uint8_t cstf : 1;
     uint8_t cssn : 4;
@@ -166,56 +173,47 @@ static uint8_t bis_pool_free = BIS_POOL_SIZE;
 static struct ble_ll_iso_big *big_pending;
 static struct ble_ll_iso_big *big_active;
 
-struct ble_ll_iso_bis *
-ble_ll_iso_big_find_bis_by_handle(uint16_t conn_handle)
+static void
+big_sched_set(struct ble_ll_iso_big *big)
 {
-    struct ble_ll_iso_bis *bis;
-    uint8_t bis_idx;
+    uint32_t offset_us;
 
-    if (!BLE_LL_CONN_HANDLE_IS_BIS(conn_handle)) {
-        return NULL;
+    big->sch.start_time = big->anchor_base_ticks;
+    big->sch.remainder = big->anchor_base_rem_us;
+
+    offset_us = big->anchor_offset * big->iso_interval * 1250;
+
+    ble_ll_tmr_add(&big->sch.start_time, &big->sch.remainder, offset_us);
+
+    /* Reset anchor base before anchor offset wraps-around.
+     * This happens much earlier than possible overflow in calculations.
+     */
+    if (big->anchor_offset == UINT16_MAX) {
+        big->anchor_base_ticks = big->sch.start_time;
+        big->anchor_base_rem_us = big->sch.remainder;
+        big->anchor_offset = 0;
     }
 
-    bis_idx = BLE_LL_CONN_HANDLE_IDX(conn_handle);
+    big->sch.end_time = big->sch.start_time +
+                        ble_ll_tmr_u2t_up(big->sync_delay) + 1;
+    big->sch.start_time -= g_ble_ll_sched_offset_ticks;
 
-    if (bis_idx >= BIS_POOL_SIZE) {
-        return NULL;
+    if (big->control_active) {
+        /* XXX calculate proper time */
+        big->sch.end_time += 10;
     }
-
-    bis = &bis_pool[bis_idx];
-    if (!bis->big) {
-        return NULL;
-    }
-
-    return bis;
 }
 
-struct ble_ll_isoal_mux *
-ble_ll_iso_big_find_mux_by_handle(uint16_t conn_handle)
+static void
+ble_ll_iso_big_biginfo_chanmap_update(struct ble_ll_iso_big *big)
 {
-    struct ble_ll_iso_bis *bis;
+    uint8_t *buf;
 
-    bis = ble_ll_iso_big_find_bis_by_handle(conn_handle);
-    if (bis) {
-        return &bis->mux;
-    }
+    buf = &big->biginfo[23];
 
-    return NULL;
-}
-
-int
-ble_ll_iso_big_last_tx_timestamp_get(struct ble_ll_iso_bis *bis,
-                                     uint16_t *packet_seq_num, uint32_t *timestamp)
-{
-    struct ble_ll_iso_big *big;
-
-    big = bis->big;
-
-    *packet_seq_num = big->bis_counter;
-    *timestamp = (uint64_t)big->event_start * 1000000 / 32768 +
-                 big->event_start_us;
-
-    return 0;
+    /* chm, phy */
+    memcpy(buf, big->chan_map, 5);
+    buf[4] |= (big->phy - 1) << 5;
 }
 
 static void
@@ -241,8 +239,8 @@ ble_ll_iso_big_biginfo_calc(struct ble_ll_iso_big *big, uint32_t seed_aa)
     put_le24(buf, (big->irc << 20) | (big->bis_spacing));
     buf += 3;
 
-    /* max_pdu, rfu */
-    put_le16(buf, big->max_pdu);
+    /* max_pdu, rfu, framing_mode */
+    put_le16(buf, big->max_pdu | (big->framing_mode) << 15);
     buf += 2;
 
     /* seed_access_address */
@@ -258,12 +256,12 @@ ble_ll_iso_big_biginfo_calc(struct ble_ll_iso_big *big, uint32_t seed_aa)
     buf += 2;
 
     /* chm, phy */
-    memcpy(buf, big->chan_map, 5);
-    buf[4] |= (big->phy - 1) << 5;
+    ble_ll_iso_big_biginfo_chanmap_update(big);
     buf += 5;
 
     /* bis_payload_cnt, framing */
-    memset(buf, 0x00, 5);
+    memset(buf, 0x01, 5);
+    buf[4] |= (big->framed << 7) & 0x80;
 }
 
 int
@@ -271,20 +269,38 @@ ble_ll_iso_big_biginfo_copy(struct ble_ll_iso_big *big, uint8_t *dptr,
                             uint32_t base_ticks, uint8_t base_rem_us)
 {
     uint8_t *dptr_start;
+    uint32_t event_start;
+    uint8_t event_start_us;
     uint64_t counter;
     uint32_t offset_us;
     uint32_t offset;
-    uint32_t d_ticks;
-    uint8_t d_rem_us;
 
     dptr_start = dptr;
     counter = big->bis_counter;
 
-    d_ticks = big->event_start - base_ticks;
-    d_rem_us = big->event_start_us;
-    ble_ll_tmr_sub(&d_ticks, &d_rem_us, base_rem_us);
+    event_start = big->event_start;
+    event_start_us = big->event_start_us;
 
-    offset_us = ble_ll_tmr_t2u(d_ticks) + d_rem_us;
+    /* Use next BIG event in case current one is before AUX_SYNC_IND. This can
+     * happen if AUX_SYNC_IND is scheduled right after BIG event and the BIG
+     * was not yet advanced to next event.
+     */
+    if (event_start <= base_ticks) {
+        ble_ll_tmr_add(&event_start, &event_start_us, big->iso_interval * 1250);
+        counter += big->bn;
+    }
+
+    /* Drop BIGInfo if BIG event is still before AUX_SYNC_IND. This should not
+     * happen but better not send invalid offset.
+     */
+    if (event_start <= base_ticks) {
+        return 0;
+    }
+
+    offset_us = ble_ll_tmr_t2u(event_start - base_ticks);
+    offset_us += event_start_us;
+    offset_us -= base_rem_us;
+
     if (offset_us <= 600) {
         counter += big->bn;
         offset_us += big->iso_interval * 1250;
@@ -306,7 +322,7 @@ ble_ll_iso_big_biginfo_copy(struct ble_ll_iso_big *big, uint8_t *dptr,
     *dptr++ = (counter >> 8) & 0xff;
     *dptr++ = (counter >> 16) & 0xff;
     *dptr++ = (counter >> 24) & 0xff;
-    *dptr++ = (counter >> 32) & 0xff;
+    *dptr++ = ((counter >> 32) & 0x7f) | ((big->framed << 7) & 0x80);
 
     if (big->encrypted) {
         memcpy(dptr, big->giv, 8);
@@ -339,7 +355,7 @@ ble_ll_iso_big_free(struct ble_ll_iso_big *big)
     ble_npl_eventq_remove(&g_ble_ll_data.ll_evq, &big->event_done);
 
     STAILQ_FOREACH(bis, &big->bis_q, bis_q_next) {
-        ble_ll_isoal_mux_free(&bis->mux);
+        ble_ll_iso_conn_free(&bis->conn);
         bis->big = NULL;
         bis_pool_free++;
     }
@@ -382,16 +398,22 @@ ble_ll_iso_big_chan_map_update_complete(struct ble_ll_iso_big *big)
 {
     memcpy(big->chan_map, big->chan_map_new, BLE_LL_CHAN_MAP_LEN);
     big->chan_map_used = ble_ll_utils_chan_map_used_get(big->chan_map);
+
+    ble_ll_iso_big_biginfo_chanmap_update(big);
 }
 
 static void
-ble_ll_iso_big_update_event_start(struct ble_ll_iso_big *big)
+ble_ll_iso_big_update_event_start(struct ble_ll_iso_big *big,
+                                  uint64_t new_big_counter)
 {
     os_sr_t sr;
 
     OS_ENTER_CRITICAL(sr);
+    /* This has to be updated atomically to avoid races when copying to BIGInfo */
     big->event_start = big->sch.start_time + g_ble_ll_sched_offset_ticks;
     big->event_start_us = big->sch.remainder;
+    big->bis_counter += (new_big_counter - big->big_counter) * big->bn;
+    big->big_counter = new_big_counter;
     OS_EXIT_CRITICAL(sr);
 }
 
@@ -400,8 +422,17 @@ ble_ll_iso_big_event_done(struct ble_ll_iso_big *big)
 {
     struct ble_ll_iso_bis *bis;
     struct ble_hci_ev *hci_ev;
-    struct ble_hci_ev_num_comp_pkts *hci_ev_ncp;
+#if MYNEWT_VAL(BLE_LL_ISO_HCI_FEEDBACK_INTERVAL_MS)
+    struct ble_hci_ev *fb_hci_ev = NULL;
+    struct ble_hci_ev_vs *fb_hci_ev_vs;
+    struct ble_hci_vs_subev_iso_hci_feedback *fb_hci_subev = NULL;
+    uint16_t exp;
+    uint32_t now;
+#endif
+    uint64_t big_counter;
+    struct ble_hci_ev_num_comp_pkts *hci_ev_ncp = NULL;
     int num_completed_pkt;
+    int idx;
     int rc;
 
     ble_ll_rfmgmt_release();
@@ -419,18 +450,46 @@ ble_ll_iso_big_event_done(struct ble_ll_iso_big *big)
         hci_ev_ncp->count = 0;
     }
 
-    STAILQ_FOREACH(bis, &big->bis_q, bis_q_next) {
-        num_completed_pkt = ble_ll_isoal_mux_event_done(&bis->mux);
-        if (hci_ev && num_completed_pkt) {
-            hci_ev_ncp->completed[hci_ev_ncp->count].handle =
-                htole16(bis->conn_handle);
-            hci_ev_ncp->completed[hci_ev_ncp->count].packets =
-                htole16(num_completed_pkt + bis->num_completed_pkt);
-            bis->num_completed_pkt = 0;
-            hci_ev_ncp->count++;
-        } else {
-            bis->num_completed_pkt += num_completed_pkt;
+#if MYNEWT_VAL(BLE_LL_ISO_HCI_FEEDBACK_INTERVAL_MS)
+    now = os_time_get();
+    if (OS_TIME_TICK_GEQ(now, big->last_feedback +
+                              os_time_ms_to_ticks32(MYNEWT_VAL(BLE_LL_ISO_HCI_FEEDBACK_INTERVAL_MS)))) {
+        fb_hci_ev = ble_transport_alloc_evt(1);
+        if (fb_hci_ev) {
+            fb_hci_ev->opcode = BLE_HCI_EVCODE_VS;
+            fb_hci_ev->length = sizeof(*fb_hci_ev_vs) + sizeof(*fb_hci_subev);
+            fb_hci_ev_vs = (void *)fb_hci_ev->data;
+            fb_hci_ev_vs->id = BLE_HCI_VS_SUBEV_ISO_HCI_FEEDBACK;
+            fb_hci_subev = (void *)fb_hci_ev_vs->data;
+            fb_hci_subev->big_handle = big->handle;
+            fb_hci_subev->count = 0;
         }
+    }
+#endif
+
+    STAILQ_FOREACH(bis, &big->bis_q, bis_q_next) {
+        num_completed_pkt = ble_ll_iso_conn_event_done(&bis->conn);
+        if (hci_ev && num_completed_pkt) {
+            idx = hci_ev_ncp->count++;
+            hci_ev_ncp->completed[idx].handle = htole16(bis->conn.handle);
+            hci_ev_ncp->completed[idx].packets = htole16(num_completed_pkt);
+            bis->conn.num_completed_pkt = 0;
+        }
+
+#if MYNEWT_VAL(BLE_LL_ISO_HCI_FEEDBACK_INTERVAL_MS)
+        if (fb_hci_ev) {
+            /* Expected SDUs in queue after an event -> host should send
+             * sdu_per_interval SDUs until next event so there are sdu_per_event
+             * SDUs queued at next event. Feedback value is the difference between
+             * expected and actual SDUs count.
+             */
+            exp = bis->mux.sdu_per_event - bis->mux.sdu_per_interval;
+            idx = fb_hci_subev->count++;
+            fb_hci_subev->feedback[idx].handle = htole16(bis->conn.handle);
+            fb_hci_subev->feedback[idx].sdu_per_interval = bis->mux.sdu_per_interval;
+            fb_hci_subev->feedback[idx].diff = (int8_t)(bis->mux.sdu_q_len - exp);
+        }
+#endif
     }
 
     if (hci_ev) {
@@ -443,15 +502,24 @@ ble_ll_iso_big_event_done(struct ble_ll_iso_big *big)
         }
     }
 
+#if MYNEWT_VAL(BLE_LL_ISO_HCI_FEEDBACK_INTERVAL_MS)
+    if (fb_hci_ev) {
+        fb_hci_ev->length = sizeof(*fb_hci_ev_vs) + sizeof(*fb_hci_subev) +
+                            fb_hci_subev->count * sizeof(fb_hci_subev->feedback[0]);
+        ble_transport_to_hs_evt(fb_hci_ev);
+        big->last_feedback = now;
+    }
+#endif
+
     big->sch.start_time = big->event_start;
     big->sch.remainder = big->event_start_us;
+    big_counter = big->big_counter;
 
     do {
-        big->big_counter++;
-        big->bis_counter += big->bn;
+        big_counter++;
 
         if (big->control_active &&
-            (big->control_instant == (uint16_t)big->big_counter)) {
+            (big->control_instant == (uint16_t)big_counter)) {
             switch (big->control_active) {
             case BIG_CONTROL_ACTIVE_TERM:
                 ble_ll_iso_big_terminate_complete(big);
@@ -480,31 +548,21 @@ ble_ll_iso_big_event_done(struct ble_ll_iso_big *big)
             }
 
             if (big->control_active) {
-                big->control_instant = big->big_counter + 6;
+                big->control_instant = big_counter + 6;
                 big->cstf = 1;
                 big->cssn += 1;
             }
         }
 
-        /* XXX precalculate some data here? */
+        big->anchor_offset++;
+        big_sched_set(big);
 
-        ble_ll_tmr_add(&big->sch.start_time, &big->sch.remainder,
-                       big->iso_interval * 1250);
-        big->sch.end_time = big->sch.start_time +
-                            ble_ll_tmr_u2t_up(big->sync_delay) + 1;
-        big->sch.start_time -= g_ble_ll_sched_offset_ticks;
-
-        if (big->control_active) {
-            /* XXX fixme */
-            big->sch.end_time += 10;
-        }
-
-        /* XXX this should always succeed since we preempt anything for now */
-        rc = ble_ll_sched_iso_big(&big->sch, 0);
-        assert(rc == 0);
+        /* This should always succeed since we preempt anything for now */
+        rc = ble_ll_sched_iso_big(&big->sch, 0, 1);
+        BLE_LL_ASSERT(rc == 0);
     } while (rc < 0);
 
-    ble_ll_iso_big_update_event_start(big);
+    ble_ll_iso_big_update_event_start(big, big_counter);
 }
 
 static void
@@ -627,7 +685,7 @@ ble_ll_iso_big_subevent_pdu_cb(uint8_t *dptr, void *arg, uint8_t *hdr_byte)
     }
 
 #if 1
-    pdu_len = ble_ll_isoal_mux_unframed_get(&bis->mux, idx, &llid, dptr);
+    pdu_len = ble_ll_iso_pdu_get(&bis->conn, idx, big->bis_counter + idx, &llid, dptr);
 #else
     llid = 0;
     pdu_len = big->max_pdu;
@@ -743,7 +801,7 @@ ble_ll_iso_big_event_sched_cb(struct ble_ll_sched_item *sch)
 {
     struct ble_ll_iso_big *big;
     struct ble_ll_iso_bis *bis;
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
     uint8_t phy_mode;
 #endif
     int rc;
@@ -757,17 +815,17 @@ ble_ll_iso_big_event_sched_cb(struct ble_ll_sched_item *sch)
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
     ble_phy_resolv_list_disable();
 #endif
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
     phy_mode = ble_ll_phy_to_phy_mode(big->phy, 0);
     ble_phy_mode_set(phy_mode, phy_mode);
 #endif
 
-    BLE_LL_ASSERT(!big->framed);
+    ble_ll_tx_power_set(g_ble_ll_tx_power);
 
     /* XXX calculate this in advance at the end of previous event? */
     big->tx.subevents_rem = big->num_bis * big->nse;
     STAILQ_FOREACH(bis, &big->bis_q, bis_q_next) {
-        ble_ll_isoal_mux_event_start(&bis->mux, (uint64_t)big->event_start *
+        ble_ll_iso_conn_event_start(&bis->conn, (uint64_t)big->event_start *
                                                 1000000 / 32768 +
                                                 big->event_start_us);
 
@@ -867,11 +925,18 @@ static int
 ble_ll_iso_big_create(uint8_t big_handle, uint8_t adv_handle, uint8_t num_bis,
                       struct big_params *bp)
 {
+    struct ble_ll_iso_conn_init_param conn_init_param = {
+        .iso_interval_us = bp->iso_interval * 1250,
+        .sdu_interval_us = bp->sdu_interval,
+        .max_sdu = bp->max_sdu,
+        .max_pdu = bp->max_pdu,
+        .framing = bp->framing,
+        .bn = bp->bn,
+    };
     struct ble_ll_iso_big *big = NULL;
     struct ble_ll_iso_bis *bis;
     struct ble_ll_adv_sm *advsm;
     uint32_t seed_aa;
-    uint8_t pte;
     uint8_t gc;
     uint8_t idx;
     int rc;
@@ -892,17 +957,21 @@ ble_ll_iso_big_create(uint8_t big_handle, uint8_t adv_handle, uint8_t num_bis,
 
     BLE_LL_ASSERT(big);
 
+    big_pool_free--;
+    big->handle = big_handle;
+
     advsm = ble_ll_adv_sync_get(adv_handle);
     if (!advsm) {
+        ble_ll_iso_big_free(big);
         return -ENOENT;
     }
 
     if (ble_ll_adv_sync_big_add(advsm, big) < 0) {
+        ble_ll_iso_big_free(big);
         return -ENOENT;
     }
 
     big->advsm = advsm;
-    big->handle = big_handle;
 
     big->crc_init = ble_ll_rand();
     memcpy(big->chan_map, g_ble_ll_data.chan_map, BLE_LL_CHAN_MAP_LEN);
@@ -923,9 +992,9 @@ ble_ll_iso_big_create(uint8_t big_handle, uint8_t adv_handle, uint8_t num_bis,
     /* Core 5.3, Vol 6, Part B, 4.4.6.6 */
     gc = bp->nse / bp->bn;
     if (bp->irc == gc) {
-        pte = 0;
+        conn_init_param.pte = 0;
     } else {
-        pte = bp->pto * (gc - bp->irc);
+        conn_init_param.pte = bp->pto * (gc - bp->irc);
     }
 
     /* Allocate BISes */
@@ -944,46 +1013,20 @@ ble_ll_iso_big_create(uint8_t big_handle, uint8_t adv_handle, uint8_t num_bis,
         bis->num = big->num_bis;
         bis->crc_init = (big->crc_init << 8) | (big->num_bis);
 
-        BLE_LL_ASSERT(!big->framed);
+        conn_init_param.conn_handle = BLE_LL_CONN_HANDLE(BLE_LL_CONN_HANDLE_TYPE_BIS, idx);
 
-        ble_ll_isoal_mux_init(&bis->mux, bp->max_pdu, bp->iso_interval * 1250,
-                              bp->sdu_interval, bp->bn, pte);
+        ble_ll_iso_conn_init(&bis->conn, &conn_init_param);
     }
 
-    big_pool_free--;
     bis_pool_free -= num_bis;
-
-    /* Calculate AA for each BIS and BIG Control. We have to repeat this process
-     * until all AAs are valid.
-     */
-    do {
-        rc = 0;
-
-        seed_aa = ble_ll_utils_calc_seed_aa();
-        big->ctrl_aa = ble_ll_utils_calc_big_aa(seed_aa, 0);
-
-        if (!ble_ll_utils_verify_aa(big->ctrl_aa)) {
-            continue;
-        }
-
-        rc = 1;
-
-        STAILQ_FOREACH(bis, &big->bis_q, bis_q_next) {
-            bis->aa = ble_ll_utils_calc_big_aa(seed_aa, bis->num);
-            if (!ble_ll_utils_verify_aa(bis->aa)) {
-                rc = 0;
-                break;
-            }
-            bis->chan_id = bis->aa ^ (bis->aa >> 16);
-        }
-    } while (rc == 0);
 
     big->bn = bp->bn;
     big->pto = bp->pto;
     big->irc = bp->irc;
     big->nse = bp->nse;
     big->interleaved = bp->interleaved;
-    big->framed = bp->framed;
+    big->framed = bp->framing != BLE_HCI_ISO_FRAMING_UNFRAMED;
+    big->framing_mode = bp->framing == BLE_HCI_ISO_FRAMING_FRAMED_UNSEGMENTED;
     big->encrypted = bp->encrypted;
     big->sdu_interval = bp->sdu_interval;
     big->iso_interval = bp->iso_interval;
@@ -1013,12 +1056,53 @@ ble_ll_iso_big_create(uint8_t big_handle, uint8_t adv_handle, uint8_t num_bis,
         big->pto = 0;
     }
 
+    /* Core 6.0, Vol 6, Part G, 3.2.1 and 3.2.2 */
+    if (big->framed) {
+        big->transport_latency_us = big->sync_delay +
+                                    (big->pto * (big->nse / big->bn - big->irc) + 1) *
+                                    big->iso_interval * 1250 + big->sdu_interval;
+    } else {
+        big->transport_latency_us = big->sync_delay +
+                                    (big->pto * (big->nse / big->bn - big->irc) + 1) *
+                                    big->iso_interval * 1250 - big->sdu_interval;
+    }
+
+    if (big->transport_latency_us > bp->max_transport_latency_ms * 1000) {
+        ble_ll_iso_big_free(big);
+        return -ERANGE;
+    }
+
+    /* Calculate AA for each BIS and BIG Control. We have to repeat this process
+     * until all AAs are valid.
+     */
+    do {
+        rc = 0;
+
+        seed_aa = ble_ll_utils_calc_seed_aa();
+        big->ctrl_aa = ble_ll_utils_calc_big_aa(seed_aa, 0);
+
+        if (!ble_ll_utils_verify_aa(big->ctrl_aa)) {
+            continue;
+        }
+
+        rc = 1;
+
+        STAILQ_FOREACH(bis, &big->bis_q, bis_q_next) {
+            bis->aa = ble_ll_utils_calc_big_aa(seed_aa, bis->num);
+            if (!ble_ll_utils_verify_aa(bis->aa)) {
+                rc = 0;
+                break;
+            }
+            bis->chan_id = bis->aa ^ (bis->aa >> 16);
+        }
+    } while (rc == 0);
+
+    ble_ll_iso_big_biginfo_calc(big, seed_aa);
+
     if (big->encrypted) {
         ble_ll_iso_big_calculate_gsk(big, bp->broadcast_code);
         ble_ll_iso_big_calculate_iv(big);
     }
-
-    ble_ll_iso_big_biginfo_calc(big, seed_aa);
 
     /* For now we will schedule complete event as single item. This allows for
      * shortest possible subevent space (150us) but can create sequence of long
@@ -1031,24 +1115,42 @@ ble_ll_iso_big_create(uint8_t big_handle, uint8_t adv_handle, uint8_t num_bis,
      * not enough for some phys to run scheduler item.
      */
 
-    /* Schedule 1st event a bit in future */
-    /* FIXME schedule 6ms in the future to avoid conflict with periodic
-     *       advertising when both are started at the same time; we should
-     *       select this value in some smart way later...
-     */
-    big->sch.start_time = ble_ll_tmr_get() + ble_ll_tmr_u2t(6000);
-    big->sch.remainder = 0;
-    big->sch.end_time = big->sch.start_time +
-                        ble_ll_tmr_u2t_up(big->sync_delay) + 1;
-    big->sch.start_time -= g_ble_ll_sched_offset_ticks;
+    uint32_t padv_start_time, big_start_time;
+    uint32_t sync_delay_ticks = ble_ll_tmr_u2t_up(big->sync_delay);
+    int big_event_fixed;
 
-    rc = ble_ll_sched_iso_big(&big->sch, 1);
-    if (rc < 0) {
-        ble_ll_iso_big_free(big);
-        return -EFAULT;
+    rc = ble_ll_adv_padv_event_start_get(big->advsm, &padv_start_time, NULL);
+    if (rc) {
+        /* 1st event will be moved by 1 interval before scheduling so this will
+         * be always in the future */
+        big_start_time = ble_ll_tmr_get();
+        big_event_fixed = 0;
+    } else {
+        /* Set 1st BIG event directly before periodic advertising event, this
+         * way it will not overlap it even if periodic advertising data changes.
+         * Make sure it's in the future.
+         */
+        big_start_time = padv_start_time - g_ble_ll_sched_offset_ticks -
+                         sync_delay_ticks - 1;
+        big_event_fixed = 1;
     }
 
-    ble_ll_iso_big_update_event_start(big);
+    big->anchor_base_ticks = big_start_time;
+    big->anchor_base_rem_us = 0;
+    big->anchor_offset = 0;
+
+    do {
+        big->anchor_offset++;
+        big_sched_set(big);
+
+        if (LL_TMR_LEQ(big->sch.start_time, ble_ll_tmr_get())) {
+            rc = -1;
+        } else {
+            rc = ble_ll_sched_iso_big(&big->sch, 1, big_event_fixed);
+        }
+    } while (rc < 0);
+
+    ble_ll_iso_big_update_event_start(big, big->big_counter);
 
     big_pending = big;
 
@@ -1141,10 +1243,7 @@ ble_ll_iso_big_hci_evt_complete(void)
     evt->big_handle = big->handle;
     put_le24(evt->big_sync_delay, big->sync_delay);
     /* Core 5.3, Vol 6, Part G, 3.2.2 */
-    put_le24(evt->transport_latency_big,
-             big->sync_delay +
-             (big->pto * (big->nse / big->bn - big->irc) + 1) * big->iso_interval * 1250 -
-             big->sdu_interval);
+    put_le24(evt->transport_latency_big, big->transport_latency_us);
     evt->phy = big->phy;
     evt->nse = big->nse;
     evt->bn = big->bn;
@@ -1156,7 +1255,7 @@ ble_ll_iso_big_hci_evt_complete(void)
 
     idx = 0;
     STAILQ_FOREACH(bis, &big->bis_q, bis_q_next) {
-        evt->conn_handle[idx] = htole16(bis->conn_handle);
+        evt->conn_handle[idx] = htole16(bis->conn.handle);
         idx++;
     }
 
@@ -1168,6 +1267,7 @@ ble_ll_iso_big_hci_create(const uint8_t *cmdbuf, uint8_t len)
 {
     const struct ble_hci_le_create_big_cp *cmd = (void *)cmdbuf;
     struct big_params bp;
+    uint8_t valid_phys;
     int rc;
 
     if (len != sizeof(*cmd)) {
@@ -1181,12 +1281,24 @@ ble_ll_iso_big_hci_create(const uint8_t *cmdbuf, uint8_t len)
         !IN_RANGE(le16toh(cmd->max_sdu), 0x0001, 0x0fff) ||
         !IN_RANGE(le16toh(cmd->max_transport_latency), 0x0005, 0x0fa0) ||
         !IN_RANGE(cmd->rtn, 0x00, 0x1e) ||
-        (cmd->packing > 1) || (cmd->framing > 1) || (cmd->encryption) > 1) {
+        (cmd->packing > 1) || (cmd->framing > 2) || (cmd->encryption) > 1) {
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
 
+    valid_phys = BLE_HCI_LE_PHY_1M_PREF_MASK;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_2M_PHY)
+    valid_phys |= BLE_HCI_LE_PHY_2M_PREF_MASK;
+#endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY)
+    valid_phys |= BLE_HCI_LE_PHY_CODED_PREF_MASK;
+#endif
+
+    if (cmd->phy & ~valid_phys) {
+        return BLE_ERR_UNSUPPORTED;
+    }
+
     bp.sdu_interval = get_le24(cmd->sdu_interval);
-    bp.max_transport_latency = le16toh(cmd->max_transport_latency);
+    bp.max_transport_latency_ms = le16toh(cmd->max_transport_latency);
     bp.max_sdu = le16toh(cmd->max_sdu);
     if (cmd->phy & BLE_HCI_LE_PHY_2M_PREF_MASK) {
         bp.phy = BLE_PHY_2M;
@@ -1196,28 +1308,53 @@ ble_ll_iso_big_hci_create(const uint8_t *cmdbuf, uint8_t len)
         bp.phy = BLE_PHY_CODED;
     }
     bp.interleaved = cmd->packing;
-    bp.framed = cmd->framing;
     bp.encrypted = cmd->encryption;
     memcpy(bp.broadcast_code, cmd->broadcast_code, 16);
 
-    bp.nse = 1;
-    bp.bn = 1;
-    bp.irc = 1;
+    /* FIXME for now we only care about retransmissions, so set both NSE and IRC
+     * to RTN
+     */
+    bp.nse = MIN(cmd->rtn + 1, 0x0f);;
+    bp.irc = MIN(cmd->rtn + 1, 0x0f);
     bp.pto = 0;
-    bp.iso_interval = bp.sdu_interval / 1250;
-    bp.max_pdu = bp.max_sdu;
+
+    uint32_t iso_interval = bp.sdu_interval / 1250;
+    if (bp.sdu_interval > iso_interval * 1250) {
+        /* The requirements for using Unframed PDUs are not met */
+        bp.framing = BLE_HCI_ISO_FRAMING_FRAMED_SEGMENTABLE;
+        bp.iso_interval = iso_interval + 1;
+        bp.bn = 2;
+        bp.max_pdu = bp.max_sdu + 5;
+    } else {
+        bp.framing = cmd->framing;
+        bp.iso_interval = iso_interval;
+        bp.bn = 1;
+        if (cmd->framing == BLE_HCI_ISO_FRAMING_UNFRAMED) {
+            bp.max_pdu = bp.max_sdu;
+        } else {
+            /**
+             * XXX: The requirements for using Unframed PDUs are met but the user
+             * requested Framed PDUs explicitly. Ensure the PDU fits the Segmentation Header.
+             */
+            bp.max_pdu = bp.max_sdu + 5;
+        }
+    }
 
     rc = ble_ll_iso_big_create(cmd->big_handle, cmd->adv_handle, cmd->num_bis,
                                &bp);
     switch (rc) {
     case 0:
         break;
+    case -EALREADY:
+        return BLE_ERR_CMD_DISALLOWED;
     case -EINVAL:
         return BLE_ERR_INV_HCI_CMD_PARMS;
     case -ENOMEM:
         return BLE_ERR_CONN_REJ_RESOURCES;
     case -ENOENT:
         return BLE_ERR_UNK_ADV_INDENT;
+    case -ERANGE:
+        return BLE_ERR_UNSUPPORTED;
     default:
         return BLE_ERR_UNSPECIFIED;
     }
@@ -1260,6 +1397,7 @@ ble_ll_iso_big_hci_create_test(const uint8_t *cmdbuf, uint8_t len)
     bp.pto = cmd->pto;
     bp.sdu_interval = get_le24(cmd->sdu_interval);
     bp.iso_interval = le16toh(cmd->iso_interval);
+    bp.max_transport_latency_ms = 0x0fa0; /* max_transport_latency for HCI LE Create BIG */
     bp.max_sdu = le16toh(cmd->max_sdu);
     bp.max_pdu = le16toh(cmd->max_pdu);
     /* TODO verify phy */
@@ -1271,7 +1409,7 @@ ble_ll_iso_big_hci_create_test(const uint8_t *cmdbuf, uint8_t len)
         bp.phy = BLE_PHY_CODED;
     }
     bp.interleaved = cmd->packing;
-    bp.framed = cmd->framing;
+    bp.framing = cmd->framing;
     bp.encrypted = cmd->encryption;
     memcpy(bp.broadcast_code, cmd->broadcast_code, 16);
 
@@ -1281,7 +1419,7 @@ ble_ll_iso_big_hci_create_test(const uint8_t *cmdbuf, uint8_t len)
 
     iso_interval_us = bp.iso_interval * 1250;
 
-    if (!bp.framed) {
+    if (bp.framing == BLE_HCI_ISO_FRAMING_UNFRAMED) {
         /* sdu_interval shall be an integer multiple of iso_interval */
         if (iso_interval_us % bp.sdu_interval) {
             return BLE_ERR_INV_HCI_CMD_PARMS;
@@ -1298,12 +1436,16 @@ ble_ll_iso_big_hci_create_test(const uint8_t *cmdbuf, uint8_t len)
     switch (rc) {
     case 0:
         break;
+    case -EALREADY:
+        return BLE_ERR_CMD_DISALLOWED;
     case -EINVAL:
         return BLE_ERR_INV_HCI_CMD_PARMS;
     case -ENOMEM:
         return BLE_ERR_CONN_REJ_RESOURCES;
     case -ENOENT:
         return BLE_ERR_UNK_ADV_INDENT;
+    case -ERANGE:
+        return BLE_ERR_UNSUPPORTED;
     default:
         return BLE_ERR_UNSPECIFIED;
     }
@@ -1334,7 +1476,6 @@ void
 ble_ll_iso_big_init(void)
 {
     struct ble_ll_iso_big *big;
-    struct ble_ll_iso_bis *bis;
     uint8_t idx;
 
     memset(big_pool, 0, sizeof(big_pool));
@@ -1350,11 +1491,6 @@ ble_ll_iso_big_init(void)
         big->sch.cb_arg = big;
 
         ble_npl_event_init(&big->event_done, ble_ll_iso_big_event_done_ev, big);
-    }
-
-    for (idx = 0; idx < BIS_POOL_SIZE; idx++) {
-        bis = &bis_pool[idx];
-        bis->conn_handle = BLE_LL_CONN_HANDLE(BLE_LL_CONN_HANDLE_TYPE_BIS, idx);
     }
 
     big_pool_free = ARRAY_SIZE(big_pool);
@@ -1376,4 +1512,5 @@ ble_ll_iso_big_reset(void)
 }
 
 #endif /* BLE_LL_ISO_BROADCASTER */
+
 #endif /* ESP_PLATFORM */

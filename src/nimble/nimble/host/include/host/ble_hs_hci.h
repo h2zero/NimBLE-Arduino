@@ -100,7 +100,7 @@ int ble_hs_hci_set_chan_class(const uint8_t *chan_map);
  *                              A BLE host core return code on unexpected
  *                                  error.
  */
-int ble_hs_hci_util_rand(void *dst, int len);
+int ble_hs_hci_rand(void *dst, int len);
 
 #if MYNEWT_VAL(BLE_HCI_VS)
 /**
