@@ -1,3 +1,5 @@
+#if defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES))
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,11 +19,9 @@
  * under the License.
  */
 
-#if defined(ARDUINO_ARCH_NRF5) && defined(NRF52_SERIES)
-
 #include <stdint.h>
 #include <nrfx.h>
-#include <nimble/nimble/controller/include/controller/ble_fem.h>
+#include "nimble/nimble/controller/include/controller/ble_fem.h"
 #include "nimble/nimble/drivers/nrf5x/src/phy_priv.h"
 
 #if PHY_USE_DEBUG
@@ -190,7 +190,6 @@ phy_txpower_set(int8_t dbm)
 int8_t
 phy_txpower_round(int8_t dbm)
 {
-/* "Rail" power level if outside supported range */
 #ifdef RADIO_TXPOWER_TXPOWER_Pos8dBm
     if (dbm >= (int8_t)RADIO_TXPOWER_TXPOWER_Pos8dBm) {
         return (int8_t)RADIO_TXPOWER_TXPOWER_Pos8dBm;
@@ -214,7 +213,6 @@ phy_txpower_round(int8_t dbm)
         return (int8_t)RADIO_TXPOWER_TXPOWER_Pos5dBm;
     }
 #endif
-
     if (dbm >= (int8_t)RADIO_TXPOWER_TXPOWER_Pos4dBm) {
         return (int8_t)RADIO_TXPOWER_TXPOWER_Pos4dBm;
     }
@@ -246,4 +244,4 @@ phy_txpower_round(int8_t dbm)
     return (int8_t)RADIO_TXPOWER_TXPOWER_Neg40dBm;
 }
 
-#endif /* defined(ARDUINO_ARCH_NRF5) && defined(NRF52_SERIES) */
+#endif /* ARDUINO_ARCH_NRF5 && NRF52_SERIES */

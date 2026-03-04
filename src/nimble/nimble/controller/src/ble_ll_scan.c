@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-#ifndef ESP_PLATFORM
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -177,7 +177,7 @@ ble_ll_scan_req_backoff(struct ble_ll_scan_sm *scansm, int success)
     BLE_LL_ASSERT(scansm->backoff_count <= 256);
 }
 
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
+#if MYNEWT_VAL(BLE_LL_SCAN_ACTIVE_SCAN_NRPA)
 static void
 ble_ll_scan_refresh_nrpa(struct ble_ll_scan_sm *scansm)
 {
@@ -193,17 +193,13 @@ ble_ll_scan_refresh_nrpa(struct ble_ll_scan_sm *scansm)
         scansm->scan_nrpa_timer = now + ble_ll_resolv_get_rpa_tmo();
     }
 }
-
-uint8_t *
-ble_ll_get_scan_nrpa(void)
-{
-    struct ble_ll_scan_sm *scansm = &g_ble_ll_scan_sm;
-
-    ble_ll_scan_refresh_nrpa(scansm);
-
-    return scansm->scan_nrpa;
-}
 #endif
+
+struct ble_ll_scan_sm *
+ble_ll_scan_sm_get(void)
+{
+    return &g_ble_ll_scan_sm;
+}
 
 uint8_t
 ble_ll_scan_get_own_addr_type(void)
@@ -243,30 +239,26 @@ ble_ll_scan_backoff_update(int success)
     ble_ll_scan_req_backoff(scansm, success);
 }
 
-static void
-ble_ll_scan_req_pdu_prepare(struct ble_ll_scan_sm *scansm,
-                            const uint8_t *adv_addr, uint8_t adv_addr_type,
-                            int8_t rpa_index)
+void
+ble_ll_scan_make_req_pdu(struct ble_ll_scan_sm *scansm, uint8_t *pdu,
+                         uint8_t *hdr_byte, uint8_t adva_type,
+                         const uint8_t *adva, int rpa_index)
 {
-    uint8_t hdr_byte;
-    struct ble_ll_scan_pdu_data *pdu_data;
     uint8_t *scana;
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
     struct ble_ll_resolv_entry *rl;
     uint8_t rpa[BLE_DEV_ADDR_LEN];
 #endif
 
-    pdu_data = &scansm->pdu_data;
-
     /* Construct first PDU header byte */
-    hdr_byte = BLE_ADV_PDU_TYPE_SCAN_REQ;
-    if (adv_addr_type) {
-        hdr_byte |= BLE_ADV_PDU_HDR_RXADD_RAND;
+    *hdr_byte = BLE_ADV_PDU_TYPE_SCAN_REQ;
+    if (adva_type) {
+        *hdr_byte |= BLE_ADV_PDU_HDR_RXADD_RAND;
     }
 
     /* Determine ScanA */
     if (scansm->own_addr_type & 0x01) {
-        hdr_byte |= BLE_ADV_PDU_HDR_TXADD_RAND;
+        *hdr_byte |= BLE_ADV_PDU_HDR_TXADD_RAND;
         scana = g_random_addr;
     } else {
         scana = g_dev_addr;
@@ -280,28 +272,42 @@ ble_ll_scan_req_pdu_prepare(struct ble_ll_scan_sm *scansm,
             rl = NULL;
         }
 
-        /*
-         * If device is on RL and we have local IRK, we use RPA generated using
-         * that IRK as ScanA. Otherwise we use NRPA as ScanA to prevent our
-         * device from being tracked when doing an active scan (Core 5.1, Vol 6,
-         * Part B, section 6.3)
-         */
+        /* Check if we should use RPA/NRPA instead of public/random address:
+         * - use RPA if device is on RL and has local IRK set
+         * - use RPA generated from local IRK if set
+         * - use NRPA if allowed by configuration
+         * */
+
         if (rl && rl->rl_has_local) {
             ble_ll_resolv_get_priv_addr(rl, 1, rpa);
             scana = rpa;
         } else {
-            ble_ll_scan_refresh_nrpa(scansm);
-            scana = scansm->scan_nrpa;
+            if (ble_ll_resolv_local_rpa_get(scansm->own_addr_type & 0x01, rpa) == 0) {
+                scana = rpa;
+            } else {
+#if MYNEWT_VAL(BLE_LL_SCAN_ACTIVE_SCAN_NRPA)
+                ble_ll_scan_refresh_nrpa(scansm);
+                scana = scansm->scan_nrpa;
+#endif
+            }
         }
 
-        hdr_byte |= BLE_ADV_PDU_HDR_TXADD_RAND;
+        *hdr_byte |= BLE_ADV_PDU_HDR_TXADD_RAND;
     }
 #endif
 
-    /* Save scan request data */
-    pdu_data->hdr_byte = hdr_byte;
-    memcpy(pdu_data->scana, scana, BLE_DEV_ADDR_LEN);
-    memcpy(pdu_data->adva, adv_addr, BLE_DEV_ADDR_LEN);
+    memcpy(pdu, scana, BLE_DEV_ADDR_LEN);
+    memcpy(pdu + 6, adva, BLE_DEV_ADDR_LEN);
+}
+
+static void
+ble_ll_scan_req_pdu_prepare(struct ble_ll_scan_sm *scansm,
+                            const uint8_t *adv_addr, uint8_t adv_addr_type,
+                            int8_t rpa_index)
+{
+    ble_ll_scan_make_req_pdu(scansm, scansm->pdu_data.scana,
+                             &scansm->pdu_data.hdr_byte, adv_addr_type, adv_addr,
+                             rpa_index);
 }
 
 static uint8_t
@@ -751,7 +757,7 @@ ble_ll_scan_start(struct ble_ll_scan_sm *scansm)
     int rc;
     struct ble_ll_scan_phy *scanp = scansm->scanp;
     uint8_t chan;
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
     uint8_t phy_mode;
     int phy;
 #endif
@@ -781,7 +787,7 @@ ble_ll_scan_start(struct ble_ll_scan_sm *scansm)
     }
 #endif
 
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
     phy = scanp->phy;
     phy_mode = ble_ll_phy_to_phy_mode(phy, BLE_HCI_LE_PHY_CODED_ANY);
     ble_phy_mode_set(phy_mode, phy_mode);
@@ -1612,14 +1618,27 @@ ble_ll_scan_rx_isr_end(struct os_mbuf *rxpdu, uint8_t crcok)
         goto scan_rx_isr_ignore;
     }
 
+    if (!scansm->scan_enabled) {
+        STATS_INC(ble_ll_stats, rx_pdu_on_scan_disabled);
+        goto scan_rx_isr_ignore;
+    }
+
     rxbuf = rxpdu->om_data;
     pdu_type = rxbuf[0] & BLE_ADV_PDU_HDR_TYPE_MASK;
 
     switch (pdu_type) {
     case BLE_ADV_PDU_TYPE_ADV_IND:
     case BLE_ADV_PDU_TYPE_ADV_DIRECT_IND:
+        rc = ble_ll_scan_rx_isr_end_on_adv(pdu_type, rxbuf, hdr, &addrd);
+        break;
     case BLE_ADV_PDU_TYPE_ADV_NONCONN_IND:
     case BLE_ADV_PDU_TYPE_ADV_SCAN_IND:
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+        if (scansm->scanp->scan_type == BLE_SCAN_TYPE_INITIATE) {
+            rc = -1;
+            break;
+        }
+#endif
         rc = ble_ll_scan_rx_isr_end_on_adv(pdu_type, rxbuf, hdr, &addrd);
         break;
     case BLE_ADV_PDU_TYPE_SCAN_RSP:
@@ -1989,8 +2008,10 @@ ble_ll_scan_rx_pkt_in_on_legacy(uint8_t pdu_type, struct os_mbuf *om,
 void
 ble_ll_scan_rx_pkt_in(uint8_t ptype, struct os_mbuf *om, struct ble_mbuf_hdr *hdr)
 {
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL) || MYNEWT_VAL(BLE_LL_HCI_VS_SET_SCAN_CFG)
+    struct ble_mbuf_hdr_rxinfo *rxinfo = &hdr->rxinfo;
+#endif
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
-    struct ble_mbuf_hdr_rxinfo *rxinfo;
     uint8_t *targeta;
 #endif
     struct ble_ll_scan_sm *scansm;
@@ -2012,6 +2033,26 @@ ble_ll_scan_rx_pkt_in(uint8_t ptype, struct os_mbuf *om, struct ble_mbuf_hdr *hd
         return;
     }
 
+#if MYNEWT_VAL(BLE_LL_HCI_VS_SET_SCAN_CFG)
+    if ((scansm->vs_config.ignore_ext) &&
+        (ptype == BLE_ADV_PDU_TYPE_ADV_EXT_IND)) {
+        ble_ll_scan_chk_resume();
+        return;
+    }
+
+    if ((scansm->vs_config.ignore_legacy) &&
+        (ptype != BLE_ADV_PDU_TYPE_ADV_EXT_IND)) {
+        ble_ll_scan_chk_resume();
+        return;
+    }
+
+    if ((scansm->vs_config.rssi_filter) &&
+        (rxinfo->rssi < scansm->vs_config.rssi_threshold)) {
+        ble_ll_scan_chk_resume();
+        return;
+    }
+#endif
+
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
     if (ptype == BLE_ADV_PDU_TYPE_ADV_EXT_IND) {
         ble_ll_scan_aux_pkt_in_on_ext(om, hdr);
@@ -2023,7 +2064,6 @@ ble_ll_scan_rx_pkt_in(uint8_t ptype, struct os_mbuf *om, struct ble_mbuf_hdr *hd
     switch (scansm->scanp->scan_type) {
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     case BLE_SCAN_TYPE_INITIATE:
-        rxinfo = &hdr->rxinfo;
         if (rxinfo->flags & BLE_MBUF_HDR_F_CONNECT_IND_TXD) {
             /* We need to keep original TargetA in case it was resolved, so rl
              * can be updated properly.
@@ -2124,9 +2164,9 @@ ble_ll_scan_check_phy_params(uint8_t type, uint16_t itvl, uint16_t window)
 
     /* Check interval and window */
     if ((itvl < BLE_HCI_SCAN_ITVL_MIN) ||
-        // (itvl > BLE_HCI_SCAN_ITVL_MAX_EXT) ||
+        (itvl > BLE_HCI_SCAN_ITVL_MAX_EXT) ||
         (window < BLE_HCI_SCAN_WINDOW_MIN) ||
-        // (window > BLE_HCI_SCAN_WINDOW_MAX_EXT) ||
+        (window > BLE_HCI_SCAN_WINDOW_MAX_EXT) ||
         (itvl < window)) {
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
@@ -2170,11 +2210,13 @@ ble_ll_scan_hci_set_ext_params(const uint8_t *cmdbuf, uint8_t len)
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
 
-    /* Check if no reserved bits in PHYS are set and that at least one valid PHY
-     * is set.
-     */
-    if (!(cmd->phys & SCAN_VALID_PHY_MASK) ||
-        (cmd->phys & ~SCAN_VALID_PHY_MASK)) {
+    /* Check if valid phy is specified */
+    if (cmd->phys & ~SCAN_VALID_PHY_MASK) {
+        return BLE_ERR_UNSUPPORTED;
+    }
+
+    /* Check if at least one valid phy is specified */
+    if (!(cmd->phys & SCAN_VALID_PHY_MASK)) {
          return BLE_ERR_INV_HCI_CMD_PARMS;
      }
 
@@ -2245,6 +2287,27 @@ ble_ll_scan_hci_set_ext_params(const uint8_t *cmdbuf, uint8_t len)
     return 0;
 }
 
+#endif
+
+#if MYNEWT_VAL(BLE_LL_HCI_VS_SET_SCAN_CFG)
+int
+ble_ll_scan_set_vs_config(uint32_t flags, int8_t rssi_threshold)
+{
+    struct ble_ll_scan_sm *scansm;
+
+    scansm = &g_ble_ll_scan_sm;
+
+    if (scansm->scan_enabled || scansm->connsm) {
+        return 1;
+    }
+
+    scansm->vs_config.ignore_legacy = !!(flags & BLE_HCI_VS_SET_SCAN_CFG_FLAG_NO_LEGACY);
+    scansm->vs_config.ignore_ext = !!(flags & BLE_HCI_VS_SET_SCAN_CFG_FLAG_NO_EXT);
+    scansm->vs_config.rssi_filter = !!(flags & BLE_HCI_VS_SET_SCAN_CFG_FLAG_RSSI_FILTER);
+    scansm->vs_config.rssi_threshold = rssi_threshold;
+
+    return 0;
+}
 #endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
@@ -2694,7 +2757,7 @@ ble_ll_scan_common_init(void)
     scansm->scan_phys[PHY_CODED].phy = BLE_PHY_CODED;
 #endif
 
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
+#if MYNEWT_VAL(BLE_LL_SCAN_ACTIVE_SCAN_NRPA)
     /* Make sure we'll generate new NRPA if necessary */
     scansm->scan_nrpa_timer = ble_npl_time_get();
 #endif
@@ -2778,4 +2841,5 @@ ble_ll_scan_init(void)
 }
 
 #endif
-#endif
+
+#endif /* ESP_PLATFORM */

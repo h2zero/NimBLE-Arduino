@@ -67,8 +67,8 @@
 #ifndef __TC_CTR_MODE_H__
 #define __TC_CTR_MODE_H__
 
-#include <nimble/ext/tinycrypt/include/tinycrypt/aes.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/constants.h>
+#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
 
 #ifdef __cplusplus
 extern "C" {
