@@ -252,10 +252,10 @@ jobs:
         with:
           cli-version: latest
           platforms: |
-            - name: "h2zero:arm-ble"
+            - name: "n-able-Arduino:arm-ble"
               source-url: "https://h2zero.github.io/n-able-Arduino/package_n-able_boards_index.json"
               version: latest
-          fqbn: "h2zero:arm-ble:${{ matrix.variant }}"
+          fqbn: "n-able-Arduino:arm-ble:${{ matrix.variant }}"
           sketch-paths: ${{ matrix.example }}
 
   build_bt5_n-able-Arduino:
@@ -278,10 +278,10 @@ jobs:
         with:
           cli-version: latest
           platforms: |
-            - name: "h2zero:arm-ble"
+            - name: "n-able-Arduino:arm-ble"
               source-url: "https://h2zero.github.io/n-able-Arduino/package_n-able_boards_index.json"
               version: latest
-          fqbn: "h2zero:arm-ble:${{ matrix.variant }}"
+          fqbn: "n-able-Arduino:arm-ble:${{ matrix.variant }}"
           sketch-paths: ${{ matrix.example }}
 
   build_n-able-pio:
@@ -309,7 +309,7 @@ jobs:
           mkdir example/src
           cat > example/platformio.ini << EOF
             [env]
-            platform = https://github.com/h2zero/platform-n-able.git
+            platform = https://github.com/h2zero/platform-n-able.git#latest
             framework = arduino
 
             [env:generic_nrf51822_xxaa]
@@ -352,7 +352,7 @@ jobs:
           mkdir example/src
           cat > example/platformio.ini << EOF
             [env]
-            platform = https://github.com/h2zero/platform-n-able.git
+            platform = https://github.com/h2zero/platform-n-able.git#latest
             framework = arduino
 
             [env:generic_nrf52840]
