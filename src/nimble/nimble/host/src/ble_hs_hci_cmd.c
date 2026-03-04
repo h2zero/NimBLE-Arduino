@@ -24,23 +24,6 @@
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/nimble/include/nimble/hci_common.h"
 #include "ble_hs_priv.h"
-
-#ifdef ESP_PLATFORM
-// #include "bt_common.h"
-// #if (BT_HCI_LOG_INCLUDED == TRUE)
-// #include "hci_log/bt_hci_log.h"
-// #endif // (BT_HCI_LOG_INCLUDED == TRUE)
-
-
-/*
- * HCI Command Header
- *
- * Comprises the following fields
- *  -> Opcode group field & Opcode command field (2)
- *  -> Parameter Length                          (1)
- *      Length of all the parameters (does not include any part of the hci
- *      command header
- */
 #define BLE_HCI_CMD_HDR_LEN                 (3)
 
 static int
@@ -48,7 +31,7 @@ ble_hs_hci_cmd_transport(struct ble_hci_cmd *cmd)
 {
     int rc;
 
-    rc = ble_transport_to_ll_cmd((uint8_t *)cmd);
+    rc = ble_transport_to_ll_cmd(cmd);
     switch (rc) {
     case 0:
         return 0;
@@ -61,6 +44,7 @@ ble_hs_hci_cmd_transport(struct ble_hci_cmd *cmd)
     }
 }
 
+#ifdef ESP_PLATFORM
 static int
 ble_hs_hci_cmd_send(uint16_t opcode, uint8_t len, const void *cmddata)
 {
@@ -93,15 +77,6 @@ ble_hs_hci_cmd_send(uint16_t opcode, uint8_t len, const void *cmddata)
     buf--;
 #endif
 
-// #if ((BT_HCI_LOG_INCLUDED == TRUE) && SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED)
-//     uint8_t *data;
-// #if !(SOC_ESP_NIMBLE_CONTROLLER) && CONFIG_BT_CONTROLLER_ENABLED
-//     data = (uint8_t *)buf + 1;
-// #else
-//     data = (uint8_t *)buf;
-// #endif
-//     bt_hci_log_record_hci_data(0x01, data, len + BLE_HCI_CMD_HDR_LEN);
-// #endif
 
     rc = ble_hs_hci_cmd_transport((void *) buf);
 
@@ -113,24 +88,8 @@ ble_hs_hci_cmd_send(uint16_t opcode, uint8_t len, const void *cmddata)
 
     return rc;
 }
-# else /* ! ESP_PLATFORM */
-static int
-ble_hs_hci_cmd_transport(struct ble_hci_cmd *cmd)
-{
-    int rc;
 
-    rc = ble_transport_to_ll_cmd(cmd);
-    switch (rc) {
-    case 0:
-        return 0;
-
-    case BLE_ERR_MEM_CAPACITY:
-        return BLE_HS_ENOMEM_EVT;
-
-    default:
-        return BLE_HS_EUNKNOWN;
-    }
-}
+#else /* !ESP_PLATFORM */
 
 static int
 ble_hs_hci_cmd_send(uint16_t opcode, uint8_t len, const void *cmddata)
@@ -140,6 +99,9 @@ ble_hs_hci_cmd_send(uint16_t opcode, uint8_t len, const void *cmddata)
 
     cmd = ble_transport_alloc_cmd();
     BLE_HS_DBG_ASSERT(cmd != NULL);
+    if (cmd == NULL) {
+        return BLE_HS_ENOMEM;
+    }
 
     cmd->opcode = htole16(opcode);
     cmd->length = len;
@@ -157,8 +119,7 @@ ble_hs_hci_cmd_send(uint16_t opcode, uint8_t len, const void *cmddata)
 
     return rc;
 }
-
-#endif /*ESP_PLATFORM */
+#endif /* ESP_PLATFORM */
 
 int
 ble_hs_hci_cmd_send_buf(uint16_t opcode, const void *buf, uint8_t buf_len)

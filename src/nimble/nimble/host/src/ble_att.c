@@ -71,9 +71,8 @@ static const struct ble_att_rx_dispatch_entry ble_att_rx_dispatch[] = {
     { BLE_ATT_OP_INDICATE_RSP,         ble_att_clt_rx_indicate },
     { BLE_ATT_OP_READ_MULT_VAR_REQ,    ble_att_svr_rx_read_mult_var },
     { BLE_ATT_OP_READ_MULT_VAR_RSP,    ble_att_clt_rx_read_mult_var },
-    { BLE_ATT_OP_NOTIFY_MULTI_REQ,     ble_att_svr_rx_notify_multi },
+    { BLE_ATT_OP_NOTIFY_MULTI_REQ,     ble_att_svr_rx_notify_multi},
     { BLE_ATT_OP_WRITE_CMD,            ble_att_svr_rx_write_no_rsp },
-    { BLE_ATT_OP_SIGNED_WRITE_CMD,     ble_att_svr_rx_signed_write },
 };
 
 #define BLE_ATT_RX_DISPATCH_SZ \
@@ -133,8 +132,6 @@ STATS_NAME_START(ble_att_stats)
     STATS_NAME(ble_att_stats, indicate_req_tx)
     STATS_NAME(ble_att_stats, indicate_rsp_rx)
     STATS_NAME(ble_att_stats, indicate_rsp_tx)
-    STATS_NAME(ble_att_stats, multi_notify_req_rx)
-    STATS_NAME(ble_att_stats, multi_notify_req_tx)
     STATS_NAME(ble_att_stats, write_cmd_rx)
     STATS_NAME(ble_att_stats, write_cmd_tx)
 STATS_NAME_END(ble_att_stats)
@@ -168,8 +165,7 @@ ble_att_conn_chan_find(uint16_t conn_handle, uint16_t cid, struct ble_hs_conn **
 }
 
 int
-ble_att_conn_chan_find_by_psm(uint16_t conn_handle, uint16_t psm,
-                              struct ble_hs_conn **out_conn,
+ble_att_conn_chan_find_by_psm(uint16_t conn_handle, uint16_t psm, struct ble_hs_conn **out_conn,
                               struct ble_l2cap_chan **out_chan)
 {
     return ble_hs_misc_conn_chan_find(conn_handle, psm, out_conn, out_chan);
@@ -281,10 +277,6 @@ ble_att_inc_tx_stat(uint8_t att_op)
 
     case BLE_ATT_OP_INDICATE_RSP:
         STATS_INC(ble_att_stats, indicate_rsp_tx);
-        break;
-
-    case BLE_ATT_OP_NOTIFY_MULTI_REQ:
-        STATS_INC(ble_att_stats, multi_notify_req_tx);
         break;
 
     case BLE_ATT_OP_WRITE_CMD:
@@ -404,10 +396,6 @@ ble_att_inc_rx_stat(uint8_t att_op)
         STATS_INC(ble_att_stats, indicate_rsp_rx);
         break;
 
-    case BLE_ATT_OP_NOTIFY_MULTI_REQ:
-        STATS_INC(ble_att_stats, multi_notify_req_rx);
-        break;
-
     case BLE_ATT_OP_WRITE_CMD:
         STATS_INC(ble_att_stats, write_cmd_rx);
         break;
@@ -475,10 +463,10 @@ ble_att_chan_mtu(const struct ble_l2cap_chan *chan)
     uint16_t mtu;
 
 #if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
-    if (ble_hs_cfg.eatt && chan->psm == BLE_EATT_PSM) {
+    if (chan->psm == BLE_EATT_PSM) {
         /* The ATT_MTU for the Enhanced ATT bearer shall be set to the minimum of the
          * MTU field values of the two devices. Reference:
-         * Core v5.4 Vol 3 Part G 5.3.1 ATT_MTU
+         * Core v5.0, Vol 6, Part B, section 1.3.2.1
          */
         return min(chan->coc_tx.mtu, chan->coc_rx.mtu);
     }
@@ -527,6 +515,7 @@ ble_att_send_outstanding_after_response(uint16_t conn_handle)
     rc = ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_ATT, &conn,
                                          &chan);
     if (rc) {
+        ble_hs_unlock();
         return;
     }
     conn->client_att_busy = false;
@@ -575,7 +564,7 @@ ble_att_rx_extended(uint16_t conn_handle, uint16_t cid, struct os_mbuf **om)
 }
 
 static int
-ble_att_rx(struct ble_l2cap_chan *chan)
+ble_att_rx(struct ble_l2cap_chan *chan, struct os_mbuf **om)
 {
     uint16_t conn_handle;
 
@@ -584,7 +573,7 @@ ble_att_rx(struct ble_l2cap_chan *chan)
         return BLE_HS_ENOTCONN;
     }
 
-    return ble_att_rx_extended(conn_handle, chan->scid, &chan->rx_buf);
+    return ble_att_rx_extended(conn_handle, chan->scid, om);
 }
 
 uint16_t
@@ -648,6 +637,55 @@ ble_att_create_chan(uint16_t conn_handle)
 }
 
 bool
+ble_eatt_supported_req(uint8_t opcode)
+{
+    switch (opcode) {
+    /* EATT does not support MTU request,
+     * but we must handle this request with proper error response.
+     */
+    case BLE_ATT_OP_MTU_REQ:
+    case BLE_ATT_OP_WRITE_CMD:
+    case BLE_ATT_OP_FIND_INFO_REQ:
+    case BLE_ATT_OP_FIND_TYPE_VALUE_REQ:
+    case BLE_ATT_OP_READ_TYPE_REQ:
+    case BLE_ATT_OP_READ_REQ:
+    case BLE_ATT_OP_READ_BLOB_REQ:
+    case BLE_ATT_OP_READ_MULT_REQ:
+    case BLE_ATT_OP_READ_GROUP_TYPE_REQ:
+    case BLE_ATT_OP_WRITE_REQ:
+    case BLE_ATT_OP_PREP_WRITE_REQ:
+    case BLE_ATT_OP_EXEC_WRITE_REQ:
+    case BLE_ATT_OP_INDICATE_REQ:
+    case BLE_ATT_OP_READ_MULT_VAR_REQ:
+    case BLE_ATT_OP_NOTIFY_MULTI_REQ:
+        return true;
+    }
+    return false;
+}
+
+bool
+ble_eatt_supported_rsp(uint8_t opcode)
+{
+    switch (opcode) {
+    case BLE_ATT_OP_ERROR_RSP:
+    case BLE_ATT_OP_FIND_INFO_RSP:
+    case BLE_ATT_OP_FIND_TYPE_VALUE_RSP:
+    case BLE_ATT_OP_READ_TYPE_RSP:
+    case BLE_ATT_OP_INDICATE_RSP:
+    case BLE_ATT_OP_READ_RSP:
+    case BLE_ATT_OP_READ_BLOB_RSP:
+    case BLE_ATT_OP_READ_MULT_RSP:
+    case BLE_ATT_OP_READ_GROUP_TYPE_RSP:
+    case BLE_ATT_OP_WRITE_RSP:
+    case BLE_ATT_OP_PREP_WRITE_RSP:
+    case BLE_ATT_OP_EXEC_WRITE_RSP:
+    case BLE_ATT_OP_READ_MULT_VAR_RSP:
+        return true;
+    }
+    return false;
+}
+
+bool
 ble_att_is_request_op(uint8_t opcode)
 {
     switch (opcode) {
@@ -664,6 +702,7 @@ ble_att_is_request_op(uint8_t opcode)
     case BLE_ATT_OP_EXEC_WRITE_REQ:
     case BLE_ATT_OP_INDICATE_REQ:
     case BLE_ATT_OP_READ_MULT_VAR_REQ:
+    case BLE_ATT_OP_NOTIFY_MULTI_REQ:
         return true;
     }
     return false;
@@ -691,59 +730,6 @@ ble_att_is_response_op(uint8_t opcode)
     }
 
     return false;
-}
-
-bool
-ble_att_is_att_pdu_op(uint8_t opcode)
-{
-    if (ble_att_is_request_op(opcode)) {
-        return true;
-    }
-
-    if (ble_att_is_response_op(opcode)) {
-        return true;
-    }
-
-    switch (opcode) {
-    case BLE_ATT_OP_NOTIFY_MULTI_REQ:
-    case BLE_ATT_OP_WRITE_CMD:
-    case BLE_ATT_OP_SIGNED_WRITE_CMD:
-    case BLE_ATT_OP_NOTIFY_REQ:
-        return true;
-    }
-    return false;
-}
-
-int
-ble_att_set_default_bearer_using_cid(uint16_t conn_handle, uint16_t cid) {
-#if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
-    struct ble_hs_conn * conn;
-
-    ble_hs_lock();
-    conn = ble_hs_conn_find(conn_handle);
-    ble_hs_unlock();
-
-    if (conn == NULL) {
-        return BLE_HS_ENOTCONN;
-    }
-    conn->default_cid = cid;
-    return 0;
-#endif
-    return BLE_HS_ENOTSUP;
-}
-
-uint16_t
-ble_att_get_default_bearer_cid(uint16_t conn_handle) {
-#if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
-    struct ble_hs_conn * conn;
-
-    conn = ble_hs_conn_find(conn_handle);
-    if (conn == NULL) {
-        return 0;
-    }
-    return conn->default_cid;
-#endif
-    return 0;
 }
 
 int

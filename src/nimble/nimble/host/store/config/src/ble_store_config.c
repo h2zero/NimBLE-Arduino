@@ -24,6 +24,7 @@
 #include "nimble/porting/nimble/include/sysinit/sysinit.h"
 #include "syscfg/syscfg.h"
 #include "nimble/nimble/host/include/host/ble_hs.h"
+#include "nimble/porting/nimble/include/os/util.h"
 #include "nimble/nimble/host/store/config/include/store/config/ble_store_config.h"
 #include "ble_store_config_priv.h"
 
@@ -195,7 +196,7 @@ ble_store_config_print_value_sec(const struct ble_store_value_sec *sec)
     if (sec->csrk_present) {
         BLE_HS_LOG(DEBUG, "csrk=");
         ble_hs_log_flat_buf(sec->csrk, 16);
-        BLE_HS_LOG(DEBUG, " sign_counter = %" PRIu32, sec->sign_counter);
+        BLE_HS_LOG(DEBUG, " ");
     }
 
     BLE_HS_LOG(DEBUG, "\n");
@@ -514,7 +515,7 @@ ble_store_config_delete_cccd(const struct ble_store_key_cccd *key_cccd)
     int rc;
 
     idx = ble_store_config_find_cccd(key_cccd);
-    if (idx == -1) {
+    if (idx < 0) {
         return BLE_HS_ENOENT;
     }
 

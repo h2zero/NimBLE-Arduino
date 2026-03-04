@@ -45,7 +45,7 @@ int ble_ll_sync_transfer(const uint8_t *cmdbuf, uint8_t len,
                          uint8_t *rspbuf, uint8_t *rsplen);
 
 void ble_ll_sync_periodic_ind(struct ble_ll_conn_sm *connsm,
-                              const uint8_t *sync_ind, bool reports_disabled,
+                              const uint8_t *sync_ind, uint8_t mode,
                               uint16_t max_skip, uint32_t sync_timeout);
 void ble_ll_sync_transfer_disconnected(struct ble_ll_conn_sm *connsm);
 
