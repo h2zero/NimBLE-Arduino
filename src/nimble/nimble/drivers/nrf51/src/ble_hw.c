@@ -1,3 +1,5 @@
+#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +19,6 @@
  * under the License.
  */
 
-#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
-
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
@@ -33,7 +33,7 @@
 #include "mcu/cmsis_nvic.h"
 #else
 #include "core_cm0.h"
-#include <nimble/porting/npl/freertos/include/nimble/nimble_npl_os.h>
+#include "nimble/porting/npl/freertos/include/nimble/nimble_npl_os.h"
 #endif
 #include "nimble/porting/nimble/include/os/os_trace_api.h"
 
@@ -454,7 +454,7 @@ ble_hw_resolv_list_rmv(int index)
 
     if (index < g_nrf_num_irks) {
         --g_nrf_num_irks;
-        irk_entry = &g_nrf_irk_list[index];
+        irk_entry = &g_nrf_irk_list[4 * index];
         if (g_nrf_num_irks > index) {
             memmove(irk_entry, irk_entry + 4, 16 * (g_nrf_num_irks - index));
         }

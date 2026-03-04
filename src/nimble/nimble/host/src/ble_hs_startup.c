@@ -281,17 +281,6 @@ ble_hs_startup_le_set_evmask_tx(void)
     }
 #endif
 
-#if MYNEWT_VAL(BLE_POWER_CONTROL)
-    if (version >= BLE_HCI_VER_BCS_5_2) {
-        /**
-         * Enable the following LE events:
-         * 0x0000000080000000 LE Path Loss Threshold event
-         * 0x0000000100000000 LE Transmit Power Reporting event
-         */
-        mask |= 0x0000000180000000;
-    }
-#endif
-
 #if MYNEWT_VAL(BLE_PERIODIC_ADV_SYNC_BIGINFO_REPORTS)
     if (version >= BLE_HCI_VER_BCS_5_2) {
         /**
@@ -302,39 +291,42 @@ ble_hs_startup_le_set_evmask_tx(void)
     }
 #endif
 
-#if MYNEWT_VAL(BLE_AOA_AOD)
-    if (version >= BLE_HCI_VER_BCS_5_1) {
+#if MYNEWT_VAL(BLE_ISO_BROADCAST_SOURCE)
+    if (version >= BLE_HCI_VER_BCS_5_2) {
         /**
          * Enable the following LE events:
-         * 0x0000000000100000 LE Connectionless IQ Report event
-         * 0x0000000000200000 LE Connection IQ Report event
-         * 0x0000000000400000 LE CTE Request Failed event
+         * 0x0000000004000000 LE Create BIG Complete event
+         * 0x0000000008000000 LE Terminate BIG Complete event
          */
-        mask |= 0x0000000000700000;
+        mask |= 0x000000000C000000;
     }
 #endif
 
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-    if (version >= BLE_HCI_VER_BCS_5_4) {
+#if MYNEWT_VAL(BLE_ISO_BROADCAST_SINK)
+    if (version >= BLE_HCI_VER_BCS_5_2) {
         /**
          * Enable the following LE events:
-         * 0x0000000800000000 LE Periodic Advertising Sync Established event V2
-         * 0x0000001000000000 LE Periodic Advertising Report Event V2
-         * 0x0000004000000000 LE Periodic Advertising Subevent Data Request event
-         * 0x0000008000000000 LE Periodic Advertising Response Report event
-         * 0x0000010000000000 LE Enhanced Connection Complete event V2
+         * 0x0000000010000000 LE BIG Sync Established Complete event
+         * 0x0000000020000000 LE BIG Sync lost event
          */
-        mask |= 0x000001d800000000;
+        mask |= 0x0000000030000000;
     }
 #endif
 
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_SYNC_TRANSFER)
+#if MYNEWT_VAL(BLE_CHANNEL_SOUNDING)
     if (version >= BLE_HCI_VER_BCS_5_4) {
         /**
          * Enable the following LE events:
-         * 0x0000002000000000 LE Periodic Advertising Sync Transfer Received event V2
+         * 0x0000080000000000 LE CS Read Remote Supported Capabilities Complete event
+         * 0x0000100000000000 LE CS Read Remote FAE Table Complete event
+         * 0x0000200000000000 LE CS Security Enable Complete event
+         * 0x0000400000000000 LE CS Config Complete event
+         * 0x0000800000000000 LE CS Procedure Enable Complete event
+         * 0x0001000000000000 LE CS Subevent Result event
+         * 0x0002000000000000 LE CS Subevent Result Continue event
+         * 0x0004000000000000 LE CS Test End Complete event
          */
-        mask |= 0x0000002000000000;
+        mask |= 0x0007f80000000000;
     }
 #endif
 
@@ -366,13 +358,12 @@ ble_hs_startup_set_evmask_tx(void)
      * Enable the following events:
      *     0x0000000000000010 Disconnection Complete Event
      *     0x0000000000000080 Encryption Change Event
-     *     0x0000000000000800 Read Remote Version Information Complete event
      *     0x0000000000008000 Hardware Error Event
      *     0x0000000002000000 Data Buffer Overflow Event
      *     0x0000800000000000 Encryption Key Refresh Complete Event
      *     0x2000000000000000 LE Meta-Event
      */
-    cmd.event_mask = htole64(0x2000800002008890);
+    cmd.event_mask = htole64(0x2000800002008090);
 
     rc = ble_hs_hci_cmd_tx(BLE_HCI_OP(BLE_HCI_OGF_CTLR_BASEBAND,
                                       BLE_HCI_OCF_CB_SET_EVENT_MASK),
@@ -480,8 +471,6 @@ ble_hs_startup_go(void)
     }
 
     if (rc != 0) {
-        ble_hs_pvcy_set_default_irk();
-
         ble_hs_pvcy_set_our_irk(NULL);
     }
 

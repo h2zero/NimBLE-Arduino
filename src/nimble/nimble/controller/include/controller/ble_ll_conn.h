@@ -108,6 +108,8 @@ struct ble_ll_conn_sm_flags {
     uint32_t encrypted : 1;
     uint32_t encrypt_ltk_req : 1;
     uint32_t encrypt_event_sent : 1;
+    uint32_t encrypt_paused : 1;
+    uint32_t pending_encrypt_restart : 1;
     uint32_t version_ind_txd : 1;
     uint32_t version_ind_rxd : 1;
     uint32_t features_rxd : 1;
@@ -118,6 +120,7 @@ struct ble_ll_conn_sm_flags {
     uint32_t terminate_ind_rxd_acked : 1;
     uint32_t conn_update_sched : 1;
     uint32_t conn_update_use_cp : 1;
+    uint32_t conn_update_host_initd : 1;
     uint32_t conn_update_host_w4reply : 1;
     uint32_t conn_update_host_w4event : 1;
     uint32_t chanmap_update_sched : 1;
@@ -233,7 +236,7 @@ struct ble_ll_conn_sm
     uint16_t host_req_max_rx_time;
 #endif
 
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
     struct ble_ll_conn_phy_data phy_data;
     uint16_t phy_instant;
     uint8_t phy_tx_transition;
@@ -343,6 +346,8 @@ struct ble_ll_conn_sm
     /* Packet transmit queue */
     struct os_mbuf *cur_tx_pdu;
     STAILQ_HEAD(conn_txq_head, os_mbuf_pkthdr) conn_txq;
+    uint8_t conn_txq_num_data_pkt;
+    uint8_t conn_txq_num_zero_pkt;
 
     /* List entry for active/free connection pools */
     union {
@@ -447,9 +452,14 @@ void ble_ll_conn_chan_map_update(void);
 /* required for unit testing */
 uint8_t ble_ll_conn_calc_dci(struct ble_ll_conn_sm *conn, uint16_t latency);
 
-/* used to get anchor point for connection event specified */
-void ble_ll_conn_get_anchor(struct ble_ll_conn_sm *connsm, uint16_t conn_event,
+/* get current event counter and anchor point */
+void ble_ll_conn_anchor_get(struct ble_ll_conn_sm *connsm, uint16_t *event_cntr,
                             uint32_t *anchor, uint8_t *anchor_usecs);
+
+/* get anchor point for specified connection event */
+void ble_ll_conn_anchor_event_cntr_get(struct ble_ll_conn_sm *connsm,
+                                       uint16_t event_cntr, uint32_t *anchor,
+                                       uint8_t *anchor_usecs);
 
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
 int ble_ll_conn_move_anchor(struct ble_ll_conn_sm *connsm, uint16_t offset);
@@ -458,8 +468,6 @@ int ble_ll_conn_move_anchor(struct ble_ll_conn_sm *connsm, uint16_t offset);
 struct ble_ll_scan_addr_data;
 struct ble_ll_scan_pdu_data;
 
-uint8_t ble_ll_conn_tx_connect_ind_pducb(uint8_t *dptr, void *pducb_arg,
-                                         uint8_t *hdr_byte);
 void ble_ll_conn_prepare_connect_ind(struct ble_ll_conn_sm *connsm,
                                      struct ble_ll_scan_pdu_data *pdu_data,
                                      struct ble_ll_scan_addr_data *addrd,

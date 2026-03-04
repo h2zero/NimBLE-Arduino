@@ -99,6 +99,14 @@ struct ble_ll_scan_pdu_data {
     uint8_t adva[BLE_DEV_ADDR_LEN];
 };
 
+struct ble_ll_scan_vs_config {
+    uint8_t ignore_legacy : 1;
+    uint8_t ignore_ext : 1;
+    uint8_t rssi_filter : 1;
+
+    int8_t rssi_threshold;
+};
+
 struct ble_ll_scan_addr_data {
     uint8_t *adva;
     uint8_t *targeta;
@@ -124,7 +132,7 @@ struct ble_ll_scan_sm
     uint8_t scan_rsp_cons_fails;
     uint8_t scan_rsp_cons_ok;
     uint8_t scan_peer_rpa[BLE_DEV_ADDR_LEN];
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
+#if MYNEWT_VAL(BLE_LL_SCAN_ACTIVE_SCAN_NRPA)
     ble_npl_time_t scan_nrpa_timer;
     uint8_t scan_nrpa[BLE_DEV_ADDR_LEN];
 #endif
@@ -155,6 +163,10 @@ struct ble_ll_scan_sm
 #if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     /* Connection sm for initiator scan */
     struct ble_ll_conn_sm *connsm;
+#endif
+
+#if MYNEWT_VAL(BLE_LL_HCI_VS_SET_SCAN_CFG)
+    struct ble_ll_scan_vs_config vs_config;
 #endif
 };
 
@@ -238,7 +250,6 @@ void ble_ll_scan_interrupted(struct ble_ll_scan_sm *scansm);
 /* Called to halt currently running scan */
 void ble_ll_scan_halt(void);
 
-uint8_t *ble_ll_get_scan_nrpa(void);
 uint8_t ble_ll_scan_get_own_addr_type(void);
 uint8_t ble_ll_scan_get_filt_policy(void);
 uint8_t ble_ll_scan_get_filt_dups(void);
@@ -254,10 +265,20 @@ int ble_ll_scan_have_rxd_scan_rsp(uint8_t *addr, uint8_t txadd, uint8_t ext_adv,
 void ble_ll_scan_add_scan_rsp_adv(uint8_t *addr, uint8_t txadd, uint8_t ext_adv,
                                   uint16_t adi);
 
+struct ble_ll_scan_sm *ble_ll_scan_sm_get(void);
+
+void ble_ll_scan_make_req_pdu(struct ble_ll_scan_sm *scansm, uint8_t *pdu,
+                              uint8_t *hdr_byte, uint8_t adva_type,
+                              const uint8_t *adva, int rpa_index);
+
 int
 ble_ll_scan_rx_filter(uint8_t own_addr_type, uint8_t scan_filt_policy,
                       struct ble_ll_scan_addr_data *addrd, uint8_t *scan_ok);
 int ble_ll_scan_rx_check_init(struct ble_ll_scan_addr_data *addrd);
+
+#if MYNEWT_VAL(BLE_LL_HCI_VS_SET_SCAN_CFG)
+int ble_ll_scan_set_vs_config(uint32_t flags, int8_t rssi_threshold);
+#endif
 
 #ifdef __cplusplus
 }
