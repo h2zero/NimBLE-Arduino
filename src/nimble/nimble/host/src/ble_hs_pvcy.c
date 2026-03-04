@@ -28,8 +28,10 @@ static uint8_t ble_hs_pvcy_started;
 static uint8_t ble_hs_pvcy_irk[16];
 
 /** Use this as a default IRK if none gets set. */
-uint8_t ble_hs_pvcy_default_irk[16];
-uint16_t rpa_timeout;
+const uint8_t ble_hs_pvcy_default_irk[16] = {
+    0xef, 0x8d, 0xe2, 0x16, 0x4f, 0xec, 0x43, 0x0d,
+    0xbf, 0x5b, 0xdd, 0x34, 0xc0, 0x53, 0x1e, 0xb8,
+};
 
 static int
 ble_hs_pvcy_set_addr_timeout(uint16_t timeout)
@@ -51,23 +53,6 @@ ble_hs_pvcy_set_addr_timeout(uint16_t timeout)
                              &cmd, sizeof(cmd), NULL, 0);
 }
 
-int ble_hs_set_rpa_timeout (uint16_t timeout)
-{
-    rpa_timeout = timeout;
-
-    return ble_hs_pvcy_set_addr_timeout(rpa_timeout);
-}
-
-uint16_t ble_hs_get_rpa_timeout(void)
-{
-    return rpa_timeout;
-}
-
-void ble_hs_reset_rpa_timeout(void)
-{
-    rpa_timeout = 0 ;
-}
-
 #if (!MYNEWT_VAL(BLE_HOST_BASED_PRIVACY))
 int
 ble_hs_pvcy_set_resolve_enabled(int enable)
@@ -82,11 +67,10 @@ ble_hs_pvcy_set_resolve_enabled(int enable)
 }
 #endif
 
-int
-ble_hs_pvcy_remove_entry(uint8_t addr_type, const uint8_t *addr)
+static int
+ble_hs_pvcy_remove_entry_hci(uint8_t addr_type, const uint8_t *addr)
 {
     struct ble_hci_le_rmv_resolve_list_cp cmd;
-    int rc;
 
     if (addr_type > BLE_ADDR_RANDOM) {
         addr_type = addr_type % 2;
@@ -94,13 +78,28 @@ ble_hs_pvcy_remove_entry(uint8_t addr_type, const uint8_t *addr)
 
     cmd.peer_addr_type = addr_type;
     memcpy(cmd.peer_id_addr, addr, BLE_DEV_ADDR_LEN);
+
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
-    rc = ble_hs_resolv_list_rmv(addr_type, &cmd.peer_id_addr[0]);
+    return ble_hs_resolv_list_rmv(addr_type, &cmd.peer_id_addr[0]);
 #else
-    rc = ble_hs_hci_cmd_tx(BLE_HCI_OP(BLE_HCI_OGF_LE,
-                                      BLE_HCI_OCF_LE_RMV_RESOLV_LIST),
-                           &cmd, sizeof(cmd), NULL, 0);
+    return ble_hs_hci_cmd_tx(BLE_HCI_OP(BLE_HCI_OGF_LE,
+                                        BLE_HCI_OCF_LE_RMV_RESOLV_LIST),
+                             &cmd, sizeof(cmd), NULL, 0);
 #endif
+}
+
+int
+ble_hs_pvcy_remove_entry(uint8_t addr_type, const uint8_t *addr)
+{
+    int rc;
+
+    /* Need to preempt all GAP procedures (advertising, pending connections)
+     * before modifying resolving list in the controller
+     */
+    ble_gap_preempt();
+    rc = ble_hs_pvcy_remove_entry_hci(addr_type, addr);
+    ble_gap_preempt_done();
+
     return rc;
 }
 
@@ -119,6 +118,7 @@ ble_hs_pvcy_add_entry_hci(const uint8_t *addr, uint8_t addr_type,
                           const uint8_t *irk)
 {
     struct ble_hci_le_add_resolv_list_cp cmd;
+    ble_addr_t peer_addr;
     int rc;
 
     if (addr_type > BLE_ADDR_RANDOM) {
@@ -129,16 +129,14 @@ ble_hs_pvcy_add_entry_hci(const uint8_t *addr, uint8_t addr_type,
     memcpy(cmd.peer_id_addr, addr, 6);
     memcpy(cmd.local_irk, ble_hs_pvcy_irk, 16);
     memcpy(cmd.peer_irk, irk, 16);
-
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+    (void)peer_addr; /* Unused */
     rc = ble_hs_resolv_list_add((uint8_t *) &cmd);
     if (rc != 0) {
         return rc;
     }
 
 #else
-    ble_addr_t peer_addr;
-
     rc = ble_hs_hci_cmd_tx(BLE_HCI_OP(BLE_HCI_OGF_LE,
                                       BLE_HCI_OCF_LE_ADD_RESOLV_LIST),
                            &cmd, sizeof(cmd), NULL, 0);
@@ -158,7 +156,6 @@ ble_hs_pvcy_add_entry_hci(const uint8_t *addr, uint8_t addr_type,
         return rc;
     }
 #endif
-
     return 0;
 }
 
@@ -174,18 +171,18 @@ ble_hs_pvcy_add_entry(const uint8_t *addr, uint8_t addr_type,
      * list (Vol 2, Part E, 7.8.38).  Stop all GAP procedures and temporarily
      * prevent any new ones from being started.
      */
+    ble_gap_preempt();
+
 #if (MYNEWT_VAL(BLE_HOST_BASED_PRIVACY))
     rc = ble_hs_pvcy_add_entry_hci(addr, addr_type, irk);
 #else
-    ble_gap_preempt();
 
     /* Try to add the entry now that GAP is halted. */
     rc = ble_hs_pvcy_add_entry_hci(addr, addr_type, irk);
-
+#endif
     /* Allow GAP procedures to be started again. */
     ble_gap_preempt_done();
 
-#endif
     if (rc != 0) {
         STATS_INC(ble_hs_stats, pvcy_add_entry_fail);
     }
@@ -197,7 +194,6 @@ int
 ble_hs_pvcy_ensure_started(void)
 {
     int rc;
-    uint16_t rpa_timeout;
 
     if (ble_hs_pvcy_started) {
         return 0;
@@ -208,16 +204,8 @@ ble_hs_pvcy_ensure_started(void)
     ble_hs_resolv_init();
 #endif
 
-    /* Check if user has already set any timeout. If yes, use it */
-    rpa_timeout = ble_hs_get_rpa_timeout();
-
     /* Set up the periodic change of our RPA. */
-    if (rpa_timeout) {
-        rc = ble_hs_pvcy_set_addr_timeout(rpa_timeout);
-    } else {
-        rc = ble_hs_pvcy_set_addr_timeout(MYNEWT_VAL(BLE_RPA_TIMEOUT));
-    }
-
+    rc = ble_hs_pvcy_set_addr_timeout(MYNEWT_VAL(BLE_RPA_TIMEOUT));
     if (rc != 0) {
         return rc;
     }
@@ -225,56 +213,6 @@ ble_hs_pvcy_ensure_started(void)
     ble_hs_pvcy_started = 1;
 
     return 0;
-}
-
-void ble_hs_pvcy_set_default_irk(void)
-{
-    struct ble_store_value_local_irk  value_local_irk;
-    struct ble_store_key_local_irk key_local_irk;
-
-    uint8_t *local_id = NULL;
-    int rc;
-
-    memset(&key_local_irk, 0, sizeof key_local_irk);
-    memset(&value_local_irk, 0x0, sizeof value_local_irk);
-
-    ble_hs_id_addr(BLE_ADDR_PUBLIC, (const uint8_t **) &local_id, NULL);
-
-    /* Create key / value */
-    /* Some controllers give all 0s as address. Handle such case */
-    if (local_id) {
-        memcpy (key_local_irk.addr.val , local_id, BLE_DEV_ADDR_LEN);
-    }
-
-    key_local_irk.addr.type = BLE_ADDR_PUBLIC;
-
-    /* Read NVS for local IRK */
-
-    rc = ble_store_read_local_irk(&key_local_irk, &value_local_irk);
-    if (!rc) {
-        memcpy(ble_hs_pvcy_default_irk, value_local_irk.irk, 16);
-    } else {
-        /* No entry for local IRK found . Generate one and load in NVS */
-        memset(ble_hs_pvcy_default_irk, 0x0, 16);
-        rc = ble_hs_hci_util_rand(ble_hs_pvcy_default_irk, 16);
-
-        if (rc != 0) {
-            BLE_HS_LOG(ERROR, "Failed to generate local IRK");
-            return;
-        }
-
-        memset(&value_local_irk, 0x0, sizeof value_local_irk);
-
-        memcpy(&value_local_irk.irk, ble_hs_pvcy_default_irk, 16);
-
-        if (local_id) {
-            memcpy(value_local_irk.addr.val, local_id, BLE_DEV_ADDR_LEN);
-        }
-
-        value_local_irk.addr.type = BLE_ADDR_PUBLIC;
-
-        ble_store_write_local_irk(&value_local_irk);
-    }
 }
 
 int
@@ -290,51 +228,53 @@ ble_hs_pvcy_set_our_irk(const uint8_t *irk)
         memcpy(new_irk, ble_hs_pvcy_default_irk, 16);
     }
 
-    memcpy(ble_hs_pvcy_irk, new_irk, 16);
+    /* Clear the resolving list if this is a new IRK. */
+    if (memcmp(ble_hs_pvcy_irk, new_irk, 16) != 0) {
+        memcpy(ble_hs_pvcy_irk, new_irk, 16);
 
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
-    if (irk != NULL) {
-       bool rpa_state = false;
+        if (irk != NULL) {
+            bool rpa_state = false;
 
-       if ((rpa_state = ble_host_rpa_enabled()) == true) {
-            ble_hs_resolv_enable(0);
-       }
+            if ((rpa_state = ble_host_rpa_enabled()) == true) {
+                ble_hs_resolv_enable(0);
+            }
 
-       ble_hs_resolv_list_clear_all();
+            ble_hs_resolv_list_clear_all();
 
-       if (rpa_state) {
-             ble_hs_resolv_enable(1);
-       }
-   }
+            if (rpa_state) {
+                ble_hs_resolv_enable(1);
+            }
+        }
 #else
-    rc = ble_hs_pvcy_set_resolve_enabled(0);
-    if (rc != 0) {
-       return rc;
-    }
+        rc = ble_hs_pvcy_set_resolve_enabled(0);
+        if (rc != 0) {
+            return rc;
+        }
 
-    rc = ble_hs_pvcy_clear_entries();
-    if (rc != 0) {
-       return rc;
-    }
+        rc = ble_hs_pvcy_clear_entries();
+        if (rc != 0) {
+            return rc;
+        }
 
-    rc = ble_hs_pvcy_set_resolve_enabled(1);
-    if (rc != 0) {
-       return rc;
-    }
-
+        rc = ble_hs_pvcy_set_resolve_enabled(1);
+        if (rc != 0) {
+            return rc;
+        }
 #endif
-    /*
-      * Add local IRK entry with 00:00:00:00:00:00 address. This entry will
-      * be used to generate RPA for non-directed advertising if own_addr_type
-      * is set to rpa_pub since we use all-zero address as peer addres in
-      * such case. Peer IRK should be left all-zero since this is not for an
-      * actual peer.
-      */
-    memset(tmp_addr, 0, 6);
-    memset(new_irk, 0, 16);
-    rc = ble_hs_pvcy_add_entry(tmp_addr, 0, new_irk);
-    if (rc != 0) {
-        return rc;
+        /*
+         * Add local IRK entry with 00:00:00:00:00:00 address. This entry will
+         * be used to generate RPA for non-directed advertising if own_addr_type
+         * is set to rpa_pub since we use all-zero address as peer addres in
+         * such case. Peer IRK should be left all-zero since this is not for an
+         * actual peer.
+         */
+        memset(tmp_addr, 0, 6);
+        memset(new_irk, 0, 16);
+        rc = ble_hs_pvcy_add_entry(tmp_addr, 0, new_irk);
+        if (rc != 0) {
+            return rc;
+        }
     }
 
     return 0;
@@ -367,13 +307,20 @@ ble_hs_pvcy_set_mode(const ble_addr_t *addr, uint8_t priv_mode)
                              &cmd, sizeof(cmd), NULL, 0);
 }
 
+void
+ble_hs_pvcy_reset(void)
+{
+    ble_hs_pvcy_started = 0;
+    memset(ble_hs_pvcy_irk, 0, sizeof(ble_hs_pvcy_irk));
+}
+
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
 bool
 ble_hs_pvcy_enabled(void)
 {
     return ble_hs_pvcy_started;
 }
 
-#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
 int
 ble_hs_pvcy_rpa_config(uint8_t enable)
 {

@@ -66,6 +66,12 @@ struct ble_hs_conn;
 /** Security Manager (SM) CID. */
 #define BLE_L2CAP_CID_SM            6
 
+/** Start range for connection oriented channel CID. */
+#define BLE_L2CAP_COC_CID_START     0x0040
+
+/** End range for connection oriented channel CID. */
+#define BLE_L2CAP_COC_CID_END       0x007F
+
 /** @} */
 
 /**
@@ -541,6 +547,19 @@ int ble_l2cap_create_server(uint16_t psm, uint16_t mtu,
                             ble_l2cap_event_fn *cb, void *cb_arg);
 
 /**
+ * @brief Removes an L2CAP server.
+ *
+ * This function removes an L2CAP server with the specified Protocol/Service
+ * Multiplexer (PSM). Existing connections for this PSM are not removed.
+ *
+ * @param psm       The Protocol/Service Multiplexer (PSM) for the server.
+ *
+ * @return          0 on success;
+ *                  A non-zero value on failure.
+ */
+int ble_l2cap_remove_server(uint16_t psm);
+
+/**
  * @brief Initiate an L2CAP connection.
  *
  * This function initiates an L2CAP connection to a remote device with the specified connection handle,
@@ -565,7 +584,7 @@ int ble_l2cap_connect(uint16_t conn_handle, uint16_t psm, uint16_t mtu,
 /**
  * @brief Disconnect an L2CAP channel.
  *
- * This function disconnects the specified L2CAP channel by sending a disconnect signal.
+ * This function disconnects the specified L2CAP connection oriented channel by sending a disconnect signal.
  *
  * @param chan          Pointer to the L2CAP channel structure representing the channel to disconnect.
  *

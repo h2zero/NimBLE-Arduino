@@ -115,6 +115,17 @@ int ble_ll_resolv_peer_rpa_any(const uint8_t *rpa);
 /* Initialize resolv*/
 void ble_ll_resolv_init(void);
 
+#if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
+int ble_ll_resolv_local_irk_set(uint8_t own_addr_type, const uint8_t *irk);
+int ble_ll_resolv_local_rpa_get(uint8_t own_addr_type, uint8_t *rpa);
+#else
+static inline int
+ble_ll_resolv_local_rpa_get(uint8_t own_addr_type, uint8_t *rpa)
+{
+    return -1;
+}
+#endif
+
 #ifdef __cplusplus
 }
 #endif
