@@ -98,15 +98,11 @@ ble_gap_event_listener     NimBLEDevice::m_listener{};
 std::vector<NimBLEAddress> NimBLEDevice::m_whiteList{};
 uint8_t                    NimBLEDevice::m_ownAddrType{BLE_OWN_ADDR_PUBLIC};
 
-# ifdef ESP_PLATFORM
-#  if CONFIG_BTDM_BLE_SCAN_DUPL
-uint16_t NimBLEDevice::m_scanDuplicateSize{CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE};
-uint8_t  NimBLEDevice::m_scanFilterMode{CONFIG_BTDM_SCAN_DUPL_TYPE};
+# if NIMBLE_CPP_SCAN_DUPL_ENABLED
+uint16_t NimBLEDevice::m_scanDuplicateSize{100};
+uint8_t  NimBLEDevice::m_scanFilterMode{0};
 uint16_t NimBLEDevice::m_scanDuplicateResetTime{0};
-#  elif CONFIG_BT_LE_SCAN_DUPL
-uint16_t       NimBLEDevice::m_scanDuplicateSize{CONFIG_BT_LE_LL_DUP_SCAN_LIST_COUNT};
-uint8_t        NimBLEDevice::m_scanFilterMode{CONFIG_BT_LE_SCAN_DUPL_TYPE};
-uint16_t       NimBLEDevice::m_scanDuplicateResetTime{0};
+#  if SOC_ESP_NIMBLE_CONTROLLER
 extern "C" int ble_vhci_disc_duplicate_set_max_cache_size(int max_cache_size);
 extern "C" int ble_vhci_disc_duplicate_set_period_refresh_time(int refresh_period_time);
 extern "C" int ble_vhci_disc_duplicate_mode_disable(int mode);
@@ -914,23 +910,25 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         bt_cfg.nimble_max_connections = MYNEWT_VAL(BLE_MAX_CONNECTIONS);
 #   endif
 
-#   if CONFIG_BTDM_BLE_SCAN_DUPL
+#   if NIMBLE_CPP_SCAN_DUPL_ENABLED
+#    if !SOC_ESP_NIMBLE_CONTROLLER
         bt_cfg.normal_adv_size     = m_scanDuplicateSize;
         bt_cfg.scan_duplicate_type = m_scanFilterMode;
-#    if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+        bt_cfg.scan_duplicate_mode = 0; // Ensure normal filter mode, could be set to mesh in default config
+#     if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
         bt_cfg.dup_list_refresh_period = m_scanDuplicateResetTime;
-#    endif
-#   elif CONFIG_BT_LE_SCAN_DUPL
+#     endif
+#    else  // SOC_ESP_NIMBLE_CONTROLLER
         bt_cfg.ble_ll_rsp_dup_list_count = m_scanDuplicateSize;
         bt_cfg.ble_ll_adv_dup_list_count = m_scanDuplicateSize;
-#   endif
+#    endif // SOC_ESP_NIMBLE_CONTROLLER
         err = esp_bt_controller_init(&bt_cfg);
         if (err != ESP_OK) {
             NIMBLE_LOGE(LOG_TAG, "esp_bt_controller_init() failed; err=%d", err);
             return false;
         }
 
-#   if CONFIG_BT_LE_SCAN_DUPL
+#    if SOC_ESP_NIMBLE_CONTROLLER
         int mode = (1UL << 4); // FILTER_DUPLICATE_EXCEPTION_FOR_MESH
         switch (m_scanFilterMode) {
             case 1:
@@ -940,14 +938,15 @@ bool NimBLEDevice::init(const std::string& deviceName) {
                 mode |= ((1UL << 2) | (1UL << 3)); // FILTER_DUPLICATE_ADDRESS | FILTER_DUPLICATE_ADVDATA
                 break;
             default:
-                mode |= (1UL << 0) | (1UL << 2); // FILTER_DUPLICATE_PDUTYPE | FILTER_DUPLICATE_ADDRESS
+                mode |= ((1UL << 0) | (1UL << 2)); // FILTER_DUPLICATE_PDUTYPE | FILTER_DUPLICATE_ADDRESS
         }
 
         ble_vhci_disc_duplicate_mode_disable(0xFFFFFFFF);
         ble_vhci_disc_duplicate_mode_enable(mode);
         ble_vhci_disc_duplicate_set_max_cache_size(m_scanDuplicateSize);
         ble_vhci_disc_duplicate_set_period_refresh_time(m_scanDuplicateResetTime);
-#   endif
+#    endif // SOC_ESP_NIMBLE_CONTROLLER
+#   endif  // NIMBLE_CPP_SCAN_DUPL_ENABLED
 
         err = esp_bt_controller_enable(ESP_BT_MODE_BLE);
         if (err != ESP_OK) {
