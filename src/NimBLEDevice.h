@@ -24,6 +24,8 @@
 #  ifndef CONFIG_IDF_TARGET_ESP32P4
 #   include <esp_bt.h>
 #  endif
+#  define NIMBLE_CPP_SCAN_DUPL_ENABLED \
+      (CONFIG_BTDM_BLE_SCAN_DUPL || CONFIG_BT_LE_SCAN_DUPL || CONFIG_BT_CTRL_BLE_SCAN_DUPL)
 # endif
 
 # if defined(CONFIG_NIMBLE_CPP_IDF)
@@ -243,7 +245,7 @@ class NimBLEDevice {
 # endif
 
 # ifdef ESP_PLATFORM
-#  if CONFIG_BTDM_BLE_SCAN_DUPL || CONFIG_BT_LE_SCAN_DUPL
+#  if NIMBLE_CPP_SCAN_DUPL_ENABLED 
     static uint16_t m_scanDuplicateSize;
     static uint8_t  m_scanFilterMode;
     static uint16_t m_scanDuplicateResetTime;
