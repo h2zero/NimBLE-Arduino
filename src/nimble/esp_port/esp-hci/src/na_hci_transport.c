@@ -6,7 +6,7 @@
 
 #ifdef ESP_PLATFORM
 #include "syscfg/syscfg.h"
-#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT && CONFIG_BT_BLUEDROID_ENABLED
 
 #include <stdio.h>
 #include <string.h>

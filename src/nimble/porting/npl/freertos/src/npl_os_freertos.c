@@ -661,11 +661,12 @@ static os_membuf_t *ble_freertos_mutex_buf = NULL;
 
 static uint16_t ble_freertos_total_event_cnt = 0;
 
+#if CONFIG_BT_BLUEDROID_ENABLED
 int na_npl_freertos_mempool_init(void)
 {
     int rc = -1;
     // These values taken from esp-idf: bt/nimble/porting/npl/freertos/src/npl_os_freertos.c
-    uint16_t ble_total_evt_count = 19;
+    uint16_t ble_total_evt_count = 80;
     uint16_t ble_total_co_count = 8;
     uint16_t ble_total_evtq_count = 3;
     uint16_t ble_total_sem_count = 10;
@@ -816,5 +817,6 @@ na_npl_freertos_eventq_init(struct ble_npl_eventq *evq)
         xQueueReset(eventq->q);
     }
 }
+#endif /* CONFIG_BT_BLUEDROID_ENABLED */
 
 #endif
