@@ -6,7 +6,8 @@
 
 #include <nimble/porting/nimble/include/syscfg/syscfg.h>
 #ifdef ESP_PLATFORM
-#if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
+# if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && \
+     !defined(CONFIG_IDF_TARGET_ESP32S3) && CONFIG_BT_BLUEDROID_ENABLED
 
 #include <assert.h>
 #include <string.h>

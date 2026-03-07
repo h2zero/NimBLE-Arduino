@@ -99,14 +99,12 @@ esp_err_t esp_nimble_init(void)
     os_mempool_module_init();
     os_msys_init();
 
-#elif CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+#elif CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT && CONFIG_BT_BLUEDROID_ENABLED
     hci_transport_deinit();
     na_hci_transport_init(HCI_TRANSPORT_VHCI);
     int na_npl_freertos_mempool_init(void);
     na_npl_freertos_mempool_init();
-#ifdef CONFIG_BT_BLUEDROID_ENABLED
     ble_npl_eventq_init(&g_eventq_dflt);
-#endif
 #endif
 
     ble_transport_ll_init();
@@ -143,13 +141,11 @@ esp_err_t esp_nimble_deinit(void)
 
     ble_transport_ll_deinit();
 
-#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT
+#if CONFIG_BT_LE_CONTROLLER_NPL_OS_PORTING_SUPPORT && CONFIG_BT_BLUEDROID_ENABLED
     na_hci_transport_deinit();
     void na_npl_freertos_mempool_deinit(void);
     na_npl_freertos_mempool_deinit();
-#ifdef CONFIG_BT_BLUEDROID_ENABLED
     ble_npl_eventq_deinit(&g_eventq_dflt);
-#endif
 #endif
     return ESP_OK;
 }
