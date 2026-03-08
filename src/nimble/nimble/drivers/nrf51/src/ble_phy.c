@@ -1,3 +1,5 @@
+#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
 
 #include <stdint.h>
 #include <string.h>
@@ -50,7 +50,7 @@
 #endif
 
 #ifndef min
-#define min(a, b) ((a)<(b)?(a):(b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
 static uint32_t
