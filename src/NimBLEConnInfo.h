@@ -25,6 +25,7 @@
 #endif
 
 #include "NimBLEAddress.h"
+#include <cstdio>
 
 /**
  * @brief Connection information.
@@ -69,6 +70,41 @@ class NimBLEConnInfo {
 
     /** @brief Gets the key size used to encrypt the connection */
     uint8_t getSecKeySize() const { return m_desc.sec_state.key_size; }
+
+    /** @brief Get a string representation of the connection info, useful for debugging */
+    std::string toString() const {
+        std::string str;
+        // 294 chars max expected from all labels + worst-case values, round up to 300.
+        str.resize(300);
+
+        snprintf(&str[0],
+                 str.size(),
+                 "  Address: %s\n"
+                 "  ID Address: %s\n"
+                 "  Connection Handle: %u\n"
+                 "  Connection Interval: %.1f ms\n"
+                 "  Connection Timeout: %u ms\n"
+                 "  Connection Latency: %u\n"
+                 "  MTU: %u bytes\n"
+                 "  Role: %s\n"
+                 "  Bonded: %s\n"
+                 "  Encrypted: %s\n"
+                 "  Authenticated: %s\n"
+                 "  Security Key Size: %u\n",
+                 getAddress().toString().c_str(),
+                 getIdAddress().toString().c_str(),
+                 getConnHandle(),
+                 getConnInterval() * 1.25f,
+                 getConnTimeout() * 10,
+                 getConnLatency(),
+                 getMTU(),
+                 isMaster() ? "Master" : "Slave",
+                 isBonded() ? "Yes" : "No",
+                 isEncrypted() ? "Yes" : "No",
+                 isAuthenticated() ? "Yes" : "No",
+                 getSecKeySize());
+        return str;
+    }
 
   private:
     friend class NimBLEServer;
