@@ -17,7 +17,7 @@ static NimBLEServer* pServer;
  **                       Remove as you see fit for your needs                        */
 class ServerCallbacks : public NimBLEServerCallbacks {
     void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
-        Serial.printf("Client address: %s\n", connInfo.getAddress().toString().c_str());
+        Serial.printf("Client connected:\n%s", connInfo.toString().c_str());
 
         /**
          *  We can use the connection handle here to ask for different connection parameters.
