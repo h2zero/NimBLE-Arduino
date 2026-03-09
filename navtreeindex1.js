@@ -1,11 +1,11 @@
 var NAVTREEINDEX1 =
 {
+"class_nim_b_l_e_characteristic.html#a95e454eacf23ae8e1e251b76d7857954":[9,0,8,21],
 "class_nim_b_l_e_characteristic.html#a95e454eacf23ae8e1e251b76d7857954":[9,0,8,20],
-"class_nim_b_l_e_characteristic.html#a95e454eacf23ae8e1e251b76d7857954":[9,0,8,22],
 "class_nim_b_l_e_characteristic.html#aa5eb7de28ee6ec5661acac5c07abb11c":[9,0,8,17],
-"class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31":[9,0,8,14],
 "class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31":[9,0,8,15],
 "class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31":[9,0,8,16],
+"class_nim_b_l_e_characteristic.html#aa824e4b90d8f9418d7c9ccc8735a6e31":[9,0,8,14],
 "class_nim_b_l_e_characteristic.html#aa9817ffdcc2d57e65e4ec3d88836af3f":[9,0,8,5],
 "class_nim_b_l_e_characteristic.html#aabdc2745d2523239a9ab3f02e39aa3cf":[9,0,8,18],
 "class_nim_b_l_e_characteristic.html#ab05a81528522e7f12acff65fa86f9a28":[9,0,8,19],
@@ -81,6 +81,7 @@ var NAVTREEINDEX1 =
 "class_nim_b_l_e_conn_info.html#a1a29242623a50989c7a03ee209ac2cf4":[9,0,12,10],
 "class_nim_b_l_e_conn_info.html#a3a555ccfc6fe678a2603942022a8cd5c":[9,0,12,7],
 "class_nim_b_l_e_conn_info.html#a5f91ef30d5ff92ad26f07feb31a5cd20":[9,0,12,11],
+"class_nim_b_l_e_conn_info.html#a82da6ce1d231083023460742eb2d41b1":[9,0,12,13],
 "class_nim_b_l_e_conn_info.html#a8a1174d706ae36e99adc9498bf30d68f":[9,0,12,8],
 "class_nim_b_l_e_conn_info.html#aa3ffb5995fb9961a6f04117f538a8f28":[9,0,12,1],
 "class_nim_b_l_e_conn_info.html#aa8c39ebf9d346b3334b0a067ffe082a5":[9,0,12,4],
@@ -248,6 +249,5 @@ var NAVTREEINDEX1 =
 "class_nim_b_l_e_scan.html#a2ae53719546e2d410c816e12c56aad61":[9,0,26,3],
 "class_nim_b_l_e_scan.html#a3b0d41fc5d9113a02357c1b2a43c5d1d":[9,0,26,14],
 "class_nim_b_l_e_scan.html#a4248aabb5da67953eadab2a6f834d967":[9,0,26,8],
-"class_nim_b_l_e_scan.html#a4c3e1794c3e56acba76ee269ffb1393e":[9,0,26,9],
-"class_nim_b_l_e_scan.html#a566a9ef25b04e946ac23402bb760cda1":[9,0,26,1]
+"class_nim_b_l_e_scan.html#a4c3e1794c3e56acba76ee269ffb1393e":[9,0,26,9]
 };

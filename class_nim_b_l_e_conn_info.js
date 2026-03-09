@@ -12,5 +12,6 @@ var class_nim_b_l_e_conn_info =
     [ "isBonded", "class_nim_b_l_e_conn_info.html#afefcdd1c560a307632c15394497c436f", null ],
     [ "isEncrypted", "class_nim_b_l_e_conn_info.html#a1a29242623a50989c7a03ee209ac2cf4", null ],
     [ "isMaster", "class_nim_b_l_e_conn_info.html#a5f91ef30d5ff92ad26f07feb31a5cd20", null ],
-    [ "isSlave", "class_nim_b_l_e_conn_info.html#ad91de04bdad64019950a1d095baf0e43", null ]
+    [ "isSlave", "class_nim_b_l_e_conn_info.html#ad91de04bdad64019950a1d095baf0e43", null ],
+    [ "toString", "class_nim_b_l_e_conn_info.html#a82da6ce1d231083023460742eb2d41b1", null ]
 ];
