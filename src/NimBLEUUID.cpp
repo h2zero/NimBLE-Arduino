@@ -39,6 +39,20 @@ static const uint8_t ble_base_uuid[] = {
 NimBLEUUID::NimBLEUUID(const ble_uuid_any_t& uuid) : m_uuid{uuid} {}
 
 /**
+ * @brief Create a UUID from the native UUID pointer.
+ * @param [in] uuid The native UUID pointer.
+ */
+NimBLEUUID::NimBLEUUID(const ble_uuid_t* uuid) {
+    if (uuid == nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "Invalid UUID pointer");
+        m_uuid.u.type = 0;
+        return;
+    }
+
+    ble_uuid_copy(&m_uuid, uuid);
+}
+
+/**
  * @brief Create a UUID from a string.
  *
  * Create a UUID from a string.  There will be two possible stories here. Either

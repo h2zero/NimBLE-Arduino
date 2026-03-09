@@ -48,12 +48,7 @@ NimBLEService::NimBLEService(const NimBLEUUID& uuid)
  * @brief Destructor, make sure we release the resources allocated for the service.
  */
 NimBLEService::~NimBLEService() {
-    if (m_pSvcDef->characteristics) {
-        if (m_pSvcDef->characteristics->descriptors) {
-            delete[] m_pSvcDef->characteristics->descriptors;
-        }
-        delete[] m_pSvcDef->characteristics;
-    }
+    clearServiceDefinitions();
 
     for (const auto& it : m_vChars) {
         delete it;
@@ -89,7 +84,14 @@ void NimBLEService::dump() const {
  * @return bool success/failure .
  */
 bool NimBLEService::start() {
-    NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service: %s", toString().c_str());
+    NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service: UUID: %s", getUUID().toString().c_str());
+    // If the server has started before then we need to reset the GATT server
+    // to update the service/characteristic/descriptor definitions. If characteristics or descriptors
+    // have been added/removed since the last server start then this service will be started on gatt reset.
+    if (getServer()->m_svcChanged && getServer()->m_gattsStarted) {
+        NIMBLE_LOGW(LOG_TAG, "<< start(): GATT change pending, cannot start service");
+        return false;
+    }
 
     // If started previously and no characteristics have been added or removed,
     // then we can skip the service registration process.
@@ -97,13 +99,8 @@ bool NimBLEService::start() {
         return true;
     }
 
-    // If started previously, clear everything and start over
-    if (m_pSvcDef->characteristics) {
-        if (m_pSvcDef->characteristics->descriptors) {
-            delete[] m_pSvcDef->characteristics->descriptors;
-        }
-        delete[] m_pSvcDef->characteristics;
-    }
+    // Make sure the definitions are cleared first
+    clearServiceDefinitions();
 
     size_t numChrs = 0;
     for (const auto& chr : m_vChars) {
@@ -113,7 +110,7 @@ bool NimBLEService::start() {
         ++numChrs;
     }
 
-    NIMBLE_LOGD(LOG_TAG, "Adding %d characteristics for service %s", numChrs, toString().c_str());
+    NIMBLE_LOGD(LOG_TAG, "Adding %zu characteristics for service %s", numChrs, getUUID().toString().c_str());
     if (numChrs) {
         int i = 0;
 
@@ -160,7 +157,7 @@ bool NimBLEService::start() {
             pChrs[i].arg          = chr;
             pChrs[i].flags        = chr->getProperties();
             pChrs[i].min_key_size = 0;
-            pChrs[i].val_handle   = &chr->m_handle;
+            pChrs[i].val_handle   = nullptr;
             ++i;
         }
 
@@ -168,7 +165,8 @@ bool NimBLEService::start() {
     }
 
     m_pSvcDef->type = BLE_GATT_SVC_TYPE_PRIMARY;
-    int rc          = ble_gatts_count_cfg(m_pSvcDef);
+
+    int rc = ble_gatts_count_cfg(m_pSvcDef);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_count_cfg failed, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;
@@ -183,6 +181,25 @@ bool NimBLEService::start() {
     NIMBLE_LOGD(LOG_TAG, "<< start()");
     return true;
 } // start
+
+/**
+ * @brief Clear the service definitions to free memory and reset the service for re-registration.
+ */
+void NimBLEService::clearServiceDefinitions() {
+    if (m_pSvcDef->characteristics) {
+        const ble_gatt_chr_def* chrDef = m_pSvcDef->characteristics;
+        while (chrDef->uuid != nullptr) {
+            if (chrDef->descriptors) {
+                delete[] chrDef->descriptors;
+            }
+            ++chrDef;
+        }
+        delete[] m_pSvcDef->characteristics;
+        m_pSvcDef->characteristics = nullptr;
+    }
+
+    m_pSvcDef->type = 0; // Clear the type to indicate the service is not started/registered.
+} // clearServiceDefinitions
 
 /**
  * @brief Create a new BLE Characteristic associated with this service.

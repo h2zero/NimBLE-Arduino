@@ -61,6 +61,7 @@ class NimBLEService : public NimBLELocalAttribute {
 
   private:
     friend class NimBLEServer;
+    void clearServiceDefinitions();
 
     std::vector<NimBLECharacteristic*> m_vChars{};
     // Nimble requires an array of services to be sent to the api
