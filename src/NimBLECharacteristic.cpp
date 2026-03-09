@@ -165,21 +165,27 @@ void NimBLECharacteristic::removeDescriptor(NimBLEDescriptor* pDescriptor, bool 
 /**
  * @brief Return the BLE Descriptor for the given UUID.
  * @param [in] uuid The UUID of the descriptor.
+ * @param [in] index The index of the descriptor to return (used when multiple descriptors have the same UUID).
  * @return A pointer to the descriptor object or nullptr if not found.
  */
-NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* uuid) const {
-    return getDescriptorByUUID(NimBLEUUID(uuid));
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* uuid, uint16_t index) const {
+    return getDescriptorByUUID(NimBLEUUID(uuid), index);
 } // getDescriptorByUUID
 
 /**
  * @brief Return the BLE Descriptor for the given UUID.
  * @param [in] uuid The UUID of the descriptor.
+ * @param [in] index The index of the descriptor to return (used when multiple descriptors have the same UUID).
  * @return A pointer to the descriptor object or nullptr if not found.
  */
-NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID& uuid) const {
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID& uuid, uint16_t index) const {
+    uint16_t position = 0;
     for (const auto& dsc : m_vDescriptors) {
         if (dsc->getUUID() == uuid) {
-            return dsc;
+            if (position == index) {
+                return dsc;
+            }
+            position++;
         }
     }
     return nullptr;
