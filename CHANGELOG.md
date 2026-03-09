@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.3.9] 2026-03-08
+
+## Fixed
+- Crash when scanning with esp32c6/c5/c2/h2.
+- Scan duplicate filter not resetting on scan restart.
+
+## Added
+- `NimBLEConnInfo::toString` method to get a string representation of the connection information for logging/debugging purposes.
+
+
 ## [2.3.8] 2026-03-02
 
 ## Fixed
