@@ -11,6 +11,8 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 
+#include "NimBLE2905.h"
+
 static NimBLEServer* pServer;
 
 /**  None of these are required as they will be handled by the library with defaults. **
@@ -123,7 +125,9 @@ class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
 
 void setup(void) {
     Serial.begin(115200);
+    delay(500);
     Serial.printf("Starting NimBLE Server\n");
+    delay(500);
 
     /** Initialize NimBLE and set the device name */
     NimBLEDevice::init("NimBLE");
@@ -186,9 +190,70 @@ void setup(void) {
     pC01Ddsc->setValue("Send it back!");
     pC01Ddsc->setCallbacks(&dscCallbacks);
 
+    NimBLEService* pCafeService = pServer->createService("CAFE");
+
+    NimBLECharacteristic* pBurgerIngredientsCharacteristic =
+        pCafeService->createCharacteristic("FEED", NIMBLE_PROPERTY::READ);
+
+    NimBLE2904* pFormatName = pBurgerIngredientsCharacteristic->create2904();
+    pFormatName->setFormat(0x19);
+    pFormatName->setUnit(0x2700);
+
+    NimBLE2904* pFormatFatPercent = pBurgerIngredientsCharacteristic->create2904();
+    pFormatFatPercent->setFormat(0x04);
+    pFormatFatPercent->setUnit(0x27AD);
+
+    NimBLE2904* pFormatWeight = pBurgerIngredientsCharacteristic->create2904();
+    pFormatWeight->setFormat(0x06);
+    pFormatWeight->setUnit(0x276F);
+
+    /**
+     *  2905 “Aggregate Format” descriptor is a special case. When create2905() is called,
+     *  it creates an instance of NimBLE2905 with the correct properties and size.
+     *  We must then explicitly add the constituent 2904 descriptors that define the
+     *  aggregate format (e.g., name, fat percent, weight) using add2904Descriptor().
+     *  This ensures the aggregate descriptor correctly references all its component descriptors.
+     */
+    NimBLE2905* pFormatAggregate = pBurgerIngredientsCharacteristic->create2905();
+    pFormatAggregate->add2904Descriptor(pFormatName);
+    pFormatAggregate->add2904Descriptor(pFormatFatPercent);
+    pFormatAggregate->add2904Descriptor(pFormatWeight);
+
+
+    const char* name = "Ground Beef Patty";
+    const size_t nameLength = strlen(name);
+    uint8_t fatPercentage = 20;
+    uint16_t weightGrams = 227;
+    uint8_t rawValue[nameLength + 1 + sizeof(fatPercentage) + sizeof(weightGrams)];
+
+    size_t offset = 0;
+    // Copy name
+    memcpy(rawValue + offset, name, nameLength);
+    offset += nameLength;
+
+    // Null terminator
+    rawValue[offset++] = 0;
+
+    // Fat percentage (1 byte)
+    memcpy(rawValue + offset, &fatPercentage, sizeof(fatPercentage));
+    offset += sizeof(fatPercentage);
+    // Weight (2 bytes)
+    memcpy(rawValue + offset, &weightGrams, sizeof(weightGrams));
+    offset += sizeof(weightGrams);
+    pBurgerIngredientsCharacteristic->setValue(rawValue, offset);
+
+    const char* description = "UTF-8 Name (null-terminated) + uint8 Fat % + uint16 Weight (grams)";
+    NimBLEDescriptor* pUserDesc = pBurgerIngredientsCharacteristic->createDescriptor(
+        BLEUUID((uint16_t)0x2901),
+        NIMBLE_PROPERTY::READ,
+        strlen(description)
+    );
+    pUserDesc->setValue(description);
+
     /** Start the services when finished creating all Characteristics and Descriptors */
     pDeadService->start();
     pBaadService->start();
+    pCafeService->start();
 
     /** Create an advertising instance and add the services to the advertised data */
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
