@@ -119,10 +119,11 @@ class NimBLEServer {
 
     NimBLEServer();
     ~NimBLEServer();
-    static int handleGapEvent(struct ble_gap_event* event, void* arg);
-    static int handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
-    void       serviceChanged();
-    void       resetGATT();
+    static int  handleGapEvent(struct ble_gap_event* event, void* arg);
+    static int  handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
+    static void gattRegisterCallback(struct ble_gatt_register_ctxt* ctxt, void* arg);
+    void        serviceChanged();
+    void        resetGATT();
 
     bool m_gattsStarted : 1;
     bool m_svcChanged : 1;
