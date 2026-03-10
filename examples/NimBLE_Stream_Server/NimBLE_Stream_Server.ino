@@ -3,8 +3,8 @@
  *
  *  Demonstrates using NimBLEStreamServer to create a BLE GATT server
  *  that behaves like a serial port using the Arduino Stream interface.
- *  
- *  This allows you to use familiar methods like print(), println(), 
+ *
+ *  This allows you to use familiar methods like print(), println(),
  *  read(), and available() over BLE, similar to how you would use Serial.
  *
  *  Created: November 2025
@@ -13,7 +13,6 @@
 
 #include <Arduino.h>
 #include <NimBLEDevice.h>
-#include <NimBLEStream.h>
 
 // Create the stream server instance
 NimBLEStreamServer bleStream;
@@ -48,8 +47,8 @@ void setup() {
     /** Initialize NimBLE and set the device name */
     NimBLEDevice::init("NimBLE-Stream");
 
-    /** 
-     * Create the BLE server and set callbacks 
+    /**
+     * Create the BLE server and set callbacks
      * Note: The stream will create its own service and characteristic
      */
     NimBLEServer* pServer = NimBLEDevice::createServer();
@@ -58,26 +57,22 @@ void setup() {
     /**
      * Initialize the stream server with:
      * - Service UUID
-     * - Characteristic UUID  
-     * - canWrite: true (allows clients to write data to us)
+     * - Characteristic UUID
+     * - txBufSize: 1024 bytes for outgoing data (notifications)
+     * - rxBufSize: 1024 bytes for incoming data (writes)
      * - secure: false (no encryption required - set to true for secure connections)
      */
-    if (!bleStream.init(NimBLEUUID(SERVICE_UUID), 
-                        NimBLEUUID(CHARACTERISTIC_UUID),
-                        true,   // canWrite - allow receiving data
-                        false)) // secure
+    if (!bleStream.begin(NimBLEUUID(SERVICE_UUID),
+                         NimBLEUUID(CHARACTERISTIC_UUID),
+                         1024,   // txBufSize
+                         1024,   // rxBufSize
+                         false)) // secure
     {
         Serial.println("Failed to initialize BLE stream!");
         return;
     }
 
-    /** Start the stream (begins internal buffers and tasks) */
-    if (!bleStream.begin()) {
-        Serial.println("Failed to start BLE stream!");
-        return;
-    }
-
-    /** 
+    /**
      * Create advertising instance and add service UUID
      * This makes the stream service discoverable
      */
@@ -94,32 +89,31 @@ void setup() {
 
 void loop() {
     // Check if a client is subscribed (connected and listening)
-    if (bleStream.hasSubscriber()) {
-        
+    if (bleStream.ready()) {
         // Send a message every 2 seconds using Stream methods
         static unsigned long lastSend = 0;
         if (millis() - lastSend > 2000) {
             lastSend = millis();
-            
+
             // Using familiar Serial-like methods!
             bleStream.print("Hello from BLE Server! Time: ");
             bleStream.println(millis());
-            
+
             // You can also use printf
             bleStream.printf("Free heap: %d bytes\n", ESP.getFreeHeap());
-            
+
             Serial.println("Sent data to client via BLE stream");
         }
 
         // Check if we received any data from the client
         if (bleStream.available()) {
             Serial.print("Received from client: ");
-            
+
             // Read all available data (just like Serial.read())
             while (bleStream.available()) {
                 char c = bleStream.read();
-                Serial.write(c);  // Echo to Serial
-                bleStream.write(c);  // Echo back to BLE client
+                Serial.write(c);    // Echo to Serial
+                bleStream.write(c); // Echo back to BLE client
             }
             Serial.println();
         }

@@ -7,7 +7,7 @@ This example demonstrates how to use the `NimBLEStreamServer` class to create a 
 - Uses Arduino Stream interface (print, println, read, available, etc.)
 - Automatic connection management
 - Bidirectional communication
-- Buffered TX/RX using FreeRTOS ring buffers
+- Buffered TX/RX using ring buffers
 - Similar usage to Serial communication
 
 ## How it Works

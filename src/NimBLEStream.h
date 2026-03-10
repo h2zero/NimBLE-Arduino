@@ -15,21 +15,25 @@
  * limitations under the License.
  */
 
-#ifdef ESP_PLATFORM
-# ifndef NIMBLE_CPP_STREAM_H
-#  define NIMBLE_CPP_STREAM_H
+#ifndef NIMBLE_CPP_STREAM_H
+#define NIMBLE_CPP_STREAM_H
 
-#  include "syscfg/syscfg.h"
-#  if CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
+#include "syscfg/syscfg.h"
+#if CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
 
-#   include "NimBLEUUID.h"
-#   include <freertos/FreeRTOS.h>
-#   include <freertos/ringbuf.h>
-#   include <type_traits>
+# if defined(CONFIG_NIMBLE_CPP_IDF)
+#  include "nimble/nimble_npl.h"
+# else
+#  include "nimble/nimble/include/nimble/nimble_npl.h"
+# endif
 
-#   if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
-#    include <Stream.h>
-#   else
+# include <type_traits>
+# include <cstdarg>
+
+# if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  include <Stream.h>
+# else
+
 // Minimal Stream/Print stubs when Arduino not available
 class Print {
   public:
@@ -46,194 +50,158 @@ class Stream : public Print {
     virtual int   available() = 0;
     virtual int   read()      = 0;
     virtual int   peek()      = 0;
+    virtual void  flush() {}
     void          setTimeout(unsigned long timeout) { m_timeout = timeout; }
     unsigned long getTimeout() const { return m_timeout; }
 
   protected:
     unsigned long m_timeout{0};
 };
-#   endif
+# endif
 
 class NimBLEStream : public Stream {
   public:
     NimBLEStream() = default;
     virtual ~NimBLEStream() { end(); }
 
-    bool begin();
-    bool end();
-
-    // Configure TX/RX buffer sizes and task parameters before begin()
-    void setTxBufSize(uint32_t size) { m_txBufSize = size; }
-    void setRxBufSize(uint32_t size) { m_rxBufSize = size; }
-    void setTxTaskStackSize(uint32_t size) { m_txTaskStackSize = size; }
-    void setTxTaskPriority(uint32_t priority) { m_txTaskPriority = priority; }
-
-    // These logging macros exist to provide log output over UART so that the stream class can
-    // be used to redirect logs without causing recursion issues.
-    static int uart_log_printfv(const char* format, va_list arg);
-    static int uart_log_printf(const char* format, ...);
-
     // Print/Stream TX methods
     virtual size_t write(const uint8_t* data, size_t len) override;
     virtual size_t write(uint8_t data) override { return write(&data, 1); }
 
     // Template for other integral types (char, int, long, etc.)
-    template <typename T, typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, uint8_t>::value, int>::type = 0>
-    size_t write(T data) {
+    template <typename T>
+    typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, uint8_t>::value, size_t>::type write(T data) {
         return write(static_cast<uint8_t>(data));
     }
 
-    size_t availableForWrite() const;
-    void   flush(uint32_t timeout_ms = 0);
+    virtual void flush() override {}
 
-    // Stream RX methods
-    virtual int available() override;
-    virtual int read() override;
-    virtual int peek() override;
+    size_t availableForWrite() const;
 
     // Read up to len bytes into buffer (non-blocking)
     size_t read(uint8_t* buffer, size_t len);
 
-    // Serial-like helpers
-    bool ready() const { return isReady(); }
-         operator bool() const { return ready(); }
+    // Stream RX methods
+    virtual int  available() override;
+    virtual int  read() override;
+    virtual int  peek() override;
+    virtual bool ready() const = 0;
+
+    operator bool() const { return ready(); }
 
     using Print::write;
 
+    struct ByteRingBuffer;
+
   protected:
-    static void  txTask(void* arg);
-    virtual bool send(const uint8_t* data, size_t len) = 0;
-    virtual bool isReady() const                       = 0;
+    bool         begin();
+    void         drainTx();
+    size_t       pushRx(const uint8_t* data, size_t len);
+    virtual void end();
+    virtual bool send() = 0;
+    static void  txDrainEventCb(struct ble_npl_event* ev);
+    static void  txDrainCalloutCb(struct ble_npl_event* ev);
 
-    // Push received data into RX ring (called by subclass callbacks)
-    size_t pushRx(const uint8_t* data, size_t len);
-
-    // RX buffering state: avoids requeueing/fragmentation
-    struct RxState {
-        uint8_t* item{nullptr};
-        size_t itemSize{0};
-        size_t offset{0};
-    };
-
-    RingbufHandle_t m_txBuf{nullptr};
-    RingbufHandle_t m_rxBuf{nullptr};
-    TaskHandle_t    m_txTask{nullptr};
-    uint32_t        m_txTaskStackSize{4096};
-    uint32_t        m_txTaskPriority{tskIDLE_PRIORITY + 1};
+    ByteRingBuffer* m_txBuf{nullptr};
+    ByteRingBuffer* m_rxBuf{nullptr};
+    uint8_t         m_txChunkBuf[MYNEWT_VAL(BLE_ATT_PREFERRED_MTU)];
     uint32_t        m_txBufSize{1024};
     uint32_t        m_rxBufSize{1024};
-
-    mutable RxState m_rxState{};  // Track current RX item to avoid requeueing
+    ble_npl_event   m_txDrainEvent{NULL};
+    ble_npl_callout m_txDrainCallout{NULL};
+    bool            m_coInitialized{false};
+    bool            m_eventInitialized{false};
 };
 
-#   if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
-#    include "NimBLECharacteristic.h"
+# if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
+#  include "NimBLECharacteristic.h"
 
 class NimBLEStreamServer : public NimBLEStream {
   public:
     NimBLEStreamServer() : m_charCallbacks(this) {}
-    ~NimBLEStreamServer()                                    = default;
+    ~NimBLEStreamServer() override { end(); }
+
     // non-copyable
     NimBLEStreamServer(const NimBLEStreamServer&)            = delete;
     NimBLEStreamServer& operator=(const NimBLEStreamServer&) = delete;
 
-    bool     init(const NimBLEUUID& svcUuid  = NimBLEUUID(uint16_t(0xc0de)),
-                  const NimBLEUUID& chrUuid  = NimBLEUUID(uint16_t(0xfeed)),
-                  bool              canWrite = false,
-                  bool              secure   = false);
-    void     deinit();
+    bool begin(NimBLECharacteristic* chr, uint32_t txBufSize = 1024, uint32_t rxBufSize = 1024);
+
+    // Convenience overload to create service/characteristic internally; service will be deleted on end()
+    bool begin(const NimBLEUUID& svcUuid,
+               const NimBLEUUID& chrUuid,
+               uint32_t          txBufSize = 1024,
+               uint32_t          rxBufSize = 1024,
+               bool              secure    = false);
+
+    void     end() override;
     size_t   write(const uint8_t* data, size_t len) override;
     uint16_t getPeerHandle() const { return m_charCallbacks.m_peerHandle; }
-    bool     hasSubscriber() const { return m_charCallbacks.m_peerHandle != BLE_HS_CONN_HANDLE_NONE; }
-    size_t   getMaxLength() const { return m_charCallbacks.m_maxLen; }
     void     setCallbacks(NimBLECharacteristicCallbacks* pCallbacks) { m_charCallbacks.m_userCallbacks = pCallbacks; }
+    bool     ready() const override;
 
     using NimBLEStream::write; // Inherit template write overloads
 
-  private:
-    bool send(const uint8_t* data, size_t len) override;
-    bool isReady() const override { return hasSubscriber(); }
+  protected:
+    bool send() override;
 
     struct ChrCallbacks : public NimBLECharacteristicCallbacks {
         ChrCallbacks(NimBLEStreamServer* parent)
-            : m_parent(parent), m_userCallbacks(nullptr), m_peerHandle(BLE_HS_CONN_HANDLE_NONE), m_maxLen(0) {}
+            : m_parent(parent), m_userCallbacks(nullptr), m_peerHandle(BLE_HS_CONN_HANDLE_NONE) {}
         void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override;
         void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue) override;
-        void onStatus(NimBLECharacteristic* pCharacteristic, int code) override;
+        void onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code) override;
         // override this to avoid recursion when debug logs are enabled
-        void onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code) {
-            if (m_userCallbacks) {
-                m_userCallbacks->onStatus(pCharacteristic, connInfo, code);
+        void onStatus(NimBLECharacteristic* pCharacteristic, int code) override {
+            if (m_userCallbacks != nullptr) {
+                m_userCallbacks->onStatus(pCharacteristic, code);
             }
         }
 
         NimBLEStreamServer*            m_parent;
         NimBLECharacteristicCallbacks* m_userCallbacks;
         uint16_t                       m_peerHandle;
-        uint16_t                       m_maxLen;
     } m_charCallbacks;
 
     NimBLECharacteristic* m_pChr{nullptr};
     int                   m_rc{0};
+    // Whether to delete the BLE service when end() is called; set to false if service is managed externally
+    bool                  m_deleteSvcOnEnd{false};
 };
-#   endif // BLE_ROLE_PERIPHERAL
+# endif // BLE_ROLE_PERIPHERAL
 
-#   if MYNEWT_VAL(BLE_ROLE_CENTRAL)
-#    include "NimBLERemoteCharacteristic.h"
+# if MYNEWT_VAL(BLE_ROLE_CENTRAL)
+#  include "NimBLERemoteCharacteristic.h"
 
 class NimBLEStreamClient : public NimBLEStream {
   public:
-    NimBLEStreamClient()                                     = default;
-    ~NimBLEStreamClient()                                    = default;
+    NimBLEStreamClient() = default;
+    ~NimBLEStreamClient() override { end(); }
+
     // non-copyable
     NimBLEStreamClient(const NimBLEStreamClient&)            = delete;
     NimBLEStreamClient& operator=(const NimBLEStreamClient&) = delete;
 
     // Attach a discovered remote characteristic; app owns discovery/connection.
     // Set subscribeNotify=true to receive notifications into RX buffer.
-    bool init(NimBLERemoteCharacteristic* pChr, bool subscribeNotify = false);
-    void deinit();
-    void setWriteWithResponse(bool useWithRsp) { m_writeWithRsp = useWithRsp; }
+    bool begin(NimBLERemoteCharacteristic* pChr,
+               bool                        subscribeNotify = false,
+               uint32_t                    txBufSize       = 1024,
+               uint32_t                    rxBufSize       = 1024);
+    void end() override;
     void setNotifyCallback(NimBLERemoteCharacteristic::notify_callback cb) { m_userNotifyCallback = cb; }
+    bool ready() const override;
 
     using NimBLEStream::write; // Inherit template write overloads
 
-  private:
-    bool send(const uint8_t* data, size_t len) override;
-    bool isReady() const override { return m_pChr != nullptr; }
+  protected:
+    bool send() override;
     void notifyCallback(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t len, bool isNotify);
 
     NimBLERemoteCharacteristic*                 m_pChr{nullptr};
-    bool                                        m_writeWithRsp{false};
     NimBLERemoteCharacteristic::notify_callback m_userNotifyCallback{nullptr};
 };
-#   endif // BLE_ROLE_CENTRAL
+# endif // BLE_ROLE_CENTRAL
 
-#  endif // CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
-
-#  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
-#   define NIMBLE_UART_LOGD(tag, format, ...) NimBLEStream::uart_log_printf("D %s: " format "\n", tag, ##__VA_ARGS__)
-#  else
-#   define NIMBLE_UART_LOGD(tag, format, ...) (void)tag
-#  endif
-
-#  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 3
-#   define NIMBLE_UART_LOGI(tag, format, ...) NimBLEStream::uart_log_printf("I %s: " format "\n", tag, ##__VA_ARGS__)
-#  else
-#   define NIMBLE_UART_LOGI(tag, format, ...) (void)tag
-#  endif
-
-#  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 2
-#   define NIMBLE_UART_LOGW(tag, format, ...) NimBLEStream::uart_log_printf("W %s: " format "\n", tag, ##__VA_ARGS__)
-#  else
-#   define NIMBLE_UART_LOGW(tag, format, ...) (void)tag
-#  endif
-
-#  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 1
-#   define NIMBLE_UART_LOGE(tag, format, ...) NimBLEStream::uart_log_printf("E %s: " format "\n", tag, ##__VA_ARGS__)
-#  else
-#   define NIMBLE_UART_LOGE(tag, format, ...) (void)tag
-#  endif
-
-# endif // NIMBLE_CPP_STREAM_H
-#endif  // ESP_PLATFORM
+#endif // CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
+#endif // NIMBLE_CPP_STREAM_H

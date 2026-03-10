@@ -15,18 +15,207 @@
  * limitations under the License.
  */
 
-#ifdef ESP_PLATFORM
-# include "NimBLEStream.h"
-# if CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
+#include "NimBLEStream.h"
+#if CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
 
-#  include "NimBLEDevice.h"
-#  include "rom/uart.h"
+# include "NimBLEDevice.h"
+# include "NimBLELog.h"
+# if defined(CONFIG_NIMBLE_CPP_IDF)
+#  include "os/os_mbuf.h"
+#  include "nimble/nimble_port.h"
+# else
+#  include "nimble/porting/nimble/include/os/os_mbuf.h"
+#  include "nimble/porting/nimble/include/nimble/nimble_port.h"
+# endif
+# include <algorithm>
+# include <cstdio>
+# include <cstdlib>
+# include <cstring>
 
 static const char* LOG_TAG = "NimBLEStream";
 
+struct NimBLEStream::ByteRingBuffer {
+    /** @brief Guard for ByteRingBuffer to manage locking. */
+    struct Guard {
+        const ByteRingBuffer& _b;
+        bool                  _locked;
+        Guard(const ByteRingBuffer& b) : _b(b), _locked(b.lock()) {}
+        ~Guard() {
+            if (_locked) _b.unlock();
+        }
+        operator bool() const { return _locked; } // Allows: if (Guard g{*this}) { ... }
+    };
+
+    /** @brief Construct a ByteRingBuffer with the specified capacity. */
+    explicit ByteRingBuffer(size_t capacity) : m_capacity(capacity) {
+        memset(&m_mutex, 0, sizeof(m_mutex));
+        auto rc = ble_npl_mutex_init(&m_mutex);
+        if (rc != BLE_NPL_OK) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to initialize ring buffer mutex, error: %d", rc);
+            return;
+        }
+
+        m_buf = static_cast<uint8_t*>(malloc(capacity));
+        if (!m_buf) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to allocate ring buffer memory");
+            return;
+        }
+    }
+
+    /** @brief Destroy the ByteRingBuffer and release resources. */
+    ~ByteRingBuffer() {
+        if (m_buf) {
+            free(m_buf);
+        }
+        ble_npl_mutex_deinit(&m_mutex);
+    }
+
+    /** @brief Check if the ByteRingBuffer is valid. */
+    bool valid() const { return m_buf != nullptr; }
+
+    /** @brief Get the capacity of the ByteRingBuffer. */
+    size_t capacity() const { return m_capacity; }
+
+    /** @brief Get the current size of the ByteRingBuffer. */
+    size_t size() const {
+        Guard g(*this);
+        return g ? m_size : 0;
+    }
+
+    /** @brief Get the available free space in the ByteRingBuffer. */
+    size_t freeSize() const {
+        Guard g(*this);
+        return g ? m_capacity - m_size : 0;
+    }
+
+    /**
+     * @brief Write data to the ByteRingBuffer.
+     * @param data Pointer to the data to write.
+     * @param len Length of the data to write.
+     * @returns the number of bytes actually written, which may be less than len if the buffer does not have enough free space.
+     */
+    size_t write(const uint8_t* data, size_t len) {
+        if (!data || len == 0) {
+            return 0;
+        }
+
+        Guard g(*this);
+        if (!g || m_size >= m_capacity) {
+            return 0;
+        }
+
+        size_t count = std::min(len, m_capacity - m_size);
+        size_t first = std::min(count, m_capacity - m_head);
+        memcpy(m_buf + m_head, data, first);
+        size_t remain = count - first;
+        if (remain > 0) {
+            memcpy(m_buf, data + first, remain);
+        }
+
+        m_head  = (m_head + count) % m_capacity;
+        m_size += count;
+        return count;
+    }
+
+    /**
+     * @brief Read data from the ByteRingBuffer.
+     * @param out Pointer to the buffer where read data will be stored.
+     * @param len Maximum number of bytes to read.
+     * @returns the number of bytes actually read.
+     */
+    size_t read(uint8_t* out, size_t len) {
+        if (!out || len == 0) {
+            return 0;
+        }
+
+        Guard g(*this);
+        if (!g || m_size == 0) {
+            return 0;
+        }
+
+        size_t count = std::min(len, m_size);
+        size_t first = std::min(count, m_capacity - m_tail);
+        memcpy(out, m_buf + m_tail, first);
+        size_t remain = count - first;
+        if (remain > 0) {
+            memcpy(out + first, m_buf, remain);
+        }
+
+        m_tail  = (m_tail + count) % m_capacity;
+        m_size -= count;
+        return count;
+    }
+
+    /**
+     * @brief Peek at data in the ByteRingBuffer without removing it.
+     * @param out Pointer to the buffer where peeked data will be stored.
+     * @param len Maximum number of bytes to peek.
+     * @returns the number of bytes actually peeked.
+     */
+    size_t peek(uint8_t* out, size_t len) {
+        if (!out || len == 0) {
+            return 0;
+        }
+
+        Guard g(*this);
+        if (!g || m_size == 0) {
+            return 0;
+        }
+
+        size_t count = std::min(len, m_size);
+        size_t first = std::min(count, m_capacity - m_tail);
+        memcpy(out, m_buf + m_tail, first);
+        size_t remain = count - first;
+        if (remain > 0) {
+            memcpy(out + first, m_buf, remain);
+        }
+
+        return count;
+    }
+
+    /**
+     * @brief Drop data from the ByteRingBuffer without reading it.
+     * @param len Maximum number of bytes to drop.
+     * @returns the number of bytes actually dropped.
+     */
+    size_t drop(size_t len) {
+        if (len == 0) {
+            return 0;
+        }
+
+        Guard g(*this);
+        if (!g || m_size == 0) {
+            return 0;
+        }
+        size_t count  = std::min(len, m_size);
+        m_tail        = (m_tail + count) % m_capacity;
+        m_size       -= count;
+        return count;
+    }
+
+  private:
+    /**
+     * @brief Lock the ByteRingBuffer for exclusive access.
+     * @return true if the lock was successfully acquired, false otherwise.
+     */
+    bool lock() const { return valid() && ble_npl_mutex_pend(&m_mutex, BLE_NPL_TIME_FOREVER) == BLE_NPL_OK; }
+
+    /**
+     * @brief Unlock the ByteRingBuffer after exclusive access.
+     */
+    void unlock() const { ble_npl_mutex_release(&m_mutex); }
+
+    uint8_t*              m_buf{nullptr};
+    size_t                m_capacity{0};
+    size_t                m_head{0};
+    size_t                m_tail{0};
+    size_t                m_size{0};
+    mutable ble_npl_mutex m_mutex;
+};
+
 // Stub Print/Stream implementations when Arduino not available
-#  if !NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
-#   include <cstring>
+# if !NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  include <cstring>
 
 size_t Print::print(const char* s) {
     if (!s) return 0;
@@ -72,272 +261,310 @@ size_t Print::printf(const char* fmt, ...) {
     free(buf);
     return ret;
 }
-#  endif
+# endif
 
-void NimBLEStream::txTask(void* arg) {
-    NimBLEStream* pStream = static_cast<NimBLEStream*>(arg);
-    for (;;) {
-        size_t itemSize = 0;
-        void*  item     = xRingbufferReceive(pStream->m_txBuf, &itemSize, portMAX_DELAY);
-        if (item) {
-            pStream->send(reinterpret_cast<uint8_t*>(item), itemSize);
-            vRingbufferReturnItem(pStream->m_txBuf, item);
-        }
-    }
-}
-
+/**
+ * @brief Initialize the NimBLEStream, creating TX and RX buffers and setting up events.
+ * @return true if initialization was successful, false otherwise.
+ */
 bool NimBLEStream::begin() {
-    if (m_txBuf || m_rxBuf || m_txTask) {
-        NIMBLE_UART_LOGW(LOG_TAG, "Already initialized");
+    if (m_txBuf || m_rxBuf) {
+        NIMBLE_LOGW(LOG_TAG, "Already initialized");
         return true;
     }
 
+    if (m_txBufSize == 0 && m_rxBufSize == 0) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot initialize stream with both TX and RX buffer sizes set to 0");
+        return false;
+    }
+
+    if (ble_npl_callout_init(&m_txDrainCallout, nimble_port_get_dflt_eventq(), NimBLEStream::txDrainCalloutCb, this) != 0) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to initialize TX drain callout");
+        return false;
+    }
+    m_coInitialized = true;
+
+    ble_npl_event_init(&m_txDrainEvent, NimBLEStream::txDrainEventCb, this);
+    m_eventInitialized = true;
+
     if (m_txBufSize) {
-        m_txBuf = xRingbufferCreate(m_txBufSize, RINGBUF_TYPE_BYTEBUF);
-        if (!m_txBuf) {
-            NIMBLE_UART_LOGE(LOG_TAG, "Failed to create TX ringbuffer");
+        m_txBuf = new ByteRingBuffer(m_txBufSize);
+        if (!m_txBuf || !m_txBuf->valid()) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to create TX ringbuffer");
+            end();
             return false;
         }
     }
 
     if (m_rxBufSize) {
-        m_rxBuf = xRingbufferCreate(m_rxBufSize, RINGBUF_TYPE_BYTEBUF);
-        if (!m_rxBuf) {
-            NIMBLE_UART_LOGE(LOG_TAG, "Failed to create RX ringbuffer");
-            if (m_txBuf) {
-                vRingbufferDelete(m_txBuf);
-                m_txBuf = nullptr;
-            }
+        m_rxBuf = new ByteRingBuffer(m_rxBufSize);
+        if (!m_rxBuf || !m_rxBuf->valid()) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to create RX ringbuffer");
+            end();
             return false;
         }
     }
 
-    if (xTaskCreate(txTask, "NimBLEStreamTx", m_txTaskStackSize, this, m_txTaskPriority, &m_txTask) != pdPASS) {
-        NIMBLE_UART_LOGE(LOG_TAG, "Failed to create stream tx task");
-        if (m_rxBuf) {
-            vRingbufferDelete(m_rxBuf);
-            m_rxBuf = nullptr;
-        }
-        if (m_txBuf) {
-            vRingbufferDelete(m_txBuf);
-            m_txBuf = nullptr;
-        }
-        return false;
-    }
-
     return true;
 }
 
-bool NimBLEStream::end() {
-    // Release any buffered RX item
-    if (m_rxState.item && m_rxBuf) {
-        vRingbufferReturnItem(m_rxBuf, m_rxState.item);
-        m_rxState.item = nullptr;
+/**
+ * @brief Clean up the NimBLEStream, stopping events and deleting buffers.
+ */
+void NimBLEStream::end() {
+    if (m_coInitialized) {
+        ble_npl_callout_stop(&m_txDrainCallout);
+        ble_npl_callout_deinit(&m_txDrainCallout);
+        m_coInitialized = false;
     }
-    m_rxState.itemSize = 0;
-    m_rxState.offset   = 0;
 
-    if (m_txTask) {
-        vTaskDelete(m_txTask);
-        m_txTask = nullptr;
+    if (m_eventInitialized) {
+        ble_npl_eventq_remove(nimble_port_get_dflt_eventq(), &m_txDrainEvent);
+        ble_npl_event_deinit(&m_txDrainEvent);
+        m_eventInitialized = false;
     }
 
     if (m_txBuf) {
-        vRingbufferDelete(m_txBuf);
+        delete m_txBuf;
         m_txBuf = nullptr;
     }
 
     if (m_rxBuf) {
-        vRingbufferDelete(m_rxBuf);
+        delete m_rxBuf;
         m_rxBuf = nullptr;
     }
-
-    return true;
 }
 
+/**
+ * @brief Write data to the stream, which will be sent over BLE.
+ * @param data Pointer to the data to write.
+ * @param len Length of the data to write.
+ * @return the number of bytes actually written to the stream buffer.
+ */
 size_t NimBLEStream::write(const uint8_t* data, size_t len) {
-    if (!m_txBuf || !data || len == 0) {
-        return 0;
-    }
-
-    ble_npl_time_t timeout = 0;
-    ble_npl_time_ms_to_ticks(getTimeout(), &timeout);
-    size_t chunk = std::min(len, xRingbufferGetCurFreeSize(m_txBuf));
-    if (xRingbufferSend(m_txBuf, data, chunk, static_cast<TickType_t>(timeout)) != pdTRUE) {
-        return 0;
-    }
-    return chunk;
-}
-
-size_t NimBLEStream::availableForWrite() const {
-    return m_txBuf ? xRingbufferGetCurFreeSize(m_txBuf) : 0;
-}
-
-void NimBLEStream::flush(uint32_t timeout_ms) {
     if (!m_txBuf) {
+        return 0;
+    }
+
+    auto written = m_txBuf->write(data, len);
+    drainTx();
+    return written;
+}
+
+/**
+ * @brief Get the available free space in the stream's TX buffer.
+ * @return the number of bytes that can be written to the stream without blocking.
+ */
+size_t NimBLEStream::availableForWrite() const {
+    return m_txBuf ? m_txBuf->freeSize() : 0;
+}
+
+/**
+ * @brief Schedule the stream to attempt to send data from the TX buffer.
+ * @details This should be called whenever new data is written to the TX buffer
+ * or when a send attempt fails due to lack of BLE buffers.
+ */
+void NimBLEStream::drainTx() {
+    if (!m_txBuf || m_txBuf->size() == 0) {
         return;
     }
 
-    ble_npl_time_t deadline = timeout_ms > 0 ? ble_npl_time_get() + ble_npl_time_ms_to_ticks32(timeout_ms) : 0;
+    ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &m_txDrainEvent);
+}
 
-    // Wait until TX ring is drained
-    while (m_txBuf && xRingbufferGetCurFreeSize(m_txBuf) < m_txBufSize) {
-        if (deadline > 0 && ble_npl_time_get() >= deadline) {
-            break;
-        }
-        ble_npl_time_delay(ble_npl_time_ms_to_ticks32(1));
+/**
+ * @brief Event callback for when the stream is scheduled to drain the TX buffer.
+ * @param ev Pointer to the event that triggered the callback.
+ * @details This will attempt to send data from the TX buffer. If sending fails due to
+ * lack of BLE buffers, it will reschedule itself to try again after a short delay.
+ */
+void NimBLEStream::txDrainEventCb(struct ble_npl_event* ev) {
+    if (!ev) {
+        return;
+    }
+
+    auto* stream = static_cast<NimBLEStream*>(ble_npl_event_get_arg(ev));
+    if (!stream) {
+        return;
+    }
+
+    if (stream->send()) {
+        // Schedule a short delayed retry to give the stack time to free buffers, use 5ms for now
+        // TODO: consider options for the delay time and retry strategy if the stack is persistently out of buffers
+        ble_npl_callout_reset(&stream->m_txDrainCallout, ble_npl_time_ms_to_ticks32(5));
     }
 }
 
+/**
+ * @brief Callout callback for when the stream is scheduled to retry draining the TX buffer.
+ * @param ev Pointer to the event that triggered the callback.
+ * @details This will call drainTx() to attempt to send data from the TX buffer again.
+ */
+void NimBLEStream::txDrainCalloutCb(struct ble_npl_event* ev) {
+    if (!ev) {
+        return;
+    }
+
+    auto* stream = static_cast<NimBLEStream*>(ble_npl_event_get_arg(ev));
+    if (!stream) {
+        return;
+    }
+
+    stream->drainTx();
+}
+
+/**
+ * @brief Get the number of bytes available to read from the stream.
+ * @return the number of bytes that can be read from the stream.
+ */
 int NimBLEStream::available() {
     if (!m_rxBuf) {
-        NIMBLE_UART_LOGE(LOG_TAG, "Invalid RX buffer");
         return 0;
     }
 
-    // Count buffered RX item remainder
-    size_t buffered = m_rxState.itemSize > m_rxState.offset ? m_rxState.itemSize - m_rxState.offset : 0;
-
-    // Query items in RX ring
-    UBaseType_t waiting = 0;
-    vRingbufferGetInfo(m_rxBuf, nullptr, nullptr, nullptr, nullptr, &waiting);
-
-    return static_cast<int>(buffered + waiting);
+    return static_cast<int>(m_rxBuf->size());
 }
 
+/**
+ * @brief Read a single byte from the stream.
+ * @return the byte read as an int, or -1 if no data is available.
+ */
 int NimBLEStream::read() {
     if (!m_rxBuf) {
         return -1;
     }
 
-    // Return from buffered item if available
-    if (m_rxState.item && m_rxState.offset < m_rxState.itemSize) {
-        uint8_t byte = m_rxState.item[m_rxState.offset++];
-
-        // Release item if we've consumed it all
-        if (m_rxState.offset >= m_rxState.itemSize) {
-            vRingbufferReturnItem(m_rxBuf, m_rxState.item);
-            m_rxState.item     = nullptr;
-            m_rxState.itemSize = 0;
-            m_rxState.offset   = 0;
-        }
-
-        return static_cast<int>(byte);
-    }
-
-    // Fetch next item from ringbuffer
-    size_t   itemSize = 0;
-    uint8_t* item     = static_cast<uint8_t*>(xRingbufferReceive(m_rxBuf, &itemSize, 0));
-    if (!item || itemSize == 0) {
+    uint8_t byte = 0;
+    if (m_rxBuf->read(&byte, 1) == 0) {
         return -1;
     }
 
-    // Store in buffer state and return first byte
-    m_rxState.item     = item;
-    m_rxState.itemSize = itemSize;
-    m_rxState.offset   = 1; // Already consumed first byte
-
-    return static_cast<int>(item[0]);
+    return static_cast<int>(byte);
 }
 
+/**
+ * @brief Peek at the next byte in the stream without removing it.
+ * @return the byte peeked as an int, or -1 if no data is available.
+ */
 int NimBLEStream::peek() {
     if (!m_rxBuf) {
         return -1;
     }
 
-    // Return from buffered item if available
-    if (m_rxState.item && m_rxState.offset < m_rxState.itemSize) {
-        return static_cast<int>(m_rxState.item[m_rxState.offset]);
+    uint8_t byte = 0;
+    if (m_rxBuf->peek(&byte, 1) == 0) {
+        return -1;
     }
 
-    // Fetch next item from ringbuffer if not already buffered
-    if (!m_rxState.item) {
-        size_t   itemSize = 0;
-        uint8_t* item     = static_cast<uint8_t*>(xRingbufferReceive(m_rxBuf, &itemSize, 0));
-        if (!item || itemSize == 0) {
-            return -1;
-        }
-
-        // Store in buffer state
-        m_rxState.item     = item;
-        m_rxState.itemSize = itemSize;
-        m_rxState.offset   = 0;
-    }
-
-    return static_cast<int>(m_rxState.item[m_rxState.offset]);
+    return static_cast<int>(byte);
 }
 
+/**
+ * @brief Read data from the stream into a buffer.
+ * @param buffer Pointer to the buffer where read data will be stored.
+ * @param len Maximum number of bytes to read.
+ * @return the number of bytes actually read from the stream.
+ */
 size_t NimBLEStream::read(uint8_t* buffer, size_t len) {
-    if (!m_rxBuf || !buffer || len == 0) {
+    if (!m_rxBuf) {
         return 0;
     }
 
-    size_t total = 0;
-
-    // First, consume any buffered RX item remainder
-    if (m_rxState.item && m_rxState.offset < m_rxState.itemSize) {
-        size_t available = m_rxState.itemSize - m_rxState.offset;
-        size_t copyLen   = std::min(len, available);
-        memcpy(buffer, m_rxState.item + m_rxState.offset, copyLen);
-        m_rxState.offset += copyLen;
-        total            += copyLen;
-
-        // Release item if fully consumed
-        if (m_rxState.offset >= m_rxState.itemSize) {
-            vRingbufferReturnItem(m_rxBuf, m_rxState.item);
-            m_rxState.item     = nullptr;
-            m_rxState.itemSize = 0;
-            m_rxState.offset   = 0;
-        }
-
-        if (total >= len) {
-            return total;
-        }
-    }
-
-    // Drain additional RX ringbuffer items
-    while (total < len) {
-        size_t   itemSize = 0;
-        uint8_t* item     = static_cast<uint8_t*>(xRingbufferReceive(m_rxBuf, &itemSize, 0));
-        if (!item || itemSize == 0) {
-            break;
-        }
-
-        size_t copyLen = std::min(len - total, itemSize);
-        memcpy(buffer + total, item, copyLen);
-        total += copyLen;
-
-        // If we didn't consume the entire item, buffer it
-        if (copyLen < itemSize) {
-            m_rxState.item     = item;
-            m_rxState.itemSize = itemSize;
-            m_rxState.offset   = copyLen;
-        } else {
-            // Item fully consumed
-            vRingbufferReturnItem(m_rxBuf, item);
-        }
-    }
-
-    return total;
+    return m_rxBuf->read(buffer, len);
 }
 
+/**
+ * @brief Push received data into the stream's RX buffer.
+ * @param data Pointer to the data to push into the RX buffer.
+ * @param len Length of the data to push.
+ * @return the number of bytes actually pushed into the RX buffer, which may be less than
+ * len if the buffer does not have enough free space.
+ */
 size_t NimBLEStream::pushRx(const uint8_t* data, size_t len) {
-    if (!m_rxBuf || !data || len == 0) {
-        NIMBLE_UART_LOGE(LOG_TAG, "Invalid RX buffer or data");
+    if (!m_rxBuf) {
         return 0;
     }
 
-    if (xRingbufferSend(m_rxBuf, data, len, 0) != pdTRUE) {
-        NIMBLE_UART_LOGE(LOG_TAG, "RX buffer full, dropping %zu bytes", len);
+    if (m_rxBuf->freeSize() < len) {
+        NIMBLE_LOGE(LOG_TAG, "RX buffer full, dropping data");
         return 0;
     }
-    return len;
+
+    return m_rxBuf->write(data, len);
 }
 
-#  if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
-bool NimBLEStreamServer::init(const NimBLEUUID& svcUuid, const NimBLEUUID& chrUuid, bool canWrite, bool secure) {
+# if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
+/**
+ * @brief Initialize the NimBLEStreamServer with an existing characteristic.
+ * @param pChr Pointer to the existing NimBLECharacteristic to use for the stream.
+ * @param txBufSize Size of the TX buffer.
+ * @param rxBufSize Size of the RX buffer.
+ * @return true if initialization was successful, false otherwise.
+ * @details The provided characteristic must have the NOTIFY property set for write operations
+ * to work and the WRITE or WRITE_NR property set for read operations to work.
+ * The stream will manage setting its own callbacks on the characteristic, but will save and call
+ * any existing user callbacks if they were set.
+ * The RX buffer will only be created if the characteristic has WRITE or WRITE_NR properties.
+ * The TX buffer will only be created if the characteristic has NOTIFY properties.
+ */
+bool NimBLEStreamServer::begin(NimBLECharacteristic* pChr, uint32_t txBufSize, uint32_t rxBufSize) {
     if (!NimBLEDevice::isInitialized()) {
-        NIMBLE_UART_LOGE(LOG_TAG, "NimBLEDevice not initialized");
+        return false;
+    }
+
+    if (m_pChr) {
+        NIMBLE_LOGW(LOG_TAG, "Already initialized with a characteristic");
+        return true;
+    }
+
+    if (!pChr) {
+        NIMBLE_LOGE(LOG_TAG, "Characteristic is null");
+        return false;
+    }
+
+    auto props     = pChr->getProperties();
+    bool canWrite  = (props & NIMBLE_PROPERTY::WRITE) || (props & NIMBLE_PROPERTY::WRITE_NR);
+    if (!canWrite && rxBufSize > 0) {
+        NIMBLE_LOGW(LOG_TAG, "Characteristic does not support WRITE, ignoring RX buffer size");
+    }
+
+    bool canNotify = props & NIMBLE_PROPERTY::NOTIFY;
+    if (!canNotify && txBufSize > 0) {
+        NIMBLE_LOGW(LOG_TAG, "Characteristic does not support NOTIFY, ignoring TX buffer size");
+    }
+
+    m_rxBufSize = canWrite ? rxBufSize : 0;  // disable RX if not writable
+    m_txBufSize = canNotify ? txBufSize : 0; // disable TX if notifications not supported
+
+    if (!NimBLEStream::begin()) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to initialize stream buffers");
+        return false;
+    }
+
+    m_charCallbacks.m_userCallbacks = pChr->getCallbacks();
+    pChr->setCallbacks(&m_charCallbacks);
+    m_pChr = pChr;
+    return true;
+}
+
+/**
+ * @brief Initialize the NimBLEStreamServer, creating a BLE service and characteristic for streaming.
+ * @param svcUuid UUID of the BLE service to create.
+ * @param chrUuid UUID of the BLE characteristic to create.
+ * @param txBufSize Size of the TX buffer, set to 0 to disable TX and create a write-only characteristic.
+ * @param rxBufSize Size of the RX buffer, set to 0 to disable RX and create a notify-only characteristic.
+ * @param secure Whether the characteristic requires encryption.
+ * @return true if initialization was successful, false otherwise.
+ */
+bool NimBLEStreamServer::begin(
+    const NimBLEUUID& svcUuid, const NimBLEUUID& chrUuid, uint32_t txBufSize, uint32_t rxBufSize, bool secure) {
+    if (!NimBLEDevice::isInitialized()) {
+        NIMBLE_LOGE(LOG_TAG, "NimBLEDevice not initialized");
+        return false;
+    }
+
+    if (m_pChr != nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "NimBLEStreamServer already initialized;");
         return false;
     }
 
@@ -346,62 +573,92 @@ bool NimBLEStreamServer::init(const NimBLEUUID& svcUuid, const NimBLEUUID& chrUu
         pServer = NimBLEDevice::createServer();
     }
 
-    NimBLEService* pSvc = pServer->getServiceByUUID(svcUuid);
+    auto pSvc = pServer->createService(svcUuid);
     if (!pSvc) {
-        pSvc = pServer->createService(svcUuid);
-    }
-
-    if (!pSvc) {
-        NIMBLE_UART_LOGE(LOG_TAG, "Failed to create service");
         return false;
     }
 
     // Create characteristic with notify + write properties for bidirectional stream
-    uint32_t props = NIMBLE_PROPERTY::NOTIFY;
-    if (secure) {
-        props |= NIMBLE_PROPERTY::READ_ENC;
+    uint32_t props = 0;
+    if (txBufSize > 0) {
+        props |= NIMBLE_PROPERTY::NOTIFY;
+        if (secure) {
+            props |= NIMBLE_PROPERTY::READ_ENC;
+        }
     }
 
-    if (canWrite) {
+    if (rxBufSize > 0) {
         props |= NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR;
         if (secure) {
             props |= NIMBLE_PROPERTY::WRITE_ENC;
         }
-    } else {
-        m_rxBufSize = 0; // disable RX if not writable
     }
 
-    m_pChr = pSvc->getCharacteristic(chrUuid);
-    if (!m_pChr) {
-        m_pChr = pSvc->createCharacteristic(chrUuid, props);
+    auto pChr = pSvc->createCharacteristic(chrUuid, props);
+    if (!pChr) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to create characteristic");
+        goto error;
     }
 
-    if (!m_pChr) {
-        NIMBLE_UART_LOGE(LOG_TAG, "Failed to create characteristic");
-        return false;
+    m_deleteSvcOnEnd = true; // mark service for deletion on end since we created it here
+
+    if (!pSvc->start()) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to start service");
+        goto error;
     }
 
-    m_pChr->setCallbacks(&m_charCallbacks);
-    return pSvc->start();
+    if (!begin(pChr, txBufSize, rxBufSize)) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to initialize stream with characteristic");
+        goto error;
+    }
+
+    return true;
+
+error:
+    pServer->removeService(pSvc, true); // delete service and all its characteristics
+    m_pChr = nullptr;                   // reset characteristic pointer as it's now invalid after service removal
+    end();
+    return false;
 }
 
-void NimBLEStreamServer::deinit() {
+/**
+ * @brief Stop the NimBLEStreamServer
+ * @details This will stop the stream and delete the service created if it was created by this class.
+ */
+void NimBLEStreamServer::end() {
     if (m_pChr) {
-        NimBLEService* pSvc = m_pChr->getService();
-        if (pSvc) {
-            pSvc->removeCharacteristic(m_pChr, true);
+        if (m_deleteSvcOnEnd) {
+            auto pSvc = m_pChr->getService();
+            if (pSvc) {
+                auto pServer = pSvc->getServer();
+                if (pServer) {
+                    pServer->removeService(pSvc, true);
+                }
+            }
+        } else {
+            m_pChr->setCallbacks(m_charCallbacks.m_userCallbacks); // restore any user callbacks
         }
-        m_pChr = nullptr;
     }
+
+    m_pChr                          = nullptr;
+    m_charCallbacks.m_peerHandle    = BLE_HS_CONN_HANDLE_NONE;
+    m_charCallbacks.m_userCallbacks = nullptr;
+    m_deleteSvcOnEnd                = false;
     NimBLEStream::end();
 }
 
+/**
+ * @brief Write data to the stream, which will be sent as BLE notifications.
+ * @param data Pointer to the data to write.
+ * @param len Length of the data to write.
+ * @return the number of bytes actually written to the stream buffer.
+ */
 size_t NimBLEStreamServer::write(const uint8_t* data, size_t len) {
-    if (!m_pChr || len == 0 || !hasSubscriber()) {
+    if (!m_pChr || len == 0 || !ready()) {
         return 0;
     }
 
-#   if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
+#  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
     // Skip server gap events to avoid log recursion
     static const char filterStr[] = "handleGapEvent";
     constexpr size_t  filterLen   = sizeof(filterStr) - 1;
@@ -412,163 +669,266 @@ size_t NimBLEStreamServer::write(const uint8_t* data, size_t len) {
             }
         }
     }
-#   endif
+#  endif
 
     return NimBLEStream::write(data, len);
 }
 
-bool NimBLEStreamServer::send(const uint8_t* data, size_t len) {
-    if (!m_pChr || !len || !hasSubscriber()) {
+/**
+ * @brief Attempt to send data from the TX buffer as BLE notifications.
+ * @return true if a retry should be scheduled, false otherwise.
+ * @details This will try to send as much data as possible from the TX buffer in chunks
+ * that fit within the current BLE MTU. If sending fails due to lack of BLE buffers, it will return true
+ * to indicate that a retry should be scheduled, but it will not drop any data from the TX buffer.
+ * For other errors or if all data is sent, it returns false.
+ */
+bool NimBLEStreamServer::send() {
+    if (!m_pChr || !m_txBuf || !ready()) {
         return false;
     }
 
-    size_t offset = 0;
-    while (offset < len) {
-        size_t chunkLen = std::min(len - offset, getMaxLength());
-        while (!m_pChr->notify(data + offset, chunkLen, getPeerHandle())) {
-            // Retry on ENOMEM (mbuf shortage)
-            if (m_rc == BLE_HS_ENOMEM || os_msys_num_free() <= 2) {
-                ble_npl_time_delay(ble_npl_time_ms_to_ticks32(8)); // wait for a minimum connection event time
-                continue;
-            }
-            return false;
+    size_t mtu = ble_att_mtu(getPeerHandle());
+    if (mtu < 23) {
+        return false;
+    }
+
+    size_t maxDataLen = std::min<size_t>(mtu - 3, sizeof(m_txChunkBuf));
+
+    while (m_txBuf->size()) {
+        size_t chunkLen = m_txBuf->peek(m_txChunkBuf, maxDataLen);
+        if (!chunkLen) {
+            break;
         }
 
-        offset += chunkLen;
+        if (!m_pChr->notify(m_txChunkBuf, chunkLen, getPeerHandle())) {
+            if (m_rc == BLE_HS_ENOMEM || os_msys_num_free() <= 2) {
+                // NimBLE stack out of buffers, likely due to pending notifications/indications
+                // Don't drop data, but wait for stack to free buffers and try again later
+                return true;
+            }
+
+            return false; // disconnect or other error don't retry send, preserve data for next attempt
+        }
+
+        m_txBuf->drop(chunkLen);
     }
-    return true;
+
+    return false; // no more data to send
 }
 
-void NimBLEStreamServer::ChrCallbacks::onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
-    // Push received data into RX buffer
-    auto val = pCharacteristic->getValue();
-    if (val.size() > 0) {
-        m_parent->pushRx(val.data(), val.size());
+/**
+ * @brief Check if the stream is ready to send/receive data, which requires an active BLE connection.
+ * @return true if the stream is ready, false otherwise.
+ */
+bool NimBLEStreamServer::ready() const {
+    if (m_charCallbacks.m_peerHandle == BLE_HS_CONN_HANDLE_NONE) {
+        return false;
     }
+
+    return ble_gap_conn_find(m_charCallbacks.m_peerHandle, NULL) == 0;
+}
+
+/**
+ * @brief Callback for when the characteristic is written to by a client.
+ * @param pChr Pointer to the characteristic that was written to.
+ * @param connInfo Information about the connection that performed the write.
+ * @details This will push the received data into the RX buffer and call any user-defined callbacks.
+ */
+void NimBLEStreamServer::ChrCallbacks::onWrite(NimBLECharacteristic* pChr, NimBLEConnInfo& connInfo) {
+    // Push received data into RX buffer
+    auto val = pChr->getValue();
+    m_parent->pushRx(val.data(), val.size());
 
     if (m_userCallbacks) {
-        m_userCallbacks->onWrite(pCharacteristic, connInfo);
+        m_userCallbacks->onWrite(pChr, connInfo);
     }
 }
 
-void NimBLEStreamServer::ChrCallbacks::onSubscribe(NimBLECharacteristic* pCharacteristic,
-                                                   NimBLEConnInfo&       connInfo,
-                                                   uint16_t              subValue) {
+/**
+ * @brief Callback for when a client subscribes or unsubscribes to notifications/indications.
+ * @param pChr Pointer to the characteristic that was subscribed/unsubscribed.
+ * @param connInfo Information about the connection that performed the subscribe/unsubscribe.
+ * @param subValue The new subscription value (0 for unsubscribe, non-zero for subscribe).
+ * @details This will track the subscriber's connection handle and call any user-defined callbacks.
+ * Only one subscriber is supported; if another client tries to subscribe while one is already subscribed, it will be ignored.
+ */
+void NimBLEStreamServer::ChrCallbacks::onSubscribe(NimBLECharacteristic* pChr, NimBLEConnInfo& connInfo, uint16_t subValue) {
+    // If we have a stored peer handle, ensure it still refers to an active connection.
+    // If the connection has gone away without an explicit unsubscribe, clear it so a new
+    // subscriber can be accepted.
+    if (m_peerHandle != BLE_HS_CONN_HANDLE_NONE) {
+        if (ble_gap_conn_find(m_peerHandle, nullptr) != 0) {
+            m_peerHandle = BLE_HS_CONN_HANDLE_NONE;
+        }
+    }
+
     // only one subscriber supported
-    if (m_peerHandle != BLE_HS_CONN_HANDLE_NONE && subValue) {
+    if (subValue && m_peerHandle != BLE_HS_CONN_HANDLE_NONE) {
+        NIMBLE_LOGI(LOG_TAG,
+                    "Already have a subscriber, rejecting new subscription from conn handle %d",
+                    connInfo.getConnHandle());
         return;
     }
 
     m_peerHandle = subValue ? connInfo.getConnHandle() : BLE_HS_CONN_HANDLE_NONE;
-    if (m_peerHandle != BLE_HS_CONN_HANDLE_NONE) {
-        m_maxLen = ble_att_mtu(m_peerHandle) - 3;
-        if (!m_parent->begin()) {
-            NIMBLE_UART_LOGE(LOG_TAG, "NimBLEStreamServer failed to begin");
-        }
-        return;
-    }
-
-    m_parent->end();
     if (m_userCallbacks) {
-        m_userCallbacks->onSubscribe(pCharacteristic, connInfo, subValue);
+        m_userCallbacks->onSubscribe(pChr, connInfo, subValue);
     }
 }
 
-void NimBLEStreamServer::ChrCallbacks::onStatus(NimBLECharacteristic* pCharacteristic, int code) {
+/**
+ * @brief Callback for when the connection status changes (e.g. disconnect).
+ * @param pChr Pointer to the characteristic associated with the status change.
+ * @param connInfo Information about the connection that changed status.
+ * @param code The new status code (e.g. success or error code).
+ * @details The code is used to track when the stack is out of buffers (BLE_HS_ENOMEM)
+ * to trigger retries without dropping data. User-defined callbacks will also be called if set.
+ */
+void NimBLEStreamServer::ChrCallbacks::onStatus(NimBLECharacteristic* pChr, NimBLEConnInfo& connInfo, int code) {
     m_parent->m_rc = code;
     if (m_userCallbacks) {
-        m_userCallbacks->onStatus(pCharacteristic, code);
+        m_userCallbacks->onStatus(pChr, connInfo, code);
     }
 }
 
-#  endif // MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
+# endif // MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
-#  if MYNEWT_VAL(BLE_ROLE_CENTRAL)
-bool NimBLEStreamClient::init(NimBLERemoteCharacteristic* pChr, bool subscribe) {
-    if (!pChr) {
+# if MYNEWT_VAL(BLE_ROLE_CENTRAL)
+/**
+ * @brief Initialize the NimBLEStreamClient, setting up the remote characteristic and subscribing to notifications if requested.
+ * @param pChr Pointer to the remote characteristic to use for streaming.
+ * @param subscribe Whether to subscribe to notifications/indications from the characteristic for RX.
+ * @param txBufSize Size of the TX buffer.
+ * @param rxBufSize Size of the RX buffer.
+ * @return true if initialization was successful, false otherwise.
+ * @details The characteristic must support write without response for TX.
+ * If subscribe is true, it will subscribe to notifications/indications for RX.
+ * If subscribe is false, the RX buffer will not be created and no notifications will be received.
+ */
+bool NimBLEStreamClient::begin(NimBLERemoteCharacteristic* pChr, bool subscribe, uint32_t txBufSize, uint32_t rxBufSize) {
+    if (!NimBLEDevice::isInitialized()) {
+        NIMBLE_LOGE(LOG_TAG, "NimBLE stack not initialized, call NimBLEDevice::init() first");
         return false;
     }
 
-    m_pChr         = pChr;
-    m_writeWithRsp = !pChr->canWriteNoResponse();
+    if (m_pChr) {
+        NIMBLE_LOGW(LOG_TAG, "Already initialized, must end() first");
+        return true;
+    }
+
+    if (!pChr) {
+        NIMBLE_LOGE(LOG_TAG, "Remote characteristic is null");
+        return false;
+    }
+
+    if (!pChr->canWriteNoResponse()) {
+        NIMBLE_LOGE(LOG_TAG, "Characteristic does not support write without response");
+        return false;
+    }
+
+    if (subscribe && !pChr->canNotify() && !pChr->canIndicate()) {
+        NIMBLE_LOGW(LOG_TAG, "Characteristic does not support subscriptions, RX disabled");
+        subscribe = false; // disable subscribe if not supported
+    }
+
+    m_txBufSize = txBufSize;
+    m_rxBufSize = subscribe ? rxBufSize : 0; // disable RX buffer if not subscribing
+
+    if (!NimBLEStream::begin()) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to initialize stream buffers");
+        return false;
+    }
 
     // Subscribe to notifications/indications for RX if requested
-    if (subscribe && (pChr->canNotify() || pChr->canIndicate())) {
+    if (subscribe) {
         using namespace std::placeholders;
         if (!pChr->subscribe(pChr->canNotify(), std::bind(&NimBLEStreamClient::notifyCallback, this, _1, _2, _3, _4))) {
-            NIMBLE_UART_LOGE(LOG_TAG, "Failed to subscribe for notifications");
+            NIMBLE_LOGE(LOG_TAG, "Failed to subscribe for %s", pChr->canNotify() ? "notifications" : "indications");
+            end();
+            return false;
         }
     }
 
-    if (!subscribe) {
-        m_rxBufSize = 0; // disable RX if not subscribing
-    }
-
+    m_pChr = pChr;
     return true;
 }
 
-void NimBLEStreamClient::deinit() {
+/**
+ * @brief Clean up the NimBLEStreamClient, unsubscribing from notifications and clearing the remote characteristic reference.
+ */
+void NimBLEStreamClient::end() {
     if (m_pChr && (m_pChr->canNotify() || m_pChr->canIndicate())) {
         m_pChr->unsubscribe();
     }
-    NimBLEStream::end();
+
     m_pChr = nullptr;
+    NimBLEStream::end();
 }
 
-bool NimBLEStreamClient::send(const uint8_t* data, size_t len) {
-    if (!m_pChr || !data || len == 0) {
+/**
+ * @brief Write data to the stream, which will be sent as BLE writes to the remote characteristic.
+ * @return True if a retry should be scheduled due to lack of BLE buffers, false otherwise.
+ * @details This will try to send as much data as possible from the TX buffer in chunks
+ * that fit within the memory buffers. If sending fails due to lack of BLE buffers, it will return true
+ * to indicate that a retry should be scheduled, but it will not drop any data from the TX buffer.
+ * For other errors or if all data is sent, it returns false.
+ */
+bool NimBLEStreamClient::send() {
+    if (!ready() || !m_txBuf) {
         return false;
     }
-    return m_pChr->writeValue(data, len, m_writeWithRsp);
-}
 
-void NimBLEStreamClient::notifyCallback(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t len, bool isNotify) {
-    if (pData && len > 0) {
-        pushRx(pData, len);
+    auto mtu = m_pChr->getClient()->getMTU();
+    if (mtu < 23) {
+        return false;
     }
 
+    size_t maxDataLen = std::min<size_t>(mtu - 3, sizeof(m_txChunkBuf));
+
+    while (m_txBuf->size()) {
+        size_t chunkLen = m_txBuf->peek(m_txChunkBuf, maxDataLen);
+        if (!chunkLen) {
+            break;
+        }
+
+        if (!m_pChr->writeValue(m_txChunkBuf, chunkLen, false)) {
+            if (os_msys_num_free() <= 2) {
+                // NimBLE stack out of buffers, likely due to pending writes
+                // Don't drop data, wait for stack to free buffers and try again later
+                return true;
+            }
+
+            break; // preserve data, no retry
+        }
+
+        m_txBuf->drop(chunkLen);
+    }
+
+    return false; // don't retry, it's either sent or we are disconnected
+}
+
+/**
+ * @brief Check if the stream is ready for communication.
+ * @return true if the stream is ready, false otherwise.
+ * @details The stream is considered ready if the remote characteristic is set and the client connection is active.
+ */
+bool NimBLEStreamClient::ready() const {
+    return m_pChr != nullptr && m_pChr->getClient()->isConnected();
+}
+
+/**
+ * @brief Callback for when a notification or indication is received from the remote characteristic.
+ * @param pChar Pointer to the characteristic that sent the notification/indication.
+ * @param pData Pointer to the data received in the notification/indication.
+ * @param len Length of the data received.
+ * @param isNotify True if the data was received as a notification, false if it was received as an indication.
+ * @details This will push the received data into the RX buffer and call any user-defined callbacks.
+ */
+void NimBLEStreamClient::notifyCallback(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t len, bool isNotify) {
+    pushRx(pData, len);
     if (m_userNotifyCallback) {
         m_userNotifyCallback(pChar, pData, len, isNotify);
     }
 }
-
-// UART logging support
-int NimBLEStream::uart_log_printfv(const char* format, va_list arg) {
-    static char loc_buf[64];
-    char*       temp = loc_buf;
-    uint32_t    len;
-    va_list     copy;
-    va_copy(copy, arg);
-    len = vsnprintf(NULL, 0, format, copy);
-    va_end(copy);
-    if (len >= sizeof(loc_buf)) {
-        temp = (char*)malloc(len + 1);
-        if (temp == NULL) {
-            return 0;
-        }
-    }
-
-    int wlen = vsnprintf(temp, len + 1, format, arg);
-    for (int i = 0; i < wlen; i++) {
-        uart_tx_one_char(temp[i]);
-    }
-
-    if (len >= sizeof(loc_buf)) {
-        free(temp);
-    }
-
-    return wlen;
-}
-
-int NimBLEStream::uart_log_printf(const char* format, ...) {
-    int     len;
-    va_list arg;
-    va_start(arg, format);
-    len = NimBLEStream::uart_log_printfv(format, arg);
-    va_end(arg);
-    return len;
-}
-
-#  endif // MYNEWT_VAL(BLE_ROLE_CENTRAL)
-# endif  // CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))
-#endif   // ESP_PLATFORM
+# endif // MYNEWT_VAL(BLE_ROLE_CENTRAL)
+#endif  // CONFIG_BT_NIMBLE_ENABLED && (MYNEWT_VAL(BLE_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_ROLE_CENTRAL))

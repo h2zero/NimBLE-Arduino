@@ -15,7 +15,6 @@
 
 #include <Arduino.h>
 #include <NimBLEDevice.h>
-#include <NimBLEStream.h>
 
 // Service and Characteristic UUIDs (must match the server)
 #define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -64,7 +63,7 @@ class ClientCallbacks : public NimBLEClientCallbacks {
     void onDisconnect(NimBLEClient* pClient, int reason) override {
         Serial.printf("Disconnected from server, reason: %d\n", reason);
         connected = false;
-        bleStream.deinit();
+        bleStream.end();
         
         // Restart scanning
         Serial.println("Restarting scan...");
@@ -118,16 +117,8 @@ bool connectToServer() {
      * Initialize the stream client with the remote characteristic
      * subscribeNotify=true means we'll receive notifications in the RX buffer
      */
-    if (!bleStream.init(pRemoteCharacteristic, true)) {
+    if (!bleStream.begin(pRemoteCharacteristic, true)) {
         Serial.println("Failed to initialize BLE stream!");
-        pClient->disconnect();
-        return false;
-    }
-
-    /** Start the stream (begins internal buffers and tasks) */
-    if (!bleStream.begin()) {
-        Serial.println("Failed to start BLE stream!");
-        bleStream.deinit();
         pClient->disconnect();
         return false;
     }

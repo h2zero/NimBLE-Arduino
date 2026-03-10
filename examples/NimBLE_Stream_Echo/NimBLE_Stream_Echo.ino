@@ -3,7 +3,7 @@
  *
  *  A minimal example demonstrating NimBLEStreamServer.
  *  Echoes back any data received from BLE clients.
- *  
+ *
  *  This is the simplest way to use the NimBLE Stream interface,
  *  showing just the essential setup and read/write operations.
  *
@@ -13,7 +13,6 @@
 
 #include <Arduino.h>
 #include <NimBLEDevice.h>
-#include <NimBLEStream.h>
 
 NimBLEStreamServer bleStream;
 
@@ -25,12 +24,22 @@ void setup() {
     NimBLEDevice::init("BLE-Echo");
     NimBLEDevice::createServer();
 
-    // Initialize stream with default UUIDs, allow writes
-    bleStream.init(NimBLEUUID(uint16_t(0xc0de)),  // Service UUID
-                   NimBLEUUID(uint16_t(0xfeed)),  // Characteristic UUID
-                   true,                           // canWrite
-                   false);                         // secure
-    bleStream.begin();
+    /**
+     * Initialize the stream server with:
+     * - Service UUID
+     * - Characteristic UUID
+     * - txBufSize: 1024 bytes for outgoing data (notifications)
+     * - rxBufSize: 1024 bytes for incoming data (writes)
+     * - secure: false (no encryption required - set to true for secure connections)
+     */
+    if (!bleStream.begin(NimBLEUUID(uint16_t(0xc0de)), // Service UUID
+                         NimBLEUUID(uint16_t(0xfeed)), // Characteristic UUID
+                         1024,                         // txBufSize
+                         1024,                         // rxBufSize
+                         false)) {                     // secure
+        Serial.println("Failed to initialize BLE stream");
+        return;
+    }
 
     // Start advertising
     NimBLEDevice::getAdvertising()->start();
@@ -39,12 +48,12 @@ void setup() {
 
 void loop() {
     // Echo any received data back to the client
-    if (bleStream.hasSubscriber() && bleStream.available()) {
+    if (bleStream.ready() && bleStream.available()) {
         Serial.print("Echo: ");
         while (bleStream.available()) {
             char c = bleStream.read();
             Serial.write(c);
-            bleStream.write(c);  // Echo back
+            bleStream.write(c); // Echo back
         }
         Serial.println();
     }
