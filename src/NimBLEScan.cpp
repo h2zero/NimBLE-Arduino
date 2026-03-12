@@ -32,10 +32,20 @@ static NimBLEScanCallbacks defaultScanCallbacks;
  */
 NimBLEScan::NimBLEScan()
     : m_pScanCallbacks{&defaultScanCallbacks},
-      // default interval + window, no whitelist scan filter,not limited scan, no scan response, filter_duplicates
-      m_scanParams{0, 0, BLE_HCI_SCAN_FILT_NO_WL, 0, 1, 1},
+      m_scanParams{
+          .itvl              = 0,                       // default interval
+          .window            = 0,                       // default window
+          .filter_policy     = BLE_HCI_SCAN_FILT_NO_WL, // no whitelist scan filter
+          .limited           = 0,                       // no limited scan
+          .passive           = 1,                       // no scan response
+          .filter_duplicates = 1,                       // filter duplicates
+# if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+          .disable_observer_mode = 0, // observer role enabled
+# endif
+      },
       m_pTaskData{nullptr},
-      m_maxResults{0xFF} {}
+      m_maxResults{0xFF} {
+}
 
 /**
  * @brief Scan destructor, release any allocated resources.
