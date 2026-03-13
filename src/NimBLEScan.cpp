@@ -41,7 +41,7 @@ NimBLEScan::NimBLEScan()
           .filter_duplicates = 1,                       // filter duplicates
 # if defined(ESP_PLATFORM) && !defined(CONFIG_USING_NIMBLE_COMPONENT)
 #  if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
-          .disable_observer_mode = 0,
+          .disable_observer_mode = 0, // observer role enabled
 #  endif
 # endif
       },
