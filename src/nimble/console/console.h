@@ -5,9 +5,10 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
+#define console_printf(_fmt, ...) ::printf(_fmt, ##__VA_ARGS__)
+#else
 #define console_printf(_fmt, ...) printf(_fmt, ##__VA_ARGS__)
+#endif
 
 #ifdef __cplusplus
 }
