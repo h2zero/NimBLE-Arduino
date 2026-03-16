@@ -933,7 +933,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
     switch (event->type) {
         case BLE_GAP_EVENT_DISCONNECT: {
-
             // workaround for bug in NimBLE stack where disconnect event argument is not passed correctly
             pClient = NimBLEDevice::getClientByPeerAddress(event->disconnect.conn.peer_ota_addr);
             if (pClient == nullptr) {
@@ -946,8 +945,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             }
 
             if (pClient == nullptr) {
-                NIMBLE_LOGE(LOG_TAG, "Disconnected client not found, conn_handle=%d",
-                            event->disconnect.conn.conn_handle);
+                NIMBLE_LOGE(LOG_TAG, "Disconnected client not found, conn_handle=%d", event->disconnect.conn.conn_handle);
                 return 0;
             }
 
@@ -1050,33 +1048,46 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
         } // BLE_GAP_EVENT_TERM_FAILURE
 
         case BLE_GAP_EVENT_NOTIFY_RX: {
-            if (pClient->m_connHandle != event->notify_rx.conn_handle) return 0;
+            if (pClient->m_connHandle != event->notify_rx.conn_handle) {
+                return 0;
+            }
+
             NIMBLE_LOGD(LOG_TAG, "Notify Received for handle: %d", event->notify_rx.attr_handle);
 
-            for (const auto& svc : pClient->m_svcVec) {
-                // Dont waste cycles searching services without this handle in its range
-                if (svc->getEndHandle() < event->notify_rx.attr_handle) {
-                    continue;
-                }
+            NimBLERemoteCharacteristic* pChr = pClient->getCharacteristic(event->notify_rx.attr_handle);
+            if (pChr == nullptr) {
+                NIMBLE_LOGW(LOG_TAG, "unknown handle: %d", event->notify_rx.attr_handle);
+                return BLE_ATT_ERR_INVALID_HANDLE;
+            }
 
-                NIMBLE_LOGD(LOG_TAG,
-                            "checking service %s for handle: %d",
-                            svc->getUUID().toString().c_str(),
-                            event->notify_rx.attr_handle);
-
-                for (const auto& chr : svc->m_vChars) {
-                    if (chr->getHandle() == event->notify_rx.attr_handle) {
-                        NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", chr->toString().c_str());
-
-                        uint32_t data_len = OS_MBUF_PKTLEN(event->notify_rx.om);
-                        chr->m_value.setValue(event->notify_rx.om->om_data, data_len);
-
-                        if (chr->m_notifyCallback != nullptr) {
-                            chr->m_notifyCallback(chr, event->notify_rx.om->om_data, data_len, !event->notify_rx.indication);
-                        }
+            auto len = event->notify_rx.om->om_len;
+            if (pChr->m_value.setValue(event->notify_rx.om->om_data, len)) {
+                os_mbuf* next;
+                next = SLIST_NEXT(event->notify_rx.om, om_next);
+                while (next != NULL) {
+                    pChr->m_value.append(next->om_data, next->om_len);
+                    if (pChr->m_value.length() != len + next->om_len) {
+                        rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                         break;
                     }
+                    len  += next->om_len;
+                    next  = SLIST_NEXT(next, om_next);
                 }
+            } else {
+                rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+            }
+
+            if (rc != 0) { // This should never happen
+                NIMBLE_LOGE(LOG_TAG, "notification value error; exceeds limit");
+                return rc;
+            }
+
+            if (pChr->m_notifyCallback != nullptr) {
+                // TODO: change this callback to use the NimBLEAttValue class instead of raw data and length
+                pChr->m_notifyCallback(pChr,
+                                       const_cast<uint8_t*>(pChr->m_value.getValue().data()),
+                                       pChr->m_value.length(),
+                                       !event->notify_rx.indication);
             }
 
             return 0;
