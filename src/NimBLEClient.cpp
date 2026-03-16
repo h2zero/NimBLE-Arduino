@@ -933,7 +933,6 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
     switch (event->type) {
         case BLE_GAP_EVENT_DISCONNECT: {
-
             // workaround for bug in NimBLE stack where disconnect event argument is not passed correctly
             pClient = NimBLEDevice::getClientByPeerAddress(event->disconnect.conn.peer_ota_addr);
             if (pClient == nullptr) {
@@ -946,8 +945,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             }
 
             if (pClient == nullptr) {
-                NIMBLE_LOGE(LOG_TAG, "Disconnected client not found, conn_handle=%d",
-                            event->disconnect.conn.conn_handle);
+                NIMBLE_LOGE(LOG_TAG, "Disconnected client not found, conn_handle=%d", event->disconnect.conn.conn_handle);
                 return 0;
             }
 
@@ -1064,19 +1062,50 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                             svc->getUUID().toString().c_str(),
                             event->notify_rx.attr_handle);
 
+                NimBLERemoteCharacteristic* pChr = nullptr;
                 for (const auto& chr : svc->m_vChars) {
                     if (chr->getHandle() == event->notify_rx.attr_handle) {
                         NIMBLE_LOGD(LOG_TAG, "Got Notification for characteristic %s", chr->toString().c_str());
-
-                        uint32_t data_len = OS_MBUF_PKTLEN(event->notify_rx.om);
-                        chr->m_value.setValue(event->notify_rx.om->om_data, data_len);
-
-                        if (chr->m_notifyCallback != nullptr) {
-                            chr->m_notifyCallback(chr, event->notify_rx.om->om_data, data_len, !event->notify_rx.indication);
-                        }
+                        pChr = chr;
                         break;
                     }
                 }
+
+                if (pChr == nullptr) {
+                    continue;
+                }
+
+                auto len = event->notify_rx.om->om_len;
+                if (pChr->m_value.setValue(event->notify_rx.om->om_data, len)) {
+                    os_mbuf* next;
+                    next = SLIST_NEXT(event->notify_rx.om, om_next);
+                    while (next != NULL) {
+                        pChr->m_value.append(next->om_data, next->om_len);
+                        if (pChr->m_value.length() != len + next->om_len) {
+                            rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+                            break;
+                        }
+                        len  += next->om_len;
+                        next  = SLIST_NEXT(next, om_next);
+                    }
+                } else {
+                    rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+                }
+
+                if (rc != 0) {
+                    NIMBLE_LOGE(LOG_TAG, "Error processing notification: %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+                    // send an empty value to the callback to indicate an error occurred
+                    pChr->m_value.setValue(static_cast<const uint8_t*>(nullptr), 0);
+                }
+
+                if (pChr->m_notifyCallback != nullptr) {
+                    pChr->m_notifyCallback(pChr,
+                                           const_cast<uint8_t*>(pChr->m_value.getValue().data()),
+                                           pChr->m_value.length(),
+                                           !event->notify_rx.indication);
+                }
+
+                break;
             }
 
             return 0;
