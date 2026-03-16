@@ -23,9 +23,6 @@ jobs:
         example:
           - NimBLE_Client
           - NimBLE_Server
-          - NimBLE_Stream_Client
-          - NimBLE_Stream_Server
-          - NimBLE_Stream_Echo
           - Bluetooth_5/NimBLE_extended_client
           - Bluetooth_5/NimBLE_extended_server
         exclude:
@@ -68,7 +65,7 @@ jobs:
   build_docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Doxygen Action
         uses: mattnotmitt/doxygen-action@v1.9.8
         with:
