@@ -53,10 +53,28 @@
 #define NIMBLE_CPP_VERSION_STRINGIFY(x)      NIMBLE_CPP_VERSION_STRINGIFY_IMPL(x)
 /** @endcond */
 
-/** @brief NimBLE-Arduino library version as a string. */
+/**
+ * @brief Optional Semantic Versioning prerelease suffix.
+ * @details Include the leading '-' when defined, for example: "-beta.1"
+ */
+#ifndef NIMBLE_CPP_VERSION_PRERELEASE
+# define NIMBLE_CPP_VERSION_PRERELEASE ""
+#endif
+
+/**
+ * @brief Optional Semantic Versioning build metadata suffix.
+ * @details Include the leading '+' when defined, for example: "+sha.abcd1234"
+ */
+#ifndef NIMBLE_CPP_VERSION_BUILD_METADATA
+# define NIMBLE_CPP_VERSION_BUILD_METADATA ""
+#endif
+
+/** @brief NimBLE-Arduino library version as a prefixed Semantic Versioning string. */
 #define NIMBLE_CPP_VERSION_STR                         \
+    "NimBLE-Arduino " \
     NIMBLE_CPP_VERSION_STRINGIFY(NIMBLE_CPP_VERSION_MAJOR) "." \
     NIMBLE_CPP_VERSION_STRINGIFY(NIMBLE_CPP_VERSION_MINOR) "." \
-    NIMBLE_CPP_VERSION_STRINGIFY(NIMBLE_CPP_VERSION_PATCH)
+    NIMBLE_CPP_VERSION_STRINGIFY(NIMBLE_CPP_VERSION_PATCH) \
+    NIMBLE_CPP_VERSION_PRERELEASE NIMBLE_CPP_VERSION_BUILD_METADATA
 
 #endif // NIMBLE_CPP_VERSION_H_
