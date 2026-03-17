@@ -684,6 +684,15 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 // }
                 // rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 // NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_OOB; ble_sm_inject_io result: %d", rc);
+            } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
+                NIMBLE_LOGD(LOG_TAG, "Enter the passkey");
+
+                rc = ble_gap_conn_find(event->passkey.conn_handle, &peerInfo.m_desc);
+                if (rc != 0) {
+                    return BLE_ATT_ERR_INVALID_HANDLE;
+                }
+
+                pServer->m_pServerCallbacks->onPassKeyEntry(peerInfo);
             } else if (event->passkey.params.action == BLE_SM_IOACT_NONE) {
                 NIMBLE_LOGD(LOG_TAG, "No passkey action required");
             }
@@ -1118,6 +1127,11 @@ uint32_t NimBLEServerCallbacks::onPassKeyDisplay() {
     NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyDisplay: default: 123456");
     return 123456;
 } // onPassKeyDisplay
+
+void NimBLEServerCallbacks::onPassKeyEntry(NimBLEConnInfo& connInfo) {
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyEntry: default: 123456");
+    NimBLEDevice::injectPassKey(connInfo, 123456);
+} // onPassKeyEntry
 
 void NimBLEServerCallbacks::onConfirmPassKey(NimBLEConnInfo& connInfo, uint32_t pin) {
     NIMBLE_LOGD("NimBLEServerCallbacks", "onConfirmPasskey: default: true");
