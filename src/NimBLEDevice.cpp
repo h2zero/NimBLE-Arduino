@@ -867,7 +867,7 @@ void NimBLEDevice::onSync(void) {
  * @brief The main host task.
  */
 void NimBLEDevice::host_task(void* param) {
-    NIMBLE_LOGI(LOG_TAG, "BLE Host Task Started");
+    NIMBLE_LOGI(LOG_TAG, "NimBLE Started!");
     nimble_port_run(); // This function will return only when nimble_port_stop() is executed
     nimble_port_freertos_deinit();
 } // host_task
@@ -878,6 +878,7 @@ void NimBLEDevice::host_task(void* param) {
  */
 bool NimBLEDevice::init(const std::string& deviceName) {
     if (!m_initialized) {
+        NIMBLE_LOGD(LOG_TAG, "Starting %s", getVersion());
 # ifdef ESP_PLATFORM
 
 #  if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED
@@ -999,6 +1000,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
     }
 
     m_initialized = true; // Set the initialization flag to ensure we are only initialized once.
+    NIMBLE_LOGD(LOG_TAG, "Initialized");
     return true;
 } // init
 
@@ -1330,7 +1332,7 @@ std::string NimBLEDevice::toString() {
 
 /**
  * @brief Return the library version as a string.
- * @return A const char* containing the version string in the format "major.minor.patch".
+ * @return A const char* containing library version information.
  */
 const char* NimBLEDevice::getVersion() {
     return NIMBLE_CPP_VERSION_STR;
