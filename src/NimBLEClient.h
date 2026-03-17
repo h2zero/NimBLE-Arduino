@@ -188,6 +188,13 @@ class NimBLEClientCallbacks {
     virtual void onPassKeyEntry(NimBLEConnInfo& connInfo);
 
     /**
+     * @brief Called when using passkey entry pairing and the passkey should be displayed.
+     * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
+     * @return The passkey to display to the user. The peer device must enter this passkey to complete the pairing.
+     */
+    virtual uint32_t onPassKeyDisplay(NimBLEConnInfo& connInfo);
+
+    /**
      * @brief Called when the pairing procedure is complete.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.\n
      * This can be used to check the status of the connection encryption/pairing.

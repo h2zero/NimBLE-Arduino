@@ -1210,7 +1210,16 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 break;
             }
 
-            if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
+            if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
+                struct ble_sm_io pkey = {0, 0};
+                pkey.action           = event->passkey.params.action;
+                pkey.passkey          = NimBLEDevice::getSecurityPasskey();
+                if (pkey.passkey == 123456) {
+                    pkey.passkey = pClient->m_pClientCallbacks->onPassKeyDisplay(peerInfo);
+                }
+                rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+                NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
+            } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
                 NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %" PRIu32, event->passkey.params.numcmp);
                 pClient->m_pClientCallbacks->onConfirmPasskey(peerInfo, event->passkey.params.numcmp);
             } else if (event->passkey.params.action == BLE_SM_IOACT_OOB) {
@@ -1313,6 +1322,11 @@ void NimBLEClientCallbacks::onPassKeyEntry(NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD(CB_TAG, "onPassKeyEntry: default: 123456");
     NimBLEDevice::injectPassKey(connInfo, 123456);
 } // onPassKeyEntry
+
+uint32_t NimBLEClientCallbacks::onPassKeyDisplay(NimBLEConnInfo& connInfo) {
+    NIMBLE_LOGD(CB_TAG, "onPassKeyDisplay: default");
+    return NimBLEDevice::getSecurityPasskey();
+} // onPassKeyDisplay
 
 void NimBLEClientCallbacks::onAuthenticationComplete(NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD(CB_TAG, "onAuthenticationComplete: default");
