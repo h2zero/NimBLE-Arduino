@@ -1332,6 +1332,14 @@ std::string NimBLEDevice::toString() {
     return getAddress().toString();
 } // toString
 
+/**
+ * @brief Return the library version as a string.
+ * @return A const char* containing the version string in the format "major.minor.patch".
+ */
+const char* NimBLEDevice::getVersion() {
+    return NIMBLE_CPP_VERSION_STR;
+} // getVersion
+
 # if MYNEWT_VAL(NIMBLE_CPP_DEBUG_ASSERT_ENABLED) || __DOXYGEN__
 /**
  * @brief Debug assert - weak function.

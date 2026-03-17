@@ -18,6 +18,7 @@
 #ifndef NIMBLE_CPP_DEVICE_H_
 #define NIMBLE_CPP_DEVICE_H_
 
+#include "NimBLECppVersion.h"
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED
 # ifdef ESP_PLATFORM
@@ -123,6 +124,7 @@ class NimBLEDevice {
     static bool          isInitialized();
     static NimBLEAddress getAddress();
     static std::string   toString();
+    static const char*   getVersion();
     static bool          whiteListAdd(const NimBLEAddress& address);
     static bool          whiteListRemove(const NimBLEAddress& address);
     static bool          onWhiteList(const NimBLEAddress& address);
