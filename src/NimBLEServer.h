@@ -61,7 +61,7 @@ class NimBLEClient;
  */
 class NimBLEServer {
   public:
-    void    start();
+    bool    start();
     uint8_t getConnectedCount() const;
     bool    disconnect(uint16_t connHandle, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM) const;
     bool    disconnect(const NimBLEConnInfo& connInfo, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM) const;
@@ -122,7 +122,7 @@ class NimBLEServer {
     bool m_gattsStarted : 1;
     bool m_svcChanged : 1;
     bool m_deleteCallbacks : 1;
-# if !CONFIG_BT_NIMBLE_EXT_ADV
+# if !CONFIG_BT_NIMBLE_EXT_ADV && CONFIG_BT_NIMBLE_ROLE_BROADCASTER
     bool m_advertiseOnDisconnect : 1;
 # endif
     NimBLEServerCallbacks*                                 m_pServerCallbacks;
@@ -137,7 +137,7 @@ class NimBLEServer {
     static int  handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
     static void gattRegisterCallback(struct ble_gatt_register_ctxt* ctxt, void* arg);
     void        serviceChanged();
-    void        resetGATT();
+    bool        resetGATT();
 
 }; // NimBLEServer
 

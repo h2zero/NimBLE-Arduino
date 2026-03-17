@@ -83,22 +83,8 @@ void NimBLEService::dump() const {
  * and registers it with the NimBLE stack.
  * @return bool success/failure .
  */
-bool NimBLEService::start() {
+bool NimBLEService::start_internal() {
     NIMBLE_LOGD(LOG_TAG, ">> start(): Starting service: UUID: %s", getUUID().toString().c_str());
-    // If the server has started before then we need to reset the GATT server
-    // to update the service/characteristic/descriptor definitions. If characteristics or descriptors
-    // have been added/removed since the last server start then this service will be started on gatt reset.
-    if (getServer()->m_svcChanged && getServer()->m_gattsStarted) {
-        NIMBLE_LOGW(LOG_TAG, "<< start(): GATT change pending, cannot start service");
-        return false;
-    }
-
-    // If started previously and no characteristics have been added or removed,
-    // then we can skip the service registration process.
-    if (m_pSvcDef->characteristics && !getServer()->m_svcChanged) {
-        return true;
-    }
-
     // Make sure the definitions are cleared first
     clearServiceDefinitions();
 
@@ -169,12 +155,14 @@ bool NimBLEService::start() {
     int rc = ble_gatts_count_cfg(m_pSvcDef);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_count_cfg failed, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        clearServiceDefinitions(); // Clear the definitions to free memory and reset the service for re-registration.
         return false;
     }
 
     rc = ble_gatts_add_svcs(m_pSvcDef);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_add_svcs, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        clearServiceDefinitions(); // Clear the definitions to free memory and reset the service for re-registration.
         return false;
     }
 
