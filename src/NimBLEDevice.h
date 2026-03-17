@@ -18,8 +18,10 @@
 #ifndef NIMBLE_CPP_DEVICE_H_
 #define NIMBLE_CPP_DEVICE_H_
 
+#include "NimBLECppVersion.h"
 #include "nimconfig.h"
 #if CONFIG_BT_ENABLED
+
 # ifdef ESP_PLATFORM
 #  ifndef CONFIG_IDF_TARGET_ESP32P4
 #   include <esp_bt.h>
@@ -129,6 +131,7 @@ class NimBLEDevice {
     static bool          isInitialized();
     static NimBLEAddress getAddress();
     static std::string   toString();
+    static const char*   getVersion();
     static bool          whiteListAdd(const NimBLEAddress& address);
     static bool          whiteListRemove(const NimBLEAddress& address);
     static bool          onWhiteList(const NimBLEAddress& address);
@@ -251,7 +254,7 @@ class NimBLEDevice {
 # endif
 
 # ifdef ESP_PLATFORM
-#  if NIMBLE_CPP_SCAN_DUPL_ENABLED 
+#  if NIMBLE_CPP_SCAN_DUPL_ENABLED
     static uint16_t m_scanDuplicateSize;
     static uint8_t  m_scanFilterMode;
     static uint16_t m_scanDuplicateResetTime;
