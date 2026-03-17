@@ -37,11 +37,19 @@ class NimBLEService : public NimBLELocalAttribute {
     NimBLEService(const NimBLEUUID& uuid);
     ~NimBLEService();
 
-    NimBLEServer*         getServer() const;
-    std::string           toString() const;
-    void                  dump() const;
-    bool                  isStarted() const;
-    bool                  start();
+    NimBLEServer* getServer() const;
+    std::string   toString() const;
+    void          dump() const;
+    bool          isStarted() const;
+
+    /**
+     * @brief Dummy function to start the service. Services are started when the server is started.
+     * This will be removed in a future release. Use `NimBLEServer::start()` to start the server and all associated services.
+     */
+    __attribute__((deprecated("NimBLEService::start() has no effect. "
+                   "Services are started when the server is started.")))
+    bool start() { return true; }
+
     NimBLECharacteristic* createCharacteristic(const char* uuid,
                                                uint32_t    properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
                                                uint16_t    max_len    = BLE_ATT_ATTR_MAX_LEN);
@@ -61,6 +69,7 @@ class NimBLEService : public NimBLELocalAttribute {
 
   private:
     friend class NimBLEServer;
+    bool start_internal();
     void clearServiceDefinitions();
 
     std::vector<NimBLECharacteristic*> m_vChars{};

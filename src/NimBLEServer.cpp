@@ -272,12 +272,14 @@ void NimBLEServer::gattRegisterCallback(ble_gatt_register_ctxt* ctxt, void* arg)
 void NimBLEServer::start() {
     if (m_svcChanged && !getConnectedCount()) {
         NIMBLE_LOGD(LOG_TAG, "Services have changed since last start, resetting GATT server");
-        resetGATT();
+        m_gattsStarted = false;
     }
 
     if (m_gattsStarted) {
         return; // already started
     }
+
+    resetGATT();
 
     ble_hs_cfg.gatts_register_cb = NimBLEServer::gattRegisterCallback;
     gattRegisterCallbackArgs args{};
@@ -873,8 +875,6 @@ void NimBLEServer::resetGATT() {
     ble_svc_gap_init();
     ble_svc_gatt_init();
 
-    m_gattsStarted = false;
-
     for (auto svcIt = m_svcVec.begin(); svcIt != m_svcVec.end();) {
         auto* pSvc = *svcIt;
         if (pSvc->getRemoved() == NIMBLE_ATT_REMOVE_DELETE) {
@@ -908,7 +908,7 @@ void NimBLEServer::resetGATT() {
         }
 
         if (pSvc->getRemoved() == 0) {
-            pSvc->start();
+            pSvc->start_internal();
         }
 
         pSvc->m_handle = 0;
