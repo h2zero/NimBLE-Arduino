@@ -197,8 +197,9 @@ bool NimBLEAdvertising::start(uint32_t duration, const NimBLEAddress* dirAddr) {
 
 # if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
     NimBLEServer* pServer = NimBLEDevice::getServer();
-    if (pServer != nullptr) {
-        pServer->start(); // make sure the GATT server is ready before advertising
+    if (pServer != nullptr && !pServer->start()) { // make sure the GATT server is ready before advertising
+        NIMBLE_LOGE(LOG_TAG, "Failed to start GATT server");
+        return false;
     }
 # endif
 
