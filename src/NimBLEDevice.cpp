@@ -125,9 +125,6 @@ extern "C" int ble_vhci_disc_duplicate_mode_enable(int mode);
 NimBLEServer* NimBLEDevice::createServer() {
     if (NimBLEDevice::m_pServer == nullptr) {
         NimBLEDevice::m_pServer = new NimBLEServer();
-        ble_gatts_reset();
-        ble_svc_gap_init();
-        ble_svc_gatt_init();
     }
 
     return m_pServer;
