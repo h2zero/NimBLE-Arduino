@@ -55,7 +55,6 @@ void setup() {
     pCharacteristic =
         pService->createCharacteristic(CHARACTERISTIC_UUID,
                                        NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY);
-    pService->start();
 
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(SERVICE_UUID);

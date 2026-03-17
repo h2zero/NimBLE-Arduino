@@ -186,10 +186,6 @@ void setup(void) {
     pC01Ddsc->setValue("Send it back!");
     pC01Ddsc->setCallbacks(&dscCallbacks);
 
-    /** Start the services when finished creating all Characteristics and Descriptors */
-    pDeadService->start();
-    pBaadService->start();
-
     /** Create an advertising instance and add the services to the advertised data */
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
     pAdvertising->setName("NimBLE-Server");

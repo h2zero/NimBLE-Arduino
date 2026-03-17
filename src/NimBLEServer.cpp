@@ -269,14 +269,18 @@ void NimBLEServer::gattRegisterCallback(ble_gatt_register_ctxt* ctxt, void* arg)
  * @details Required to be called after setup of all services and characteristics / descriptors
  * for the NimBLE host to register them.
  */
-void NimBLEServer::start() {
+bool NimBLEServer::start() {
     if (m_svcChanged && !getConnectedCount()) {
         NIMBLE_LOGD(LOG_TAG, "Services have changed since last start, resetting GATT server");
-        resetGATT();
+        m_gattsStarted = false;
     }
 
     if (m_gattsStarted) {
-        return; // already started
+        return true; // already started
+    }
+
+    if (!resetGATT()) {
+        return false;
     }
 
     ble_hs_cfg.gatts_register_cb = NimBLEServer::gattRegisterCallback;
@@ -286,7 +290,7 @@ void NimBLEServer::start() {
     int rc = ble_gatts_start();
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
-        return;
+        return false;
     }
 
 # if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
@@ -313,6 +317,7 @@ void NimBLEServer::start() {
     }
 
     m_gattsStarted = true;
+    return true;
 } // start
 
 /**
@@ -335,7 +340,7 @@ bool NimBLEServer::disconnect(uint16_t connHandle, uint8_t reason) const {
  * @brief Disconnect the specified client with optional reason.
  * @param [in] connInfo Connection of the client to disconnect.
  * @param [in] reason code for disconnecting.
- * @return NimBLE host return code.
+ * @return True if successful.
  */
 bool NimBLEServer::disconnect(const NimBLEConnInfo& connInfo, uint8_t reason) const {
     return disconnect(connInfo.getConnHandle(), reason);
@@ -505,7 +510,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
 
             peerInfo.m_desc = event->disconnect.conn;
             pServer->m_pServerCallbacks->onDisconnect(pServer, peerInfo, event->disconnect.reason);
-# if !MYNEWT_VAL(BLE_EXT_ADV)
+# if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
             if (pServer->m_advertiseOnDisconnect) {
                 pServer->startAdvertising();
             }
@@ -863,8 +868,13 @@ void NimBLEServer::addService(NimBLEService* service) {
 
 /**
  * @brief Resets the GATT server, used when services are added/removed after initialization.
+ * @return True if successful.
+ * @details This will reset the GATT server and re-register all services, characteristics, and
+ * descriptors that have not been removed. Services, characteristics, and descriptors that have been
+ * removed but not deleted will be skipped and have their handles cleared, and those that have been
+ * deleted will be removed from the server's service vector.
  */
-void NimBLEServer::resetGATT() {
+bool NimBLEServer::resetGATT() {
 # if MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     NimBLEDevice::stopAdvertising();
 # endif
@@ -872,8 +882,6 @@ void NimBLEServer::resetGATT() {
     ble_gatts_reset();
     ble_svc_gap_init();
     ble_svc_gatt_init();
-
-    m_gattsStarted = false;
 
     for (auto svcIt = m_svcVec.begin(); svcIt != m_svcVec.end();) {
         auto* pSvc = *svcIt;
@@ -908,12 +916,17 @@ void NimBLEServer::resetGATT() {
         }
 
         if (pSvc->getRemoved() == 0) {
-            pSvc->start();
+            if (!pSvc->start_internal()) {
+                NIMBLE_LOGE(LOG_TAG, "Failed to start service: %s", pSvc->getUUID().toString().c_str());
+                return false;
+            }
         }
 
         pSvc->m_handle = 0;
         ++svcIt;
     }
+
+    return true;
 } // resetGATT
 
 /**

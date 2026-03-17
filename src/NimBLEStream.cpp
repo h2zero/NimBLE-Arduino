@@ -608,6 +608,8 @@ bool NimBLEStreamServer::begin(
         return false;
     }
 
+    m_deleteSvcOnEnd = true; // mark service for deletion on end since we created it here
+
     // Create characteristic with notify + write properties for bidirectional stream
     uint32_t props = 0;
     if (txBufSize > 0) {
@@ -627,13 +629,6 @@ bool NimBLEStreamServer::begin(
     auto pChr = pSvc->createCharacteristic(chrUuid, props);
     if (!pChr) {
         NIMBLE_LOGE(LOG_TAG, "Failed to create characteristic");
-        goto error;
-    }
-
-    m_deleteSvcOnEnd = true; // mark service for deletion on end since we created it here
-
-    if (!pSvc->start()) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to start service");
         goto error;
     }
 

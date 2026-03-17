@@ -29,7 +29,6 @@ void setup() {
         pService->createCharacteristic("1235",
                                        NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::READ_ENC | NIMBLE_PROPERTY::READ_AUTHEN);
 
-    pService->start();
     pNonSecureCharacteristic->setValue("Hello Non Secure BLE");
     pSecureCharacteristic->setValue("Hello Secure BLE");
 
