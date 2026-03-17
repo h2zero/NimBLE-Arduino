@@ -155,12 +155,14 @@ bool NimBLEService::start_internal() {
     int rc = ble_gatts_count_cfg(m_pSvcDef);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_count_cfg failed, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        clearServiceDefinitions(); // Clear the definitions to free memory and reset the service for re-registration.
         return false;
     }
 
     rc = ble_gatts_add_svcs(m_pSvcDef);
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_add_svcs, rc= %d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        clearServiceDefinitions(); // Clear the definitions to free memory and reset the service for re-registration.
         return false;
     }
 
