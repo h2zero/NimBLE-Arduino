@@ -632,10 +632,13 @@ int NimBLEDevice::getNumBonds() {
  * @returns True on success.
  */
 bool NimBLEDevice::deleteAllBonds() {
-    int rc = ble_store_clear();
-    if (rc != 0) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to delete all bonds; rc=%d", rc);
-        return false;
+    int numBonds = NimBLEDevice::getNumBonds();
+    for (int i = numBonds - 1; i >= 0; i--) {
+        auto addr = NimBLEDevice::getBondedAddress(i);
+        if (!NimBLEDevice::deleteBond(addr)) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to delete bond for address: %s", addr.toString().c_str());
+            return false;
+        }
     }
     return true;
 }
