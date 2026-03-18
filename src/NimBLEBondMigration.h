@@ -7,6 +7,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+#include <string>
+#include <vector>
 
 #include "esp_err.h"
 #include "esp_log.h"
@@ -74,6 +77,107 @@ struct MigrationStats {
     uint16_t alreadyTarget;
     uint16_t skippedUnknownSize;
 };
+
+inline void appendLine(std::string& out, const char* fmt, ...) {
+    char    buf[256];
+    va_list args;
+    va_start(args, fmt);
+    const int written = vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    if (written > 0) {
+        out.append(buf, strlen(buf));
+    }
+}
+
+inline void appendHex(std::string& out, const uint8_t* data, size_t len) {
+    static constexpr char hex[] = "0123456789ABCDEF";
+    out.reserve(out.size() + (len * 2));
+    for (size_t i = 0; i < len; ++i) {
+        const uint8_t value = data[i];
+        out.push_back(hex[(value >> 4) & 0x0F]);
+        out.push_back(hex[value & 0x0F]);
+    }
+}
+
+inline void appendAddr(std::string& out, const ble_addr_t& addr) {
+    appendLine(out,
+               "%02X:%02X:%02X:%02X:%02X:%02X(type=%u)",
+               addr.val[5],
+               addr.val[4],
+               addr.val[3],
+               addr.val[2],
+               addr.val[1],
+               addr.val[0],
+               addr.type);
+}
+
+inline void appendV1Record(std::string& out, const BleStoreValueSecV1& sec) {
+    out += "  peer_addr=";
+    appendAddr(out, sec.peer_addr);
+    out += "\n";
+    appendLine(out,
+               "  key_size=%u ediv=%u rand_num=%llu auth=%u sc=%u\n",
+               sec.key_size,
+               sec.ediv,
+               static_cast<unsigned long long>(sec.rand_num),
+               sec.authenticated,
+               sec.sc);
+    appendLine(out,
+               "  ltk_present=%u irk_present=%u csrk_present=%u\n",
+               sec.ltk_present,
+               sec.irk_present,
+               sec.csrk_present);
+    if (sec.ltk_present) {
+        out += "  ltk=";
+        appendHex(out, sec.ltk, sizeof(sec.ltk));
+        out += "\n";
+    }
+    if (sec.irk_present) {
+        out += "  irk=";
+        appendHex(out, sec.irk, sizeof(sec.irk));
+        out += "\n";
+    }
+    if (sec.csrk_present) {
+        out += "  csrk=";
+        appendHex(out, sec.csrk, sizeof(sec.csrk));
+        out += "\n";
+    }
+}
+
+inline void appendCurrentRecord(std::string& out, const BleStoreValueSecCurrent& sec) {
+    out += "  peer_addr=";
+    appendAddr(out, sec.peer_addr);
+    out += "\n";
+    appendLine(out,
+               "  bond_count=%u sign_counter=%u key_size=%u ediv=%u rand_num=%llu auth=%u sc=%u\n",
+               sec.bond_count,
+               sec.sign_counter,
+               sec.key_size,
+               sec.ediv,
+               static_cast<unsigned long long>(sec.rand_num),
+               sec.authenticated,
+               sec.sc);
+    appendLine(out,
+               "  ltk_present=%u irk_present=%u csrk_present=%u\n",
+               sec.ltk_present,
+               sec.irk_present,
+               sec.csrk_present);
+    if (sec.ltk_present) {
+        out += "  ltk=";
+        appendHex(out, sec.ltk, sizeof(sec.ltk));
+        out += "\n";
+    }
+    if (sec.irk_present) {
+        out += "  irk=";
+        appendHex(out, sec.irk, sizeof(sec.irk));
+        out += "\n";
+    }
+    if (sec.csrk_present) {
+        out += "  csrk=";
+        appendHex(out, sec.csrk, sizeof(sec.csrk));
+        out += "\n";
+    }
+}
 
 inline bool makeBondKey(char* out, size_t outLen, const char* prefix, uint16_t index) {
     const int written = snprintf(out, outLen, "%s_%u", prefix, index);
@@ -261,6 +365,109 @@ inline esp_err_t migrateBondStore(bool toCurrent, uint16_t maxEntries) {
 }
 
 } // namespace detail
+
+inline std::string dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
+    std::string out;
+    out.reserve(2048);
+
+    nvs_handle_t nvsHandle;
+    esp_err_t    err = nvs_open(detail::kBondNamespace, NVS_READONLY, &nvsHandle);
+    if (err != ESP_OK) {
+        detail::appendLine(out,
+                           "Failed to open NVS namespace '%s', err=%d\n",
+                           detail::kBondNamespace,
+                           static_cast<int>(err));
+        return out;
+    }
+
+    out += "NimBLE bond dump\n";
+    detail::appendLine(out,
+                       "v1_size=%u current_size=%u max_entries=%u\n",
+                       static_cast<unsigned>(sizeof(detail::BleStoreValueSecV1)),
+                       static_cast<unsigned>(sizeof(detail::BleStoreValueSecCurrent)),
+                       maxEntries);
+
+    uint16_t foundCount = 0;
+    char     key[detail::kNvsKeyMaxLen]{};
+
+    for (uint16_t i = 1; i <= maxEntries; ++i) {
+        const char* prefixes[] = {detail::kOurSecPrefix, detail::kPeerSecPrefix};
+        const char* types[]    = {"our", "peer"};
+
+        for (size_t j = 0; j < 2; ++j) {
+            if (!detail::makeBondKey(key, sizeof(key), prefixes[j], i)) {
+                out += "Key format error\n";
+                continue;
+            }
+
+            size_t blobSize = 0;
+            err             = nvs_get_blob(nvsHandle, key, nullptr, &blobSize);
+            if (err == ESP_ERR_NVS_NOT_FOUND) {
+                continue;
+            }
+            if (err != ESP_OK) {
+                detail::appendLine(out,
+                                   "[%s:%u] key=%s read-size error err=%d\n",
+                                   types[j],
+                                   i,
+                                   key,
+                                   static_cast<int>(err));
+                continue;
+            }
+
+            std::vector<uint8_t> blob(blobSize);
+            size_t               readSize = blobSize;
+            err = nvs_get_blob(nvsHandle, key, blob.data(), &readSize);
+            if (err != ESP_OK) {
+                detail::appendLine(out,
+                                   "[%s:%u] key=%s read error err=%d\n",
+                                   types[j],
+                                   i,
+                                   key,
+                                   static_cast<int>(err));
+                continue;
+            }
+
+            foundCount++;
+            detail::appendLine(out,
+                               "[%s:%u] key=%s size=%u ",
+                               types[j],
+                               i,
+                               key,
+                               static_cast<unsigned>(blobSize));
+
+            if (blobSize == sizeof(detail::BleStoreValueSecCurrent)) {
+                out += "format=current\n";
+                detail::BleStoreValueSecCurrent sec{};
+                memcpy(&sec, blob.data(), sizeof(sec));
+                detail::appendCurrentRecord(out, sec);
+            } else if (blobSize == sizeof(detail::BleStoreValueSecV1)) {
+                out += "format=v1\n";
+                detail::BleStoreValueSecV1 sec{};
+                memcpy(&sec, blob.data(), sizeof(sec));
+                detail::appendV1Record(out, sec);
+            } else {
+                out += "format=unknown\n";
+                out += "  raw=";
+                const size_t dumpLen = blobSize > 64 ? 64 : blobSize;
+                detail::appendHex(out, blob.data(), dumpLen);
+                if (blobSize > dumpLen) {
+                    out += "...";
+                }
+                out += "\n";
+            }
+        }
+    }
+
+    if (foundCount == 0) {
+        out += "No bond entries found\n";
+    } else {
+        detail::appendLine(out, "Total entries found: %u\n", foundCount);
+    }
+
+    nvs_close(nvsHandle);
+    return out;
+}
 
 inline esp_err_t migrateBondStoreToCurrent(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
     return detail::migrateBondStore(true, maxEntries);
