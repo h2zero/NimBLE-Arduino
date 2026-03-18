@@ -24,6 +24,7 @@ static constexpr const char* kLogTag        = "NimBLEBondMigration";
 static constexpr const char* kBondNamespace = "nimble_bond";
 static constexpr const char* kOurSecPrefix  = "our_sec";
 static constexpr const char* kPeerSecPrefix = "peer_sec";
+static constexpr const char* kLocalIrkPrefix = "local_irk";
 static constexpr size_t      kNvsKeyMaxLen  = 16;
 
 typedef struct {
@@ -69,6 +70,20 @@ struct BleStoreValueSecCurrent {
 
     unsigned authenticated : 1;
     uint8_t sc : 1;
+};
+
+struct BleStoreValueLocalIrkV1 {
+    uint8_t irk[16];
+};
+
+struct BleStoreValueLocalIrkCurrent {
+    ble_addr_t addr;
+    uint8_t irk[16];
+};
+
+static constexpr uint8_t kDefaultLocalIrk[16] = {
+    0xef, 0x8d, 0xe2, 0x16, 0x4f, 0xec, 0x43, 0x0d,
+    0xbf, 0x5b, 0xdd, 0x34, 0xc0, 0x53, 0x1e, 0xb8,
 };
 
 struct MigrationStats {
@@ -179,29 +194,45 @@ inline void appendCurrentRecord(std::string& out, const BleStoreValueSecCurrent&
     }
 }
 
+inline void appendLocalIrkV1Record(std::string& out, const BleStoreValueLocalIrkV1& irkRecord) {
+    out += "  irk=";
+    appendHex(out, irkRecord.irk, sizeof(irkRecord.irk));
+    out += "\n";
+}
+
+inline void appendLocalIrkCurrentRecord(std::string& out, const BleStoreValueLocalIrkCurrent& irkRecord) {
+    out += "  addr=";
+    appendAddr(out, irkRecord.addr);
+    out += "\n";
+    out += "  irk=";
+    appendHex(out, irkRecord.irk, sizeof(irkRecord.irk));
+    out += "\n";
+}
+
 inline bool makeBondKey(char* out, size_t outLen, const char* prefix, uint16_t index) {
     const int written = snprintf(out, outLen, "%s_%u", prefix, index);
     return written > 0 && static_cast<size_t>(written) < outLen;
 }
 
-inline esp_err_t migrateEntryToCurrent(nvs_handle_t nvsHandle,
-                                       const char* key,
-                                       uint16_t index,
-                                       MigrationStats* stats) {
+inline bool migrateEntryToCurrent(nvs_handle_t nvsHandle,
+                                  const char* key,
+                                  uint16_t index,
+                                  MigrationStats* stats) {
     size_t blobSize = 0;
     esp_err_t err = nvs_get_blob(nvsHandle, key, nullptr, &blobSize);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
-        return ESP_OK;
+        return true;
     }
     if (err != ESP_OK) {
-        return err;
+        ESP_LOGE(kLogTag, "nvs_get_blob size failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
     }
 
     stats->scanned++;
 
     if (blobSize == sizeof(BleStoreValueSecCurrent)) {
         stats->alreadyTarget++;
-        return ESP_OK;
+        return true;
     }
 
     if (blobSize != sizeof(BleStoreValueSecV1)) {
@@ -210,14 +241,15 @@ inline esp_err_t migrateEntryToCurrent(nvs_handle_t nvsHandle,
                  "Skipping key=%s due to unexpected size=%u",
                  key,
                  static_cast<unsigned>(blobSize));
-        return ESP_OK;
+        return true;
     }
 
     BleStoreValueSecV1 oldValue{};
     size_t readSize = sizeof(oldValue);
     err = nvs_get_blob(nvsHandle, key, &oldValue, &readSize);
     if (err != ESP_OK) {
-        return err;
+        ESP_LOGE(kLogTag, "nvs_get_blob value failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
     }
 
     BleStoreValueSecCurrent newValue{};
@@ -238,30 +270,32 @@ inline esp_err_t migrateEntryToCurrent(nvs_handle_t nvsHandle,
 
     err = nvs_set_blob(nvsHandle, key, &newValue, sizeof(newValue));
     if (err != ESP_OK) {
-        return err;
+        ESP_LOGE(kLogTag, "nvs_set_blob failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
     }
 
     stats->converted++;
-    return ESP_OK;
+    return true;
 }
 
-inline esp_err_t migrateEntryToV1(nvs_handle_t nvsHandle,
-                                  const char* key,
-                                  MigrationStats* stats) {
+inline bool migrateEntryToV1(nvs_handle_t nvsHandle,
+                             const char* key,
+                             MigrationStats* stats) {
     size_t blobSize = 0;
     esp_err_t err = nvs_get_blob(nvsHandle, key, nullptr, &blobSize);
     if (err == ESP_ERR_NVS_NOT_FOUND) {
-        return ESP_OK;
+        return true;
     }
     if (err != ESP_OK) {
-        return err;
+        ESP_LOGE(kLogTag, "nvs_get_blob size failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
     }
 
     stats->scanned++;
 
     if (blobSize == sizeof(BleStoreValueSecV1)) {
         stats->alreadyTarget++;
-        return ESP_OK;
+        return true;
     }
 
     if (blobSize != sizeof(BleStoreValueSecCurrent)) {
@@ -270,14 +304,15 @@ inline esp_err_t migrateEntryToV1(nvs_handle_t nvsHandle,
                  "Skipping key=%s due to unexpected size=%u",
                  key,
                  static_cast<unsigned>(blobSize));
-        return ESP_OK;
+        return true;
     }
 
     BleStoreValueSecCurrent curValue{};
     size_t readSize = sizeof(curValue);
     err = nvs_get_blob(nvsHandle, key, &curValue, &readSize);
     if (err != ESP_OK) {
-        return err;
+        ESP_LOGE(kLogTag, "nvs_get_blob value failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
     }
 
     BleStoreValueSecV1 oldValue{};
@@ -296,14 +331,77 @@ inline esp_err_t migrateEntryToV1(nvs_handle_t nvsHandle,
 
     err = nvs_set_blob(nvsHandle, key, &oldValue, sizeof(oldValue));
     if (err != ESP_OK) {
-        return err;
+        ESP_LOGE(kLogTag, "nvs_set_blob failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
     }
 
     stats->converted++;
-    return ESP_OK;
+    return true;
 }
 
-inline esp_err_t migrateBondStore(bool toCurrent, uint16_t maxEntries) {
+inline bool migrateLocalIrkEntryToCurrent(nvs_handle_t nvsHandle,
+                                          const char* key,
+                                          MigrationStats* stats) {
+    size_t blobSize = 0;
+    esp_err_t err = nvs_get_blob(nvsHandle, key, nullptr, &blobSize);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        blobSize = 0;
+    } else if (err != ESP_OK) {
+        ESP_LOGE(kLogTag, "nvs_get_blob size failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
+    } else {
+        stats->scanned++;
+    }
+
+    if (blobSize != 0 && blobSize != sizeof(BleStoreValueLocalIrkCurrent) &&
+        blobSize != sizeof(BleStoreValueLocalIrkV1)) {
+        stats->skippedUnknownSize++;
+        ESP_LOGW(kLogTag,
+                 "Overwriting key=%s with default local_irk despite unexpected size=%u",
+                 key,
+                 static_cast<unsigned>(blobSize));
+    }
+
+    BleStoreValueLocalIrkCurrent newValue{};
+    memcpy(newValue.irk, kDefaultLocalIrk, sizeof(newValue.irk));
+
+    err = nvs_set_blob(nvsHandle, key, &newValue, sizeof(newValue));
+    if (err != ESP_OK) {
+        ESP_LOGE(kLogTag, "nvs_set_blob failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
+    }
+
+    stats->converted++;
+    return true;
+}
+
+inline bool migrateLocalIrkEntryToV1(nvs_handle_t nvsHandle,
+                                     const char* key,
+                                     MigrationStats* stats) {
+    size_t blobSize = 0;
+    esp_err_t err = nvs_get_blob(nvsHandle, key, nullptr, &blobSize);
+    if (err == ESP_ERR_NVS_NOT_FOUND) {
+        return true;
+    }
+    if (err != ESP_OK) {
+        ESP_LOGE(kLogTag, "nvs_get_blob size failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
+    }
+
+    stats->scanned++;
+
+    // Rollback to v1 should not persist local IRK entries; erase if present.
+    err = nvs_erase_key(nvsHandle, key);
+    if (err != ESP_OK) {
+        ESP_LOGE(kLogTag, "nvs_erase_key failed key=%s err=%d", key, static_cast<int>(err));
+        return false;
+    }
+
+    stats->converted++;
+    return true;
+}
+
+inline bool migrateBondStore(bool toCurrent, uint16_t maxEntries) {
     nvs_handle_t nvsHandle;
     esp_err_t err = nvs_open(kBondNamespace, NVS_READWRITE, &nvsHandle);
     if (err != ESP_OK) {
@@ -311,7 +409,7 @@ inline esp_err_t migrateBondStore(bool toCurrent, uint16_t maxEntries) {
                  "Failed to open NVS namespace '%s', err=%d",
                  kBondNamespace,
                  static_cast<int>(err));
-        return err;
+        return false;
     }
 
     MigrationStats stats{};
@@ -320,34 +418,57 @@ inline esp_err_t migrateBondStore(bool toCurrent, uint16_t maxEntries) {
     for (uint16_t i = 1; i <= maxEntries; ++i) {
         if (!makeBondKey(key, sizeof(key), kOurSecPrefix, i)) {
             nvs_close(nvsHandle);
-            return ESP_FAIL;
+            return false;
         }
 
-        err = toCurrent ? migrateEntryToCurrent(nvsHandle, key, i, &stats)
-                        : migrateEntryToV1(nvsHandle, key, &stats);
-        if (err != ESP_OK) {
+        if (!(toCurrent ? migrateEntryToCurrent(nvsHandle, key, i, &stats)
+                        : migrateEntryToV1(nvsHandle, key, &stats))) {
             nvs_close(nvsHandle);
-            return err;
+            return false;
         }
 
         if (!makeBondKey(key, sizeof(key), kPeerSecPrefix, i)) {
             nvs_close(nvsHandle);
-            return ESP_FAIL;
+            return false;
         }
 
-        err = toCurrent ? migrateEntryToCurrent(nvsHandle, key, i, &stats)
-                        : migrateEntryToV1(nvsHandle, key, &stats);
-        if (err != ESP_OK) {
+        if (!(toCurrent ? migrateEntryToCurrent(nvsHandle, key, i, &stats)
+                        : migrateEntryToV1(nvsHandle, key, &stats))) {
             nvs_close(nvsHandle);
-            return err;
+            return false;
+        }
+    }
+
+    if (toCurrent) {
+        if (!makeBondKey(key, sizeof(key), kLocalIrkPrefix, 1)) {
+            nvs_close(nvsHandle);
+            return false;
+        }
+
+        if (!migrateLocalIrkEntryToCurrent(nvsHandle, key, &stats)) {
+            nvs_close(nvsHandle);
+            return false;
+        }
+    } else {
+        for (uint16_t i = 1; i <= maxEntries; ++i) {
+            if (!makeBondKey(key, sizeof(key), kLocalIrkPrefix, i)) {
+                nvs_close(nvsHandle);
+                return false;
+            }
+
+            if (!migrateLocalIrkEntryToV1(nvsHandle, key, &stats)) {
+                nvs_close(nvsHandle);
+                return false;
+            }
         }
     }
 
     if (stats.converted > 0) {
         err = nvs_commit(nvsHandle);
         if (err != ESP_OK) {
+            ESP_LOGE(kLogTag, "nvs_commit failed err=%d", static_cast<int>(err));
             nvs_close(nvsHandle);
-            return err;
+            return false;
         }
     }
 
@@ -361,7 +482,7 @@ inline esp_err_t migrateBondStore(bool toCurrent, uint16_t maxEntries) {
              stats.alreadyTarget,
              stats.skippedUnknownSize);
 
-    return ESP_OK;
+    return true;
 }
 
 } // namespace detail
@@ -457,6 +578,65 @@ inline std::string dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_B
                 out += "\n";
             }
         }
+
+        if (!detail::makeBondKey(key, sizeof(key), detail::kLocalIrkPrefix, i)) {
+            out += "Key format error\n";
+            continue;
+        }
+
+        size_t blobSize = 0;
+        err             = nvs_get_blob(nvsHandle, key, nullptr, &blobSize);
+        if (err == ESP_ERR_NVS_NOT_FOUND) {
+            continue;
+        }
+        if (err != ESP_OK) {
+            detail::appendLine(out,
+                               "[local_irk:%u] key=%s read-size error err=%d\n",
+                               i,
+                               key,
+                               static_cast<int>(err));
+            continue;
+        }
+
+        std::vector<uint8_t> blob(blobSize);
+        size_t               readSize = blobSize;
+        err = nvs_get_blob(nvsHandle, key, blob.data(), &readSize);
+        if (err != ESP_OK) {
+            detail::appendLine(out,
+                               "[local_irk:%u] key=%s read error err=%d\n",
+                               i,
+                               key,
+                               static_cast<int>(err));
+            continue;
+        }
+
+        foundCount++;
+        detail::appendLine(out,
+                           "[local_irk:%u] key=%s size=%u ",
+                           i,
+                           key,
+                           static_cast<unsigned>(blobSize));
+
+        if (blobSize == sizeof(detail::BleStoreValueLocalIrkCurrent)) {
+            out += "format=local_irk_current\n";
+            detail::BleStoreValueLocalIrkCurrent irkRecord{};
+            memcpy(&irkRecord, blob.data(), sizeof(irkRecord));
+            detail::appendLocalIrkCurrentRecord(out, irkRecord);
+        } else if (blobSize == sizeof(detail::BleStoreValueLocalIrkV1)) {
+            out += "format=local_irk_v1\n";
+            detail::BleStoreValueLocalIrkV1 irkRecord{};
+            memcpy(&irkRecord, blob.data(), sizeof(irkRecord));
+            detail::appendLocalIrkV1Record(out, irkRecord);
+        } else {
+            out += "format=unknown\n";
+            out += "  raw=";
+            const size_t dumpLen = blobSize > 64 ? 64 : blobSize;
+            detail::appendHex(out, blob.data(), dumpLen);
+            if (blobSize > dumpLen) {
+                out += "...";
+            }
+            out += "\n";
+        }
     }
 
     if (foundCount == 0) {
@@ -469,11 +649,11 @@ inline std::string dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_B
     return out;
 }
 
-inline esp_err_t migrateBondStoreToCurrent(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
+inline bool migrateBondStoreToCurrent(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
     return detail::migrateBondStore(true, maxEntries);
 }
 
-inline esp_err_t migrateBondStoreToV1(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
+inline bool migrateBondStoreToV1(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
     return detail::migrateBondStore(false, maxEntries);
 }
 
