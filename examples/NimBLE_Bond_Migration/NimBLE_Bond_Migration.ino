@@ -10,10 +10,8 @@
 #include <NimBLEDevice.h>
 #include <NimBLEBondMigration.h>
 
-namespace NimBLE_Bond_Migration = NimBLEBondMigration;
-
 #ifndef NIMBLE_BOND_MIGRATION_MODE
-#define NIMBLE_BOND_MIGRATION_MODE 0
+#define NIMBLE_BOND_MIGRATION_MODE 1
 #endif
 
 #if (NIMBLE_BOND_MIGRATION_MODE < 0) || (NIMBLE_BOND_MIGRATION_MODE > 2)
@@ -21,43 +19,37 @@ namespace NimBLE_Bond_Migration = NimBLEBondMigration;
 #endif
 
 void setup() {
+    using namespace NimBLEBondMigration;
+
     Serial.begin(115200);
     Serial.println("Starting NimBLE_Bond_Migration Demo");
 
+    bool success = false;
 #if NIMBLE_BOND_MIGRATION_MODE == 1
-    {
-        esp_err_t rc = NimBLE_Bond_Migration::migrateBondStoreToCurrent();
-        Serial.printf("NimBLE_Bond_Migration to current rc=%d\n", static_cast<int>(rc));
-    }
+    success = migrateBondStoreToCurrent();
+    Serial.printf("NimBLE_Bond_Migration to current %s\n", success ? "success" : "failed");
 #elif NIMBLE_BOND_MIGRATION_MODE == 2
-    {
-        esp_err_t rc = NimBLE_Bond_Migration::migrateBondStoreToV1();
-        Serial.printf("NimBLE_Bond_Migration to v1 rc=%d\n", static_cast<int>(rc));
-        if (rc == ESP_OK) {
-            Serial.println("NimBLE_Bond_Migration completed to v1, upload v1 firmware to continue");
-            while (true) {
-                delay(1000);
-            }
-        } else {
-            Serial.println("NimBLE_Bond_Migration to v1 failed");
-        }
-    }
+    success = migrateBondStoreToV1();
+    Serial.printf("NimBLE_Bond_Migration to v1 %s\n", success ? "success" : "failed");
 #endif
 
-    NimBLEDevice::init("NimBLE");
-    NimBLEDevice::setPower(3); /** +3db */
+    if (success) {
+        Serial.println("NimBLE_Bond_Migration completed, upload target firmware to continue");
+        while (true) {
+            delay(1000);
+        }
+    }
 
+    NimBLEDevice::init("NimBLE");
     NimBLEDevice::setSecurityAuth(true, true, false); /** bonding, MITM, don't need BLE secure connections as we are using passkey pairing */
     NimBLEDevice::setSecurityPasskey(123456);
     NimBLEDevice::setSecurityIOCap(BLE_HS_IO_DISPLAY_ONLY); /** Display only passkey */
     NimBLEServer*         pServer                  = NimBLEDevice::createServer();
     NimBLEService*        pService                 = pServer->createService("ABCD");
-    NimBLECharacteristic* pNonSecureCharacteristic = pService->createCharacteristic("1234", NIMBLE_PROPERTY::READ);
     NimBLECharacteristic* pSecureCharacteristic =
         pService->createCharacteristic("1235",
                                        NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::READ_ENC | NIMBLE_PROPERTY::READ_AUTHEN);
 
-    pNonSecureCharacteristic->setValue("Hello Non Secure BLE");
     pSecureCharacteristic->setValue("Hello Secure BLE");
 
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
