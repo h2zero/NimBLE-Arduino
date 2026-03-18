@@ -689,7 +689,7 @@ NimBLEAddress NimBLEDevice::getBondedAddress(int index) {
     ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
     int        num_peers, rc;
     rc = ble_store_util_bonded_peers(&peer_id_addrs[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
-    if (rc != 0 || index > num_peers || index < 0) {
+    if (rc != 0 || index >= num_peers || index < 0) {
         return NimBLEAddress{};
     }
 
