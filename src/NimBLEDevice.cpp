@@ -614,6 +614,7 @@ uint16_t NimBLEDevice::getMTU() {
  * @brief Gets the number of bonded peers stored
  */
 int NimBLEDevice::getNumBonds() {
+#  if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
     ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
     int        num_peers, rc;
     rc = ble_store_util_bonded_peers(&peer_id_addrs[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
@@ -622,6 +623,9 @@ int NimBLEDevice::getNumBonds() {
     }
 
     return num_peers;
+#  else
+    return 0;
+#  endif
 }
 
 /**
@@ -655,6 +659,7 @@ bool NimBLEDevice::deleteBond(const NimBLEAddress& address) {
  * @returns True if bonded.
  */
 bool NimBLEDevice::isBonded(const NimBLEAddress& address) {
+#  if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
     ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
     int        num_peers, rc;
 
@@ -669,7 +674,8 @@ bool NimBLEDevice::isBonded(const NimBLEAddress& address) {
             return true;
         }
     }
-
+#  endif
+    (void)address; // unused
     return false;
 }
 
@@ -679,6 +685,7 @@ bool NimBLEDevice::isBonded(const NimBLEAddress& address) {
  * @returns NimBLEAddress of the found bonded peer or null address if not found.
  */
 NimBLEAddress NimBLEDevice::getBondedAddress(int index) {
+# if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
     ble_addr_t peer_id_addrs[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
     int        num_peers, rc;
     rc = ble_store_util_bonded_peers(&peer_id_addrs[0], &num_peers, MYNEWT_VAL(BLE_STORE_MAX_BONDS));
@@ -687,6 +694,10 @@ NimBLEAddress NimBLEDevice::getBondedAddress(int index) {
     }
 
     return NimBLEAddress(peer_id_addrs[index]);
+# else
+    (void)index; // unused
+    return NimBLEAddress{};
+# endif
 }
 # endif
 
@@ -1267,10 +1278,17 @@ bool NimBLEDevice::startSecurity(uint16_t connHandle, int* rcPtr) {
  * @return true if the passkey was injected successfully.
  */
 bool NimBLEDevice::injectPassKey(const NimBLEConnInfo& peerInfo, uint32_t passkey) {
+#if MYNEWT_VAL(BLE_SM_LEGACY)
     ble_sm_io pkey{.action = BLE_SM_IOACT_INPUT, .passkey = passkey};
     int       rc = ble_sm_inject_io(peerInfo.getConnHandle(), &pkey);
     NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_INPUT; ble_sm_inject_io result: %d", rc);
     return rc == 0;
+#else
+    (void)peerInfo;
+    (void)passkey;
+    NIMBLE_LOGE(LOG_TAG, "Passkey entry not supported with current security settings");
+    return false;
+#endif
 }
 
 /**
@@ -1279,10 +1297,17 @@ bool NimBLEDevice::injectPassKey(const NimBLEConnInfo& peerInfo, uint32_t passke
  * @param [in] accept Whether the user confirmed or declined the comparison.
  */
 bool NimBLEDevice::injectConfirmPasskey(const NimBLEConnInfo& peerInfo, bool accept) {
+#if MYNEWT_VAL(BLE_SM_SC)
     ble_sm_io pkey{.action = BLE_SM_IOACT_NUMCMP, .numcmp_accept = accept};
     int       rc = ble_sm_inject_io(peerInfo.getConnHandle(), &pkey);
     NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_NUMCMP; ble_sm_inject_io result: %d", rc);
     return rc == 0;
+#else
+    (void)peerInfo;
+    (void)accept;
+    NIMBLE_LOGE(LOG_TAG, "Numeric comparison not supported with current security settings");
+    return false;
+#endif
 }
 # endif // MYNEWT_VAL(BLE_ROLE_CENTRAL) || MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
