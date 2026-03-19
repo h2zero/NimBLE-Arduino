@@ -31,7 +31,7 @@ For Nordic devices, this library provides access to a completely open source and
 * Open platformio.ini, a project configuration file located in the root of PlatformIO project.  
 * Add the following line to the lib_deps option of [env:] section:
 ```
-h2zero/NimBLE-Arduino@^2.1.0
+h2zero/NimBLE-Arduino
 ```
 * Build a project, PlatformIO will automatically install dependencies.
 
@@ -56,14 +56,8 @@ Change the settings in the `src/nimconfig.h` file to customize NimBLE to your pr
 such as increasing max connections, default is 3 for the esp32.
 <br/>
 
-# Development Status
-This Library is tracking the esp-nimble repo, nimble-1.5.0-idf branch, currently [@e3cbdc0.](https://github.com/espressif/esp-nimble)  
-<br/>
-
 # Sponsors
 Thank you to all the sponsors who support this project!
-
-<!-- sponsors --><!-- sponsors -->
 
 If you use this library for a commercial product please consider [sponsoring the development](https://github.com/sponsors/h2zero) to ensure the continued updates and maintenance.  
 <br/>

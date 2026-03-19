@@ -17,11 +17,11 @@ jobs:
           - "examples/NimBLE_Server"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.13"
       - name: Install platformio
         run: |
           python -m pip install --upgrade pip
@@ -57,7 +57,7 @@ jobs:
           - "examples/Bluetooth_5/NimBLE_extended_server"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -96,7 +96,7 @@ jobs:
           - "examples/NimBLE_Server"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -142,7 +142,7 @@ jobs:
           - "examples/Bluetooth_5/NimBLE_extended_server"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -195,7 +195,7 @@ jobs:
           - esp32h2
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build arduino-esp32
         uses: arduino/compile-sketches@v1.1.0
         with:
@@ -221,7 +221,7 @@ jobs:
           - esp32h2
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set config for BT5
         run: |
           sed -i '0,/#include \"nimconfig_rename.h\"/a #define CONFIG_BT_NIMBLE_EXT_ADV 1' ./src/nimconfig.h
@@ -250,7 +250,7 @@ jobs:
           - Generic_nRF52840
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build n-able Arduino
         uses: arduino/compile-sketches@v1.1.0
         with:
@@ -273,7 +273,7 @@ jobs:
           - Generic_nRF52840
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set config for BT5
         run: |
           echo "-DCONFIG_BT_NIMBLE_EXT_ADV=1" > ${{ matrix.example }}/build_opt.h
@@ -297,7 +297,7 @@ jobs:
           - "examples/NimBLE_Server"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -340,7 +340,7 @@ jobs:
           - "examples/Bluetooth_5/NimBLE_extended_server"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -369,7 +369,7 @@ jobs:
   build_docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Doxygen Action
         uses: mattnotmitt/doxygen-action@v1.9.8
         with:

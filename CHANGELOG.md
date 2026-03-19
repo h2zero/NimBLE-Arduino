@@ -1,6 +1,32 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+## Fixed
+- GATT attribute handles are now assigned from the registration callback so duplicate UUID attributes are identified correctly.
+- Dynamic service changes now properly remove characteristics/descriptors and reset the GATT database when advertising starts.
+- Missing notification/indication payload data when the value spans multiple mbufs, such as values larger than 255 bytes with small ACL buffers.
+- `NimBLEDevice::createServer` will longer crash when called before the stack is initialized.
+- Re-pairing after deleting all bonds now works by unpairing each stored bond instead of only deleting NVS data.
+- Whitelist bounds checks.
+- `NimBLEDevice::getBondedAddress` index bounds validation.
+- ESP32 linker error when both central and peripheral roles are disabled.
+- Compiler warnings when bonds are disabled.
+
+## Added
+- `NimBLEStream`, `NimBLEStreamClient`, and `NimBLEStreamServer` classes and examples.
+- `NimBLECppVersion.h` with compile-time version macros.
+- `NimBLEDevice::getVersion` runtime version string helper.
+- Matching passkey callbacks for both roles: `NimBLEServerCallbacks::onPassKeyEntry` and `NimBLEClientCallbacks::onPassKeyDisplay`.
+- Bond migration helpers to convert bond storage between v1 and current formats while preserving existing bonds.
+- `NimBLEUUID` constructor overload for `ble_uuid_t*`.
+- Optional `index` parameter for `NimBLECharacteristic::getDescriptorByUUID` to access multiple descriptors with the same UUID.
+
+## Changed
+- `NimBLEService::start` is deprecated; services are now added when the server starts.
+- `NimBLEHIDDevice::startServices()` is deprecated; services are now added when the server starts.
+
 ## [2.3.9] 2026-03-08
 
 ## Fixed

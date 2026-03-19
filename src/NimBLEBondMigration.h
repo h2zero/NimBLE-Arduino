@@ -16,6 +16,13 @@
 #include "nvs.h"
 #include "syscfg/syscfg.h"
 
+/**
+ * @brief Helpers for converting NimBLE bond data stored in ESP NVS between
+ *        the legacy 1.x layout and the current 2.x layout.
+ *
+ * These helpers are intended for one-time migration firmware and must be used
+ * before calling `NimBLEDevice::init()`.
+ */
 namespace NimBLEBondMigration {
 
 namespace detail {
@@ -487,6 +494,17 @@ inline bool migrateBondStore(bool toCurrent, uint16_t maxEntries) {
 
 } // namespace detail
 
+/**
+ * @brief Read and format the contents of the NimBLE bond store.
+ *
+ * This is intended for diagnostics before or after migration and returns a
+ * human-readable summary of each `our_sec_*`, `peer_sec_*`, and `local_irk_*`
+ * record found in the NVS bond namespace.
+ *
+ * @param[in] maxEntries The maximum number of bond slots to inspect.
+ * @return A formatted string describing the stored bond data, or an error
+ *         message if the NVS namespace could not be opened.
+ */
 inline std::string dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
     std::string out;
     out.reserve(2048);
@@ -649,10 +667,31 @@ inline std::string dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_B
     return out;
 }
 
+/**
+ * @brief Convert legacy 1.x bond data in NVS to the current 2.x format.
+ *
+ * This function should be called once, before `NimBLEDevice::init()`, by a
+ * temporary migration firmware when upgrading an existing installation that
+ * needs to preserve bonded peers.
+ *
+ * @param[in] maxEntries The maximum number of bond slots to inspect and
+ *            convert.
+ * @return `true` if migration completed successfully, otherwise `false`.
+ */
 inline bool migrateBondStoreToCurrent(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
     return detail::migrateBondStore(true, maxEntries);
 }
 
+/**
+ * @brief Convert current 2.x bond data in NVS back to the legacy 1.x format.
+ *
+ * This is intended for rollback scenarios where bond data must be preserved
+ * before flashing firmware built against the 1.x library.
+ *
+ * @param[in] maxEntries The maximum number of bond slots to inspect and
+ *            convert.
+ * @return `true` if migration completed successfully, otherwise `false`.
+ */
 inline bool migrateBondStoreToV1(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
     return detail::migrateBondStore(false, maxEntries);
 }
