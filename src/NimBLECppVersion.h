@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * Copyright 2020-2026 Ryan Powell <ryan@nable-embedded.io> and
  * esp-nimble-cpp, NimBLE-Arduino contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@
  * @details Include the leading '-' when defined, for example: "-beta.1"
  */
 #ifndef NIMBLE_CPP_VERSION_PRERELEASE
-# define NIMBLE_CPP_VERSION_PRERELEASE "-rc.1"
+# define NIMBLE_CPP_VERSION_PRERELEASE ""
 #endif
 
 /**

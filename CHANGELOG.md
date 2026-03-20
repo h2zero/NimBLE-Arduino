@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [2.4.0] 2026-03-20
 
 ## Fixed
 - GATT attribute handles are now assigned from the registration callback so duplicate UUID attributes are identified correctly.
