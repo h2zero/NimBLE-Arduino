@@ -100,7 +100,7 @@ class NimBLEStream : public Stream {
      */
     void setRxOverflowCallback(RxOverflowCallback cb, void* userArg = nullptr) {
         m_rxOverflowCallback = cb;
-        m_rxOverflowUserArg = userArg;
+        m_rxOverflowUserArg  = userArg;
     }
 
     operator bool() const { return ready(); }
@@ -118,17 +118,17 @@ class NimBLEStream : public Stream {
     static void  txDrainEventCb(struct ble_npl_event* ev);
     static void  txDrainCalloutCb(struct ble_npl_event* ev);
 
-    ByteRingBuffer*        m_txBuf{nullptr};
-    ByteRingBuffer*        m_rxBuf{nullptr};
-    uint8_t                m_txChunkBuf[CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU];
-    uint32_t               m_txBufSize{1024};
-    uint32_t               m_rxBufSize{1024};
-    ble_npl_event          m_txDrainEvent{};
-    ble_npl_callout        m_txDrainCallout{};
+    ByteRingBuffer*    m_txBuf{nullptr};
+    ByteRingBuffer*    m_rxBuf{nullptr};
+    uint8_t            m_txChunkBuf[CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU];
+    uint32_t           m_txBufSize{1024};
+    uint32_t           m_rxBufSize{1024};
+    ble_npl_event      m_txDrainEvent{};
+    ble_npl_callout    m_txDrainCallout{};
     RxOverflowCallback m_rxOverflowCallback{nullptr};
-    void*                  m_rxOverflowUserArg{nullptr};
-    bool                   m_coInitialized{false};
-    bool                   m_eventInitialized{false};
+    void*              m_rxOverflowUserArg{nullptr};
+    bool               m_coInitialized{false};
+    bool               m_eventInitialized{false};
 };
 
 # if CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
@@ -203,13 +203,13 @@ class NimBLEStreamClient : public NimBLEStream {
 
     // Attach a discovered remote characteristic; app owns discovery/connection.
     // Set subscribeNotify=true to receive notifications into RX buffer.
-    bool begin(NimBLERemoteCharacteristic* pChr,
-               bool                        subscribeNotify = false,
-               uint32_t                    txBufSize       = 1024,
-               uint32_t                    rxBufSize       = 1024);
-    void end() override;
-    void setNotifyCallback(NimBLERemoteCharacteristic::notify_callback cb) { m_userNotifyCallback = cb; }
-    bool ready() const override;
+    bool         begin(NimBLERemoteCharacteristic* pChr,
+                       bool                        subscribeNotify = false,
+                       uint32_t                    txBufSize       = 1024,
+                       uint32_t                    rxBufSize       = 1024);
+    void         end() override;
+    void         setNotifyCallback(NimBLERemoteCharacteristic::notify_callback cb) { m_userNotifyCallback = cb; }
+    bool         ready() const override;
     virtual void flush() override;
 
     using NimBLEStream::write; // Inherit template write overloads

@@ -58,6 +58,7 @@ struct NimBLEStream::ByteRingBuffer {
         m_buf = static_cast<uint8_t*>(malloc(capacity));
         if (!m_buf) {
             NIMBLE_LOGE(LOG_TAG, "Failed to allocate ring buffer memory");
+            ble_npl_mutex_deinit(&m_mutex);
             return;
         }
     }
