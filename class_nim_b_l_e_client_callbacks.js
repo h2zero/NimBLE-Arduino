@@ -8,6 +8,7 @@ var class_nim_b_l_e_client_callbacks =
     [ "onDisconnect", "class_nim_b_l_e_client_callbacks.html#ad618179ade926482a7f2d94b0deabd69", null ],
     [ "onIdentity", "class_nim_b_l_e_client_callbacks.html#ac03333d26d570e55b285da460c0def76", null ],
     [ "onMTUChange", "class_nim_b_l_e_client_callbacks.html#a92662eb9ecf882b2c55bc6d9b4de97bc", null ],
+    [ "onPassKeyDisplay", "class_nim_b_l_e_client_callbacks.html#a1297950297c89b33dadfce4cbd318b41", null ],
     [ "onPassKeyEntry", "class_nim_b_l_e_client_callbacks.html#aacb0b757e6e7c7984d8389c83fe1937d", null ],
     [ "onPhyUpdate", "class_nim_b_l_e_client_callbacks.html#a4e91ebb66e46b7f3ccc6291ece0b549c", null ]
 ];

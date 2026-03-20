@@ -23,7 +23,7 @@ var class_nim_b_l_e_server =
     [ "removeService", "class_nim_b_l_e_server.html#a00c92f62f41ec1c499dfaf042b487d75", null ],
     [ "setCallbacks", "class_nim_b_l_e_server.html#a485c90ce36275f9e4ec26a7f3d348cd9", null ],
     [ "setDataLen", "class_nim_b_l_e_server.html#afbffb933eed8142bd24222e3cacc138a", null ],
-    [ "start", "class_nim_b_l_e_server.html#ae94ad52f3c97f62553af9765acdb7bcb", null ],
+    [ "start", "class_nim_b_l_e_server.html#a82247d9abef1a70b2ad9ecdc4e74cff6", null ],
     [ "startAdvertising", "class_nim_b_l_e_server.html#a0697fab04372df6412d3e948f3d55654", null ],
     [ "startAdvertising", "class_nim_b_l_e_server.html#ab8cab448de62d05448ccb27d1bbb5c33", null ],
     [ "stopAdvertising", "class_nim_b_l_e_server.html#a1da4f645f62b523eb6383ff7d1ed76c6", null ],

@@ -3,6 +3,7 @@ var class_nim_b_l_e_service =
     [ "NimBLEService", "class_nim_b_l_e_service.html#a5084a6db9c9b5ddb4f3e9261606b1e65", null ],
     [ "NimBLEService", "class_nim_b_l_e_service.html#af4e9e030046352a6ff3d9ba67fe872e3", null ],
     [ "~NimBLEService", "class_nim_b_l_e_service.html#a8904838e785b967c770a240e6c5099e7", null ],
+    [ "__attribute__", "class_nim_b_l_e_service.html#a3af7ab85d87a88cef2cbd1b08e257280", null ],
     [ "addCharacteristic", "class_nim_b_l_e_service.html#af8215dbfdaf7ced32d6158f8ff5116e8", null ],
     [ "createCharacteristic", "class_nim_b_l_e_service.html#a415e1b836946831c6f9edd74adba8763", null ],
     [ "createCharacteristic", "class_nim_b_l_e_service.html#aa780d072e6257258e27cbc96106626ad", null ],
@@ -16,6 +17,5 @@ var class_nim_b_l_e_service =
     [ "getServer", "class_nim_b_l_e_service.html#acfbb7abadee89abd496b89f8fe085f58", null ],
     [ "isStarted", "class_nim_b_l_e_service.html#aa9464e97d7e39a4634c5d9bdce1abbac", null ],
     [ "removeCharacteristic", "class_nim_b_l_e_service.html#af992d0c27e3a559789fb77fc46623234", null ],
-    [ "start", "class_nim_b_l_e_service.html#ad37324ed0404d596923d6fdc0133b985", null ],
     [ "toString", "class_nim_b_l_e_service.html#a819ff207ef7c30f59887af277aa09ce9", null ]
 ];

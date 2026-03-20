@@ -20,5 +20,5 @@ var class_nim_b_l_e_h_i_d_device =
     [ "setManufacturer", "class_nim_b_l_e_h_i_d_device.html#a35c42432a5a8f5b3286293bea1b9f397", null ],
     [ "setPnp", "class_nim_b_l_e_h_i_d_device.html#ab0495fb5fbee85277a14a0b9476a0239", null ],
     [ "setReportMap", "class_nim_b_l_e_h_i_d_device.html#abdc7efa80e3a1cc9c35bcce012c1d37c", null ],
-    [ "startServices", "class_nim_b_l_e_h_i_d_device.html#a5984042cd05ea4ead895f5577133a235", null ]
+    [ "startServices", "class_nim_b_l_e_h_i_d_device.html#a6e0a371c75062322bfafe155e9ee0e03", null ]
 ];

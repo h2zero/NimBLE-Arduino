@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.9</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
    </div>
   </td>
  </tr>
@@ -115,6 +115,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a45b5fc1c98b287a2ddeab8f2f5b63c4f" id="r_a45b5fc1c98b287a2ddeab8f2f5b63c4f"><td class="memItemLeft" align="right" valign="top">virtual uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server_callbacks.html#a45b5fc1c98b287a2ddeab8f2f5b63c4f">onPassKeyDisplay</a> ()</td></tr>
 <tr class="memdesc:a45b5fc1c98b287a2ddeab8f2f5b63c4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when a client requests a passkey for pairing (display).  <br /></td></tr>
 <tr class="separator:a45b5fc1c98b287a2ddeab8f2f5b63c4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc6b8271dc9e35551db7b0cf054ec882" id="r_acc6b8271dc9e35551db7b0cf054ec882"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server_callbacks.html#acc6b8271dc9e35551db7b0cf054ec882">onPassKeyEntry</a> (<a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo)</td></tr>
+<tr class="memdesc:acc6b8271dc9e35551db7b0cf054ec882"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when using passkey entry pairing and the peer requires the passkey to be entered.  <br /></td></tr>
+<tr class="separator:acc6b8271dc9e35551db7b0cf054ec882"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a507296393ca8557db2e4afa786c5b436" id="r_a507296393ca8557db2e4afa786c5b436"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server_callbacks.html#a507296393ca8557db2e4afa786c5b436">onConfirmPassKey</a> (<a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo, uint32_t pin)</td></tr>
 <tr class="memdesc:a507296393ca8557db2e4afa786c5b436"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when using numeric comparision for pairing.  <br /></td></tr>
 <tr class="separator:a507296393ca8557db2e4afa786c5b436"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -449,6 +452,41 @@ Public Member Functions</h2></td></tr>
 
 <p>Called when a client requests a passkey for pairing (display). </p>
 <dl class="section return"><dt>Returns</dt><dd>The passkey to be sent to the client. </dd></dl>
+
+</div>
+</div>
+<a id="acc6b8271dc9e35551db7b0cf054ec882" name="acc6b8271dc9e35551db7b0cf054ec882"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc6b8271dc9e35551db7b0cf054ec882">&#9670;&#160;</a></span>onPassKeyEntry()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEServerCallbacks::onPassKeyEntry </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;&#160;</td>
+          <td class="paramname"><em>connInfo</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Called when using passkey entry pairing and the peer requires the passkey to be entered. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">connInfo</td><td>A reference to a <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a> instance with information about the peer connection parameters.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>The application should call <a class="el" href="class_nim_b_l_e_device.html#a5071168b3bda69aa4457a43473ad7a96" title="Inject the provided passkey into the Security Manager.">NimBLEDevice::injectPassKey</a> with the passkey displayed on the peer device to complete the pairing process. </p>
 
 </div>
 </div>

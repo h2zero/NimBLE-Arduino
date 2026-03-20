@@ -1,5 +1,6 @@
 var hierarchy =
 [
+    [ "NimBLEStream::ByteRingBuffer::Guard", "struct_nim_b_l_e_stream_1_1_byte_ring_buffer_1_1_guard.html", null ],
     [ "NimBLEAddress", "class_nim_b_l_e_address.html", null ],
     [ "NimBLEAdvertisedDevice", "class_nim_b_l_e_advertised_device.html", null ],
     [ "NimBLEAdvertisementData", "class_nim_b_l_e_advertisement_data.html", null ],

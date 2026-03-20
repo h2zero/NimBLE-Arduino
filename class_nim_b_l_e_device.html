@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.9</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
    </div>
   </td>
  </tr>
@@ -121,6 +121,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:abf8c494b54d9f0c9466c80f25dbdd961" id="r_abf8c494b54d9f0c9466c80f25dbdd961"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#abf8c494b54d9f0c9466c80f25dbdd961">toString</a> ()</td></tr>
 <tr class="memdesc:abf8c494b54d9f0c9466c80f25dbdd961"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return a string representation of the address of this device.  <br /></td></tr>
 <tr class="separator:abf8c494b54d9f0c9466c80f25dbdd961"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af54be1633fe006b4b421abb471129b4f" id="r_af54be1633fe006b4b421abb471129b4f"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#af54be1633fe006b4b421abb471129b4f">getVersion</a> ()</td></tr>
+<tr class="memdesc:af54be1633fe006b4b421abb471129b4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the library version as a string.  <br /></td></tr>
+<tr class="separator:af54be1633fe006b4b421abb471129b4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aabc68166b6dd4a744a98f94e569f37db" id="r_aabc68166b6dd4a744a98f94e569f37db"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_device.html#aabc68166b6dd4a744a98f94e569f37db">whiteListAdd</a> (const <a class="el" href="class_nim_b_l_e_address.html">NimBLEAddress</a> &amp;address)</td></tr>
 <tr class="memdesc:aabc68166b6dd4a744a98f94e569f37db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a peer address to the whitelist.  <br /></td></tr>
 <tr class="separator:aabc68166b6dd4a744a98f94e569f37db"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -883,6 +886,34 @@ A pointer to the advertising object. </dd></dl>
 
 <p>Get the instance of the server. </p>
 <dl class="section return"><dt>Returns</dt><dd>A pointer to the server instance or nullptr if none have been created. </dd></dl>
+
+</div>
+</div>
+<a id="af54be1633fe006b4b421abb471129b4f" name="af54be1633fe006b4b421abb471129b4f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af54be1633fe006b4b421abb471129b4f">&#9670;&#160;</a></span>getVersion()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char * NimBLEDevice::getVersion </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return the library version as a string. </p>
+<dl class="section return"><dt>Returns</dt><dd>A const char* containing library version information. </dd></dl>
 
 </div>
 </div>

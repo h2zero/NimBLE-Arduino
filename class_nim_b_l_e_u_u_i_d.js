@@ -2,6 +2,7 @@ var class_nim_b_l_e_u_u_i_d =
 [
     [ "NimBLEUUID", "class_nim_b_l_e_u_u_i_d.html#a7265f67b8ca3a2cd55b37a74b66d18bc", null ],
     [ "NimBLEUUID", "class_nim_b_l_e_u_u_i_d.html#a11f607fa0f7afbad0f047c6e9cba9d4d", null ],
+    [ "NimBLEUUID", "class_nim_b_l_e_u_u_i_d.html#a8b701010caa0a48ded55db8d99bf3d2a", null ],
     [ "NimBLEUUID", "class_nim_b_l_e_u_u_i_d.html#a6fd3849062c96cee3d6cd00544fadfac", null ],
     [ "NimBLEUUID", "class_nim_b_l_e_u_u_i_d.html#aadbfc5504e63cd91c59c778607b8dd92", null ],
     [ "NimBLEUUID", "class_nim_b_l_e_u_u_i_d.html#ab4e1658b1c414edb9aea5cf5140fa461", null ],

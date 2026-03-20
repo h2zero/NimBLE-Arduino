@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.9</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
    </div>
   </td>
  </tr>
@@ -180,7 +180,7 @@ Creating a Server</h1>
 <div class="line">}</div>
 </div><!-- fragment --><p>All that's left to do now is start the service, give the characteristic a value and start advertising for clients. <br  />
 </p>
-<p>Fist we start the service by calling <code><a class="el" href="class_nim_b_l_e_service.html#ad37324ed0404d596923d6fdc0133b985" title="Builds the database of characteristics/descriptors for the service and registers it with the NimBLE s...">NimBLEService::start()</a></code>.</p>
+<p>Fist we start the service by calling <code>NimBLEService::start()</code>.</p>
 <p>Next we need to call <code>NimBLECharacteristic::setValue</code> to set the characteristic value that the client will read. <br  />
  There are many different types you can send as parameters for the value but for this example we will use a simple string. <code>pCharacteristic-&gt;setValue("Hello BLE");</code> <br  />
 </p>

@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.9</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
    </div>
   </td>
  </tr>
@@ -111,6 +111,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a11f607fa0f7afbad0f047c6e9cba9d4d" id="r_a11f607fa0f7afbad0f047c6e9cba9d4d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a11f607fa0f7afbad0f047c6e9cba9d4d">NimBLEUUID</a> (<a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">const</a> <a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">ble_uuid_any_t</a> &amp;uuid)</td></tr>
 <tr class="memdesc:a11f607fa0f7afbad0f047c6e9cba9d4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a UUID from the native UUID.  <br /></td></tr>
 <tr class="separator:a11f607fa0f7afbad0f047c6e9cba9d4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b701010caa0a48ded55db8d99bf3d2a" id="r_a8b701010caa0a48ded55db8d99bf3d2a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a8b701010caa0a48ded55db8d99bf3d2a">NimBLEUUID</a> (<a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">const</a> <a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">ble_uuid_t</a> *uuid)</td></tr>
+<tr class="memdesc:a8b701010caa0a48ded55db8d99bf3d2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a UUID from the native UUID pointer.  <br /></td></tr>
+<tr class="separator:a8b701010caa0a48ded55db8d99bf3d2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6fd3849062c96cee3d6cd00544fadfac" id="r_a6fd3849062c96cee3d6cd00544fadfac"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_u_u_i_d.html#a6fd3849062c96cee3d6cd00544fadfac">NimBLEUUID</a> (<a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">const</a> std::string &amp;uuid)</td></tr>
 <tr class="memdesc:a6fd3849062c96cee3d6cd00544fadfac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a UUID from a string.  <br /></td></tr>
 <tr class="separator:a6fd3849062c96cee3d6cd00544fadfac"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -174,7 +177,7 @@ Static Public Member Functions</h2></td></tr>
 <div class="textblock"><p>A model of a BLE UUID. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a11f607fa0f7afbad0f047c6e9cba9d4d" name="a11f607fa0f7afbad0f047c6e9cba9d4d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11f607fa0f7afbad0f047c6e9cba9d4d">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[1/7]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a11f607fa0f7afbad0f047c6e9cba9d4d">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[1/8]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -199,8 +202,34 @@ Static Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a8b701010caa0a48ded55db8d99bf3d2a" name="a8b701010caa0a48ded55db8d99bf3d2a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b701010caa0a48ded55db8d99bf3d2a">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[2/8]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">NimBLEUUID::NimBLEUUID </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">const</a> <a class="el" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">ble_uuid_t</a> *&#160;</td>
+          <td class="paramname"><em>uuid</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a UUID from the native UUID pointer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">uuid</td><td>The native UUID pointer. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a6fd3849062c96cee3d6cd00544fadfac" name="a6fd3849062c96cee3d6cd00544fadfac"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6fd3849062c96cee3d6cd00544fadfac">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[2/7]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a6fd3849062c96cee3d6cd00544fadfac">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[3/8]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -220,7 +249,7 @@ Static Public Member Functions</h2></td></tr>
 <div class="fragment"><div class="line"><span class="stringliteral">&quot;beb5483e-36e1-4688-b7f5-ea07361b26a8&quot;</span></div>
 <div class="line"> 0 1 2 3  4 5  6 7  8 9  0 1 2 3 4 5</div>
 <div class="line"> 12345678-90<a class="code hl_function" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">ab</a>-<a class="code hl_function" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">cdef</a>-1234-567890<a class="code hl_function" href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">abcdef</a></div>
-<div class="ttc" id="aclass_nim_b_l_e_u_u_i_d_html_acf379fca7d3689a73e6750d7ab50a0af"><div class="ttname"><a href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">NimBLEUUID::getValue</a></div><div class="ttdeci">const uint8_t * getValue() const</div><div class="ttdoc">Get the uuid value.</div><div class="ttdef"><b>Definition</b> NimBLEUUID.cpp:152</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_u_u_i_d_html_acf379fca7d3689a73e6750d7ab50a0af"><div class="ttname"><a href="class_nim_b_l_e_u_u_i_d.html#acf379fca7d3689a73e6750d7ab50a0af">NimBLEUUID::getValue</a></div><div class="ttdeci">const uint8_t * getValue() const</div><div class="ttdoc">Get the uuid value.</div><div class="ttdef"><b>Definition</b> NimBLEUUID.cpp:166</div></div>
 </div><!-- fragment --><p>This has a length of 36 characters. We need to parse this into 16 bytes.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -232,7 +261,7 @@ Static Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="aadbfc5504e63cd91c59c778607b8dd92" name="aadbfc5504e63cd91c59c778607b8dd92"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aadbfc5504e63cd91c59c778607b8dd92">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[3/7]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aadbfc5504e63cd91c59c778607b8dd92">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[4/8]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -258,7 +287,7 @@ Static Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="ab4e1658b1c414edb9aea5cf5140fa461" name="ab4e1658b1c414edb9aea5cf5140fa461"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab4e1658b1c414edb9aea5cf5140fa461">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[4/7]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ab4e1658b1c414edb9aea5cf5140fa461">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[5/8]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -284,7 +313,7 @@ Static Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="ac9fbd00e7ffeb334571016c61bca9286" name="ac9fbd00e7ffeb334571016c61bca9286"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac9fbd00e7ffeb334571016c61bca9286">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[5/7]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9fbd00e7ffeb334571016c61bca9286">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[6/8]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -310,7 +339,7 @@ Static Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="aca27c0b572bb65ff9559f3b7ce8541fd" name="aca27c0b572bb65ff9559f3b7ce8541fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aca27c0b572bb65ff9559f3b7ce8541fd">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[6/7]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aca27c0b572bb65ff9559f3b7ce8541fd">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[7/8]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -347,7 +376,7 @@ Static Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="a399dca7d70ee262aa155b39d357321b1" name="a399dca7d70ee262aa155b39d357321b1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a399dca7d70ee262aa155b39d357321b1">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[7/7]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a399dca7d70ee262aa155b39d357321b1">&#9670;&#160;</a></span>NimBLEUUID() <span class="overload">[8/8]</span></h2>
 
 <div class="memitem">
 <div class="memproto">

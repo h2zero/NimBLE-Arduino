@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.9</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
    </div>
   </td>
  </tr>
@@ -97,6 +97,7 @@ $(document).ready(function(){initNavTree('md_1_8x__to2_8x__migration__guide.html
 <p>The changes listed here are only the required changes that must be made, and a short overview of options for migrating existing applications.</p>
 <ul>
 <li><a class="el" href="md_1_8x__to2_8x__migration__guide.html#general-changes">General changes</a></li>
+<li><a class="el" href="md_1_8x__to2_8x__migration__guide.html#bond-migration">Bond migration</a></li>
 <li><a class="el" href="md_1_8x__to2_8x__migration__guide.html#ble-device">BLE Device</a></li>
 <li><a class="el" href="md_1_8x__to2_8x__migration__guide.html#ble-addresses">BLE Addresses</a></li>
 <li><a class="el" href="md_1_8x__to2_8x__migration__guide.html#ble-uuids">BLE UUID's</a></li>
@@ -132,6 +133,45 @@ General changes</h1>
  For instance <code>onAuthenticationComplete(ble_gap_conn_desc* desc)</code> signature is now <code>onAuthenticationComplete(<a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a>&amp; connInfo)</code> and <br  />
  <code>NimBLEServerCallbacks::onConnect(NimBLEServer* pServer)</code> signature is now <code><a class="el" href="class_nim_b_l_e_server_callbacks.html#a11d48696c2121eb301a76301555df2c5" title="Handle a client connection. This is called when a client connects.">NimBLEServerCallbacks::onConnect</a>(NimBLEServer* pServer, <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a>&amp; connInfo)</code>. <br  />
  <br  />
+</li>
+</ul>
+<h1><a class="anchor" id="bond-migration"></a>
+Bond migration</h1>
+<p>If your 1.x application stores bonds and you want paired devices to continue working after upgrading to 2.x, the library provides helper functions to migrate the bond data stored in NVS.</p>
+<p>The helpers are declared in <code><a class="el" href="_nim_b_l_e_bond_migration_8h_source.html">NimBLEBondMigration.h</a></code>:</p>
+<ul>
+<li><code><a class="el" href="namespace_nim_b_l_e_bond_migration.html#a2eac25626bb2f4079f8526128edf7b34" title="Convert legacy 1.x bond data in NVS to the current 2.x format.">NimBLEBondMigration::migrateBondStoreToCurrent()</a></code> converts 1.x bond data to the current 2.x format.</li>
+<li><code><a class="el" href="namespace_nim_b_l_e_bond_migration.html#a423ad50bd8d7e0953bcde27ced2ab3e4" title="Convert current 2.x bond data in NVS back to the legacy 1.x format.">NimBLEBondMigration::migrateBondStoreToV1()</a></code> converts current bond data back to the 1.x format.</li>
+<li><code><a class="el" href="namespace_nim_b_l_e_bond_migration.html#a0a03d6c05d5c2c90530031ac77a92971" title="Read and format the contents of the NimBLE bond store.">NimBLEBondMigration::dumpBondData()</a></code> returns a human-readable dump of the stored bond records for debugging.</li>
+</ul>
+<p>These functions must be called <b>before</b> <code><a class="el" href="class_nim_b_l_e_device.html#a2e8bb71daabbffd9eab8787493a45ce7" title="Initialize the BLE environment.">NimBLEDevice::init()</a></code> so the bond store can be updated before the stack starts using it.</p>
+<p>Typical migration flow:</p>
+<ol type="1">
+<li>Build and flash a temporary migration firmware that includes <code><a class="el" href="_nim_b_l_e_bond_migration_8h_source.html">NimBLEBondMigration.h</a></code>.</li>
+<li>Call <code>migrateBondStoreToCurrent()</code> once during startup before BLE initialization.</li>
+<li>If the function returns <code>true</code>, stop there and then flash the final 2.x application firmware.</li>
+<li>After the migration is complete, do not run the migration again in normal application startup.</li>
+</ol>
+<p>Example: </p><pre class="fragment">#include &lt;NimBLEDevice.h&gt;
+#include &lt;NimBLEBondMigration.h&gt;
+
+void setup() {
+    bool success = NimBLEBondMigration::migrateBondStoreToCurrent();
+    if (success) {
+        // Flash the normal 2.x firmware after this one-time step.
+        while (true) {
+            delay(1000);
+        }
+    }
+
+    NimBLEDevice::init("NimBLE");
+}
+</pre><p> Notes:</p>
+<ul>
+<li>These helpers currently require <code>ESP_PLATFORM</code> because they operate directly on the ESP NVS bond storage.</li>
+<li><code>dumpBondData()</code> is useful before and after migration to verify what records are present.</li>
+<li>If you need to temporarily return to a 1.x firmware image while preserving bonds, run <code>migrateBondStoreToV1()</code> first, then flash the 1.x application.</li>
+<li>See the <code>examples/NimBLE_Bond_Migration</code> example for a complete one-time migration sketch. <br  />
 </li>
 </ul>
 <h1><a class="anchor" id="ble-device"></a>

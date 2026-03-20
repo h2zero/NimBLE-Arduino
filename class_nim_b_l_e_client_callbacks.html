@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.9</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
    </div>
   </td>
  </tr>
@@ -118,6 +118,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aacb0b757e6e7c7984d8389c83fe1937d" id="r_aacb0b757e6e7c7984d8389c83fe1937d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_client_callbacks.html#aacb0b757e6e7c7984d8389c83fe1937d">onPassKeyEntry</a> (<a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo)</td></tr>
 <tr class="memdesc:aacb0b757e6e7c7984d8389c83fe1937d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when server requests a passkey for pairing.  <br /></td></tr>
 <tr class="separator:aacb0b757e6e7c7984d8389c83fe1937d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1297950297c89b33dadfce4cbd318b41" id="r_a1297950297c89b33dadfce4cbd318b41"><td class="memItemLeft" align="right" valign="top">virtual uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_client_callbacks.html#a1297950297c89b33dadfce4cbd318b41">onPassKeyDisplay</a> (<a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo)</td></tr>
+<tr class="memdesc:a1297950297c89b33dadfce4cbd318b41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when using passkey entry pairing and the passkey should be displayed.  <br /></td></tr>
+<tr class="separator:a1297950297c89b33dadfce4cbd318b41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8e2abef6949ac87abf5ecad1a4dfe35" id="r_ae8e2abef6949ac87abf5ecad1a4dfe35"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_client_callbacks.html#ae8e2abef6949ac87abf5ecad1a4dfe35">onAuthenticationComplete</a> (<a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;connInfo)</td></tr>
 <tr class="memdesc:ae8e2abef6949ac87abf5ecad1a4dfe35"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when the pairing procedure is complete.  <br /></td></tr>
 <tr class="separator:ae8e2abef6949ac87abf5ecad1a4dfe35"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -463,6 +466,41 @@ This can be used to check the status of the connection encryption/pairing. </td>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a1297950297c89b33dadfce4cbd318b41" name="a1297950297c89b33dadfce4cbd318b41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1297950297c89b33dadfce4cbd318b41">&#9670;&#160;</a></span>onPassKeyDisplay()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t NimBLEClientCallbacks::onPassKeyDisplay </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_conn_info.html">NimBLEConnInfo</a> &amp;&#160;</td>
+          <td class="paramname"><em>connInfo</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Called when using passkey entry pairing and the passkey should be displayed. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">connInfo</td><td>A reference to a <a class="el" href="class_nim_b_l_e_conn_info.html" title="Connection information.">NimBLEConnInfo</a> instance containing the peer info. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The passkey to display to the user. The peer device must enter this passkey to complete the pairing. </dd></dl>
 
 </div>
 </div>

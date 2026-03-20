@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.3.9</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
    </div>
   </td>
  </tr>
@@ -128,9 +128,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> () const</td
 <tr class="memitem:aa9464e97d7e39a4634c5d9bdce1abbac" id="r_aa9464e97d7e39a4634c5d9bdce1abbac"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#aa9464e97d7e39a4634c5d9bdce1abbac">isStarted</a> () const</td></tr>
 <tr class="memdesc:aa9464e97d7e39a4634c5d9bdce1abbac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the service has been started.  <br /></td></tr>
 <tr class="separator:aa9464e97d7e39a4634c5d9bdce1abbac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad37324ed0404d596923d6fdc0133b985" id="r_ad37324ed0404d596923d6fdc0133b985"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#ad37324ed0404d596923d6fdc0133b985">start</a> ()</td></tr>
-<tr class="memdesc:ad37324ed0404d596923d6fdc0133b985"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds the database of characteristics/descriptors for the service and registers it with the NimBLE stack.  <br /></td></tr>
-<tr class="separator:ad37324ed0404d596923d6fdc0133b985"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3af7ab85d87a88cef2cbd1b08e257280" id="r_a3af7ab85d87a88cef2cbd1b08e257280"><td class="memItemLeft" align="right" valign="top"><a id="a3af7ab85d87a88cef2cbd1b08e257280" name="a3af7ab85d87a88cef2cbd1b08e257280"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>__attribute__</b> ((deprecated(&quot;NimBLEService::start() has no effect. &quot; &quot;Services are started when the server is started.&quot;))) bool start()</td></tr>
+<tr class="memdesc:a3af7ab85d87a88cef2cbd1b08e257280"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dummy function to start the service. Services are started when the server is started. This will be removed in a future release. Use <code><a class="el" href="class_nim_b_l_e_server.html#a82247d9abef1a70b2ad9ecdc4e74cff6" title="Start the GATT server.">NimBLEServer::start()</a></code> to start the server and all associated services. <br /></td></tr>
+<tr class="separator:a3af7ab85d87a88cef2cbd1b08e257280"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a415e1b836946831c6f9edd74adba8763" id="r_a415e1b836946831c6f9edd74adba8763"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_characteristic.html">NimBLECharacteristic</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_service.html#a415e1b836946831c6f9edd74adba8763">createCharacteristic</a> (const char *uuid, uint32_t properties=NIMBLE_PROPERTY::READ|NIMBLE_PROPERTY::WRITE, uint16_t max_len=BLE_ATT_ATTR_MAX_LEN)</td></tr>
 <tr class="memdesc:a415e1b836946831c6f9edd74adba8763"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a new BLE Characteristic associated with this service.  <br /></td></tr>
 <tr class="separator:a415e1b836946831c6f9edd74adba8763"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -599,26 +600,6 @@ Additional Inherited Members</h2></td></tr>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a id="ad37324ed0404d596923d6fdc0133b985" name="ad37324ed0404d596923d6fdc0133b985"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad37324ed0404d596923d6fdc0133b985">&#9670;&#160;</a></span>start()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool NimBLEService::start </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Builds the database of characteristics/descriptors for the service and registers it with the NimBLE stack. </p>
-<dl class="section return"><dt>Returns</dt><dd>bool success/failure . </dd></dl>
 
 </div>
 </div>

@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['whitelistadd_0',['whiteListAdd',['../class_nim_b_l_e_device.html#aabc68166b6dd4a744a98f94e569f37db',1,'NimBLEDevice']]],
-  ['whitelistremove_1',['whiteListRemove',['../class_nim_b_l_e_device.html#a81abbad5e371fe1cdd91c002b42cc654',1,'NimBLEDevice']]]
+  ['unsubscribe_0',['unsubscribe',['../class_nim_b_l_e_remote_characteristic.html#a64a74ffc6612cf4a42f33836e34887f0',1,'NimBLERemoteCharacteristic']]],
+  ['updateconnparams_1',['updateconnparams',['../class_nim_b_l_e_client.html#ad168d34de0f57f91824a78688b88b2b8',1,'NimBLEClient::updateConnParams()'],['../class_nim_b_l_e_server.html#a56add4759f7df045f51b70a026897975',1,'NimBLEServer::updateConnParams()']]],
+  ['updatephy_2',['updatephy',['../class_nim_b_l_e_client.html#a165957953c2773dacc6a203c969f6069',1,'NimBLEClient::updatePhy()'],['../class_nim_b_l_e_server.html#abfd159ff5f10848bd611733835ddf215',1,'NimBLEServer::updatePhy()']]]
 ];
