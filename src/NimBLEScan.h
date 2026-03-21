@@ -82,6 +82,7 @@ class NimBLEScan {
     void              setMaxResults(uint8_t maxResults);
     void              erase(const NimBLEAddress& address);
     void              erase(const NimBLEAdvertisedDevice* device);
+    void              setScanResponseTimeout(uint32_t timeoutMs);
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     enum Phy { SCAN_1M = 0x01, SCAN_CODED = 0x02, SCAN_ALL = 0x03 };

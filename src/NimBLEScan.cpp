@@ -31,9 +31,9 @@
 
 static const char*         LOG_TAG = "NimBLEScan";
 static NimBLEScanCallbacks defaultScanCallbacks;
-static ble_npl_event  dummySrTimerEvent;
+static ble_npl_event       dummySrTimerEvent;
 
-#  if MYNEWT_VAL(BLE_EXT_ADV)
+# if MYNEWT_VAL(BLE_EXT_ADV)
 struct ble_gap_ext_disc_desc dummyDesc{.props             = BLE_HCI_ADV_LEGACY_MASK,
                                        .data_status       = BLE_GAP_EXT_ADV_DATA_STATUS_COMPLETE,
                                        .legacy_event_type = BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP,
@@ -49,11 +49,11 @@ struct ble_gap_ext_disc_desc dummyDesc{.props             = BLE_HCI_ADV_LEGACY_M
                                        .direct_addr{}};
 
 extern "C" void ble_gap_rx_ext_adv_report(struct ble_gap_ext_disc_desc* desc);
-#  else
+# else
 static ble_gap_disc_desc dummyDesc{
     .event_type = BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP, .length_data = 0, .addr{}, .rssi = 127, .data = nullptr, .direct_addr{}};
 extern "C" void ble_gap_rx_adv_report(ble_gap_disc_desc* desc);
-#  endif
+# endif
 
 /**
  * @brief Sends dummy (null) scan response data to the scan event handler in order to
@@ -62,11 +62,11 @@ extern "C" void ble_gap_rx_adv_report(ble_gap_disc_desc* desc);
  */
 static void sendDummyScanResponse(ble_npl_event* ev) {
     (void)ev;
-#  if MYNEWT_VAL(BLE_EXT_ADV)
+# if MYNEWT_VAL(BLE_EXT_ADV)
     ble_gap_rx_ext_adv_report(&dummyDesc);
-#  else
+# else
     ble_gap_rx_adv_report(&dummyDesc);
-#  endif
+# endif
 }
 
 /**
@@ -96,9 +96,9 @@ void NimBLEScan::srTimerCb(ble_npl_event* event) {
 
     // Add the event to the host queue
     if (curDev && now - curDev->m_time >= pScan->m_srTimeoutTicks) {
-#  if MYNEWT_VAL(BLE_EXT_ADV)
+# if MYNEWT_VAL(BLE_EXT_ADV)
         dummyDesc.sid = curDev->getSetId();
-#  endif
+# endif
         memcpy(&dummyDesc.addr, curDev->getAddress().getBase(), sizeof(dummyDesc.addr));
         NIMBLE_LOGI(LOG_TAG, "Scan response timeout for: %s", curDev->getAddress().toString().c_str());
         ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &dummySrTimerEvent);
@@ -222,9 +222,10 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                         NIMBLE_LOGI(LOG_TAG, "Duplicate; updated: %s", advertisedAddress.toString().c_str());
                         // Restart scan-response timeout when we see a new non-scan-response
                         // legacy advertisement during active scanning for a scannable device.
-                        advertisedDevice->m_time = ble_npl_time_get();
+                        advertisedDevice->m_time         = ble_npl_time_get();
                         advertisedDevice->m_callbackSent = 0;
-                        if (advertisedDevice->isScannable() && !ble_npl_callout_is_active(&pScan->m_srTimer)) {
+                        if (pScan->m_srTimeoutTicks && advertisedDevice->isScannable() &&
+                            !ble_npl_callout_is_active(&pScan->m_srTimer)) {
                             ble_npl_callout_reset(&pScan->m_srTimer, pScan->m_srTimeoutTicks);
                         }
                     }
@@ -252,7 +253,8 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                 advertisedDevice->m_callbackSent++;
                 // got the scan response report the full data.
                 pScan->m_pScanCallbacks->onResult(advertisedDevice);
-            } else if (isLegacyAdv && advertisedDevice->isScannable() && !ble_npl_callout_is_active(&pScan->m_srTimer)) {
+            } else if (pScan->m_srTimeoutTicks && isLegacyAdv && advertisedDevice->isScannable() &&
+                       !ble_npl_callout_is_active(&pScan->m_srTimer)) {
                 // Start the timer to wait for the scan response.
                 ble_npl_callout_reset(&pScan->m_srTimer, pScan->m_srTimeoutTicks);
             }
@@ -285,6 +287,20 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
             return 0;
     }
 } // handleGapEvent
+
+/**
+ * @brief Set the scan response timeout.
+ * @param [in] timeoutMs The timeout in milliseconds to wait for a scan response.
+ */
+void NimBLEScan::setScanResponseTimeout(uint32_t timeoutMs) {
+    if (timeoutMs == 0) {
+        ble_npl_callout_stop(&m_srTimer);
+        m_srTimeoutTicks = 0;
+        return;
+    }
+
+    ble_npl_time_ms_to_ticks(timeoutMs, &m_srTimeoutTicks);
+} // setScanResponseTimeout
 
 /**
  * @brief Should we perform an active or passive scan?
