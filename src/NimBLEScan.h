@@ -31,6 +31,8 @@
 # endif
 
 # include <vector>
+# include <cinttypes>
+# include <cstdio>
 
 class NimBLEDevice;
 class NimBLEScan;
@@ -82,6 +84,8 @@ class NimBLEScan {
     void              setMaxResults(uint8_t maxResults);
     void              erase(const NimBLEAddress& address);
     void              erase(const NimBLEAdvertisedDevice* device);
+    void              setScanResponseTimeout(uint32_t timeoutMs);
+    std::string       getStatsString() const { return m_stats.toString(); }
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     enum Phy { SCAN_1M = 0x01, SCAN_CODED = 0x02, SCAN_ALL = 0x03 };
@@ -92,16 +96,103 @@ class NimBLEScan {
   private:
     friend class NimBLEDevice;
 
+    struct stats {
+# if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
+        uint32_t devCount        = 0; // unique devices seen for the first time
+        uint32_t dupCount        = 0; // repeat advertisements from already-known devices
+        uint32_t srMinMs         = UINT32_MAX;
+        uint32_t srMaxMs         = 0;
+        uint64_t srTotalMs       = 0; // uint64 to avoid overflow on long/busy scans
+        uint32_t srCount         = 0; // matched scan responses (advertisement + SR pair)
+        uint32_t orphanedSrCount = 0; // scan responses received with no prior advertisement
+        uint32_t missedSrCount   = 0; // scannable devices for which no SR ever arrived
+
+        void reset() {
+            devCount        = 0;
+            dupCount        = 0;
+            srMinMs         = UINT32_MAX;
+            srMaxMs         = 0;
+            srTotalMs       = 0;
+            srCount         = 0;
+            orphanedSrCount = 0;
+            missedSrCount   = 0;
+        }
+
+        void incDevCount() { devCount++; }
+        void incDupCount() { dupCount++; }
+        void incMissedSrCount() { missedSrCount++; }
+        void incOrphanedSrCount() { orphanedSrCount++; }
+
+        std::string toString() const {
+            std::string out;
+            out.resize(400); // should be more than enough for the stats string
+            snprintf(&out[0],
+                     out.size(),
+                     "Scan stats:\n"
+                     "  Devices seen      : %" PRIu32 "\n"
+                     "  Duplicate advs    : %" PRIu32 "\n"
+                     "  Scan responses    : %" PRIu32 "\n"
+                     "  SR timing (ms)    : min=%" PRIu32 ", max=%" PRIu32 ", avg=%" PRIu64 "\n"
+                     "  Orphaned SR       : %" PRIu32 "\n"
+                     "  Missed SR         : %" PRIu32 "\n",
+                     devCount,
+                     dupCount,
+                     srCount,
+                     srCount ? srMinMs : 0,
+                     srCount ? srMaxMs : 0,
+                     srCount ? srTotalMs / srCount : 0,
+                     orphanedSrCount,
+                     missedSrCount);
+            return out;
+        }
+
+        // Records scan-response round-trip time.
+        void recordSrTime(uint32_t ticks) {
+            uint32_t ms;
+            ble_npl_time_ticks_to_ms(ticks, &ms);
+
+            if (ms < srMinMs) {
+                srMinMs = ms;
+            }
+            if (ms > srMaxMs) {
+                srMaxMs = ms;
+            }
+            srTotalMs += ms;
+            srCount++;
+            return;
+        }
+# else
+        void        reset() {}
+        void        incDevCount() {}
+        void        incDupCount() {}
+        void        incMissedSrCount() {}
+        void        incOrphanedSrCount() {}
+        std::string toString() const { return ""; }
+        void        recordSrTime(uint32_t ticks) {}
+# endif
+    } m_stats;
+
     NimBLEScan();
     ~NimBLEScan();
-    static int handleGapEvent(ble_gap_event* event, void* arg);
-    void       onHostSync();
+    static int  handleGapEvent(ble_gap_event* event, void* arg);
+    void        onHostSync();
+    static void srTimerCb(ble_npl_event* event);
 
-    NimBLEScanCallbacks* m_pScanCallbacks;
-    ble_gap_disc_params  m_scanParams;
-    NimBLEScanResults    m_scanResults;
-    NimBLETaskData*      m_pTaskData;
-    uint8_t              m_maxResults;
+    // Linked list helpers for devices awaiting scan responses
+    void addWaitingDevice(NimBLEAdvertisedDevice* pDev);
+    void removeWaitingDevice(NimBLEAdvertisedDevice* pDev);
+    void clearWaitingList();
+    void resetWaitingTimer();
+
+    NimBLEScanCallbacks*    m_pScanCallbacks;
+    ble_gap_disc_params     m_scanParams;
+    NimBLEScanResults       m_scanResults;
+    NimBLETaskData*         m_pTaskData;
+    ble_npl_callout         m_srTimer{};
+    ble_npl_time_t          m_srTimeoutTicks{};
+    uint8_t                 m_maxResults;
+    NimBLEAdvertisedDevice* m_pWaitingListHead{}; // head of linked list for devices awaiting scan responses
+    NimBLEAdvertisedDevice* m_pWaitingListTail{}; // tail of linked list for FIFO ordering
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     uint8_t  m_phy{SCAN_ALL};

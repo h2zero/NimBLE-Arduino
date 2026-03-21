@@ -20,12 +20,49 @@
 
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
+# if defined(CONFIG_NIMBLE_CPP_IDF)
+#  include "nimble/nimble_port.h"
+# else
+#  include "nimble/porting/nimble/include/nimble/nimble_port.h"
+# endif
 
 # include <string>
 # include <climits>
 
+# define DEFAULT_SCAN_RESP_TIMEOUT_MS 10240 // max advertising interval (10.24s)
+
 static const char*         LOG_TAG = "NimBLEScan";
 static NimBLEScanCallbacks defaultScanCallbacks;
+
+/**
+ * @brief This handles an event run in the host task when the scan response timeout for the head of
+ * the waiting list is triggered and directly invokes the onResult callback with the current device.
+ */
+void NimBLEScan::srTimerCb(ble_npl_event* event) {
+    auto pScan = NimBLEDevice::getScan();
+    auto pDev  = pScan->m_pWaitingListHead;
+
+    if (pDev == nullptr) {
+        ble_npl_callout_stop(&pScan->m_srTimer);
+        return;
+    }
+
+    if (ble_npl_time_get() - pDev->m_time < pScan->m_srTimeoutTicks) {
+        // This can happen if a scan response was received and the device was removed from the waiting list
+        // after this was put in the queue. In this case, just reset the timer for this device.
+        pScan->resetWaitingTimer();
+        return;
+    }
+
+    NIMBLE_LOGI(LOG_TAG, "Scan response timeout for: %s", pDev->getAddress().toString().c_str());
+    pScan->m_stats.incMissedSrCount();
+    pScan->removeWaitingDevice(pDev);
+    pDev->m_callbackSent = 2;
+    pScan->m_pScanCallbacks->onResult(pDev);
+    if (pScan->m_maxResults == 0) {
+        pScan->erase(pDev);
+    }
+}
 
 /**
  * @brief Scan constructor.
@@ -35,15 +72,127 @@ NimBLEScan::NimBLEScan()
       // default interval + window, no whitelist scan filter,not limited scan, no scan response, filter_duplicates
       m_scanParams{0, 0, BLE_HCI_SCAN_FILT_NO_WL, 0, 1, 1},
       m_pTaskData{nullptr},
-      m_maxResults{0xFF} {}
+      m_maxResults{0xFF} {
+    ble_npl_callout_init(&m_srTimer, nimble_port_get_dflt_eventq(), NimBLEScan::srTimerCb, nullptr);
+    ble_npl_time_ms_to_ticks(DEFAULT_SCAN_RESP_TIMEOUT_MS, &m_srTimeoutTicks);
+} // NimBLEScan::NimBLEScan
 
 /**
  * @brief Scan destructor, release any allocated resources.
  */
 NimBLEScan::~NimBLEScan() {
+    ble_npl_callout_deinit(&m_srTimer);
+
     for (const auto& dev : m_scanResults.m_deviceVec) {
         delete dev;
     }
+}
+
+/**
+ * @brief Add a device to the waiting list for scan responses.
+ * @param [in] pDev The device to add to the list.
+ */
+void NimBLEScan::addWaitingDevice(NimBLEAdvertisedDevice* pDev) {
+    if (pDev == nullptr) {
+        return;
+    }
+
+    ble_npl_hw_enter_critical();
+
+    // Self-pointer is the "not in list" sentinel; anything else means already in list.
+    if (pDev->m_pNextWaiting != pDev) {
+        ble_npl_hw_exit_critical(0);
+        return;
+    }
+
+    // Initialize link field before inserting into the list.
+    pDev->m_pNextWaiting = nullptr;
+    if (m_pWaitingListTail == nullptr) {
+        m_pWaitingListHead = pDev;
+        m_pWaitingListTail = pDev;
+        ble_npl_hw_exit_critical(0);
+        return;
+    }
+
+    m_pWaitingListTail->m_pNextWaiting = pDev;
+    m_pWaitingListTail                 = pDev;
+    ble_npl_hw_exit_critical(0);
+}
+
+/**
+ * @brief Remove a device from the waiting list.
+ * @param [in] pDev The device to remove from the list.
+ */
+void NimBLEScan::removeWaitingDevice(NimBLEAdvertisedDevice* pDev) {
+    if (pDev == nullptr) {
+        return;
+    }
+
+    if (pDev->m_pNextWaiting == pDev) {
+        return; // Not in the list
+    }
+
+    bool resetTimer = false;
+    ble_npl_hw_enter_critical();
+    if (m_pWaitingListHead == pDev) {
+        m_pWaitingListHead = pDev->m_pNextWaiting;
+        if (m_pWaitingListHead == nullptr) {
+            m_pWaitingListTail = nullptr;
+        } else {
+            resetTimer = true;
+        }
+    } else {
+        NimBLEAdvertisedDevice* current = m_pWaitingListHead;
+        while (current != nullptr) {
+            if (current->m_pNextWaiting == pDev) {
+                current->m_pNextWaiting = pDev->m_pNextWaiting;
+                if (m_pWaitingListTail == pDev) {
+                    m_pWaitingListTail = current;
+                }
+                break;
+            }
+            current = current->m_pNextWaiting;
+        }
+    }
+    ble_npl_hw_exit_critical(0);
+    pDev->m_pNextWaiting = pDev; // Restore sentinel: self-pointer means "not in list"
+    if (resetTimer) {
+        resetWaitingTimer();
+    }
+}
+
+/**
+ * @brief Clear all devices from the waiting list.
+ */
+void NimBLEScan::clearWaitingList() {
+    // Stop the timer and remove any pending timeout events since we're clearing
+    // the list and won't be processing any more timeouts for these devices
+    ble_npl_callout_stop(&m_srTimer);
+    ble_npl_hw_enter_critical();
+    NimBLEAdvertisedDevice* current = m_pWaitingListHead;
+    while (current != nullptr) {
+        NimBLEAdvertisedDevice* next = current->m_pNextWaiting;
+        current->m_pNextWaiting      = current; // Restore sentinel
+        current                      = next;
+    }
+    m_pWaitingListHead = nullptr;
+    m_pWaitingListTail = nullptr;
+    ble_npl_hw_exit_critical(0);
+}
+
+/**
+ * @brief Reset the timer for the next waiting device at the head of the FIFO list.
+ */
+void NimBLEScan::resetWaitingTimer() {
+    if (m_srTimeoutTicks == 0 || m_pWaitingListHead == nullptr) {
+        ble_npl_callout_stop(&m_srTimer);
+        return;
+    }
+
+    ble_npl_time_t now      = ble_npl_time_get();
+    ble_npl_time_t elapsed  = now - m_pWaitingListHead->m_time;
+    ble_npl_time_t nextTime = elapsed >= m_srTimeoutTicks ? 1 : m_srTimeoutTicks - elapsed;
+    ble_npl_callout_reset(&m_srTimer, nextTime);
 }
 
 /**
@@ -101,6 +250,8 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
             // If we haven't seen this device before; create a new instance and insert it in the vector.
             // Otherwise just update the relevant parameters of the already known device.
             if (advertisedDevice == nullptr) {
+                pScan->m_stats.incDevCount();
+
                 // Check if we have reach the scan results limit, ignore this one if so.
                 // We still need to store each device when maxResults is 0 to be able to append the scan results
                 if (pScan->m_maxResults > 0 && pScan->m_maxResults < 0xFF &&
@@ -109,19 +260,39 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                 }
 
                 if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                    pScan->m_stats.incOrphanedSrCount();
                     NIMBLE_LOGI(LOG_TAG, "Scan response without advertisement: %s", advertisedAddress.toString().c_str());
                 }
 
                 advertisedDevice = new NimBLEAdvertisedDevice(event, event_type);
                 pScan->m_scanResults.m_deviceVec.push_back(advertisedDevice);
+                advertisedDevice->m_time = ble_npl_time_get();
                 NIMBLE_LOGI(LOG_TAG, "New advertiser: %s", advertisedAddress.toString().c_str());
             } else {
                 advertisedDevice->update(event, event_type);
                 if (isLegacyAdv) {
                     if (event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                        pScan->m_stats.recordSrTime(ble_npl_time_get() - advertisedDevice->m_time);
                         NIMBLE_LOGI(LOG_TAG, "Scan response from: %s", advertisedAddress.toString().c_str());
+                        // Remove device from waiting list since we got the response
+                        pScan->removeWaitingDevice(advertisedDevice);
                     } else {
+                        pScan->m_stats.incDupCount();
                         NIMBLE_LOGI(LOG_TAG, "Duplicate; updated: %s", advertisedAddress.toString().c_str());
+                        // Restart scan-response timeout when we see a new non-scan-response
+                        // legacy advertisement during active scanning for a scannable device.
+                        advertisedDevice->m_time = ble_npl_time_get();
+                        // Re-add to the tail so FIFO timeout order matches advertisement order.
+                        if (advertisedDevice->isScannable()) {
+                            pScan->removeWaitingDevice(advertisedDevice);
+                            pScan->addWaitingDevice(advertisedDevice);
+                        }
+
+                        // If we're not filtering duplicates, we need to reset the callbackSent count
+                        // so that callbacks will be triggered again for this device
+                        if (!pScan->m_scanParams.filter_duplicates) {
+                            advertisedDevice->m_callbackSent = 0;
+                        }
                     }
                 }
             }
@@ -147,6 +318,12 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                 advertisedDevice->m_callbackSent++;
                 // got the scan response report the full data.
                 pScan->m_pScanCallbacks->onResult(advertisedDevice);
+            } else if (isLegacyAdv && advertisedDevice->isScannable()) {
+                // Add to waiting list for scan response and start the timer
+                pScan->addWaitingDevice(advertisedDevice);
+                if (pScan->m_pWaitingListHead == advertisedDevice) {
+                    pScan->resetWaitingTimer();
+                }
             }
 
             // If not storing results and we have invoked the callback, delete the device.
@@ -158,11 +335,25 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
         }
 
         case BLE_GAP_EVENT_DISC_COMPLETE: {
-            NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d", event->disc_complete.reason);
+            ble_npl_callout_stop(&pScan->m_srTimer);
+
+            // If we have any scannable devices that haven't received a scan response,
+            // we should trigger the callback with whatever data we have since the scan is complete
+            // and we won't be getting any more updates for these devices.
+            while (pScan->m_pWaitingListHead != nullptr) {
+                auto pDev = pScan->m_pWaitingListHead;
+                pScan->m_stats.incMissedSrCount();
+                pScan->removeWaitingDevice(pDev);
+                pDev->m_callbackSent = 2;
+                pScan->m_pScanCallbacks->onResult(pDev);
+            }
 
             if (pScan->m_maxResults == 0) {
                 pScan->clearResults();
             }
+
+            NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d", event->disc_complete.reason);
+            NIMBLE_LOGD(LOG_TAG, "%s", pScan->getStatsString().c_str());
 
             pScan->m_pScanCallbacks->onScanEnd(pScan->m_scanResults, event->disc_complete.reason);
 
@@ -177,6 +368,27 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
             return 0;
     }
 } // handleGapEvent
+
+/**
+ * @brief Set the scan response timeout.
+ * @param [in] timeoutMs The timeout in milliseconds to wait for a scan response, default: max advertising interval (10.24s)
+ * @details If a scan response is not received within the timeout period,
+ * the pending device will be reported to the scan result callback with whatever
+ * data was present in the advertisement; no synthetic scan-response event is generated.
+ * If set to 0, the scan result callback will only be triggered when a scan response
+ * is received from the advertiser or when the scan completes, at which point any
+ * pending scannable devices will be reported with the advertisement data only.
+ */
+void NimBLEScan::setScanResponseTimeout(uint32_t timeoutMs) {
+    if (timeoutMs == 0) {
+        ble_npl_callout_stop(&m_srTimer);
+        m_srTimeoutTicks = 0;
+        return;
+    }
+
+    ble_npl_time_ms_to_ticks(timeoutMs, &m_srTimeoutTicks);
+    resetWaitingTimer();
+} // setScanResponseTimeout
 
 /**
  * @brief Should we perform an active or passive scan?
@@ -208,7 +420,7 @@ void NimBLEScan::setDuplicateFilter(uint8_t enabled) {
  */
 void NimBLEScan::setLimitedOnly(bool enabled) {
     m_scanParams.limited = enabled;
-} // setLimited
+} // setLimitedOnly
 
 /**
  * @brief Sets the scan filter policy.
@@ -323,11 +535,13 @@ bool NimBLEScan::start(uint32_t duration, bool isContinue, bool restart) {
 
             if (!isContinue) {
                 clearResults();
+                m_stats.reset();
             }
         }
     } else { // Don't clear results while scanning is active
         if (!isContinue) {
             clearResults();
+            m_stats.reset();
         }
     }
 
@@ -394,6 +608,8 @@ bool NimBLEScan::stop() {
         return false;
     }
 
+    clearWaitingList();
+
     if (m_maxResults == 0) {
         clearResults();
     }
@@ -414,6 +630,7 @@ void NimBLEScan::erase(const NimBLEAddress& address) {
     NIMBLE_LOGD(LOG_TAG, "erase device: %s", address.toString().c_str());
     for (auto it = m_scanResults.m_deviceVec.begin(); it != m_scanResults.m_deviceVec.end(); ++it) {
         if ((*it)->getAddress() == address) {
+            removeWaitingDevice(*it);
             delete *it;
             m_scanResults.m_deviceVec.erase(it);
             break;
@@ -429,6 +646,7 @@ void NimBLEScan::erase(const NimBLEAdvertisedDevice* device) {
     NIMBLE_LOGD(LOG_TAG, "erase device: %s", device->getAddress().toString().c_str());
     for (auto it = m_scanResults.m_deviceVec.begin(); it != m_scanResults.m_deviceVec.end(); ++it) {
         if ((*it) == device) {
+            removeWaitingDevice(*it);
             delete *it;
             m_scanResults.m_deviceVec.erase(it);
             break;
@@ -483,6 +701,12 @@ NimBLEScanResults NimBLEScan::getResults() {
  * @brief Clear the stored results of the scan.
  */
 void NimBLEScan::clearResults() {
+    if (isScanning()) {
+        NIMBLE_LOGW(LOG_TAG, "Cannot clear results while scan is active");
+        return;
+    }
+
+    clearWaitingList();
     if (m_scanResults.m_deviceVec.size()) {
         std::vector<NimBLEAdvertisedDevice*> vSwap{};
         ble_npl_hw_enter_critical();
