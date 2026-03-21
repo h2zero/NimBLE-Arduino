@@ -130,6 +130,16 @@ typedef union {
         .value = (uuid32),              \
     }
 
+/**
+ * @brief Macro for initializing a 128-bit UUID.
+ *
+ * This macro initializes a 128-bit UUID with the provided value.
+ *
+ * @param ...       A sequence of values in little-endian order representing
+ *                  the 128-bit UUID.
+ *
+ * @return          The initialized 128-bit UUID structure.
+ */
 #define BLE_UUID128_INIT(uuid128 ...)   \
     {                                   \
         .u = {                          \
@@ -139,7 +149,8 @@ typedef union {
     }
 
 /**
- * @brief Macro for declaring a pointer to a 16-bit UUID structure initialized with a specific 16-bit UUID value.
+ * @brief Macro for declaring a pointer to a 16-bit UUID structure initialized
+ * with a specific 16-bit UUID value.
  *
  * @param uuid16    The 16-bit UUID value to initialize the structure with.
  *
@@ -149,7 +160,8 @@ typedef union {
     ((ble_uuid_t *) (&(ble_uuid16_t) BLE_UUID16_INIT(uuid16)))
 
 /**
- * @brief Macro for declaring a pointer to a 32-bit UUID structure initialized with a specific 32-bit UUID value.
+ * @brief Macro for declaring a pointer to a 32-bit UUID structure initialized
+ * with a specific 32-bit UUID value.
  *
  * @param uuid32    The 32-bit UUID value to initialize the structure with.
  *
@@ -159,7 +171,8 @@ typedef union {
     ((ble_uuid_t *) (&(ble_uuid32_t) BLE_UUID32_INIT(uuid32)))
 
 /**
- * @brief Macro for declaring a pointer to a 128-bit UUID structure initialized with specific 128-bit UUID values.
+ * @brief Macro for declaring a pointer to a 128-bit UUID structure initialized
+ * with specific 128-bit UUID values.
  *
  * @param uuid128   The 128-bit UUID value to initialize the structure with.
  *
@@ -169,7 +182,8 @@ typedef union {
     ((ble_uuid_t *) (&(ble_uuid128_t) BLE_UUID128_INIT(uuid128)))
 
 /**
- * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer to 16-bit UUID structure.
+ * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer
+ * to 16-bit UUID structure.
  *
  * @param u         Pointer to a `ble_uuid_t` structure.
  *
@@ -179,7 +193,8 @@ typedef union {
     ((ble_uuid16_t *) (u))
 
 /**
- * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer to 32-bit UUID structure.
+ * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer
+ * to 32-bit UUID structure.
  *
  * @param u         Pointer to a `ble_uuid_t` structure.
  *
@@ -189,7 +204,8 @@ typedef union {
     ((ble_uuid32_t *) (u))
 
 /**
- * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer to 128-bit UUID structure.
+ * @brief Macro for casting a pointer to a `ble_uuid_t` structure to a pointer
+ * to 128-bit UUID structure.
  *
  * @param u         Pointer to a `ble_uuid_t` structure.
  *
@@ -209,8 +225,8 @@ typedef union {
  * @param buf   The source buffer to parse.
  * @param len   The size of the buffer, in bytes.
  *
- * @return      0 on success, BLE_HS_EINVAL if the source buffer does not contain
- *              a valid UUID.
+ * @return      0 on success;
+ *              BLE_HS_EINVAL if the source buffer does not contain a valid UUID.
  */
 int ble_uuid_init_from_buf(ble_uuid_any_t *uuid, const void *buf, size_t len);
 
@@ -219,7 +235,8 @@ int ble_uuid_init_from_buf(ble_uuid_any_t *uuid, const void *buf, size_t len);
  * @param uuid1  The first UUID to compare.
  * @param uuid2  The second UUID to compare.
  *
- * @return       0 if the two UUIDs are equal, nonzero if the UUIDs differ.
+ * @return       0 if the two UUIDs are equal;
+ *               nonzero if the UUIDs differ.
  */
 int ble_uuid_cmp(const ble_uuid_t *uuid1, const ble_uuid_t *uuid2);
 
@@ -280,4 +297,4 @@ uint16_t ble_uuid_u16(const ble_uuid_t *uuid);
  * @}
  */
 
-#endif /* _BLE_HOST_UUID_H */
+#endif /* H_BLE_UUID_ */

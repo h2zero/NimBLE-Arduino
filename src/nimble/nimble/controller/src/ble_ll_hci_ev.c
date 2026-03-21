@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-#ifndef ESP_PLATFORM
 
 #include <assert.h>
 #include <stdarg.h>
@@ -434,7 +434,7 @@ ble_ll_hci_ev_send_adv_set_terminated(uint8_t status, uint8_t adv_handle,
  * @param connsm Pointer to connection state machine
  * @param status error status of event
  */
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
 int
 ble_ll_hci_ev_phy_update(struct ble_ll_conn_sm *connsm, uint8_t status)
 {
@@ -620,6 +620,7 @@ ble_ll_hci_ev_send_vs_printf(uint8_t id, const char *fmt, ...)
     struct ble_hci_ev_vs *ev;
     struct ble_hci_ev *hci_ev;
     va_list ap;
+    int len;
 
     hci_ev = ble_transport_alloc_evt(1);
     if (!hci_ev) {
@@ -633,9 +634,11 @@ ble_ll_hci_ev_send_vs_printf(uint8_t id, const char *fmt, ...)
     ev->id = id;
 
     va_start(ap, fmt);
-    hci_ev->length += vsnprintf((void *)ev->data,
-                                BLE_HCI_MAX_DATA_LEN - sizeof(*ev), fmt, ap);
+    len = vsnprintf((void *)ev->data, BLE_HCI_MAX_DATA_LEN - sizeof(*ev), fmt, ap);
     va_end(ap);
+
+    ev->data[len] = 0;
+    hci_ev->length += len + 1;
 
     ble_ll_hci_event_send(hci_ev);
 }
@@ -667,4 +670,5 @@ ble_ll_hci_ev_send_vs_llcp_trace(uint8_t type, uint16_t handle, uint16_t count,
     }
 }
 #endif
+
 #endif /* ESP_PLATFORM */

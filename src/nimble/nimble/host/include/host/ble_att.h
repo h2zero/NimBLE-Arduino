@@ -109,8 +109,21 @@ struct os_mbuf;
 
 /**Insufficient Resources to complete the request. */
 #define BLE_ATT_ERR_INSUFFICIENT_RES        0x11
-#define BLE_ATT_ERR_DB_OUT_OF_SYNC          0x12
+
+/**Requested value is not allowed. */
 #define BLE_ATT_ERR_VALUE_NOT_ALLOWED       0x13
+
+/**Write Request Rejected. */
+#define BLE_ATT_ERR_WRITE_REQ_REJECTED      0xFC
+
+/**Client Characteristic Configuration Descriptor Improperly Configured. */
+#define BLE_ATT_ERR_CCCD_IMPORER_CONF       0xFD
+
+/**Procedure Already in Progress. */
+#define BLE_ATT_ERR_PROC_IN_PROGRESS        0xFE
+
+/**Out of Range. */
+#define BLE_ATT_ERR_OUT_OF_RANGE            0xFF
 
 /** @} */
 
@@ -120,7 +133,6 @@ struct os_mbuf;
  */
 
 /** Error Response. */
-
 #define BLE_ATT_OP_ERROR_RSP                0x01
 
 /** MTU Request. */
@@ -189,12 +201,6 @@ struct os_mbuf;
 /** Execute Write Response. */
 #define BLE_ATT_OP_EXEC_WRITE_RSP           0x19
 
-/** Read Multiple Variable Lenght Request */
-#define BLE_ATT_OP_READ_MULT_VAR_REQ        0x20
-
-/** Read Multiple Variable Lenght Response */
-#define BLE_ATT_OP_READ_MULT_VAR_RSP        0x21
-
 /** Notify Request. */
 #define BLE_ATT_OP_NOTIFY_REQ               0x1b
 
@@ -204,14 +210,16 @@ struct os_mbuf;
 /** Indicate Response. */
 #define BLE_ATT_OP_INDICATE_RSP             0x1e
 
-/** Multiple Handle Value Length Notification Request */
-#define BLE_ATT_OP_NOTIFY_MULTI_REQ         0x23
+/** Read Multiple Variable Lenght Request */
+#define BLE_ATT_OP_READ_MULT_VAR_REQ        0x20
 
+/** Read Multiple Variable Lenght Response */
+#define BLE_ATT_OP_READ_MULT_VAR_RSP        0x21
+
+/** Notify Multiple Request */
+#define BLE_ATT_OP_NOTIFY_MULTI_REQ         0x23
 /** Write Command. */
 #define BLE_ATT_OP_WRITE_CMD                0x52
-
-/** Signed Write Command */
-#define BLE_ATT_OP_SIGNED_WRITE_CMD         0xD2
 
 /** @} */
 
@@ -346,9 +354,6 @@ uint16_t ble_att_preferred_mtu(void);
  *                                  within the allowed range.
  */
 int ble_att_set_preferred_mtu(uint16_t mtu);
-
-int ble_att_set_default_bearer_using_cid(uint16_t conn_handle, uint16_t cid);
-uint16_t ble_att_get_default_bearer_cid(uint16_t conn_handle);
 
 #ifdef __cplusplus
 }

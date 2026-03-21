@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,13 +19,11 @@
  * under the License.
  */
 
-#ifndef ESP_PLATFORM
-
 #include <stdint.h>
 #include <string.h>
 #include <syscfg/syscfg.h>
-#include <nimble/nimble/controller/include/controller/ble_ll.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_hci.h>
+#include "nimble/nimble/controller/include/controller/ble_ll.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_hci.h"
 
 /* Magic macros */
 #define BIT(n)      (1 << (n)) |
@@ -47,6 +47,9 @@ static const uint8_t octet_5 = OCTET(
 );
 
 static const uint8_t octet_10 = OCTET(
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    BIT(2) /* HCI Read Transmit Power Level */
+#endif
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_CTRL_TO_HOST_FLOW_CONTROL)
     BIT(5) /* HCI Set Controller To Host Flow Control */
     BIT(6) /* HCI Host Buffer Size */
@@ -64,6 +67,10 @@ static const uint8_t octet_15 = OCTET(
 #if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     BIT(5) /* HCI Read RSSI */
 #endif
+);
+
+static const uint8_t octet_22 = OCTET(
+    BIT(2) /* HCI Set Event Mask Page 2 */
 );
 
 static const uint8_t octet_25 = OCTET(
@@ -130,6 +137,14 @@ static const uint8_t octet_28 = OCTET(
 #endif
 );
 
+static const uint8_t octet_32 = OCTET(
+#if (MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)) && \
+    MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_PING)
+    BIT(4) /* HCI Read Authenticated Payload Timeout */
+    BIT(5) /* HCI Write Authenticated Payload Timeout */
+#endif
+);
+
 static const uint8_t octet_33 = OCTET(
 #if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     BIT(4) /* HCI LE Remote Connection Parameter Request Reply */
@@ -163,7 +178,7 @@ static const uint8_t octet_35 = OCTET(
     BIT(2) /* HCI LE Set Resolvable Private Address Timeout */
 #endif
     BIT(3) /* HCI LE Read Maximum Data Length */
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
 #if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     BIT(4) /* HCI LE Read PHY */
     BIT(5) /* HCI LE Set Default PHY */
@@ -271,10 +286,20 @@ static const uint8_t octet_43 = OCTET(
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_SCA_UPDATE)
     BIT(2) /* HCI LE Request Peer SCA */
 #endif
+#if MYNEWT_VAL(BLE_LL_ISO)
+    BIT(3) /* HCI LE Setup ISO Data Path */
+    BIT(4) /* HCI LE Remove ISO Data Path */
+#endif
+#if MYNEWT_VAL(BLE_LL_ISO_BROADCASTER)
+    BIT(5) /* HCI LE ISO Transmit Test */
+#endif
 );
 
 static const uint8_t octet_44 = OCTET(
-#if MYNEWT_VAL(BLE_VERSION) >= 52
+#if MYNEWT_VAL(BLE_LL_ISO)
+    BIT(0) /* HCI LE ISO Test End */
+#endif
+#if BLE_LL_HOST_CONTROLLED_FEATURES
     BIT(1) /* HCI LE Set Host Feature */
 #endif
 );
@@ -283,6 +308,9 @@ static const uint8_t octet_46 = OCTET(
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
     BIT(0) /* HCI LE Set Default Subrate */
     BIT(1) /* HCI LE Subrate Request */
+#endif
+#if MYNEWT_VAL(BLE_VERSION) >= 54 && MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+    BIT(2) /* HCI LE Set Extended Advertising Parameters [v2] */
 #endif
 );
 
@@ -309,7 +337,7 @@ static const uint8_t g_ble_ll_hci_supp_cmds[64] = {
     0,
     0,
     0,
-    0,
+    octet_22,
     0,
     0,
     octet_25,
@@ -319,7 +347,7 @@ static const uint8_t g_ble_ll_hci_supp_cmds[64] = {
     0,
     0,
     0,
-    0,
+    octet_32,
     octet_33,
     octet_34,
     octet_35,
