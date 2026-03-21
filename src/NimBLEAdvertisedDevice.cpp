@@ -52,6 +52,7 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice(const ble_gap_event* event, uint8
       m_advLength{event->disc.length_data},
       m_payload(event->disc.data, event->disc.data + event->disc.length_data) {
 # endif
+    m_pNextWaiting = this; // initialize sentinel: self-pointer means "not in list"
 } // NimBLEAdvertisedDevice
 
 /**
