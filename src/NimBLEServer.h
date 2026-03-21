@@ -84,6 +84,7 @@ class NimBLEServer {
     void                  setDataLen(uint16_t connHandle, uint16_t tx_octets) const;
     bool                  updatePhy(uint16_t connHandle, uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions);
     bool                  getPhy(uint16_t connHandle, uint8_t* txPhy, uint8_t* rxPhy);
+    void                  serviceChanged();
 
 # if MYNEWT_VAL(BLE_ROLE_CENTRAL)
     NimBLEClient* getClient(uint16_t connHandle);
@@ -122,7 +123,6 @@ class NimBLEServer {
     static int  handleGapEvent(struct ble_gap_event* event, void* arg);
     static int  handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_gatt_access_ctxt* ctxt, void* arg);
     static void gattRegisterCallback(struct ble_gatt_register_ctxt* ctxt, void* arg);
-    void        serviceChanged();
     bool        resetGATT();
 
     bool m_gattsStarted : 1;
