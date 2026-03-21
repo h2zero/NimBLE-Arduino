@@ -163,6 +163,9 @@ class NimBLEAdvertisedDevice {
     int8_t        m_rssi{};
     uint8_t       m_callbackSent{};
     uint16_t      m_advLength{};
+# if MYNEWT_VAL(NIMBLE_CPP_SCAN_RSP_TIMEOUT)
+    ble_npl_time_t m_time{};
+# endif
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     bool     m_isLegacyAdv{};

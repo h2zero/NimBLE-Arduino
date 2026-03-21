@@ -61,6 +61,10 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice(const ble_gap_event* event, uint8
 void NimBLEAdvertisedDevice::update(const ble_gap_event* event, uint8_t eventType) {
 # if MYNEWT_VAL(BLE_EXT_ADV)
     const auto& disc = event->ext_disc;
+    if (!disc.length_data) { // dummy sr, just return, don't update anything
+        return;
+    }
+
     if (m_dataStatus == BLE_GAP_EXT_ADV_DATA_STATUS_INCOMPLETE) {
         m_payload.reserve(m_advLength + disc.length_data);
         m_payload.insert(m_payload.end(), disc.data, disc.data + disc.length_data);
@@ -74,6 +78,10 @@ void NimBLEAdvertisedDevice::update(const ble_gap_event* event, uint8_t eventTyp
 # else
     const auto& disc = event->disc;
 # endif
+
+    if (!disc.length_data) { // dummy sr, just return, don't update anything
+        return;
+    }
 
     m_rssi = disc.rssi;
     if (eventType == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP && isLegacyAdvertisement()) {
