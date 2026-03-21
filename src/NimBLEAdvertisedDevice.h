@@ -158,14 +158,12 @@ class NimBLEAdvertisedDevice {
     uint8_t findAdvField(uint8_t type, uint8_t index = 0, size_t* data_loc = nullptr) const;
     size_t  findServiceData(uint8_t index, uint8_t* bytes) const;
 
-    NimBLEAddress m_address{};
-    uint8_t       m_advType{};
-    int8_t        m_rssi{};
-    uint8_t       m_callbackSent{};
-    uint16_t      m_advLength{};
-# if MYNEWT_VAL(NIMBLE_CPP_SCAN_RSP_TIMEOUT)
+    NimBLEAddress  m_address{};
+    uint8_t        m_advType{};
+    int8_t         m_rssi{};
+    uint8_t        m_callbackSent{};
+    uint16_t       m_advLength{};
     ble_npl_time_t m_time{};
-# endif
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     bool     m_isLegacyAdv{};
