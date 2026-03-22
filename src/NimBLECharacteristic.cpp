@@ -125,7 +125,7 @@ void NimBLECharacteristic::addDescriptor(NimBLEDescriptor* pDescriptor) {
     }
 
     pDescriptor->setCharacteristic(this);
-    NimBLEDevice::getServer()->serviceChanged();
+    NimBLEDevice::getServer()->setServiceChanged();
 }
 
 /**
@@ -152,7 +152,7 @@ void NimBLECharacteristic::removeDescriptor(NimBLEDescriptor* pDescriptor, bool 
     }
 
     pDescriptor->setRemoved(deleteDsc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE);
-    NimBLEDevice::getServer()->serviceChanged();
+    NimBLEDevice::getServer()->setServiceChanged();
 } // removeDescriptor
 
 /**
