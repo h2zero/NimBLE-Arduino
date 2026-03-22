@@ -309,6 +309,11 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
 /**
  * @brief Set the scan response timeout.
  * @param [in] timeoutMs The timeout in milliseconds to wait for a scan response.
+ * @details If a scan response is not received within the timeout period,
+ * a dummy scan response with null data will be sent to the scan event handler
+ * which will trigger the callback with whatever data was in the advertisement.
+ * If set to 0, no dummy scan response will be sent and the callback will only
+ * be triggered when a scan response is received from the advertiser or when the scan completes.
  */
 void NimBLEScan::setScanResponseTimeout(uint32_t timeoutMs) {
     if (timeoutMs == 0) {
