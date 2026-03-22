@@ -70,14 +70,6 @@
 // #define MYNEWT_VAL_NIMBLE_HOST_TASK_STACK_SIZE 4096
 
 /**
- * @brief Un-comment to change the default scan response timeout, in milliseconds.
- * @details This is the time to wait for a scan response before calling the onResult scan callback,
- * lower values increase callback rates but will lose data more often, higher values give full data more
- * often. Setting this to 0 will disable the scan response timeout.
- */
- // #define MYNEWT_VAL_NIMBLE_CPP_SCAN_RSP_TIMEOUT (200)
-
-/**
  * @brief Un-comment to change the bit used to block tasks during BLE operations
  * that call NimBLEUtils::taskWait. This should be different than any other
  * task notification flag used in the system.

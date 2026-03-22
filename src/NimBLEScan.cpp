@@ -60,8 +60,9 @@ extern "C" void ble_gap_rx_adv_report(ble_gap_disc_desc* desc);
  * provide the scan result to the callbacks when a device hasn't responded to the
  * scan request in time. This is called by the host task from the default event queue.
  */
-static void sendDummyScanResponse(ble_npl_event* ev) {
+void NimBLEScan::sendDummyScanResponse(ble_npl_event* ev) {
     (void)ev;
+    NimBLEDevice::getScan()->m_stats.incMissedSrCount();
 # if MYNEWT_VAL(BLE_EXT_ADV)
     ble_gap_rx_ext_adv_report(&dummyDesc);
 # else
@@ -128,7 +129,7 @@ NimBLEScan::NimBLEScan()
       m_maxResults{0xFF} {
     ble_npl_callout_init(&m_srTimer, nimble_port_get_dflt_eventq(), NimBLEScan::srTimerCb, this);
     ble_npl_event_init(&dummySrTimerEvent, sendDummyScanResponse, NULL);
-    ble_npl_time_ms_to_ticks(MYNEWT_VAL(NIMBLE_CPP_SCAN_RSP_TIMEOUT), &m_srTimeoutTicks);
+    ble_npl_time_ms_to_ticks(BLE_GAP_SCAN_FAST_WINDOW, &m_srTimeoutTicks);
 } // NimBLEScan::NimBLEScan
 
 /**
@@ -198,6 +199,8 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
             // If we haven't seen this device before; create a new instance and insert it in the vector.
             // Otherwise just update the relevant parameters of the already known device.
             if (advertisedDevice == nullptr) {
+                pScan->m_stats.incDevCount();
+
                 // Check if we have reach the scan results limit, ignore this one if so.
                 // We still need to store each device when maxResults is 0 to be able to append the scan results
                 if (pScan->m_maxResults > 0 && pScan->m_maxResults < 0xFF &&
@@ -206,6 +209,7 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                 }
 
                 if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
+                    pScan->m_stats.incOrphanedSrCount();
                     NIMBLE_LOGI(LOG_TAG, "Scan response without advertisement: %s", advertisedAddress.toString().c_str());
                 }
 
@@ -218,7 +222,14 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                 if (isLegacyAdv) {
                     if (event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
                         NIMBLE_LOGI(LOG_TAG, "Scan response from: %s", advertisedAddress.toString().c_str());
+                        if (!pScan->m_stats.recordSrTime(ble_npl_time_get() - advertisedDevice->m_time,
+                                                    pScan->m_scanParams.window * 625 / 1000)) {
+                            NIMBLE_LOGD(LOG_TAG,
+                                        "Abnormal scan response time, stats ignored for device: %s",
+                                        advertisedAddress.toString().c_str());
+                        }
                     } else {
+                        pScan->m_stats.incDupCount();
                         NIMBLE_LOGI(LOG_TAG, "Duplicate; updated: %s", advertisedAddress.toString().c_str());
                         // Restart scan-response timeout when we see a new non-scan-response
                         // legacy advertisement during active scanning for a scannable device.
@@ -269,6 +280,13 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
 
         case BLE_GAP_EVENT_DISC_COMPLETE: {
             ble_npl_callout_stop(&pScan->m_srTimer);
+            for (const auto& dev : pScan->m_scanResults.m_deviceVec) {
+                if (dev->isScannable() && dev->m_callbackSent < 2) {
+                    pScan->m_stats.incMissedSrCount();
+                    pScan->m_pScanCallbacks->onResult(dev);
+                }
+            }
+
             NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d", event->disc_complete.reason);
 
             pScan->m_pScanCallbacks->onScanEnd(pScan->m_scanResults, event->disc_complete.reason);
@@ -437,6 +455,8 @@ void NimBLEScan::setPeriod(uint32_t periodMs) {
  * @return True if scan started or false if there was an error.
  */
 bool NimBLEScan::start(uint32_t duration, bool isContinue, bool restart) {
+    m_stats.reset();
+
     NIMBLE_LOGD(LOG_TAG, ">> start: duration=%" PRIu32, duration);
     if (isScanning()) {
         if (restart) {

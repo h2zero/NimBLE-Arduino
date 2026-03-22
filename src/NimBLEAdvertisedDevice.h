@@ -154,7 +154,7 @@ class NimBLEAdvertisedDevice {
     friend class NimBLEScan;
 
     NimBLEAdvertisedDevice(const ble_gap_event* event, uint8_t eventType);
-    void    update(const ble_gap_event* event, uint8_t eventType);
+    bool    update(const ble_gap_event* event, uint8_t eventType);
     uint8_t findAdvField(uint8_t type, uint8_t index = 0, size_t* data_loc = nullptr) const;
     size_t  findServiceData(uint8_t index, uint8_t* bytes) const;
 

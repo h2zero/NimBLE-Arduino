@@ -58,11 +58,11 @@ NimBLEAdvertisedDevice::NimBLEAdvertisedDevice(const ble_gap_event* event, uint8
  * @brief Update the advertisement data.
  * @param [in] event The advertisement event data.
  */
-void NimBLEAdvertisedDevice::update(const ble_gap_event* event, uint8_t eventType) {
+bool NimBLEAdvertisedDevice::update(const ble_gap_event* event, uint8_t eventType) {
 # if MYNEWT_VAL(BLE_EXT_ADV)
     const auto& disc = event->ext_disc;
     if (!disc.length_data) { // dummy sr, just return, don't update anything
-        return;
+        return false;
     }
 
     if (m_dataStatus == BLE_GAP_EXT_ADV_DATA_STATUS_INCOMPLETE) {
@@ -70,7 +70,7 @@ void NimBLEAdvertisedDevice::update(const ble_gap_event* event, uint8_t eventTyp
         m_payload.insert(m_payload.end(), disc.data, disc.data + disc.length_data);
         m_dataStatus = disc.data_status;
         m_advLength  = m_payload.size();
-        return;
+        return true;
     }
 
     m_dataStatus  = disc.data_status;
@@ -80,17 +80,18 @@ void NimBLEAdvertisedDevice::update(const ble_gap_event* event, uint8_t eventTyp
 # endif
 
     if (!disc.length_data) { // dummy sr, just return, don't update anything
-        return;
+        return false;
     }
 
     m_rssi = disc.rssi;
     if (eventType == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP && isLegacyAdvertisement()) {
         m_payload.insert(m_payload.end(), disc.data, disc.data + disc.length_data);
-        return;
+        return true;
     }
     m_advLength = disc.length_data;
     m_payload.assign(disc.data, disc.data + disc.length_data);
     m_callbackSent = 0; // new data, reset callback sent flag
+    return true;
 } // update
 
 /**

@@ -31,6 +31,8 @@
 # endif
 
 # include <vector>
+# include <cinttypes>
+# include <cstdio>
 
 class NimBLEDevice;
 class NimBLEScan;
@@ -83,6 +85,7 @@ class NimBLEScan {
     void              erase(const NimBLEAddress& address);
     void              erase(const NimBLEAdvertisedDevice* device);
     void              setScanResponseTimeout(uint32_t timeoutMs);
+    std::string       getStatsString() const { return m_stats.toString(); }
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     enum Phy { SCAN_1M = 0x01, SCAN_CODED = 0x02, SCAN_ALL = 0x03 };
@@ -93,11 +96,93 @@ class NimBLEScan {
   private:
     friend class NimBLEDevice;
 
+    struct stats {
+# if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
+        uint32_t devCount        = 0; // unique devices seen for the first time
+        uint32_t dupCount        = 0; // repeat advertisements from already-known devices
+        uint32_t srMinMs         = UINT32_MAX;
+        uint32_t srMaxMs         = 0;
+        uint64_t srTotalMs       = 0; // uint64 to avoid overflow on long/busy scans
+        uint32_t srCount         = 0; // matched scan responses (advertisement + SR pair)
+        uint32_t orphanedSrCount = 0; // scan responses received with no prior advertisement
+        uint32_t missedSrCount   = 0; // scannable devices for which no SR ever arrived
+
+        void reset() {
+            devCount        = 0;
+            dupCount        = 0;
+            srMinMs         = UINT32_MAX;
+            srMaxMs         = 0;
+            srTotalMs       = 0;
+            srCount         = 0;
+            orphanedSrCount = 0;
+            missedSrCount   = 0;
+        }
+
+        void incDevCount() { devCount++; }
+        void incDupCount() { dupCount++; }
+        void incMissedSrCount() { missedSrCount++; }
+        void incOrphanedSrCount() { orphanedSrCount++; }
+
+        std::string toString() const {
+            std::string out;
+            out.resize(400); // should be more than enough for the stats string
+            snprintf(out.data(),
+                     out.size(),
+                     "Scan stats:\n"
+                     "  Devices seen      : %" PRIu32 "\n"
+                     "  Duplicate advs    : %" PRIu32 "\n"
+                     "  Scan responses    : %" PRIu32 "\n"
+                     "  SR timing (ms)    : min=%" PRIu32 ", max=%" PRIu32 ", avg=%" PRIu64 "\n"
+                     "  Orphaned SR       : %" PRIu32 "\n"
+                     "  Missed SR         : %" PRIu32 "\n",
+                     devCount,
+                     dupCount,
+                     srCount,
+                     srMinMs,
+                     srMaxMs,
+                     srCount ? srTotalMs / srCount : 0,
+                     orphanedSrCount,
+                     missedSrCount);
+
+            return out;
+        }
+
+        // Records scan-response round-trip time. Returns false if the timing is abnormal
+        // (>= 5x the scan window) and should be excluded from stats.
+        bool recordSrTime(uint32_t ticks, uint16_t window) {
+            uint32_t ms;
+            ble_npl_time_ticks_to_ms(ticks, &ms);
+            if (ms >= (window ? window : BLE_GAP_SCAN_FAST_WINDOW) * 5) {
+                return false;
+            }
+
+            if (ms < srMinMs) {
+                srMinMs = ms;
+            }
+            if (ms > srMaxMs) {
+                srMaxMs = ms;
+            }
+            srTotalMs += ms;
+            srCount++;
+            return true;
+        }
+# else
+        void        reset() {}
+        void        incDevCount() {}
+        void        incDupCount() {}
+        void        incMissedSrCount() {}
+        void        incOrphanedSrCount() {}
+        std::string toString() const { return ""; }
+        bool        recordSrTime(uint32_t ticks, uint16_t window) { return true; }
+# endif
+    } m_stats;
+
     NimBLEScan();
     ~NimBLEScan();
     static int  handleGapEvent(ble_gap_event* event, void* arg);
     void        onHostSync();
     static void srTimerCb(ble_npl_event* event);
+    static void sendDummyScanResponse(ble_npl_event* ev);
 
     NimBLEScanCallbacks* m_pScanCallbacks;
     ble_gap_disc_params  m_scanParams;
