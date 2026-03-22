@@ -98,8 +98,7 @@ NimBLEService* NimBLEServer::createService(const char* uuid) {
 NimBLEService* NimBLEServer::createService(const NimBLEUUID& uuid) {
     NimBLEService* pService = new NimBLEService(uuid);
     m_svcVec.push_back(pService);
-    serviceChanged();
-
+    setServiceChanged();
     return pService;
 } // createService
 
@@ -187,11 +186,19 @@ NimBLEAdvertising* NimBLEServer::getAdvertising() const {
  * @brief Called when the services are added/removed and sets a flag to indicate they should be reloaded.
  * @details This has no effect if the GATT server was not already started.
  */
-void NimBLEServer::serviceChanged() {
+void NimBLEServer::setServiceChanged() {
     if (m_gattsStarted) {
         m_svcChanged = true;
     }
 } // serviceChanged
+
+/**
+ * @brief Send a service changed indication to all clients.
+ * @details This should be called when services are added, removed or modified after the server has been started.
+ */
+void NimBLEServer::sendServiceChangedIndication() const {
+    ble_svc_gatt_changed(0x0001, 0xffff);
+}
 
 /**
  * @brief Callback for GATT registration events,
@@ -313,7 +320,7 @@ bool NimBLEServer::start() {
     // If the services have changed indicate it now
     if (m_svcChanged) {
         m_svcChanged = false;
-        ble_svc_gatt_changed(0x0001, 0xffff);
+        sendServiceChangedIndication();
     }
 
     m_gattsStarted = true;
@@ -836,7 +843,7 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
     }
 
     service->setRemoved(deleteSvc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE);
-    serviceChanged();
+    setServiceChanged();
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
 # endif
@@ -863,7 +870,7 @@ void NimBLEServer::addService(NimBLEService* service) {
     }
 
     service->setRemoved(0);
-    serviceChanged();
+    setServiceChanged();
 } // addService
 
 /**
