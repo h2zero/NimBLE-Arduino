@@ -113,6 +113,8 @@ class NimBLEClient {
     void   setConfig(Config config);
 
   private:
+    enum ConnStatus : uint8_t { CONNECTED, DISCONNECTED, CONNECTING, DISCONNECTING };
+
     NimBLEClient(const NimBLEAddress& peerAddress);
     ~NimBLEClient();
     NimBLEClient(const NimBLEClient&)            = delete;
@@ -136,6 +138,7 @@ class NimBLEClient {
     uint8_t                           m_terminateFailCount;
     mutable uint8_t                   m_asyncSecureAttempt;
     Config                            m_config;
+    ConnStatus                        m_connStatus;
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     uint8_t m_phyMask;

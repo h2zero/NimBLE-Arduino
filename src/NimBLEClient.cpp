@@ -68,6 +68,7 @@ NimBLEClient::NimBLEClient(const NimBLEAddress& peerAddress)
       m_terminateFailCount{0},
       m_asyncSecureAttempt{0},
       m_config{},
+      m_connStatus{DISCONNECTED},
 # if MYNEWT_VAL(BLE_EXT_ADV)
       m_phyMask{BLE_GAP_LE_PHY_1M_MASK | BLE_GAP_LE_PHY_2M_MASK | BLE_GAP_LE_PHY_CODED_MASK},
 # endif
@@ -171,35 +172,30 @@ bool NimBLEClient::connect(bool deleteAttributes, bool asyncConnect, bool exchan
  */
 bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
+    NimBLETaskData    taskData(this);
+    const ble_addr_t* peerAddr = address.getBase();
+    int               rc       = 0;
 
     if (!NimBLEDevice::m_synced) {
-        NIMBLE_LOGE(LOG_TAG, "Host reset, wait for sync.");
-        return false;
+        NIMBLE_LOGE(LOG_TAG, "Host not synced with controller.");
+        rc = BLE_HS_ENOTSYNCED;
+        goto error;
     }
 
-    if (isConnected()) {
-        NIMBLE_LOGE(LOG_TAG, "Client already connected");
-        return false;
-    }
-
-    const ble_addr_t* peerAddr = address.getBase();
-    if (ble_gap_conn_find_by_addr(peerAddr, NULL) == 0) {
-        NIMBLE_LOGE(LOG_TAG, "A connection to %s already exists", address.toString().c_str());
-        return false;
+    if (m_connStatus != DISCONNECTED) {
+        NIMBLE_LOGE(LOG_TAG, "Client not disconnected, cannot connect");
+        rc = BLE_HS_EREJECT;
+        goto error;
     }
 
     if (address.isNull()) {
         NIMBLE_LOGE(LOG_TAG, "Invalid peer address; (NULL)");
-        return false;
-    } else {
-        m_peerAddress = address;
+        rc = BLE_HS_EINVAL;
+        goto error;
     }
 
-    if (deleteAttributes) {
-        deleteServices();
-    }
-
-    int rc                = 0;
+    m_connStatus          = CONNECTING;
+    m_peerAddress         = address;
     m_config.asyncConnect = asyncConnect;
     m_config.exchangeMTU  = exchangeMTU;
 
@@ -259,22 +255,24 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
 
     } while (rc == BLE_HS_EBUSY);
 
+    if (deleteAttributes) {
+        deleteServices();
+    }
+
     if (rc != 0) {
-        m_lastErr = rc;
-        return false;
+        goto error;
     }
 
     if (m_config.asyncConnect) {
         return true;
     }
 
-    NimBLETaskData taskData(this);
     m_pTaskData = &taskData;
 
     // Wait for the connect timeout time +1 second for the connection to complete
     if (!NimBLEUtils::taskWait(taskData, m_connectTimeout + 1000)) {
         // If a connection was made but no response from MTU exchange proceed anyway
-        if (isConnected()) {
+        if (m_connStatus == CONNECTED && m_config.exchangeMTU) {
             taskData.m_flags = 0;
         } else {
             // workaround; if the controller doesn't cancel the connection at the timeout, cancel it here.
@@ -288,17 +286,20 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
     rc          = taskData.m_flags;
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "Connection failed; status=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-        m_lastErr = rc;
-        if (m_config.deleteOnConnectFail) {
-            NimBLEDevice::deleteClient(this);
-        }
-        return false;
+        goto error;
     }
 
     m_pClientCallbacks->onConnect(this);
     NIMBLE_LOGD(LOG_TAG, "<< connect()");
-    // Check if still connected before returning
-    return isConnected();
+    return true;
+
+error:
+    m_connStatus = DISCONNECTED;
+    m_lastErr    = rc;
+    if (m_config.deleteOnConnectFail) {
+        NimBLEDevice::deleteClient(this);
+    }
+    return false;
 } // connect
 
 /**
@@ -358,6 +359,7 @@ bool NimBLEClient::disconnect(uint8_t reason) {
         return false;
     }
 
+    m_connStatus = (rc == BLE_HS_ENOTCONN) ? DISCONNECTED : DISCONNECTING;
     return true;
 } // disconnect
 
@@ -575,8 +577,8 @@ NimBLEAddress NimBLEClient::getPeerAddress() const {
  * @return True if successful.
  */
 bool NimBLEClient::setPeerAddress(const NimBLEAddress& address) {
-    if (isConnected()) {
-        NIMBLE_LOGE(LOG_TAG, "Cannot set peer address while connected");
+    if (m_connStatus == CONNECTED || m_connStatus == CONNECTING) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot set peer address while connected/connecting");
         return false;
     }
 
@@ -589,7 +591,7 @@ bool NimBLEClient::setPeerAddress(const NimBLEAddress& address) {
  * @return The RSSI value or 0 if there was an error.
  */
 int NimBLEClient::getRssi() const {
-    if (!isConnected()) {
+    if (m_connStatus != CONNECTED) {
         NIMBLE_LOGE(LOG_TAG, "getRssi(): Not connected");
         return 0;
     }
@@ -732,7 +734,7 @@ bool NimBLEClient::discoverAttributes() {
  * @return true on success otherwise false if an error occurred
  */
 bool NimBLEClient::retrieveServices(const NimBLEUUID* uuidFilter) {
-    if (!isConnected()) {
+    if (m_connStatus != CONNECTED) {
         NIMBLE_LOGE(LOG_TAG, "Disconnected, could not retrieve services -aborting");
         return false;
     }
@@ -968,6 +970,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
             pClient->m_terminateFailCount = 0;
             pClient->m_asyncSecureAttempt = 0;
+            pClient->m_connStatus         = DISCONNECTED;
 
             // Don't call the disconnect callback if we are waiting for a connection to complete and it fails
             if (rc == (BLE_HS_ERR_HCI_BASE + BLE_ERR_CONN_ESTABLISHMENT) && pClient->m_config.asyncConnect) {
@@ -994,7 +997,8 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
         case BLE_GAP_EVENT_CONNECT: {
             // If we aren't waiting for this connection response we should drop the connection immediately.
-            if (pClient->isConnected() || (!pClient->m_config.asyncConnect && pClient->m_pTaskData == nullptr)) {
+            if (pClient->m_connStatus != CONNECTING ||
+                (!pClient->m_config.asyncConnect && pClient->m_pTaskData == nullptr)) {
                 ble_gap_terminate(event->connect.conn_handle, BLE_ERR_REM_USER_CONN_TERM);
                 return 0;
             }
@@ -1005,6 +1009,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             }
 
             if (rc == 0) {
+                pClient->m_connStatus = CONNECTED;
                 pClient->m_connHandle = event->connect.conn_handle;
 
                 if (pClient->m_config.asyncConnect) {
@@ -1013,13 +1018,13 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
                 if (pClient->m_config.exchangeMTU) {
                     if (!pClient->exchangeMTU()) {
-                        rc = pClient->m_lastErr; // sets the error in the task data
-                        break;
+                        break; // if exchangeMTU fails we will just continue, likely will disconnect immediately after
                     }
 
                     return 0; // return as we may have a task waiting for the MTU before releasing it.
                 }
             } else {
+                pClient->m_connStatus = DISCONNECTED;
                 pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
 
                 if (pClient->m_config.asyncConnect) {
@@ -1258,7 +1263,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
  * @return True if we are connected and false if we are not connected.
  */
 bool NimBLEClient::isConnected() const {
-    return m_connHandle != BLE_HS_CONN_HANDLE_NONE;
+    return m_connStatus == CONNECTED;
 } // isConnected
 
 /**
@@ -1348,6 +1353,5 @@ void NimBLEClientCallbacks::onMTUChange(NimBLEClient* pClient, uint16_t mtu) {
 void NimBLEClientCallbacks::onPhyUpdate(NimBLEClient* pClient, uint8_t txPhy, uint8_t rxPhy) {
     NIMBLE_LOGD(CB_TAG, "onPhyUpdate: default, txPhy: %d, rxPhy: %d", txPhy, rxPhy);
 } // onPhyUpdate
-#
 
 #endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)
