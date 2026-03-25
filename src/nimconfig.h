@@ -215,13 +215,6 @@
 # define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE (1)
 #endif // ESP_PLATFORM
 
-/* Enables the use of Arduino String class for attribute values */
-#if defined __has_include
-# if __has_include(<Arduino.h>)
-#  define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE (1)
-# endif
-#endif
-
 /* Required macros for all supported devices */
 
 #ifndef CONFIG_BT_NIMBLE_ENABLED
