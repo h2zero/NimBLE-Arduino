@@ -42,7 +42,7 @@
 #define NIMBLE_NVS_CCCD_SEC_KEY                  "cccd_sec"
 #define NIMBLE_NVS_CSFC_SEC_KEY                  "csfc_sec"
 #define NIMBLE_NVS_PEER_RECORDS_KEY              "p_dev_rec"
-#define NIMBLE_NVS_NAMESPACE                     "nimble_bond"
+#define NIMBLE_NVS_DEFAULT_NAMESPACE             "nimble_bond"
 
 #if MYNEWT_VAL(ENC_ADV_DATA)
 #define NIMBLE_NVS_EAD_SEC_KEY                   "ead_sec"
@@ -53,10 +53,30 @@
 typedef uint32_t nvs_handle_t;
 
 static const char *LOG_TAG = "NIMBLE_NVS";
+static char nimble_nvs_namespace_buf[NIMBLE_NVS_STR_NAME_MAX_LEN];
+static const char *NIMBLE_NVS_NAMESPACE = NIMBLE_NVS_DEFAULT_NAMESPACE;
 
 /*****************************************************************************
  * $ MISC                                                                    *
  *****************************************************************************/
+
+void
+set_nimble_nvs_namespace(const char *ns)
+{
+    if (ns == NULL) {
+        NIMBLE_NVS_NAMESPACE = NIMBLE_NVS_DEFAULT_NAMESPACE;
+        return;
+    }
+
+    if (strlen(ns) < NIMBLE_NVS_STR_NAME_MAX_LEN) {
+        strncpy(nimble_nvs_namespace_buf, ns, NIMBLE_NVS_STR_NAME_MAX_LEN - 1);
+        nimble_nvs_namespace_buf[NIMBLE_NVS_STR_NAME_MAX_LEN - 1] = '\0';
+        NIMBLE_NVS_NAMESPACE = nimble_nvs_namespace_buf;
+    } else {
+        ESP_LOGE(LOG_TAG, "Namespace string is too long, using default namespace");
+        NIMBLE_NVS_NAMESPACE = NIMBLE_NVS_DEFAULT_NAMESPACE;
+    }
+}
 
 static void
 get_nvs_key_string(int obj_type, int index, char *key_string)

@@ -190,6 +190,10 @@
 #  define MYNEWT_VAL_BLE_HCI_VS (0)
 # endif
 
+# ifdef __cplusplus
+extern "C" void set_nimble_nvs_namespace(const char *ns);
+# endif
+
 #else // !ESP_PLATFORM
 # if defined(NRF51)
 #  include "syscfg/devcfg/nrf51cfg.h"
