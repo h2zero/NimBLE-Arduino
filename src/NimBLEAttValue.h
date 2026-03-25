@@ -21,8 +21,13 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED
 
-# ifdef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
-#  include <Arduino.h>
+/* Enables the use of Arduino String class for attribute values */
+# ifndef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE (__has_include(<Arduino.h>))
+# endif
+
+# if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  include <WString.h>
 # endif
 
 # include <string>
@@ -78,8 +83,7 @@ template <typename T, typename = void>
 struct Has_value_type : std::false_type {};
 
 template <typename T>
-struct Has_value_type<T, decltype(void(sizeof(typename T::value_type)))>
-    : std::true_type {};
+struct Has_value_type<T, decltype(void(sizeof(typename T::value_type)))> : std::true_type {};
 
 /**
  * @brief A specialized container class to hold BLE attribute values.
@@ -103,7 +107,8 @@ class NimBLEAttValue {
      * @param[in] init_len The initial size in bytes.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(uint16_t init_len = MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH), uint16_t max_len = BLE_ATT_ATTR_MAX_LEN);
+    NimBLEAttValue(uint16_t init_len = MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH),
+                   uint16_t max_len  = BLE_ATT_ATTR_MAX_LEN);
 
     /**
      * @brief Construct with an initial value from a buffer.
@@ -145,7 +150,7 @@ class NimBLEAttValue {
     NimBLEAttValue(const std::vector<uint8_t> vec, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
         : NimBLEAttValue(&vec[0], vec.size(), max_len) {}
 
-# ifdef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+# if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
     /**
      * @brief Construct with an initial value from an Arduino String.
      * @param str An Arduino String containing to the initial value to set.
@@ -292,10 +297,7 @@ class NimBLEAttValue {
     typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
 #  endif
     setValue(const T& v) {
-        return setValue(
-            reinterpret_cast<const uint8_t*>(v.data()),
-            v.size() * sizeof(typename T::value_type)
-        );
+        return setValue(reinterpret_cast<const uint8_t*>(v.data()), v.size() * sizeof(typename T::value_type));
     }
 
     /**
@@ -398,7 +400,7 @@ class NimBLEAttValue {
     /** @brief Inequality operator */
     bool operator!=(const NimBLEAttValue& source) const { return !(*this == source); }
 
-# ifdef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+# if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
     /** @brief Operator; Get the value as an Arduino String value. */
     operator String() const { return String(reinterpret_cast<char*>(m_attr_value)); }
 # endif

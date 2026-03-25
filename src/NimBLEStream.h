@@ -31,6 +31,10 @@
 # include <type_traits>
 # include <cstdarg>
 
+# ifndef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE (__has_include(<Arduino.h>))
+# endif
+
 # if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
 #  include <Stream.h>
 # else
