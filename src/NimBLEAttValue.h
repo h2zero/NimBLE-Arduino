@@ -21,8 +21,13 @@
 #include "nimconfig.h"
 #if CONFIG_BT_ENABLED
 
-# ifdef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
-#  include <Arduino.h>
+/* Enables the use of Arduino String class for attribute values */
+# ifndef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE (__has_include(<Arduino.h>))
+# endif
+
+# if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+#  include <WString.h>
 # endif
 
 # include <string>
@@ -135,7 +140,7 @@ class NimBLEAttValue {
     NimBLEAttValue(const std::vector<uint8_t> vec, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
         : NimBLEAttValue(&vec[0], vec.size(), max_len) {}
 
-# ifdef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+# if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
     /**
      * @brief Construct with an initial value from an Arduino String.
      * @param str An Arduino String containing to the initial value to set.
@@ -388,7 +393,7 @@ class NimBLEAttValue {
     /** @brief Inequality operator */
     bool operator!=(const NimBLEAttValue& source) const { return !(*this == source); }
 
-# ifdef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
+# if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
     /** @brief Operator; Get the value as an Arduino String value. */
     operator String() const { return String(reinterpret_cast<char*>(m_attr_value)); }
 # endif
