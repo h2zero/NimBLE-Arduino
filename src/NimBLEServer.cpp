@@ -335,12 +335,15 @@ bool NimBLEServer::start() {
  */
 bool NimBLEServer::disconnect(uint16_t connHandle, uint8_t reason) const {
     int rc = ble_gap_terminate(connHandle, reason);
-    if (rc != 0 && rc != BLE_HS_ENOTCONN && rc != BLE_HS_EALREADY) {
-        NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-        return false;
+    switch (rc) {
+        case 0:
+        case BLE_HS_ENOTCONN:
+        case BLE_HS_EALREADY:
+        case BLE_HS_HCI_ERR(BLE_ERR_UNK_CONN_ID):
+            return true;
     }
-
-    return true;
+    NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    return false;
 } // disconnect
 
 /**
