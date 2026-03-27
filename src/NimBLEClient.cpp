@@ -354,7 +354,7 @@ bool NimBLEClient::secureConnection(bool async) const {
         if (NimBLEDevice::startSecurity(m_connHandle)) {
             NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
         }
-    } while (taskData.m_flags == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING) && retryCount--);
+    } while (taskData.m_flags == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING) && retryCount--);
 
     m_pTaskData = nullptr;
 
@@ -364,7 +364,10 @@ bool NimBLEClient::secureConnection(bool async) const {
     }
 
     m_lastErr = taskData.m_flags;
-    NIMBLE_LOGE(LOG_TAG, "secureConnection: failed rc=%d", taskData.m_flags);
+    NIMBLE_LOGE(LOG_TAG,
+                "secureConnection: failed rc=%d %s",
+                taskData.m_flags,
+                NimBLEUtils::returnCodeToString(taskData.m_flags));
     return false;
 
 } // secureConnection
@@ -375,14 +378,19 @@ bool NimBLEClient::secureConnection(bool async) const {
  */
 bool NimBLEClient::disconnect(uint8_t reason) {
     int rc = ble_gap_terminate(m_connHandle, reason);
-    if (rc != 0 && rc != BLE_HS_ENOTCONN && rc != BLE_HS_EALREADY) {
-        NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-        m_lastErr = rc;
-        return false;
+    switch (rc) {
+        case 0:
+            m_connStatus = DISCONNECTING;
+            return true;
+        case BLE_HS_ENOTCONN:
+        case BLE_HS_EALREADY:
+        case BLE_HS_HCI_ERR(BLE_ERR_UNK_CONN_ID): // should not happen but just in case
+            return true;
     }
 
-    m_connStatus = (rc == BLE_HS_ENOTCONN) ? DISCONNECTED : DISCONNECTING;
-    return true;
+    NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    m_lastErr = rc;
+    return false;
 } // disconnect
 
 /**
@@ -1051,7 +1059,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             // set this incase the client instance was changed due to incorrect event arg bug above
             pTaskData = pClient->m_pTaskData;
 
-            const int connEstablishFailReason = BLE_HS_ERR_HCI_BASE + BLE_ERR_CONN_ESTABLISHMENT;
+            const int connEstablishFailReason = BLE_HS_HCI_ERR(BLE_ERR_CONN_ESTABLISHMENT);
             if (rc == connEstablishFailReason && pClient->m_connectFailRetryCount < pClient->m_config.connectFailRetries) {
                 pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
                 ++pClient->m_connectFailRetryCount;
@@ -1263,8 +1271,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 pTaskData = nullptr;
             }
 
-            if (event->enc_change.status == 0 ||
-                event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
+            if (event->enc_change.status == 0 || event->enc_change.status == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING)) {
                 NimBLEConnInfo peerInfo;
                 rc = ble_gap_conn_find(event->enc_change.conn_handle, &peerInfo.m_desc);
                 if (rc != 0) {
@@ -1272,7 +1279,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                     break;
                 }
 
-                if (event->enc_change.status == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING)) {
+                if (event->enc_change.status == BLE_HS_HCI_ERR(BLE_ERR_PINKEY_MISSING)) {
                     // Key is missing, try deleting.
                     ble_store_util_delete_peer(&peerInfo.m_desc.peer_id_addr);
                     // Attempt a retry if async secure failed.
