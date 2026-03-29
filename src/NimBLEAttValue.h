@@ -254,6 +254,23 @@ class NimBLEAttValue {
 
 # if __cplusplus < 201703L
     /**
+     * @brief Template to set value to the value of a char array using strnlen.
+     * @param [in] s A reference to a char array.
+     * @details Only used for char array types to correctly determine length via strnlen.
+     */
+    template <typename T>
+#  ifdef _DOXYGEN_
+    bool
+#  else
+    typename std::enable_if<std::is_array<T>::value &&
+                                std::is_same<typename std::remove_extent<T>::type, char>::value,
+                            bool>::type
+#  endif
+    setValue(const T& s) {
+        return setValue(reinterpret_cast<const uint8_t*>(s), strnlen(s, sizeof(T)));
+    }
+
+    /**
      * @brief Template to set value to the value of <type\>val.
      * @param [in] v The <type\>value to set.
      * @details Only used for types without a `c_str()` and `length()` or `data()` and `size()` method.
@@ -263,7 +280,10 @@ class NimBLEAttValue {
 #  ifdef _DOXYGEN_
     bool
 #  else
-    typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
+    typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value &&
+                                !(std::is_array<T>::value &&
+                                  std::is_same<typename std::remove_extent<T>::type, char>::value),
+                            bool>::type
 #  endif
     setValue(const T& v) {
         return setValue(reinterpret_cast<const uint8_t*>(&v), sizeof(T));
@@ -331,6 +351,9 @@ class NimBLEAttValue {
             }
         } else if constexpr (Has_c_str_length<T>::value) {
             return setValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length());
+        } else if constexpr (std::is_array<T>::value &&
+                             std::is_same<typename std::remove_extent<T>::type, char>::value) {
+            return setValue(reinterpret_cast<const uint8_t*>(s), strnlen(s, sizeof(s)));
         } else {
             return setValue(reinterpret_cast<const uint8_t*>(&s), sizeof(s));
         }
