@@ -1119,6 +1119,7 @@ NimBLEClient* NimBLEServer::getClient(const NimBLEConnInfo& connInfo) {
     m_pClient->deleteServices(); // Changed peer connection delete the database.
     m_pClient->m_peerAddress = connInfo.getAddress();
     m_pClient->m_connHandle  = connInfo.getConnHandle();
+    m_pClient->m_connStatus  = NimBLEClient::CONNECTED;
     return m_pClient;
 } // getClient
 
