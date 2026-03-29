@@ -25,6 +25,7 @@
 # include "NimBLELog.h"
 
 # include <climits>
+# include <algorithm>
 
 static const char* LOG_TAG = "NimBLERemoteService";
 
@@ -207,6 +208,12 @@ bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID* uuidFilter) 
     NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
     rc = taskData.m_flags;
     if (rc == 0 || rc == BLE_HS_EDONE) {
+        // sort the characteristics vector by handle to make sure the search range for descriptors is correct
+        std::sort(m_vChars.begin(),
+                  m_vChars.end(),
+                  [](const NimBLERemoteCharacteristic* a, const NimBLERemoteCharacteristic* b) {
+                      return a->getHandle() < b->getHandle();
+                  });
         NIMBLE_LOGD(LOG_TAG, "<< retrieveCharacteristics()");
         return true;
     }
