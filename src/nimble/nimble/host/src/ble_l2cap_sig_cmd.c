@@ -23,13 +23,14 @@
 #if NIMBLE_BLE_CONNECT
 /* this function consumes tx os_mbuf */
 int
-ble_l2cap_sig_tx(uint16_t conn_handle, struct os_mbuf *txom)
+ble_l2cap_sig_tx_nolock(uint16_t conn_handle, struct os_mbuf *txom)
 {
     struct ble_l2cap_chan *chan;
     struct ble_hs_conn *conn;
     int rc;
 
-    ble_hs_lock();
+    BLE_HS_DBG_ASSERT(ble_hs_locked_by_cur_task());
+
     rc = ble_hs_misc_conn_chan_find_reqd(conn_handle, BLE_L2CAP_CID_SIG,
                                          &conn, &chan);
     if (rc == 0) {
@@ -37,6 +38,17 @@ ble_l2cap_sig_tx(uint16_t conn_handle, struct os_mbuf *txom)
     } else {
         os_mbuf_free_chain(txom);
     }
+
+    return rc;
+}
+
+int
+ble_l2cap_sig_tx(uint16_t conn_handle, struct os_mbuf *txom)
+{
+    int rc;
+
+    ble_hs_lock();
+    rc = ble_l2cap_sig_tx_nolock(conn_handle, txom);
     ble_hs_unlock();
 
     return rc;

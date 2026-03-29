@@ -66,8 +66,6 @@ void *ble_npl_get_current_task_id(void);
 
 void ble_npl_eventq_init(struct ble_npl_eventq *evq);
 
-void ble_npl_eventq_deinit(struct ble_npl_eventq *evq);
-
 struct ble_npl_event *ble_npl_eventq_get(struct ble_npl_eventq *evq,
                                          ble_npl_time_t tmo);
 
@@ -100,8 +98,6 @@ ble_npl_error_t ble_npl_mutex_pend(struct ble_npl_mutex *mu,
 
 ble_npl_error_t ble_npl_mutex_release(struct ble_npl_mutex *mu);
 
-ble_npl_error_t ble_npl_mutex_deinit(struct ble_npl_mutex *mu);
-
 /*
  * Semaphores
  */
@@ -112,8 +108,6 @@ ble_npl_error_t ble_npl_sem_pend(struct ble_npl_sem *sem,
                                  ble_npl_time_t timeout);
 
 ble_npl_error_t ble_npl_sem_release(struct ble_npl_sem *sem);
-
-ble_npl_error_t ble_npl_sem_deinit(struct ble_npl_sem *sem);
 
 uint16_t ble_npl_sem_get_count(struct ble_npl_sem *sem);
 
