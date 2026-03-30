@@ -56,6 +56,14 @@ class NimBLEL2CAPChannel {
     /// NOTE: This function will block until the data has been sent or an error occurred.
     bool write(const std::vector<uint8_t>& bytes);
 
+    /// @brief Disconnect this L2CAP channel.
+    /// @return true on success, false on failure.
+    bool disconnect();
+
+    /// @brief Get the connection handle associated with this channel.
+    /// @return Connection handle, or BLE_HS_CONN_HANDLE_NONE if not connected.
+    uint16_t getConnHandle() const;
+
     /// @return True, if the channel is connected. False, otherwise.
     bool isConnected() const { return !!channel; }
 
