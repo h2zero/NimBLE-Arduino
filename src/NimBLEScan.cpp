@@ -678,6 +678,11 @@ NimBLEScanResults NimBLEScan::getResults(uint32_t duration, bool is_continue) {
         return m_scanResults;
     }
 
+    if (NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot call blocking getResults from NimBLE host task");
+        return m_scanResults;
+    }
+
     NimBLETaskData taskData;
     m_pTaskData = &taskData;
 

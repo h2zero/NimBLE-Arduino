@@ -270,6 +270,12 @@ bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, 
         goto error;
     }
 
+    if (!asyncConnect && NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot connect synchronously from host task");
+        rc = BLE_HS_EREJECT;
+        goto error;
+    }
+
     m_connStatus             = CONNECTING;
     m_peerAddress            = address;
     m_config.asyncConnect    = asyncConnect;
@@ -334,6 +340,11 @@ error:
  */
 bool NimBLEClient::secureConnection(bool async) const {
     NIMBLE_LOGD(LOG_TAG, ">> secureConnection()");
+    if (!async && NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "Cannot secure connection synchronously from host task");
+        m_lastErr = BLE_HS_EREJECT;
+        return false;
+    }
 
     int rc = 0;
     if (async && !NimBLEDevice::startSecurity(m_connHandle, &rc)) {
@@ -669,6 +680,10 @@ NimBLERemoteService* NimBLEClient::getService(const char* uuid) {
  */
 NimBLERemoteService* NimBLEClient::getService(const NimBLEUUID& uuid) {
     NIMBLE_LOGD(LOG_TAG, ">> getService: uuid: %s", uuid.toString().c_str());
+    if (NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "getService cannot be called from host task");
+        return nullptr;
+    }
 
     for (auto& it : m_svcVec) {
         if (it->getUUID() == uuid) {
