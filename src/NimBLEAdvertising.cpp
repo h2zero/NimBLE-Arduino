@@ -18,11 +18,12 @@
 #include "NimBLEAdvertising.h"
 #if (CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_BROADCASTER) && !MYNEWT_VAL(BLE_EXT_ADV)) || defined(_DOXYGEN_)
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "services/gap/ble_svc_gap.h"
-# else
+#ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
+# else
+#  include "services/gap/ble_svc_gap.h"
 # endif
+
 # include "NimBLEDevice.h"
 # include "NimBLEServer.h"
 # include "NimBLEUtils.h"

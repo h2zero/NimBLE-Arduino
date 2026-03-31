@@ -25,12 +25,12 @@
 #  include "NimBLEClient.h"
 # endif
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "services/gap/ble_svc_gap.h"
-#  include "services/gatt/ble_svc_gatt.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
 #  include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
+# else
+#  include "services/gap/ble_svc_gap.h"
+#  include "services/gatt/ble_svc_gatt.h"
 # endif
 
 # define NIMBLE_SERVER_GET_PEER_NAME_ON_CONNECT_CB 0
@@ -1072,7 +1072,7 @@ void NimBLEServer::updateConnParams(
  * @param [in] octets The preferred number of payload octets to use (Range 0x001B-0x00FB).
  */
 void NimBLEServer::setDataLen(uint16_t connHandle, uint16_t octets) const {
-# if defined(CONFIG_NIMBLE_CPP_IDF) && !defined(ESP_IDF_VERSION) || \
+# if !defined(USING_NIMBLE_ARDUINO_HEADERS) && !defined(ESP_IDF_VERSION) || \
      (ESP_IDF_VERSION_MAJOR * 100 + ESP_IDF_VERSION_MINOR * 10 + ESP_IDF_VERSION_PATCH) < 432
     return;
 # else

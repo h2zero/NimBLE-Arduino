@@ -24,7 +24,7 @@
 #   include "esp_bt.h"
 #  endif
 #  include "nvs_flash.h"
-#  if defined(CONFIG_NIMBLE_CPP_IDF)
+#  ifndef USING_NIMBLE_ARDUINO_HEADERS
 #   if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0) || CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE)
 #    include "esp_nimble_hci.h"
 #   endif
@@ -35,14 +35,14 @@
 #   include "host/util/util.h"
 #   include "services/gap/ble_svc_gap.h"
 #   include "services/gatt/ble_svc_gatt.h"
-#  else
+#  else // USING_NIMBLE_ARDUINO_HEADERS
 #   include "nimble/esp_port/esp-hci/include/esp_nimble_hci.h"
 #  endif
 # else
 #  include "nimble/nimble/controller/include/controller/ble_phy.h"
 # endif
 
-# ifndef CONFIG_NIMBLE_CPP_IDF
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/porting/nimble/include/nimble/nimble_port.h"
 #  include "nimble/porting/npl/freertos/include/nimble/nimble_port_freertos.h"
 #  include "nimble/nimble/host/include/host/ble_hs.h"
@@ -914,7 +914,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
 #  endif
 
-#  if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0) || !defined(CONFIG_NIMBLE_CPP_IDF)
+#  if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0) || defined(USING_NIMBLE_ARDUINO_HEADERS)
         esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 #   if defined(CONFIG_IDF_TARGET_ESP32)
         bt_cfg.mode         = ESP_BT_MODE_BLE;
@@ -1028,7 +1028,7 @@ bool NimBLEDevice::deinit(bool clearAll) {
         rc = nimble_port_stop();
         if (rc == 0) {
             nimble_port_deinit();
-# ifdef CONFIG_NIMBLE_CPP_IDF
+# ifndef USING_NIMBLE_ARDUINO_HEADERS
 #  if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
             rc = esp_nimble_hci_and_controller_deinit();
             if (rc != ESP_OK) {
