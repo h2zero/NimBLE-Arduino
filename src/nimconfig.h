@@ -225,4 +225,7 @@
 # define CONFIG_BT_CONTROLLER_ENABLED (1)
 #endif
 
+// Indicate that NimBLE Arduino headers are being used,
+// allows for drop-in compatibility with the esp-nimble-cpp library where it is not defined.
+#define USING_NIMBLE_ARDUINO_HEADERS (1)
 #endif // NIMCONFIG_H

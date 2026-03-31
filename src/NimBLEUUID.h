@@ -21,10 +21,10 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "host/ble_uuid.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_uuid.h"
+# else
+#  include "host/ble_uuid.h"
 # endif
 
 /****  FIX COMPILATION ****/
@@ -65,7 +65,7 @@ class NimBLEUUID {
 
     bool operator==(const NimBLEUUID& rhs) const;
     bool operator!=(const NimBLEUUID& rhs) const;
-    operator std::string() const;
+         operator std::string() const;
 
   private:
     ble_uuid_any_t m_uuid{};

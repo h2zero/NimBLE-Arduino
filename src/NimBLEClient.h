@@ -21,10 +21,10 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "host/ble_gap.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_gap.h"
+# else
+#  include "host/ble_gap.h"
 # endif
 
 # include "NimBLEAddress.h"
@@ -118,7 +118,7 @@ class NimBLEClient {
          * - deleteOnConnectFail: false
          * - asyncConnect: false
          * - exchangeMTU: true
-         * - connectFailRetries: 2 
+         * - connectFailRetries: 2
          */
         Config()
             : deleteCallbacks(0),

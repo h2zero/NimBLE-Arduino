@@ -21,10 +21,10 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "nimble/ble.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/include/nimble/ble.h"
+# else
+#  include "nimble/ble.h"
 # endif
 
 /****  FIX COMPILATION ****/
@@ -63,8 +63,8 @@ class NimBLEAddress : private ble_addr_t {
     const NimBLEAddress& reverseByteOrder();
     bool                 operator==(const NimBLEAddress& rhs) const;
     bool                 operator!=(const NimBLEAddress& rhs) const;
-    operator std::string() const;
-    operator uint64_t() const;
+                         operator std::string() const;
+                         operator uint64_t() const;
 };
 
 #endif // CONFIG_BT_NIMBLE_ENABLED

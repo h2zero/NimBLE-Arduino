@@ -25,12 +25,12 @@
 # include "NimBLEScan.h"
 # include "NimBLEUUID.h"
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "host/ble_hs_adv.h"
-#  include "host/ble_gap.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_hs_adv.h"
 #  include "nimble/nimble/host/include/host/ble_gap.h"
+# else
+#  include "host/ble_hs_adv.h"
+#  include "host/ble_gap.h"
 # endif
 
 # include <vector>
@@ -158,13 +158,13 @@ class NimBLEAdvertisedDevice {
     uint8_t findAdvField(uint8_t type, uint8_t index = 0, size_t* data_loc = nullptr) const;
     size_t  findServiceData(uint8_t index, uint8_t* bytes) const;
 
-    NimBLEAddress             m_address{};
-    uint8_t                   m_advType{};
-    int8_t                    m_rssi{};
-    uint8_t                   m_callbackSent{};
-    uint16_t                  m_advLength{};
-    ble_npl_time_t            m_time{};
-    NimBLEAdvertisedDevice*   m_pNextWaiting{}; // intrusive list node; self-pointer means "not in list", set in ctor
+    NimBLEAddress           m_address{};
+    uint8_t                 m_advType{};
+    int8_t                  m_rssi{};
+    uint8_t                 m_callbackSent{};
+    uint16_t                m_advLength{};
+    ble_npl_time_t          m_time{};
+    NimBLEAdvertisedDevice* m_pNextWaiting{}; // intrusive list node; self-pointer means "not in list", set in ctor
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     bool     m_isLegacyAdv{};

@@ -9,12 +9,12 @@
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM)
 
 # include "inttypes.h"
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "host/ble_l2cap.h"
-#  include "os/os_mbuf.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_l2cap.h"
 #  include "nimble/porting/nimble/include/os/os_mbuf.h"
+# else
+#  include "host/ble_l2cap.h"
+#  include "os/os_mbuf.h"
 # endif
 
 /****  FIX COMPILATION ****/

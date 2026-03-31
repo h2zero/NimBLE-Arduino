@@ -18,10 +18,10 @@
 #include "NimBLEAttValue.h"
 #if CONFIG_BT_NIMBLE_ENABLED
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "nimble/nimble_npl.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/include/nimble/nimble_npl.h"
+# else
+#  include "nimble/nimble_npl.h"
 # endif
 
 # include "NimBLEUtils.h"

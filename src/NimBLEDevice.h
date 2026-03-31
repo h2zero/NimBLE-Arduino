@@ -29,10 +29,10 @@
       (CONFIG_BTDM_BLE_SCAN_DUPL || CONFIG_BT_LE_SCAN_DUPL || CONFIG_BT_CTRL_BLE_SCAN_DUPL)
 # endif
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include <host/ble_gap.h>
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
+#  include "nimble/nimble/host/include/host/ble_gap.h"
 # else
-#  include <nimble/nimble/host/include/host/ble_gap.h>
+#  include "host/ble_gap.h"
 # endif
 
 /****  FIX COMPILATION ****/
