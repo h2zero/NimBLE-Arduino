@@ -7,7 +7,8 @@
  *  This allows you to use familiar methods like print(), println(),
  *  read(), and available() over BLE, similar to how you would use Serial.
  *
- *  This example connects to the NimBLE_Stream_Server example.
+ *  This example connects to the NimBLE_Stream_Server example using the Nordic UART
+ *  Service (NUS) with separate TX and RX characteristics.
  *
  *  Created: November 2025
  *      Author: NimBLE-Arduino Contributors
@@ -16,9 +17,10 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 
-// Service and Characteristic UUIDs (must match the server)
-#define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+// Nordic UART Service (NUS) UUIDs (must match the server)
+#define SERVICE_UUID    "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define TX_CHAR_UUID    "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"  // Server TX: client subscribes here
+#define RX_CHAR_UUID    "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"  // Server RX: client writes here
 
 // Create the stream client instance
 NimBLEStreamClient bleStream;
@@ -116,7 +118,7 @@ bool connectToServer() {
 
     Serial.println("Connected! Discovering services...");
 
-    // Get the service and characteristic
+    // Get the service
     NimBLERemoteService* pRemoteService = pClient->getService(SERVICE_UUID);
     if (!pRemoteService) {
         Serial.println("Failed to find our service UUID");
@@ -125,19 +127,30 @@ bool connectToServer() {
     }
     Serial.println("Found the stream service");
 
-    NimBLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(CHARACTERISTIC_UUID);
-    if (!pRemoteCharacteristic) {
-        Serial.println("Failed to find our characteristic UUID");
+    // Get the TX characteristic (server sends notifications here; client subscribes for RX)
+    NimBLERemoteCharacteristic* pTxChar = pRemoteService->getCharacteristic(TX_CHAR_UUID);
+    if (!pTxChar) {
+        Serial.println("Failed to find TX characteristic");
         pClient->disconnect();
         return false;
     }
-    Serial.println("Found the stream characteristic");
+    Serial.println("Found the TX characteristic");
+
+    // Get the RX characteristic (server receives writes here; client writes for TX)
+    NimBLERemoteCharacteristic* pRxChar = pRemoteService->getCharacteristic(RX_CHAR_UUID);
+    if (!pRxChar) {
+        Serial.println("Failed to find RX characteristic");
+        pClient->disconnect();
+        return false;
+    }
+    Serial.println("Found the RX characteristic");
 
     /**
-     * Initialize the stream client with the remote characteristic
-     * subscribeNotify=true means we'll receive notifications in the RX buffer
+     * Initialize the stream client with separate TX and RX characteristics:
+     * - pRxChar: the characteristic we write to (our TX = server's RX, UUID 6E400002)
+     * - pTxChar: the characteristic we subscribe to (our RX = server's TX, UUID 6E400003)
      */
-    if (!bleStream.begin(pRemoteCharacteristic, true)) {
+    if (!bleStream.begin(pRxChar, pTxChar)) {
         Serial.println("Failed to initialize BLE stream!");
         pClient->disconnect();
         return false;
