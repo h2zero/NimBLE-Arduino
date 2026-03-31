@@ -20,10 +20,10 @@
 
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "nimble/nimble_port.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/porting/nimble/include/nimble/nimble_port.h"
+# else
+#  include "nimble/nimble_port.h"
 # endif
 
 # include <string>
@@ -553,15 +553,15 @@ bool NimBLEScan::start(uint32_t duration, bool isContinue, bool restart) {
     scan_params.itvl    = m_scanParams.itvl;
     scan_params.window  = m_scanParams.window;
     int rc              = ble_gap_ext_disc(NimBLEDevice::m_ownAddrType,
-                              duration / 10, // 10ms units
-                              m_period,
-                              m_scanParams.filter_duplicates,
-                              m_scanParams.filter_policy,
-                              m_scanParams.limited,
-                              m_phy & SCAN_1M ? &scan_params : NULL,
-                              m_phy & SCAN_CODED ? &scan_params : NULL,
-                              NimBLEScan::handleGapEvent,
-                              NULL);
+                                           duration / 10, // 10ms units
+                                           m_period,
+                                           m_scanParams.filter_duplicates,
+                                           m_scanParams.filter_policy,
+                                           m_scanParams.limited,
+                                           m_phy & SCAN_1M ? &scan_params : NULL,
+                                           m_phy & SCAN_CODED ? &scan_params : NULL,
+                                           NimBLEScan::handleGapEvent,
+                                           NULL);
 # else
     int rc = ble_gap_disc(NimBLEDevice::m_ownAddrType,
                           duration ? duration : BLE_HS_FOREVER,

@@ -21,10 +21,10 @@
 #include "nimconfig.h"
 #if CONFIG_BT_ENABLED && CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "host/ble_gap.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_gap.h"
+# else
+#  include "host/ble_gap.h"
 # endif
 
 /****  FIX COMPILATION ****/

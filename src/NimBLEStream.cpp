@@ -20,12 +20,12 @@
 
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "os/os_mbuf.h"
-#  include "nimble/nimble_port.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/porting/nimble/include/os/os_mbuf.h"
 #  include "nimble/porting/nimble/include/nimble/nimble_port.h"
+# else
+#  include "os/os_mbuf.h"
+#  include "nimble/nimble_port.h"
 # endif
 # include <algorithm>
 # include <cstdio>

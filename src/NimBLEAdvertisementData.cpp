@@ -23,10 +23,10 @@
 # include "NimBLEUUID.h"
 # include "NimBLELog.h"
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "host/ble_hs_adv.h"
-# else
+#ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_hs_adv.h"
+# else
+#  include "host/ble_hs_adv.h"
 # endif
 
 static const char* LOG_TAG = "NimBLEAdvertisementData";

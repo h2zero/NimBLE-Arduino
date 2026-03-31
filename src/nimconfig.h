@@ -422,3 +422,7 @@ void nimble_cpp_assert(const char *file, unsigned line) __attribute((weak, noret
 #else
 # define NIMBLE_CPP_DEBUG_ASSERT(cond) (void(0))
 #endif
+
+// Indicate that NimBLE Arduino headers are being used,
+// allows for drop-in compatibility with the esp-nimble-cpp library where it is not defined.
+#define USING_NIMBLE_ARDUINO_HEADERS (1)
