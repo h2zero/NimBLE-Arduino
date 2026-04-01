@@ -1,6 +1,21 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.5.0] 2026-04-01
+
+## Fixed
+- `NimBLEClient` connection state tracking.
+- Calling disconnect will no longer return false if the HCI response is "Unknown ID".
+- Remote descriptors not found when characteristic vector handles out of order.
+- `setValue` with char inputs now calculates the data length correctly.
+
+## Added
+- `NimBLEServer::sendServiceChangedIndication` Sends the service changed indication to peers so they refresh their database.
+- `NimBLEScan` user configuarable scan response timer added to prevent unreported devices on long duration scans.
+- `NimBLEClient` Connection retry on connection establishment failure, retry count configurable by app, default 2.
+- ANCS Example
+- `l2Cap` Disconnect API
+
 ## [2.4.0] 2026-03-20
 
 ## Fixed

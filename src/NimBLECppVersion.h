@@ -22,7 +22,7 @@
 #define NIMBLE_CPP_VERSION_MAJOR 2
 
 /** @brief NimBLE-Arduino library minor version number. */
-#define NIMBLE_CPP_VERSION_MINOR 4
+#define NIMBLE_CPP_VERSION_MINOR 5
 
 /** @brief NimBLE-Arduino library patch version number. */
 #define NIMBLE_CPP_VERSION_PATCH 0
