@@ -1,6 +1,56 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.5.0] 2026-04-01
+
+## Fixed
+- `NimBLEClient` connection state tracking.
+- Calling disconnect will no longer return false if the HCI response is "Unknown ID".
+- Remote descriptors not found when characteristic vector handles out of order.
+- `setValue` with char inputs now calculates the data length correctly.
+
+## Added
+- `NimBLEServer::sendServiceChangedIndication` Sends the service changed indication to peers so they refresh their database.
+- `NimBLEScan` user configuarable scan response timer added to prevent unreported devices on long duration scans.
+- `NimBLEClient` Connection retry on connection establishment failure, retry count configurable by app, default 2.
+- ANCS Example
+- `l2Cap` Disconnect API
+
+## [2.4.0] 2026-03-20
+
+## Fixed
+- GATT attribute handles are now assigned from the registration callback so duplicate UUID attributes are identified correctly.
+- Dynamic service changes now properly remove characteristics/descriptors and reset the GATT database when advertising starts.
+- Missing notification/indication payload data when the value spans multiple mbufs, such as values larger than 255 bytes with small ACL buffers.
+- `NimBLEDevice::createServer` will longer crash when called before the stack is initialized.
+- Re-pairing after deleting all bonds now works by unpairing each stored bond instead of only deleting NVS data.
+- Whitelist bounds checks.
+- `NimBLEDevice::getBondedAddress` index bounds validation.
+- ESP32 linker error when both central and peripheral roles are disabled.
+- Compiler warnings when bonds are disabled.
+
+## Added
+- `NimBLEStream`, `NimBLEStreamClient`, and `NimBLEStreamServer` classes and examples.
+- `NimBLECppVersion.h` with compile-time version macros.
+- `NimBLEDevice::getVersion` runtime version string helper.
+- Matching passkey callbacks for both roles: `NimBLEServerCallbacks::onPassKeyEntry` and `NimBLEClientCallbacks::onPassKeyDisplay`.
+- Bond migration helpers to convert bond storage between v1 and current formats while preserving existing bonds.
+- `NimBLEUUID` constructor overload for `ble_uuid_t*`.
+- Optional `index` parameter for `NimBLECharacteristic::getDescriptorByUUID` to access multiple descriptors with the same UUID.
+
+## Changed
+- `NimBLEService::start` is deprecated; services are now added when the server starts.
+- `NimBLEHIDDevice::startServices()` is deprecated; services are now added when the server starts.
+
+## [2.3.9] 2026-03-08
+
+## Fixed
+- Crash when scanning with esp32c6/c5/c2/h2.
+- Scan duplicate filter not resetting on scan restart.
+
+## Added
+- `NimBLEConnInfo::toString` method to get a string representation of the connection information for logging/debugging purposes.
+
 ## [2.3.8] 2026-03-02
 
 ## Fixed
