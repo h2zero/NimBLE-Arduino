@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.0</span>
    </div>
   </td>
  </tr>
@@ -119,6 +119,9 @@ passed to the constructor.  <br /></td></tr>
 <tr class="memitem:af77b2a5390ea811e9405ff81dba8ecac" id="r_af77b2a5390ea811e9405ff81dba8ecac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_client.html#af77b2a5390ea811e9405ff81dba8ecac">cancelConnect</a> () <a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">const</a></td></tr>
 <tr class="memdesc:af77b2a5390ea811e9405ff81dba8ecac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cancel an ongoing connection attempt.  <br /></td></tr>
 <tr class="separator:af77b2a5390ea811e9405ff81dba8ecac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74f72446b8e9c5e11d424e3658555d20" id="r_a74f72446b8e9c5e11d424e3658555d20"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_client.html#a74f72446b8e9c5e11d424e3658555d20">setConnectRetries</a> (<a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">uint8_t</a> <a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">numRetries</a>)</td></tr>
+<tr class="memdesc:a74f72446b8e9c5e11d424e3658555d20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the number of times to retry connecting after a connection establishment error (0x3e).  <br /></td></tr>
+<tr class="separator:a74f72446b8e9c5e11d424e3658555d20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a665a5ef97b3ab0307bccc54872d3c218" id="r_a665a5ef97b3ab0307bccc54872d3c218"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_client.html#a665a5ef97b3ab0307bccc54872d3c218">setSelfDelete</a> (<a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">bool</a> deleteOnDisconnect, <a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">bool</a> deleteOnConnectFail)</td></tr>
 <tr class="memdesc:a665a5ef97b3ab0307bccc54872d3c218"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set or unset a flag to delete this client when disconnected or connection failed.  <br /></td></tr>
 <tr class="separator:a665a5ef97b3ab0307bccc54872d3c218"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1064,6 +1067,33 @@ The available bits are:<ul>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a74f72446b8e9c5e11d424e3658555d20" name="a74f72446b8e9c5e11d424e3658555d20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74f72446b8e9c5e11d424e3658555d20">&#9670;&#160;</a></span>setConnectRetries()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">void</a> NimBLEClient::setConnectRetries </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_nim_b_l_e_client.html#a3903fb7589e2b8b781f8f81f9e0f2a83">uint8_t</a>&#160;</td>
+          <td class="paramname"><em>numRetries</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the number of times to retry connecting after a connection establishment error (0x3e). </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">numRetries</td><td>The number of retries to attempt before giving up and reporting the failure.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Max is 7, Default is 2. </p>
 
 </div>
 </div>

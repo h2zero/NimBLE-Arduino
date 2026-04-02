@@ -30,6 +30,7 @@ var class_nim_b_l_e_att_value =
     [ "operator[]", "class_nim_b_l_e_att_value.html#a8ca8d07c06a79e30bf6279e6817e4881", null ],
     [ "setValue", "class_nim_b_l_e_att_value.html#aade512f55c6f962941aee7078677356b", null ],
     [ "setValue", "class_nim_b_l_e_att_value.html#ac94a41f0c0d42d48b29d5b18d7ad7bd8", null ],
+    [ "setValue", "class_nim_b_l_e_att_value.html#ac94a41f0c0d42d48b29d5b18d7ad7bd8", null ],
     [ "setValue", "class_nim_b_l_e_att_value.html#a98da1765d9cfd2d93cdac2fb7a108a79", null ],
     [ "setValue", "class_nim_b_l_e_att_value.html#a98da1765d9cfd2d93cdac2fb7a108a79", null ],
     [ "setValue", "class_nim_b_l_e_att_value.html#a98da1765d9cfd2d93cdac2fb7a108a79", null ],

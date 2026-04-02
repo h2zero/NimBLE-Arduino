@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.0</span>
    </div>
   </td>
  </tr>
@@ -170,6 +170,9 @@ or created and later added to services list.  <br /></td></tr>
 <tr class="memitem:a709eb11532ec43a35f8653845b3158fc" id="r_a709eb11532ec43a35f8653845b3158fc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a709eb11532ec43a35f8653845b3158fc">getPhy</a> (uint16_t connHandle, uint8_t *txPhy, uint8_t *rxPhy)</td></tr>
 <tr class="memdesc:a709eb11532ec43a35f8653845b3158fc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the PHY used for a peer connection.  <br /></td></tr>
 <tr class="separator:a709eb11532ec43a35f8653845b3158fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a355d5c2c7a43c70076b1e7afb03a7e6c" id="r_a355d5c2c7a43c70076b1e7afb03a7e6c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a355d5c2c7a43c70076b1e7afb03a7e6c">sendServiceChangedIndication</a> () const</td></tr>
+<tr class="memdesc:a355d5c2c7a43c70076b1e7afb03a7e6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Send a service changed indication to all clients.  <br /></td></tr>
+<tr class="separator:a355d5c2c7a43c70076b1e7afb03a7e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a31f73892bcf7eb66ee540bf1da9c419c" id="r_a31f73892bcf7eb66ee540bf1da9c419c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_client.html">NimBLEClient</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_server.html#a31f73892bcf7eb66ee540bf1da9c419c">getClient</a> (uint16_t connHandle)</td></tr>
 <tr class="memdesc:a31f73892bcf7eb66ee540bf1da9c419c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a client instance from the connection handle.  <br /></td></tr>
 <tr class="separator:a31f73892bcf7eb66ee540bf1da9c419c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -795,6 +798,26 @@ Advertising will need to be restarted by the user after calling this as we must 
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a355d5c2c7a43c70076b1e7afb03a7e6c" name="a355d5c2c7a43c70076b1e7afb03a7e6c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a355d5c2c7a43c70076b1e7afb03a7e6c">&#9670;&#160;</a></span>sendServiceChangedIndication()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEServer::sendServiceChangedIndication </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Send a service changed indication to all clients. </p>
+<p>This should be called when services are added, removed or modified after the server has been started. </p>
 
 </div>
 </div>

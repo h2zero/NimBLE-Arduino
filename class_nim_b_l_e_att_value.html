@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.0</span>
    </div>
   </td>
  </tr>
@@ -174,6 +174,10 @@ const uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> ()
 <tr class="memitem:aa217dfc649daed50eb75c7168442f86e" id="r_aa217dfc649daed50eb75c7168442f86e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_nim_b_l_e_att_value.html">NimBLEAttValue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_att_value.html#aa217dfc649daed50eb75c7168442f86e">append</a> (const uint8_t *value, uint16_t len)</td></tr>
 <tr class="memdesc:aa217dfc649daed50eb75c7168442f86e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append data to the value.  <br /></td></tr>
 <tr class="separator:aa217dfc649daed50eb75c7168442f86e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac94a41f0c0d42d48b29d5b18d7ad7bd8" id="r_ac94a41f0c0d42d48b29d5b18d7ad7bd8"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:ac94a41f0c0d42d48b29d5b18d7ad7bd8"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_att_value.html#ac94a41f0c0d42d48b29d5b18d7ad7bd8">setValue</a> (const T &amp;s)</td></tr>
+<tr class="memdesc:ac94a41f0c0d42d48b29d5b18d7ad7bd8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to set value to the value of a char array using strnlen.  <br /></td></tr>
+<tr class="separator:ac94a41f0c0d42d48b29d5b18d7ad7bd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98da1765d9cfd2d93cdac2fb7a108a79" id="r_a98da1765d9cfd2d93cdac2fb7a108a79"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a98da1765d9cfd2d93cdac2fb7a108a79"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_att_value.html#a98da1765d9cfd2d93cdac2fb7a108a79">setValue</a> (const T &amp;v)</td></tr>
 <tr class="memdesc:a98da1765d9cfd2d93cdac2fb7a108a79"><td class="mdescLeft">&#160;</td><td class="mdescRight">Template to set value to the value of &lt;type&gt;val.  <br /></td></tr>
@@ -599,7 +603,7 @@ less than <code>sizeof(&lt;type&gt;)</code>.</dd></dl>
 </div>
 </div>
 <a id="aade512f55c6f962941aee7078677356b" name="aade512f55c6f962941aee7078677356b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aade512f55c6f962941aee7078677356b">&#9670;&#160;</a></span>setValue() <span class="overload">[1/6]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aade512f55c6f962941aee7078677356b">&#9670;&#160;</a></span>setValue() <span class="overload">[1/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -644,7 +648,44 @@ less than <code>sizeof(&lt;type&gt;)</code>.</dd></dl>
 </div>
 </div>
 <a id="ac94a41f0c0d42d48b29d5b18d7ad7bd8" name="ac94a41f0c0d42d48b29d5b18d7ad7bd8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac94a41f0c0d42d48b29d5b18d7ad7bd8">&#9670;&#160;</a></span>setValue() <span class="overload">[2/6]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ac94a41f0c0d42d48b29d5b18d7ad7bd8">&#9670;&#160;</a></span>setValue() <span class="overload">[2/7]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool NimBLEAttValue::setValue </td>
+          <td>(</td>
+          <td class="paramtype">const T &amp;&#160;</td>
+          <td class="paramname"><em>s</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Template to set value to the value of a char array using strnlen. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>A reference to a char array.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Only used for char array types to correctly determine length via strnlen. </p>
+
+</div>
+</div>
+<a id="ac94a41f0c0d42d48b29d5b18d7ad7bd8" name="ac94a41f0c0d42d48b29d5b18d7ad7bd8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac94a41f0c0d42d48b29d5b18d7ad7bd8">&#9670;&#160;</a></span>setValue() <span class="overload">[3/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -681,7 +722,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="a98da1765d9cfd2d93cdac2fb7a108a79" name="a98da1765d9cfd2d93cdac2fb7a108a79"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a98da1765d9cfd2d93cdac2fb7a108a79">&#9670;&#160;</a></span>setValue() <span class="overload">[3/6]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a98da1765d9cfd2d93cdac2fb7a108a79">&#9670;&#160;</a></span>setValue() <span class="overload">[4/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -718,7 +759,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="a98da1765d9cfd2d93cdac2fb7a108a79" name="a98da1765d9cfd2d93cdac2fb7a108a79"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a98da1765d9cfd2d93cdac2fb7a108a79">&#9670;&#160;</a></span>setValue() <span class="overload">[4/6]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a98da1765d9cfd2d93cdac2fb7a108a79">&#9670;&#160;</a></span>setValue() <span class="overload">[5/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -755,7 +796,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="a98da1765d9cfd2d93cdac2fb7a108a79" name="a98da1765d9cfd2d93cdac2fb7a108a79"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a98da1765d9cfd2d93cdac2fb7a108a79">&#9670;&#160;</a></span>setValue() <span class="overload">[5/6]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a98da1765d9cfd2d93cdac2fb7a108a79">&#9670;&#160;</a></span>setValue() <span class="overload">[6/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -792,7 +833,7 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <a id="a5c8c5ecfa3864d45ea5b155385e3f9fa" name="a5c8c5ecfa3864d45ea5b155385e3f9fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c8c5ecfa3864d45ea5b155385e3f9fa">&#9670;&#160;</a></span>setValue() <span class="overload">[6/6]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c8c5ecfa3864d45ea5b155385e3f9fa">&#9670;&#160;</a></span>setValue() <span class="overload">[7/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">

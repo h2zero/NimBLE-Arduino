@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.0</span>
    </div>
   </td>
  </tr>
@@ -152,6 +152,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>clearResults</b> ()</
 <tr class="memitem:acaa40328d16e040e9f92cba4819cb045" id="r_acaa40328d16e040e9f92cba4819cb045"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_scan.html#acaa40328d16e040e9f92cba4819cb045">erase</a> (const <a class="el" href="class_nim_b_l_e_advertised_device.html">NimBLEAdvertisedDevice</a> *device)</td></tr>
 <tr class="memdesc:acaa40328d16e040e9f92cba4819cb045"><td class="mdescLeft">&#160;</td><td class="mdescRight">Delete peer device from the scan results vector.  <br /></td></tr>
 <tr class="separator:acaa40328d16e040e9f92cba4819cb045"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21b8513cee215c5ff7a0caa9e6e12b2b" id="r_a21b8513cee215c5ff7a0caa9e6e12b2b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_scan.html#a21b8513cee215c5ff7a0caa9e6e12b2b">setScanResponseTimeout</a> (uint32_t timeoutMs)</td></tr>
+<tr class="memdesc:a21b8513cee215c5ff7a0caa9e6e12b2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the scan response timeout.  <br /></td></tr>
+<tr class="separator:a21b8513cee215c5ff7a0caa9e6e12b2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17f2f775b5e6793f06a412f840d5dceb" id="r_a17f2f775b5e6793f06a412f840d5dceb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_scan.html#a17f2f775b5e6793f06a412f840d5dceb">setPhy</a> (Phy phyMask)</td></tr>
 <tr class="memdesc:a17f2f775b5e6793f06a412f840d5dceb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the PHYs to scan.  <br /></td></tr>
 <tr class="separator:a17f2f775b5e6793f06a412f840d5dceb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -553,6 +556,33 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>clearResults</b> ()</
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a21b8513cee215c5ff7a0caa9e6e12b2b" name="a21b8513cee215c5ff7a0caa9e6e12b2b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a21b8513cee215c5ff7a0caa9e6e12b2b">&#9670;&#160;</a></span>setScanResponseTimeout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void NimBLEScan::setScanResponseTimeout </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>timeoutMs</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set the scan response timeout. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">timeoutMs</td><td>The timeout in milliseconds to wait for a scan response, default: max advertising interval (10.24s)</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>If a scan response is not received within the timeout period, the pending device will be reported to the scan result callback with whatever data was present in the advertisement; no synthetic scan-response event is generated. If set to 0, the scan result callback will only be triggered when a scan response is received from the advertiser or when the scan completes, at which point any pending scannable devices will be reported with the advertisement data only. </p>
 
 </div>
 </div>

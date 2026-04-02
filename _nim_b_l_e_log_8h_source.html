@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.0</span>
    </div>
   </td>
  </tr>
@@ -120,7 +120,7 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_log_8h_source.html',''); in
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &quot;nimconfig.h&quot;</span></div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#if CONFIG_BT_ENABLED</span></div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor"># if defined(CONFIG_NIMBLE_CPP_IDF)</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor"># ifndef USING_NIMBLE_ARDUINO_HEADERS</span></div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#  include &quot;esp_log.h&quot;</span></div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor">#  include &quot;console/console.h&quot;</span></div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#  ifndef CONFIG_NIMBLE_CPP_LOG_LEVEL</span></div>
@@ -270,7 +270,7 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_log_8h_source.html',''); in
 <div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="preprocessor">#   define NIMBLE_LOGE(tag, format, ...) (void)tag</span></div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="preprocessor">#  endif</span></div>
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span> </div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="preprocessor"># endif  </span><span class="comment">/* CONFIG_NIMBLE_CPP_IDF */</span><span class="preprocessor"></span></div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="preprocessor"># endif  </span><span class="comment">/* !USING_NIMBLE_ARDUINO_HEADERS */</span><span class="preprocessor"></span></div>
 <div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span> </div>
 <div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="preprocessor">#  define NIMBLE_LOGD_IF(cond, tag, format, ...) { if (cond) { NIMBLE_LOGD(tag, format, ##__VA_ARGS__); }}</span></div>
 <div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="preprocessor">#  define NIMBLE_LOGI_IF(cond, tag, format, ...) { if (cond) { NIMBLE_LOGI(tag, format, ##__VA_ARGS__); }}</span></div>

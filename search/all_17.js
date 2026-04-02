@@ -1,8 +1,8 @@
 var searchData=
 [
   ['of_20properties_0',['The full list of properties',['../md__migration__guide.html#the-full-list-of-properties',1,'']]],
-  ['onauthenticationcomplete_1',['onauthenticationcomplete',['../class_nim_b_l_e_server_callbacks.html#a7cbed42919678d9e8d40b351dec82523',1,'NimBLEServerCallbacks::onAuthenticationComplete()'],['../class_nim_b_l_e_client_callbacks.html#ae8e2abef6949ac87abf5ecad1a4dfe35',1,'NimBLEClientCallbacks::onAuthenticationComplete()']]],
-  ['onconfirmpasskey_2',['onconfirmpasskey',['../class_nim_b_l_e_server_callbacks.html#a507296393ca8557db2e4afa786c5b436',1,'NimBLEServerCallbacks::onConfirmPassKey()'],['../class_nim_b_l_e_client_callbacks.html#a6e7cfa81cd43420f78d6da727c67928b',1,'NimBLEClientCallbacks::onConfirmPasskey(NimBLEConnInfo &amp;connInfo, uint32_t pin)']]],
+  ['onauthenticationcomplete_1',['onauthenticationcomplete',['../class_nim_b_l_e_server_callbacks.html#a7cbed42919678d9e8d40b351dec82523',1,'NimBLEServerCallbacks::onAuthenticationComplete()'],['../class_nim_b_l_e_client_callbacks.html#ae8e2abef6949ac87abf5ecad1a4dfe35',1,'NimBLEClientCallbacks::onAuthenticationComplete(NimBLEConnInfo &amp;connInfo)']]],
+  ['onconfirmpasskey_2',['onconfirmpasskey',['../class_nim_b_l_e_client_callbacks.html#a6e7cfa81cd43420f78d6da727c67928b',1,'NimBLEClientCallbacks::onConfirmPasskey()'],['../class_nim_b_l_e_server_callbacks.html#a507296393ca8557db2e4afa786c5b436',1,'NimBLEServerCallbacks::onConfirmPassKey()']]],
   ['onconnect_3',['onconnect',['../class_nim_b_l_e_client_callbacks.html#a96de53d9745f243d544cd89498f979ae',1,'NimBLEClientCallbacks::onConnect()'],['../class_nim_b_l_e_server_callbacks.html#a11d48696c2121eb301a76301555df2c5',1,'NimBLEServerCallbacks::onConnect()']]],
   ['onconnectfail_4',['onConnectFail',['../class_nim_b_l_e_client_callbacks.html#ad0eb6bee07ef8c41dd8924aaca3bc71e',1,'NimBLEClientCallbacks']]],
   ['onconnparamsupdate_5',['onConnParamsUpdate',['../class_nim_b_l_e_server_callbacks.html#aa6e5e8ef90a537540d9c72f8744c0199',1,'NimBLEServerCallbacks']]],

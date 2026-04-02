@@ -21,6 +21,7 @@ var class_nim_b_l_e_server =
     [ "getServiceByUUID", "class_nim_b_l_e_server.html#a26af61c030e9ad1108b24df4d3b6b633", null ],
     [ "getServiceByUUID", "class_nim_b_l_e_server.html#a6bd0d52090b31cf39e2e9666091b8a61", null ],
     [ "removeService", "class_nim_b_l_e_server.html#a00c92f62f41ec1c499dfaf042b487d75", null ],
+    [ "sendServiceChangedIndication", "class_nim_b_l_e_server.html#a355d5c2c7a43c70076b1e7afb03a7e6c", null ],
     [ "setCallbacks", "class_nim_b_l_e_server.html#a485c90ce36275f9e4ec26a7f3d348cd9", null ],
     [ "setDataLen", "class_nim_b_l_e_server.html#afbffb933eed8142bd24222e3cacc138a", null ],
     [ "start", "class_nim_b_l_e_server.html#a82247d9abef1a70b2ad9ecdc4e74cff6", null ],

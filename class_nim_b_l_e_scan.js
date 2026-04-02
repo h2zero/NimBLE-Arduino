@@ -15,6 +15,7 @@ var class_nim_b_l_e_scan =
     [ "setPeriod", "class_nim_b_l_e_scan.html#aaace4d0b128b6294276347f6790f3f8b", null ],
     [ "setPhy", "class_nim_b_l_e_scan.html#a17f2f775b5e6793f06a412f840d5dceb", null ],
     [ "setScanCallbacks", "class_nim_b_l_e_scan.html#a3b0d41fc5d9113a02357c1b2a43c5d1d", null ],
+    [ "setScanResponseTimeout", "class_nim_b_l_e_scan.html#a21b8513cee215c5ff7a0caa9e6e12b2b", null ],
     [ "setWindow", "class_nim_b_l_e_scan.html#a0fec97ad0f4ff191bb853138c30d5316", null ],
     [ "start", "class_nim_b_l_e_scan.html#ac1307f30a881688d3a4d57bac7abe02c", null ],
     [ "stop", "class_nim_b_l_e_scan.html#a68fa5cc715f62a9a97ac0dccfb8557c1", null ]

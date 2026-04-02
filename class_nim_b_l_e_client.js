@@ -30,6 +30,7 @@ var class_nim_b_l_e_client =
     [ "setConfig", "class_nim_b_l_e_client.html#ad89d8202400ecb573ce0e2ec5fc801dc", null ],
     [ "setConnectionParams", "class_nim_b_l_e_client.html#a17718339f76eb621db0d7919c73b9267", null ],
     [ "setConnectPhy", "class_nim_b_l_e_client.html#a004a85999b1ee4283e1e8e1e31090cca", null ],
+    [ "setConnectRetries", "class_nim_b_l_e_client.html#a74f72446b8e9c5e11d424e3658555d20", null ],
     [ "setConnectTimeout", "class_nim_b_l_e_client.html#aeb3675ab243ae6f0e4e7165cd07f7b80", null ],
     [ "setDataLen", "class_nim_b_l_e_client.html#a4e8b16bb2c8ba3534bbd04803a411911", null ],
     [ "setPeerAddress", "class_nim_b_l_e_client.html#a89d5aee4deaba953b8f77af75e3ee910", null ],

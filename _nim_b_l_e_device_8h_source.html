@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.0</span>
    </div>
   </td>
  </tr>
@@ -129,10 +129,10 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_device_8h_source.html','');
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="preprocessor">      (CONFIG_BTDM_BLE_SCAN_DUPL || CONFIG_BT_LE_SCAN_DUPL || CONFIG_BT_CTRL_BLE_SCAN_DUPL)</span></div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span><span class="preprocessor"># endif</span></div>
 <div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor"># if defined(CONFIG_NIMBLE_CPP_IDF)</span></div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#  include &lt;host/ble_gap.h&gt;</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor"># ifdef USING_NIMBLE_ARDUINO_HEADERS</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span><span class="preprocessor">#  include &quot;nimble/nimble/host/include/host/ble_gap.h&quot;</span></div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span><span class="preprocessor"># else</span></div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#  include &lt;nimble/nimble/host/include/host/ble_gap.h&gt;</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span><span class="preprocessor">#  include &quot;host/ble_gap.h&quot;</span></div>
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span><span class="preprocessor"># endif</span></div>
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
 <div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span><span class="comment">/****  FIX COMPILATION ****/</span></div>
@@ -490,7 +490,7 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_device_8h_source.html','');
 <div class="ttc" id="aclass_nim_b_l_e_device_html_aff35384524ab80a19ce1ef23fdcd970b"><div class="ttname"><a href="class_nim_b_l_e_device.html#aff35384524ab80a19ce1ef23fdcd970b">NimBLEDevice::injectConfirmPasskey</a></div><div class="ttdeci">static bool injectConfirmPasskey(const NimBLEConnInfo &amp;peerInfo, bool accept)</div><div class="ttdoc">Inject the provided numeric comparison response into the Security Manager.</div><div class="ttdef"><b>Definition</b> NimBLEDevice.cpp:1299</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_ext_advertisement_html"><div class="ttname"><a href="class_nim_b_l_e_ext_advertisement.html">NimBLEExtAdvertisement</a></div><div class="ttdoc">Extended advertisement data.</div><div class="ttdef"><b>Definition</b> NimBLEExtAdvertising.h:46</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_ext_advertising_html"><div class="ttname"><a href="class_nim_b_l_e_ext_advertising.html">NimBLEExtAdvertising</a></div><div class="ttdoc">Extended advertising class.</div><div class="ttdef"><b>Definition</b> NimBLEExtAdvertising.h:110</div></div>
-<div class="ttc" id="aclass_nim_b_l_e_scan_html"><div class="ttname"><a href="class_nim_b_l_e_scan.html">NimBLEScan</a></div><div class="ttdoc">Perform and manage BLE scans.</div><div class="ttdef"><b>Definition</b> NimBLEScan.h:67</div></div>
+<div class="ttc" id="aclass_nim_b_l_e_scan_html"><div class="ttname"><a href="class_nim_b_l_e_scan.html">NimBLEScan</a></div><div class="ttdoc">Perform and manage BLE scans.</div><div class="ttdef"><b>Definition</b> NimBLEScan.h:69</div></div>
 <div class="ttc" id="aclass_nim_b_l_e_server_html"><div class="ttname"><a href="class_nim_b_l_e_server.html">NimBLEServer</a></div><div class="ttdoc">The model of a BLE server.</div><div class="ttdef"><b>Definition</b> NimBLEServer.h:62</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

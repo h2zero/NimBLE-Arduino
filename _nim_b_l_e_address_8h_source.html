@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.4.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.0</span>
    </div>
   </td>
  </tr>
@@ -120,10 +120,10 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_address_8h_source.html','')
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="preprocessor">#include &quot;nimconfig.h&quot;</span></div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span><span class="preprocessor">#if CONFIG_BT_ENABLED</span></div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span> </div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor"># if defined(CONFIG_NIMBLE_CPP_IDF)</span></div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#  include &quot;nimble/ble.h&quot;</span></div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span><span class="preprocessor"># ifdef USING_NIMBLE_ARDUINO_HEADERS</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="preprocessor">#  include &quot;nimble/nimble/include/nimble/ble.h&quot;</span></div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span><span class="preprocessor"># else</span></div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#  include &quot;nimble/nimble/include/nimble/ble.h&quot;</span></div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="preprocessor">#  include &quot;nimble/ble.h&quot;</span></div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span><span class="preprocessor"># endif</span></div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="comment">/****  FIX COMPILATION ****/</span></div>
@@ -155,8 +155,8 @@ $(document).ready(function(){initNavTree('_nim_b_l_e_address_8h_source.html','')
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    <span class="keyword">const</span> <a class="code hl_class" href="class_nim_b_l_e_address.html">NimBLEAddress</a>&amp; <a class="code hl_function" href="class_nim_b_l_e_address.html#a0f390fb5f422db8ced1938bd40f87c4d">reverseByteOrder</a>();</div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    <span class="keywordtype">bool</span>                 <a class="code hl_function" href="class_nim_b_l_e_address.html#a87e8ccc81c2d83bf0503166939319164">operator==</a>(<span class="keyword">const</span> <a class="code hl_class" href="class_nim_b_l_e_address.html">NimBLEAddress</a>&amp; rhs) <span class="keyword">const</span>;</div>
 <div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keywordtype">bool</span>                 <a class="code hl_function" href="class_nim_b_l_e_address.html#ae243127c78af69b26dfa225effd806ce">operator!=</a>(<span class="keyword">const</span> <a class="code hl_class" href="class_nim_b_l_e_address.html">NimBLEAddress</a>&amp; rhs) <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    <span class="keyword">operator</span> std::string() <span class="keyword">const</span>;</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keyword">operator</span> uint64_t() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>                         <span class="keyword">operator</span> std::string() <span class="keyword">const</span>;</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>                         <span class="keyword">operator</span> uint64_t() <span class="keyword">const</span>;</div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>};</div>
 </div>
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
