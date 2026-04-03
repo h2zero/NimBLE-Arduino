@@ -30,8 +30,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <nimble/ext/tinycrypt/include/tinycrypt/utils.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/constants.h>
+#include "nimble/ext/tinycrypt/include/tinycrypt/utils.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
 
 #include <string.h>
 

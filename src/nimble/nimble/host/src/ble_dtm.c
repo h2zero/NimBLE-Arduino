@@ -17,9 +17,9 @@
  * under the License.
  */
 
-#include <nimble/nimble/include/nimble/hci_common.h>
-#include <nimble/nimble/host/include/host/ble_dtm.h>
-#include <nimble/porting/nimble/include/os/endian.h>
+#include "nimble/nimble/include/nimble/hci_common.h"
+#include "nimble/nimble/host/include/host/ble_dtm.h"
+#include "nimble/porting/nimble/include/os/endian.h"
 #include "ble_hs_hci_priv.h"
 
 int

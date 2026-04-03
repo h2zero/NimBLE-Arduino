@@ -197,14 +197,21 @@ void ble_ll_disconn_comp_event_send(struct ble_ll_conn_sm *connsm,
 void ble_ll_auth_pyld_tmo_event_send(struct ble_ll_conn_sm *connsm);
 int ble_ll_conn_hci_disconnect_cmd(const struct ble_hci_lc_disconnect_cp *cmd);
 int ble_ll_conn_hci_rd_rem_ver_cmd(const uint8_t *cmdbuf, uint8_t len);
+
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
 int ble_ll_conn_hci_create(const uint8_t *cmdbuf, uint8_t len);
+int ble_ll_conn_create_cancel(void);
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+int ble_ll_conn_hci_ext_create(const uint8_t *cmdbuf, uint8_t len);
+#endif
+#endif
+
 int ble_ll_conn_hci_update(const uint8_t *cmdbuf, uint8_t len);
 int ble_ll_conn_hci_set_chan_class(const uint8_t *cmdbuf, uint8_t len);
 int ble_ll_conn_hci_param_rr(const uint8_t *cmdbuf, uint8_t len,
                              uint8_t *rspbuf, uint8_t *rsplen);
 int ble_ll_conn_hci_param_nrr(const uint8_t *cmdbuf, uint8_t len,
                              uint8_t *rspbuf, uint8_t *rsplen);
-int ble_ll_conn_create_cancel(void);
 void ble_ll_conn_num_comp_pkts_event_send(struct ble_ll_conn_sm *connsm);
 void ble_ll_conn_comp_event_send(struct ble_ll_conn_sm *connsm, uint8_t status,
                                  uint8_t *evbuf, struct ble_ll_adv_sm *advsm);
@@ -227,6 +234,9 @@ int ble_ll_conn_hci_wr_auth_pyld_tmo(const uint8_t *cmdbuf, uint8_t len,
                                      uint8_t *rspbuf, uint8_t *rsplen);
 int ble_ll_conn_hci_rd_auth_pyld_tmo(const uint8_t *cmdbuf, uint8_t len,
                                      uint8_t *rspbuf, uint8_t *rsplen);
+int ble_ll_conn_hci_cb_read_tx_pwr(const uint8_t *cmdbuf, uint8_t len,
+                                   uint8_t *rspbuf, uint8_t *rsplen);
+
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_SCA_UPDATE)
 int ble_ll_conn_req_peer_sca(const uint8_t *cmdbuf, uint8_t len,
                              uint8_t *rspbuf, uint8_t *rsplen);
@@ -264,9 +274,6 @@ int ble_ll_conn_hci_le_rd_phy(const uint8_t *cmdbuf, uint8_t len,
                               uint8_t *rsp, uint8_t *rsplen);
 int ble_ll_conn_hci_le_set_phy(const uint8_t *cmdbuf, uint8_t len);
 int ble_ll_conn_phy_update_if_needed(struct ble_ll_conn_sm *connsm);
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-int ble_ll_conn_hci_ext_create(const uint8_t *cmdbuf, uint8_t len);
-#endif
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_SYNC_TRANSFER)
 int ble_ll_set_sync_transfer_params(const uint8_t *cmdbuf, uint8_t len,

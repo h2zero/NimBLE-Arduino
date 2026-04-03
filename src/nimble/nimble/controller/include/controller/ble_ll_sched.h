@@ -219,7 +219,7 @@ uint32_t ble_ll_sched_css_get_conn_interval_us(void);
 #endif
 
 #if MYNEWT_VAL(BLE_LL_ISO_BROADCASTER)
-int ble_ll_sched_iso_big(struct ble_ll_sched_item *sch, int first);
+int ble_ll_sched_iso_big(struct ble_ll_sched_item *sch, int first, int fixed);
 #endif /* BLE_LL_ISO_BROADCASTER */
 
 #ifdef __cplusplus
