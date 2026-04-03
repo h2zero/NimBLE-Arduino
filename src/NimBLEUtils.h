@@ -29,17 +29,18 @@
 #  endif
 # endif
 
-#if MYNEWT_VAL(NIMBLE_CPP_DEBUG_ASSERT_ENABLED) && !defined NDEBUG
-void nimble_cpp_assert(const char *file, unsigned line) __attribute((weak, noreturn));
-# define NIMBLE_ATT_VAL_FILE  (__builtin_strrchr(__FILE__, '/') ? \
-                            __builtin_strrchr (__FILE__, '/') + 1 : __FILE__)
-# define NIMBLE_CPP_DEBUG_ASSERT(cond) \
-    if (!(cond)) { \
-        nimble_cpp_assert(NIMBLE_ATT_VAL_FILE, __LINE__); \
-    }
-#else
-# define NIMBLE_CPP_DEBUG_ASSERT(cond) (void(0))
-#endif
+# if MYNEWT_VAL(NIMBLE_CPP_DEBUG_ASSERT_ENABLED) && !defined NDEBUG
+void nimble_cpp_assert(const char* file, unsigned line) __attribute__((weak, noreturn));
+#  define NIMBLE_ATT_VAL_FILE (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#  define NIMBLE_CPP_DEBUG_ASSERT(cond)                         \
+      do {                                                      \
+          if (!(cond)) {                                        \
+              nimble_cpp_assert(NIMBLE_ATT_VAL_FILE, __LINE__); \
+          }                                                     \
+      } while (0)
+# else
+#  define NIMBLE_CPP_DEBUG_ASSERT(cond) (void(0))
+# endif
 
 # include <string>
 
@@ -74,6 +75,12 @@ class NimBLEUtils {
     static NimBLEAddress generateAddr(bool nrpa);
     static bool          taskWait(const NimBLETaskData& taskData, uint32_t timeout);
     static void          taskRelease(const NimBLETaskData& taskData, int rc = 0);
+    static void*         getHostTaskHandle();
+    static bool          inHostTask();
+
+  private:
+    friend class NimBLEDevice;
+    static void* m_hostTaskHandle;
 };
 
 #endif // CONFIG_BT_NIMBLE_ENABLED

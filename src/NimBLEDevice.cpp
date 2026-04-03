@@ -879,6 +879,7 @@ void NimBLEDevice::onSync(void) {
  */
 void NimBLEDevice::host_task(void* param) {
     NIMBLE_LOGI(LOG_TAG, "NimBLE Started!");
+    NimBLEUtils::m_hostTaskHandle = ble_npl_get_current_task_id();
     nimble_port_run(); // This function will return only when nimble_port_stop() is executed
     nimble_port_freertos_deinit();
 } // host_task

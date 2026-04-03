@@ -155,6 +155,11 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFi
  */
 NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID& uuid) const {
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
+    if (NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "getDescriptor cannot be called from host task");
+        return nullptr;
+    }
+
     NimBLEUUID             uuidTmp{uuid};
     NimBLETaskData         taskData(const_cast<NimBLERemoteCharacteristic*>(this));
     NimBLEDescriptorFilter filter{nullptr, &uuidTmp, &taskData};

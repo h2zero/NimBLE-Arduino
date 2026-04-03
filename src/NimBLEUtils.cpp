@@ -72,6 +72,8 @@
 constexpr uint32_t TASK_BLOCK_BIT = (1 << MYNEWT_VAL(NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT));
 static const char* LOG_TAG        = "NimBLEUtils";
 
+void* NimBLEUtils::m_hostTaskHandle = nullptr;
+
 /**
  * @brief Construct a NimBLETaskData instance.
  * @param [in] pInstance An instance of the class that will be waiting.
@@ -603,5 +605,22 @@ NimBLEAddress NimBLEUtils::generateAddr(bool nrpa) {
 
     return NimBLEAddress{addr};
 } // generateAddr
+
+
+/**
+ * @brief Get the handle of the task that is running the NimBLE host.
+ * @return The task handle or nullptr if there was an error.
+ */
+void* NimBLEUtils::getHostTaskHandle() {
+    return m_hostTaskHandle;
+} // getHostTaskHandle
+
+/**
+ * @brief Check if the current task is the NimBLE host task.
+ * @return True if the current task is the host task, false otherwise.
+ */
+bool NimBLEUtils::inHostTask() {
+    return ble_npl_get_current_task_id() == NimBLEUtils::getHostTaskHandle();
+}
 
 #endif // CONFIG_BT_NIMBLE_ENABLED

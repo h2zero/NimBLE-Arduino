@@ -42,6 +42,11 @@ bool NimBLERemoteValueAttribute::writeValue(const uint8_t* data, size_t length, 
         goto Done;
     }
 
+    if (NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "writeValue cannot be called from the host task");
+        return false;
+    }
+
     do {
         if (length > mtu) {
             NIMBLE_LOGI(LOG_TAG, "writeValue: long write");
@@ -123,6 +128,10 @@ int NimBLERemoteValueAttribute::onWriteCB(uint16_t conn_handle, const ble_gatt_e
  */
 NimBLEAttValue NimBLERemoteValueAttribute::readValue(time_t* timestamp) {
     NIMBLE_LOGD(LOG_TAG, ">> readValue()");
+    if (NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "readValue cannot be called from the host task");
+        return NimBLEAttValue();
+    }
 
     NimBLEAttValue      value{};
     const NimBLEClient* pClient    = getClient();

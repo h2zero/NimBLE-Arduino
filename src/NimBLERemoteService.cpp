@@ -75,6 +75,11 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* u
  */
 NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID& uuid) const {
     NIMBLE_LOGD(LOG_TAG, ">> getCharacteristic: uuid: %s", uuid.toString().c_str());
+    if (NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "getCharacteristic cannot be called from host task");
+        return nullptr;
+    }
+
     NimBLERemoteCharacteristic* pChar     = nullptr;
 
     for (const auto& it : m_vChars) {
@@ -116,6 +121,11 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEU
  * @return A read-only reference to the vector of characteristics retrieved for this service.
  */
 const std::vector<NimBLERemoteCharacteristic*>& NimBLERemoteService::getCharacteristics(bool refresh) const {
+    if (refresh && NimBLEUtils::inHostTask()) {
+        NIMBLE_LOGE(LOG_TAG, "cannot refresh characteristics from host task");
+        return m_vChars;
+    }
+
     if (refresh) {
         deleteCharacteristics();
         retrieveCharacteristics();
