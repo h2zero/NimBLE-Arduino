@@ -7,6 +7,9 @@
  *  This allows you to use familiar methods like print(), println(),
  *  read(), and available() over BLE, similar to how you would use Serial.
  *
+ *  Uses the Nordic UART Service (NUS) UUIDs with separate TX and RX characteristics
+ *  for compatibility with NUS terminal apps (e.g. nRF UART, Serial Bluetooth Terminal).
+ *
  *  Created: November 2025
  *      Author: NimBLE-Arduino Contributors
  */
@@ -36,10 +39,11 @@ NimBLEStream::RxOverflowAction onRxOverflow(const uint8_t* data, size_t len, voi
     return NimBLEStream::DROP_OLDER_DATA;
 }
 
-// Service and Characteristic UUIDs for the stream
-// Using custom UUIDs - you can change these as needed
-#define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+// Nordic UART Service (NUS) UUIDs
+// Using separate TX and RX characteristics for compatibility with NUS terminal apps.
+#define SERVICE_UUID    "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define TX_CHAR_UUID    "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"  // Server TX: notify (server → client)
+#define RX_CHAR_UUID    "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"  // Server RX: write  (client → server)
 
 /** Server callbacks to handle connection/disconnection events */
 class ServerCallbacks : public NimBLEServerCallbacks {
@@ -68,21 +72,23 @@ void setup() {
 
     /**
      * Create the BLE server and set callbacks
-     * Note: The stream will create its own service and characteristic
+     * Note: The stream will create its own service and characteristics
      */
     NimBLEServer* pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(&serverCallbacks);
 
     /**
-     * Initialize the stream server with:
+     * Initialize the stream server with NUS UUIDs using separate TX and RX characteristics:
      * - Service UUID
-     * - Characteristic UUID
+     * - TX Characteristic UUID: server sends notifications here (client subscribes)
+     * - RX Characteristic UUID: client writes here (server receives)
      * - txBufSize: 1024 bytes for outgoing data (notifications)
      * - rxBufSize: 1024 bytes for incoming data (writes)
      * - secure: false (no encryption required - set to true for secure connections)
      */
     if (!bleStream.begin(NimBLEUUID(SERVICE_UUID),
-                         NimBLEUUID(CHARACTERISTIC_UUID),
+                         NimBLEUUID(TX_CHAR_UUID),
+                         NimBLEUUID(RX_CHAR_UUID),
                          1024,   // txBufSize
                          1024,   // rxBufSize
                          false)) // secure
