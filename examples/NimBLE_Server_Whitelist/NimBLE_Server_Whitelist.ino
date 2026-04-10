@@ -47,7 +47,7 @@ void setup() {
     NimBLEDevice::init("Whitelist NimBLEServer");
 
     NimBLEServer* pServer = NimBLEDevice::createServer();
-    pServer->setCallbacks(&serverCallbacks);
+    pServer->setCallbacks(serverCallbacks);
     pServer->advertiseOnDisconnect(false);
 
     NimBLEService* pService = pServer->createService(SERVICE_UUID);

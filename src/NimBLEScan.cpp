@@ -58,7 +58,7 @@ void NimBLEScan::srTimerCb(ble_npl_event* event) {
     pScan->m_stats.incMissedSrCount();
     pScan->removeWaitingDevice(pDev);
     pDev->m_callbackSent = 2;
-    pScan->m_pScanCallbacks->onResult(pDev);
+    pScan->m_pCallbacks->onResult(pDev);
     if (pScan->m_maxResults == 0) {
         pScan->erase(pDev);
     }
@@ -68,7 +68,7 @@ void NimBLEScan::srTimerCb(ble_npl_event* event) {
  * @brief Scan constructor.
  */
 NimBLEScan::NimBLEScan()
-    : m_pScanCallbacks{&defaultScanCallbacks},
+    : m_pCallbacks{&defaultScanCallbacks},
       // default interval + window, no whitelist scan filter,not limited scan, no scan response, filter_duplicates
       m_scanParams{0, 0, BLE_HCI_SCAN_FILT_NO_WL, 0, 1, 1},
       m_pTaskData{nullptr},
@@ -306,18 +306,18 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
 
             if (!advertisedDevice->m_callbackSent) {
                 advertisedDevice->m_callbackSent++;
-                pScan->m_pScanCallbacks->onDiscovered(advertisedDevice);
+                pScan->m_pCallbacks->onDiscovered(advertisedDevice);
             }
 
             // If not active scanning or scan response is not available
             // or extended advertisement scanning, report the result to the callback now.
             if (pScan->m_scanParams.passive || !isLegacyAdv || !advertisedDevice->isScannable()) {
                 advertisedDevice->m_callbackSent++;
-                pScan->m_pScanCallbacks->onResult(advertisedDevice);
+                pScan->m_pCallbacks->onResult(advertisedDevice);
             } else if (isLegacyAdv && event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP) {
                 advertisedDevice->m_callbackSent++;
                 // got the scan response report the full data.
-                pScan->m_pScanCallbacks->onResult(advertisedDevice);
+                pScan->m_pCallbacks->onResult(advertisedDevice);
             } else if (isLegacyAdv && advertisedDevice->isScannable()) {
                 // Add to waiting list for scan response and start the timer
                 pScan->addWaitingDevice(advertisedDevice);
@@ -345,7 +345,7 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
                 pScan->m_stats.incMissedSrCount();
                 pScan->removeWaitingDevice(pDev);
                 pDev->m_callbackSent = 2;
-                pScan->m_pScanCallbacks->onResult(pDev);
+                pScan->m_pCallbacks->onResult(pDev);
             }
 
             if (pScan->m_maxResults == 0) {
@@ -355,7 +355,7 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
             NIMBLE_LOGD(LOG_TAG, "discovery complete; reason=%d", event->disc_complete.reason);
             NIMBLE_LOGD(LOG_TAG, "%s", pScan->getStatsString().c_str());
 
-            pScan->m_pScanCallbacks->onScanEnd(pScan->m_scanResults, event->disc_complete.reason);
+            pScan->m_pCallbacks->onScanEnd(pScan->m_scanResults, event->disc_complete.reason);
 
             if (pScan->m_pTaskData != nullptr) {
                 NimBLEUtils::taskRelease(*pScan->m_pTaskData, event->disc_complete.reason);
@@ -454,18 +454,24 @@ void NimBLEScan::setMaxResults(uint8_t maxResults) {
 } // setMaxResults
 
 /**
- * @brief Set the call backs to be invoked.
- * @param [in] pScanCallbacks Call backs to be invoked.
- * @param [in] wantDuplicates  True if we wish to be called back with duplicates, default: false.
+ * @brief Set scan callbacks.
+ * @param [in] callbacks Callback handler instance.
+ * @param [in] wantDuplicates True to report duplicate advertisements.
+ * @details The callback handler must outlive this scanner or until resetCallbacks() is called.
  */
-void NimBLEScan::setScanCallbacks(NimBLEScanCallbacks* pScanCallbacks, bool wantDuplicates) {
+void NimBLEScan::setCallbacks(NimBLEScanCallbacks& callbacks, bool wantDuplicates) {
     setDuplicateFilter(!wantDuplicates);
-    if (pScanCallbacks == nullptr) {
-        m_pScanCallbacks = &defaultScanCallbacks;
-        return;
-    }
-    m_pScanCallbacks = pScanCallbacks;
-} // setScanCallbacks
+    m_pCallbacks = &callbacks;
+} // setCallbacks
+
+/**
+ * @brief Restore default scan callback handlers.
+ * @param [in] wantDuplicates True to report duplicate advertisements.
+ */
+void NimBLEScan::resetCallbacks(bool wantDuplicates) {
+    setDuplicateFilter(!wantDuplicates);
+    m_pCallbacks = &defaultScanCallbacks;
+} // resetCallbacks
 
 /**
  * @brief Set the interval to scan.
@@ -659,7 +665,7 @@ void NimBLEScan::erase(const NimBLEAdvertisedDevice* device) {
  * If the application was scanning indefinitely with a callback, restart it.
  */
 void NimBLEScan::onHostSync() {
-    m_pScanCallbacks->onScanEnd(m_scanResults, BLE_HS_ENOTSYNCED);
+    m_pCallbacks->onScanEnd(m_scanResults, BLE_HS_ENOTSYNCED);
 }
 
 /**

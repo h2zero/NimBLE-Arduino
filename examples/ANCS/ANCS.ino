@@ -120,7 +120,7 @@ void setup() {
     NimBLEDevice::setPower(9);
 
     NimBLEServer* pServer = NimBLEDevice::createServer();
-    pServer->setCallbacks(&serverCallbacks);
+    pServer->setCallbacks(serverCallbacks);
     pServer->advertiseOnDisconnect(true);
 
     NimBLEAdvertising*      pAdvertising = pServer->getAdvertising();

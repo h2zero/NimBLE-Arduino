@@ -53,11 +53,10 @@ struct gattRegisterCallbackArgs {
 NimBLEServer::NimBLEServer()
     : m_gattsStarted{false},
       m_svcChanged{false},
-      m_deleteCallbacks{false},
 # if !MYNEWT_VAL(BLE_EXT_ADV)
       m_advertiseOnDisconnect{false},
 # endif
-      m_pServerCallbacks{&defaultCallbacks},
+      m_pCallbacks{&defaultCallbacks},
       m_svcVec{} {
     m_connectedPeers.fill(BLE_HS_CONN_HANDLE_NONE);
 } // NimBLEServer
@@ -68,10 +67,6 @@ NimBLEServer::NimBLEServer()
 NimBLEServer::~NimBLEServer() {
     for (const auto& svc : m_svcVec) {
         delete svc;
-    }
-
-    if (m_deleteCallbacks) {
-        delete m_pServerCallbacks;
     }
 
 # if MYNEWT_VAL(BLE_ROLE_CENTRAL)
@@ -483,7 +478,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                     }
                 }
 
-                pServer->m_pServerCallbacks->onConnect(pServer, peerInfo);
+                pServer->m_pCallbacks->onConnect(pServer, peerInfo);
             }
 
             break;
@@ -519,7 +514,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
 # endif
 
             peerInfo.m_desc = event->disconnect.conn;
-            pServer->m_pServerCallbacks->onDisconnect(pServer, peerInfo, event->disconnect.reason);
+            pServer->m_pCallbacks->onDisconnect(pServer, peerInfo, event->disconnect.reason);
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
             if (pServer->m_advertiseOnDisconnect) {
                 pServer->startAdvertising();
@@ -550,7 +545,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
         case BLE_GAP_EVENT_MTU: {
             NIMBLE_LOGI(LOG_TAG, "mtu update event; conn_handle=%d mtu=%d", event->mtu.conn_handle, event->mtu.value);
             if (ble_gap_conn_find(event->mtu.conn_handle, &peerInfo.m_desc) == 0) {
-                pServer->m_pServerCallbacks->onMTUChange(event->mtu.value, peerInfo);
+                pServer->m_pCallbacks->onMTUChange(event->mtu.value, peerInfo);
             }
 
             break;
@@ -598,7 +593,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
 
         case BLE_GAP_EVENT_CONN_UPDATE: {
             if (ble_gap_conn_find(event->connect.conn_handle, &peerInfo.m_desc) == 0) {
-                pServer->m_pServerCallbacks->onConnParamsUpdate(peerInfo);
+                pServer->m_pCallbacks->onConnParamsUpdate(peerInfo);
             }
 
             break;
@@ -630,7 +625,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 return BLE_ATT_ERR_INVALID_HANDLE;
             }
 
-            pServer->m_pServerCallbacks->onAuthenticationComplete(peerInfo);
+            pServer->m_pCallbacks->onAuthenticationComplete(peerInfo);
 # if MYNEWT_VAL(BLE_ROLE_CENTRAL)
             if (pServer->m_pClient && pServer->m_pClient->m_connHandle == event->enc_change.conn_handle) {
                 NimBLEClient::handleGapEvent(event, pServer->m_pClient);
@@ -652,7 +647,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 return BLE_ATT_ERR_INVALID_HANDLE;
             }
 
-            pServer->m_pServerCallbacks->onIdentity(peerInfo);
+            pServer->m_pCallbacks->onIdentity(peerInfo);
             break;
         } // BLE_GAP_EVENT_IDENTITY_RESOLVED
 
@@ -662,7 +657,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 return BLE_ATT_ERR_INVALID_HANDLE;
             }
 
-            pServer->m_pServerCallbacks->onPhyUpdate(peerInfo, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
+            pServer->m_pCallbacks->onPhyUpdate(peerInfo, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
             return 0;
         } // BLE_GAP_EVENT_PHY_UPDATE_COMPLETE
 
@@ -676,7 +671,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 // if the (static)passkey is the default, check the callback for custom value
                 // both values default to the same.
                 if (pkey.passkey == 123456) {
-                    pkey.passkey = pServer->m_pServerCallbacks->onPassKeyDisplay();
+                    pkey.passkey = pServer->m_pCallbacks->onPassKeyDisplay();
                 }
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
@@ -689,7 +684,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                     return BLE_ATT_ERR_INVALID_HANDLE;
                 }
 
-                pServer->m_pServerCallbacks->onConfirmPassKey(peerInfo, event->passkey.params.numcmp);
+                pServer->m_pCallbacks->onConfirmPassKey(peerInfo, event->passkey.params.numcmp);
             } else if (event->passkey.params.action == BLE_SM_IOACT_OOB) {
                 // TODO: Handle out of band pairing
                 // static uint8_t tem_oob[16] = {0};
@@ -707,7 +702,7 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                     return BLE_ATT_ERR_INVALID_HANDLE;
                 }
 
-                pServer->m_pServerCallbacks->onPassKeyEntry(peerInfo);
+                pServer->m_pCallbacks->onPassKeyEntry(peerInfo);
             } else if (event->passkey.params.action == BLE_SM_IOACT_NONE) {
                 NIMBLE_LOGD(LOG_TAG, "No passkey action required");
             }
@@ -785,24 +780,20 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
 } // handleGattEvent
 
 /**
- * @brief Set the server callbacks.
- *
- * As a BLE server operates, it will generate server level events such as a new client connecting or a previous
- * client disconnecting.  This function can be called to register a callback handler that will be invoked when these
- * events are detected.
- *
- * @param [in] pCallbacks The callbacks to be invoked.
- * @param [in] deleteCallbacks if true callback class will be deleted when server is destructed.
+ * @brief Set the callbacks for server events.
+ * @param [in] callbacks Callback handler instance.
+ * @details The callback handler must outlive this server or until resetCallbacks() is called.
  */
-void NimBLEServer::setCallbacks(NimBLEServerCallbacks* pCallbacks, bool deleteCallbacks) {
-    if (pCallbacks != nullptr) {
-        m_pServerCallbacks = pCallbacks;
-        m_deleteCallbacks  = deleteCallbacks;
-    } else {
-        m_pServerCallbacks = &defaultCallbacks;
-        m_deleteCallbacks  = false;
-    }
+void NimBLEServer::setCallbacks(NimBLEServerCallbacks& callbacks) {
+    m_pCallbacks = &callbacks;
 } // setCallbacks
+
+/**
+ * @brief Restore default callback handlers.
+ */
+void NimBLEServer::resetCallbacks() {
+    m_pCallbacks = &defaultCallbacks;
+} // resetCallbacks
 
 /**
  * @brief Remove a service from the server.

@@ -65,7 +65,7 @@ void setup() {
     auto channel   = cocServer->createService(L2CAP_CHANNEL, L2CAP_MTU, &l2capCallbacks);
 
     auto server = NimBLEDevice::createServer();
-    server->setCallbacks(&gattCallbacks);
+    server->setCallbacks(gattCallbacks);
 
     auto service        = server->createService(SERVICE_UUID);
     auto characteristic = service->createCharacteristic(CHARACTERISTIC_UUID, NIMBLE_PROPERTY::READ);

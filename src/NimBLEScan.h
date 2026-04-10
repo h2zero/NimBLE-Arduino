@@ -70,7 +70,8 @@ class NimBLEScan {
   public:
     bool              start(uint32_t duration, bool isContinue = false, bool restart = true);
     bool              isScanning();
-    void              setScanCallbacks(NimBLEScanCallbacks* pScanCallbacks, bool wantDuplicates = false);
+    void              setCallbacks(NimBLEScanCallbacks& callbacks, bool wantDuplicates = false);
+    void              resetCallbacks(bool wantDuplicates = false);
     void              setActiveScan(bool active);
     void              setInterval(uint16_t intervalMs);
     void              setWindow(uint16_t windowMs);
@@ -129,11 +130,16 @@ class NimBLEScan {
             snprintf(&out[0],
                      out.size(),
                      "Scan stats:\n"
-                     "  Devices seen      : %" PRIu32 "\n"
-                     "  Duplicate advs    : %" PRIu32 "\n"
-                     "  Scan responses    : %" PRIu32 "\n"
-                     "  SR timing (ms)    : min=%" PRIu32 ", max=%" PRIu32 ", avg=%" PRIu64 "\n"
-                     "  Orphaned SR       : %" PRIu32 "\n"
+                     "  Devices seen      : %" PRIu32
+                     "\n"
+                     "  Duplicate advs    : %" PRIu32
+                     "\n"
+                     "  Scan responses    : %" PRIu32
+                     "\n"
+                     "  SR timing (ms)    : min=%" PRIu32 ", max=%" PRIu32 ", avg=%" PRIu64
+                     "\n"
+                     "  Orphaned SR       : %" PRIu32
+                     "\n"
                      "  Missed SR         : %" PRIu32 "\n",
                      devCount,
                      dupCount,
@@ -184,7 +190,7 @@ class NimBLEScan {
     void clearWaitingList();
     void resetWaitingTimer();
 
-    NimBLEScanCallbacks*    m_pScanCallbacks;
+    NimBLEScanCallbacks*    m_pCallbacks;
     ble_gap_disc_params     m_scanParams;
     NimBLEScanResults       m_scanResults;
     NimBLETaskData*         m_pTaskData;

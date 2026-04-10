@@ -65,7 +65,8 @@ class NimBLEServer {
     uint8_t getConnectedCount() const;
     bool    disconnect(uint16_t connHandle, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM) const;
     bool    disconnect(const NimBLEConnInfo& connInfo, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM) const;
-    void    setCallbacks(NimBLEServerCallbacks* pCallbacks, bool deleteCallbacks = true);
+    void    setCallbacks(NimBLEServerCallbacks& callbacks);
+    void    resetCallbacks();
     void updateConnParams(uint16_t connHandle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) const;
     NimBLEService*        createService(const char* uuid);
     NimBLEService*        createService(const NimBLEUUID& uuid);
@@ -128,11 +129,10 @@ class NimBLEServer {
 
     bool m_gattsStarted : 1;
     bool m_svcChanged : 1;
-    bool m_deleteCallbacks : 1;
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     bool m_advertiseOnDisconnect : 1;
 # endif
-    NimBLEServerCallbacks*                                m_pServerCallbacks;
+    NimBLEServerCallbacks*                                m_pCallbacks;
     std::vector<NimBLEService*>                           m_svcVec;
     std::array<uint16_t, MYNEWT_VAL(BLE_MAX_CONNECTIONS)> m_connectedPeers;
 

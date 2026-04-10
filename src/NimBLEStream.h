@@ -159,7 +159,7 @@ class NimBLEStreamServer : public NimBLEStream {
     void     end() override;
     size_t   write(const uint8_t* data, size_t len) override;
     uint16_t getPeerHandle() const { return m_charCallbacks.m_peerHandle; }
-    void     setCallbacks(NimBLECharacteristicCallbacks* pCallbacks) { m_charCallbacks.m_userCallbacks = pCallbacks; }
+    void     setCallbacks(NimBLECharacteristicCallbacks& callbacks) { m_charCallbacks.m_userCallbacks = &callbacks; }
     bool     ready() const override;
     virtual void flush() override;
 

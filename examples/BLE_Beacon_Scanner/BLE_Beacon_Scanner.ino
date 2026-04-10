@@ -81,7 +81,7 @@ void setup() {
 
     NimBLEDevice::init("Beacon-scanner");
     pBLEScan = BLEDevice::getScan();
-    pBLEScan->setScanCallbacks(&scanCallbacks);
+    pBLEScan->setCallbacks(scanCallbacks);
     pBLEScan->setActiveScan(true);
     pBLEScan->setInterval(100);
     pBLEScan->setWindow(100);
