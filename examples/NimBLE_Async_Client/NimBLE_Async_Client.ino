@@ -40,7 +40,7 @@ class ScanCallbacks : public NimBLEScanCallbacks {
                 }
             }
 
-            pClient->setClientCallbacks(&clientCallbacks, false);
+            pClient->setCallbacks(clientCallbacks);
             if (!pClient->connect(true, true, false)) { // delete attributes, async connect, no MTU exchange
                 NimBLEDevice::deleteClient(pClient);
                 Serial.printf("Failed to connect\n");
@@ -62,7 +62,7 @@ void setup() {
     NimBLEDevice::setPower(3); /** +3db */
 
     NimBLEScan* pScan = NimBLEDevice::getScan();
-    pScan->setScanCallbacks(&scanCallbacks);
+    pScan->setCallbacks(scanCallbacks);
     pScan->setInterval(45);
     pScan->setWindow(45);
     pScan->setActiveScan(true);

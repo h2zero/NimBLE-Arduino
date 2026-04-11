@@ -64,7 +64,8 @@ class NimBLEClient {
     bool           setPeerAddress(const NimBLEAddress& address);
     int            getRssi() const;
     bool           isConnected() const;
-    void           setClientCallbacks(NimBLEClientCallbacks* pClientCallbacks, bool deleteCallbacks = true);
+    void           setCallbacks(NimBLEClientCallbacks& callbacks);
+    void           resetCallbacks();
     std::string    toString() const;
     uint16_t       getConnHandle() const;
     uint16_t       getMTU() const;
@@ -103,7 +104,6 @@ class NimBLEClient {
     bool getPhy(uint8_t* txPhy, uint8_t* rxPhy);
 
     struct Config {
-        uint8_t deleteCallbacks : 1;     // Delete the callback object when the client is deleted.
         uint8_t deleteOnDisconnect : 1;  // Delete the client when disconnected.
         uint8_t deleteOnConnectFail : 1; // Delete the client when a connection attempt fails.
         uint8_t asyncConnect : 1;        // Connect asynchronously.
@@ -113,7 +113,6 @@ class NimBLEClient {
         /**
          * @brief Construct a new Config object with default values.
          * @details Default values are:
-         * - deleteCallbacks: false
          * - deleteOnDisconnect: false
          * - deleteOnConnectFail: false
          * - asyncConnect: false
@@ -121,12 +120,7 @@ class NimBLEClient {
          * - connectFailRetries: 2
          */
         Config()
-            : deleteCallbacks(0),
-              deleteOnDisconnect(0),
-              deleteOnConnectFail(0),
-              asyncConnect(0),
-              exchangeMTU(1),
-              connectFailRetries(2) {}
+            : deleteOnDisconnect(0), deleteOnConnectFail(0), asyncConnect(0), exchangeMTU(1), connectFailRetries(2) {}
     };
 
     Config getConfig() const;
@@ -157,7 +151,7 @@ class NimBLEClient {
     int32_t                           m_connectTimeout;
     mutable NimBLETaskData*           m_pTaskData;
     std::vector<NimBLERemoteService*> m_svcVec;
-    NimBLEClientCallbacks*            m_pClientCallbacks;
+    NimBLEClientCallbacks*            m_pCallbacks;
     uint16_t                          m_connHandle;
     uint8_t                           m_terminateFailCount;
     mutable uint8_t                   m_asyncSecureAttempt;

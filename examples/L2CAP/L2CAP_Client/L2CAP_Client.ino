@@ -86,7 +86,7 @@ void setup() {
     NimBLEDevice::setMTU(BLE_ATT_MTU_MAX);
 
     auto scan = NimBLEDevice::getScan();
-    scan->setScanCallbacks(&scanCallbacks);
+    scan->setCallbacks(scanCallbacks);
     scan->setInterval(1349);
     scan->setWindow(449);
     scan->setActiveScan(true);
@@ -106,7 +106,7 @@ void loop() {
     if (!theClient) {
         theClient = NimBLEDevice::createClient();
         theClient->setConnectionParams(6, 6, 0, 42);
-        theClient->setClientCallbacks(&clientCallbacks);
+        theClient->setCallbacks(clientCallbacks);
         if (!theClient->connect(theDevice)) {
             Serial.println("Error: Could not connect to device");
             return;

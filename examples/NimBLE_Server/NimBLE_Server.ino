@@ -147,7 +147,7 @@ void setup(void) {
     // NimBLEDevice::setSecurityAuth(BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM | BLE_SM_PAIR_AUTHREQ_SC);
 
     pServer = NimBLEDevice::createServer();
-    pServer->setCallbacks(&serverCallbacks);
+    pServer->setCallbacks(serverCallbacks);
 
     NimBLEService*        pDeadService = pServer->createService("DEAD");
     NimBLECharacteristic* pBeefCharacteristic =
@@ -159,7 +159,7 @@ void setup(void) {
         );
 
     pBeefCharacteristic->setValue("Burger");
-    pBeefCharacteristic->setCallbacks(&chrCallbacks);
+    pBeefCharacteristic->setCallbacks(chrCallbacks);
 
     /**
      *  2902 and 2904 descriptors are a special case, when createDescriptor is called with
@@ -169,14 +169,14 @@ void setup(void) {
      */
     NimBLE2904* pBeef2904 = pBeefCharacteristic->create2904();
     pBeef2904->setFormat(NimBLE2904::FORMAT_UTF8);
-    pBeef2904->setCallbacks(&dscCallbacks);
+    pBeef2904->setCallbacks(dscCallbacks);
 
     NimBLEService*        pBaadService = pServer->createService("BAAD");
     NimBLECharacteristic* pFoodCharacteristic =
         pBaadService->createCharacteristic("F00D", NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY);
 
     pFoodCharacteristic->setValue("Fries");
-    pFoodCharacteristic->setCallbacks(&chrCallbacks);
+    pFoodCharacteristic->setCallbacks(chrCallbacks);
 
     /** Custom descriptor: Arguments are UUID, Properties, max length of the value in bytes */
     NimBLEDescriptor* pC01Ddsc =
@@ -184,7 +184,7 @@ void setup(void) {
                                               NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_ENC,
                                               20);
     pC01Ddsc->setValue("Send it back!");
-    pC01Ddsc->setCallbacks(&dscCallbacks);
+    pC01Ddsc->setCallbacks(dscCallbacks);
 
     /** Create an advertising instance and add the services to the advertised data */
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();

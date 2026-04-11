@@ -438,17 +438,20 @@ void NimBLECharacteristic::writeEvent(const uint8_t* val, uint16_t len, NimBLECo
 } // writeEvent
 
 /**
- * @brief Set the callback handlers for this characteristic.
- * @param [in] pCallbacks An instance of a NimBLECharacteristicCallbacks class\n
- * used to define any callbacks for the characteristic.
+ * @brief Set the callbacks for this characteristic.
+ * @param [in] callbacks Callback handler instance.
+ * @details The callback handler must outlive this characteristic or until resetCallbacks() is called.
  */
-void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks* pCallbacks) {
-    if (pCallbacks != nullptr) {
-        m_pCallbacks = pCallbacks;
-    } else {
-        m_pCallbacks = &defaultCallback;
-    }
+void NimBLECharacteristic::setCallbacks(NimBLECharacteristicCallbacks& callbacks) {
+    m_pCallbacks = &callbacks;
 } // setCallbacks
+
+/**
+ * @brief Restore default callback handlers.
+ */
+void NimBLECharacteristic::resetCallbacks() {
+    m_pCallbacks = &defaultCallback;
+} // resetCallbacks
 
 /**
  * @brief Get the callback handlers for this characteristic.

@@ -69,7 +69,7 @@ NimBLEClient::NimBLEClient(const NimBLEAddress& peerAddress)
       m_connectTimeout{30000},
       m_pTaskData{nullptr},
       m_svcVec{},
-      m_pClientCallbacks{&defaultCallbacks},
+      m_pCallbacks{&defaultCallbacks},
       m_connHandle{BLE_HS_CONN_HANDLE_NONE},
       m_terminateFailCount{0},
       m_asyncSecureAttempt{0},
@@ -104,10 +104,6 @@ NimBLEClient::~NimBLEClient() {
     // We may have allocated service references associated with this client.
     // Before we are finished with the client, we must release resources.
     deleteServices();
-
-    if (m_config.deleteCallbacks) {
-        delete m_pClientCallbacks;
-    }
 } // ~NimBLEClient
 
 /**
@@ -977,7 +973,7 @@ bool NimBLEClient::completeConnectEstablished() {
     ble_npl_callout_stop(&m_connectEstablishedTimer);
     auto pTaskData = m_pTaskData; // save a copy in case something in the callback changes it
     m_pTaskData    = nullptr;     // clear before callback to prevent other handlers from releasing
-    m_pClientCallbacks->onConnect(this);
+    m_pCallbacks->onConnect(this);
 
     if (pTaskData != nullptr) {
         NimBLEUtils::taskRelease(*pTaskData, 0);
@@ -1079,9 +1075,9 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             }
 
             if (rc == connEstablishFailReason) {
-                pClient->m_pClientCallbacks->onConnectFail(pClient, rc);
+                pClient->m_pCallbacks->onConnectFail(pClient, rc);
             } else {
-                pClient->m_pClientCallbacks->onDisconnect(pClient, rc);
+                pClient->m_pCallbacks->onDisconnect(pClient, rc);
             }
 
             pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
@@ -1138,7 +1134,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 ble_npl_callout_stop(&pClient->m_connectEstablishedTimer);
 
                 if (pClient->m_config.asyncConnect) {
-                    pClient->m_pClientCallbacks->onConnectFail(pClient, rc);
+                    pClient->m_pCallbacks->onConnectFail(pClient, rc);
                     if (pClient->m_config.deleteOnConnectFail) {
                         NimBLEDevice::deleteClient(pClient);
                     }
@@ -1230,7 +1226,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                         event->conn_update_req.peer_params->latency,
                         event->conn_update_req.peer_params->supervision_timeout);
 
-            rc = pClient->m_pClientCallbacks->onConnParamsUpdateRequest(pClient, event->conn_update_req.peer_params)
+            rc = pClient->m_pCallbacks->onConnParamsUpdateRequest(pClient, event->conn_update_req.peer_params)
                      ? 0
                      : BLE_ERR_CONN_PARMS;
 
@@ -1288,7 +1284,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                     }
                 } else {
                     pClient->m_asyncSecureAttempt = 0;
-                    pClient->m_pClientCallbacks->onAuthenticationComplete(peerInfo);
+                    pClient->m_pCallbacks->onAuthenticationComplete(peerInfo);
                 }
             }
 
@@ -1312,7 +1308,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 break;
             }
 
-            pClient->m_pClientCallbacks->onIdentity(peerInfo);
+            pClient->m_pCallbacks->onIdentity(peerInfo);
             break;
         } // BLE_GAP_EVENT_IDENTITY_RESOLVED
 
@@ -1331,7 +1327,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 return BLE_ATT_ERR_INVALID_HANDLE;
             }
 
-            pClient->m_pClientCallbacks->onPhyUpdate(pClient, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
+            pClient->m_pCallbacks->onPhyUpdate(pClient, event->phy_updated.tx_phy, event->phy_updated.rx_phy);
             return 0;
         } // BLE_GAP_EVENT_PHY_UPDATE_COMPLETE
 
@@ -1345,7 +1341,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             }
 
             NIMBLE_LOGI(LOG_TAG, "mtu update: mtu=%d", event->mtu.value);
-            pClient->m_pClientCallbacks->onMTUChange(pClient, event->mtu.value);
+            pClient->m_pCallbacks->onMTUChange(pClient, event->mtu.value);
             rc = 0;
             break;
         } // BLE_GAP_EVENT_MTU
@@ -1371,13 +1367,13 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 pkey.action           = event->passkey.params.action;
                 pkey.passkey          = NimBLEDevice::getSecurityPasskey();
                 if (pkey.passkey == 123456) {
-                    pkey.passkey = pClient->m_pClientCallbacks->onPassKeyDisplay(peerInfo);
+                    pkey.passkey = pClient->m_pCallbacks->onPassKeyDisplay(peerInfo);
                 }
                 rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
             } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
                 NIMBLE_LOGD(LOG_TAG, "Passkey on device's display: %" PRIu32, event->passkey.params.numcmp);
-                pClient->m_pClientCallbacks->onConfirmPasskey(peerInfo, event->passkey.params.numcmp);
+                pClient->m_pCallbacks->onConfirmPasskey(peerInfo, event->passkey.params.numcmp);
             } else if (event->passkey.params.action == BLE_SM_IOACT_OOB) {
                 NIMBLE_LOGD(LOG_TAG, "OOB request received");
                 // TODO: Handle out of band pairing
@@ -1388,7 +1384,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 // NIMBLE_LOGD(LOG_TAG, "ble_sm_inject_io result: %d", rc);
             } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
                 NIMBLE_LOGD(LOG_TAG, "Enter the passkey");
-                pClient->m_pClientCallbacks->onPassKeyEntry(peerInfo);
+                pClient->m_pCallbacks->onPassKeyEntry(peerInfo);
             } else if (event->passkey.params.action == BLE_SM_IOACT_NONE) {
                 NIMBLE_LOGD(LOG_TAG, "No passkey action required");
             }
@@ -1418,19 +1414,20 @@ bool NimBLEClient::isConnected() const {
 } // isConnected
 
 /**
- * @brief Set the callbacks that will be invoked when events are received.
- * @param [in] pClientCallbacks A pointer to a class to receive the event callbacks.
- * @param [in] deleteCallbacks If true this will delete the callback class sent when the client is destructed.
+ * @brief Set the callbacks for client events.
+ * @param [in] callbacks Callback handler instance.
+ * @details The callback handler must outlive this client or until resetCallbacks() is called.
  */
-void NimBLEClient::setClientCallbacks(NimBLEClientCallbacks* pClientCallbacks, bool deleteCallbacks) {
-    if (pClientCallbacks != nullptr) {
-        m_pClientCallbacks       = pClientCallbacks;
-        m_config.deleteCallbacks = deleteCallbacks;
-    } else {
-        m_pClientCallbacks       = &defaultCallbacks;
-        m_config.deleteCallbacks = false;
-    }
-} // setClientCallbacks
+void NimBLEClient::setCallbacks(NimBLEClientCallbacks& callbacks) {
+    m_pCallbacks = &callbacks;
+} // setCallbacks
+
+/**
+ * @brief Restore default callback handlers.
+ */
+void NimBLEClient::resetCallbacks() {
+    m_pCallbacks = &defaultCallbacks;
+} // resetCallbacks
 
 /**
  * @brief Return a string representation of this client.

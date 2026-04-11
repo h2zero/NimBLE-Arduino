@@ -71,7 +71,7 @@ void setup() {
      * Note: The stream will create its own service and characteristic
      */
     NimBLEServer* pServer = NimBLEDevice::createServer();
-    pServer->setCallbacks(&serverCallbacks);
+    pServer->setCallbacks(serverCallbacks);
 
     /**
      * Initialize the stream server with:
