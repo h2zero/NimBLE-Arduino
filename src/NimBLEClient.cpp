@@ -248,9 +248,9 @@ int NimBLEClient::startConnectionAttempt(const ble_addr_t* peerAddr) {
  */
 bool NimBLEClient::connect(const NimBLEAddress& address, bool deleteAttributes, bool asyncConnect, bool exchangeMTU) {
     NIMBLE_LOGD(LOG_TAG, ">> connect(%s)", address.toString().c_str());
-    NimBLETaskData    taskData(this);
-    const ble_addr_t* peerAddr = address.getBase();
-    int               rc       = 0;
+    NimBLEUtils::TaskData taskData(this);
+    const ble_addr_t*     peerAddr = address.getBase();
+    int                   rc       = 0;
 
     if (!NimBLEDevice::m_synced) {
         NIMBLE_LOGE(LOG_TAG, "Host not synced with controller.");
@@ -347,7 +347,7 @@ bool NimBLEClient::secureConnection(bool async) const {
         return true;
     }
 
-    NimBLETaskData taskData(const_cast<NimBLEClient*>(this), BLE_HS_ENOTCONN);
+    NimBLEUtils::TaskData taskData(const_cast<NimBLEClient*>(this), BLE_HS_ENOTCONN);
     m_pTaskData    = &taskData;
     int retryCount = 1;
     do {
@@ -769,8 +769,8 @@ bool NimBLEClient::retrieveServices(const NimBLEUUID* uuidFilter) {
         return false;
     }
 
-    int            rc = 0;
-    NimBLETaskData taskData(this);
+    int                   rc = 0;
+    NimBLEUtils::TaskData taskData(this);
 
     if (uuidFilter == nullptr) {
         rc = ble_gattc_disc_all_svcs(m_connHandle, NimBLEClient::serviceDiscoveredCB, &taskData);
@@ -809,8 +809,8 @@ int NimBLEClient::serviceDiscoveredCB(uint16_t                     connHandle,
                 error->status,
                 (error->status == 0) ? service->start_handle : -1);
 
-    NimBLETaskData* pTaskData = (NimBLETaskData*)arg;
-    NimBLEClient*   pClient   = (NimBLEClient*)pTaskData->m_pInstance;
+    NimBLEUtils::TaskData* pTaskData = (NimBLEUtils::TaskData*)arg;
+    NimBLEClient*          pClient   = (NimBLEClient*)pTaskData->m_pInstance;
 
     if (error->status == BLE_HS_ENOTCONN) {
         NIMBLE_LOGE(LOG_TAG, "<< Service Discovered; Disconnected");
@@ -1010,9 +1010,9 @@ void NimBLEClient::setConnectRetries(uint8_t numRetries) {
  * @param [in] arg A pointer to the client instance that registered for this callback.
  */
 int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
-    NimBLEClient*   pClient   = (NimBLEClient*)arg;
-    int             rc        = 0;
-    NimBLETaskData* pTaskData = pClient->m_pTaskData; // save a copy in case client is deleted
+    NimBLEClient*          pClient   = (NimBLEClient*)arg;
+    int                    rc        = 0;
+    NimBLEUtils::TaskData* pTaskData = pClient->m_pTaskData; // save a copy in case client is deleted
 
     NIMBLE_LOGD(LOG_TAG, ">> handleGapEvent %s", NimBLEUtils::gapEventToString(event->type));
 

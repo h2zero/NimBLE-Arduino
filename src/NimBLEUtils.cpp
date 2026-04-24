@@ -21,9 +21,9 @@
 # include "NimBLEAddress.h"
 # include "NimBLELog.h"
 
-#ifdef USING_NIMBLE_ARDUINO_HEADERS
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_hs.h"
-#else
+# else
 #  include "host/ble_hs.h"
 # endif
 
@@ -59,57 +59,18 @@
 #  endif
 # endif
 
-# if defined INC_FREERTOS_H
-#  ifndef MYNEWT_VAL_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
-#   ifndef CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
-#    define MYNEWT_VAL_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT 31
-#   else
-#    define MYNEWT_VAL_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT CONFIG_NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT
-#   endif
-#  endif
-# endif
+static const char* LOG_TAG = "NimBLEUtils";
 
-constexpr uint32_t TASK_BLOCK_BIT = (1 << MYNEWT_VAL(NIMBLE_CPP_FREERTOS_TASK_BLOCK_BIT));
-static const char* LOG_TAG        = "NimBLEUtils";
+std::vector<NimBLEUtils::TaskSemEntry*> NimBLEUtils::m_taskSemEntries{};
 
 /**
- * @brief Construct a NimBLETaskData instance.
+ * @brief Construct a NimBLEUtils::TaskData instance.
  * @param [in] pInstance An instance of the class that will be waiting.
  * @param [in] flags General purpose flags for the caller.
  * @param [in] buf A buffer for data.
  */
-NimBLETaskData::NimBLETaskData(void* pInstance, int flags, void* buf)
-    : m_pInstance{pInstance},
-      m_flags{flags},
-      m_pBuf{buf}
-# ifdef INC_FREERTOS_H
-      ,
-      m_pHandle{xTaskGetCurrentTaskHandle()} {
-}
-# else
-{
-    ble_npl_sem* sem = new ble_npl_sem;
-    if (ble_npl_sem_init(sem, 0) != BLE_NPL_OK) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to init semaphore");
-        delete sem;
-        m_pHandle = nullptr;
-    } else {
-        m_pHandle = sem;
-    }
-}
-# endif
-
-/**
- * @brief Destructor.
- */
-NimBLETaskData::~NimBLETaskData() {
-# ifndef INC_FREERTOS_H
-    if (m_pHandle != nullptr) {
-        ble_npl_sem_deinit(static_cast<ble_npl_sem*>(m_pHandle));
-        delete static_cast<ble_npl_sem*>(m_pHandle);
-    }
-# endif
-}
+NimBLEUtils::TaskData::TaskData(void* pInstance, int flags, void* buf)
+    : m_pInstance{pInstance}, m_flags{flags}, m_pBuf{buf} {}
 
 /**
  * @brief Blocks the calling task until released or timeout.
@@ -117,7 +78,7 @@ NimBLETaskData::~NimBLETaskData() {
  * @param [in] timeout The time to wait in milliseconds.
  * @return True if the task completed, false if the timeout was reached.
  */
-bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
+bool NimBLEUtils::taskWait(const TaskData& taskData, uint32_t timeout) {
     ble_npl_time_t ticks;
     if (timeout == BLE_NPL_TIME_FOREVER) {
         ticks = BLE_NPL_TIME_FOREVER;
@@ -125,18 +86,33 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
         ble_npl_time_ms_to_ticks(timeout, &ticks);
     }
 
-# ifdef INC_FREERTOS_H
-    uint32_t notificationValue;
-    xTaskNotifyWait(0, TASK_BLOCK_BIT, &notificationValue, 0);
-    if (notificationValue & TASK_BLOCK_BIT) {
-        return true;
+    // find a semaphore that is not currently in use, or create a new one
+    for (auto& entry : m_taskSemEntries) {
+        if (!entry->inUse) {
+            taskData.m_pSem = entry;
+            break;
+        }
     }
 
-    return xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
+    if (taskData.m_pSem == nullptr) {
+        auto* sem = new ble_npl_sem;
+        if (ble_npl_sem_init(sem, 0) != BLE_NPL_OK) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to initialize semaphore for taskWait");
+            delete sem;
+            return false;
+        }
 
-# else
-    return ble_npl_sem_pend(static_cast<ble_npl_sem*>(taskData.m_pHandle), ticks) == BLE_NPL_OK;
-# endif
+        TaskSemEntry* entry = new TaskSemEntry;
+        entry->sem          = sem;
+        entry->inUse        = true;
+        m_taskSemEntries.push_back(entry);
+        taskData.m_pSem = entry;
+        NIMBLE_LOGD(LOG_TAG, "Created new semaphore for taskWait, total semaphores: %d\n", (int)m_taskSemEntries.size());
+    }
+
+    NIMBLE_LOGD(LOG_TAG, "Task waiting with timeout %" PRIu32 "ms", timeout);
+    taskData.m_pSem->inUse = true;
+    return ble_npl_sem_pend(taskData.m_pSem->sem, ticks) == BLE_NPL_OK;
 } // taskWait
 
 /**
@@ -144,16 +120,35 @@ bool NimBLEUtils::taskWait(const NimBLETaskData& taskData, uint32_t timeout) {
  * @param [in] taskData A pointer to the task data structure.
  * @param [in] flags A return value to set in the task data structure.
  */
-void NimBLEUtils::taskRelease(const NimBLETaskData& taskData, int flags) {
+void NimBLEUtils::taskRelease(const TaskData& taskData, int flags) {
     taskData.m_flags = flags;
-    if (taskData.m_pHandle != nullptr) {
-# ifdef INC_FREERTOS_H
-        xTaskNotify(static_cast<TaskHandle_t>(taskData.m_pHandle), TASK_BLOCK_BIT, eSetBits);
-# else
-        ble_npl_sem_release(static_cast<ble_npl_sem*>(taskData.m_pHandle));
-# endif
+    if (taskData.m_pSem == nullptr) {
+        NIMBLE_LOGE(LOG_TAG, "taskRelease called with null semaphore");
+        return;
+    }
+
+    taskData.m_pSem->inUse = false;
+    auto rc = ble_npl_sem_release(taskData.m_pSem->sem);
+    if (rc != BLE_NPL_OK) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to release semaphore: rc=%d %s", rc, returnCodeToString(rc));
+        return;
     }
 } // taskRelease
+
+/**
+ * @brief Deletes all semaphores used for task waiting.
+ * @details This should be called when the NimBLE stack is deinitialized to clean up any resources used by waiting tasks.
+ */
+void NimBLEUtils::deleteTaskSems() {
+    for (auto& entry : m_taskSemEntries) {
+        ble_npl_sem_release(entry->sem);
+        ble_npl_time_delay(10); // give time for any pending tasks to be released
+        ble_npl_sem_deinit(entry->sem);
+        delete entry->sem;
+        delete entry;
+    }
+    m_taskSemEntries.clear();
+}
 
 /**
  * @brief Converts a return code from the NimBLE stack to a text string.
@@ -571,7 +566,7 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             NIMBLE_LOGD(LOG_TAG, "Unknown event type %d 0x%.2x", eventType, eventType);
             return "Unknown event type";
     }
-# else // MYNEWT_VAL(NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
+# else  // MYNEWT_VAL(NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)
     (void)eventType;
     return "";
 # endif // MYNEWT_VAL(NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT)

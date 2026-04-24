@@ -22,12 +22,13 @@
 # undef max
 /**************************/
 
+# include "NimBLEUtils.h"
+
 # include <vector>
 # include <atomic>
 
 class NimBLEClient;
 class NimBLEL2CAPChannelCallbacks;
-struct NimBLETaskData;
 
 /**
  * @brief Encapsulates a L2CAP channel.
@@ -94,7 +95,7 @@ class NimBLEL2CAPChannel {
 
     // Runtime handling
     std::atomic<bool> stalled{false};
-    NimBLETaskData*   m_pTaskData{nullptr};
+    NimBLEUtils::TaskData*   m_pTaskData{nullptr};
 
     // Allocate / deallocate NimBLE memory pool
     bool setupMemPool();

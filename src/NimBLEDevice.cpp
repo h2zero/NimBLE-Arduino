@@ -1074,6 +1074,8 @@ bool NimBLEDevice::deinit(bool clearAll) {
             deleteClient(clt);
         }
 # endif
+
+        NimBLEUtils::deleteTaskSems();
     }
 
     return rc == 0;

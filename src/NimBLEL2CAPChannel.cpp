@@ -88,7 +88,7 @@ int NimBLEL2CAPChannel::writeFragment(std::vector<uint8_t>::const_iterator begin
 
     if (stalled) {
         NIMBLE_LOGD(LOG_TAG, "L2CAP Channel waiting for unstall...");
-        NimBLETaskData taskData;
+        NimBLEUtils::TaskData taskData;
         m_pTaskData = &taskData;
         NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
         m_pTaskData = nullptr;

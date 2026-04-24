@@ -75,7 +75,7 @@ NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* u
  */
 NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const NimBLEUUID& uuid) const {
     NIMBLE_LOGD(LOG_TAG, ">> getCharacteristic: uuid: %s", uuid.toString().c_str());
-    NimBLERemoteCharacteristic* pChar     = nullptr;
+    NimBLERemoteCharacteristic* pChar = nullptr;
 
     for (const auto& it : m_vChars) {
         if (it->getUUID() == uuid) {
@@ -136,7 +136,7 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t              conn_handle,
                 "Characteristic Discovery >> status: %d handle: %d",
                 error->status,
                 (error->status == 0) ? chr->def_handle : -1);
-    auto       pTaskData = (NimBLETaskData*)arg;
+    auto       pTaskData = (NimBLEUtils::TaskData*)arg;
     const auto pSvc      = (NimBLERemoteService*)pTaskData->m_pInstance;
 
     if (error->status == BLE_HS_ENOTCONN) {
@@ -178,8 +178,8 @@ int NimBLERemoteService::characteristicDiscCB(uint16_t              conn_handle,
  */
 bool NimBLERemoteService::retrieveCharacteristics(const NimBLEUUID* uuidFilter, NimBLERemoteCharacteristic** ppChar) const {
     NIMBLE_LOGD(LOG_TAG, ">> retrieveCharacteristics()");
-    int            rc = 0;
-    NimBLETaskData taskData(const_cast<NimBLERemoteService*>(this));
+    int                   rc = 0;
+    NimBLEUtils::TaskData taskData(const_cast<NimBLERemoteService*>(this));
 
     if (uuidFilter == nullptr) {
         rc = ble_gattc_disc_all_chrs(m_pClient->getConnHandle(),

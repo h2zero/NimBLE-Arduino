@@ -678,7 +678,7 @@ NimBLEScanResults NimBLEScan::getResults(uint32_t duration, bool is_continue) {
         return m_scanResults;
     }
 
-    NimBLETaskData taskData;
+    NimBLEUtils::TaskData taskData;
     m_pTaskData = &taskData;
 
     if (start(duration, is_continue)) {

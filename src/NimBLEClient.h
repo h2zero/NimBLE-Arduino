@@ -28,6 +28,7 @@
 # endif
 
 # include "NimBLEAddress.h"
+# include "NimBLEUtils.h"
 
 # include <stdint.h>
 # include <vector>
@@ -41,7 +42,6 @@ class NimBLEAdvertisedDevice;
 class NimBLEAttValue;
 class NimBLEClientCallbacks;
 class NimBLEConnInfo;
-struct NimBLETaskData;
 
 /**
  * @brief A model of a BLE client.
@@ -155,7 +155,7 @@ class NimBLEClient {
     NimBLEAddress                     m_peerAddress;
     mutable int                       m_lastErr;
     int32_t                           m_connectTimeout;
-    mutable NimBLETaskData*           m_pTaskData;
+    mutable NimBLEUtils::TaskData*    m_pTaskData;
     std::vector<NimBLERemoteService*> m_svcVec;
     NimBLEClientCallbacks*            m_pClientCallbacks;
     uint16_t                          m_connHandle;
