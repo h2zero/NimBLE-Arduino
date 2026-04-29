@@ -13,10 +13,11 @@ This example demonstrates how to use the `NimBLEStreamServer` class to create a 
 
 ## How it Works
 
-1. Creates a BLE GATT server with the NUS service and two separate characteristics (TX and RX)
-2. Initializes `NimBLEStreamServer` with separate TX (notify) and RX (write) characteristics
-3. Uses familiar Stream methods like `print()`, `println()`, `read()`, and `available()`
-4. Automatically handles connection state and MTU negotiation
+1. Creates the NUS service with two characteristics (TX and RX)
+2. Initializes two `NimBLEStreamServer` instances — one for TX (notifications) and one for RX (writes)
+3. `NimBLEStreamServer::begin()` automatically enables only the direction supported by the characteristic's properties: the TX characteristic (NOTIFY-only) enables the TX buffer; the RX characteristic (WRITE-only) enables the RX buffer
+4. Uses familiar Stream methods like `print()`, `println()`, `read()`, and `available()`
+5. Automatically handles connection state and MTU negotiation
 
 ## Usage
 
@@ -24,15 +25,15 @@ This example demonstrates how to use the `NimBLEStreamServer` class to create a 
 2. The device will advertise as "NimBLE-Stream"
 3. Connect with a BLE client (such as the NimBLE_Stream_Client example or a NUS terminal app)
 4. Once connected, the server will:
-   - Send periodic messages to the client
-   - Echo back any data received from the client
+   - Send periodic messages to the client via the TX characteristic
+   - Echo back any data received from the client on the RX characteristic
    - Display all communication on the Serial monitor
 
 ## Service UUIDs (Nordic UART Service)
 
 - Service: `6E400001-B5A3-F393-E0A9-E50E24DCCA9E`
-- TX Characteristic (server → client, notify): `6E400003-B5A3-F393-E0A9-E50E24DCCA9E`
-- RX Characteristic (client → server, write): `6E400002-B5A3-F393-E0A9-E50E24DCCA9E`
+- TX Characteristic (server notifies → client subscribes): `6E400003-B5A3-F393-E0A9-E50E24DCCA9E`
+- RX Characteristic (client writes → server receives): `6E400002-B5A3-F393-E0A9-E50E24DCCA9E`
 
 ## Compatible With
 

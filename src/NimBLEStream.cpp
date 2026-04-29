@@ -647,156 +647,6 @@ error:
 }
 
 /**
- * @brief Initialize the NimBLEStreamServer with separate TX and RX characteristics.
- * @param pTxChr Pointer to the TX characteristic used for sending notifications to the client.
- * @param pRxChr Pointer to the RX characteristic used for receiving writes from the client.
- * @param txBufSize Size of the TX buffer.
- * @param rxBufSize Size of the RX buffer.
- * @return true if initialization was successful, false otherwise.
- * @details This overload supports the NUS (Nordic UART Service) pattern where TX and RX use
- * separate characteristics. pTxChr must have the NOTIFY property; pRxChr must have WRITE or WRITE_NR.
- */
-bool NimBLEStreamServer::begin(NimBLECharacteristic* pTxChr,
-                               NimBLECharacteristic* pRxChr,
-                               uint32_t              txBufSize,
-                               uint32_t              rxBufSize) {
-    if (!NimBLEDevice::isInitialized()) {
-        return false;
-    }
-
-    if (m_pChr) {
-        NIMBLE_LOGW(LOG_TAG, "Already initialized with a characteristic");
-        return true;
-    }
-
-    if (!pTxChr) {
-        NIMBLE_LOGE(LOG_TAG, "TX characteristic is null");
-        return false;
-    }
-
-    bool canNotify = pTxChr->getProperties() & NIMBLE_PROPERTY::NOTIFY;
-    if (!canNotify && txBufSize > 0) {
-        NIMBLE_LOGW(LOG_TAG, "TX characteristic does not support NOTIFY, ignoring TX buffer size");
-    }
-
-    m_txBufSize = canNotify ? txBufSize : 0;
-
-    if (pRxChr) {
-        auto rxProps  = pRxChr->getProperties();
-        bool canWrite = (rxProps & NIMBLE_PROPERTY::WRITE) || (rxProps & NIMBLE_PROPERTY::WRITE_NR);
-        if (!canWrite && rxBufSize > 0) {
-            NIMBLE_LOGW(LOG_TAG, "RX characteristic does not support WRITE, ignoring RX buffer size");
-        }
-        m_rxBufSize = canWrite ? rxBufSize : 0;
-    } else {
-        m_rxBufSize = 0;
-    }
-
-    if (!NimBLEStream::begin()) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to initialize stream buffers");
-        return false;
-    }
-
-    m_charCallbacks.m_userCallbacks = pTxChr->getCallbacks();
-    pTxChr->setCallbacks(&m_charCallbacks);
-    m_pChr = pTxChr;
-
-    if (pRxChr && m_rxBufSize > 0) {
-        m_rxCharCallbacks.m_userCallbacks = pRxChr->getCallbacks();
-        pRxChr->setCallbacks(&m_rxCharCallbacks);
-        m_pRxChr = pRxChr;
-    }
-
-    return true;
-}
-
-/**
- * @brief Initialize the NimBLEStreamServer, creating a BLE service with separate TX and RX characteristics.
- * @param svcUuid UUID of the BLE service to create.
- * @param txChrUuid UUID of the TX characteristic (server sends notifications, e.g. NUS TX: 6E400003).
- * @param rxChrUuid UUID of the RX characteristic (client writes, e.g. NUS RX: 6E400002).
- * @param txBufSize Size of the TX buffer, set to 0 to disable TX.
- * @param rxBufSize Size of the RX buffer, set to 0 to disable RX.
- * @param secure Whether the characteristics require encryption.
- * @return true if initialization was successful, false otherwise.
- * @details This is the recommended overload for NUS (Nordic UART Service) compatibility, where
- * the TX and RX data paths use separate characteristics.
- */
-bool NimBLEStreamServer::begin(const NimBLEUUID& svcUuid,
-                               const NimBLEUUID& txChrUuid,
-                               const NimBLEUUID& rxChrUuid,
-                               uint32_t          txBufSize,
-                               uint32_t          rxBufSize,
-                               bool              secure) {
-    if (!NimBLEDevice::isInitialized()) {
-        NIMBLE_LOGE(LOG_TAG, "NimBLEDevice not initialized");
-        return false;
-    }
-
-    if (m_pChr != nullptr) {
-        NIMBLE_LOGE(LOG_TAG, "NimBLEStreamServer already initialized");
-        return false;
-    }
-
-    NimBLEServer* pServer = NimBLEDevice::getServer();
-    if (!pServer) {
-        pServer = NimBLEDevice::createServer();
-    }
-
-    auto pSvc = pServer->createService(svcUuid);
-    if (!pSvc) {
-        return false;
-    }
-
-    m_deleteSvcOnEnd = true; // mark service for deletion on end since we created it here
-
-    // Create TX characteristic with NOTIFY property
-    uint32_t txProps = 0;
-    if (txBufSize > 0) {
-        txProps |= NIMBLE_PROPERTY::NOTIFY;
-        if (secure) {
-            txProps |= NIMBLE_PROPERTY::READ_ENC;
-        }
-    }
-
-    auto pTxChr = pSvc->createCharacteristic(txChrUuid, txProps);
-    if (!pTxChr) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to create TX characteristic");
-        pServer->removeService(pSvc, true);
-        m_deleteSvcOnEnd = false;
-        return false;
-    }
-
-    // Create RX characteristic with WRITE property
-    NimBLECharacteristic* pRxChr = nullptr;
-    if (rxBufSize > 0) {
-        uint32_t rxProps = NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR;
-        if (secure) {
-            rxProps |= NIMBLE_PROPERTY::WRITE_ENC;
-        }
-        pRxChr = pSvc->createCharacteristic(rxChrUuid, rxProps);
-        if (!pRxChr) {
-            NIMBLE_LOGE(LOG_TAG, "Failed to create RX characteristic");
-            pServer->removeService(pSvc, true);
-            m_deleteSvcOnEnd = false;
-            return false;
-        }
-    }
-
-    if (!begin(pTxChr, pRxChr, txBufSize, rxBufSize)) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to initialize stream with characteristics");
-        pServer->removeService(pSvc, true);
-        m_pChr           = nullptr;
-        m_pRxChr         = nullptr;
-        m_deleteSvcOnEnd = false;
-        end();
-        return false;
-    }
-
-    return true;
-}
-
-/**
  * @brief Stop the NimBLEStreamServer
  * @details This will stop the stream and delete the service created if it was created by this class.
  */
@@ -812,18 +662,13 @@ void NimBLEStreamServer::end() {
             }
         } else {
             m_pChr->setCallbacks(m_charCallbacks.m_userCallbacks); // restore any user callbacks
-            if (m_pRxChr) {
-                m_pRxChr->setCallbacks(m_rxCharCallbacks.m_userCallbacks); // restore any user callbacks
-            }
         }
     }
 
-    m_pChr                             = nullptr;
-    m_pRxChr                           = nullptr;
-    m_charCallbacks.m_peerHandle       = BLE_HS_CONN_HANDLE_NONE;
-    m_charCallbacks.m_userCallbacks    = nullptr;
-    m_rxCharCallbacks.m_userCallbacks  = nullptr;
-    m_deleteSvcOnEnd                   = false;
+    m_pChr                          = nullptr;
+    m_charCallbacks.m_peerHandle    = BLE_HS_CONN_HANDLE_NONE;
+    m_charCallbacks.m_userCallbacks = nullptr;
+    m_deleteSvcOnEnd                = false;
     NimBLEStream::end();
 }
 
@@ -1027,21 +872,6 @@ void NimBLEStreamServer::ChrCallbacks::onStatus(NimBLECharacteristic* pChr, NimB
     }
 }
 
-/**
- * @brief Callback for when the separate RX characteristic is written to by a client (two-characteristic mode).
- * @param pChr Pointer to the RX characteristic that was written to.
- * @param connInfo Information about the connection that performed the write.
- * @details This will push the received data into the RX buffer and call any user-defined callbacks.
- */
-void NimBLEStreamServer::RxChrCallbacks::onWrite(NimBLECharacteristic* pChr, NimBLEConnInfo& connInfo) {
-    auto val = pChr->getValue();
-    m_parent->pushRx(val.data(), val.size());
-
-    if (m_userCallbacks) {
-        m_userCallbacks->onWrite(pChr, connInfo);
-    }
-}
-
 # endif // MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
 # if MYNEWT_VAL(BLE_ROLE_CENTRAL)
@@ -1105,83 +935,14 @@ bool NimBLEStreamClient::begin(NimBLERemoteCharacteristic* pChr, bool subscribe,
 }
 
 /**
- * @brief Initialize the NimBLEStreamClient with separate TX and RX characteristics.
- * @param pTxChr Pointer to the remote characteristic to write to (e.g. NUS RX characteristic: 6E400002).
- * @param pRxChr Pointer to the remote characteristic to subscribe to for notifications (e.g. NUS TX: 6E400003).
- * @param txBufSize Size of the TX buffer.
- * @param rxBufSize Size of the RX buffer.
- * @return true if initialization was successful, false otherwise.
- * @details This overload supports the NUS (Nordic UART Service) pattern where TX and RX use
- * separate characteristics. pTxChr must support write without response; pRxChr must support notify.
- */
-bool NimBLEStreamClient::begin(NimBLERemoteCharacteristic* pTxChr,
-                               NimBLERemoteCharacteristic* pRxChr,
-                               uint32_t                    txBufSize,
-                               uint32_t                    rxBufSize) {
-    if (!NimBLEDevice::isInitialized()) {
-        NIMBLE_LOGE(LOG_TAG, "NimBLE stack not initialized, call NimBLEDevice::init() first");
-        return false;
-    }
-
-    if (m_pChr) {
-        NIMBLE_LOGW(LOG_TAG, "Already initialized, must end() first");
-        return true;
-    }
-
-    if (!pTxChr) {
-        NIMBLE_LOGE(LOG_TAG, "TX remote characteristic is null");
-        return false;
-    }
-
-    if (!pTxChr->canWriteNoResponse()) {
-        NIMBLE_LOGE(LOG_TAG, "TX characteristic does not support write without response");
-        return false;
-    }
-
-    bool subscribe = false;
-    if (pRxChr) {
-        if (!pRxChr->canNotify() && !pRxChr->canIndicate()) {
-            NIMBLE_LOGW(LOG_TAG, "RX characteristic does not support subscriptions, RX disabled");
-        } else {
-            subscribe = true;
-        }
-    }
-
-    m_txBufSize = txBufSize;
-    m_rxBufSize = subscribe ? rxBufSize : 0;
-
-    if (!NimBLEStream::begin()) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to initialize stream buffers");
-        return false;
-    }
-
-    if (subscribe) {
-        using namespace std::placeholders;
-        if (!pRxChr->subscribe(pRxChr->canNotify(),
-                               std::bind(&NimBLEStreamClient::notifyCallback, this, _1, _2, _3, _4))) {
-            NIMBLE_LOGE(LOG_TAG, "Failed to subscribe for %s", pRxChr->canNotify() ? "notifications" : "indications");
-            end();
-            return false;
-        }
-        m_pRxChr = pRxChr;
-    }
-
-    m_pChr = pTxChr;
-    return true;
-}
-
-/**
  * @brief Clean up the NimBLEStreamClient, unsubscribing from notifications and clearing the remote characteristic reference.
  */
 void NimBLEStreamClient::end() {
-    // In two-characteristic mode, unsubscribe from the dedicated RX char; otherwise from m_pChr.
-    NimBLERemoteCharacteristic* notifyChr = m_pRxChr ? m_pRxChr : m_pChr;
-    if (notifyChr && (notifyChr->canNotify() || notifyChr->canIndicate())) {
-        notifyChr->unsubscribe();
+    if (m_pChr && (m_pChr->canNotify() || m_pChr->canIndicate())) {
+        m_pChr->unsubscribe();
     }
 
-    m_pChr   = nullptr;
-    m_pRxChr = nullptr;
+    m_pChr = nullptr;
     NimBLEStream::end();
 }
 

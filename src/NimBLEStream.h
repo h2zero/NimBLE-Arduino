@@ -140,32 +140,18 @@ class NimBLEStream : public Stream {
 
 class NimBLEStreamServer : public NimBLEStream {
   public:
-    NimBLEStreamServer() : m_charCallbacks(this), m_rxCharCallbacks(this) {}
+    NimBLEStreamServer() : m_charCallbacks(this) {}
     ~NimBLEStreamServer() override { end(); }
 
     // non-copyable
     NimBLEStreamServer(const NimBLEStreamServer&)            = delete;
     NimBLEStreamServer& operator=(const NimBLEStreamServer&) = delete;
 
-    bool begin(NimBLECharacteristic* pChr, uint32_t txBufSize = 1024, uint32_t rxBufSize = 1024);
-
-    // Two-characteristic overload: separate TX (notify) and RX (write) characteristics, e.g. for NUS compatibility.
-    bool begin(NimBLECharacteristic* pTxChr,
-               NimBLECharacteristic* pRxChr,
-               uint32_t              txBufSize = 1024,
-               uint32_t              rxBufSize = 1024);
+    bool begin(NimBLECharacteristic* chr, uint32_t txBufSize = 1024, uint32_t rxBufSize = 1024);
 
     // Convenience overload to create service/characteristic internally; service will be deleted on end()
     bool begin(const NimBLEUUID& svcUuid,
                const NimBLEUUID& chrUuid,
-               uint32_t          txBufSize = 1024,
-               uint32_t          rxBufSize = 1024,
-               bool              secure    = false);
-
-    // Convenience overload with separate TX/RX UUIDs (e.g. for NUS); service will be deleted on end()
-    bool begin(const NimBLEUUID& svcUuid,
-               const NimBLEUUID& txChrUuid,
-               const NimBLEUUID& rxChrUuid,
                uint32_t          txBufSize = 1024,
                uint32_t          rxBufSize = 1024,
                bool              secure    = false);
@@ -200,17 +186,7 @@ class NimBLEStreamServer : public NimBLEStream {
         uint16_t                       m_peerHandle;
     } m_charCallbacks;
 
-    // Callbacks for a separate RX characteristic in two-characteristic mode (e.g. NUS)
-    struct RxChrCallbacks : public NimBLECharacteristicCallbacks {
-        RxChrCallbacks(NimBLEStreamServer* parent) : m_parent(parent), m_userCallbacks(nullptr) {}
-        void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override;
-
-        NimBLEStreamServer*            m_parent;
-        NimBLECharacteristicCallbacks* m_userCallbacks;
-    } m_rxCharCallbacks;
-
-    NimBLECharacteristic* m_pChr{nullptr};    // TX characteristic (notify)
-    NimBLECharacteristic* m_pRxChr{nullptr};  // RX characteristic (write) in two-char mode, nullptr in single-char mode
+    NimBLECharacteristic* m_pChr{nullptr};
     int                   m_rc{0};
     // Whether to delete the BLE service when end() is called; set to false if service is managed externally
     bool                  m_deleteSvcOnEnd{false};
@@ -231,19 +207,10 @@ class NimBLEStreamClient : public NimBLEStream {
 
     // Attach a discovered remote characteristic; app owns discovery/connection.
     // Set subscribeNotify=true to receive notifications into RX buffer.
-    bool begin(NimBLERemoteCharacteristic* pChr,
-               bool                        subscribeNotify = false,
-               uint32_t                    txBufSize       = 1024,
-               uint32_t                    rxBufSize       = 1024);
-
-    // Two-characteristic overload: separate TX (write) and RX (subscribe) characteristics, e.g. for NUS compatibility.
-    // pTxChr: the characteristic to write to (e.g. NUS RX characteristic).
-    // pRxChr: the characteristic to subscribe to for notifications (e.g. NUS TX characteristic).
-    bool begin(NimBLERemoteCharacteristic* pTxChr,
-               NimBLERemoteCharacteristic* pRxChr,
-               uint32_t                    txBufSize = 1024,
-               uint32_t                    rxBufSize = 1024);
-
+    bool         begin(NimBLERemoteCharacteristic* pChr,
+                       bool                        subscribeNotify = false,
+                       uint32_t                    txBufSize       = 1024,
+                       uint32_t                    rxBufSize       = 1024);
     void         end() override;
     void         setNotifyCallback(NimBLERemoteCharacteristic::notify_callback cb) { m_userNotifyCallback = cb; }
     bool         ready() const override;
@@ -255,8 +222,7 @@ class NimBLEStreamClient : public NimBLEStream {
     bool send() override;
     void notifyCallback(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t len, bool isNotify);
 
-    NimBLERemoteCharacteristic*                 m_pChr{nullptr};    // TX characteristic (write)
-    NimBLERemoteCharacteristic*                 m_pRxChr{nullptr};  // RX characteristic (subscribe) in two-char mode
+    NimBLERemoteCharacteristic*                 m_pChr{nullptr};
     NimBLERemoteCharacteristic::notify_callback m_userNotifyCallback{nullptr};
 };
 # endif // BLE_ROLE_CENTRAL
