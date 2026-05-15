@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ## Fixed
 - `NimBLEClient` connection state tracking.
+- `NimBLEClient` no longer retries connection or calls `onConnectFail` when a disconnect with error code `0x3E` (Connection Failed to be Established) occurs after the connection was previously confirmed; instead `onDisconnect` is called correctly.
 - Calling disconnect will no longer return false if the HCI response is "Unknown ID".
 - Remote descriptors not found when characteristic vector handles out of order.
 - `setValue` with char inputs now calculates the data length correctly.

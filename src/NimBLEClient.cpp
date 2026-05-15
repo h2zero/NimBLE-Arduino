@@ -1059,8 +1059,17 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             // set this incase the client instance was changed due to incorrect event arg bug above
             pTaskData = pClient->m_pTaskData;
 
+            // Save the connection status before any modifications to determine if the connection
+            // was previously established. This is used to differentiate between a genuine
+            // connection establishment failure and a disconnect after a successful connection.
+            const bool wasConnected = (pClient->m_connStatus == CONNECTED);
+
             const int connEstablishFailReason = BLE_HS_HCI_ERR(BLE_ERR_CONN_ESTABLISHMENT);
-            if (rc == connEstablishFailReason && pClient->m_connectFailRetryCount < pClient->m_config.connectFailRetries) {
+            // Only retry connection establishment failures if the connection was not previously
+            // established. If the connection was established (wasConnected), this is a genuine
+            // disconnect (e.g., peer powered off), so we should not retry.
+            if (rc == connEstablishFailReason && !wasConnected &&
+                pClient->m_connectFailRetryCount < pClient->m_config.connectFailRetries) {
                 pClient->m_connHandle = BLE_HS_CONN_HANDLE_NONE;
                 ++pClient->m_connectFailRetryCount;
                 pClient->m_connStatus = CONNECTING;
@@ -1078,7 +1087,11 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 NIMBLE_LOGE(LOG_TAG, "Retry connect start failed, rc=%d %s", retryRc, NimBLEUtils::returnCodeToString(retryRc));
             }
 
-            if (rc == connEstablishFailReason) {
+            // Treat as a connect failure only if the connection was never established.
+            // If the connection was established (wasConnected), call onDisconnect even for 0x3E,
+            // since the peer was already connected and then disconnected.
+            const bool isConnectFail = (rc == connEstablishFailReason && !wasConnected);
+            if (isConnectFail) {
                 pClient->m_pClientCallbacks->onConnectFail(pClient, rc);
             } else {
                 pClient->m_pClientCallbacks->onDisconnect(pClient, rc);
@@ -1088,10 +1101,10 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             pClient->m_connStatus = DISCONNECTED;
 
             if (pClient->m_config.deleteOnDisconnect ||
-                (rc == connEstablishFailReason && pClient->m_config.deleteOnConnectFail)) {
+                (isConnectFail && pClient->m_config.deleteOnConnectFail)) {
                 // If we are set to self delete on disconnect but we have a task waiting on the connection
                 // completion we will set the flag to delete on connect fail instead of deleting here
-                if (pTaskData != nullptr && rc == connEstablishFailReason) {
+                if (pTaskData != nullptr && isConnectFail) {
                     pClient->m_config.deleteOnConnectFail = true;
                     break;
                 }
