@@ -147,27 +147,28 @@
 
 # else
 #  include "nimble/console/console.h"
+#  include "esp32-hal.h"
 
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
-#   define NIMBLE_LOGD(tag, format, ...) console_printf("D %s: " format "\n", tag, ##__VA_ARGS__)
+#   define NIMBLE_LOGD(tag, format, ...) console_printf("D (%lu) %s: " format "\n", millis(), tag, ##__VA_ARGS__)
 #  else
 #   define NIMBLE_LOGD(tag, format, ...) (void)tag
 #  endif
 
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 3
-#   define NIMBLE_LOGI(tag, format, ...) console_printf("I %s: " format "\n", tag, ##__VA_ARGS__)
+#   define NIMBLE_LOGI(tag, format, ...) console_printf("I (%lu) %s: " format "\n", millis(), tag, ##__VA_ARGS__)
 #  else
 #   define NIMBLE_LOGI(tag, format, ...) (void)tag
 #  endif
 
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 2
-#   define NIMBLE_LOGW(tag, format, ...) console_printf("W %s: " format "\n", tag, ##__VA_ARGS__)
+#   define NIMBLE_LOGW(tag, format, ...) console_printf("W (%lu) %s: " format "\n", millis(), tag, ##__VA_ARGS__)
 #  else
 #   define NIMBLE_LOGW(tag, format, ...) (void)tag
 #  endif
 
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 1
-#   define NIMBLE_LOGE(tag, format, ...) console_printf("E %s: " format "\n", tag, ##__VA_ARGS__)
+#   define NIMBLE_LOGE(tag, format, ...) console_printf("E (%lu) %s: " format "\n", millis(), tag, ##__VA_ARGS__)
 #  else
 #   define NIMBLE_LOGE(tag, format, ...) (void)tag
 #  endif
