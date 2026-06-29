@@ -147,7 +147,7 @@
 
 # else
 #  include "nimble/console/console.h"
-#  include "esp32-hal.h"
+#  include <Arduino.h>
 
 #  if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
 #   define NIMBLE_LOGD(tag, format, ...) console_printf("D (%lu) %s: " format "\n", millis(), tag, ##__VA_ARGS__)
