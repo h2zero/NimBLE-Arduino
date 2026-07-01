@@ -421,9 +421,10 @@ void NimBLECharacteristic::updatePeerStatus(const NimBLEConnInfo& peerInfo) cons
 /**
  * @brief Handle a read event from a client.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
+ * @return The status of the read operation.
  */
-void NimBLECharacteristic::readEvent(NimBLEConnInfo& connInfo) {
-    m_pCallbacks->onRead(this, connInfo);
+NimBLEGattStatus NimBLECharacteristic::readEvent(NimBLEConnInfo& connInfo) {
+    return m_pCallbacks->onRead(this, connInfo);
 } // readEvent
 
 /**
@@ -431,10 +432,19 @@ void NimBLECharacteristic::readEvent(NimBLEConnInfo& connInfo) {
  * @param [in] val A pointer to the data written by the client.
  * @param [in] len The length of the data written by the client.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
+ * @return The status of the write operation.
  */
-void NimBLECharacteristic::writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) {
+NimBLEGattStatus NimBLECharacteristic::writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) {
+    // Commit before the callback so getValue() reflects the new value inside it
+    // (onWriteStatus defaults to calling the legacy onWrite), but snapshot first
+    // so a rejected write can be rolled back and never becomes observable state.
+    NimBLEAttValue previous = m_value;
     setValue(val, len);
-    m_pCallbacks->onWrite(this, connInfo);
+    NimBLEGattStatus rc = m_pCallbacks->onWrite(this, connInfo);
+    if (rc != NimBLEGattStatus::Success) {
+        m_value = previous;
+    }
+    return rc;
 } // writeEvent
 
 /**
@@ -483,30 +493,23 @@ std::string NimBLECharacteristic::toString() const {
  * @brief Callback function to support a read request.
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
+ * @return The status of the read operation.
  */
-void NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
+NimBLEGattStatus NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onRead: default");
+    return NimBLEGattStatus::Success;
 } // onRead
 
 /**
  * @brief Callback function to support a write request.
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
+ * @return The status of the write operation.
  */
-void NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
+NimBLEGattStatus NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onWrite: default");
+    return NimBLEGattStatus::Success;
 } // onWrite
-
-/**
- * @brief Callback function to support a Notify/Indicate Status report.
- * @param [in] pCharacteristic The characteristic that is the source of the event.
- * @param [in] code Status return code from the NimBLE stack.
- * @details The status code for success is 0 for notifications and BLE_HS_EDONE for indications,
- * any other value is an error.
- */
-void NimBLECharacteristicCallbacks::onStatus(NimBLECharacteristic* pCharacteristic, int code) {
-    NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onStatus: default");
-} // onStatus
 
 /**
  * @brief Callback function to support a Notify/Indicate Status report.

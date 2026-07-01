@@ -272,13 +272,13 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     friend class NimBLEServer;
     friend class NimBLEService;
 
-    void setService(NimBLEService* pService);
-    void readEvent(NimBLEConnInfo& connInfo) override;
-    void writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) override;
-    bool sendValue(const uint8_t* value,
-                   size_t         length,
-                   bool           is_notification = true,
-                   uint16_t       connHandle      = BLE_HS_CONN_HANDLE_NONE) const;
+    void             setService(NimBLEService* pService);
+    NimBLEGattStatus readEvent(NimBLEConnInfo& connInfo) override;
+    NimBLEGattStatus writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) override;
+    bool             sendValue(const uint8_t* value,
+                               size_t         length,
+                               bool           is_notification = true,
+                               uint16_t       connHandle      = BLE_HS_CONN_HANDLE_NONE) const;
 
     struct SubPeerEntry {
         enum : uint8_t { AWAITING_SECURE = 1 << 0, SECURE = 1 << 1, SUB_NOTIFY = 1 << 2, SUB_INDICATE = 1 << 3 };
@@ -319,10 +319,9 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 class NimBLECharacteristicCallbacks {
   public:
     virtual ~NimBLECharacteristicCallbacks() {}
-    virtual void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
-    virtual void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
-    virtual void onStatus(NimBLECharacteristic* pCharacteristic, int code); // deprecated
-    virtual void onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code);
+    virtual NimBLEGattStatus onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
+    virtual NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
+    virtual void             onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code);
     virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue);
 };
 

@@ -813,16 +813,21 @@ bool NimBLEStreamServer::ready() const {
  * @brief Callback for when the characteristic is written to by a client.
  * @param pChr Pointer to the characteristic that was written to.
  * @param connInfo Information about the connection that performed the write.
- * @details This will push the received data into the RX buffer and call any user-defined callbacks.
+ * @return The user callback status, or success if no user callback is set.
+ * @details Received data is pushed into the RX buffer only if the user callback succeeds.
  */
-void NimBLEStreamServer::ChrCallbacks::onWrite(NimBLECharacteristic* pChr, NimBLEConnInfo& connInfo) {
-    // Push received data into RX buffer
+NimBLEGattStatus NimBLEStreamServer::ChrCallbacks::onWrite(NimBLECharacteristic* pChr, NimBLEConnInfo& connInfo) {
     auto val = pChr->getValue();
-    m_parent->pushRx(val.data(), val.size());
 
     if (m_userCallbacks) {
-        m_userCallbacks->onWrite(pChr, connInfo);
+        NimBLEGattStatus status = m_userCallbacks->onWrite(pChr, connInfo);
+        if (status != NimBLEGattStatus::Success) {
+            return status;
+        }
     }
+
+    m_parent->pushRx(val.data(), val.size());
+    return NimBLEGattStatus::Success;
 }
 
 /**

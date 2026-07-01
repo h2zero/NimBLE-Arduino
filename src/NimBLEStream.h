@@ -171,15 +171,9 @@ class NimBLEStreamServer : public NimBLEStream {
     struct ChrCallbacks : public NimBLECharacteristicCallbacks {
         ChrCallbacks(NimBLEStreamServer* parent)
             : m_parent(parent), m_userCallbacks(nullptr), m_peerHandle(BLE_HS_CONN_HANDLE_NONE) {}
-        void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override;
+        NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override;
         void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue) override;
         void onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code) override;
-        // override this to avoid recursion when debug logs are enabled
-        void onStatus(NimBLECharacteristic* pCharacteristic, int code) override {
-            if (m_userCallbacks != nullptr) {
-                m_userCallbacks->onStatus(pCharacteristic, code);
-            }
-        }
 
         NimBLEStreamServer*            m_parent;
         NimBLECharacteristicCallbacks* m_userCallbacks;

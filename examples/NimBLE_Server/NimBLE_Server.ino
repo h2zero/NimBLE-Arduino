@@ -69,22 +69,24 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 
 /** Handler class for characteristic actions */
 class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
-    void onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
+    NimBLEGattStatus onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
         Serial.printf("%s : onRead(), value: %s\n",
-                      pCharacteristic->getUUID().toString().c_str(),
-                      pCharacteristic->getValue().c_str());
+               pCharacteristic->getUUID().toString().c_str(),
+               pCharacteristic->getValue().c_str());
+        return NimBLEGattStatus::Success;
     }
 
-    void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
+    NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
         Serial.printf("%s : onWrite(), value: %s\n",
-                      pCharacteristic->getUUID().toString().c_str(),
-                      pCharacteristic->getValue().c_str());
+               pCharacteristic->getUUID().toString().c_str(),
+               pCharacteristic->getValue().c_str());
+        return NimBLEGattStatus::Success;
     }
 
     /**
      *  The value returned in code is the NimBLE host return code.
      */
-    void onStatus(NimBLECharacteristic* pCharacteristic, int code) override {
+    void onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo&, int code) override {
         Serial.printf("Notification/Indication return code: %d, %s\n", code, NimBLEUtils::returnCodeToString(code));
     }
 
@@ -111,13 +113,15 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
 
 /** Handler class for descriptor actions */
 class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
-    void onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) override {
+    NimBLEGattStatus onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) override {
         std::string dscVal = pDescriptor->getValue();
         Serial.printf("Descriptor written value: %s\n", dscVal.c_str());
+        return NimBLEGattStatus::Success;
     }
 
-    void onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) override {
+    NimBLEGattStatus onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) override {
         Serial.printf("%s Descriptor read\n", pDescriptor->getUUID().toString().c_str());
+        return NimBLEGattStatus::Success;
     }
 } dscCallbacks;
 

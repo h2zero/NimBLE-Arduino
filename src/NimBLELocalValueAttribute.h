@@ -21,7 +21,7 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
-#ifdef USING_NIMBLE_ARDUINO_HEADERS
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_hs.h"
 # else
 #  include "host/ble_hs.h"
@@ -31,6 +31,11 @@
 # undef min
 # undef max
 /**************************/
+
+# include "NimBLELocalAttribute.h"
+# include "NimBLEValueAttribute.h"
+# include "NimBLEAttValue.h"
+# include <vector>
 
 typedef enum {
     READ         = BLE_GATT_CHR_F_READ,
@@ -47,10 +52,48 @@ typedef enum {
     INDICATE     = BLE_GATT_CHR_F_INDICATE
 } NIMBLE_PROPERTY;
 
-# include "NimBLELocalAttribute.h"
-# include "NimBLEValueAttribute.h"
-# include "NimBLEAttValue.h"
-# include <vector>
+enum class NimBLEGattStatus : uint8_t {
+    // Standard GATT Success State
+    Success = 0x00,
+
+    // Standard ATT Protocol Errors (0x01 - 0x11)
+    InvalidHandle          = 0x01, ///< The attribute handle given was not valid on this server.
+    ReadNotPermitted       = 0x02, ///< The attribute cannot be read.
+    WriteNotPermitted      = 0x03, ///< The attribute cannot be written.
+    InvalidPdu             = 0x04, ///< The Attribute PDU was invalid or malformed.
+    Authentication         = 0x05, ///< The link requires authentication/bonding before access.
+    RequestNotSupported    = 0x06, ///< The ATT request opcode is not supported by this server.
+    InvalidOffset          = 0x07, ///< The offset specified was past the end of the attribute value.
+    Authorization          = 0x08, ///< The link requires authorization before access.
+    PrepareQueueFull       = 0x09, ///< Too many prepare write requests have been queued.
+    AttributeNotFound      = 0x0A, ///< No attribute found within the given handle range.
+    AttributeNotLong       = 0x0B, ///< The attribute cannot be read/written using Read/Write Blob requests.
+    InsufficientKeySize    = 0x0C, ///< The encryption key size is too short to access this data.
+    InvalidAttributeLength = 0x0D, ///< The length of the attribute value written is invalid for this profile.
+    UnlikelyError          = 0x0E, ///< A highly unusual internal error occurred; the operation failed.
+    InsufficientEncryption = 0x0F, ///< The link must be encrypted before accessing this attribute.
+    UnsupportedGroupType   = 0x10, ///< The attribute type is not a supported grouping attribute.
+    InsufficientResources  = 0x11, ///< Temporary failure due to lack of device resources (RAM/buffers).
+    DatabaseOutOfSync      = 0x12, ///< The database is out of sync.
+    ValueNotAllowed        = 0x13, ///< The parameter value written is outside the valid ranges of that application profile.
+
+    // -------------------------------------------------------------------------
+    // User / Application Defined Errors (0x80 - 0x9F)
+    // The Bluetooth Specification explicitly reserves this range for developers
+    // to map their own custom domain logic failures back to the client.
+    // Examples:
+    // -------------------------------------------------------------------------
+    AppErrorMin = 0x80, ///< Minimum boundary for custom application-specific errors.
+
+    /* Example extensions:
+    AppInvalidPin              = 0x81,
+    AppDeviceBusy              = 0x82,
+    AppCrcCheckFailed          = 0x83,
+    */
+
+    AppErrorMax = 0x9F ///< Maximum boundary for custom application-specific errors.
+};
+
 class NimBLEConnInfo;
 
 class NimBLELocalValueAttribute : public NimBLELocalAttribute, public NimBLEValueAttribute {
@@ -112,8 +155,9 @@ class NimBLELocalValueAttribute : public NimBLELocalAttribute, public NimBLEValu
      * @brief Callback function to support a read request.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
      * @details This function is called by NimBLEServer when a read request is received.
+     * @return NimBLEGattStatus::Success or other error code to reject the read.
      */
-    virtual void readEvent(NimBLEConnInfo& connInfo) = 0;
+    virtual NimBLEGattStatus readEvent(NimBLEConnInfo& connInfo) = 0;
 
     /**
      * @brief Callback function to support a write request.
@@ -121,8 +165,9 @@ class NimBLELocalValueAttribute : public NimBLELocalAttribute, public NimBLEValu
      * @param [in] len The length of the value.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
      * @details This function is called by NimBLEServer when a write request is received.
+     * @return NimBLEGattStatus::Success or other error code to reject the write.
      */
-    virtual void writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) = 0;
+    virtual NimBLEGattStatus writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) = 0;
 
     /**
      * @brief Get a reference to value of the attribute.
