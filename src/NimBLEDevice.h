@@ -109,6 +109,7 @@ class NimBLEDeviceCallbacks;
 # define BLEL2CAPClientCallbacks      NimBLEL2CAPClientCallbacks
 # define BLEL2CAPChannel              NimBLEL2CAPChannel
 # define BLEL2CAPChannelCallbacks     NimBLEL2CAPChannelCallbacks
+# define BLEGattStatus                NimBLEGattStatus
 
 enum class NimBLETxPowerType { All = 0, Advertise = 1, Scan = 2, Connection = 3 };
 

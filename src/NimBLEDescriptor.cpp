@@ -123,31 +123,43 @@ std::string NimBLEDescriptor::toString() const {
     return res;
 } // toString
 
-void NimBLEDescriptor::readEvent(NimBLEConnInfo& connInfo) {
-    m_pCallbacks->onRead(this, connInfo);
+NimBLEGattStatus NimBLEDescriptor::readEvent(NimBLEConnInfo& connInfo) {
+    return m_pCallbacks->onRead(this, connInfo);
 } // readEvent
 
-void NimBLEDescriptor::writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) {
+NimBLEGattStatus NimBLEDescriptor::writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) {
+    // Commit before the callback so getValue() reflects the new value inside it
+    // (onWriteStatus defaults to calling the legacy onWrite), but snapshot first
+    // so a rejected write can be rolled back and never becomes observable state.
+    NimBLEAttValue previous = m_value;
     setValue(val, len);
-    m_pCallbacks->onWrite(this, connInfo);
+    NimBLEGattStatus rc = m_pCallbacks->onWrite(this, connInfo);
+    if (rc != NimBLEGattStatus::Success) {
+        m_value = previous;
+    }
+    return rc;
 } // writeEvent
 
 /**
  * @brief Callback function to support a read request.
  * @param [in] pDescriptor The descriptor that is the source of the event.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
+ * @return The status of the read operation.
  */
-void NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
+NimBLEGattStatus NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onRead: default");
+    return NimBLEGattStatus::Success;
 } // onRead
 
 /**
  * @brief Callback function to support a write request.
  * @param [in] pDescriptor The descriptor that is the source of the event.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
+ * @return The status of the write operation.
  */
-void NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
+NimBLEGattStatus NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onWrite: default");
+    return NimBLEGattStatus::Success;
 } // onWrite
 
 #endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)

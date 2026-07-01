@@ -50,26 +50,26 @@ class NimBLEDescriptor : public NimBLELocalValueAttribute {
     friend class NimBLECharacteristic;
     friend class NimBLEService;
 
-    void setCharacteristic(NimBLECharacteristic* pChar);
-    void readEvent(NimBLEConnInfo& connInfo) override;
-    void writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) override;
+    void             setCharacteristic(NimBLECharacteristic* pChar);
+    NimBLEGattStatus readEvent(NimBLEConnInfo& connInfo) override;
+    NimBLEGattStatus writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) override;
 
     NimBLEDescriptorCallbacks* m_pCallbacks{nullptr};
     NimBLECharacteristic*      m_pCharacteristic{nullptr};
 }; // NimBLEDescriptor
 
 /**
- * @brief Callbacks that can be associated with a %BLE descriptors to inform of events.
+ * @brief Callbacks that can be associated with a BLE descriptors to inform of events.
  *
- * When a server application creates a %BLE descriptor, we may wish to be informed when there is either
- * a read or write request to the descriptors value.  An application can register a
+ * When a server application creates a BLE descriptor, we may wish to be informed when there is either
+ * a read or write request to the descriptor's value.  An application can register a
  * sub-classed instance of this class and will be notified when such an event happens.
  */
 class NimBLEDescriptorCallbacks {
   public:
     virtual ~NimBLEDescriptorCallbacks() = default;
-    virtual void onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo);
-    virtual void onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo);
+    virtual NimBLEGattStatus onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo);
+    virtual NimBLEGattStatus onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo);
 };
 
 # include "NimBLE2904.h"

@@ -568,7 +568,6 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 }
             }
 
-            pChar->m_pCallbacks->onStatus(pChar, event->notify_tx.status);
             pChar->m_pCallbacks->onStatus(pChar, peerInfo, event->notify_tx.status);
             break;
         } // BLE_GAP_EVENT_NOTIFY_TX
@@ -737,7 +736,10 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
             // Don't call readEvent if the buffer len is 0 (this is a follow up to a previous read),
             // or if this is an internal read (handle is NONE)
             if (ctxt->om->om_len > 0 && connHandle != BLE_HS_CONN_HANDLE_NONE) {
-                pAtt->readEvent(peerInfo);
+                NimBLEGattStatus status = pAtt->readEvent(peerInfo);
+                if (status != NimBLEGattStatus::Success) {
+                    return static_cast<int>(status);
+                }
             }
 
             NimBLEAttValue::Lock lock;
@@ -767,8 +769,7 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
                 next  = SLIST_NEXT(next, om_next);
             }
 
-            pAtt->writeEvent(buf, len, peerInfo);
-            return 0;
+            return static_cast<int>(pAtt->writeEvent(buf, len, peerInfo));
         }
 
         default:
