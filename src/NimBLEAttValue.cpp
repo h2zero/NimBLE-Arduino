@@ -124,14 +124,18 @@ NimBLEAttValue& NimBLEAttValue::append(const uint8_t* value, uint16_t len) {
 
     uint8_t* res     = m_attr_value;
     uint16_t new_len = m_attr_len + len;
-    if (new_len > m_capacity) {
-        res        = static_cast<uint8_t*>(realloc(m_attr_value, (new_len + 1)));
-        m_capacity = new_len;
+    bool     grow    = new_len > m_capacity;
+    if (grow) {
+        res = static_cast<uint8_t*>(realloc(m_attr_value, (new_len + 1)));
     }
     NIMBLE_CPP_DEBUG_ASSERT(res);
     if (res == nullptr) {
         NIMBLE_LOGE(LOG_TAG, "Failed to realloc append");
         return *this;
+    }
+
+    if (grow) {
+        m_capacity = new_len;
     }
 
 # if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED)
