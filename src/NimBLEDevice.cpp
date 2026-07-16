@@ -756,6 +756,10 @@ bool NimBLEDevice::whiteListRemove(const NimBLEAddress& address) {
             }
 
             std::vector<NimBLEAddress>(m_whiteList).swap(m_whiteList);
+            break; // `it` was invalidated by erase() and its buffer freed by the
+                   // swap above; continuing would iterate a dangling iterator.
+                   // Duplicates are impossible (whiteListAdd checks onWhiteList),
+                   // so a single match is total.
         }
     }
 
