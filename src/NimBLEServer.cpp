@@ -312,6 +312,33 @@ bool NimBLEServer::start() {
     }
 # endif
 
+    // Populate Aggregate Format (0x2905) descriptors with the handle of each active 0x2904 descriptor.
+    for (const auto& svc : m_svcVec) {
+        if (svc->getHandle() == 0) { // Skip services that have no handle (not registered)
+            continue;
+        }
+
+        for (const auto& chr : svc->getCharacteristics()) {
+            if (chr->getHandle() == 0) { // Skip characteristics that have no handle (not registered)
+                continue;
+            }
+
+            auto dsc2905 = chr->getDescriptorByUUID(NimBLEUUID(static_cast<uint16_t>(0x2905)));
+            if (dsc2905 == nullptr) {
+                continue;
+            }
+
+            static const NimBLEUUID uuid2904(static_cast<uint16_t>(0x2904));
+            dsc2905->m_value = NimBLEAttValue();
+            for (const auto& dsc : chr->m_vDescriptors) {
+                auto handle = dsc->getHandle();
+                if (handle != 0 && dsc->getUUID() == uuid2904) {
+                    dsc2905->m_value.append(reinterpret_cast<const uint8_t*>(&handle), sizeof(handle));
+                }
+            }
+        }
+    }
+
     // If the services have changed indicate it now
     if (m_svcChanged) {
         m_svcChanged = false;
