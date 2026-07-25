@@ -32,6 +32,17 @@
 #include "nimble/porting/nimble/include/os/os.h"
 #include "nimble/porting/nimble/include/os/queue.h"
 
+#if defined(ARDUINO_ARCH_ESP32) && __has_include("esp_arduino_version.h")
+#include "esp_arduino_version.h"
+#endif
+
+#if defined(ESP_ARDUINO_VERSION)
+/* Arduino ESP32 core 3.3.11+ dropped the legacy r_ prefix for these mempool symbols. */
+#define NIMBLE_OS_MEMPOOL_USE_ROM_R_PREFIX (ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(3, 3, 11))
+#else
+#define NIMBLE_OS_MEMPOOL_USE_ROM_R_PREFIX 1
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -170,7 +181,7 @@ typedef __uint128_t os_membuf_t;
 #define OS_MEMPOOL_BYTES(n,blksize)     \
     (sizeof (os_membuf_t) * OS_MEMPOOL_SIZE((n), (blksize)))
 
-#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
+#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED && NIMBLE_OS_MEMPOOL_USE_ROM_R_PREFIX
 /**
  * Initialize a memory pool.
  *
@@ -404,6 +415,9 @@ os_error_t os_memblock_put(struct os_mempool *mp, void *block_addr);
 #ifdef __cplusplus
 }
 #endif
+
+/* Keep this version gate local to this header. */
+#undef NIMBLE_OS_MEMPOOL_USE_ROM_R_PREFIX
 
 #endif  /* _OS_MEMPOOL_H_ */
 
