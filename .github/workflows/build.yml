@@ -189,6 +189,7 @@ jobs:
           - "examples/NimBLE_Server"
         variant:
           - esp32
+          - esp32c5
           - esp32c3
           - esp32s3
           - esp32c6
