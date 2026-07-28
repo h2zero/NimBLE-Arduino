@@ -38,22 +38,23 @@ NimBLE2905::NimBLE2905(NimBLECharacteristic* pChr)
 } // NimBLE2905
 
 void NimBLE2905::initValue() {
-    const size_t count = m_vAggregatedDescriptors.size();
-    uint16_t aggregatedHandles[count];
+    uint16_t aggregatedHandles[NIMBLE_MAX_AGGREGATE_FORMAT_DESCRIPTORS];
+    size_t validCount = 0;
 
-    for (size_t i = 0; i < count; ++i) {
-        auto* desc = m_vAggregatedDescriptors[i];
+    for (auto* desc : m_vAggregatedDescriptors) {
         uint16_t handle = desc->getHandle();
 
         if (handle == 0) {
             NIMBLE_LOGE(LOG_TAG, "Failed to initialize value: presentation format descriptor handle is not initialized");
-            return;
+            continue;
         }
 
-        aggregatedHandles[i] = desc->getHandle();
-    } // initValue
+        aggregatedHandles[validCount++] = handle;
+    }
 
-    setValue(reinterpret_cast<const uint8_t*>(aggregatedHandles), sizeof(aggregatedHandles));
+    if (validCount > 0) {
+        setValue(reinterpret_cast<const uint8_t*>(aggregatedHandles), validCount * sizeof(uint16_t));
+    }
 
     // Presentation formats no longer needed, let's free some memory
     m_vAggregatedDescriptors.clear();
