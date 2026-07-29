@@ -73,7 +73,6 @@ NimBLEScan::NimBLEScan()
       m_scanParams{0, 0, BLE_HCI_SCAN_FILT_NO_WL, 0, 1, 1},
       m_pTaskData{nullptr},
       m_maxResults{0xFF} {
-    ble_npl_callout_init(&m_srTimer, nimble_port_get_dflt_eventq(), NimBLEScan::srTimerCb, nullptr);
     ble_npl_time_ms_to_ticks(DEFAULT_SCAN_RESP_TIMEOUT_MS, &m_srTimeoutTicks);
 } // NimBLEScan::NimBLEScan
 
@@ -81,7 +80,10 @@ NimBLEScan::NimBLEScan()
  * @brief Scan destructor, release any allocated resources.
  */
 NimBLEScan::~NimBLEScan() {
-    ble_npl_callout_deinit(&m_srTimer);
+    if (m_srTimerInitialized) {
+        ble_npl_callout_deinit(&m_srTimer);
+        m_srTimerInitialized = false;
+    }
 
     for (const auto& dev : m_scanResults.m_deviceVec) {
         delete dev;
@@ -167,7 +169,9 @@ void NimBLEScan::removeWaitingDevice(NimBLEAdvertisedDevice* pDev) {
 void NimBLEScan::clearWaitingList() {
     // Stop the timer and remove any pending timeout events since we're clearing
     // the list and won't be processing any more timeouts for these devices
-    ble_npl_callout_stop(&m_srTimer);
+    if (m_srTimerInitialized) {
+        ble_npl_callout_stop(&m_srTimer);
+    }
     ble_npl_hw_enter_critical();
     NimBLEAdvertisedDevice* current = m_pWaitingListHead;
     while (current != nullptr) {
@@ -185,8 +189,17 @@ void NimBLEScan::clearWaitingList() {
  */
 void NimBLEScan::resetWaitingTimer() {
     if (m_srTimeoutTicks == 0 || m_pWaitingListHead == nullptr) {
-        ble_npl_callout_stop(&m_srTimer);
+        if (m_srTimerInitialized) {
+            ble_npl_callout_stop(&m_srTimer);
+        }
         return;
+    }
+
+    if (!m_srTimerInitialized) {
+        m_srTimerInitialized = ble_npl_callout_init(&m_srTimer, nimble_port_get_dflt_eventq(), NimBLEScan::srTimerCb, nullptr) == 0;
+        if (!m_srTimerInitialized) {
+            return;
+        }
     }
 
     ble_npl_time_t now      = ble_npl_time_get();
@@ -335,7 +348,9 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
         }
 
         case BLE_GAP_EVENT_DISC_COMPLETE: {
-            ble_npl_callout_stop(&pScan->m_srTimer);
+            if (pScan->m_srTimerInitialized) {
+                ble_npl_callout_stop(&pScan->m_srTimer);
+            }
 
             // If we have any scannable devices that haven't received a scan response,
             // we should trigger the callback with whatever data we have since the scan is complete
@@ -381,7 +396,9 @@ int NimBLEScan::handleGapEvent(ble_gap_event* event, void* arg) {
  */
 void NimBLEScan::setScanResponseTimeout(uint32_t timeoutMs) {
     if (timeoutMs == 0) {
-        ble_npl_callout_stop(&m_srTimer);
+        if (m_srTimerInitialized) {
+            ble_npl_callout_stop(&m_srTimer);
+        }
         m_srTimeoutTicks = 0;
         return;
     }
@@ -660,6 +677,18 @@ void NimBLEScan::erase(const NimBLEAdvertisedDevice* device) {
  */
 void NimBLEScan::onHostSync() {
     m_pScanCallbacks->onScanEnd(m_scanResults, BLE_HS_ENOTSYNCED);
+}
+
+/**
+ * @brief Called before host deinit so callouts don't outlive the default event queue.
+ */
+void NimBLEScan::onHostDeinit() {
+    clearWaitingList();
+
+    if (m_srTimerInitialized) {
+        ble_npl_callout_deinit(&m_srTimer);
+        m_srTimerInitialized = false;
+    }
 }
 
 /**
