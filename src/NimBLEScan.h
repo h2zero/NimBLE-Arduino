@@ -181,6 +181,7 @@ class NimBLEScan {
     ~NimBLEScan();
     static int  handleGapEvent(ble_gap_event* event, void* arg);
     void        onHostSync();
+    void        onHostDeinit();
     static void srTimerCb(ble_npl_event* event);
 
     // Linked list helpers for devices awaiting scan responses
@@ -194,6 +195,7 @@ class NimBLEScan {
     NimBLEScanResults       m_scanResults;
     NimBLEUtils::TaskData*  m_pTaskData;
     ble_npl_callout         m_srTimer{};
+    bool                    m_srTimerInitialized{false};
     ble_npl_time_t          m_srTimeoutTicks{};
     uint8_t                 m_maxResults;
     NimBLEAdvertisedDevice* m_pWaitingListHead{}; // head of linked list for devices awaiting scan responses
