@@ -1029,6 +1029,12 @@ bool NimBLEDevice::init(const std::string& deviceName) {
 bool NimBLEDevice::deinit(bool clearAll) {
     int rc = 0;
     if (m_initialized) {
+# if MYNEWT_VAL(BLE_ROLE_OBSERVER)
+        if (NimBLEDevice::m_pScan != nullptr) {
+            NimBLEDevice::m_pScan->onHostDeinit();
+        }
+# endif
+
         rc = nimble_port_stop();
         if (rc == 0) {
             nimble_port_deinit();
