@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.5.1] 2026-07-29
+
+## Fixed
+- Scan response timer causing crash on reinit cycle.
+- Arduino 3.3.11 build/crash with esp32 c5/c6 variants.
+- Clarified NimBLEAddress(uint8_t[6], type) byte order in docs.
+- `NimBLEEddystoneTLM` byte-order mismatch between getters and setters.
+- `NimBLEAttValue` - preserve capacity after realloc failure.
+- whiteListRemove use-after-free — loop continues on invalidated iterator causing a crash.
+- Infinite recursion bug for ticks to ms conversion.
+
 ## [2.5.0] 2026-04-01
 
 ## Fixed
