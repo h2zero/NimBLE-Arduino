@@ -86,7 +86,7 @@ class NimBLEStream : public Stream {
         return write(static_cast<uint8_t>(data));
     }
 
-    size_t availableForWrite() const;
+    int availableForWrite();
 
     // Read up to len bytes into buffer (non-blocking)
     size_t read(uint8_t* buffer, size_t len);

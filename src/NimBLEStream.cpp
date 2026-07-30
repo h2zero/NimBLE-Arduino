@@ -356,8 +356,8 @@ size_t NimBLEStream::write(const uint8_t* data, size_t len) {
  * @brief Get the available free space in the stream's TX buffer.
  * @return the number of bytes that can be written to the stream without blocking.
  */
-size_t NimBLEStream::availableForWrite() const {
-    return m_txBuf ? m_txBuf->freeSize() : 0;
+int NimBLEStream::availableForWrite() {
+    return m_txBuf ? static_cast<int>(m_txBuf->freeSize()) : 0;
 }
 
 /**
