@@ -25,7 +25,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.0</span>
+   <div id="projectname">NimBLE-Arduino<span id="projectnumber">&#160;2.5.1</span>
    </div>
   </td>
  </tr>
@@ -113,7 +113,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ac1bad3b929b3a694402cc7354635775e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an address from the native NimBLE representation.  <br /></td></tr>
 <tr class="separator:ac1bad3b929b3a694402cc7354635775e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a567542a3cf8324810751cdd4d92703ab" id="r_a567542a3cf8324810751cdd4d92703ab"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a567542a3cf8324810751cdd4d92703ab">NimBLEAddress</a> (const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t type)</td></tr>
-<tr class="memdesc:a567542a3cf8324810751cdd4d92703ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for compatibility with bluedroid esp library using native ESP representation.  <br /></td></tr>
+<tr class="memdesc:a567542a3cf8324810751cdd4d92703ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor accepting a 6-byte MSB-first BLE address (Bluedroid <code>esp_bd_addr_t</code> layout).  <br /></td></tr>
 <tr class="separator:a567542a3cf8324810751cdd4d92703ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4339a4ba2a68932000b2168547a37b35" id="r_a4339a4ba2a68932000b2168547a37b35"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_nim_b_l_e_address.html#a4339a4ba2a68932000b2168547a37b35">NimBLEAddress</a> (const std::string &amp;stringAddress, uint8_t type)</td></tr>
 <tr class="memdesc:a4339a4ba2a68932000b2168547a37b35"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an address from a hex string.  <br /></td></tr>
@@ -227,10 +227,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const
       </table>
 </div><div class="memdoc">
 
-<p>Constructor for compatibility with bluedroid esp library using native ESP representation. </p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p>Constructor accepting a 6-byte MSB-first BLE address (Bluedroid <code>esp_bd_addr_t</code> layout). </p>
+<p>The input bytes are stored internally in LSB-first wire order (NimBLE's <code>ble_addr_t.val</code> layout), so this constructor <b>reverses</b> the input. If you already have LSB-first wire bytes — e.g. straight out of a NimBLE callback's <code>ble_addr_t</code> — use the <code><a class="el" href="class_nim_b_l_e_address.html#ac1bad3b929b3a694402cc7354635775e" title="Create an address from the native NimBLE representation.">NimBLEAddress(ble_addr_t)</a></code> constructor instead (it stores them as-is). If you have the address as a hex integer (e.g. <code>0xa4c1385def16</code> for <code>"a4:c1:38:5d:ef:16"</code>), use <code><a class="el" href="class_nim_b_l_e_address.html" title="A BLE device address.">NimBLEAddress</a>(const uint64_t&amp;, uint8_t)</code>. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">address</td><td>A uint8_t[6] or esp_bd_addr_t containing the address. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">address</td><td>Six bytes in MSB-first order (<code>{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}</code> for <code>"aa:bb:cc:dd:ee:ff"</code>). Compatible with Bluedroid's <code>esp_bd_addr_t</code>. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">type</td><td>The type of the address should be one of:<ul>
 <li>BLE_ADDR_PUBLIC (0)</li>
 <li>BLE_ADDR_RANDOM (1) </li>
