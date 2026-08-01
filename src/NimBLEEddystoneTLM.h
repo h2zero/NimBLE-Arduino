@@ -37,8 +37,8 @@ class NimBLEEddystoneTLM {
     struct BeaconData {
         uint8_t  frameType{EDDYSTONE_TLM_FRAME_TYPE};
         uint8_t  version{0};
-        uint16_t volt{3300};
-        uint16_t temp{23 * 256};
+        uint16_t volt{0xE40C}; // Big-endian (wire format) encoding of 3300 mV; getVolt() swaps back to host order.
+        uint16_t temp{0x0017}; // Big-endian (wire format) encoding of 23.0C (23 * 256); getTemp() swaps back to host order.
         uint32_t advCount{0};
         uint32_t tmil{0};
     } __attribute__((packed));

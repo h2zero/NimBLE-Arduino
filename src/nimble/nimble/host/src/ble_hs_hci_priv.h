@@ -90,7 +90,6 @@ int ble_hs_hci_cmd_tx_no_rsp(uint16_t opcode, const void *cmd, uint8_t cmd_len);
 int ble_hs_hci_cmd_tx(uint16_t opcode, const void *cmd, uint8_t cmd_len,
                       void *rsp, uint8_t rsp_len);
 void ble_hs_hci_init(void);
-void ble_hs_hci_deinit(void);
 
 void ble_hs_hci_set_le_supported_feat(uint32_t feat);
 uint32_t ble_hs_hci_get_le_supported_feat(void);
@@ -105,7 +104,6 @@ void ble_hs_hci_set_phony_ack_cb(ble_hs_hci_phony_ack_fn *cb);
 #endif
 
 int ble_hs_hci_util_read_adv_tx_pwr(int8_t *out_pwr);
-int ble_hs_hci_util_rand(void *dst, int len);
 int ble_hs_hci_util_read_rssi(uint16_t conn_handle, int8_t *out_rssi);
 int ble_hs_hci_util_set_random_addr(const uint8_t *addr);
 int ble_hs_hci_util_set_data_len(uint16_t conn_handle, uint16_t tx_octets,
@@ -130,15 +128,6 @@ int ble_hs_hci_acl_tx(struct ble_hs_conn *conn, struct os_mbuf **om);
 
 int ble_hs_hci_frag_num_mbufs(void);
 int ble_hs_hci_frag_num_mbufs_free(void);
-
-int ble_hs_hci_util_set_data_addr_change(uint8_t adv_handle, uint8_t change_reason);
-
-int ble_hs_hci_dtm_tx_start(uint8_t tx_chan, uint8_t test_data_len, uint8_t payload);
-int ble_hs_hci_dtm_rx_start(uint8_t rx_chan);
-int ble_hs_hci_dtm_enh_rx_start(uint8_t rx_chan, uint8_t index, uint8_t phy);
-int ble_hs_hci_dtm_enh_tx_start(uint8_t tx_chan, uint8_t test_data_len,
-		                uint8_t payload, uint8_t phy);
-int ble_hs_hci_dtm_stop(void);
 
 #ifdef __cplusplus
 }

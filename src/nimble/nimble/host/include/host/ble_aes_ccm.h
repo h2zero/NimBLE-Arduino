@@ -11,12 +11,6 @@
 #include "nimble/porting/nimble/include/os/queue.h"
 #include "nimble/nimble/host/include/host/ble_hs.h"
 
-#if MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS)
-#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
-#else
-#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

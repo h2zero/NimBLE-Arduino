@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ESP_PLATFORM
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -116,6 +116,16 @@ preempt_any_except_conn(struct ble_ll_sched_item *sch,
     return ble_ll_conn_is_lru(sch->cb_arg, item->cb_arg);
 }
 
+static int
+preempt_any_except_big(struct ble_ll_sched_item *sch, struct ble_ll_sched_item *item)
+{
+    if (item->sched_type == BLE_LL_SCHED_TYPE_BIG) {
+        return 0;
+    }
+
+    return 1;
+}
+
 static inline int
 ble_ll_sched_check_overlap(struct ble_ll_sched_item *sch1,
                            struct ble_ll_sched_item *sch2)
@@ -153,25 +163,25 @@ ble_ll_sched_preempt(struct ble_ll_sched_item *sch,
                 break;
 #endif
 #if MYNEWT_VAL(BLE_LL_ROLE_BROADCASTER)
-            case BLE_LL_SCHED_TYPE_ADV:
-                ble_ll_adv_event_rmvd_from_sched(entry->cb_arg);
-                break;
+        case BLE_LL_SCHED_TYPE_ADV:
+            ble_ll_adv_preempted(entry->cb_arg);
+            break;
 #endif
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV) && MYNEWT_VAL(BLE_LL_ROLE_OBSERVER)
             case BLE_LL_SCHED_TYPE_SCAN_AUX:
                 ble_ll_scan_aux_break(entry->cb_arg);
                 break;
+#endif
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV)
 #if MYNEWT_VAL(BLE_LL_ROLE_BROADCASTER)
             case BLE_LL_SCHED_TYPE_PERIODIC:
                 ble_ll_adv_periodic_rmvd_from_sched(entry->cb_arg);
                 break;
 #endif
-#if MYNEWT_VAL(BLE_LL_ROLE_OBSERVER)
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV) && MYNEWT_VAL(BLE_LL_ROLE_OBSERVER)
             case BLE_LL_SCHED_TYPE_SYNC:
                 ble_ll_sync_rmvd_from_sched(entry->cb_arg);
                 break;
-#endif
 #endif
 #endif
 #if MYNEWT_VAL(BLE_LL_ISO_BROADCASTER)
@@ -430,7 +440,7 @@ ble_ll_sched_conn_central_new(struct ble_ll_conn_sm *connsm,
     uint32_t orig_start_time;
     uint32_t earliest_start = 0;
     uint32_t min_win_offset;
-    uint32_t max_delay;
+    uint32_t max_delay = 0;
     uint32_t adv_rxend;
     bool calc_sch = true;
     os_sr_t sr;
@@ -538,7 +548,6 @@ ble_ll_sched_conn_central_new(struct ble_ll_conn_sm *connsm,
             } else {
                 connsm->css_period_idx = css->period_anchor_idx;
             }
-            max_delay = 0;
         }
 
         /* Calculate anchor point and move to next period if scheduled too
@@ -749,7 +758,7 @@ ble_ll_sched_periodic_adv(struct ble_ll_sched_item *sch, bool first_event)
         rc = ble_ll_sched_insert(sch, BLE_LL_SCHED_MAX_DELAY_ANY,
                                  preempt_none);
     } else {
-        rc = ble_ll_sched_insert(sch, 0, preempt_any);
+        rc = ble_ll_sched_insert(sch, 0, preempt_any_except_big);
     }
 
     OS_EXIT_CRITICAL(sr);
@@ -846,14 +855,14 @@ ble_ll_sched_adv_resched_pdu(struct ble_ll_sched_item *sch)
 
 #if MYNEWT_VAL(BLE_LL_ISO_BROADCASTER)
 int
-ble_ll_sched_iso_big(struct ble_ll_sched_item *sch, int first)
+ble_ll_sched_iso_big(struct ble_ll_sched_item *sch, int first, int fixed)
 {
     os_sr_t sr;
     int rc;
 
     OS_ENTER_CRITICAL(sr);
 
-    if (first) {
+    if (first && !fixed) {
         rc = ble_ll_sched_insert(sch, BLE_LL_SCHED_MAX_DELAY_ANY, preempt_none);
     } else {
         /* XXX provide better strategy for preemption */
@@ -923,9 +932,12 @@ ble_ll_sched_rmv_elem_type(uint8_t type, sched_remove_cb_func remove_cb)
     OS_ENTER_CRITICAL(sr);
 
     first = TAILQ_FIRST(&g_ble_ll_sched_q);
-    if (first->sched_type == type) {
-        first_removed = 1;
+    if (!first) {
+        OS_EXIT_CRITICAL(sr);
+        return;
     }
+
+    first_removed = first->sched_type == type;
 
     TAILQ_FOREACH(entry, &g_ble_ll_sched_q, link) {
         if (entry->sched_type != type) {
@@ -1285,4 +1297,5 @@ ble_ll_sched_css_get_conn_interval_us(void)
 #endif
 
 #endif
-#endif
+
+#endif /* ESP_PLATFORM */

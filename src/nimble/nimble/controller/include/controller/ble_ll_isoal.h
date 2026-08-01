@@ -20,13 +20,18 @@
 #ifndef H_BLE_LL_ISOAL_
 #define H_BLE_LL_ISOAL_
 
+#include "nimble/porting/nimble/include/os/os_mbuf.h"
+#include <syscfg/syscfg.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if MYNEWT_VAL(BLE_LL_ISO)
-
 struct ble_ll_isoal_mux {
+#if MYNEWT_VAL(BLE_LL_ISOAL_MUX_PREFILL)
+    uint8_t active;
+#endif
+
     /* Max PDU length */
     uint8_t max_pdu;
     /* Number of expected SDUs per ISO interval */
@@ -38,44 +43,53 @@ struct ble_ll_isoal_mux {
     /* Number of SDUs available for current event */
     uint8_t sdu_in_event;
 
-    STAILQ_HEAD(, os_mbuf_pkthdr) sdu_q;
+    /* Burst Number */
+    uint8_t bn;
 
-    struct os_mbuf *frag;
+    STAILQ_HEAD(, os_mbuf_pkthdr) sdu_q;
+    uint16_t sdu_q_len;
 
     uint32_t sdu_counter;
 
     uint32_t event_tx_timestamp;
     uint32_t last_tx_timestamp;
     uint16_t last_tx_packet_seq_num;
+
+    /* The head SDU Segment is the Continuation of an SDU */
+    uint8_t sc : 1;
+    uint8_t framed : 1;
+    uint8_t framing_mode : 1;
 };
 
-void
-ble_ll_isoal_mux_init(struct ble_ll_isoal_mux *mux, uint8_t max_pdu,
-                      uint32_t iso_interval_us, uint32_t sdu_interval_us,
-                      uint8_t bn, uint8_t pte);
+#define BLE_LL_ISOAL_SEGHDR(sc, cmplt, len) \
+        ((uint16_t)((sc) & 0x01) | (((cmplt) & 0x01) << 1) | ((len) & 0xff) << 8)
+
+#define BLE_LL_ISOAL_SEGHDR_SC(word)    ((word) & 0x01)
+#define BLE_LL_ISOAL_SEGHDR_CMPLT(word) ((word >> 1) & 0x01)
+#define BLE_LL_ISOAL_SEGHDR_LEN(word)   ((word >> 8) & 0xff)
+
+#define BLE_LL_ISOAL_MUX_IS_FRAMED(framing) \
+        ((framing) == BLE_HCI_ISO_FRAMING_FRAMED_SEGMENTABLE || \
+         (framing) == BLE_HCI_ISO_FRAMING_FRAMED_UNSEGMENTED)
+
+void ble_ll_isoal_mux_init(struct ble_ll_isoal_mux *mux, uint8_t max_pdu,
+                           uint32_t iso_interval_us, uint32_t sdu_interval_us,
+                           uint8_t bn, uint8_t pte, bool framed,
+                           uint8_t framing_mode);
 void ble_ll_isoal_mux_free(struct ble_ll_isoal_mux *mux);
 
 int ble_ll_isoal_mux_event_start(struct ble_ll_isoal_mux *mux,
                                  uint32_t timestamp);
 int ble_ll_isoal_mux_event_done(struct ble_ll_isoal_mux *mux);
 
-int
-ble_ll_isoal_mux_unframed_get(struct ble_ll_isoal_mux *mux, uint8_t idx,
-                              uint8_t *llid, void *dptr);
+int ble_ll_isoal_mux_pdu_get(struct ble_ll_isoal_mux *mux, uint8_t idx,
+                             uint8_t *llid, void *dptr);
 
-/* HCI command handlers */
-int ble_ll_isoal_hci_setup_iso_data_path(const uint8_t *cmdbuf, uint8_t cmdlen,
-                                         uint8_t *rspbuf, uint8_t *rsplen);
-int ble_ll_isoal_hci_remove_iso_data_path(const uint8_t *cmdbuf, uint8_t cmdlen,
-                                          uint8_t *rspbuf, uint8_t *rsplen);
-int ble_ll_isoal_hci_read_tx_sync(const uint8_t *cmdbuf, uint8_t cmdlen,
-                                  uint8_t *rspbuf, uint8_t *rsplen);
+void ble_ll_isoal_mux_sdu_enqueue(struct ble_ll_isoal_mux *mux,
+                                  struct os_mbuf *om);
 
 void ble_ll_isoal_init(void);
 void ble_ll_isoal_reset(void);
-int ble_ll_isoal_data_in(struct os_mbuf *om);
-
-#endif /* BLE_LL_ISO */
 
 #ifdef __cplusplus
 }

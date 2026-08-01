@@ -29,11 +29,11 @@ static const char* LOG_TAG = "NimBLERemoteValueAttribute";
 bool NimBLERemoteValueAttribute::writeValue(const uint8_t* data, size_t length, bool response) const {
     NIMBLE_LOGD(LOG_TAG, ">> writeValue()");
 
-    const NimBLEClient* pClient    = getClient();
-    int                 retryCount = 1;
-    int                 rc         = 0;
-    uint16_t            mtu        = pClient->getMTU() - 3;
-    NimBLETaskData      taskData(const_cast<NimBLERemoteValueAttribute*>(this));
+    const NimBLEClient*   pClient    = getClient();
+    int                   retryCount = 1;
+    int                   rc         = 0;
+    uint16_t              mtu        = pClient->getMTU() - 3;
+    NimBLEUtils::TaskData taskData(const_cast<NimBLERemoteValueAttribute*>(this));
 
     // Check if the data length is longer than we can write in one connection event.
     // If so we must do a long write which requires a response.
@@ -98,7 +98,7 @@ Done:
  * @return success == 0 or error code.
  */
 int NimBLERemoteValueAttribute::onWriteCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg) {
-    auto       pTaskData = static_cast<NimBLETaskData*>(arg);
+    auto       pTaskData = static_cast<NimBLEUtils::TaskData*>(arg);
     const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->m_pInstance);
 
     if (error->status == BLE_HS_ENOTCONN) {
@@ -124,11 +124,11 @@ int NimBLERemoteValueAttribute::onWriteCB(uint16_t conn_handle, const ble_gatt_e
 NimBLEAttValue NimBLERemoteValueAttribute::readValue(time_t* timestamp) {
     NIMBLE_LOGD(LOG_TAG, ">> readValue()");
 
-    NimBLEAttValue      value{};
-    const NimBLEClient* pClient    = getClient();
-    int                 rc         = 0;
-    int                 retryCount = 1;
-    NimBLETaskData      taskData(const_cast<NimBLERemoteValueAttribute*>(this), 0, &value);
+    NimBLEAttValue        value{};
+    const NimBLEClient*   pClient    = getClient();
+    int                   rc         = 0;
+    int                   retryCount = 1;
+    NimBLEUtils::TaskData taskData(const_cast<NimBLERemoteValueAttribute*>(this), 0, &value);
 
     do {
         rc = ble_gattc_read_long(pClient->getConnHandle(), getHandle(), 0, NimBLERemoteValueAttribute::onReadCB, &taskData);
@@ -183,7 +183,7 @@ Done:
  * @return success == 0 or error code.
  */
 int NimBLERemoteValueAttribute::onReadCB(uint16_t conn_handle, const ble_gatt_error* error, ble_gatt_attr* attr, void* arg) {
-    auto       pTaskData = static_cast<NimBLETaskData*>(arg);
+    auto       pTaskData = static_cast<NimBLEUtils::TaskData*>(arg);
     const auto pAtt      = static_cast<NimBLERemoteValueAttribute*>(pTaskData->m_pInstance);
 
     if (error->status == BLE_HS_ENOTCONN) {

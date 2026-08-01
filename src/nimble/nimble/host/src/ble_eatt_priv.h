@@ -53,6 +53,5 @@ ble_eatt_get_available_chan_cid(uint16_t conn_handle, uint8_t op)
 {
     return BLE_L2CAP_CID_ATT;
 }
-
 #endif
 #endif

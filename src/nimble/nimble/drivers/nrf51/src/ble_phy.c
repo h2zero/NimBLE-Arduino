@@ -1,3 +1,5 @@
+#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-#if defined(ARDUINO_ARCH_NRF5) && defined(NRF51)
 
 #include <stdint.h>
 #include <string.h>
@@ -50,7 +50,7 @@
 #endif
 
 #ifndef min
-#define min(a, b) ((a)<(b)?(a):(b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
 static uint32_t
@@ -1509,7 +1509,7 @@ ble_phy_resolv_list_disable(void)
 void
 ble_phy_rfclk_enable(void)
 {
-#if MYNEWT || ARDUINO
+#if MYNEWT || defined(ARDUINO)
     nrf51_clock_hfxo_request();
 #else
     NRF_CLOCK->TASKS_HFCLKSTART = 1;
@@ -1519,7 +1519,7 @@ ble_phy_rfclk_enable(void)
 void
 ble_phy_rfclk_disable(void)
 {
-#if MYNEWT || ARDUINO
+#if MYNEWT || defined(ARDUINO)
     nrf51_clock_hfxo_release();
 #else
     NRF_CLOCK->TASKS_HFCLKSTOP = 1;

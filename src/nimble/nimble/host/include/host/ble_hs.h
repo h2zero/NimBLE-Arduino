@@ -43,8 +43,8 @@
 #include "nimble/nimble/host/include/host/ble_sm.h"
 #include "nimble/nimble/host/include/host/ble_store.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
+#include "nimble/nimble/host/include/host/ble_iso.h"
 #include "nimble/nimble/include/nimble/nimble_npl.h"
-#include "nimble/nimble/host/include/host/ble_esp_hs.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,8 +55,6 @@ extern "C" {
 
 /** Connection handle not present */
 #define BLE_HS_CONN_HANDLE_NONE     0xffff
-
-#define BLE_HS_CTRL_DATA_HDR_SZ     0x4
 
 /**
  * @brief Bluetooth Host Error Code
@@ -315,28 +313,11 @@ struct ble_hs_cfg {
      */
     unsigned sm_sc:1;
 
-    /** @brief Security Manager - Enable/Disable Secure Connections Only flag
-     *
-     * If set, this will enforce P-256 elliptic curve encryption algorithm
-     * during pairing.
-     * It will force the max key size to be used during pairing.
-     */
-    unsigned sm_sc_only:1;
-
     /** @brief Security Manager Key Press Notification flag
      *
      * Currently unsupported and should not be set.
      */
     unsigned sm_keypress:1;
-
-    /** @brief Enable/Disable Enhanced ATT Support
-     *
-     * Primarily used to enable EATT behaviour; denotes the number of eatt
-     * channels. Set to 0 to disable eatt.
-     *
-     * Default value is CONFIG_BT_NIMBLE_EATT_CHAN_NUM.
-     */
-    uint8_t eatt;
 
     /** @brief Security Manager Local Key Distribution Mask */
     uint8_t sm_our_key_dist;

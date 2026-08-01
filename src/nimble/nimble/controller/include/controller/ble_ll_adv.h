@@ -168,7 +168,7 @@ int ble_ll_adv_can_chg_whitelist(void);
  * Called when an advertising event has been removed from the scheduler
  * without being run.
  */
-void ble_ll_adv_event_rmvd_from_sched(struct ble_ll_adv_sm *advsm);
+void ble_ll_adv_preempted(struct ble_ll_adv_sm *advsm);
 
 /*
  * Called when a periodic event has been removed from the scheduler
@@ -201,6 +201,9 @@ int ble_ll_adv_periodic_set_info_transfer(const uint8_t *cmdbuf, uint8_t len,
 
 /* Get advertising instance with periodic advertising configured */
 struct ble_ll_adv_sm *ble_ll_adv_sync_get(uint8_t handle);
+int ble_ll_adv_padv_event_start_get(struct ble_ll_adv_sm *advsm,
+                                    uint32_t *event_start,
+                                    uint8_t *event_start_rem_us);
 
 #if MYNEWT_VAL(BLE_LL_ISO_BROADCASTER)
 struct ble_ll_iso_big;
@@ -212,6 +215,11 @@ int ble_ll_adv_sync_big_add(struct ble_ll_adv_sm *advsm,
 int ble_ll_adv_sync_big_remove(struct ble_ll_adv_sm *advsm,
                                struct ble_ll_iso_big *big);
 #endif /* BLE_LL_ISO_BROADCASTER */
+
+#if MYNEWT_VAL(BLE_VERSION) >= 54
+int ble_ll_adv_ext_set_param_v2(const uint8_t *cmdbuf, uint8_t len,
+                                uint8_t *rspbuf, uint8_t *rsplen);
+#endif
 
 /* Called to notify adv code about RPA rotation */
 void ble_ll_adv_rpa_timeout(void);

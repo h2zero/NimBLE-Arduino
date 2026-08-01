@@ -25,12 +25,12 @@
 #  include "NimBLEClient.h"
 # endif
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "services/gap/ble_svc_gap.h"
-#  include "services/gatt/ble_svc_gatt.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
 #  include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
+# else
+#  include "services/gap/ble_svc_gap.h"
+#  include "services/gatt/ble_svc_gatt.h"
 # endif
 
 # define NIMBLE_SERVER_GET_PEER_NAME_ON_CONNECT_CB 0
@@ -38,6 +38,11 @@
 
 static const char*           LOG_TAG = "NimBLEServer";
 static NimBLEServerCallbacks defaultCallbacks;
+
+struct gattRegisterCallbackArgs {
+    NimBLEService*        pSvc{nullptr};
+    NimBLECharacteristic* pChar{nullptr};
+};
 
 /**
  * @brief Construct a BLE Server
@@ -93,8 +98,7 @@ NimBLEService* NimBLEServer::createService(const char* uuid) {
 NimBLEService* NimBLEServer::createService(const NimBLEUUID& uuid) {
     NimBLEService* pService = new NimBLEService(uuid);
     m_svcVec.push_back(pService);
-    serviceChanged();
-
+    setServiceChanged();
     return pService;
 } // createService
 
@@ -182,61 +186,145 @@ NimBLEAdvertising* NimBLEServer::getAdvertising() const {
  * @brief Called when the services are added/removed and sets a flag to indicate they should be reloaded.
  * @details This has no effect if the GATT server was not already started.
  */
-void NimBLEServer::serviceChanged() {
+void NimBLEServer::setServiceChanged() {
     if (m_gattsStarted) {
         m_svcChanged = true;
     }
 } // serviceChanged
 
 /**
+ * @brief Send a service changed indication to all clients.
+ * @details This should be called when services are added, removed or modified after the server has been started.
+ */
+void NimBLEServer::sendServiceChangedIndication() const {
+    ble_svc_gatt_changed(0x0001, 0xffff);
+}
+
+/**
+ * @brief Callback for GATT registration events,
+ * used to obtain the assigned handles for services, characteristics, and descriptors.
+ * @param [in] ctxt The context of the registration event.
+ * @param [in] arg A pointer to the gattRegisterCallbackArgs struct used to track the
+ * service and characteristic being registered.
+ */
+void NimBLEServer::gattRegisterCallback(ble_gatt_register_ctxt* ctxt, void* arg) {
+    gattRegisterCallbackArgs* args = static_cast<gattRegisterCallbackArgs*>(arg);
+
+    if (ctxt->op == BLE_GATT_REGISTER_OP_SVC) {
+        NimBLEUUID uuid(ctxt->svc.svc_def->uuid);
+        args->pSvc = nullptr;
+        for (auto pSvc : NimBLEDevice::getServer()->m_svcVec) {
+            if (!pSvc->getRemoved() && pSvc->m_handle == 0 && pSvc->getUUID() == uuid) {
+                pSvc->m_handle = ctxt->svc.handle;
+                NIMBLE_LOGD(LOG_TAG, "Service registered: %s, handle=%d", uuid.toString().c_str(), ctxt->svc.handle);
+                // Set the arg to the service so we know that the following
+                // characteristics and descriptors belong to this service
+                args->pSvc = pSvc;
+                break;
+            }
+        }
+
+        return;
+    }
+
+    if (args->pSvc == nullptr) {
+        // If the service is not found then this is likely a characteristic or descriptor that was registered as
+        // part of the GATT server setup and not found in the service vector
+        NIMBLE_LOGD(LOG_TAG, "Skipping characteristic or descriptor registered with unknown service");
+        return;
+    }
+
+    if (ctxt->op == BLE_GATT_REGISTER_OP_CHR) {
+        NimBLEUUID uuid(ctxt->chr.chr_def->uuid);
+        args->pChar = nullptr;
+        for (auto pChr : args->pSvc->m_vChars) {
+            if (!pChr->getRemoved() && pChr->m_handle == 0 && pChr->getUUID() == uuid) {
+                pChr->m_handle = ctxt->chr.val_handle;
+                // Set the arg to the characteristic so we know that the following descriptors belong to this characteristic
+                args->pChar    = pChr;
+                NIMBLE_LOGD(LOG_TAG,
+                            "Characteristic registered: %s, def_handle=%d, val_handle=%d",
+                            uuid.toString().c_str(),
+                            ctxt->chr.def_handle,
+                            ctxt->chr.val_handle);
+                break;
+            }
+        }
+
+        return;
+    }
+
+    if (ctxt->op == BLE_GATT_REGISTER_OP_DSC) {
+        if (args->pChar == nullptr) {
+            NIMBLE_LOGE(LOG_TAG, "Descriptor registered with unknown characteristic, skipping");
+            return;
+        }
+
+        NimBLEUUID uuid(ctxt->dsc.dsc_def->uuid);
+        for (auto pDsc : args->pChar->m_vDescriptors) {
+            if (!pDsc->getRemoved() && pDsc->m_handle == 0 && pDsc->getUUID() == uuid) {
+                pDsc->m_handle = ctxt->dsc.handle;
+                NIMBLE_LOGD(LOG_TAG, "Descriptor registered: %s, handle=%d", uuid.toString().c_str(), ctxt->dsc.handle);
+                return;
+            }
+        }
+    }
+}
+
+/**
  * @brief Start the GATT server.
  * @details Required to be called after setup of all services and characteristics / descriptors
  * for the NimBLE host to register them.
  */
-void NimBLEServer::start() {
-    if (m_gattsStarted) {
-        return; // already started
+bool NimBLEServer::start() {
+    if (m_svcChanged && !getConnectedCount()) {
+        NIMBLE_LOGD(LOG_TAG, "Services have changed since last start, resetting GATT server");
+        m_gattsStarted = false;
     }
+
+    if (m_gattsStarted) {
+        return true; // already started
+    }
+
+    if (!resetGATT()) {
+        return false;
+    }
+
+    ble_hs_cfg.gatts_register_cb = NimBLEServer::gattRegisterCallback;
+    gattRegisterCallbackArgs args{};
+    ble_hs_cfg.gatts_register_arg = &args;
 
     int rc = ble_gatts_start();
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
-        return;
+        return false;
     }
 
 # if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
     ble_gatts_show_local();
-# endif
 
-    // Get the assigned service handles and build a vector of characteristics
-    // with Notify / Indicate capabilities for event handling
+    // Check that all services were registered and log if any are missing.
     for (const auto& svc : m_svcVec) {
         if (svc->getRemoved() == 0) {
-            rc = ble_gatts_find_svc(svc->getUUID().getBase(), &svc->m_handle);
+            rc = ble_gatts_find_svc(svc->getUUID().getBase(), NULL);
             if (rc != 0) {
-                NIMBLE_LOGW(LOG_TAG,
+                NIMBLE_LOGD(LOG_TAG,
                             "GATT Server started without service: %s, Service %s",
                             svc->getUUID().toString().c_str(),
                             svc->isStarted() ? "missing" : "not started");
-                continue; // Skip this service as it was not started
-            }
-        }
-
-        // Set the descriptor handles now as the stack does not set these when the service is started
-        for (const auto& chr : svc->m_vChars) {
-            for (auto& desc : chr->m_vDescriptors) {
-                ble_gatts_find_dsc(svc->getUUID().getBase(), chr->getUUID().getBase(), desc->getUUID().getBase(), &desc->m_handle);
             }
         }
     }
+# endif
 
     // If the services have changed indicate it now
     if (m_svcChanged) {
         m_svcChanged = false;
-        ble_svc_gatt_changed(0x0001, 0xffff);
+        sendServiceChangedIndication();
     }
 
     m_gattsStarted = true;
+    return true;
 } // start
 
 /**
@@ -247,19 +335,22 @@ void NimBLEServer::start() {
  */
 bool NimBLEServer::disconnect(uint16_t connHandle, uint8_t reason) const {
     int rc = ble_gap_terminate(connHandle, reason);
-    if (rc != 0 && rc != BLE_HS_ENOTCONN && rc != BLE_HS_EALREADY) {
-        NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
-        return false;
+    switch (rc) {
+        case 0:
+        case BLE_HS_ENOTCONN:
+        case BLE_HS_EALREADY:
+        case BLE_HS_HCI_ERR(BLE_ERR_UNK_CONN_ID):
+            return true;
     }
-
-    return true;
+    NIMBLE_LOGE(LOG_TAG, "ble_gap_terminate failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
+    return false;
 } // disconnect
 
 /**
  * @brief Disconnect the specified client with optional reason.
  * @param [in] connInfo Connection of the client to disconnect.
  * @param [in] reason code for disconnecting.
- * @return NimBLE host return code.
+ * @return True if successful.
  */
 bool NimBLEServer::disconnect(const NimBLEConnInfo& connInfo, uint8_t reason) const {
     return disconnect(connInfo.getConnHandle(), reason);
@@ -427,13 +518,9 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
             }
 # endif
 
-            if (pServer->m_svcChanged) {
-                pServer->resetGATT();
-            }
-
             peerInfo.m_desc = event->disconnect.conn;
             pServer->m_pServerCallbacks->onDisconnect(pServer, peerInfo, event->disconnect.reason);
-# if !MYNEWT_VAL(BLE_EXT_ADV)
+# if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
             if (pServer->m_advertiseOnDisconnect) {
                 pServer->startAdvertising();
             }
@@ -612,6 +699,15 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
                 // }
                 // rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
                 // NIMBLE_LOGD(LOG_TAG, "BLE_SM_IOACT_OOB; ble_sm_inject_io result: %d", rc);
+            } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
+                NIMBLE_LOGD(LOG_TAG, "Enter the passkey");
+
+                rc = ble_gap_conn_find(event->passkey.conn_handle, &peerInfo.m_desc);
+                if (rc != 0) {
+                    return BLE_ATT_ERR_INVALID_HANDLE;
+                }
+
+                pServer->m_pServerCallbacks->onPassKeyEntry(peerInfo);
             } else if (event->passkey.params.action == BLE_SM_IOACT_NONE) {
                 NIMBLE_LOGD(LOG_TAG, "No passkey action required");
             }
@@ -750,7 +846,7 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
     }
 
     service->setRemoved(deleteSvc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE);
-    serviceChanged();
+    setServiceChanged();
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
 # endif
@@ -777,40 +873,70 @@ void NimBLEServer::addService(NimBLEService* service) {
     }
 
     service->setRemoved(0);
-    serviceChanged();
+    setServiceChanged();
 } // addService
 
 /**
  * @brief Resets the GATT server, used when services are added/removed after initialization.
+ * @return True if successful.
+ * @details This will reset the GATT server and re-register all services, characteristics, and
+ * descriptors that have not been removed. Services, characteristics, and descriptors that have been
+ * removed but not deleted will be skipped and have their handles cleared, and those that have been
+ * deleted will be removed from the server's service vector.
  */
-void NimBLEServer::resetGATT() {
-    if (getConnectedCount() > 0) {
-        return;
-    }
-
+bool NimBLEServer::resetGATT() {
 # if MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     NimBLEDevice::stopAdvertising();
 # endif
+
     ble_gatts_reset();
     ble_svc_gap_init();
     ble_svc_gatt_init();
 
-    for (auto it = m_svcVec.begin(); it != m_svcVec.end();) {
-        if ((*it)->getRemoved() > 0) {
-            if ((*it)->getRemoved() == NIMBLE_ATT_REMOVE_DELETE) {
-                delete *it;
-                it = m_svcVec.erase(it);
-            } else {
-                ++it;
-            }
+    for (auto svcIt = m_svcVec.begin(); svcIt != m_svcVec.end();) {
+        auto* pSvc = *svcIt;
+        if (pSvc->getRemoved() == NIMBLE_ATT_REMOVE_DELETE) {
+            delete pSvc;
+            svcIt = m_svcVec.erase(svcIt);
             continue;
         }
 
-        (*it)->start();
-        ++it;
+        for (auto chrIt = pSvc->m_vChars.begin(); chrIt != pSvc->m_vChars.end();) {
+            auto* pChr = *chrIt;
+            if (pChr->getRemoved() == NIMBLE_ATT_REMOVE_DELETE) {
+                delete pChr;
+                chrIt = pSvc->m_vChars.erase(chrIt);
+                continue;
+            }
+
+            for (auto dscIt = pChr->m_vDescriptors.begin(); dscIt != pChr->m_vDescriptors.end();) {
+                auto* pDsc = *dscIt;
+                if (pDsc->getRemoved() == NIMBLE_ATT_REMOVE_DELETE) {
+                    delete pDsc;
+                    dscIt = pChr->m_vDescriptors.erase(dscIt);
+                    continue;
+                }
+
+                pDsc->m_handle = 0;
+                ++dscIt;
+            }
+
+            pChr->m_handle = 0;
+            ++chrIt;
+        }
+
+        if (pSvc->getRemoved() == 0) {
+            if (!pSvc->start_internal()) {
+                NIMBLE_LOGE(LOG_TAG, "Failed to start service: %s", pSvc->getUUID().toString().c_str());
+                return false;
+            }
+        }
+
+        pSvc->m_handle = 0;
+        ++svcIt;
     }
 
-    m_gattsStarted = false;
+    return true;
 } // resetGATT
 
 /**
@@ -946,7 +1072,7 @@ void NimBLEServer::updateConnParams(
  * @param [in] octets The preferred number of payload octets to use (Range 0x001B-0x00FB).
  */
 void NimBLEServer::setDataLen(uint16_t connHandle, uint16_t octets) const {
-# if defined(CONFIG_NIMBLE_CPP_IDF) && !defined(ESP_IDF_VERSION) || \
+# if !defined(USING_NIMBLE_ARDUINO_HEADERS) && !defined(ESP_IDF_VERSION) || \
      (ESP_IDF_VERSION_MAJOR * 100 + ESP_IDF_VERSION_MINOR * 10 + ESP_IDF_VERSION_PATCH) < 432
     return;
 # else
@@ -993,6 +1119,7 @@ NimBLEClient* NimBLEServer::getClient(const NimBLEConnInfo& connInfo) {
     m_pClient->deleteServices(); // Changed peer connection delete the database.
     m_pClient->m_peerAddress = connInfo.getAddress();
     m_pClient->m_connHandle  = connInfo.getConnHandle();
+    m_pClient->m_connStatus  = NimBLEClient::CONNECTED;
     return m_pClient;
 } // getClient
 
@@ -1024,6 +1151,11 @@ uint32_t NimBLEServerCallbacks::onPassKeyDisplay() {
     NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyDisplay: default: 123456");
     return 123456;
 } // onPassKeyDisplay
+
+void NimBLEServerCallbacks::onPassKeyEntry(NimBLEConnInfo& connInfo) {
+    NIMBLE_LOGD("NimBLEServerCallbacks", "onPassKeyEntry: default: 123456");
+    NimBLEDevice::injectPassKey(connInfo, 123456);
+} // onPassKeyEntry
 
 void NimBLEServerCallbacks::onConfirmPassKey(NimBLEConnInfo& connInfo, uint32_t pin) {
     NIMBLE_LOGD("NimBLEServerCallbacks", "onConfirmPasskey: default: true");

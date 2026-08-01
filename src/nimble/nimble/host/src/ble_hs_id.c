@@ -20,12 +20,10 @@
 #include <string.h>
 #include "nimble/nimble/host/include/host/ble_hs_id.h"
 #include "ble_hs_priv.h"
-#include "ble_hs_resolv_priv.h"
 
 static uint8_t ble_hs_id_pub[6];
 static uint8_t ble_hs_id_rnd[6];
 static const uint8_t ble_hs_misc_null_addr[6];
-
 
 bool
 ble_hs_is_rpa(uint8_t *addr, uint8_t addr_type)
@@ -54,7 +52,7 @@ ble_hs_id_gen_rnd(int nrpa, ble_addr_t *out_addr)
 
     out_addr->type = BLE_ADDR_RANDOM;
 
-    rc = ble_hs_hci_util_rand(out_addr->val, 6);
+    rc = ble_hs_hci_rand(out_addr->val, 6);
     if (rc != 0) {
         return rc;
     }
@@ -222,15 +220,15 @@ ble_hs_id_addr(uint8_t id_addr_type, const uint8_t **out_id_addr,
     const uint8_t *id_addr;
     int nrpa;
 
+    BLE_HS_DBG_ASSERT(ble_hs_locked_by_cur_task());
+
     switch (id_addr_type) {
     case BLE_ADDR_PUBLIC:
-    case BLE_ADDR_PUBLIC_ID:
         id_addr = ble_hs_id_pub;
         nrpa = 0;
         break;
 
     case BLE_ADDR_RANDOM:
-    case BLE_ADDR_RANDOM_ID:
         id_addr = ble_hs_id_rnd;
         nrpa = (ble_hs_id_rnd[5] & 0xc0) == 0;
         break;

@@ -1,3 +1,5 @@
+#if defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES))
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-#if defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES) || defined(NRF53_SERIES))
 
 #include <stdint.h>
 #include "syscfg/syscfg.h"
@@ -45,4 +45,4 @@ ble_phy_trace_init(void)
 }
 #endif
 
-#endif /* defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES) || defined(NRF53_SERIES)) */
+#endif /* ARDUINO_ARCH_NRF5 && NRF52_SERIES */

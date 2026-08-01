@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +19,8 @@
  * under the License.
  */
 
-#include <nimble/nimble/controller/include/controller/ble_phy.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_pdu.h>
+#include "nimble/nimble/controller/include/controller/ble_phy.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_pdu.h"
 
 static const uint16_t syncword_len[] = {
     [BLE_PHY_MODE_1M] = (BLE_LL_PDU_PREAMBLE_1M_LEN + BLE_LL_PDU_AA_LEN) * 8,
@@ -56,3 +58,5 @@ ble_ll_pdu_us(uint8_t payload_len, uint8_t phy_mode)
 {
     return payload0_len[phy_mode] + (payload_len * us_per_octet[phy_mode]);
 }
+
+#endif /* ESP_PLATFORM */

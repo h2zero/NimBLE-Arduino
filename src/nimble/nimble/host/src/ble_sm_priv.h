@@ -24,9 +24,6 @@
 #include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/queue.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
-#if MYNEWT_VAL(ENC_ADV_DATA)
-#include "nimble/nimble/host/include/host/ble_ead.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -234,7 +231,6 @@ struct ble_sm_keys {
     unsigned irk_valid:1;
     unsigned csrk_valid:1;
     unsigned addr_valid:1;
-    uint32_t sign_counter;
     uint16_t ediv;
     uint64_t rand_val;
     uint8_t addr_type;
@@ -287,7 +283,6 @@ struct ble_sm_result {
     unsigned enc_cb : 1;
     unsigned bonded : 1;
     unsigned restore : 1;
-    unsigned out_of_order : 1;
 };
 
 #if MYNEWT_VAL(BLE_HS_DEBUG)
@@ -301,29 +296,42 @@ void ble_sm_dbg_set_sc_keys(uint8_t *pubkey, uint8_t *privkey);
 
 int ble_sm_num_procs(void);
 
-int na_ble_sm_alg_s1(const uint8_t *k, const uint8_t *r1, const uint8_t *r2,
+int ble_sm_alg_s1(const uint8_t *k, const uint8_t *r1, const uint8_t *r2,
                   uint8_t *out);
-int na_ble_sm_alg_c1(const uint8_t *k, const uint8_t *r,
+int ble_sm_alg_c1(const uint8_t *k, const uint8_t *r,
                   const uint8_t *preq, const uint8_t *pres,
                   uint8_t iat, uint8_t rat,
                   const uint8_t *ia, const uint8_t *ra,
                   uint8_t *out_enc_data);
-int na_ble_sm_alg_f4(const uint8_t *u, const uint8_t *v, const uint8_t *x,
+int ble_sm_alg_f4(const uint8_t *u, const uint8_t *v, const uint8_t *x,
                   uint8_t z, uint8_t *out_enc_data);
-int na_ble_sm_alg_g2(const uint8_t *u, const uint8_t *v, const uint8_t *x,
+int ble_sm_alg_g2(const uint8_t *u, const uint8_t *v, const uint8_t *x,
                   const uint8_t *y, uint32_t *passkey);
-int na_ble_sm_alg_f5(const uint8_t *w, const uint8_t *n1, const uint8_t *n2,
+int ble_sm_alg_f5(const uint8_t *w, const uint8_t *n1, const uint8_t *n2,
                   uint8_t a1t, const uint8_t *a1, uint8_t a2t,
                   const uint8_t *a2, uint8_t *mackey, uint8_t *ltk);
-int na_ble_sm_alg_f6(const uint8_t *w, const uint8_t *n1, const uint8_t *n2,
+int ble_sm_alg_f6(const uint8_t *w, const uint8_t *n1, const uint8_t *n2,
                   const uint8_t *r, const uint8_t *iocap, uint8_t a1t,
                   const uint8_t *a1, uint8_t a2t, const uint8_t *a2,
                   uint8_t *check);
+int ble_sm_alg_csis_k1(const uint8_t *n, size_t n_len, const uint8_t *salt,
+                       const uint8_t *p, size_t p_len, uint8_t *out);
+int ble_sm_alg_csis_s1(const uint8_t *m, size_t m_len, uint8_t *out);
+int ble_sm_alg_csis_sef(const uint8_t *k, const uint8_t *plaintext_sirk,
+                        uint8_t *out);
+int ble_sm_alg_csis_sdf(const uint8_t *k, const uint8_t *enc_sirk,
+                        uint8_t *out);
+int ble_sm_alg_csis_sih(const uint8_t *k, const uint8_t *r, uint8_t *out);
 int ble_sm_alg_gen_dhkey(const uint8_t *peer_pub_key_x,
                          const uint8_t *peer_pub_key_y,
                          const uint8_t *our_priv_key, uint8_t *out_dhkey);
 int ble_sm_alg_gen_key_pair(uint8_t *pub, uint8_t *priv);
-void na_ble_sm_alg_ecc_init(void);
+void ble_sm_alg_ecc_init(void);
+
+int ble_sm_csis_generate_rsi(const uint8_t *sirk, uint8_t *out);
+int ble_sm_csis_encrypt_sirk(const uint8_t *ltk, const uint8_t *plaintext_sirk,
+                             uint8_t *out);
+int ble_sm_csis_decrypt_sirk(const uint8_t *ltk, const uint8_t *enc_sirk, uint8_t *out);
 
 void ble_sm_enc_change_rx(const struct ble_hci_ev_enrypt_chg *ev);
 void ble_sm_enc_key_refresh_rx(const struct ble_hci_ev_enc_key_refresh *ev);
@@ -393,10 +401,6 @@ void ble_sm_ia_ra(struct ble_sm_proc *proc,
                   uint8_t *out_iat, uint8_t *out_ia,
                   uint8_t *out_rat, uint8_t *out_ra);
 
-int ble_sm_incr_our_sign_counter(uint16_t conn_handle);
-int ble_sm_incr_peer_sign_counter(uint16_t conn_handle);
-int na_ble_sm_alg_aes_cmac(const uint8_t *key, const uint8_t *in, size_t len,
-                        uint8_t *out);
 int32_t ble_sm_timer(void);
 void ble_sm_connection_broken(uint16_t conn_handle);
 int ble_sm_pair_initiate(uint16_t conn_handle);
@@ -404,14 +408,11 @@ int ble_sm_slave_initiate(uint16_t conn_handle);
 int ble_sm_enc_initiate(uint16_t conn_handle, uint8_t key_size,
                         const uint8_t *ltk, uint16_t ediv,
                         uint64_t rand_val, int auth);
-int na_ble_sm_alg_encrypt(const uint8_t *key, const uint8_t *plaintext,
+int ble_sm_alg_encrypt(const uint8_t *key, const uint8_t *plaintext,
                        uint8_t *enc_data);
 int ble_sm_init(void);
 #else
 
-#define ble_sm_incr_our_sign_counter(conn_handle) BLE_HS_ENOTSUP
-#define ble_sm_incr_peer_sign_counter(conn_handle) BLE_HS_ENOTSUP
-#define na_ble_sm_alg_aes_cmac(key, in, len, out) BLE_HS_ENOTSUP
 #define ble_sm_enc_change_rx(evt) ((void)(evt))
 #define ble_sm_ltk_req_rx(evt) ((void)(evt))
 #define ble_sm_enc_key_refresh_rx(evt) ((void)(evt))
@@ -425,15 +426,11 @@ int ble_sm_init(void);
 
 #define ble_sm_init() 0
 
-#define na_ble_sm_alg_encrypt(key, plaintext, enc_data) \
-        BLE_HS_ENOTSUP
-
 #endif
 
 struct ble_l2cap_chan *ble_sm_create_chan(uint16_t handle);
 void *ble_sm_cmd_get(uint8_t opcode, size_t len, struct os_mbuf **txom);
 int ble_sm_tx(uint16_t conn_handle, struct os_mbuf *txom);
-
 
 #ifdef __cplusplus
 }

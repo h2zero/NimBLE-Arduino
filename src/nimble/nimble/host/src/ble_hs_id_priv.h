@@ -38,6 +38,7 @@ bool ble_hs_is_rpa(uint8_t *addr, uint8_t addr_type);
 int ble_hs_id_set_pseudo_rnd(const uint8_t *);
 int ble_hs_id_set_nrpa_rnd(void);
 #endif
+
 #ifdef __cplusplus
 }
 #endif

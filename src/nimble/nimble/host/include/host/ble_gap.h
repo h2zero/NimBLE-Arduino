@@ -31,11 +31,6 @@
 #include "nimble/nimble/host/include/host/ble_hs.h"
 #include "nimble/nimble/host/include/host/ble_hs_adv.h"
 #include "syscfg/syscfg.h"
-#include "nimble/nimble/host/include/host/ble_esp_gap.h"
-
-#if MYNEWT_VAL(ENC_ADV_DATA)
-#include "nimble/nimble/host/src/ble_hs_hci_priv.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,31 +39,44 @@ extern "C" {
 struct hci_le_conn_complete;
 struct hci_conn_update;
 
+/**
+ * @defgroup ble_gap_ms_convert Generic Access Profile (GAP) Time Conversion Macros
+ * @{
+ */
+
+/** Convert advertising interval from milliseconds to BLE HCI units. */
 #define BLE_GAP_ADV_ITVL_MS(t)              ((t) * 1000 / BLE_HCI_ADV_ITVL)
+
+/** Convert scan interval from milliseconds to BLE HCI units. */
 #define BLE_GAP_SCAN_ITVL_MS(t)             ((t) * 1000 / BLE_HCI_SCAN_ITVL)
+
+/** Convert scan window from milliseconds to BLE HCI units. */
 #define BLE_GAP_SCAN_WIN_MS(t)              ((t) * 1000 / BLE_HCI_SCAN_ITVL)
+
+/** Convert connection interval from milliseconds to BLE HCI units. */
 #define BLE_GAP_CONN_ITVL_MS(t)             ((t) * 1000 / BLE_HCI_CONN_ITVL)
+
+/** Convert supervision timeout from milliseconds to BLE HCI units. */
 #define BLE_GAP_SUPERVISION_TIMEOUT_MS(t)   ((t) / 10)
+
+/** Convert periodic advertising interval from milliseconds to BLE HCI units. */
 #define BLE_GAP_PERIODIC_ITVL_MS(t)         ((t) * 1000 / BLE_HCI_PERIODIC_ADV_ITVL)
 
-#if MYNEWT_VAL(BLE_HIGH_DUTY_ADV_ITVL)
-/** 5 ms. */
-#define BLE_GAP_ADV_FAST_INTERVAL1_MIN      BLE_GAP_ADV_ITVL_MS(5)
-#else
+/** @} */
+
+/**
+ * @defgroup ble_gap_intervals Generic Access Profile (GAP) Intervals and Durations
+ * @{
+ */
+
 /** 30 ms. */
 #define BLE_GAP_ADV_FAST_INTERVAL1_MIN      BLE_GAP_ADV_ITVL_MS(30)
-#endif
 
 /** 60 ms. */
 #define BLE_GAP_ADV_FAST_INTERVAL1_MAX      BLE_GAP_ADV_ITVL_MS(60)
 
-#if MYNEWT_VAL(BLE_HIGH_DUTY_ADV_ITVL)
-/** 5 ms. */
-#define BLE_GAP_ADV_FAST_INTERVAL2_MIN      BLE_GAP_ADV_ITVL_MS(5)
-#else
 /** 100 ms. */
 #define BLE_GAP_ADV_FAST_INTERVAL2_MIN      BLE_GAP_ADV_ITVL_MS(100)
-#endif
 
 /** 150 ms. */
 #define BLE_GAP_ADV_FAST_INTERVAL2_MAX      BLE_GAP_ADV_ITVL_MS(150)
@@ -88,7 +96,7 @@ struct hci_conn_update;
 /** 30 ms; active scanning. */
 #define BLE_GAP_SCAN_FAST_WINDOW            BLE_GAP_SCAN_WIN_MS(30)
 
-/* 30.72 seconds; active scanning. */
+/** 30.72 seconds; active scanning. */
 #define BLE_GAP_SCAN_FAST_PERIOD            BLE_GAP_SCAN_ITVL_MS(30.72)
 
 /** 1.28 seconds; background scanning. */
@@ -109,75 +117,156 @@ struct hci_conn_update;
 /** 5 seconds. */
 #define BLE_GAP_CONN_PAUSE_PERIPHERAL       (5 * 1000)
 
-/* 30 ms. */
+/** 30 ms. */
 #define BLE_GAP_INITIAL_CONN_ITVL_MIN       BLE_GAP_CONN_ITVL_MS(30)
 
-/* 50 ms. */
+/** 50 ms. */
 #define BLE_GAP_INITIAL_CONN_ITVL_MAX       BLE_GAP_CONN_ITVL_MS(50)
+
+/** @} */
 
 /** Default channels mask: all three channels are used. */
 #define BLE_GAP_ADV_DFLT_CHANNEL_MAP        0x07
 
+/**
+ * @defgroup ble_gap_initial_conn_params Generic Access Profile (GAP) Initial Connection Parameters
+ * @{
+ */
+
+/** Initial connection latency. */
 #define BLE_GAP_INITIAL_CONN_LATENCY        0
+
+/** Initial supervision timeout. */
 #define BLE_GAP_INITIAL_SUPERVISION_TIMEOUT 0x0100
+
+/** Initial minimum connection event length. */
 #define BLE_GAP_INITIAL_CONN_MIN_CE_LEN     0x0000
+
+/** Initial maximum connection event length. */
 #define BLE_GAP_INITIAL_CONN_MAX_CE_LEN     0x0000
 
+/** @} */
+
+/**
+ * @defgroup ble_gap_roles Generic Access Profile (GAP) Roles
+ * @{
+ */
+
+/** GAP role: Master */
 #define BLE_GAP_ROLE_MASTER                 0
+
+/** GAP role: Slave */
 #define BLE_GAP_ROLE_SLAVE                  1
 
+/** @} */
+
+/**
+ * @defgroup ble_gap_events Generic Access Profile (GAP) Events
+ * @{
+ */
+
+/** GAP event: Connection established */
 #define BLE_GAP_EVENT_CONNECT               0
+
+/** GAP event: Connection terminated */
 #define BLE_GAP_EVENT_DISCONNECT            1
+
+/** GAP event: Reserved for future use */
 /* Reserved                                 2 */
+
+/** GAP event: Connection update */
 #define BLE_GAP_EVENT_CONN_UPDATE           3
+
+/** GAP event: Connection update request */
 #define BLE_GAP_EVENT_CONN_UPDATE_REQ       4
+
+/** GAP event: L2CAP update request */
 #define BLE_GAP_EVENT_L2CAP_UPDATE_REQ      5
+
+/** GAP event: Termination failure */
 #define BLE_GAP_EVENT_TERM_FAILURE          6
+
+/** GAP event: Discovery event */
 #define BLE_GAP_EVENT_DISC                  7
+
+/** GAP event: Discovery complete */
 #define BLE_GAP_EVENT_DISC_COMPLETE         8
+
+/** GAP event: Advertising complete */
 #define BLE_GAP_EVENT_ADV_COMPLETE          9
+
+/** GAP event: Encryption change */
 #define BLE_GAP_EVENT_ENC_CHANGE            10
+
+/** GAP event: Passkey action */
 #define BLE_GAP_EVENT_PASSKEY_ACTION        11
+
+/** GAP event: Notification received */
 #define BLE_GAP_EVENT_NOTIFY_RX             12
+
+/** GAP event: Notification transmitted */
 #define BLE_GAP_EVENT_NOTIFY_TX             13
+
+/** GAP event: Subscription */
 #define BLE_GAP_EVENT_SUBSCRIBE             14
+
+/** GAP event: MTU event */
 #define BLE_GAP_EVENT_MTU                   15
+
+/** GAP event: Identity resolved */
 #define BLE_GAP_EVENT_IDENTITY_RESOLVED     16
+
+/** GAP event: Repeat pairing */
 #define BLE_GAP_EVENT_REPEAT_PAIRING        17
+
+/** GAP event: PHY update complete */
 #define BLE_GAP_EVENT_PHY_UPDATE_COMPLETE   18
+
+/** GAP event: Extended discovery */
 #define BLE_GAP_EVENT_EXT_DISC              19
+
+/** GAP event: Periodic synchronization */
 #define BLE_GAP_EVENT_PERIODIC_SYNC         20
+
+/** GAP event: Periodic report */
 #define BLE_GAP_EVENT_PERIODIC_REPORT       21
+
+/** GAP event: Periodic synchronization lost */
 #define BLE_GAP_EVENT_PERIODIC_SYNC_LOST    22
+
+/** GAP event: Scan request received */
 #define BLE_GAP_EVENT_SCAN_REQ_RCVD         23
+
+/** GAP event: Periodic transfer */
 #define BLE_GAP_EVENT_PERIODIC_TRANSFER     24
+
+/** GAP event: Pathloss threshold */
 #define BLE_GAP_EVENT_PATHLOSS_THRESHOLD    25
+
+/** GAP event: Transmit power */
 #define BLE_GAP_EVENT_TRANSMIT_POWER        26
-#define BLE_GAP_EVENT_PARING_COMPLETE       27
+
+/** GAP event: Pairing complete */
+#define BLE_GAP_EVENT_PAIRING_COMPLETE      27
+
+/** GAP event: Pairing complete (deprecated) */
+#define BLE_GAP_EVENT_PARING_COMPLETE BLE_GAP_EVENT_PAIRING_COMPLETE
+
+/** GAP event: Subrate change */
 #define BLE_GAP_EVENT_SUBRATE_CHANGE        28
-#define BLE_GAP_EVENT_VS_HCI                29
+
+/** GAP event: Unhandled HCI event */
+#define BLE_GAP_EVENT_UNHANDLED_HCI_EVENT   29
+
+/** GAP event: BIG (Broadcast Isochronous Group) information report */
 #define BLE_GAP_EVENT_BIGINFO_REPORT        30
-#define BLE_GAP_EVENT_REATTEMPT_COUNT       31
-#define BLE_GAP_EVENT_AUTHORIZE             32
-#define BLE_GAP_EVENT_TEST_UPDATE           33
-#define BLE_GAP_EVENT_DATA_LEN_CHG          34
-#define BLE_GAP_EVENT_CONNLESS_IQ_REPORT    35
-#define BLE_GAP_EVENT_CONN_IQ_REPORT        36
-#define BLE_GAP_EVENT_CTE_REQ_FAILED        37
 
-//TODO : Deprecate the EVENT_LINK_ESTAB going ahead
-#define BLE_GAP_EVENT_LINK_ESTAB            38
-#define BLE_GAP_EVENT_EATT                  39
-#define BLE_GAP_EVENT_PER_SUBEV_DATA_REQ    40
-#define BLE_GAP_EVENT_PER_SUBEV_RESP        41
-#define BLE_GAP_EVENT_PERIODIC_TRANSFER_V2  42
+/** @} */
 
-/* DTM events */
-#define BLE_GAP_DTM_TX_START_EVT            0
-#define BLE_GAP_DTM_RX_START_EVT            1
-#define BLE_GAP_DTM_END_EVT                 2
-
-/*** Reason codes for the subscribe GAP event. */
+/**
+ * @defgroup ble_gap_subscribe_reasons Generic Access Profile (GAP) Subscribe Event Reason Codes
+ * @{
+ */
 
 /** Peer's CCCD subscription state changed due to a descriptor write. */
 #define BLE_GAP_SUBSCRIBE_REASON_WRITE      1
@@ -191,24 +280,20 @@ struct hci_conn_update;
  */
 #define BLE_GAP_SUBSCRIBE_REASON_RESTORE    3
 
-#define BLE_GAP_REPEAT_PAIRING_RETRY        1
-#define BLE_GAP_REPEAT_PAIRING_IGNORE       2
-
-/**
- * @defgroup Mask for checking random address validity
- * @{
- */
-/** Static random address check mask. */
-#define BLE_STATIC_RAND_ADDR_MASK           0xC0
-
-/** Non RPA check mask. */
-#define BLE_NON_RPA_MASK                    0x3F
-
 /** @} */
 
-/* Response values for gatt read/write authorization event */
-#define BLE_GAP_AUTHORIZE_ACCEPT            1
-#define BLE_GAP_AUTHORIZE_REJECT            2
+/**
+ * @defgroup ble_gap_repeat_pairing_options Generic Access Profile (GAP) Repeat Pairing Options
+ * @{
+ */
+
+/** GAP repeat pairing option: Retry the pairing procedure. */
+#define BLE_GAP_REPEAT_PAIRING_RETRY        1
+
+/** GAP repeat pairing option: Ignore the pairing procedure. */
+#define BLE_GAP_REPEAT_PAIRING_IGNORE       2
+
+/** @} */
 
 /** Connection security state */
 struct ble_gap_sec_state {
@@ -223,21 +308,6 @@ struct ble_gap_sec_state {
 
     /** Size of a key used for encryption */
     unsigned key_size:5;
-
-    /** Current device security state*/
-    unsigned authorize:1;
-};
-
-/** Read Remote Version parameters **/
-struct ble_gap_read_rem_ver_params {
-    /** Version of the Current LMP **/
-    uint8_t  version;
-
-    /** Company Identifier **/
-    uint16_t manufacturer;
-
-    /** Revision of the LMP **/
-    uint16_t subversion;
 };
 
 /** Advertising parameters */
@@ -507,84 +577,55 @@ struct ble_gap_disc_desc {
     ble_addr_t direct_addr;
 };
 
+/**
+ * Represents a repeat pairing operation between two devices.
+ *
+ * This structure contains information about a repeat pairing operation between
+ * two devices. The host can use this information to determine whether it needs
+ * to initiate a pairing procedure with a remote device again.
+ */
 struct ble_gap_repeat_pairing {
     /** The handle of the relevant connection. */
     uint16_t conn_handle;
 
     /** Properties of the existing bond. */
+    /** The size of the current encryption key in octets. */
     uint8_t cur_key_size;
+
+    /** A flag indicating whether the current connection is authenticated. */
     uint8_t cur_authenticated:1;
+
+    /**
+     * A flag indicating whether the current connection is using secure
+     * connections.
+     */
     uint8_t cur_sc:1;
 
     /**
      * Properties of the imminent secure link if the pairing procedure is
      * allowed to continue.
      */
+
+    /** The size of the imminent encryption key in octets. */
     uint8_t new_key_size;
+
+    /**
+     * A flag indicating whether the imminent connection will be authenticated.
+     */
     uint8_t new_authenticated:1;
+
+    /**
+     * A flag indicating whether the imminent connection will use secure
+     * connections.
+     */
     uint8_t new_sc:1;
+
+    /**
+     * A flag indicating whether the pairing procedure will result in a new
+     * bonding,
+     */
     uint8_t new_bonding:1;
 };
-
-
-#define BLE_GAP_PER_ADV_DATA_STATUS_COMPLETE   0x00
-#define BLE_GAP_PER_ADV_DATA_STATUS_INCOMPLETE 0x01
-#define BLE_GAP_PER_ADV_DATA_STATUS_TRUNCATED  0x02
-#define BLE_GAP_PER_ADV_DATA_STATUS_RX_FAILED  0xFF
-
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-struct ble_gap_periodic_adv_response {
-    /** The subevent in which the response is received */
-    uint8_t subevent;
-
-    /** Status of the subevent indication.
-     *
-     *  0 if subevent indication was transmitted.
-     *  1 if subevent indication was not transmitted.
-     *  All other values RFU.
-     */
-
-    /** The adv handle of the adv */
-    uint8_t adv_handle;
-
-    uint8_t tx_status;
-
-    /** The TX power of the response in dBm */
-    int8_t tx_power;
-
-    /** The RSSI of the response in dBm */
-    int8_t rssi;
-
-    /** The Constant Tone Extension (CTE) of the advertisement */
-    uint8_t cte_type;
-
-    /** The response slot */
-    uint8_t response_slot;
-
-    /** Data status */
-    uint8_t data_status;
-
-    /** Data length */
-    uint8_t data_length;
-
-    /** response data */
-    const uint8_t *data;
-};
-
-struct ble_gap_periodic_adv_response_params {
-    /** The periodic advertsing event for which response shall be sent in */
-    uint16_t request_event;
-
-    /** The request subevent for which response shall be sent in */
-    uint8_t request_subevent;
-
-    /** The subevent the response shall be sent in */
-    uint8_t response_subevent;
-
-    /** The response slot the response shall be sent in */
-    uint8_t response_slot;
-};
-#endif
 
 /**
  * Represents a GAP-related event.  When such an event occurs, the host
@@ -619,62 +660,7 @@ struct ble_gap_event {
 
             /** The handle of the relevant connection. */
             uint16_t conn_handle;
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-           /*
-            * Adv_Handle is used to identify an advertising set.
-            * If the connection is established from periodic advertising with responses
-            * and Role is 0x00  then the Advertising_Handle parameter shall be set
-            * according to the periodic advertising train the connection was established from
-            */
-            uint8_t adv_handle;
-
-            /*
-             * Sync_Handle identifying the periodic advertising train
-             * If the connection is established from periodic advertising with responses
-             * and Role is 0x01, then the Sync_Handle parameter shall be set according
-             * to the periodic advertising train the connection was established from
-             */
-            uint16_t sync_handle;
-#endif
         } connect;
-
-         /**
-          * Represents a successful Link establishment attempt. Sometimes, in noisy environment,
-          * even if BLE_GAP_EVENT_CONNECT is posted, the link syncronization procedure may fail
-          * and link gets disconnected with reason 0x3E. Application can wait for below event to ensure
-          * the link syncronization is completed.   Valid for the following event
-          * types:
-          *     o BLE_GAP_EVENT_LINK_ESTAB
-          */
-
-         struct {
-           /**
-             * The final status of the link establishment;
-             *     o 0: the connection was successfully established.
-             *     o BLE host error code: the connection attempt failed for
-             *       the specified reason.
-             */
-            int status;
-
-           /** The handle of the relevant connection. */
-            uint16_t conn_handle;
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-           /*
-            * Adv_Handle is used to identify an advertising set.
-            * If the connection is established from periodic advertising with responses
-            * and Role is 0x00  then the Advertising_Handle parameter shall be set
-            * according to the periodic advertising train the connection was established from
-            */
-            uint8_t adv_handle;
-            /*
-             * Sync_Handle identifying the periodic advertising train
-             * If the connection is established from periodic advertising with responses
-             * and Role is 0x01, then the Sync_Handle parameter shall be set according
-             * to the periodic advertising train the connection was established from
-             */
-            uint16_t sync_handle;
-#endif
-       } link_estab;
 
         /**
          * Represents a terminated connection.  Valid for the following event
@@ -1058,18 +1044,6 @@ struct ble_gap_event {
 
             /** Advertiser clock accuracy */
             uint8_t adv_clk_accuracy;
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-            /** Number of subevents. If zero, the periodic advertiser will be a broadcaster,
-             * without responses.
-             */
-            uint8_t num_subevents;
-            /** Interval between subevents (N * 1.25 ms) */
-            uint8_t subevent_interval;
-            /** Time between the advertising packet and the first response slot (N * 1.25 ms). */
-            uint8_t response_slot_delay;
-            /** Time between response slots (N * 0.125 ms) */
-            uint8_t response_slot_spacing;
-#endif
         } periodic_sync;
 
         /**
@@ -1087,24 +1061,10 @@ struct ble_gap_event {
             /** Received signal strength indication in dBm (127 if unavailable) */
             int8_t rssi;
 
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-            /**
-             * It indicates the periodic advertising event counter (paEventCounter) of
-             * the event that the periodic advertising packet was received in.
-             */
-            uint16_t event_counter;
-            /**
-             * It indicates Periodic Advertising with Responses subevent in which
-             * the periodic advertising packet was received in.
-             */
-            uint8_t  subevent;
-#endif
-
             /** Advertising data status, can be one of following constants:
              *  - BLE_HCI_PERIODIC_DATA_STATUS_COMPLETE
              *  - BLE_HCI_PERIODIC_DATA_STATUS_INCOMPLETE
              *  - BLE_HCI_PERIODIC_DATA_STATUS_TRUNCATED
-             *  - BLE_HCI_PERIODIC_DATA_STATUS_RX_FAILED
              */
             uint8_t data_status;
 
@@ -1186,18 +1146,6 @@ struct ble_gap_event {
 
             /** Advertiser clock accuracy */
             uint8_t adv_clk_accuracy;
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-            /** Number of subevents. If zero, the periodic advertiser will be a broadcaster,-
-             * without responses.
-            */
-            uint8_t num_subevents;
-            /** Interval between subevents (N * 1.25 ms) */
-            uint8_t subevent_interval;
-            /** Time between the advertising packet and the first response slot (N * 1.25 ms). */
-            uint8_t response_slot_delay;
-            /** Time between response slots (N * 0.125 ms) */
-            uint8_t response_slot_spacing;
-#endif
         } periodic_transfer;
 #endif
 
@@ -1286,21 +1234,22 @@ struct ble_gap_event {
 	    /** Advertising PHY */
 	    uint8_t phy;
 
-	    /** Transmit power Level */
-	    int8_t transmit_power_level;
+            /** Transmit power Level */
+            int8_t transmit_power_level;
 
 	    /** Transmit Power Level Flag */
 	    uint8_t transmit_power_level_flag;
 
-	    /** Delta indicating change in transmit Power Level */
-	    int8_t delta;
+            /** Delta indicating change in transmit Power Level */
+            int8_t delta;
 	} transmit_power;
 #endif
         /**
          * Represents a received Pairing Complete message
          *
          * Valid for the following event types:
-         *     o BLE_GAP_EVENT_PARING_COMPLETE
+         *     o BLE_GAP_EVENT_PAIRING_COMPLETE
+         *     o BLE_GAP_EVENT_PARING_COMPLETE (deprecated)
          */
         struct {
             /**
@@ -1342,370 +1291,58 @@ struct ble_gap_event {
             uint16_t supervision_tmo;
         } subrate_change;
 #endif
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
+
+#if MYNEWT_VAL(BLE_HS_GAP_UNHANDLED_HCI_EVENT)
         /**
-         * Represents a periodic advertising subevent data request
-         * with parameters valid for the following event types:
-         *     o BLE_GAP_EVENT_PER_SUBEV_DATA_REQ
-         */
-        struct {
-            /** Advertising handle */
-            uint8_t adv_handle;
-
-            /** Subevent start */
-            uint8_t subevent_start;
-
-            /** Number of subevents */
-            uint8_t subevent_data_count;
-        } periodic_adv_subev_data_req;
-
-        /**
-         * Represents a periodic advertising response
-         * with parameters valid for the following event types:
-         *     o BLE_GAP_EVENT_PER_SUBEV_RESP
-         */
-        struct ble_gap_periodic_adv_response periodic_adv_response;
-#endif
-
-#if MYNEWT_VAL(BLE_HCI_VS)
-        /**
-         * Represents a received vendor-specific HCI event
+         * Represents an HCI event received from controller that is not handled
+         * by the host. The event may be a regular event, LE meta event or
+         * vendor specific event which is denoted by included flags.
          *
          * Valid for the following event types:
-         *     o BLE_GAP_EVENT_VS_HCI
+         *     o BLE_GAP_EVENT_UNHANDLED_HCI_EVENT
          */
         struct {
+            bool is_le_meta;
+            bool is_vs;
             const void *ev;
             uint8_t length;
-        } vs_hci;
-#endif
-
-        /**
-         * GATT Authorization Event. Ask the user to authorize a GATT
-         * read/write operation.
-         *
-         * Valid for the following event types:
-         * o BLE_GAP_EVENT_AUTHORIZE
-         *
-         * Valid responses from user:
-         * o BLE_GAP_AUTHORIZE_ACCEPT
-         * o BLE_GAP_AUTHORIZE_REJECT
-         */
-        struct {
-            /* Connection Handle */
-            uint16_t conn_handle;
-
-            /* Attribute handle of the attribute being accessed. */
-            uint16_t attr_handle;
-
-            /* Weather the operation is a read or write operation. */
-            int is_read;
-
-            /* User's response */
-            int out_response;
-        } authorize;
-
-#if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
-        /**
-         * EATT Event
-         *
-         * Valid for the following event types:
-         * o BLE_GAP_EVENT_EATT
-         *
-         */
-        struct {
-            /* Connection Handle */
-            uint16_t conn_handle;
-
-            /** Connected Status
-             *
-             * EATT Connected: 0
-             * EATT Disconnected: 1
-             */
-            uint8_t status;
-
-            /* CID of the bearer */
-            uint16_t cid;
-
-        } eatt;
-#endif
-
-#if MYNEWT_VAL(BLE_ENABLE_CONN_REATTEMPT)
-	/**
-	 * Represents a event mentioning connection reattempt
-	 * count
-	 *
-	 * Valid for the following event types:
-	 * 	o BLE_GAP_EVENT_REATTEMPT_COUNT
-	 */
-        struct {
-            /* Connection handle */
-	    uint16_t conn_handle;
-
-	    /* Reattempt connection attempt count */
-	    uint8_t count;
-        } reattempt_cnt;
-#endif
-        /**
-	 * Represent a event for DTM test results
-	 *
-	 * Valid for the following event types:
-	 *      o BLE_GAP_EVENT_TEST_UPDATE
-	 */
-	struct {
-            /* Indicate DTM operation status */
-	    uint8_t status;
-
-	    /* DTM state change event. Can be following constants:
-	     *    o BLE_GAP_DTM_TX_START_EVT
-	     *    o BLE_GAP_DTM_RX_START_EVT
-	     *    o BLE_GAP_DTM_END_EVT
-	     */
-            uint8_t update_evt;
-
-	    /* Number of packets received.
-	     *
-	     * Valid only for BLE_GAP_DTM_END_EVT
-	     * shall be 0 for a transmitter.
-	     */
-            uint16_t num_pkt;
-	} dtm_state;
-        /**
-	 * Represent an event for LE Data length change
-	 *
-	 * Valid for the following event types:
-	 *      o BLE_GAP_EVENT_DATA_LEN_CHG
-	 */
-	struct {
-            /* Connection handle */
-	    uint16_t conn_handle;
-
-	    /* Max Tx Payload octotes */
-	    uint16_t max_tx_octets;
-
-	    /* Max Tx Time */
-	    uint16_t max_tx_time;
-
-	    /* Max Rx payload octet */
-	    uint16_t max_rx_octets;
-
-	    /* Max Rx Time */
-	    uint16_t max_rx_time;
-	} data_len_chg;
-#if MYNEWT_VAL(BLE_AOA_AOD)
-    /**
-     * Represents a AOA/AOD connectionless iq report event
-     * Valid for the following event types:
-     *     o BLE_GAP_EVENT_CONNLESS_IQ_RPT
-     */
-    struct {
-        /** Sync_Handle identifying the periodic advertising train.
-         *  Range: 0x0000 to 0x0EFF
-         *  0x0FFF indicates Receiver Test mode.
-         */
-        uint16_t sync_handle;
-
-        /** The index of the channel on which the packet was received.
-         *  Range: 0x00 to 0x27
-         *  Note: 0x25 to 0x27 can be used only for packets generated during test modes.
-         */
-        uint8_t channel_index;
-
-        /** RSSI of the packet.
-         *  Range: -1270 to +200 (Units: 0.1 dBm).
-         */
-        int16_t rssi;
-
-        /** Antenna ID used for receiving the packet. */
-        uint8_t rssi_antenna_id;
-
-        /** Type of Constant Tone Extension (CTE).
-         *  0x00: AoA Constant Tone Extension
-         *  0x01: AoD Constant Tone Extension with 1 μs slots
-         *  0x02: AoD Constant Tone Extension with 2 μs slots
-         */
-        uint8_t cte_type;
-
-        /** Switching and sampling slot durations.
-         *  0x01: Switching and sampling slots are 1 μs each
-         *  0x02: Switching and sampling slots are 2 μs each
-         */
-        uint8_t slot_durations;
-
-        /** Status of the packet.
-         *  0x00: CRC was correct
-         *  0x01: CRC was incorrect, but Length and CTETime fields were used to determine sampling points
-         *  0x02: CRC was incorrect, but the Controller determined the position and length of the CTE in another way
-         *  0xFF: Insufficient resources to sample (Channel_Index, CTE_Type, and Slot_Durations invalid)
-         */
-        uint8_t packet_status;
-
-        /** Value of paEventCounter for the reported AUX_SYNC_IND PDU. */
-        uint16_t periodic_event_counter;
-
-        /** Total number of sample pairs (I and Q samples).
-         *  0x00: No samples provided (only permitted if Packet_Status is 0xFF)
-         *  0x09 to 0x52: Total number of sample pairs
-         */
-        uint8_t sample_count;
-
-        /** Array of I samples for the reported packet (signed integers).
-         *  Each value represents an I sample at a specific sampling point.
-         *  0x80 indicates no valid sample available.
-         */
-        int8_t *i_samples;
-
-        /** Array of Q samples for the reported packet (signed integers).
-         *  Each value represents a Q sample at a specific sampling point.
-         *  0x80 indicates no valid sample available.
-         */
-        int8_t *q_samples;
-    } connless_iq_report;
-
-    /**
-     * Represents a connection iq report.
-     * Valid for the following event types:
-     *     o BLE_GAP_EVENT_CONN_IQ_RPT
-     */
-    struct {
-        /** Connection handle identifying the connection. */
-        uint16_t conn_handle;
-
-        /** PHY used for receiving the packet.
-         *  0x01: LE 1M PHY
-         *  0x02: LE 2M PHY
-         */
-        uint8_t rx_phy;
-
-        /** The index of the data channel on which the packet was received. */
-        uint8_t data_channel_index;
-
-        /** RSSI of the packet.
-         *  Range: -1270 to +200 (Units: 0.1 dBm).
-         */
-        int16_t rssi;
-
-        /** Antenna ID used for receiving the packet. */
-        uint8_t rssi_antenna_id;
-
-        /** Type of Constant Tone Extension (CTE).
-         *  0x00: AoA Constant Tone Extension
-         *  0x01: AoD Constant Tone Extension with 1 μs slots
-         *  0x02: AoD Constant Tone Extension with 2 μs slots
-         */
-        uint8_t cte_type;
-
-        /** Switching and sampling slot durations.
-         *  0x01: Switching and sampling slots are 1 μs each
-         *  0x02: Switching and sampling slots are 2 μs each
-         */
-        uint8_t slot_durations;
-
-        /** Status of the packet.
-         *  0x00: CRC was correct
-         *  0x01: CRC was incorrect, but Length and CTETime fields were used to determine sampling points
-         *  0x02: CRC was incorrect, but the Controller determined the position and length of the CTE in another way
-         *  0xFF: Insufficient resources to sample (Channel_Index, CTE_Type, and Slot_Durations invalid)
-         */
-        uint8_t packet_status;
-
-        /** Value of the connection event counter for the reported packet. */
-        uint16_t conn_event_counter;
-
-        /** Total number of sample pairs (I and Q samples).
-         *  0x00: No samples provided (only permitted if Packet_Status is 0xFF)
-         *  0x09 to 0x52: Total number of sample pairs
-         */
-        uint8_t sample_count;
-
-        /** Array of I samples for the reported packet (signed integers).
-         *  Each value represents an I sample at a specific sampling point.
-         *  0x80 indicates no valid sample available.
-         */
-        int8_t *i_samples;
-
-        /** Array of Q samples for the reported packet (signed integers).
-         *  Each value represents a Q sample at a specific sampling point.
-         *  0x80 indicates no valid sample available.
-         */
-        int8_t *q_samples;
-    } conn_iq_report;
-
-    /**
-     * Represents a cte req failed event
-     * Valid for the following event types:
-     *     o BLE_GAP_EVENT_CTE_REQ_FAILED
-     */
-    struct {
-        /** Status indicating the reason for failure.
-         *  Refer to HCI error codes for detailed status values.
-         */
-        uint8_t status;
-
-        /** Connection handle identifying the connection. */
-        uint16_t conn_handle;
-    } cte_req_fail;
-
+        } unhandled_hci;
 #endif
     };
 };
 
-#if MYNEWT_VAL(OPTIMIZE_MULTI_CONN)
-/** @brief multiple Connection parameters  */
-struct ble_gap_multi_conn_params {
-    /** The type of address the stack should use for itself. */
-    uint8_t own_addr_type;
-
-#if MYNEWT_VAL(BLE_EXT_ADV)
-    /** Define on which PHYs connection attempt should be done */
-    uint8_t phy_mask;
-#endif // MYNEWT_VAL(BLE_EXT_ADV)
-
-    /** The address of the peer to connect to. */
-    const ble_addr_t *peer_addr;
-
-    /** The duration of the discovery procedure. */
-    int32_t duration_ms;
-
-    /**
-     * Additional arguments specifying the particulars of the connect procedure. When extended
-     * adv is disabled or BLE_GAP_LE_PHY_1M_MASK is set in phy_mask this parameter can't be
-     * specified to null.
-     */
-    const struct ble_gap_conn_params *phy_1m_conn_params;
-
-#if MYNEWT_VAL(BLE_EXT_ADV)
-    /**
-     * Additional arguments specifying the particulars of the connect procedure. When
-     * BLE_GAP_LE_PHY_2M_MASK is set in phy_mask this parameter can't be specified to null.
-     */
-    const struct ble_gap_conn_params *phy_2m_conn_params;
-
-    /**
-     * Additional arguments specifying the particulars of the connect procedure. When
-     * BLE_GAP_LE_PHY_CODED_MASK is set in phy_mask this parameter can't be specified to null.
-     */
-    const struct ble_gap_conn_params *phy_coded_conn_params;
-#endif // MYNEWT_VAL(BLE_EXT_ADV)
-
-    /**
-     * The minimum length occupied by this connection in scheduler. 0 means disable the
-     * optimization for this connection.
-     */
-    uint32_t scheduling_len_us;
-};
-#endif // MYNEWT_VAL(OPTIMIZE_MULTI_CONN)
-
+/** Callback function type for handling BLE GAP events. */
 typedef int ble_gap_event_fn(struct ble_gap_event *event, void *arg);
+
+/** Callback function type for iterating through BLE connection handles. */
 typedef int ble_gap_conn_foreach_handle_fn(uint16_t conn_handle, void *arg);
 
+/**
+ * @defgroup ble_gap_advertising_modes Generic Access Profile (GAP) Advertising Modes
+ * @{
+ */
+
+/** Non-connectable mode for advertising. */
 #define BLE_GAP_CONN_MODE_NON               0
+
+/** Directed connectable mode for advertising. */
 #define BLE_GAP_CONN_MODE_DIR               1
+
+/** Undirected connectable mode for advertising. */
 #define BLE_GAP_CONN_MODE_UND               2
 
+
+/** Non-discoverable mode for advertising. */
 #define BLE_GAP_DISC_MODE_NON               0
+
+/** Limited discoverable mode for advertising. */
 #define BLE_GAP_DISC_MODE_LTD               1
+
+/** General discoverable mode for advertising. */
 #define BLE_GAP_DISC_MODE_GEN               2
+
+/** @} */
+
 
 /**
  * Searches for a connection with the specified handle.  If a matching
@@ -1850,13 +1487,13 @@ int ble_gap_adv_rsp_set_data(const uint8_t *data, int data_len);
  *                      fit in an advertisement,
  *                      other error code on failure.
  */
-int ble_gap_adv_set_fields(const struct ble_hs_adv_fields *rsp_fields);
+int ble_gap_adv_set_fields(const struct ble_hs_adv_fields *adv_fields);
 
 /**
  * Configures the fields to include in subsequent scan responses.  This is a
  * convenience wrapper for ble_gap_adv_rsp_set_data().
  *
- * @param adv_fields   Specifies the scan response data.
+ * @param rsp_fields   Specifies the scan response data.
  *
  * @return              0 on success,
  *                      BLE_HS_EBUSY if advertising is in progress,
@@ -1865,44 +1502,6 @@ int ble_gap_adv_set_fields(const struct ble_hs_adv_fields *rsp_fields);
  *                      other error code on failure.
  */
 int ble_gap_adv_rsp_set_fields(const struct ble_hs_adv_fields *rsp_fields);
-
-#if MYNEWT_VAL(ENC_ADV_DATA)
-/**
- * @brief Bluetooth data serialized size.
- *
- * Get the size of a serialized @ref bt_data given its data length.
- *
- * Size of 'AD Structure'->'Length' field, equal to 1.
- * Size of 'AD Structure'->'Data'->'AD Type' field, equal to 1.
- * Size of 'AD Structure'->'Data'->'AD Data' field, equal to data_len.
- *
- * See Core Specification Version 5.4 Vol. 3 Part C, 11, Figure 11.1.
- */
-#define BLE_GAP_DATA_SERIALIZED_SIZE(data_len) ((data_len) + 2)
-#define BLE_GAP_ENC_ADV_DATA    0x31
-struct enc_adv_data {
-    uint8_t len;
-    uint8_t type;
-    uint8_t *data;
-};
-
-/**
- * @brief Helper to declare elements of enc_adv_data arrays
- *
- * This macro is mainly for creating an array of struct enc_adv_data
- * elements which is then passed to e.g. @ref ble_gap_adv_start().
- *
- * @param _type Type of advertising data field
- * @param _data Pointer to the data field payload
- * @param _data_len Number of bytes behind the _data pointer
- */
-#define ENC_ADV_DATA(_type, _data, _data_len) \
-    { \
-        .type = (_type), \
-        .len = (_data_len), \
-        .data = (uint8_t *)(_data), \
-    }
-#endif
 
 #if MYNEWT_VAL(BLE_EXT_ADV)
 /** @brief Extended advertising parameters  */
@@ -2103,6 +1702,16 @@ int ble_gap_ext_adv_clear(void);
  *
  */
 int ble_gap_ext_adv_active(uint8_t instance);
+
+/**
+ * Finds first not configured advertising instance.
+ *
+ * @param[out] out_adv_instance            Pointer to be filled with found advertising instance
+ *
+ * @return 0 if free advertising instance was found, error code otherwise
+ *
+ */
+int ble_gap_adv_get_free_instance(uint8_t *out_adv_instance);
 #endif
 
 /* Periodic Advertising */
@@ -2122,55 +1731,31 @@ struct ble_gap_periodic_adv_params {
      *  defaults
      */
     uint16_t itvl_max;
-
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-	/** Number of subevents
-	 *  If zero, the periodic advertiser will be a broadcaster, without responses.
-	 */
-	uint8_t num_subevents;
-
-	/** Interval between subevents (N * 1.25 ms)
-	 *  Shall be between 7.5ms and 318.75 ms.
-	 */
-	uint8_t subevent_interval;
-
-	/** Time between the advertising packet in a subevent and the
-	 *  first response slot (N * 1.25 ms)
-	 *
-	 */
-	uint8_t response_slot_delay;
-
-	/** Time between response slots (N * 0.125 ms)
-	 *  Shall be between 0.25 and 31.875 ms.
-	 */
-	uint8_t response_slot_spacing;
-
-	/** Number of subevent response slots
-	 *  If zero, response_slot_delay and response_slot_spacing are ignored.
-	 */
-	uint8_t num_response_slots;
-#endif /* PERIODIC_ADV_WITH_RESPONSES */
 };
 
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_ENH)
 /** @brief Periodic advertising enable parameters  */
 struct ble_gap_periodic_adv_start_params {
+#if MYNEWT_VAL(BLE_VERSION) >= 53
     /** If include adi in aux_sync_ind PDU */
-    unsigned int include_adi:1;
+    unsigned int include_adi : 1;
+#endif
 };
 
 /** @brief Periodic advertising sync reporting parameters  */
 struct ble_gap_periodic_adv_sync_reporting_params {
+#if MYNEWT_VAL(BLE_VERSION) >= 53
     /** If filter duplicates */
-    unsigned int filter_duplicates:1;
+    unsigned int filter_duplicates : 1;
+#endif
 };
 
 /** @brief Periodic adv set data parameters  */
 struct ble_gap_periodic_adv_set_data_params {
+#if MYNEWT_VAL(BLE_VERSION) >= 53
     /** If include adi in aux_sync_ind PDU */
-    unsigned int update_did:1;
-};
+    unsigned int update_did : 1;
 #endif
+};
 
 /** @brief Periodic sync parameters  */
 struct ble_gap_periodic_sync_params {
@@ -2184,114 +1769,14 @@ struct ble_gap_periodic_sync_params {
     uint16_t sync_timeout;
 
     /** If reports should be initially disabled when sync is created */
-    unsigned int reports_disabled:1;
+    unsigned int reports_disabled : 1;
 
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_ENH)
+#if MYNEWT_VAL(BLE_VERSION) >= 53
     /** If duplicate filtering should be should be initially enabled when sync is
-     created */
-    unsigned int filter_duplicates:1;
-#endif
-#if MYNEWT_VAL(BLE_AOA_AOD)
-    /**
-     * Specifies the type of Constant Tone Extension (CTE) to which the receiver should not synchronize.
-     * This parameter determines which types of packets with specific CTE configurations are ignored during synchronization.
-     *
-     * Possible values:
-     *   0: Do not sync to packets with an AoA Constant Tone Extension.
-     *   1: Do not sync to packets with an AoD Constant Tone Extension with 1 μs slots.
-     *   2: Do not sync to packets with an AoD Constant Tone Extension with 2 μs slots.
-     *   3: Do not sync to packets with a type 3 Constant Tone Extension (currently reserved for future use).
-     *   4: Do not sync to packets without a Constant Tone Extension.
-     */
-    uint8_t sync_cte_type;
+        created */
+    unsigned int filter_duplicates : 1;
 #endif
 };
-
-
-#if MYNEWT_VAL(BLE_AOA_AOD)
-#define BLE_GAP_CTE_TYPE_AOA        0x0
-#define BLE_GAP_CTE_TYPE_AOD_1US    0x1
-#define BLE_GAP_CTE_TYPE_AOD_2US    0x2
-
-#define BLE_GAP_CTE_RSP_ALLOW_AOA_MASK        BLE_HCI_CTE_RSP_ALLOW_AOA_MASK
-#define BLE_GAP_CTE_RSP_ALLOW_AOD_1US_MASK    BLE_HCI_CTE_RSP_ALLOW_AOD_1US_MASK
-#define BLE_GAP_CTE_RSP_ALLOW_AOD_2US_MASK    BLE_HCI_CTE_RSP_ALLOW_AOD_2US_MASK
-
-
-/** @brief Periodic advertising parameters  */
-struct ble_gap_periodic_adv_cte_params {
-    /**
-     * Constant Tone Extension length in 8 µs units (Range: 0x02 to 0x14)
-     */
-    uint8_t cte_length;
-
-    /**
-     * Constant Tone Extension type
-     *  0x00 : AoA Constant Tone Extension
-     *  0x01 : AoD Constant Tone Extension with 1 µs slots
-     *  0x02 : AoD Constant Tone Extension with 2 µs slots
-     */
-    uint8_t cte_type;
-
-    /**
-     *  The number of Constant Tone Extensions to transmit in each periodic
-     *  advertising interval (Range: 0x01 to 0x10)
-     */
-    uint8_t cte_count;
-
-    /**
-     * The number of Antenna IDs in the pattern
-     * (Range: 0x02 to 0x4B)
-     */
-    uint8_t switching_pattern_length;
-
-    /**
-     * Antenna ID in the pattern.
-     * there is a pattern pointer
-     */
-    uint8_t* antenna_ids;
-
-};
-
-struct ble_gap_cte_sampling_params {
-    /**
-     * The sampling rate used by the Controller
-     *  0x01 : Switching and sampling slots are 1 μs each
-     *  0x02 : Switching and sampling slots are 2 μs each
-     */
-    uint8_t slot_durations;
-
-    /**
-     * The number of Antenna IDs in the pattern
-     * (Range: 0x02 to 0x4B)
-     */
-    uint8_t switching_pattern_length;
-
-    /**
-     * Antenna ID in the pattern.
-     * there is a pattern pointer
-     */
-    uint8_t* antenna_ids;
-
-};
-
-#endif
-
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-struct ble_gap_set_periodic_adv_subev_data_params {
-   /** The subevent to set data for */
-   uint8_t subevent;
-
-   /** The first response slot to listen to */
-   uint8_t response_slot_start;
-
-   /** The number of response slots to listen to */
-   uint8_t response_slot_count;
-
-   /** The data to send */
-    struct os_mbuf *data;
-};
-#endif
 
 /**
  * Configure periodic advertising for specified advertising instance
@@ -2308,7 +1793,6 @@ struct ble_gap_set_periodic_adv_subev_data_params {
 int ble_gap_periodic_adv_configure(uint8_t instance,
                                    const struct ble_gap_periodic_adv_params *params);
 
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_ENH)
 /**
  * Start periodic advertising for specified advertising instance.
  *
@@ -2322,16 +1806,6 @@ int
 ble_gap_periodic_adv_start(uint8_t instance,
                            const struct ble_gap_periodic_adv_start_params *params);
 
-#else
-/**
- * Start periodic advertising for specified advertising instance.
- *
- * @param instance            Instance ID
- *
- * @return              0 on success, error code on failure.
- */
-int ble_gap_periodic_adv_start(uint8_t instance);
-#endif
 
 /**
  * Stop periodic advertising for specified advertising instance.
@@ -2342,7 +1816,6 @@ int ble_gap_periodic_adv_start(uint8_t instance);
  */
 int ble_gap_periodic_adv_stop(uint8_t instance);
 
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_ENH)
 /**
  * Configures the data to include in periodic advertisements for specified
  * advertising instance.
@@ -2356,22 +1829,13 @@ int ble_gap_periodic_adv_stop(uint8_t instance);
  */
 int ble_gap_periodic_adv_set_data(uint8_t instance,
                                   struct os_mbuf *data,
-                                  struct ble_gap_periodic_adv_set_data_params *params);
-#else
-/**
- * Configures the data to include in periodic advertisements for specified
- * advertising instance.
- *
- * @param instance            Instance ID
- * @param data                Chain containing the periodic advertising data.
- *
- * @return          0 on success or error code on failure.
- */
-int ble_gap_periodic_adv_set_data(uint8_t instance, struct os_mbuf *data);
-#endif
+                                  const struct ble_gap_periodic_adv_set_data_params *params);
 
 /**
- * Performs the Synchronization procedure with periodic advertiser.
+ * Schedule the Synchronization procedure with periodic advertiser.
+ * Procedure is performed as soon as Extended Discovery procedure is started.
+ * If Extended Discovery is already active when issuing this procedure,
+ * it will be performed immediately. It is up to application to start Extended Discovery.
  *
  * @param addr               Peer address to synchronize with. If NULL than
  *                           peers from periodic list are used.
@@ -2407,7 +1871,6 @@ int ble_gap_periodic_adv_sync_create_cancel(void);
 int ble_gap_periodic_adv_sync_terminate(uint16_t sync_handle);
 
 #if MYNEWT_VAL(BLE_PERIODIC_ADV_SYNC_TRANSFER)
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_ENH)
 /**
  * Disable or enable periodic reports for specified sync.
  *
@@ -2421,17 +1884,7 @@ int ble_gap_periodic_adv_sync_terminate(uint16_t sync_handle);
 int ble_gap_periodic_adv_sync_reporting(uint16_t sync_handle,
                                         bool enable,
                                         const struct ble_gap_periodic_adv_sync_reporting_params *params);
-#else
-/**
- * Disable or enable periodic reports for specified sync.
- *
- * @param sync_handle        Handle identifying synchronization.
- * @param enable             If reports should be enabled.
- *
- * @return                   0 on success; nonzero on failure.
- */
-int ble_gap_periodic_adv_sync_reporting(uint16_t sync_handle, bool enable);
-#endif
+
 /**
  * Initialize sync transfer procedure for specified handles.
  *
@@ -2466,6 +1919,7 @@ int ble_gap_periodic_adv_sync_set_info(uint8_t instance,
  * Set the default periodic sync transfer params.
  *
  *
+ * @param conn_handle        Handle identifying connection.
  * @param params             Default Parameters for periodic sync transfer.
  *
  * @return                   0 on success; nonzero on failure.
@@ -2535,122 +1989,6 @@ int ble_gap_clear_periodic_adv_list(void);
  * @return                   0 on success; nonzero on failure.
  */
 int ble_gap_read_periodic_adv_list_size(uint8_t *per_adv_list_size);
-
-
-
-#if MYNEWT_VAL(BLE_AOA_AOD)
-
-/**
- * Set connectionless Constant Tone Extension (CTE) transmission parameters.
- *
- * @param instance           Periodic advertising instance ID.
- * @param params             Pointer to the CTE transmission parameters.
- *
- * @return                   0 on success; nonzero on failure.
- */
-int ble_gap_set_connless_cte_transmit_params(uint8_t instance,
-                                             const struct ble_gap_periodic_adv_cte_params *params);
-
-/**
- * Enable or disable connectionless CTE transmission.
- *
- * @param instance           Periodic advertising instance ID.
- * @param cte_enable         0x00 to disable, 0x01 to enable CTE transmission.
- *
- * @return                   0 on success; nonzero on failure.
- */
-int ble_gap_set_connless_cte_transmit_enable(uint8_t instance, uint8_t cte_enable);
-
-/**
- * Enable or disable connectionless IQ sampling for periodic advertising.
- *
- * @param sync_handle        Sync handle identifying the periodic advertiser.
- * @param sampling_enable    0x00 to disable, 0x01 to enable IQ sampling.
- * @param max_sampled_ctes   Maximum number of sampled CTEs.
- * @param cte_sampling_params Pointer to the CTE sampling parameters.
- *
- * @return                   0 on success; nonzero on failure.
- */
-int ble_gap_set_connless_iq_sampling_enable(uint16_t sync_handle, uint8_t sampling_enable,
-                                            uint8_t max_sampled_ctes,
-                                            const struct ble_gap_cte_sampling_params *cte_sampling_params);
-
-/**
- * Set connection CTE receive parameters.
- *
- * @param conn_handle        Connection handle.
- * @param sampling_enable    0x00 to disable, 0x01 to enable CTE sampling.
- * @param cte_sampling_params Pointer to the CTE sampling parameters.
- *
- * @return                   0 on success; nonzero on failure.
- */
-int ble_gap_set_conn_cte_recv_param(uint16_t conn_handle, uint8_t sampling_enable,
-                                    const struct ble_gap_cte_sampling_params *cte_sampling_params);
-
-/**
- * Set connection CTE transmission parameters.
- *
- * @param conn_handle        Connection handle.
- * @param cte_types          Bitfield specifying supported CTE types.
- * @param switching_pattern_len Length of the antenna switching pattern.
- * @param antenna_ids        Pointer to the array of antenna IDs.
- *
- * @return                   0 on success; nonzero on failure.
- */
-int ble_gap_set_conn_cte_transmit_param(uint16_t conn_handle, uint8_t cte_types,
-                                        uint8_t switching_pattern_len, const uint8_t *antenna_ids);
-
-/**
- * Enable or disable connection CTE request.
- *
- * @param conn_handle        Connection handle.
- * @param enable             0x00 to disable, 0x01 to enable CTE request.
- * @param cte_request_interval Interval between CTE requests in connection interval.
- * @param requested_cte_length Requested CTE length in 8 µs units.
- * @param requested_cte_type  Requested CTE type.
- *
- * @return                   0 on success; nonzero on failure.
- */
-int ble_gap_conn_cte_req_enable(uint16_t conn_handle, uint8_t enable, uint16_t cte_request_interval,
-                                       uint8_t requested_cte_length, uint8_t requested_cte_type);
-
-/**
- * Enable or disable connection CTE response.
- *
- * @param conn_handle        Connection handle.
- * @param enable             0x00 to disable, 0x01 to enable CTE response.
- *
- * @return                   0 on success; nonzero on failure.
- */
-int ble_gap_conn_cte_rsp_enable(uint16_t conn_handle, uint8_t enable);
-
-/**
- * Read antenna information.
- *
- * @param switch_sampling_rates On success, stores the supported switching and sampling rates.
- * @param num_antennae         On success, stores the number of antennae.
- * @param max_switch_pattern_len On success, stores the maximum switching pattern length.
- * @param max_cte_len          On success, stores the maximum CTE length.
- *
- * @return                     0 on success; nonzero on failure.
- */
-int ble_gap_read_antenna_information(uint8_t *switch_sampling_rates, uint8_t *num_antennae,
-                                     uint8_t *max_switch_pattern_len, uint8_t *max_cte_len);
-
-#endif // MYNEWT_VAL(BLE_AOA_AOD)
-
-#if MYNEWT_VAL(BLE_PERIODIC_ADV_WITH_RESPONSES)
-int
-ble_gap_set_periodic_adv_subev_data(uint8_t instance, uint8_t num_subevents,
-                                    const struct ble_gap_set_periodic_adv_subev_data_params *params);
-
-int ble_gap_periodic_adv_set_response_data(uint16_t sync_handle,
-                                           struct ble_gap_periodic_adv_response_params *param,
-                                           struct os_mbuf *data);
-
-int ble_gap_periodic_adv_sync_subev(uint16_t sync_handle, uint8_t include_tx_power,
-                                    uint8_t num_subevents, uint8_t *subevents);
-#endif
 #endif
 
 
@@ -2780,7 +2118,7 @@ int ble_gap_disc_active(void);
  *                                  On expiration, the procedure ends and a
  *                                  BLE_GAP_EVENT_DISC_COMPLETE event is
  *                                  reported.  Units are milliseconds.
- * @param conn_params           Additional arguments specifying the particulars
+ * @param params           Additional arguments specifying the particulars
  *                                  of the connect procedure.  Specify null for
  *                                  default values.
  * @param cb                    The callback to associate with this connect
@@ -2806,71 +2144,6 @@ int ble_gap_connect(uint8_t own_addr_type, const ble_addr_t *peer_addr,
                     const struct ble_gap_conn_params *params,
                     ble_gap_event_fn *cb, void *cb_arg);
 
-/**
- * Initiates an Sync connect procedure for PAwR.
- *
- * @param own_addr_type         The type of address the stack should use for
- *                                  itself during connection establishment.
- *                                      - BLE_OWN_ADDR_PUBLIC
- *                                      - BLE_OWN_ADDR_RANDOM
- *                                      - BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT
- *                                      - BLE_OWN_ADDR_RPA_RANDOM_DEFAULT
- * @param advertising_handle    The advertising_Handle identifying the periodic advertising train
- *                                  Range: 0x00 to 0xEF or 0xFF
- * @param subevent              The Subevent parameter is used to identify the subevent where a connection
-                                request shall be initiated from a periodic advertising train.
-                                    The Advertising_Handle and Subevent parameters
-                                    shall be set to 0xFF if these
-                                    parameters are not used.
- * @param peer_addr             The address of the peer to connect to.
- *                                  If this parameter is NULL, the white list
- *                                  is used.
- * @param duration_ms           The duration of the discovery procedure.
- *                                  On expiration, the procedure ends and a
- *                                  BLE_GAP_EVENT_DISC_COMPLETE event is
- *                                  reported.  Units are milliseconds.
- * @param phy_mask              Define on which PHYs connection attempt should
- *                                  be done
- * @param phy_1m_conn_params     Additional arguments specifying the
- *                                  particulars of the connect procedure. When
- *                                  BLE_GAP_LE_PHY_1M_MASK is set in phy_mask
- *                                  this parameter can be specify to null for
- *                                  default values.
- * @param phy_2m_conn_params     Additional arguments specifying the
- *                                  particulars of the connect procedure. When
- *                                  BLE_GAP_LE_PHY_2M_MASK is set in phy_mask
- *                                  this parameter can be specify to null for
- *                                  default values.
- * @param phy_coded_conn_params  Additional arguments specifying the
- *                                  particulars of the connect procedure. When
- *                                  BLE_GAP_LE_PHY_CODED_MASK is set in
- *                                  phy_mask this parameter can be specify to
- *                                  null for default values.
- * @param cb                    The callback to associate with this connect
- *                                  procedure.  When the connect procedure
- *                                  completes, the result is reported through
- *                                  this callback.  If the connect procedure
- *                                  succeeds, the connection inherits this
- *                                  callback as its event-reporting mechanism.
- * @param cb_arg                The optional argument to pass to the callback
- *                                  function.
- *
- * @return                      0 on success;
- *                              BLE_HS_EALREADY if a connection attempt is
- *                                  already in progress;
- *                              BLE_HS_EBUSY if initiating a connection is not
- *                                  possible because scanning is in progress;
- *                              BLE_HS_EDONE if the specified peer is already
- *                                  connected;
- *                              Other nonzero on error.
- */
-int ble_gap_connect_with_synced(uint8_t own_addr_type, uint8_t advertising_handle,
-                uint8_t subevent, const ble_addr_t *peer_addr,
-                int32_t duration_ms, uint8_t phy_mask,
-                const struct ble_gap_conn_params *phy_1m_conn_params,
-                const struct ble_gap_conn_params *phy_2m_conn_params,
-                const struct ble_gap_conn_params *phy_coded_conn_params,
-                ble_gap_event_fn *cb, void *cb_arg);
 /**
  * Initiates an extended connect procedure.
  *
@@ -2929,44 +2202,6 @@ int ble_gap_ext_connect(uint8_t own_addr_type, const ble_addr_t *peer_addr,
                         const struct ble_gap_conn_params *phy_coded_conn_params,
                         ble_gap_event_fn *cb, void *cb_arg);
 
-#if MYNEWT_VAL(OPTIMIZE_MULTI_CONN)
-/**
- * @brief Enable the optimization of multiple connections.
- *
- * @param enable                Enable or disable the optimization.
- * @param common_factor         The greatest common factor of all intervals in 0.625ms units.
- * @return                      0 on success;
- *
- */
-int ble_gap_common_factor_set(bool enable, uint32_t common_factor);
-
-/**
- * Initiates an extended connect procedure with optimization.
- *
- * @param multi_conn_params     Additional arguments specifying the particulars
- *                                  of the connect procedure.
- * @param cb                    The callback to associate with this connect
- *                                  procedure.  When the connect procedure
- *                                  completes, the result is reported through
- *                                  this callback.  If the connect procedure
- *                                  succeeds, the connection inherits this
- *                                  callback as its event-reporting mechanism.
- * @param cb_arg                The optional argument to pass to the callback
- *                                  function.
- *
- * @return                      0 on success;
- *                              BLE_HS_EALREADY if a connection attempt is
- *                                  already in progress;
- *                              BLE_HS_EBUSY if initiating a connection is not
- *                                  possible because scanning is in progress;
- *                              BLE_HS_EDONE if the specified peer is already
- *                                  connected;
- *                              Other nonzero on error.
- */
-int ble_gap_multi_connect(struct ble_gap_multi_conn_params *multi_conn_params,
-                          ble_gap_event_fn *cb, void *cb_arg);
-#endif
-
 /**
  * Aborts a connect procedure in progress.
  *
@@ -3009,6 +2244,15 @@ int ble_gap_terminate(uint16_t conn_handle, uint8_t hci_reason);
  * @return                      0 on success; nonzero on failure.
  */
 int ble_gap_wl_set(const ble_addr_t *addrs, uint8_t white_list_count);
+
+/**
+ * Retrieves the size of whitelist supported by controller
+ *
+ * @param size                  On success, this holds the size of controller accept list
+ *
+ * @return                      0 on success; nonzero on failure
+ */
+int ble_gap_wl_read_size(uint8_t *size);
 
 /**
  * Initiates a connection parameter update procedure.
@@ -3088,37 +2332,6 @@ int ble_gap_write_sugg_def_data_len(uint16_t sugg_max_tx_octets,
                                     uint16_t sugg_max_tx_time);
 
 /**
- * Read LE Suggested Default Data Length in controller (OGF = 0x08, OCF = 0x0024).
- *
- * @param out_sugg_max_tx_octets    The Host's suggested value for the Controller's maximum transmitted
- *                                  number of payload octets in LL Data PDUs to be used for new
- *                                  connections. (Range 0x001B-0x00FB).
- * @param out_sugg_max_tx_time      The Host's suggested value for the Controller's maximum packet
- *                                  transmission time for packets containing LL Data PDUs to be used
- *                                  for new connections. (Range 0x0148-0x4290).
- *
- * @return                          0 on success,
- *                                  other error code on failure.
- */
-int ble_gap_read_sugg_def_data_len(uint16_t *out_sugg_max_tx_octets,
-                                   uint16_t *out_sugg_max_tx_time);
-
-/**
- * Configure LE Suggested Default Data Length in controller (OGF = 0x08, OCF = 0x0024).
- *
- * @param sugg_max_tx_octets    The Host's suggested value for the Controller's maximum transmitted
- *                              number of payload octets in LL Data PDUs to be used for new
- *                              connections. (Range 0x001B-0x00FB).
- * @param sugg_max_tx_time      The Host's suggested value for the Controller's maximum packet
- *                              transmission time for packets containing LL Data PDUs to be used
- *                              for new connections. (Range 0x0148-0x4290).
- *
- * @return                      0 on success,
- *                              other error code on failure.
- */
-int ble_gap_write_sugg_def_data_len(uint16_t sugg_max_tx_octets, uint16_t sugg_max_tx_time);
-
-/**
  * Initiates the GAP security procedure.
  *
  * Depending on connection role and stored security information this function
@@ -3161,7 +2374,7 @@ int ble_gap_pair_initiate(uint16_t conn_handle);
  *                              start encryption.
  * @param key_size              Encryption key size
  * @param ltk                   Long Term Key to be used for encryption.
- * @param udiv                  Encryption Diversifier for LTK
+ * @param ediv                  Encryption Diversifier for LTK
  * @param rand_val              Random Value for EDIV and LTK
  * @param auth                  If LTK provided is authenticated.
  *
@@ -3233,8 +2446,19 @@ int ble_gap_unpair_oldest_peer(void);
  */
 int ble_gap_unpair_oldest_except(const ble_addr_t *peer_addr);
 
+/**
+ * @defgroup ble_gap_privacy_modes Generic Access Profile (GAP) Privacy Modes
+ * @{
+ */
+
+/** Network privacy mode. */
 #define BLE_GAP_PRIVATE_MODE_NETWORK        0
+
+/** Device privacy mode. */
 #define BLE_GAP_PRIVATE_MODE_DEVICE         1
+
+/** @} */
+
 
 /**
  * Set privacy mode for specified peer device
@@ -3249,9 +2473,22 @@ int ble_gap_unpair_oldest_except(const ble_addr_t *peer_addr);
  */
 int ble_gap_set_priv_mode(const ble_addr_t *peer_addr, uint8_t priv_mode);
 
+/**
+ * @defgroup ble_gap_physical_layers Generic Access Profile (GAP) Physical Layers
+ * @{
+ */
+
+/** Physical layer: 1M PHY. */
 #define BLE_GAP_LE_PHY_1M                   1
+
+/** Physical layer: 2M PHY. */
 #define BLE_GAP_LE_PHY_2M                   2
+
+/** Physical layer: Coded PHY. */
 #define BLE_GAP_LE_PHY_CODED                3
+
+/** @} */
+
 /**
  * Read PHYs used for specified connection.
  *
@@ -3271,20 +2508,35 @@ int ble_gap_set_priv_mode(const ble_addr_t *peer_addr, uint8_t priv_mode);
  */
 int ble_gap_read_le_phy(uint16_t conn_handle, uint8_t *tx_phy, uint8_t *rx_phy);
 
+/**
+ * @defgroup ble_gap_phy_masks Generic Access Profile (GAP) PHY Masks
+ * @{
+ */
+
+/** Bitmask for 1M PHY. */
 #define BLE_GAP_LE_PHY_1M_MASK              0x01
+
+/** Bitmask for 2M PHY. */
 #define BLE_GAP_LE_PHY_2M_MASK              0x02
+
+/** Bitmask for Coded PHY. */
 #define BLE_GAP_LE_PHY_CODED_MASK           0x04
+
+/** Bitmask for any PHY. */
 #define BLE_GAP_LE_PHY_ANY_MASK             0x0F
+
+/** @} */
+
 /**
  * Set preferred default PHYs to be used for connections.
  *
- * @params tx_phys_mask     Preferred TX PHY. Can be mask of following
+ * @param tx_phys_mask     Preferred TX PHY. Can be mask of following
  *                          constants:
  *                          - BLE_GAP_LE_PHY_1M_MASK
  *                          - BLE_GAP_LE_PHY_2M_MASK
  *                          - BLE_GAP_LE_PHY_CODED_MASK
  *                          - BLE_GAP_LE_PHY_ANY_MASK
- * @params rx_phys_mask     Preferred RX PHY. Can be mask of following
+ * @param rx_phys_mask     Preferred RX PHY. Can be mask of following
  *                          constants:
  *                          - BLE_GAP_LE_PHY_1M_MASK
  *                          - BLE_GAP_LE_PHY_2M_MASK
@@ -3296,20 +2548,33 @@ int ble_gap_read_le_phy(uint16_t conn_handle, uint8_t *tx_phy, uint8_t *rx_phy);
 int ble_gap_set_prefered_default_le_phy(uint8_t tx_phys_mask,
                                         uint8_t rx_phys_mask);
 
+/**
+ * @defgroup ble_gap_coded_phy_schemes Generic Access Profile (GAP) Coded PHY Schemes
+ * @{
+ */
+
+/** Coded PHY: any coding scheme. */
 #define BLE_GAP_LE_PHY_CODED_ANY            0
+
+/** Coded PHY: S2 coding scheme. */
 #define BLE_GAP_LE_PHY_CODED_S2             1
+
+/** Coded PHY: S8 coding scheme. */
 #define BLE_GAP_LE_PHY_CODED_S8             2
+
+/** @} */
+
 /**
  * Set preferred PHYs to be used for connection.
  *
  * @param conn_handle       Connection handle
- * @params tx_phys_mask     Preferred TX PHY. Can be mask of following
+ * @param tx_phys_mask     Preferred TX PHY. Can be mask of following
  *                          constants:
  *                          - BLE_GAP_LE_PHY_1M_MASK
  *                          - BLE_GAP_LE_PHY_2M_MASK
  *                          - BLE_GAP_LE_PHY_CODED_MASK
  *                          - BLE_GAP_LE_PHY_ANY_MASK
- * @params rx_phys_mask     Preferred RX PHY. Can be mask of following
+ * @param rx_phys_mask     Preferred RX PHY. Can be mask of following
  *                          constants:
  *                          - BLE_GAP_LE_PHY_1M_MASK
  *                          - BLE_GAP_LE_PHY_2M_MASK
@@ -3370,8 +2635,13 @@ ble_gap_subrate_req(uint16_t conn_handle, uint16_t subrate_min, uint16_t subrate
  * This should be used as an opaque structure and not modified manually.
  */
 struct ble_gap_event_listener {
+    /** The function to call when a GAP event occurs. */
     ble_gap_event_fn *fn;
+
+    /** An optional argument to pass to the event handler function. */
     void *arg;
+
+    /** Singly-linked list entry. */
     SLIST_ENTRY(ble_gap_event_listener) link;
 };
 
@@ -3402,6 +2672,25 @@ int ble_gap_event_listener_register(struct ble_gap_event_listener *listener,
  *                      BLE_HS_ENOENT if listener was not registered
  */
 int ble_gap_event_listener_unregister(struct ble_gap_event_listener *listener);
+
+/**
+ * Calls function defined by the user for every connection that is currently established
+ *
+ * @param cb            Callback function
+ * @param arg           Callback argument
+ */
+void ble_gap_conn_foreach_handle(ble_gap_conn_foreach_handle_fn *cb, void *arg);
+
+/**
+ * Looks for the connection with specified address.
+ *
+ * @param addr                  Address to look for
+ * @param out_conn_handle       Pointer to the variable in which conn_handle will be saved if found
+ *
+ * @return                      0 on success
+ *                              BLE_HS_ENOTCONN if connection with specified address was not found
+ */
+int ble_gap_conn_find_handle_by_addr(const ble_addr_t *addr, uint16_t *out_conn_handle);
 
 #if MYNEWT_VAL(BLE_POWER_CONTROL)
 /**
@@ -3479,111 +2768,6 @@ int ble_gap_set_path_loss_reporting_param(uint16_t conn_handle, uint8_t high_thr
                                           uint8_t high_hysteresis, uint8_t low_threshold,
                                           uint8_t low_hysteresis, uint16_t min_time_spent);
 #endif
-
-/**
- * Set Data Related Address Changes Param
- *
- * @param adv_handle        Advertising handle
- * @param change_reason     Reasons for refreshing addresses
- *
- * @return                  0 on success; nonzero on failure.
- */
-int ble_gap_set_data_related_addr_change_param(uint8_t adv_handle, uint8_t change_reason);
-
-/**
- * Start a test where the DUT generates reference packets at a fixed interval.
- *
- * @param tx_chan          Channel for sending test data,
- *                         tx_channel = (Frequency -2402)/2, tx_channel range = 0x00-0x27,
- *                         Frequency range = 2402 MHz to 2480 MHz.
- *
- * @param test_data_len    Length in bytes of payload data in each packet
- * @param payload	   Packet Payload type. Valid range: 0x00 - 0x07
- *
- * @return                 0 on success; nonzero on failure
- */
-
-int ble_gap_dtm_tx_start(uint8_t tx_chan, uint8_t test_data_len, uint8_t payload);
-
-/**
- * Start a test where the DUT receives test reference packets at a fixed interval.
- *
- * @param rx_chan          Channel for test data reception,
- *                         rx_channel = (Frequency -2402)/2, tx_channel range = 0x00-0x27,
- *                         Frequency range = 2402 MHz to 2480 MHz.
- *
- * @return                 0 on success; nonzero on failure
- */
-
-int ble_gap_dtm_rx_start(uint8_t rx_chan);
-
-/**
- * Stop any test which is in progress
- *
- * @return	           0 on success; nonzero on failure
- */
-
-int ble_gap_dtm_stop(void);
-
-/**
- * Start a test where the DUT generates reference packets at a fixed interval.
- *
- * @param tx_chan          Channel for sending test data,
- *                         tx_channel = (Frequency -2402)/2, tx_channel range = 0x00-0x27,
- *                         Frequency range: 2402 MHz to 2480 MHz
- *
- * @param test_data_len    Length in bytes of payload data in each packet
- * @param payload	   Packet payload type. Valid range: 0x00 - 0x07
- * @param phy              Phy used by transmitter 1M phy: 0x01, 2M phy:0x02, coded phy:0x03.
- *
- * @return                 0 on sucess; nonzero on failure
- */
-int ble_gap_dtm_enh_tx_start(uint8_t tx_chan, uint8_t test_data_len, uint8_t payload,
-		             uint8_t phy);
-
-/**
- * Start a test where the DUT receives test reference packets at fixed interval
- *
- * @param  rx_chan        Channel for test data reception,
- *                        rx_channel = (Frequency -2402)/2, tx_channel range = 0x00-0x27,
- *                        Frequency range: 2402 MHz to 2480 MHz
- *
- * @param index 	  modulation index, 0x00:standard modulation index, 0x01:stable modulation index
- * @param phy             Phy type used by the receiver, 1M phy: 0x01, 2M phy:0x02, coded phy:0x03
- *
- * @return                0 on success; nonzero on failure
- */
-int ble_gap_dtm_enh_rx_start(uint8_t rx_chan, uint8_t index, uint8_t phy);
-
-/**
- * Set Read Remote Version Information is used to retrieve the version, manufacturer,
- * and subversion information of remote controller after connection established
- *
- * @param conn_handle     Connection handle
- * @param version         Defines the specification version of the LE Controller
- * @param manufacturer    Indicates the manufacturer of the remote Controller
- * @param subversion      Manufacturer specific version
-
- * @return                0 on success; nonzero on failure
-*/
-
-int ble_gap_read_rem_ver_info(uint16_t conn_handle, uint8_t *version, uint16_t *manufacturer, uint16_t *subversion);
-
-/**
- * Read local resolvable address command
- *
- * @param  peer_addr_type  Peer Identity Address type
- *
- * @param peer_addr        Peer Identity Address
- *
- * @param out_addr	   Local Resolvable Address received from controller.
- *
- * @return                0 on success; nonzero on failure
- */
-
-int ble_gap_rd_local_resolv_addr(uint8_t peer_addr_type, const ble_addr_t *peer_addr,
-                                 uint8_t *out_addr);
-
 #ifdef __cplusplus
 }
 #endif

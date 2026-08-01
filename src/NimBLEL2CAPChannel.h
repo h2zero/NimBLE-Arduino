@@ -9,12 +9,12 @@
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM)
 
 # include "inttypes.h"
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include "host/ble_l2cap.h"
-#  include "os/os_mbuf.h"
-# else
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_l2cap.h"
 #  include "nimble/porting/nimble/include/os/os_mbuf.h"
+# else
+#  include "host/ble_l2cap.h"
+#  include "os/os_mbuf.h"
 # endif
 
 /****  FIX COMPILATION ****/
@@ -22,12 +22,13 @@
 # undef max
 /**************************/
 
+# include "NimBLEUtils.h"
+
 # include <vector>
 # include <atomic>
 
 class NimBLEClient;
 class NimBLEL2CAPChannelCallbacks;
-struct NimBLETaskData;
 
 /**
  * @brief Encapsulates a L2CAP channel.
@@ -55,6 +56,14 @@ class NimBLEL2CAPChannel {
     ///
     /// NOTE: This function will block until the data has been sent or an error occurred.
     bool write(const std::vector<uint8_t>& bytes);
+
+    /// @brief Disconnect this L2CAP channel.
+    /// @return true on success, false on failure.
+    bool disconnect();
+
+    /// @brief Get the connection handle associated with this channel.
+    /// @return Connection handle, or BLE_HS_CONN_HANDLE_NONE if not connected.
+    uint16_t getConnHandle() const;
 
     /// @return True, if the channel is connected. False, otherwise.
     bool isConnected() const { return !!channel; }
@@ -86,7 +95,7 @@ class NimBLEL2CAPChannel {
 
     // Runtime handling
     std::atomic<bool> stalled{false};
-    NimBLETaskData*   m_pTaskData{nullptr};
+    NimBLEUtils::TaskData*   m_pTaskData{nullptr};
 
     // Allocate / deallocate NimBLE memory pool
     bool setupMemPool();

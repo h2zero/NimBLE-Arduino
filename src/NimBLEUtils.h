@@ -29,51 +29,62 @@
 #  endif
 # endif
 
-#if MYNEWT_VAL(NIMBLE_CPP_DEBUG_ASSERT_ENABLED) && !defined NDEBUG
-void nimble_cpp_assert(const char *file, unsigned line) __attribute((weak, noreturn));
-# define NIMBLE_ATT_VAL_FILE  (__builtin_strrchr(__FILE__, '/') ? \
-                            __builtin_strrchr (__FILE__, '/') + 1 : __FILE__)
-# define NIMBLE_CPP_DEBUG_ASSERT(cond) \
-    if (!(cond)) { \
-        nimble_cpp_assert(NIMBLE_ATT_VAL_FILE, __LINE__); \
-    }
-#else
-# define NIMBLE_CPP_DEBUG_ASSERT(cond) (void(0))
-#endif
+# if MYNEWT_VAL(NIMBLE_CPP_DEBUG_ASSERT_ENABLED) && !defined NDEBUG
+void nimble_cpp_assert(const char* file, unsigned line) __attribute((weak, noreturn));
+#  define NIMBLE_ATT_VAL_FILE (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#  define NIMBLE_CPP_DEBUG_ASSERT(cond)                     \
+      if (!(cond)) {                                        \
+          nimble_cpp_assert(NIMBLE_ATT_VAL_FILE, __LINE__); \
+      }
+# else
+#  define NIMBLE_CPP_DEBUG_ASSERT(cond) (void(0))
+# endif
 
 # include <string>
+# include <vector>
 
 class NimBLEAddress;
-
-/**
- * @brief A structure to hold data for a task that is waiting for a response.
- * @details This structure is used in conjunction with NimBLEUtils::taskWait() and NimBLEUtils::taskRelease().
- * All items are optional, the m_pHandle will be set in taskWait().
- */
-struct NimBLETaskData {
-    NimBLETaskData(void* pInstance = nullptr, int flags = 0, void* buf = nullptr);
-    ~NimBLETaskData();
-    void*       m_pInstance{nullptr};
-    mutable int m_flags{0};
-    void*       m_pBuf{nullptr};
-
-  private:
-    mutable void* m_pHandle{nullptr}; // semaphore or task handle
-    friend class NimBLEUtils;
-};
+struct ble_npl_sem;
 
 /**
  * @brief A BLE Utility class with methods for debugging and general purpose use.
  */
 class NimBLEUtils {
+    struct TaskSemEntry {
+        ble_npl_sem* sem;
+        bool         inUse{false};
+    };
+
   public:
+    /**
+     * @brief A structure to hold data for a task that is waiting for a response.
+     * @details This structure is used in conjunction with NimBLEUtils::taskWait() and NimBLEUtils::taskRelease().
+     * All items are optional; the internal semaphore entry is assigned in taskWait().
+     */
+    struct TaskData {
+        TaskData(void* pInstance = nullptr, int flags = 0, void* buf = nullptr);
+        ~TaskData() = default;
+        void*       m_pInstance{nullptr};
+        mutable int m_flags{0};
+        void*       m_pBuf{nullptr};
+
+      private:
+        friend class NimBLEUtils;
+        mutable TaskSemEntry* m_pSem{nullptr};
+    };
+
     static const char*   gapEventToString(uint8_t eventType);
     static std::string   dataToHexString(const uint8_t* source, uint8_t length);
     static const char*   advTypeToString(uint8_t advType);
     static const char*   returnCodeToString(int rc);
     static NimBLEAddress generateAddr(bool nrpa);
-    static bool          taskWait(const NimBLETaskData& taskData, uint32_t timeout);
-    static void          taskRelease(const NimBLETaskData& taskData, int rc = 0);
+    static bool          taskWait(const TaskData& taskData, uint32_t timeout);
+    static void          taskRelease(const TaskData& taskData, int rc = 0);
+
+  private:
+    friend class NimBLEDevice;
+    static void                       deleteTaskSems();
+    static std::vector<TaskSemEntry*> m_taskSemEntries;
 };
 
 #endif // CONFIG_BT_NIMBLE_ENABLED

@@ -18,7 +18,7 @@
 #include "NimBLECharacteristic.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
+# ifndef USING_NIMBLE_ARDUINO_HEADERS
 #  if !defined(ESP_IDF_VERSION_MAJOR) || ESP_IDF_VERSION_MAJOR < 5
 #   define ble_gatts_notify_custom   ble_gattc_notify_custom
 #   define ble_gatts_indicate_custom ble_gattc_indicate_custom
@@ -132,7 +132,7 @@ void NimBLECharacteristic::addDescriptor(NimBLEDescriptor* pDescriptor) {
     }
 
     pDescriptor->setCharacteristic(this);
-    NimBLEDevice::getServer()->serviceChanged();
+    NimBLEDevice::getServer()->setServiceChanged();
 }
 
 /**
@@ -159,27 +159,33 @@ void NimBLECharacteristic::removeDescriptor(NimBLEDescriptor* pDescriptor, bool 
     }
 
     pDescriptor->setRemoved(deleteDsc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE);
-    NimBLEDevice::getServer()->serviceChanged();
+    NimBLEDevice::getServer()->setServiceChanged();
 } // removeDescriptor
 
 /**
  * @brief Return the BLE Descriptor for the given UUID.
  * @param [in] uuid The UUID of the descriptor.
+ * @param [in] index The index of the descriptor to return (used when multiple descriptors have the same UUID).
  * @return A pointer to the descriptor object or nullptr if not found.
  */
-NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* uuid) const {
-    return getDescriptorByUUID(NimBLEUUID(uuid));
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const char* uuid, uint16_t index) const {
+    return getDescriptorByUUID(NimBLEUUID(uuid), index);
 } // getDescriptorByUUID
 
 /**
  * @brief Return the BLE Descriptor for the given UUID.
  * @param [in] uuid The UUID of the descriptor.
+ * @param [in] index The index of the descriptor to return (used when multiple descriptors have the same UUID).
  * @return A pointer to the descriptor object or nullptr if not found.
  */
-NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID& uuid) const {
+NimBLEDescriptor* NimBLECharacteristic::getDescriptorByUUID(const NimBLEUUID& uuid, uint16_t index) const {
+    uint16_t position = 0;
     for (const auto& dsc : m_vDescriptors) {
         if (dsc->getUUID() == uuid) {
-            return dsc;
+            if (position == index) {
+                return dsc;
+            }
+            position++;
         }
     }
     return nullptr;

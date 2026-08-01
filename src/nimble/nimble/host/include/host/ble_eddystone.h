@@ -34,29 +34,78 @@ extern "C" {
 
 struct ble_hs_adv_fields;
 
+/**
+ * @defgroup ble_eddystone Eddystone Constants
+ * @ingroup bt_host
+ * @{
+ */
+
+/** Maximum number of 16-bit UUIDs in Eddystone advertisement data. */
 #define BLE_EDDYSTONE_MAX_UUIDS16           3
+
+/** Maximum length of Eddystone URL. */
 #define BLE_EDDYSTONE_URL_MAX_LEN           17
 
+
+/** Eddystone URL Scheme: "http://www." prefix. */
 #define BLE_EDDYSTONE_URL_SCHEME_HTTP_WWW   0
+
+/** Eddystone URL Scheme: "https://www." prefix. */
 #define BLE_EDDYSTONE_URL_SCHEME_HTTPS_WWW  1
+
+/** Eddystone URL Scheme: "http://" prefix. */
 #define BLE_EDDYSTONE_URL_SCHEME_HTTP       2
+
+/** Eddystone URL Scheme: "https://" prefix. */
 #define BLE_EDDYSTONE_URL_SCHEME_HTTPS      3
 
+
+/** Eddystone URL Suffix: ".com/". */
 #define BLE_EDDYSTONE_URL_SUFFIX_COM_SLASH  0x00
+
+/** Eddystone URL Suffix: ".org/". */
 #define BLE_EDDYSTONE_URL_SUFFIX_ORG_SLASH  0x01
+
+/** Eddystone URL Suffix: ".edu/". */
 #define BLE_EDDYSTONE_URL_SUFFIX_EDU_SLASH  0x02
+
+/** Eddystone URL Suffix: ".net/". */
 #define BLE_EDDYSTONE_URL_SUFFIX_NET_SLASH  0x03
+
+/** Eddystone URL Suffix: ".info/". */
 #define BLE_EDDYSTONE_URL_SUFFIX_INFO_SLASH 0x04
+
+/** Eddystone URL Suffix: ".biz/". */
 #define BLE_EDDYSTONE_URL_SUFFIX_BIZ_SLASH  0x05
+
+/** Eddystone URL Suffix: ".gov/". */
 #define BLE_EDDYSTONE_URL_SUFFIX_GOV_SLASH  0x06
+
+/** Eddystone URL Suffix: ".com". */
 #define BLE_EDDYSTONE_URL_SUFFIX_COM        0x07
+
+/** Eddystone URL Suffix: ".org". */
 #define BLE_EDDYSTONE_URL_SUFFIX_ORG        0x08
+
+/** Eddystone URL Suffix: ".edu". */
 #define BLE_EDDYSTONE_URL_SUFFIX_EDU        0x09
+
+/** Eddystone URL Suffix: ".net". */
 #define BLE_EDDYSTONE_URL_SUFFIX_NET        0x0a
+
+/** Eddystone URL Suffix: ".info". */
 #define BLE_EDDYSTONE_URL_SUFFIX_INFO       0x0b
+
+/** Eddystone URL Suffix: ".biz". */
 #define BLE_EDDYSTONE_URL_SUFFIX_BIZ        0x0c
+
+/** Eddystone URL Suffix: ".gov". */
 #define BLE_EDDYSTONE_URL_SUFFIX_GOV        0x0d
+
+/** Eddystone URL Suffix: None. */
 #define BLE_EDDYSTONE_URL_SUFFIX_NONE       0xff
+
+/** @} */
 
 /**
  * Configures the device to advertise Eddystone UID beacons.
@@ -103,7 +152,7 @@ int ble_eddystone_set_adv_data_uid(struct ble_hs_adv_fields *adv_fields,
  */
 int ble_eddystone_set_adv_data_url(struct ble_hs_adv_fields *adv_fields,
                                    uint8_t url_scheme, char *url_body,
-                                   uint8_t url_body_len, uint8_t suffix,
+                                   uint8_t url_body_len, uint8_t url_suffix,
                                    int8_t measured_power);
 
 #ifdef __cplusplus

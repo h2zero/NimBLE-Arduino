@@ -79,7 +79,7 @@ static int ead_encrypt(const uint8_t session_key[BLE_EAD_KEY_SIZE], const uint8_
 
     err = ble_aes_ccm_encrypt(session_key, nonce, payload, payload_size, ble_ead_aad, BLE_EAD_AAD_SIZE,
                               &encrypted_payload[BLE_EAD_RANDOMIZER_SIZE], BLE_EAD_MIC_SIZE);
-    
+
     if (err != 0) {
         BLE_HS_LOG(DEBUG, "Failed to encrypt the payload (ble_ccm_encrypt err %d)", err);
         return -1;

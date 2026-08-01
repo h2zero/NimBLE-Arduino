@@ -30,9 +30,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <nimble/ext/tinycrypt/include/tinycrypt/constants.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/ctr_mode.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/utils.h>
+#include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/ctr_mode.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/utils.h"
 
 int tc_ctr_mode(uint8_t *out, unsigned int outlen, const uint8_t *in,
 		unsigned int inlen, uint8_t *ctr, const TCAesKeySched_t sched)

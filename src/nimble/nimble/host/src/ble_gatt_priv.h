@@ -56,8 +56,6 @@ STATS_SECT_START(ble_gattc_stats)
     STATS_SECT_ENTRY(read_long_fail)
     STATS_SECT_ENTRY(read_mult)
     STATS_SECT_ENTRY(read_mult_fail)
-    STATS_SECT_ENTRY(signed_write)
-    STATS_SECT_ENTRY(signed_write_fail)
     STATS_SECT_ENTRY(write_no_rsp)
     STATS_SECT_ENTRY(write_no_rsp_fail)
     STATS_SECT_ENTRY(write)
@@ -68,8 +66,6 @@ STATS_SECT_START(ble_gattc_stats)
     STATS_SECT_ENTRY(write_reliable_fail)
     STATS_SECT_ENTRY(notify)
     STATS_SECT_ENTRY(notify_fail)
-    STATS_SECT_ENTRY(multi_notify)
-    STATS_SECT_ENTRY(multi_notify_fail)
     STATS_SECT_ENTRY(indicate)
     STATS_SECT_ENTRY(indicate_fail)
     STATS_SECT_ENTRY(proc_timeout)
@@ -90,8 +86,9 @@ STATS_SECT_START(ble_gatts_stats)
 STATS_SECT_END
 extern STATS_SECT_DECL(ble_gatts_stats) ble_gatts_stats;
 
-#define BLE_GATT_CHR_DECL_SZ_16     5
-#define BLE_GATT_CHR_DECL_SZ_128    19
+#define BLE_GATT_CHR_DECL_SZ_16         5
+#define BLE_GATT_CHR_DECL_SZ_128        19
+#define BLE_GATT_CHR_CLI_SUP_FEAT_SZ    1
 /**
  * For now only 3 bits in first octet are defined
  *
@@ -101,17 +98,8 @@ extern STATS_SECT_DECL(ble_gatts_stats) ble_gatts_stats;
 typedef uint8_t ble_gatts_conn_flags;
 
 struct ble_gatts_conn {
-#if MYNEWT_VAL(BLE_DYNAMIC_SERVICE)
-    struct ble_gatts_clt_cfg_list clt_cfgs;
-#else
     struct ble_gatts_clt_cfg *clt_cfgs;
-#endif
     int num_clt_cfgs;
-#if MYNEWT_VAL(BLE_GATT_CACHING)
-    bool aware_state;
-    uint8_t half_aware:1;
-    bool sent_err;
-#endif
 
     uint16_t indicate_val_handle;
 
@@ -121,7 +109,7 @@ struct ble_gatts_conn {
      * future proof if more octets might be used.
      * (Vol. 3, Part G, 7.2)
      */
-    uint8_t peer_cl_sup_feat[MYNEWT_VAL(BLE_GATT_CSFC_SIZE)];
+    uint8_t peer_cl_sup_feat[BLE_GATT_CHR_CLI_SUP_FEAT_SZ];
 };
 
 /*** @client. */
@@ -131,8 +119,8 @@ void ble_gatts_indicate_fail_notconn(uint16_t conn_handle);
 
 void ble_gattc_rx_err(uint16_t conn_handle, uint16_t cid, uint16_t handle, uint16_t status);
 void ble_gattc_rx_mtu(uint16_t conn_handle, uint16_t cid, int status, uint16_t chan_mtu);
-void ble_gattc_rx_read_type_adata(uint16_t conn_handle, uint16_t cid,
-                                  struct ble_att_read_type_adata *adata);
+int ble_gattc_rx_read_type_adata(uint16_t conn_handle, uint16_t cid,
+                                 struct ble_att_read_type_adata *adata);
 void ble_gattc_rx_read_type_complete(uint16_t conn_handle, uint16_t cid, int status);
 void ble_gattc_rx_read_rsp(uint16_t conn_handle, uint16_t cid, int status,
                            struct os_mbuf **rxom);
@@ -140,7 +128,7 @@ void ble_gattc_rx_read_blob_rsp(uint16_t conn_handle, uint16_t cid, int status,
                                 struct os_mbuf **rxom);
 void ble_gattc_rx_read_mult_rsp(uint16_t conn_handle, uint16_t cid, int status,
                                 struct os_mbuf **rxom, bool variable);
-void ble_gattc_rx_read_group_type_adata(uint16_t conn_handle,  uint16_t cid,
+void ble_gattc_rx_read_group_type_adata(uint16_t conn_handle, uint16_t cid,
                                         struct ble_att_read_group_type_adata *adata);
 void ble_gattc_rx_read_group_type_complete(uint16_t conn_handle, uint16_t cid, int rc);
 void ble_gattc_rx_find_type_value_hinfo(uint16_t conn_handle, uint16_t cid,
@@ -163,13 +151,16 @@ int ble_gattc_any_jobs(void);
 int ble_gattc_init(void);
 
 /*** @server. */
-#define BLE_GATTS_CLT_CFG_F_NOTIFY              0x0001
-#define BLE_GATTS_CLT_CFG_F_INDICATE            0x0002
-#define BLE_GATTS_CLT_CFG_F_MODIFIED            0x0080 /* Internal only. */
-#define BLE_GATTS_CLT_CFG_F_RESERVED            0xfffc
+#define BLE_GATTS_CLT_CFG_F_NOTIFY   0x0001
+#define BLE_GATTS_CLT_CFG_F_INDICATE 0x0002
+#define BLE_GATTS_CLT_CFG_F_MODIFIED 0x0080 /* Internal only. */
+#define BLE_GATTS_CLT_CFG_F_RESERVED 0xfffc
 
-#define BLE_GATTS_INC_SVC_LEN_NO_UUID           4
-#define BLE_GATTS_INC_SVC_LEN_UUID              6
+#define BLE_GATTS_INC_SVC_LEN_NO_UUID 4
+#define BLE_GATTS_INC_SVC_LEN_UUID    6
+
+#define BLE_GATTS_CEP_F_RELIABLE_WRITE 0x0001
+#define BLE_GATTS_CEP_F_AUX_WRITE      0x0002
 
 /**
  * Contains counts of resources required by the GATT server.  The contents of
@@ -196,16 +187,10 @@ struct ble_gatt_resources {
     uint16_t cccds;
 
     /**
-     * Number of client presentation format descriptors. Each of
+     * Number of characteristic extended properties descriptors. Each of
      * these also contributes to the total descriptor count.
      */
-    uint16_t cpfds;
-
-    /**
-     * Number of aggregate presentation foramt descriptors. Each of
-     * these also contributes to the total descriptor count.
-     */
-    uint16_t cafds;
+    uint16_t ceps;
 
     /** Total number of ATT attributes. */
     uint16_t attrs;
@@ -224,24 +209,13 @@ int ble_gatts_register_svcs(const struct ble_gatt_svc_def *svcs,
 int ble_gatts_clt_cfg_access(uint16_t conn_handle, uint16_t attr_handle,
                              uint8_t op, uint16_t offset, struct os_mbuf **om,
                              void *arg);
-void ble_gatts_set_clt_cfg_perm_flags(uint8_t flags);
 
-#if MYNEWT_VAL(BLE_GATT_CACHING)
-struct ble_gatts_aware_state {
-    uint8_t peer_id_addr[6];
-    bool aware;
-    uint8_t half_aware:1;
-};
-extern struct ble_gatts_aware_state ble_gatts_conn_aware_states[MYNEWT_VAL(BLE_STORE_MAX_BONDS)];
-#endif
-
+int ble_gatts_peer_cl_sup_feat_update(uint16_t conn_handle,
+                                      struct os_mbuf *om);
 /*** @misc. */
 int ble_gatts_conn_can_alloc(void);
 int ble_gatts_conn_init(struct ble_gatts_conn *gatts_conn);
 int ble_gatts_init(void);
-#if MYNEWT_VAL(BLE_GATT_CACHING)
-int ble_gattc_cache_conn_init();
-#endif
 
 #ifdef __cplusplus
 }

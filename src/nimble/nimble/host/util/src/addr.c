@@ -21,17 +21,12 @@
 #include "nimble/nimble/host/util/include/host/util/util.h"
 #include "nimble/nimble/host/src/ble_hs_hci_priv.h"
 
-#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
-#include "esp_bt.h"
-#endif
-
 static int
 ble_hs_util_load_rand_addr(ble_addr_t *addr)
 {
-    int rc = BLE_HS_ENOADDR;
-
 #if MYNEWT_VAL(BLE_HCI_VS)
     struct ble_hci_vs_rd_static_addr_rp rsp;
+    int rc;
 
     rc = ble_hs_hci_cmd_tx(BLE_HCI_OP(BLE_HCI_OGF_VENDOR,
                                       BLE_HCI_OCF_VS_RD_STATIC_ADDR),
@@ -43,13 +38,7 @@ ble_hs_util_load_rand_addr(ble_addr_t *addr)
     }
 #endif
 
-#if SOC_ESP_NIMBLE_CONTROLLER && CONFIG_BT_CONTROLLER_ENABLED
-    rc = esp_ble_hw_get_static_addr((esp_ble_addr_t *)addr);
-    if (rc == 0) {
-        return 0;
-    }
-#endif
-    return rc;
+    return BLE_HS_ENOADDR;
 }
 
 static int

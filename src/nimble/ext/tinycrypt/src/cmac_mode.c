@@ -30,10 +30,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <nimble/ext/tinycrypt/include/tinycrypt/aes.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/constants.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/utils.h>
+#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/utils.h"
 
 /* max number of calls until change the key (2^48).*/
 static const uint64_t MAX_CALLS = ((uint64_t)1 << 48);

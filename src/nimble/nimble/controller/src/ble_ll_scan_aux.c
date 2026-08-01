@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-#ifndef ESP_PLATFORM
 
 #include <syscfg/syscfg.h>
 
@@ -86,6 +86,9 @@ struct ble_ll_scan_aux_data {
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
     int8_t rpa_index;
 #endif
+#if MYNEWT_VAL(BLE_LL_ADV_CODING_SELECTION)
+    uint8_t pri_phy_mode;
+#endif
 };
 
 #define AUX_MEMPOOL_SIZE    (OS_MEMPOOL_SIZE( \
@@ -113,7 +116,7 @@ static int
 ble_ll_scan_aux_sched_cb(struct ble_ll_sched_item *sch)
 {
     struct ble_ll_scan_aux_data *aux = sch->cb_arg;
-#if BLE_LL_BT5_PHY_SUPPORTED
+#if MYNEWT_VAL(BLE_LL_PHY)
     uint8_t phy_mode;
 #endif
     uint8_t lls;
@@ -139,7 +142,7 @@ ble_ll_scan_aux_sched_cb(struct ble_ll_sched_item *sch)
     }
 #endif
 
-#if BLE_LL_BT5_PHY_SUPPORTED
+#if MYNEWT_VAL(BLE_LL_PHY)
     phy_mode = ble_ll_phy_to_phy_mode(aux->sec_phy, BLE_HCI_LE_PHY_CODED_ANY);
     ble_phy_mode_set(phy_mode, phy_mode);
 #endif
@@ -218,7 +221,8 @@ ble_ll_scan_aux_need_truncation(struct ble_ll_scan_aux_data *aux)
 }
 
 static struct ble_hci_ev *
-ble_ll_hci_ev_alloc_ext_adv_report_for_aux(struct ble_ll_scan_addr_data *addrd,
+ble_ll_hci_ev_alloc_ext_adv_report_for_aux(struct ble_mbuf_hdr_rxinfo *rxinfo,
+                                           struct ble_ll_scan_addr_data *addrd,
                                            struct ble_ll_scan_aux_data *aux)
 {
     struct ble_hci_ev_le_subev_ext_adv_rpt *hci_subev;
@@ -259,6 +263,16 @@ ble_ll_hci_ev_alloc_ext_adv_report_for_aux(struct ble_ll_scan_addr_data *addrd,
     report->tx_power = 0x7f;
     report->rssi = 0x7f;
     report->periodic_itvl = 0;
+
+#if MYNEWT_VAL(BLE_LL_ADV_CODING_SELECTION)
+    if (aux->pri_phy_mode == BLE_PHY_MODE_CODED_500KBPS) {
+        report->pri_phy = 0x04;
+    }
+    if (rxinfo->phy_mode == BLE_PHY_MODE_CODED_500KBPS) {
+        report->sec_phy = 0x04;
+    }
+#endif
+
     if (addrd->targeta) {
         report->evt_type |= BLE_HCI_ADV_DIRECT_MASK;
         report->dir_addr_type = addrd->targeta_type;
@@ -328,6 +342,12 @@ ble_ll_hci_ev_update_ext_adv_report_from_aux(struct ble_hci_ev *hci_ev,
     }
     report->sec_phy = rxhdr->rxinfo.phy;
 
+#if MYNEWT_VAL(BLE_LL_ADV_CODING_SELECTION)
+    if (rxhdr->rxinfo.phy_mode == BLE_PHY_MODE_CODED_500KBPS) {
+        report->sec_phy = 0x04;
+    }
+#endif
+
     /* Strip PDU header and ext header, leave only AD */
     os_mbuf_adj(rxpdu, 3 + eh_len);
 
@@ -390,7 +410,6 @@ ble_ll_hci_ev_update_ext_adv_report_from_ext(struct ble_hci_ev *hci_ev,
 #endif
     uint8_t pdu_hdr;
     uint8_t adv_mode;
-    uint8_t eh_len;
     uint8_t eh_flags;
     uint8_t *eh_data;
     uint8_t *rxbuf;
@@ -399,7 +418,6 @@ ble_ll_hci_ev_update_ext_adv_report_from_ext(struct ble_hci_ev *hci_ev,
 
     pdu_hdr = rxbuf[0];
     adv_mode = rxbuf[2] >> 6;
-    eh_len = rxbuf[2] & 0x3f;
     eh_flags = rxbuf[3];
     eh_data = &rxbuf[4];
 
@@ -423,11 +441,17 @@ ble_ll_hci_ev_update_ext_adv_report_from_ext(struct ble_hci_ev *hci_ev,
     report->periodic_itvl = 0;
     report->data_len = 0;
 
+#if MYNEWT_VAL(BLE_LL_ADV_CODING_SELECTION)
+    if (rxinfo->phy_mode == BLE_PHY_MODE_CODED_500KBPS) {
+        report->pri_phy = 0x04;
+    }
+#endif
+
     /* Now parse extended header... */
 
     if (eh_flags & (1 << BLE_LL_EXT_ADV_ADVA_BIT)) {
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-        if (rxinfo->rpa_index >= 0) {
+        if (rxinfo->flags & BLE_MBUF_HDR_F_RESOLVED) {
             rl = &g_ble_ll_resolv_list[rxinfo->rpa_index];
             report->addr_type = rl->rl_addr_type + 2;
             memcpy(report->addr, rl->rl_identity_addr, 6);
@@ -486,8 +510,10 @@ ble_ll_hci_ev_update_ext_adv_report_from_ext(struct ble_hci_ev *hci_ev,
         report->tx_power = 0x7f;
     }
 
-    /* Strip PDU header and ext header, leave only AD */
-    os_mbuf_adj(rxpdu, 3 + eh_len);
+    /* AdvData in ADV_EXT_IND is RFU so we should ignore it, i.e. we can just
+     * remove any data left in mbuf
+     */
+    os_mbuf_adj(rxpdu, os_mbuf_len(rxpdu));
 
 }
 
@@ -611,7 +637,7 @@ ble_ll_hci_ev_send_ext_adv_report_for_aux(struct os_mbuf *rxpdu,
         hci_ev = aux->hci_ev;
         aux->hci_ev = NULL;
     } else {
-        hci_ev = ble_ll_hci_ev_alloc_ext_adv_report_for_aux(addrd, aux);
+        hci_ev = ble_ll_hci_ev_alloc_ext_adv_report_for_aux(&rxhdr->rxinfo, addrd, aux);
         if (!hci_ev) {
             aux->hci_state = BLE_LL_SCAN_AUX_H_DONE;
             return -1;
@@ -853,9 +879,10 @@ ble_ll_scan_aux_parse_to_aux_data(struct ble_ll_scan_aux_data *aux,
 
     /* Now parse extended header... */
 
-    /* AdvA is only valid in 1st PDU, ignore in AUX_CHAIN_IND */
+    /* AdvA is only valid in AUX_ADV_IND if not already present in ADV_EXT_IND */
     if (eh_flags & (1 << BLE_LL_EXT_ADV_ADVA_BIT)) {
-        if (!(aux->flags & BLE_LL_SCAN_AUX_F_AUX_CHAIN)) {
+        if (!(aux->flags & BLE_LL_SCAN_AUX_F_HAS_ADVA) &&
+            !(aux->flags & BLE_LL_SCAN_AUX_F_AUX_CHAIN)) {
             memcpy(aux->adva, eh_data, 6);
             aux->adva_type = !!(pdu_hdr & BLE_ADV_PDU_HDR_TXADD_MASK);
             aux->flags |= BLE_LL_SCAN_AUX_F_HAS_ADVA;
@@ -866,9 +893,10 @@ ble_ll_scan_aux_parse_to_aux_data(struct ble_ll_scan_aux_data *aux,
         eh_data += BLE_LL_EXT_ADV_ADVA_SIZE;
     }
 
-    /* TargetA is only valid in 1st PDU, ignore in AUX_CHAIN_IND */
+    /* TargetA is only valid in AUX_ADV_IND if not already present in ADV_EXT_IND */
     if (eh_flags & (1 << BLE_LL_EXT_ADV_TARGETA_BIT)) {
-        if (!(aux->flags & BLE_LL_SCAN_AUX_F_AUX_CHAIN)) {
+        if (!(aux->flags & BLE_LL_SCAN_AUX_F_HAS_TARGETA) &&
+            !(aux->flags & BLE_LL_SCAN_AUX_F_AUX_CHAIN)) {
             memcpy(aux->targeta, eh_data, 6);
             aux->targeta_type = !!(pdu_hdr & BLE_ADV_PDU_HDR_RXADD_MASK);
             aux->flags |= BLE_LL_SCAN_AUX_F_HAS_TARGETA;
@@ -903,7 +931,8 @@ ble_ll_scan_aux_parse_to_aux_data(struct ble_ll_scan_aux_data *aux,
         }
     }
 
-    if (eh_flags & (1 << BLE_LL_EXT_ADV_AUX_PTR_BIT)) {
+    /* AuxPtr is RFU if AdvMode!=0 so ignore in such case */
+    if ((adv_mode == 0) && (eh_flags & (1 << BLE_LL_EXT_ADV_AUX_PTR_BIT))) {
         aux->aux_ptr = get_le24(eh_data);
         rxhdr->rxinfo.flags |= BLE_MBUF_HDR_F_AUX_PTR_WAIT;
     }
@@ -1076,6 +1105,10 @@ ble_ll_scan_aux_rx_isr_end_on_ext(struct ble_ll_scan_sm *scansm,
         aux->pri_phy = rxinfo->phy;
         aux->aux_ptr = aux_ptr;
 
+#if MYNEWT_VAL(BLE_LL_ADV_CODING_SELECTION)
+        aux->pri_phy_mode = rxinfo->phy_mode;
+#endif
+
         if (addrd.adva) {
             memcpy(aux->adva, addrd.adva, 6);
             aux->adva_type = addrd.adva_type;
@@ -1146,56 +1179,9 @@ static uint8_t
 ble_ll_scan_aux_scan_req_tx_pdu_cb(uint8_t *dptr, void *arg, uint8_t *hdr_byte)
 {
     struct ble_ll_scan_aux_data *aux = arg;
-    uint8_t *scana;
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-    struct ble_ll_resolv_entry *rl;
-    uint8_t rpa[BLE_DEV_ADDR_LEN];
-#endif
-    uint8_t hb;
 
-    hb = BLE_ADV_PDU_TYPE_SCAN_REQ;
-
-    /* ScanA */
-    if (ble_ll_scan_get_own_addr_type() & 0x01) {
-        hb |= BLE_ADV_PDU_HDR_TXADD_RAND;
-        scana = g_random_addr;
-    } else {
-        scana = g_dev_addr;
-    }
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PRIVACY)
-    if (ble_ll_scan_get_own_addr_type() & 0x02) {
-        if (aux->rpa_index >=0) {
-            rl = &g_ble_ll_resolv_list[aux->rpa_index];
-        } else {
-            rl = NULL;
-        }
-
-        /*
-         * If device is on RL and we have local IRK, we use RPA generated using
-         * that IRK as ScanA. Otherwise we use NRPA as ScanA to prevent our
-         * device from being tracked when doing an active scan
-         * ref: Core 5.2, Vol 6, Part B, section 6.3)
-         */
-        if (rl && rl->rl_has_local) {
-            ble_ll_resolv_get_priv_addr(rl, 1, rpa);
-            scana = rpa;
-        } else {
-            scana = ble_ll_get_scan_nrpa();
-        }
-
-        hb |= BLE_ADV_PDU_HDR_TXADD_RAND;
-    }
-#endif
-    memcpy(dptr, scana, BLE_DEV_ADDR_LEN);
-
-    /* AdvA */
-    if (aux->adva_type) {
-        hb |= BLE_ADV_PDU_HDR_RXADD_RAND;
-    }
-    memcpy(dptr + BLE_DEV_ADDR_LEN, aux->adva, BLE_DEV_ADDR_LEN);
-
-    *hdr_byte = hb;
+    ble_ll_scan_make_req_pdu(ble_ll_scan_sm_get(), dptr, hdr_byte,
+                             aux->adva_type, aux->adva, aux->rpa_index);
 
     return BLE_DEV_ADDR_LEN * 2;
 }
@@ -1461,8 +1447,8 @@ ble_ll_scan_aux_sync_check(struct os_mbuf *rxpdu,
     eh_data = &rxbuf[4];
 
     /* Need ADI and SyncInfo */
-    if (!(eh_flags & ((1 << BLE_LL_EXT_ADV_SYNC_INFO_BIT) |
-                      (1 << BLE_LL_EXT_ADV_DATA_INFO_BIT)))) {
+    if (!(eh_flags & (1 << BLE_LL_EXT_ADV_DATA_INFO_BIT)) ||
+        !(eh_flags & (1 << BLE_LL_EXT_ADV_SYNC_INFO_BIT))) {
         return;
     }
 
@@ -1798,4 +1784,5 @@ ble_ll_scan_aux_init(void)
 }
 
 #endif /* BLE_LL_CFG_FEAT_LL_EXT_ADV */
-#endif /* ESP_PLATFORM  */
+
+#endif /* ESP_PLATFORM */

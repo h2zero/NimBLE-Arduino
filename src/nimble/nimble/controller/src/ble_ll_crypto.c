@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,11 +20,11 @@
  */
 
 #include <stdint.h>
-#include <nimble/nimble/include/nimble/ble.h>
-#include <nimble/nimble/controller/include/controller/ble_ll_crypto.h>
-#include <nimble/nimble/controller/include/controller/ble_hw.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/constants.h>
-#include <nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h>
+#include "nimble/nimble/include/nimble/ble.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_crypto.h"
+#include "nimble/nimble/controller/include/controller/ble_hw.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h"
 
 int
 ble_ll_crypto_cmac(const uint8_t *key, const uint8_t *in, int len,
@@ -60,3 +62,5 @@ ble_ll_crypto_h8(const uint8_t *k, const uint8_t *s, const uint8_t *key_id,
 
     return ble_ll_crypto_cmac(ik, key_id, 4, out);
 }
+
+#endif /* ESP_PLATFORM */

@@ -225,3 +225,6 @@ missing licensing information.  The BSD license was subsequently added to
 these files in later releases.  These files are:
     * babblesim/hw/mcu/nordic/nrf52_bsim/include/mcu/cmsis_nvic.h
 
+This product bundles part of linker scripts from Nordic Semiconductor,
+which is available under the "modified Tcl/Tk" license.  Bundled files are:
+    * targets/auracast_usb/nrf5340-mcu.ld

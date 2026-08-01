@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +19,6 @@
  * under the License.
  */
 
-#ifndef ESP_PLATFORM
-
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -26,6 +26,7 @@
 #include <assert.h>
 #include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os.h"
+#include "nimble/porting/nimble/include/os/util.h"
 #include "nimble/nimble/drivers/nrf51/include/ble/xcvr.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
@@ -112,6 +113,7 @@ struct ble_ll_adv_sm
     uint8_t own_addr_type;
     uint8_t peer_addr_type;
     uint8_t adv_chan;
+    uint8_t retry_event;
     uint8_t adv_pdu_len;
     int8_t adv_rpa_index;
     int8_t tx_power;
@@ -155,13 +157,15 @@ struct ble_ll_adv_sm
     uint8_t events;
     uint8_t pri_phy;
     uint8_t sec_phy;
+#if MYNEWT_VAL(BLE_VERSION) >= 54
+    uint8_t pri_phy_opt;
+    uint8_t sec_phy_opt;
+#endif
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV)
     struct os_mbuf *periodic_adv_data;
     struct os_mbuf *periodic_new_data;
     uint32_t periodic_crcinit; /* only 3 bytes are used */
     uint32_t periodic_access_addr;
-    uint16_t periodic_adv_itvl_min;
-    uint16_t periodic_adv_itvl_max;
     uint16_t periodic_adv_props;
     uint16_t periodic_channel_id;
     uint16_t periodic_event_cntr;
@@ -170,12 +174,23 @@ struct ble_ll_adv_sm
     uint8_t periodic_adv_active : 1;
     uint8_t periodic_sync_active : 1;
     uint8_t periodic_sync_index : 1;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
+    uint8_t periodic_include_adi : 1;
+    uint16_t periodic_adv_adi;
+#endif
     uint8_t periodic_num_used_chans;
     uint8_t periodic_chanmap[BLE_LL_CHAN_MAP_LEN];
-    uint32_t periodic_adv_itvl_ticks;
-    uint8_t periodic_adv_itvl_rem_usec;
-    uint8_t periodic_adv_event_start_time_remainder;
-    uint32_t periodic_adv_event_start_time;
+    uint16_t periodic_adv_itvl;
+
+    uint32_t padv_itvl_us;
+
+    uint16_t padv_anchor_offset;
+    uint32_t padv_anchor;
+    uint8_t padv_anchor_rem_us;
+
+    uint32_t padv_event_start;
+    uint8_t padv_event_start_rem_us;
+
     struct ble_ll_adv_sync periodic_sync[2];
     struct ble_npl_event adv_periodic_txdone_ev;
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_SYNC_TRANSFER)
@@ -229,7 +244,7 @@ struct ble_ll_adv_sm
 struct ble_ll_adv_sm g_ble_ll_adv_sm[BLE_ADV_INSTANCES];
 struct ble_ll_adv_sm *g_ble_ll_cur_adv_sm;
 
-static void ble_ll_adv_drop_event(struct ble_ll_adv_sm *advsm);
+static void ble_ll_adv_drop_event(struct ble_ll_adv_sm *advsm, bool preempted);
 
 static struct ble_ll_adv_sm *
 ble_ll_adv_sm_find_configured(uint8_t instance)
@@ -334,7 +349,9 @@ static void
 ble_ll_adv_rpa_update(struct ble_ll_adv_sm *advsm)
 {
     if (ble_ll_resolv_gen_rpa(advsm->peer_addr, advsm->peer_addr_type,
-                          advsm->adva, 1)) {
+                              advsm->adva, 1) ||
+        (ble_ll_resolv_local_rpa_get(advsm->own_addr_type & 1,
+                                     advsm->adva) == 0)) {
         ble_ll_adv_flags_set(advsm, BLE_LL_ADV_SM_FLAG_TX_ADD);
     } else {
         if (advsm->own_addr_type & 1) {
@@ -564,6 +581,7 @@ ble_ll_adv_pdu_make(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
     uint8_t ext_hdr_len;
     uint8_t ext_hdr_flags;
     uint32_t offset;
+    bool has_adva;
 
     advsm = pducb_arg;
 
@@ -575,8 +593,6 @@ ble_ll_adv_pdu_make(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
     /* only ADV_EXT_IND goes on primary advertising channels */
     pdu_type = BLE_ADV_PDU_TYPE_ADV_EXT_IND;
 
-    *hdr_byte = pdu_type;
-
     adv_mode = 0;
     if (advsm->props & BLE_HCI_LE_SET_EXT_ADV_PROP_CONNECTABLE) {
         adv_mode |= BLE_LL_EXT_ADV_MODE_CONN;
@@ -585,10 +601,18 @@ ble_ll_adv_pdu_make(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
         adv_mode |= BLE_LL_EXT_ADV_MODE_SCAN;
     }
 
+    has_adva = !MYNEWT_VAL(BLE_LL_EXT_ADV_ADVA_IN_AUX) &&
+               !(advsm->props & BLE_HCI_LE_SET_EXT_ADV_PROP_ANON_ADV);
+
     ext_hdr_len = BLE_LL_EXT_ADV_FLAGS_SIZE + BLE_LL_EXT_ADV_DATA_INFO_SIZE +
                   BLE_LL_EXT_ADV_AUX_PTR_SIZE;
     ext_hdr_flags = (1 << BLE_LL_EXT_ADV_DATA_INFO_BIT) |
                     (1 << BLE_LL_EXT_ADV_AUX_PTR_BIT);
+
+    if (has_adva) {
+        ext_hdr_len += BLE_LL_EXT_ADV_ADVA_SIZE;
+        ext_hdr_flags |= (1 << BLE_LL_EXT_ADV_ADVA_BIT);
+    }
 
     /* ext hdr len and adv mode */
     dptr[0] = ext_hdr_len | (adv_mode << 6);
@@ -597,6 +621,15 @@ ble_ll_adv_pdu_make(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
     /* ext hdr flags */
     dptr[0] = ext_hdr_flags;
     dptr += 1;
+
+    if (has_adva) {
+        /* AdvA */
+        if (advsm->flags & BLE_LL_ADV_SM_FLAG_TX_ADD) {
+            pdu_type |= BLE_ADV_PDU_HDR_TXADD_RAND;
+        }
+        memcpy(dptr, advsm->adva, BLE_LL_EXT_ADV_ADVA_SIZE);
+        dptr += BLE_LL_EXT_ADV_ADVA_SIZE;
+    }
 
     /* ADI */
     dptr[0] = advsm->adi & 0x00ff;
@@ -613,89 +646,84 @@ ble_ll_adv_pdu_make(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
     ble_ll_adv_put_aux_ptr(AUX_CURRENT(advsm)->chan, advsm->sec_phy,
                            offset, dptr);
 
+    *hdr_byte = pdu_type;
+
     return BLE_LL_EXT_ADV_HDR_LEN + ext_hdr_len;
 }
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV)
 static void
 ble_ll_adv_put_syncinfo(struct ble_ll_adv_sm *advsm,
-                        struct ble_ll_conn_sm *connsm, uint8_t *conn_event_cnt,
+                        struct ble_ll_conn_sm *connsm, uint8_t *conn_event_cntr,
                         uint8_t *dptr)
 {
+    uint32_t offset_us;
+    uint32_t offset;
+    uint32_t anchor_ticks;
+    uint8_t anchor_rem_us;
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_SYNC_TRANSFER)
-    uint8_t anchor_usecs;
-    uint16_t conn_cnt;
+    uint16_t anchor_event_cntr;
 #endif
-    unsigned int event_cnt_off = 0;
-    uint32_t offset = 0;
-    uint32_t anchor;
-    uint8_t units;
+    uint32_t event_start;
+    uint8_t event_start_us;
+    uint32_t event_cntr_offset = 0;
 
     if (connsm) {
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_SYNC_TRANSFER)
-        anchor = connsm->anchor_point;
-        anchor_usecs = connsm->anchor_point_usecs;
-        conn_cnt = connsm->event_cntr;
-
-        /* get anchor for conn event that is before periodic_adv_event_start_time */
-        while (LL_TMR_GT(anchor, advsm->periodic_adv_event_start_time)) {
-            ble_ll_conn_get_anchor(connsm, --conn_cnt, &anchor, &anchor_usecs);
-        }
-
-        offset = ble_ll_tmr_t2u(advsm->periodic_adv_event_start_time - anchor);
-        offset -= anchor_usecs;
-        offset += advsm->periodic_adv_event_start_time_remainder;
+        ble_ll_conn_anchor_get(connsm, &anchor_event_cntr,
+                               &anchor_ticks, &anchor_rem_us);
 
         /* connEventCount */
-        put_le16(conn_event_cnt, conn_cnt);
+        put_le16(conn_event_cntr, anchor_event_cntr);
+#else
+        BLE_LL_ASSERT(0);
 #endif
     } else {
-        anchor = advsm->periodic_adv_event_start_time;
-
-        /* Get periodic event that is past AUX start time (so that we always
-         * provide valid offset if it is not too far in future). This can
-         * happen if advertising event is interleaved with periodic advertising
-         * event (when chaining).
-         */
-        while (LL_TMR_GT(AUX_CURRENT(advsm)->start_time, anchor)) {
-            anchor += advsm->periodic_adv_itvl_ticks;
-            event_cnt_off++;
-        }
-
-        offset = ble_ll_tmr_t2u(anchor - AUX_CURRENT(advsm)->start_time);
-        offset += advsm->periodic_adv_event_start_time_remainder;
-        offset += advsm->periodic_adv_itvl_rem_usec;
+        anchor_ticks = AUX_CURRENT(advsm)->start_time;
+        anchor_rem_us = 0;
     }
+
+    event_start = advsm->padv_event_start;
+    event_start_us = advsm->padv_event_start_rem_us;
+
+    /* Find padv event that is past anchor item */
+    while (LL_TMR_LEQ(event_start, anchor_ticks)) {
+        ble_ll_tmr_add(&event_start, &event_start_us, advsm->padv_itvl_us);
+        event_cntr_offset++;
+    }
+
+    offset_us = ble_ll_tmr_t2u(event_start - anchor_ticks);
+    offset_us += event_start_us;
+    offset_us -= anchor_rem_us;
 
     /* Sync Packet Offset (13 bits), Offset Units (1 bit), Offset Adjust (1 bit),
      * RFU (1 bit)
      */
-    if (offset > 245700) {
-        units = 0x20;
-        offset = offset / 300;
-
+    if (offset_us > 245700) {
+        offset = offset_us / 300;
         if (offset >= 0x2000) {
             if (connsm) {
                 offset -= 0x2000;
-                units |= 0x40;
+                /* Offset Units = 1, Offset Adjust = 1 */
+                offset |= 0x6000;
             } else {
-                /* not able to represent time in offset */
                 offset = 0;
-                units = 0x00;
-                event_cnt_off = 0;
+                event_cntr_offset = 0;
             }
+        } else {
+            /* Offset Units = 1, Offset Adjust = 0 */
+            offset |= 0x2000;
         }
 
     } else {
-        units = 0x00;
-        offset = offset / 30;
+        offset = offset_us / 30;
+        /* Offset Units = 0, Offset Adjust = 0 */
     }
 
-    dptr[0] = (offset & 0x000000ff);
-    dptr[1] = ((offset >> 8) & 0x0000001f) | units;
+    put_le16(&dptr[0], offset);
 
     /* Interval (2 bytes) */
-    put_le16(&dptr[2], advsm->periodic_adv_itvl_max);
+    put_le16(&dptr[2], advsm->periodic_adv_itvl);
 
     /* Channels Mask (37 bits) */
     dptr[4] = advsm->periodic_chanmap[0];
@@ -716,7 +744,7 @@ ble_ll_adv_put_syncinfo(struct ble_ll_adv_sm *advsm,
     dptr[15] = (uint8_t)(advsm->periodic_crcinit >> 16);
 
     /* Event Counter (2 bytes) */
-    put_le16(&dptr[16], advsm->periodic_event_cntr + event_cnt_off);
+    put_le16(&dptr[16], advsm->periodic_event_cntr + event_cntr_offset);
 }
 #endif
 
@@ -1068,14 +1096,10 @@ ble_ll_adv_tx_done(void *arg)
     g_ble_ll_cur_adv_sm = NULL;
 }
 
-/*
- * Called when an advertising event has been removed from the scheduler
- * without being run.
- */
 void
-ble_ll_adv_event_rmvd_from_sched(struct ble_ll_adv_sm *advsm)
+ble_ll_adv_preempted(struct ble_ll_adv_sm *advsm)
 {
-    ble_ll_adv_drop_event(advsm);
+    ble_ll_adv_drop_event(advsm, 1);
 }
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV)
@@ -1107,6 +1131,9 @@ ble_ll_adv_tx_start_cb(struct ble_ll_sched_item *sch)
     uint8_t end_trans;
     uint32_t txstart;
     struct ble_ll_adv_sm *advsm;
+#if MYNEWT_VAL(BLE_LL_PHY) && MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+    uint8_t phy_mode __attribute__((unused));
+#endif
 
     /* Get the state machine for the event */
     advsm = (struct ble_ll_adv_sm *)sch->cb_arg;
@@ -1125,13 +1152,18 @@ ble_ll_adv_tx_start_cb(struct ble_ll_sched_item *sch)
     rc = ble_phy_setchan(advsm->adv_chan, BLE_ACCESS_ADDR_ADV, BLE_LL_CRCINIT_ADV);
     BLE_LL_ASSERT(rc == 0);
 
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
     /* Set phy mode */
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+#if MYNEWT_VAL(BLE_VERSION) >= 54
+    phy_mode = ble_ll_phy_to_phy_mode(advsm->pri_phy, advsm->pri_phy_opt);
+#else
+    phy_mode = ble_ll_phy_to_phy_mode(advsm->pri_phy, BLE_HCI_LE_PHY_CODED_ANY);
+#endif
     if (advsm->props & BLE_HCI_LE_SET_EXT_ADV_PROP_LEGACY) {
         ble_phy_mode_set(BLE_PHY_MODE_1M, BLE_PHY_MODE_1M);
     } else {
-        ble_phy_mode_set(advsm->pri_phy, advsm->pri_phy);
+        ble_phy_mode_set(phy_mode, phy_mode);
     }
 #else
     ble_phy_mode_set(BLE_PHY_MODE_1M, BLE_PHY_MODE_1M);
@@ -1256,6 +1288,9 @@ ble_ll_adv_secondary_tx_start_cb(struct ble_ll_sched_item *sch)
     struct ble_ll_adv_sm *advsm;
     ble_phy_tx_pducb_t pducb;
     struct ble_ll_adv_aux *aux;
+#if MYNEWT_VAL(BLE_LL_PHY)
+    uint8_t phy_mode;
+#endif
 
     /* Get the state machine for the event */
     advsm = (struct ble_ll_adv_sm *)sch->cb_arg;
@@ -1271,9 +1306,14 @@ ble_ll_adv_secondary_tx_start_cb(struct ble_ll_sched_item *sch)
                          BLE_LL_CRCINIT_ADV);
     BLE_LL_ASSERT(rc == 0);
 
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
+#if MYNEWT_VAL(BLE_VERSION) >= 54
+    phy_mode = ble_ll_phy_to_phy_mode(advsm->sec_phy, advsm->sec_phy_opt);
+#else
+    phy_mode = ble_ll_phy_to_phy_mode(advsm->sec_phy, BLE_HCI_LE_PHY_CODED_ANY);
+#endif
     /* Set phy mode */
-     ble_phy_mode_set(advsm->sec_phy, advsm->sec_phy);
+    ble_phy_mode_set(phy_mode, phy_mode);
 #endif
 
     /* Set the power */
@@ -1402,9 +1442,16 @@ ble_ll_adv_aux_calculate_payload(struct ble_ll_adv_sm *advsm, uint16_t props,
         ext_hdr_len += BLE_LL_EXT_ADV_DATA_INFO_SIZE;
     }
 
-    /* AdvA in 1st PDU, except for anonymous */
+    /* AdvA if:
+     * - 1st PDU
+     * - not anonymous
+     * - scannable/connectable or ADVA_IN_AUX selected
+     */
     if (first_pdu &&
-        !(props & BLE_HCI_LE_SET_EXT_ADV_PROP_ANON_ADV)) {
+        !(props & BLE_HCI_LE_SET_EXT_ADV_PROP_ANON_ADV) &&
+        ((props & (BLE_HCI_LE_SET_EXT_ADV_PROP_CONNECTABLE |
+                   BLE_HCI_LE_SET_EXT_ADV_PROP_SCANNABLE)) ||
+         MYNEWT_VAL(BLE_LL_EXT_ADV_ADVA_IN_AUX))) {
         ext_hdr_flags |= (1 << BLE_LL_EXT_ADV_ADVA_BIT);
         ext_hdr_len += BLE_LL_EXT_ADV_ADVA_SIZE;
     }
@@ -1911,10 +1958,10 @@ ble_ll_adv_set_adv_params(const uint8_t *cmdbuf, uint8_t len)
 }
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-static void
-ble_ll_adv_update_did(struct ble_ll_adv_sm *advsm)
+static uint16_t
+ble_ll_adv_update_did(uint16_t old_adi)
 {
-    uint16_t old_adi = advsm->adi;
+    uint16_t new_adi;
 
     /*
      * The Advertising DID for a given advertising set shall be initialized
@@ -1925,8 +1972,10 @@ ble_ll_adv_update_did(struct ble_ll_adv_sm *advsm)
      * the previously used value.
      */
     do {
-        advsm->adi = (advsm->adi & 0xf000) | (ble_ll_rand() & 0x0fff);
-    } while (old_adi == advsm->adi);
+        new_adi = (old_adi & 0xf000) | (ble_ll_rand() & 0x0fff);
+    } while (old_adi == new_adi);
+
+    return new_adi;
 }
 #endif
 
@@ -1960,7 +2009,7 @@ ble_ll_adv_update_adv_scan_rsp_data(struct ble_ll_adv_sm *advsm)
 
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
     /* DID shall be updated when host provides new advertising data */
-    ble_ll_adv_update_did(advsm);
+    advsm->adi = ble_ll_adv_update_did(advsm->adi);
 #endif
 }
 
@@ -2153,6 +2202,12 @@ ble_ll_adv_sync_pdu_make(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
         dptr += 1;
     }
 #endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
+    if (sync->ext_hdr_flags & (1 << BLE_LL_EXT_ADV_DATA_INFO_BIT)) {
+        put_le16(dptr, advsm->periodic_adv_adi);
+        dptr += BLE_LL_EXT_ADV_DATA_INFO_SIZE;
+    }
+#endif
 
     if (sync->ext_hdr_flags & (1 << BLE_LL_EXT_ADV_AUX_PTR_BIT)) {
         if (!SYNC_NEXT(advsm)->sch.enqueued) {
@@ -2186,7 +2241,6 @@ ble_ll_adv_sync_pdu_make(uint8_t *dptr, void *pducb_arg, uint8_t *hdr_byte)
                                                   sync->sch.start_time +
                                                   g_ble_ll_sched_offset_ticks,
                                                   sync->sch.remainder);
-        BLE_LL_ASSERT(biginfo_len > 0);
 
         dptr += biginfo_len;
     }
@@ -2266,7 +2320,7 @@ ble_ll_adv_sync_tx_start_cb(struct ble_ll_sched_item *sch)
 
     BLE_LL_ASSERT(rc == 0);
 
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
     /* Set phy mode */
      ble_phy_mode_set(advsm->sec_phy, advsm->sec_phy);
 #endif
@@ -2334,6 +2388,13 @@ ble_ll_adv_sync_calculate(struct ble_ll_adv_sm *advsm,
     rem_data_len = SYNC_DATA_LEN(advsm) - data_offset;
 
     ext_hdr_len = BLE_LL_EXT_ADV_HDR_LEN;
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
+    if (advsm->periodic_include_adi) {
+        sync->ext_hdr_flags |= (1 << BLE_LL_EXT_ADV_DATA_INFO_BIT);
+        ext_hdr_len += BLE_LL_EXT_ADV_DATA_INFO_SIZE;
+    }
+#endif
 
     /* TxPower if configured
      * Note: TxPower shall not be present in chain PDU for SYNC
@@ -2421,7 +2482,7 @@ ble_ll_adv_periodic_schedule_first(struct ble_ll_adv_sm *advsm,
      * Preincrement event counter as we later send this in PDU so make sure
      * same values are used
      */
-    chan = ble_ll_utils_dci_csa2(++advsm->periodic_event_cntr,
+    chan = ble_ll_utils_dci_csa2(advsm->periodic_event_cntr,
                                  advsm->periodic_channel_id,
                                  advsm->periodic_num_used_chans,
                                  advsm->periodic_chanmap);
@@ -2433,14 +2494,20 @@ ble_ll_adv_periodic_schedule_first(struct ble_ll_adv_sm *advsm,
 
     sch = &sync->sch;
 
-    ble_ll_tmr_add_u(&advsm->periodic_adv_event_start_time,
-                     &advsm->periodic_adv_event_start_time_remainder,
-                     advsm->periodic_adv_itvl_rem_usec);
+    advsm->padv_event_start = advsm->padv_anchor;
+    advsm->padv_event_start_rem_us = advsm->padv_anchor_rem_us;
+    ble_ll_tmr_add(&advsm->padv_event_start, &advsm->padv_event_start_rem_us,
+                   advsm->padv_itvl_us * advsm->padv_anchor_offset);
 
-    sch->start_time = advsm->periodic_adv_event_start_time;
-    sch->remainder = advsm->periodic_adv_event_start_time_remainder;
-    sch->end_time = sch->start_time + ble_ll_tmr_u2t_up(max_usecs);
-    sch->start_time -= g_ble_ll_sched_offset_ticks;
+    if (advsm->padv_anchor_offset == UINT16_MAX) {
+        advsm->padv_anchor_offset = 0;
+        advsm->padv_anchor = advsm->padv_event_start;
+        advsm->padv_anchor_rem_us = advsm->padv_event_start_rem_us;
+    }
+
+    sch->start_time = advsm->padv_event_start - g_ble_ll_sched_offset_ticks;
+    sch->remainder = advsm->padv_event_start_rem_us;
+    sch->end_time = advsm->padv_event_start + ble_ll_tmr_u2t_up(max_usecs);
 
     rc = ble_ll_sched_periodic_adv(sch, first_pdu);
     if (rc) {
@@ -2452,10 +2519,14 @@ ble_ll_adv_periodic_schedule_first(struct ble_ll_adv_sm *advsm,
     sync->start_time = sch->start_time + g_ble_ll_sched_offset_ticks;
 
     assert(first_pdu ||
-           (sync->start_time == advsm->periodic_adv_event_start_time));
+           (sync->start_time == advsm->padv_event_start));
 
-    /* The event start time is when we start transmission of the SYNC PDU */
-    advsm->periodic_adv_event_start_time = sync->start_time;
+    if (first_pdu) {
+        /* Need to update anchor on 1st PDU since it's start time can be changed
+         * while scheduling */
+        advsm->padv_anchor = sync->start_time;
+        advsm->padv_event_start = sync->start_time;
+    }
 }
 
 static void
@@ -2536,8 +2607,8 @@ ble_ll_adv_periodic_schedule_next(struct ble_ll_adv_sm *advsm)
      * is scheduled past advertising interval.
      */
     if (sync->auxptr_zero ||
-        (LL_TMR_GT(sch->end_time, advsm->periodic_adv_event_start_time +
-                                  advsm->periodic_adv_itvl_ticks))) {
+        (LL_TMR_GT(sch->end_time, advsm->padv_event_start +
+                   ble_ll_tmr_u2t(advsm->padv_itvl_us)))) {
         STATS_INC(ble_ll_stats, periodic_chain_drop_event);
         ble_ll_sched_rmv_elem(&sync->sch);
     }
@@ -2561,7 +2632,9 @@ ble_ll_adv_sync_schedule(struct ble_ll_adv_sm *advsm, bool first_pdu)
 static void
 ble_ll_adv_reschedule_periodic_event(struct ble_ll_adv_sm *advsm)
 {
-    advsm->periodic_adv_event_start_time += advsm->periodic_adv_itvl_ticks;
+    advsm->periodic_event_cntr++;
+    advsm->padv_anchor_offset++;
+
     ble_ll_adv_sync_schedule(advsm, false);
 }
 
@@ -2580,6 +2653,9 @@ ble_ll_adv_update_periodic_data(struct ble_ll_adv_sm *advsm)
         os_mbuf_free_chain(advsm->periodic_adv_data);
         advsm->periodic_adv_data = advsm->periodic_new_data;
         advsm->periodic_new_data = NULL;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
+        advsm->periodic_adv_adi = ble_ll_adv_update_did(advsm->periodic_adv_adi);
+#endif
     }
 
     ble_ll_adv_flags_clear(advsm, BLE_LL_ADV_SM_FLAG_PERIODIC_NEW_DATA);
@@ -2635,8 +2711,6 @@ ble_ll_adv_periodic_event_done(struct ble_npl_event *ev)
 static void
 ble_ll_adv_sm_start_periodic(struct ble_ll_adv_sm *advsm)
 {
-    uint32_t usecs;
-
     /*
      * The Advertising DID is not required to change when a SyncInfo field is
      * added to or removed from an advertising set. However, if it does not
@@ -2646,7 +2720,15 @@ ble_ll_adv_sm_start_periodic(struct ble_ll_adv_sm *advsm)
      * advertisers should update the Advertising DID when a periodic advertising
      * train is enabled.
      */
-    ble_ll_adv_update_did(advsm);
+    advsm->adi = ble_ll_adv_update_did(advsm->adi);
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
+    /*
+     * Since periodic advertising can be started without data we initialize DID here
+     * instead of after setting periodic advertising data.
+     */
+    advsm->periodic_adv_adi = ble_ll_adv_update_did(advsm->periodic_adv_adi);
+#endif
 
     advsm->periodic_adv_active = 1;
 
@@ -2661,17 +2743,9 @@ ble_ll_adv_sm_start_periodic(struct ble_ll_adv_sm *advsm)
                                  (advsm->periodic_access_addr & 0x0000ffff);
     advsm->periodic_crcinit = ble_ll_rand() & 0xffffff;
 
-    usecs = (uint32_t)advsm->periodic_adv_itvl_max * BLE_LL_ADV_PERIODIC_ITVL;
-
-    advsm->periodic_adv_itvl_ticks = ble_ll_tmr_u2t_r(usecs,
-                                                      &advsm->periodic_adv_itvl_rem_usec);
-
-    /* There is no point in starting periodic advertising until next advertising
-     * event since SyncInfo is needed for synchronization
-     */
-    advsm->periodic_adv_event_start_time_remainder = 0;
-    advsm->periodic_adv_event_start_time = advsm->adv_pdu_start_time +
-                      ble_ll_tmr_u2t(advsm->adv_itvl_usecs + 5000);
+    advsm->padv_anchor_offset = 1;
+    advsm->padv_anchor = ble_ll_tmr_get();
+    advsm->padv_anchor_rem_us = 0;
 
     ble_ll_adv_sync_schedule(advsm, true);
 }
@@ -2697,7 +2771,7 @@ ble_ll_adv_sm_stop_periodic(struct ble_ll_adv_sm *advsm)
      * advertisers should update the Advertising DID when a periodic advertising
      * train is disabled.
      */
-    ble_ll_adv_update_did(advsm);
+    advsm->adi = ble_ll_adv_update_did(advsm->adi);
 
     /* Remove any scheduled advertising items */
     advsm->periodic_adv_active = 0;
@@ -3119,7 +3193,7 @@ ble_ll_adv_set_scan_rsp_data(const uint8_t *data, uint8_t datalen,
         }
 
         /* DID shall be updated when host provides new scan response data */
-        ble_ll_adv_update_did(advsm);
+        advsm->adi = ble_ll_adv_update_did(advsm->adi);
 #endif
     }
 
@@ -3194,7 +3268,7 @@ ble_ll_adv_set_adv_data(const uint8_t *data, uint8_t datalen, uint8_t instance,
         }
 
         /* update DID only */
-        ble_ll_adv_update_did(advsm);
+        advsm->adi = ble_ll_adv_update_did(advsm->adi);
         return BLE_ERR_SUCCESS;
     case BLE_HCI_LE_SET_DATA_OPER_LAST:
         ble_ll_adv_flags_clear(advsm, BLE_LL_ADV_SM_FLAG_ADV_DATA_INCOMPLETE);
@@ -3282,7 +3356,7 @@ ble_ll_adv_set_adv_data(const uint8_t *data, uint8_t datalen, uint8_t instance,
         }
 
         /* DID shall be updated when host provides new advertising data */
-        ble_ll_adv_update_did(advsm);
+        advsm->adi = ble_ll_adv_update_did(advsm->adi);
 #endif
         }
 
@@ -3410,14 +3484,38 @@ ble_ll_adv_ext_set_param(const uint8_t *cmdbuf, uint8_t len,
     }
 #endif
 
-    adv_itvl_min = cmd->pri_itvl_min[2] << 16 | cmd->pri_itvl_min[1] << 8 |
-                   cmd->pri_itvl_min[0];
-    adv_itvl_max = cmd->pri_itvl_max[2] << 16 | cmd->pri_itvl_max[1] << 8 |
-                   cmd->pri_itvl_max[0];
+    adv_itvl_min = get_le24(cmd->pri_itvl_min);
+    adv_itvl_max = get_le24(cmd->pri_itvl_max);
 
     if (props & ~BLE_HCI_LE_SET_EXT_ADV_PROP_MASK) {
         rc = BLE_ERR_INV_HCI_CMD_PARMS;
         goto done;
+    }
+
+    /* Anonymous advertising only makes sense for non-connectable, non-scannable
+     * and non-legacy. This is not explicitly stated anywhere in HCI/LL part of
+     * the spec, but Vol 3, Part C, 9.1.1.2 (GAP) states:
+     *   "A device in the Broadcast mode may send non-connectable and non-
+     *    scannable undirected or non-connectable and non-scannable directed
+     *    advertising events anonymously by excluding the Broadcaster's address."
+     * And Vol 4, Part E, 7.8.53 (HCI) states:
+     *   "If the Advertising_Event_Properties parameter does not describe an
+     *    event type supported by the Controller, contains an invalid bit
+     *    combination, or specifies a type that does not support advertising
+     *    data when the advertising set already contains some, the Controller
+     *    shall return the error code Invalid HCI Command Parameters (0x12)."
+     *
+     * So let's just assume anonymous on connectable/scannable/legacy is an
+     * invalid bit combination.
+     */
+    if (props & BLE_HCI_LE_SET_EXT_ADV_PROP_ANON_ADV) {
+        if (props & (BLE_HCI_LE_SET_EXT_ADV_PROP_CONNECTABLE |
+                     BLE_HCI_LE_SET_EXT_ADV_PROP_SCANNABLE |
+                     BLE_HCI_LE_SET_EXT_ADV_PROP_HD_DIRECTED |
+                     BLE_HCI_LE_SET_EXT_ADV_PROP_LEGACY)) {
+            rc = BLE_ERR_INV_HCI_CMD_PARMS;
+            goto done;
+        }
     }
 
     if (props & BLE_HCI_LE_SET_EXT_ADV_PROP_LEGACY) {
@@ -3587,6 +3685,9 @@ ble_ll_adv_ext_set_param(const uint8_t *cmdbuf, uint8_t len,
     advsm->sec_phy = cmd->sec_phy;
     /* Update SID only */
     advsm->adi = (advsm->adi & 0x0fff) | ((cmd->sid << 12));
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
+    advsm->periodic_adv_adi = (advsm->periodic_adv_adi & 0x0fff) | ((cmd->sid << 12));
+#endif
 
     advsm->props = props;
 
@@ -3614,6 +3715,59 @@ done:
     *rsplen = sizeof(*rsp);
     return rc;
 }
+
+#if MYNEWT_VAL(BLE_VERSION) >= 54
+static inline uint8_t
+ble_ll_adv_convert_phy_opt(uint8_t cmd_phy_opt)
+{
+    switch (cmd_phy_opt) {
+    case BLE_HCI_ADVERTISING_PHY_OPT_NO_PREF:
+        return BLE_HCI_LE_PHY_CODED_ANY;
+    case BLE_HCI_ADVERTISING_PHY_OPT_S2_PREF:
+    case BLE_HCI_ADVERTISING_PHY_OPT_S2_REQ:
+        return BLE_HCI_LE_PHY_CODED_S2_PREF;
+    case BLE_HCI_ADVERTISING_PHY_OPT_S8_PREF:
+    case BLE_HCI_ADVERTISING_PHY_OPT_S8_REQ:
+        return BLE_HCI_LE_PHY_CODED_S8_PREF;
+    default:
+        BLE_LL_ASSERT(0);
+    }
+}
+
+int
+ble_ll_adv_ext_set_param_v2(const uint8_t *cmdbuf, uint8_t len,
+                            uint8_t *rspbuf, uint8_t *rsplen)
+{
+    const struct ble_hci_le_set_ext_adv_params_v2_cp *cmd = (const void *) cmdbuf;
+    struct ble_ll_adv_sm *advsm;
+    int rc;
+
+    if (len != sizeof(*cmd)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    if ((cmd->pri_phy_opt > BLE_HCI_ADVERTISING_PHY_OPT_S8_REQ) ||
+        (cmd->sec_phy_opt > BLE_HCI_ADVERTISING_PHY_OPT_S8_REQ)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    rc = ble_ll_adv_ext_set_param(cmdbuf, len - 2, rspbuf, rsplen);
+    if (rc != 0) {
+        return rc;
+    }
+
+    advsm = ble_ll_adv_sm_get(cmd->params_v1.adv_handle);
+
+    if (advsm->pri_phy == BLE_HCI_LE_PHY_CODED) {
+        advsm->pri_phy_opt = ble_ll_adv_convert_phy_opt(cmd->pri_phy_opt);
+    }
+    if (advsm->sec_phy == BLE_HCI_LE_PHY_CODED) {
+        advsm->sec_phy_opt = ble_ll_adv_convert_phy_opt(cmd->sec_phy_opt);
+    }
+
+    return rc;
+}
+#endif
 
 int
 ble_ll_adv_ext_set_adv_data(const uint8_t *cmdbuf, uint8_t cmdlen)
@@ -3978,8 +4132,8 @@ ble_ll_adv_periodic_set_param(const uint8_t *cmdbuf, uint8_t len)
         return BLE_ERR_PACKET_TOO_LONG;
     }
 
-    advsm->periodic_adv_itvl_min = adv_itvl_min;
-    advsm->periodic_adv_itvl_max = adv_itvl_max;
+    advsm->periodic_adv_itvl = adv_itvl_max;
+    advsm->padv_itvl_us = adv_itvl_max * BLE_LL_ADV_PERIODIC_ITVL;
     advsm->periodic_adv_props = props;
 
     ble_ll_adv_flags_set(advsm, BLE_LL_ADV_SM_FLAG_PERIODIC_CONFIGURED);
@@ -4041,6 +4195,23 @@ ble_ll_adv_periodic_set_data(const uint8_t *cmdbuf, uint8_t len)
     case BLE_HCI_LE_SET_DATA_OPER_COMPLETE:
         new_data = true;
         break;
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
+    case BLE_HCI_LE_SET_DATA_OPER_UNCHANGED:
+        if (!advsm->periodic_adv_enabled) {
+            return BLE_ERR_INV_HCI_CMD_PARMS;
+        }
+
+        if (advsm->periodic_adv_data->om_len == 0) {
+            return BLE_ERR_INV_HCI_CMD_PARMS;
+        }
+
+        if (cmd->adv_data_len != 0) {
+            return BLE_ERR_INV_HCI_CMD_PARMS;
+        }
+
+        advsm->periodic_adv_adi = ble_ll_adv_update_did(advsm->periodic_adv_adi);
+        return BLE_ERR_SUCCESS;
+#endif
     default:
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
@@ -4059,7 +4230,7 @@ ble_ll_adv_periodic_set_data(const uint8_t *cmdbuf, uint8_t len)
      */
     if (!ble_ll_adv_periodic_check_data_itvl(payload_total_len,
                                              advsm->periodic_adv_props,
-                                             advsm->periodic_adv_itvl_max,
+                                             advsm->periodic_adv_itvl,
                                              advsm->sec_phy)) {
         return BLE_ERR_PACKET_TOO_LONG;
     }
@@ -4117,10 +4288,14 @@ ble_ll_adv_periodic_enable(const uint8_t *cmdbuf, uint8_t len)
         return BLE_ERR_UNK_ADV_INDENT;
     }
 
-#if MYNEWT_VAL(BLE_VERSION) >= 53
+#if !MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
     if (cmd->enable & 0x02) {
         return BLE_ERR_UNSUPPORTED;
-    } else if (cmd->enable & 0xfc) {
+    }
+#endif
+
+#if MYNEWT_VAL(BLE_VERSION) >= 53
+    if (cmd->enable & 0xfc) {
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
 #else
@@ -4129,7 +4304,7 @@ ble_ll_adv_periodic_enable(const uint8_t *cmdbuf, uint8_t len)
     }
 #endif
 
-    if (cmd->enable) {
+    if (cmd->enable & 0x1) {
         if (advsm->props & (BLE_HCI_LE_SET_EXT_ADV_PROP_ANON_ADV |
                             BLE_HCI_LE_SET_EXT_ADV_PROP_SCANNABLE |
                             BLE_HCI_LE_SET_EXT_ADV_PROP_CONNECTABLE |
@@ -4147,15 +4322,19 @@ ble_ll_adv_periodic_enable(const uint8_t *cmdbuf, uint8_t len)
 
         /* If Enable is set to 0x01 and the length of the periodic advertising
          * data is greater than the maximum that the Controller can transmit
-         * within the chosen periodicadvertising interval, the Controller shall
+         * within the chosen periodic advertising interval, the Controller shall
          * return the error code Packet Too Long (0x45).
          */
         if (!ble_ll_adv_periodic_check_data_itvl(SYNC_DATA_LEN(advsm),
                                                  advsm->periodic_adv_props,
-                                                 advsm->periodic_adv_itvl_max,
+                                                 advsm->periodic_adv_itvl,
                                                  advsm->sec_phy)) {
             return BLE_ERR_PACKET_TOO_LONG;
         }
+
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_ADI_SUPPORT)
+        advsm->periodic_include_adi = !!(cmd->enable & 0x2);
+#endif
 
         /* If the advertising set is not currently enabled (see the
          * LE_Set_Extended_Advertising_Enable command), the periodic advertising
@@ -4742,8 +4921,10 @@ ble_ll_adv_rx_isr_start(uint8_t pdu_type)
 }
 
 static void
-ble_ll_adv_drop_event(struct ble_ll_adv_sm *advsm)
+ble_ll_adv_drop_event(struct ble_ll_adv_sm *advsm, bool preempted)
 {
+    os_sr_t sr;
+
     STATS_INC(ble_ll_stats, adv_drop_event);
 
     ble_ll_sched_rmv_elem(&advsm->adv_sch);
@@ -4754,6 +4935,12 @@ ble_ll_adv_drop_event(struct ble_ll_adv_sm *advsm)
     ble_ll_event_remove(&advsm->adv_sec_txdone_ev);
     advsm->aux_active = 0;
 #endif
+
+    if (preempted) {
+        OS_ENTER_CRITICAL(sr);
+        advsm->retry_event = !(advsm->flags & BLE_LL_ADV_SM_FLAG_ACTIVE_CHANSET_MASK);
+        OS_EXIT_CRITICAL(sr);
+    }
 
     advsm->adv_chan = ble_ll_adv_final_chan(advsm);
     ble_ll_event_add(&advsm->adv_txdone_ev);
@@ -4779,7 +4966,7 @@ ble_ll_adv_reschedule_event(struct ble_ll_adv_sm *advsm)
 
         rc = ble_ll_sched_adv_reschedule(sch, max_delay_ticks);
         if (rc) {
-            ble_ll_adv_drop_event(advsm);
+            ble_ll_adv_drop_event(advsm, 0);
             return;
         }
 
@@ -4845,25 +5032,35 @@ ble_ll_adv_done(struct ble_ll_adv_sm *advsm)
     final_adv_chan = ble_ll_adv_final_chan(advsm);
 
     if (advsm->adv_chan == final_adv_chan) {
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
-        if (advsm->events_max) {
-            advsm->events++;
-        }
-#endif
-
         ble_ll_scan_chk_resume();
 
         /* This event is over. Set adv channel to first one */
         advsm->adv_chan = ble_ll_adv_first_chan(advsm);
 
-        /*
-         * Calculate start time of next advertising event. NOTE: we do not
-         * add the random advDelay as the scheduling code will do that.
-         */
         itvl = advsm->adv_itvl_usecs;
         tick_itvl = ble_ll_tmr_u2t(itvl);
-        advsm->adv_event_start_time += tick_itvl;
-        advsm->adv_pdu_start_time = advsm->adv_event_start_time;
+
+        /* do not calculate new event time if current event should be retried;
+         * this happens if event was preempted, so we just try to schedule one
+         * more time with the same start time
+         */
+
+        if (!advsm->retry_event) {
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+            if (advsm->events_max) {
+                advsm->events++;
+            }
+#endif
+
+            /*
+             * Calculate start time of next advertising event. NOTE: we do not
+             * add the random advDelay as the scheduling code will do that.
+             */
+            advsm->adv_event_start_time += tick_itvl;
+            advsm->adv_pdu_start_time = advsm->adv_event_start_time;
+        } else {
+            advsm->retry_event = 0;
+        }
 
         /*
          * The scheduled time better be in the future! If it is not, we will
@@ -4909,7 +5106,7 @@ ble_ll_adv_done(struct ble_ll_adv_sm *advsm)
                 advsm->aux_active &&
                 LL_TMR_GT(advsm->adv_pdu_start_time,
                            AUX_CURRENT(advsm)->start_time)) {
-            ble_ll_adv_drop_event(advsm);
+            ble_ll_adv_drop_event(advsm, 0);
             return;
         }
 #endif
@@ -5009,7 +5206,7 @@ ble_ll_adv_sec_done(struct ble_ll_adv_sm *advsm)
     ble_ll_rfmgmt_release();
 
     if (advsm->aux_dropped) {
-        ble_ll_adv_drop_event(advsm);
+        ble_ll_adv_drop_event(advsm, 0);
         return;
     }
 
@@ -5312,6 +5509,23 @@ ble_ll_adv_sync_get(uint8_t handle)
 }
 
 int
+ble_ll_adv_padv_event_start_get(struct ble_ll_adv_sm *advsm,
+                                uint32_t *event_start,
+                                uint8_t *event_start_rem_us)
+{
+    if (!advsm || !advsm->periodic_adv_active) {
+        return -EINVAL;
+    }
+
+    *event_start = advsm->padv_event_start;
+    if (event_start_rem_us) {
+        *event_start_rem_us = advsm->padv_event_start_rem_us;
+    }
+
+    return 0;
+}
+
+int
 ble_ll_adv_sync_big_add(struct ble_ll_adv_sm *advsm,
                         struct ble_ll_iso_big *big)
 {
@@ -5358,4 +5572,5 @@ ble_ll_adv_init(void)
 }
 
 #endif
-#endif
+
+#endif /* ESP_PLATFORM */

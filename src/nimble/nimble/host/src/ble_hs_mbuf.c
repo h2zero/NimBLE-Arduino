@@ -74,6 +74,7 @@ ble_hs_mbuf_acl_pkt(void)
 #if CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
     return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + 1);
 #else
+#define BLE_HS_CTRL_DATA_HDR_SZ     0x4
     return ble_hs_mbuf_gen_pkt(BLE_HCI_DATA_HDR_SZ + BLE_HS_CTRL_DATA_HDR_SZ + 1);
 #endif
 }

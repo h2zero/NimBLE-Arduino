@@ -80,7 +80,6 @@ ble_l2cap_chan_free(struct ble_hs_conn *conn, struct ble_l2cap_chan *chan)
         return;
     }
 
-    os_mbuf_free_chain(chan->rx_buf);
     ble_l2cap_coc_cleanup_chan(conn, chan);
 
 #if MYNEWT_VAL(BLE_HS_DEBUG)
@@ -99,18 +98,17 @@ ble_l2cap_is_mtu_req_sent(const struct ble_l2cap_chan *chan)
 }
 
 int
-ble_l2cap_parse_hdr(struct os_mbuf *om, int off,
-                    struct ble_l2cap_hdr *l2cap_hdr)
+ble_l2cap_parse_hdr(struct os_mbuf *om, struct ble_l2cap_hdr *hdr)
 {
     int rc;
 
-    rc = os_mbuf_copydata(om, off, sizeof *l2cap_hdr, l2cap_hdr);
+    rc = os_mbuf_copydata(om, 0, sizeof(*hdr), hdr);
     if (rc != 0) {
         return BLE_HS_EMSGSIZE;
     }
 
-    l2cap_hdr->len = get_le16(&l2cap_hdr->len);
-    l2cap_hdr->cid = get_le16(&l2cap_hdr->cid);
+    hdr->len = get_le16(&hdr->len);
+    hdr->cid = get_le16(&hdr->cid);
 
     return 0;
 }
@@ -147,14 +145,38 @@ int
 ble_l2cap_create_server(uint16_t psm, uint16_t mtu,
                         ble_l2cap_event_fn *cb, void *cb_arg)
 {
-    return ble_l2cap_coc_create_server(psm, mtu, cb, cb_arg);
+    int rc;
+
+    ble_hs_lock();
+    rc = ble_l2cap_coc_create_server_nolock(psm, mtu, cb, cb_arg);
+    ble_hs_unlock();
+
+    return rc;
+}
+
+int
+ble_l2cap_remove_server(uint16_t psm)
+{
+    int rc;
+
+    ble_hs_lock();
+    rc = ble_l2cap_coc_remove_server_nolock(psm);
+    ble_hs_unlock();
+
+    return rc;
 }
 
 int
 ble_l2cap_connect(uint16_t conn_handle, uint16_t psm, uint16_t mtu,
                   struct os_mbuf *sdu_rx, ble_l2cap_event_fn *cb, void *cb_arg)
 {
-    return ble_l2cap_sig_coc_connect(conn_handle, psm, mtu, sdu_rx, cb, cb_arg);
+    int rc;
+
+    ble_hs_lock();
+    rc = ble_l2cap_sig_connect_nolock(conn_handle, psm, mtu, sdu_rx, cb, cb_arg);
+    ble_hs_unlock();
+
+    return rc;
 }
 
 int
@@ -185,8 +207,14 @@ ble_l2cap_enhanced_connect(uint16_t conn_handle,
                                uint8_t num, struct os_mbuf *sdu_rx[],
                                ble_l2cap_event_fn *cb, void *cb_arg)
 {
-    return ble_l2cap_sig_ecoc_connect(conn_handle, psm, mtu,
-                                      num, sdu_rx, cb, cb_arg);
+    int rc;
+
+    ble_hs_lock();
+    rc = ble_l2cap_sig_ecoc_connect_nolock(conn_handle, psm, mtu, num, sdu_rx,
+                                           cb, cb_arg);
+    ble_hs_unlock();
+
+    return rc;
 }
 
 int
@@ -194,6 +222,7 @@ ble_l2cap_reconfig(struct ble_l2cap_chan *chans[], uint8_t num, uint16_t new_mtu
 {
     int i;
     uint16_t conn_handle;
+    int rc;
 
     if (num == 0 || !chans) {
         return BLE_HS_EINVAL;
@@ -208,35 +237,23 @@ ble_l2cap_reconfig(struct ble_l2cap_chan *chans[], uint8_t num, uint16_t new_mtu
         }
     }
 
-    return ble_l2cap_sig_coc_reconfig(conn_handle, chans, num, new_mtu, MYNEWT_VAL(BLE_L2CAP_COC_MPS));
-}
+    ble_hs_lock();
+    rc = ble_l2cap_sig_coc_reconfig_nolock(conn_handle, chans, num, new_mtu);
+    ble_hs_unlock();
 
-int
-ble_l2cap_reconfig_mtu_mps(struct ble_l2cap_chan *chans[], uint8_t num, uint16_t new_mtu, uint16_t new_mps)
-{
-    int i;
-    uint16_t conn_handle;
-
-    if (num == 0 || !chans) {
-        return BLE_HS_EINVAL;
-    }
-
-    conn_handle = chans[0]->conn_handle;
-
-    for (i = 1; i < num; i++) {
-        if (conn_handle != chans[i]->conn_handle) {
-            BLE_HS_LOG(ERROR, "All channels should have same conn handle\n");
-            return BLE_HS_EINVAL;
-        }
-    }
-
-    return ble_l2cap_sig_coc_reconfig(conn_handle, chans, num, new_mtu, new_mps);
+    return rc;
 }
 
 int
 ble_l2cap_disconnect(struct ble_l2cap_chan *chan)
 {
-    return ble_l2cap_sig_disconnect(chan);
+    int rc;
+
+    ble_hs_lock();
+    rc = ble_l2cap_sig_disconnect_nolock(chan);
+    ble_hs_unlock();
+
+    return rc;
 }
 
 /**
@@ -255,78 +272,12 @@ ble_l2cap_recv_ready(struct ble_l2cap_chan *chan, struct os_mbuf *sdu_rx)
     return ble_l2cap_coc_recv_ready(chan, sdu_rx);
 }
 
-void
-ble_l2cap_remove_rx(struct ble_hs_conn *conn, struct ble_l2cap_chan *chan)
-{
-    conn->bhc_rx_chan = NULL;
-    os_mbuf_free_chain(chan->rx_buf);
-    chan->rx_buf = NULL;
-    chan->rx_len = 0;
-}
-
-static void
-ble_l2cap_append_rx(struct ble_l2cap_chan *chan, struct os_mbuf *frag)
-{
-#if MYNEWT_VAL(BLE_L2CAP_JOIN_RX_FRAGS)
-    struct os_mbuf *m;
-
-    /* Copy the data from the incoming fragment into the packet in progress. */
-    m = os_mbuf_pack_chains(chan->rx_buf, frag);
-    assert(m);
-#else
-    /* Join disabled or append failed due to mbuf shortage.  Just attach the
-     * mbuf to the end of the packet.
-     */
-    os_mbuf_concat(chan->rx_buf, frag);
-#endif
-}
-
-static int
-ble_l2cap_rx_payload(struct ble_hs_conn *conn, struct ble_l2cap_chan *chan,
-                     struct os_mbuf *om,
-                     ble_l2cap_rx_fn **out_rx_cb)
-{
-    int len_diff;
-    int rc;
-
-    if (chan->rx_buf == NULL) {
-        /* First fragment in packet. */
-        chan->rx_buf = om;
-    } else {
-        /* Continuation of packet in progress. */
-        ble_l2cap_append_rx(chan, om);
-    }
-
-    /* Determine if packet is fully reassembled. */
-    len_diff = OS_MBUF_PKTLEN(chan->rx_buf) - chan->rx_len;
-    if (len_diff > 0) {
-        /* More data than expected; data corruption. */
-        ble_l2cap_remove_rx(conn, chan);
-        rc = BLE_HS_EBADDATA;
-    } else if (len_diff == 0) {
-        /* All fragments received. */
-        *out_rx_cb = chan->rx_fn;
-        rc = 0;
-    } else {
-        /* More fragments remain. */
-#if MYNEWT_VAL(BLE_L2CAP_RX_FRAG_TIMEOUT) != 0
-        conn->bhc_rx_timeout =
-            ble_npl_time_get() + MYNEWT_VAL(BLE_L2CAP_RX_FRAG_TIMEOUT);
-
-        ble_hs_timer_resched();
-#endif
-        rc = BLE_HS_EAGAIN;
-    }
-
-    return rc;
-}
-
 static uint16_t
 ble_l2cap_get_mtu(struct ble_l2cap_chan *chan)
 {
     if (chan->scid == BLE_L2CAP_CID_ATT) {
         /* In case of ATT chan->my_mtu keeps preferred MTU which is later
-         * used during exchange MTU procedure. Helper below will gives us actual
+         * used during exchange MTU procedure. Helper below gives us actual
          * MTU on the channel, which is 23 or higher if exchange MTU has been
          * done
          */
@@ -336,129 +287,162 @@ ble_l2cap_get_mtu(struct ble_l2cap_chan *chan)
     return chan->my_mtu;
 }
 
-/**
- * Processes an incoming L2CAP fragment.
- *
- * @param conn                  The connection the L2CAP fragment was sent
- *                                  over.
- * @param hci_hdr               The ACL data header that was at the start of
- *                                  the L2CAP fragment.  This header has been
- *                                  stripped from the mbuf parameter.
- * @param om                    An mbuf containing the L2CAP data.  If this is
- *                                  the first fragment, the L2CAP header is at
- *                                  the start of the mbuf.  For subsequent
- *                                  fragments, the mbuf starts with L2CAP
- *                                  payload data.
- * @param out_rx_cb             If a full L2CAP packet has been received, a
- *                                  pointer to the appropriate handler gets
- *                                  written here.  The caller should pass the
- *                                  receive buffer to this callback.
- * @param out_reject_cid        Indicates whether an L2CAP Command Reject
- *                                  command should be sent.  If this equals -1,
- *                                  no reject should get sent.  Otherwise, the
- *                                  value indicates the CID that the outgoing
- *                                  reject should specify.
- *
- * @return                      0 if a complete L2CAP packet has been received.
- *                              BLE_HS_EAGAIN if a partial L2CAP packet has
- *                                  been received; more fragments are expected.
- *                              Other value on error.
- */
-int
-ble_l2cap_rx(struct ble_hs_conn *conn,
-             struct hci_data_hdr *hci_hdr,
-             struct os_mbuf *om,
-             ble_l2cap_rx_fn **out_rx_cb,
-             int *out_reject_cid)
+static void
+ble_l2cap_rx_free(struct ble_hs_conn *conn)
 {
-    struct ble_l2cap_chan *chan;
-    struct ble_l2cap_hdr l2cap_hdr;
-    uint8_t pb;
+    os_mbuf_free_chain(conn->rx_frags);
+    conn->rx_frags = NULL;
+    conn->rx_len = 0;
+    conn->rx_cid = 0;
+}
+
+static int
+ble_l2cap_rx_frags_process(struct ble_hs_conn *conn)
+{
+    int rem_rx_len;
     int rc;
 
-    *out_reject_cid = -1;
+    rem_rx_len = conn->rx_len - OS_MBUF_PKTLEN(conn->rx_frags);
+    if (rem_rx_len == 0) {
+        rc = 0;
+    } else if (rem_rx_len > 0) {
+#if MYNEWT_VAL(BLE_L2CAP_RX_FRAG_TIMEOUT) != 0
+        conn->rx_frag_tmo =
+            ble_npl_time_get() +
+            ble_npl_time_ms_to_ticks32(MYNEWT_VAL(BLE_L2CAP_RX_FRAG_TIMEOUT));
 
-    pb = BLE_HCI_DATA_PB(hci_hdr->hdh_handle_pb_bc);
+        ble_hs_timer_resched();
+#endif
+        rc = BLE_HS_EAGAIN;
+    } else {
+        ble_l2cap_rx_free(conn);
+        rc = BLE_HS_EBADDATA;
+    }
+
+    return rc;
+}
+
+int
+ble_l2cap_rx(uint16_t conn_handle, uint8_t pb, struct os_mbuf *om)
+{
+    struct ble_hs_conn *conn;
+    struct ble_l2cap_chan *chan;
+    struct ble_l2cap_hdr hdr;
+    struct os_mbuf *rx_frags;
+    uint16_t rx_len;
+    uint16_t rx_cid;
+    int rc;
+
+    ble_hs_lock();
+
+    conn = ble_hs_conn_find(conn_handle);
+    if (!conn) {
+        /* Invalid connection handle, discard packet */
+        os_mbuf_free_chain(om);
+        rc = BLE_HS_ENOTCONN;
+        goto done;
+    }
+
     switch (pb) {
     case BLE_HCI_PB_FIRST_FLUSH:
-        /* First fragment. */
-        rc = ble_l2cap_parse_hdr(om, 0, &l2cap_hdr);
-        if (rc != 0) {
-            goto err;
+        if (conn->rx_frags) {
+            /* Previously received data is incomplete, discard it */
+            ble_l2cap_rx_free(conn);
         }
-
-        /* Strip L2CAP header from the front of the mbuf. */
-        os_mbuf_adj(om, BLE_L2CAP_HDR_SZ);
-
-        chan = ble_hs_conn_chan_find_by_scid(conn, l2cap_hdr.cid);
-        if (chan == NULL) {
-            rc = BLE_HS_ENOENT;
-
-            /* Unsupported channel. If the target CID is the black hole
-             * channel, quietly drop the packet.  Otherwise, send an invalid
-             * CID response.
-             */
-            if (l2cap_hdr.cid != BLE_L2CAP_CID_BLACK_HOLE) {
-                BLE_HS_LOG(DEBUG, "rx on unknown L2CAP channel: %d\n",
-                           l2cap_hdr.cid);
-                *out_reject_cid = l2cap_hdr.cid;
-            }
-            goto err;
-        }
-
-        /* For CIDs from dynamic range we check if SDU size isn't larger than MPS */
-        if (chan->dcid >= 0x0040 && chan->dcid <= 0x007F && l2cap_hdr.len > (chan->my_coc_mps + BLE_L2CAP_SDU_SZ)) {
-            /* Data exceeds MPS */
-            BLE_HS_LOG(ERROR, "error: sdu_len > chan->my_coc_mps (%d>%d)\n",
-                       l2cap_hdr.len, chan->my_coc_mps);
-            ble_l2cap_disconnect(chan);
-            rc = BLE_HS_EBADDATA;
-            goto err;
-        }
-
-        if (chan->rx_buf != NULL) {
-            /* Previous data packet never completed.  Discard old packet. */
-            ble_l2cap_remove_rx(conn, chan);
-        }
-
-        if (l2cap_hdr.len - BLE_L2CAP_SDU_SZ > ble_l2cap_get_mtu(chan)) {
-            /* More data than we expected on the channel.
-             * Disconnect peer with invalid behaviour
-             */
-            rc = BLE_HS_EBADDATA;
-            ble_l2cap_disconnect(chan);
-            goto err;
-        }
-
-        /* Remember channel and length of L2CAP data for reassembly. */
-        conn->bhc_rx_chan = chan;
-        chan->rx_len = l2cap_hdr.len;
+        conn->rx_frags = om;
         break;
-
     case BLE_HCI_PB_MIDDLE:
-        chan = conn->bhc_rx_chan;
-        if (chan == NULL || chan->rx_buf == NULL) {
-            /* Middle fragment without the start.  Discard new packet. */
+        if (!conn->rx_frags) {
+            /* Received continuation without 1st packet, discard it.
+             * This can also happen if we received invalid data earlier which
+             * was discarded, so we'll just keep discarding until valid 1st
+             * packet is received.
+             */
+            os_mbuf_free_chain(om);
             rc = BLE_HS_EBADDATA;
-            goto err;
+            goto done;
         }
+
+        /* Append fragment to rx buffer */
+#if MYNEWT_VAL(BLE_L2CAP_JOIN_RX_FRAGS)
+        os_mbuf_pack_chains(conn->rx_frags, om);
+#else
+        os_mbuf_concat(conn->rx_frag, om);
+#endif
         break;
-
     default:
+        /* Invalid PB, discard packet */
+        os_mbuf_free_chain(om);
+        ble_l2cap_rx_free(conn);
         rc = BLE_HS_EBADDATA;
-        goto err;
+        goto done;
     }
 
-    rc = ble_l2cap_rx_payload(conn, chan, om, out_rx_cb);
-    om = NULL;
-    if (rc != 0) {
-        goto err;
+    /* Parse L2CAP header if not yet done */
+    if (!conn->rx_len) {
+        rc = ble_l2cap_parse_hdr(conn->rx_frags, &hdr);
+        if (rc) {
+            /* Incomplete header, wait for continuation */
+            rc = BLE_HS_EAGAIN;
+            goto done;
+        }
+
+        os_mbuf_adj(conn->rx_frags, BLE_L2CAP_HDR_SZ);
+
+        conn->rx_len = hdr.len;
+        conn->rx_cid = hdr.cid;
     }
 
-    return 0;
+    /* Process fragments */
+    rc = ble_l2cap_rx_frags_process(conn);
+    if (rc) {
+        goto done;
+    }
 
-err:
-    os_mbuf_free_chain(om);
+    rx_frags = conn->rx_frags;
+    rx_len = conn->rx_len;
+    rx_cid = conn->rx_cid;
+
+    conn->rx_frags = NULL;
+    ble_l2cap_rx_free(conn);
+
+    chan = ble_hs_conn_chan_find_by_scid(conn, rx_cid);
+
+    ble_hs_unlock();
+
+    if (!chan) {
+        ble_l2cap_sig_reject_invalid_cid_tx(conn_handle, 0, 0, rx_cid);
+        os_mbuf_free_chain(rx_frags);
+        return BLE_HS_ENOENT;
+    }
+
+    /* disconnect pending, drop data */
+    if (chan->flags & BLE_L2CAP_CHAN_F_DISCONNECTING) {
+        os_mbuf_free_chain(rx_frags);
+        return 0;
+    }
+
+    if (chan->dcid >= BLE_L2CAP_COC_CID_START &&
+        chan->dcid <= BLE_L2CAP_COC_CID_END && rx_len > chan->my_coc_mps) {
+        ble_l2cap_disconnect(chan);
+        os_mbuf_free_chain(rx_frags);
+        return BLE_HS_EBADDATA;
+    }
+
+    if (rx_len > ble_l2cap_get_mtu(chan)) {
+        ble_l2cap_disconnect(chan);
+        os_mbuf_free_chain(rx_frags);
+        return BLE_HS_EBADDATA;
+    }
+
+    rc = chan->rx_fn(chan, &rx_frags);
+    os_mbuf_free_chain(rx_frags);
+
+    return rc;
+
+done:
+    ble_hs_unlock();
+
     return rc;
 }
 

@@ -1,3 +1,5 @@
+#if defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES))
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +19,6 @@
  * under the License.
  */
 
-#if defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES) || defined(NRF53_SERIES))
-
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
@@ -35,7 +35,7 @@
 #ifdef NRF52_SERIES
 #include "core_cm4.h"
 #endif
-#include <nimble/porting/npl/freertos/include/nimble/nimble_npl_os.h>
+#include "nimble/porting/npl/freertos/include/nimble/nimble_npl_os.h"
 #endif
 #include "nimble/porting/nimble/include/os/os_trace_api.h"
 #include <hal/nrf_rng.h>
@@ -484,7 +484,7 @@ ble_hw_resolv_list_rmv(int index)
 
     if (index < g_nrf_num_irks) {
         --g_nrf_num_irks;
-        irk_entry = &g_nrf_irk_list[index];
+        irk_entry = &g_nrf_irk_list[4 * index];
         if (g_nrf_num_irks > index) {
             memmove(irk_entry, irk_entry + 4, 16 * (g_nrf_num_irks - index));
         }
@@ -520,4 +520,4 @@ ble_hw_resolv_list_match(void)
 }
 #endif
 
-#endif /* defined(ARDUINO_ARCH_NRF5) && (defined(NRF52_SERIES) || defined(NRF53_SERIES)) */
+#endif /* ARDUINO_ARCH_NRF5 && NRF52_SERIES */

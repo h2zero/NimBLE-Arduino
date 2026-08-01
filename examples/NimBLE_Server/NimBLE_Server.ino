@@ -17,7 +17,7 @@ static NimBLEServer* pServer;
  **                       Remove as you see fit for your needs                        */
 class ServerCallbacks : public NimBLEServerCallbacks {
     void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override {
-        Serial.printf("Client address: %s\n", connInfo.getAddress().toString().c_str());
+        Serial.printf("Client connected:\n%s", connInfo.toString().c_str());
 
         /**
          *  We can use the connection handle here to ask for different connection parameters.
@@ -49,8 +49,8 @@ class ServerCallbacks : public NimBLEServerCallbacks {
         return 123456;
     }
 
-    void onConfirmPassKey(NimBLEConnInfo& connInfo, uint32_t pass_key) override {
-        Serial.printf("The passkey YES/NO number: %" PRIu32 "\n", pass_key);
+    void onConfirmPassKey(NimBLEConnInfo& connInfo, uint32_t passkey) override {
+        Serial.printf("The passkey YES/NO number: %" PRIu32 "\n", passkey);
         /** Inject false if passkeys don't match. */
         NimBLEDevice::injectConfirmPasskey(connInfo, true);
     }
@@ -185,10 +185,6 @@ void setup(void) {
                                               20);
     pC01Ddsc->setValue("Send it back!");
     pC01Ddsc->setCallbacks(&dscCallbacks);
-
-    /** Start the services when finished creating all Characteristics and Descriptors */
-    pDeadService->start();
-    pBaadService->start();
 
     /** Create an advertising instance and add the services to the advertised data */
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();

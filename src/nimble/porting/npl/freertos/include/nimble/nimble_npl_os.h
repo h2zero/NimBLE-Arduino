@@ -651,7 +651,7 @@ ble_npl_time_ms_to_ticks(uint32_t ms, ble_npl_time_t *out_ticks)
 static inline ble_npl_error_t
 ble_npl_time_ticks_to_ms(ble_npl_time_t ticks, uint32_t *out_ms)
 {
-    return ble_npl_time_ticks_to_ms(ticks, out_ms);
+    return npl_freertos_time_ticks_to_ms(ticks, out_ms);
 }
 
 static inline ble_npl_time_t

@@ -25,15 +25,6 @@
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
 #include "ble_hs_priv.h"
-#ifdef ESP_PLATFORM
-#include "nimble/esp_port/port/include/esp_nimble_mem.h"
-#else
-#include "nimble/porting/nimble/include/mem/mem.h"
-#endif
-
-#ifndef MIN
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#endif
 
 #if NIMBLE_BLE_CONNECT
 /*****************************************************************************
@@ -127,8 +118,9 @@ ble_att_clt_rx_mtu(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom)
     mtu = 0;
 
 #if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
-    if (ble_hs_cfg.eatt && cid != BLE_L2CAP_CID_ATT) {
-        return BLE_HS_ENOTSUP;
+    if (cid != BLE_L2CAP_CID_ATT) {
+        /*FIXME reject ?*/
+        assert(0);
     }
 #endif
 
@@ -439,13 +431,20 @@ ble_att_clt_rx_read_type(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rx
         adata.value_len = data_len - sizeof(*data);
         adata.value = data->value;
 
-        ble_gattc_rx_read_type_adata(conn_handle, cid, &adata);
+        rc = ble_gattc_rx_read_type_adata(conn_handle, cid, &adata);
+        if (rc != 0) {
+            /* We should not call complete callback if this returned an error
+             * since proc is not added to the proc list.
+             */
+            return 0;
+        }
         os_mbuf_adj(*rxom, data_len);
     }
 
 done:
     /* Notify GATT that the response is done being parsed. */
     ble_gattc_rx_read_type_complete(conn_handle, cid, rc);
+
     return rc;
 
 }
@@ -547,8 +546,8 @@ ble_att_clt_rx_read_blob(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rx
  * $read multiple                                                            *
  *****************************************************************************/
 int
-ble_att_clt_tx_read_mult(uint16_t conn_handle, uint16_t cid,
-                         const uint16_t *handles, int num_handles, bool variable)
+ble_att_clt_tx_read_mult(uint16_t conn_handle, uint16_t cid, const uint16_t *handles,
+                         int num_handles, bool variable)
 {
 #if !NIMBLE_BLE_ATT_CLT_READ_MULT
     return BLE_HS_ENOTSUP;
@@ -779,101 +778,6 @@ ble_att_clt_rx_write(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxom)
     return 0;
 }
 
-int
-ble_att_clt_tx_signed_write_cmd(uint16_t conn_handle, uint16_t cid, uint16_t handle,
-                                uint8_t *csrk, uint32_t counter, struct os_mbuf *txom)
-{
-#if !NIMBLE_BLE_ATT_CLT_SIGNED_WRITE
-    return BLE_HS_ENOTSUP;
-#endif
-
-    struct ble_att_signed_write_cmd *cmd;
-    struct os_mbuf *txom2;
-    uint8_t cmac[16];
-    uint8_t *message = NULL;
-    uint8_t len;
-    int rc;
-    int i;
-
-    BLE_HS_LOG(DEBUG, "ble_att_clt_tx_signed_write_cmd(): ");
-    for (i = 0; i < OS_MBUF_PKTLEN(txom); i++) {
-        BLE_HS_LOG(DEBUG, "0x%02x", (OS_MBUF_DATA(txom, uint8_t *))[i]);
-    }
-
-    cmd = ble_att_cmd_get(BLE_ATT_OP_SIGNED_WRITE_CMD,
-                          sizeof(*cmd), &txom2);
-    if (cmd == NULL) {
-        rc = BLE_HS_ENOMEM;
-        goto err;
-    }
-    cmd->handle = htole16(handle);
-
-    /* Message to be signed is opcode||handle||message||sign_counter,
-     * where || represents concatenation
-     */
-    len = BLE_ATT_SIGNED_WRITE_DATA_OFFSET + OS_MBUF_PKTLEN(txom) + sizeof(counter);
-    message = nimble_platform_mem_malloc(len);
-
-    /** Copying opcode and handle */
-    rc = os_mbuf_copydata(txom2, 0, BLE_ATT_SIGNED_WRITE_DATA_OFFSET, message);
-    if (rc != 0) {
-        goto err;
-    }
-
-    /** Copying message */
-    rc = os_mbuf_copydata(txom, 0, OS_MBUF_PKTLEN(txom), &message[BLE_ATT_SIGNED_WRITE_DATA_OFFSET]);
-    if (rc != 0) {
-        goto err;
-    }
-
-    /** Copying sign counter */
-    memcpy(&message[BLE_ATT_SIGNED_WRITE_DATA_OFFSET + OS_MBUF_PKTLEN(txom)], &counter, sizeof(counter));
-
-    /* na_ble_sm_alg_aes_cmac takes data in little-endian format,
-     * so converting it to LE.
-     */
-    swap_in_place(message, len);
-
-    /* Getting the CMAC (Cipher-based Message Authentication Code)
-     * for the message using our CSRK for this connection.
-     */
-    memset(cmac, 0, sizeof cmac);
-    rc = na_ble_sm_alg_aes_cmac(csrk, message, len, cmac);
-    if (rc != 0) {
-        goto err;
-    }
-
-    /* After using the csrk to sign data,
-     * the sign counter needs to be updated.
-     */
-    rc = ble_sm_incr_our_sign_counter(conn_handle);
-    if (rc != 0) {
-        goto err;
-    }
-
-    /* Converting cmac to little-endian */
-    swap_in_place(cmac, sizeof(cmac));
-
-    /* Creating final signed message */
-    rc = os_mbuf_append(txom, (void *)&counter, sizeof(counter));
-    if (rc != 0) {
-        goto err;
-    }
-    rc = os_mbuf_copyinto(txom, OS_MBUF_PKTLEN(txom),
-                          cmac + (sizeof(cmac)/2), sizeof(cmac)/2);
-    if (rc != 0) {
-        goto err;
-    }
-
-    if(message != NULL) nimble_platform_mem_free(message);
-    os_mbuf_concat(txom2, txom);
-    return ble_att_tx(conn_handle, cid, txom2);
-err:
-    if(message != NULL) nimble_platform_mem_free(message);
-    os_mbuf_free_chain(txom2);
-    return rc;
-}
-
 /*****************************************************************************
  * $prepare write request                                                    *
  *****************************************************************************/
@@ -895,17 +799,10 @@ ble_att_clt_tx_prep_write(uint16_t conn_handle, uint16_t cid, uint16_t handle,
         goto err;
     }
 
-#if MYNEWT_VAL(BLE_GATT_BLOB_TRANSFER)
-    if (OS_MBUF_PKTLEN(txom) > BLE_ATT_ATTR_MAX_LEN) {
-        rc = BLE_HS_EINVAL;
-        goto err;
-    }
-#else
     if (offset + OS_MBUF_PKTLEN(txom) > BLE_ATT_ATTR_MAX_LEN) {
         rc = BLE_HS_EINVAL;
         goto err;
     }
-#endif
 
     if (OS_MBUF_PKTLEN(txom) >
         ble_att_mtu_by_cid(conn_handle, cid) - BLE_ATT_PREP_WRITE_CMD_BASE_SZ) {
@@ -1095,9 +992,11 @@ ble_att_clt_rx_indicate(uint16_t conn_handle, uint16_t cid, struct os_mbuf **rxo
     return 0;
 }
 
+#endif
+
 /*****************************************************************************
-* $multiple handle value notification                                        *
-*****************************************************************************/
+ * $multiple handle value notification                                       *
+ *****************************************************************************/
 
 int
 ble_att_clt_tx_notify_mult(uint16_t conn_handle, struct os_mbuf *txom)
@@ -1111,7 +1010,8 @@ ble_att_clt_tx_notify_mult(uint16_t conn_handle, struct os_mbuf *txom)
     int rc;
 
     if (ble_att_cmd_get(BLE_ATT_OP_NOTIFY_MULTI_REQ, 0, &txom2) == NULL) {
-        return BLE_HS_ENOMEM;
+        rc = BLE_HS_ENOMEM;
+        goto err;
     }
 
     os_mbuf_concat(txom2, txom);
@@ -1122,7 +1022,6 @@ ble_att_clt_tx_notify_mult(uint16_t conn_handle, struct os_mbuf *txom)
         ble_eatt_release_chan(conn_handle, BLE_GATT_OP_DUMMY);
     }
 
+err:
     return rc;
 }
-
-#endif

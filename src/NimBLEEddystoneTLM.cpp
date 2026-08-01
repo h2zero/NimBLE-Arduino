@@ -101,10 +101,12 @@ std::string NimBLEEddystoneTLM::toString() {
     out += val;
     out += " mV\n";
 
-    out             += "Temperature ";
-    uint8_t intTemp  = m_eddystoneData.temp / 256;
-    uint8_t frac     = m_eddystoneData.temp % 256 * 100 / 256;
-    snprintf(val, sizeof(val), "%d.%d", intTemp, frac);
+    out              += "Temperature ";
+    int16_t  temp     = ENDIAN_CHANGE_U16(m_eddystoneData.temp);
+    uint32_t absTemp  = temp < 0 ? -static_cast<int32_t>(temp) : temp;
+    uint8_t  intTemp  = absTemp / 256;
+    uint8_t  frac     = absTemp % 256 * 100 / 256;
+    snprintf(val, sizeof(val), "%s%d.%02d", (temp < 0 ? "-" : ""), intTemp, frac);
     out += val;
     out += " C\n";
 
@@ -188,7 +190,7 @@ void NimBLEEddystoneTLM::setVersion(uint8_t version) {
  * @param [in] volt The voltage in millivolts.
  */
 void NimBLEEddystoneTLM::setVolt(uint16_t volt) {
-    m_eddystoneData.volt = volt;
+    m_eddystoneData.volt = ENDIAN_CHANGE_U16(volt);
 } // setVolt
 
 /**
@@ -196,7 +198,7 @@ void NimBLEEddystoneTLM::setVolt(uint16_t volt) {
  * @param [in] temp The temperature value in 8.8 fixed point format.
  */
 void NimBLEEddystoneTLM::setTemp(int16_t temp) {
-    m_eddystoneData.temp = temp;
+    m_eddystoneData.temp = ENDIAN_CHANGE_U16(temp);
 } // setTemp
 
 /**
@@ -204,7 +206,7 @@ void NimBLEEddystoneTLM::setTemp(int16_t temp) {
  * @param [in] advCount The advertisement number.
  */
 void NimBLEEddystoneTLM::setCount(uint32_t advCount) {
-    m_eddystoneData.advCount = advCount;
+    m_eddystoneData.advCount = ENDIAN_CHANGE_U32(advCount);
 } // setCount
 
 /**
@@ -212,7 +214,7 @@ void NimBLEEddystoneTLM::setCount(uint32_t advCount) {
  * @param [in] tmil The advertisement time in milliseconds.
  */
 void NimBLEEddystoneTLM::setTime(uint32_t tmil) {
-    m_eddystoneData.tmil = tmil;
+    m_eddystoneData.tmil = ENDIAN_CHANGE_U32(tmil);
 } // setTime
 
 #endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_BROADCASTER)

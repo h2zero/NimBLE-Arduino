@@ -97,8 +97,19 @@ NimBLEAddress::NimBLEAddress(const std::string& addr, uint8_t type) {
 } // NimBLEAddress
 
 /**
- * @brief Constructor for compatibility with bluedroid esp library using native ESP representation.
- * @param [in] address A uint8_t[6] or esp_bd_addr_t containing the address.
+ * @brief Constructor accepting a 6-byte MSB-first BLE address (Bluedroid `esp_bd_addr_t` layout).
+ * @details The input bytes are stored internally in LSB-first wire
+ * order (NimBLE's `ble_addr_t.val` layout), so this constructor
+ * **reverses** the input. If you already have LSB-first wire bytes —
+ * e.g. straight out of a NimBLE callback's `ble_addr_t` — use the
+ * `NimBLEAddress(ble_addr_t)` constructor instead (it stores them
+ * as-is). If you have the address as a hex integer (e.g.
+ * `0xa4c1385def16` for `"a4:c1:38:5d:ef:16"`), use
+ * `NimBLEAddress(const uint64_t&, uint8_t)`.
+ * @param [in] address Six bytes in MSB-first order
+ *                     (`{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}` for
+ *                     `"aa:bb:cc:dd:ee:ff"`). Compatible with
+ *                     Bluedroid's `esp_bd_addr_t`.
  * @param [in] type The type of the address should be one of:
  * * BLE_ADDR_PUBLIC (0)
  * * BLE_ADDR_RANDOM (1)

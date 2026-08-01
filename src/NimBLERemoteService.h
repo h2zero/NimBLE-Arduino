@@ -53,7 +53,7 @@ class NimBLERemoteService : public NimBLEAttribute {
 
     NimBLERemoteService(NimBLEClient* pClient, const struct ble_gatt_svc* service);
     ~NimBLERemoteService();
-    bool       retrieveCharacteristics(const NimBLEUUID* uuidFilter = nullptr) const;
+    bool retrieveCharacteristics(const NimBLEUUID* uuidFilter = nullptr, NimBLERemoteCharacteristic** ppChar = nullptr) const;
     static int characteristicDiscCB(uint16_t                     conn_handle,
                                     const struct ble_gatt_error* error,
                                     const struct ble_gatt_chr*   chr,

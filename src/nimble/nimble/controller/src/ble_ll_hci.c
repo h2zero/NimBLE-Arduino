@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,8 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ESP_PLATFORM
-
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
@@ -39,6 +39,7 @@
 #include "nimble/nimble/controller/include/controller/ble_ll_isoal.h"
 #include "nimble/nimble/controller/include/controller/ble_ll_iso.h"
 #include "nimble/nimble/controller/include/controller/ble_ll_iso_big.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_cs.h"
 #include "ble_ll_priv.h"
 #include "ble_ll_conn_priv.h"
 #include "ble_ll_hci_priv.h"
@@ -357,8 +358,14 @@ ble_ll_hci_le_read_bufsize_v2(uint8_t *rspbuf, uint8_t *rsplen)
 {
     struct ble_hci_le_rd_buf_size_v2_rp *rp = (void *) rspbuf;
 
+
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL) || MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL)
     rp->data_len = htole16(g_ble_ll_data.ll_acl_pkt_size);
     rp->data_packets = g_ble_ll_data.ll_num_acl_pkts;
+#else
+    rp->data_len = 0;
+    rp->data_packets = 0;
+#endif
     rp->iso_data_len = htole16(g_ble_ll_data.ll_iso_pkt_size);
     rp->iso_data_packets = g_ble_ll_data.ll_num_iso_pkts;
 
@@ -367,7 +374,7 @@ ble_ll_hci_le_read_bufsize_v2(uint8_t *rspbuf, uint8_t *rsplen)
 }
 #endif
 
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
 /**
  * Checks the preferred phy masks for validity and places the preferred masks
  * in the input phy masks
@@ -774,6 +781,9 @@ ble_ll_is_valid_adv_mode(uint8_t ocf)
 #if MYNEWT_VAL(BLE_VERSION) >= 51
     case BLE_HCI_OCF_LE_PERIODIC_ADV_RECEIVE_ENABLE:
 #endif
+#if MYNEWT_VAL(BLE_VERSION) >= 54
+    case BLE_HCI_OCF_LE_SET_EXT_ADV_PARAM_V2:
+#endif
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_PERIODIC_ADV_SYNC_TRANSFER)
     case BLE_HCI_OCF_LE_PERIODIC_ADV_SYNC_TRANSFER:
     case BLE_HCI_OCF_LE_PERIODIC_ADV_SET_INFO_TRANSFER:
@@ -1112,7 +1122,7 @@ ble_ll_hci_le_cmd_proc(const uint8_t *cmdbuf, uint8_t len, uint16_t ocf,
         }
         break;
 #endif
-#if (BLE_LL_BT5_PHY_SUPPORTED == 1)
+#if MYNEWT_VAL(BLE_LL_PHY)
 #if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
     case BLE_HCI_OCF_LE_RD_PHY:
         rc = ble_ll_conn_hci_le_rd_phy(cmdbuf, len, rspbuf, rsplen);
@@ -1276,42 +1286,22 @@ ble_ll_hci_le_cmd_proc(const uint8_t *cmdbuf, uint8_t len, uint16_t ocf,
     case BLE_HCI_OCF_LE_TERMINATE_BIG:
         rc = ble_ll_iso_big_hci_terminate(cmdbuf, len);
         break;
+    case BLE_HCI_OCF_LE_ISO_TRANSMIT_TEST:
+        rc = ble_ll_iso_transmit_test(cmdbuf, len, rspbuf, rsplen);
+        break;
 #endif /* BLE_LL_ISO_BROADCASTER */
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ISO)
-    case BLE_HCI_OCF_LE_READ_ISO_TX_SYNC:
-        rc = ble_ll_iso_read_tx_sync(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_SET_CIG_PARAM:
-        rc = ble_ll_iso_set_cig_param(cmdbuf, len, rspbuf, rsplen);
-        break;
-    case BLE_HCI_OCF_LE_CREATE_CIS:
-        rc = ble_ll_iso_create_cis(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_REMOVE_CIG:
-        rc = ble_ll_iso_remove_cig(cmdbuf, len, rspbuf, rsplen);
-        break;
-    case BLE_HCI_OCF_LE_ACCEPT_CIS_REQ:
-        rc = ble_ll_iso_accept_cis_req(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_REJECT_CIS_REQ:
-        rc = ble_ll_iso_reject_cis_req(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_BIG_CREATE_SYNC:
-        rc = ble_ll_iso_big_create_sync(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_BIG_TERMINATE_SYNC:
-        rc = ble_ll_iso_big_terminate_sync(cmdbuf,len);
-        break;
-#endif
 #if MYNEWT_VAL(BLE_LL_ISO)
     case BLE_HCI_OCF_LE_SETUP_ISO_DATA_PATH:
-        rc = ble_ll_isoal_hci_setup_iso_data_path(cmdbuf, len, rspbuf, rsplen);
+        rc = ble_ll_iso_setup_iso_data_path(cmdbuf, len, rspbuf, rsplen);
         break;
     case BLE_HCI_OCF_LE_REMOVE_ISO_DATA_PATH:
-        rc = ble_ll_isoal_hci_remove_iso_data_path(cmdbuf, len, rspbuf, rsplen);
+        rc = ble_ll_iso_remove_iso_data_path(cmdbuf, len, rspbuf, rsplen);
+        break;
+    case BLE_HCI_OCF_LE_ISO_TEST_END:
+        rc = ble_ll_iso_end_test(cmdbuf, len, rspbuf, rsplen);
         break;
     case BLE_HCI_OCF_LE_READ_ISO_TX_SYNC:
-        rc = ble_ll_isoal_hci_read_tx_sync(cmdbuf, len, rspbuf, rsplen);
+        rc = ble_ll_iso_read_tx_sync(cmdbuf, len, rspbuf, rsplen);
         break;
     case BLE_HCI_OCF_LE_RD_BUF_SIZE_V2:
         if (len == 0) {
@@ -1319,27 +1309,7 @@ ble_ll_hci_le_cmd_proc(const uint8_t *cmdbuf, uint8_t len, uint16_t ocf,
         }
         break;
 #endif /* BLE_LL_ISO */
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ISO_TEST)
-    case BLE_HCI_OCF_LE_SET_CIG_PARAM_TEST:
-        rc = ble_ll_iso_set_cig_param_test(cmdbuf, len, rspbuf, rsplen);
-        break;
-    case BLE_HCI_OCF_LE_CREATE_BIG_TEST:
-        rc = ble_ll_iso_create_big_test(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_ISO_TRANSMIT_TEST:
-        rc = ble_ll_iso_transmit_test(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_ISO_RECEIVE_TEST:
-        rc = ble_ll_iso_receive_test(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_ISO_READ_TEST_COUNTERS:
-        rc = ble_ll_iso_read_counters_test(cmdbuf, len);
-        break;
-    case BLE_HCI_OCF_LE_ISO_TEST_END:
-        rc = ble_ll_iso_end_test(cmdbuf, len);
-        break;
-#endif
-#if MYNEWT_VAL(BLE_VERSION) >= 52
+#if BLE_LL_HOST_CONTROLLED_FEATURES
     case BLE_HCI_OCF_LE_SET_HOST_FEATURE:
         rc = ble_ll_set_host_feat(cmdbuf, len);
         break;
@@ -1356,6 +1326,59 @@ ble_ll_hci_le_cmd_proc(const uint8_t *cmdbuf, uint8_t len, uint16_t ocf,
         break;
     case BLE_HCI_OCF_LE_SUBRATE_REQ:
         rc = ble_ll_conn_hci_subrate_req(cmdbuf, len, rspbuf, rsplen);
+        break;
+#endif
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_EXT_ADV)
+#if MYNEWT_VAL(BLE_VERSION) >= 54
+    case BLE_HCI_OCF_LE_SET_EXT_ADV_PARAM_V2:
+        rc = ble_ll_adv_ext_set_param_v2(cmdbuf, len, rspbuf, rsplen);
+        break;
+#endif
+#endif
+#if MYNEWT_VAL(BLE_LL_CHANNEL_SOUNDING)
+    case BLE_HCI_OCF_LE_CS_RD_LOC_SUPP_CAP:
+        rc = ble_ll_cs_hci_rd_loc_supp_cap(rspbuf, rsplen);
+        break;
+    case BLE_HCI_OCF_LE_CS_RD_REM_SUPP_CAP:
+        rc = ble_ll_cs_hci_rd_rem_supp_cap(cmdbuf, len);
+        break;
+    case BLE_HCI_OCF_LE_CS_WR_CACHED_REM_SUPP_CAP:
+        rc = ble_ll_cs_hci_wr_cached_rem_supp_cap(cmdbuf, len, rspbuf, rsplen);
+        break;
+#if MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_HCI_OCF_LE_CS_SEC_ENABLE:
+        rc = ble_ll_cs_hci_sec_enable(cmdbuf, len);
+        break;
+#endif
+    case BLE_HCI_OCF_LE_CS_SET_DEF_SETTINGS:
+        rc = ble_ll_cs_hci_set_def_settings(cmdbuf, len, rspbuf, rsplen);
+        break;
+    case BLE_HCI_OCF_LE_CS_RD_REM_FAE:
+        rc = ble_ll_cs_hci_rd_rem_fae(cmdbuf, len);
+        break;
+    case BLE_HCI_OCF_LE_CS_WR_CACHED_REM_FAE:
+        rc = ble_ll_cs_hci_wr_cached_rem_fae(cmdbuf, len, rspbuf, rsplen);
+        break;
+    case BLE_HCI_OCF_LE_CS_CREATE_CONFIG:
+        rc = ble_ll_cs_hci_create_config(cmdbuf, len);
+        break;
+    case BLE_HCI_OCF_LE_CS_REMOVE_CONFIG:
+        rc = ble_ll_cs_hci_remove_config(cmdbuf, len);
+        break;
+    case BLE_HCI_OCF_LE_CS_SET_CHAN_CLASS:
+        rc = ble_ll_cs_hci_set_chan_class(cmdbuf, len);
+        break;
+    case BLE_HCI_OCF_LE_CS_SET_PROC_PARAMS:
+        rc = ble_ll_cs_hci_set_proc_params(cmdbuf, len, rspbuf, rsplen);
+        break;
+    case BLE_HCI_OCF_LE_CS_PROC_ENABLE:
+        rc = ble_ll_cs_hci_proc_enable(cmdbuf, len);
+        break;
+    case BLE_HCI_OCF_LE_CS_TEST:
+        rc = ble_ll_cs_hci_test(cmdbuf, len, rspbuf, rsplen);
+        break;
+    case BLE_HCI_OCF_LE_CS_TEST_END:
+        rc = ble_ll_cs_hci_test_end();
         break;
 #endif
     default:
@@ -1386,12 +1409,6 @@ ble_ll_hci_disconnect(const uint8_t *cmdbuf, uint8_t len)
     if (len != sizeof (*cmd)) {
         return BLE_ERR_INV_HCI_CMD_PARMS;
     }
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ISO)
-    if (le16toh(cmd->conn_handle) >= BLE_LL_CONN_HANDLE_ISO_OFFSET) {
-        return ble_ll_iso_disconnect_cmd(cmd);
-    }
-#endif
 
     return ble_ll_conn_hci_disconnect_cmd(cmd);
 }
@@ -1532,6 +1549,11 @@ ble_ll_hci_ctlr_bb_cmd_proc(const uint8_t *cmdbuf, uint8_t len, uint16_t ocf,
             rc = ble_ll_reset();
         }
         break;
+#if MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)
+    case BLE_HCI_OCF_CB_READ_TX_PWR:
+        rc = ble_ll_conn_hci_cb_read_tx_pwr(cmdbuf, len, rspbuf, rsplen);
+        break;
+#endif
 #if MYNEWT_VAL(BLE_LL_CFG_FEAT_CTRL_TO_HOST_FLOW_CONTROL)
     case BLE_HCI_OCF_CB_SET_CTLR_TO_HOST_FC:
         rc = ble_ll_hci_cb_set_ctrlr_to_host_fc(cmdbuf, len);
@@ -1551,7 +1573,8 @@ ble_ll_hci_ctlr_bb_cmd_proc(const uint8_t *cmdbuf, uint8_t len, uint16_t ocf,
     case BLE_HCI_OCF_CB_SET_EVENT_MASK2:
         rc = ble_ll_hci_cb_set_event_mask2(cmdbuf, len);
         break;
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_PING)
+#if (MYNEWT_VAL(BLE_LL_ROLE_PERIPHERAL) || MYNEWT_VAL(BLE_LL_ROLE_CENTRAL)) \
+        && MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_PING)
     case BLE_HCI_OCF_CB_RD_AUTH_PYLD_TMO:
         rc = ble_ll_conn_hci_rd_auth_pyld_tmo(cmdbuf, len, rspbuf, rsplen);
         break;
@@ -1728,16 +1751,21 @@ ble_ll_hci_cmd_fake_dual_mode(uint16_t opcode,  uint8_t *cmdbuf, uint8_t len,
         rc = 0;
         break;
     case BLE_HCI_OP(BLE_HCI_OGF_INFO_PARAMS, BLE_HCI_OCF_IP_RD_LOC_SUPP_FEAT):
-        put_le64(rspbuf, 0x877bffdbfe0ffebf);
+        put_le64(rspbuf, 0x077bffdbfe0ffebf);
         *rsplen = 8;
         rc = 0;
         break;
     case BLE_HCI_OP(BLE_HCI_OGF_INFO_PARAMS, 0x04): /* Read Local Extended Features */
-        rspbuf[0] = 0;
+        rspbuf[0] = cmdbuf[0];
         rspbuf[1] = 0;
-        put_le64(&rspbuf[2], 0x877bffdbfe0ffebf);
+        if (rspbuf[0] == 0) {
+            put_le64(&rspbuf[2], 0x077bffdbfe0ffebf);
+            rc = 0;
+        } else {
+            put_le64(&rspbuf[2], 0);
+            rc = BLE_ERR_INV_HCI_CMD_PARMS;
+        }
         *rsplen = 10;
-        rc = 0;
         break;
     case BLE_HCI_OP(BLE_HCI_OGF_INFO_PARAMS, BLE_HCI_OCF_IP_RD_BUF_SIZE):
         put_le16(rspbuf, 255);
@@ -1975,7 +2003,7 @@ int
 ble_ll_hci_iso_rx(struct os_mbuf *om)
 {
 #if MYNEWT_VAL(BLE_LL_ISO)
-    ble_ll_isoal_data_in(om);
+    ble_ll_iso_data_in(om);
 #else
     os_mbuf_free_chain(om);
 #endif
@@ -2017,4 +2045,4 @@ ble_ll_hci_init(void)
 #endif
 }
 
-#endif
+#endif /* ESP_PLATFORM */

@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ESP_PLATFORM
 
 /* for jrand48 */
 #define _XOPEN_SOURCE
@@ -218,4 +219,4 @@ ble_ll_rand_init(void)
     return 0;
 }
 
-#endif
+#endif /* ESP_PLATFORM */

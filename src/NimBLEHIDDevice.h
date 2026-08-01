@@ -49,7 +49,8 @@ class NimBLEHIDDevice {
     NimBLEHIDDevice(NimBLEServer* server);
 
     void                  setReportMap(uint8_t* map, uint16_t);
-    void                  startServices();
+    void                  startServices() __attribute__((deprecated("Services are now started by the server when start() is called, " 
+                                                         "this function is no longer needed and will be removed in a future release.")));
     bool                  setManufacturer(const std::string& name);
     void                  setPnp(uint8_t sig, uint16_t vid, uint16_t pid, uint16_t version);
     void                  setHidInfo(uint8_t country, uint8_t flags);

@@ -147,7 +147,8 @@
 /* This section should not be altered */
 
 #ifdef ESP_PLATFORM
-# include "sdkconfig.h"
+# include <sdkconfig.h>
+# include <esp_idf_version.h>
 
 # ifndef CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE
 #  define CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE (0)
@@ -161,31 +162,37 @@
 #  define CONFIG_BTDM_SCAN_DUPL_TYPE_DATA_DEVICE (2)
 # endif
 
-# if !defined(CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE) && \
-     (defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3))
-#  define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE (1)
-# endif
-
 # if !defined(CONFIG_BT_CONTROLLER_DISABLED)
 #  define CONFIG_BT_CONTROLLER_DISABLED (0)
 # endif
 
+# undef CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE
 # if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
-#  define NIMBLE_CFG_CONTROLLER 0
+#  define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE (1)
+#  define NIMBLE_CFG_CONTROLLER               (0)
 # else
-#  define NIMBLE_CFG_CONTROLLER CONFIG_BT_CONTROLLER_ENABLED
+#  define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE (0)
+#  define NIMBLE_CFG_CONTROLLER               CONFIG_BT_CONTROLLER_ENABLED
 # endif
 
 # ifndef CONFIG_BT_NIMBLE_USE_ESP_TIMER
 #  define CONFIG_BT_NIMBLE_USE_ESP_TIMER (1)
 # endif
 
-#define MYNEWT_VAL_BLE_USE_ESP_TIMER (CONFIG_BT_NIMBLE_USE_ESP_TIMER)
+# define MYNEWT_VAL_BLE_USE_ESP_TIMER (CONFIG_BT_NIMBLE_USE_ESP_TIMER)
 
-#ifdef CONFIG_BT_NIMBLE_EXT_ADV // Workaround for PlatformIO build flags causing redefinition warnings
-# undef MYNEWT_VAL_BLE_EXT_ADV
-# define MYNEWT_VAL_BLE_EXT_ADV (CONFIG_BT_NIMBLE_EXT_ADV)
-#endif
+# ifdef CONFIG_BT_NIMBLE_EXT_ADV // Workaround for PlatformIO build flags causing redefinition warnings
+#  undef MYNEWT_VAL_BLE_EXT_ADV
+#  define MYNEWT_VAL_BLE_EXT_ADV (CONFIG_BT_NIMBLE_EXT_ADV)
+# endif
+
+# if CONFIG_IDF_TARGET_ESP32 && (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0))
+#  define MYNEWT_VAL_BLE_HCI_VS (0)
+# endif
+
+# ifdef __cplusplus
+extern "C" void set_nimble_nvs_namespace(const char *ns);
+# endif
 
 #else // !ESP_PLATFORM
 # if defined(NRF51)
@@ -212,13 +219,6 @@
 # define CONFIG_BT_NIMBLE_LEGACY_VHCI_ENABLE (1)
 #endif // ESP_PLATFORM
 
-/* Enables the use of Arduino String class for attribute values */
-#if defined __has_include
-# if __has_include(<Arduino.h>)
-#  define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE (1)
-# endif
-#endif
-
 /* Required macros for all supported devices */
 
 #ifndef CONFIG_BT_NIMBLE_ENABLED
@@ -229,4 +229,7 @@
 # define CONFIG_BT_CONTROLLER_ENABLED (1)
 #endif
 
+// Indicate that NimBLE Arduino headers are being used,
+// allows for drop-in compatibility with the esp-nimble-cpp library where it is not defined.
+#define USING_NIMBLE_ARDUINO_HEADERS (1)
 #endif // NIMCONFIG_H

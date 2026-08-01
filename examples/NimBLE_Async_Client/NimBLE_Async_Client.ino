@@ -50,7 +50,7 @@ class ScanCallbacks : public NimBLEScanCallbacks {
     }
 
     void onScanEnd(const NimBLEScanResults& results, int reason) override {
-        Serial.printf("Scan Ended\n");
+        Serial.printf("Scan ended reason = %d; restarting scan\n", reason);
         NimBLEDevice::getScan()->start(scanTimeMs);
     }
 } scanCallbacks;

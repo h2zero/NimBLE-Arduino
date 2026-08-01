@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,8 +19,6 @@
  * under the License.
  */
 
-#ifndef ESP_PLATFORM
-
 #include <stdint.h>
 #include "syscfg/syscfg.h"
 #include "nimble/nimble/controller/include/controller/ble_ll_utils.h"
@@ -29,8 +29,10 @@
 #include "nimble/nimble/controller/include/controller/ble_ll_scan.h"
 #include "nimble/nimble/controller/include/controller/ble_hw.h"
 #include "nimble/nimble/controller/include/controller/ble_fem.h"
+#include "nimble/porting/nimble/include/os/util.h"
 #include "ble_ll_conn_priv.h"
 #include "ble_ll_priv.h"
+#include "nimble/nimble/controller/include/controller/ble_ll_resolv.h"
 
 #if MYNEWT_VAL(BLE_LL_HCI_VS)
 
@@ -330,6 +332,64 @@ ble_ll_hci_vs_set_antenna(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
 }
 #endif
 
+#if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
+static int
+ble_ll_hci_vs_set_local_irk(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
+                            uint8_t *rspbuf, uint8_t *rsplen)
+{
+    const struct ble_hci_vs_set_local_irk_cp *cmd = (const void *)cmdbuf;
+    int rc;
+
+    if (cmdlen != sizeof(*cmd)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    if (ble_ll_is_busy(BLE_LL_BUSY_EXCLUDE_CONNECTIONS)) {
+        return BLE_ERR_CMD_DISALLOWED;
+    }
+
+    rc = ble_ll_resolv_local_irk_set(cmd->own_addr_type, cmd->irk);
+    if (rc) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    *rsplen = 0;
+
+    return 0;
+}
+#endif
+
+#if MYNEWT_VAL(BLE_LL_HCI_VS_SET_SCAN_CFG)
+static int
+ble_ll_hci_vs_set_scan_cfg(uint16_t ocf, const uint8_t *cmdbuf, uint8_t cmdlen,
+                           uint8_t *rspbuf, uint8_t *rsplen)
+{
+    const struct ble_hci_vs_set_scan_cfg_cp *cmd = (const void *)cmdbuf;
+    uint32_t flags;
+    int rc;
+
+    if (cmdlen != sizeof(*cmd)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    flags = le32toh(cmd->flags);
+
+    if ((flags & BLE_HCI_VS_SET_SCAN_CFG_FLAG_NO_LEGACY) &&
+        (flags & BLE_HCI_VS_SET_SCAN_CFG_FLAG_NO_EXT)) {
+        return BLE_ERR_INV_HCI_CMD_PARMS;
+    }
+
+    rc = ble_ll_scan_set_vs_config(flags, cmd->rssi_threshold);
+    if (rc != 0) {
+        return BLE_ERR_CMD_DISALLOWED;
+    }
+
+    *rsplen = 0;
+
+    return 0;
+}
+#endif
+
 static struct ble_ll_hci_vs_cmd g_ble_ll_hci_vs_cmds[] = {
     BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_RD_STATIC_ADDR,
                       ble_ll_hci_vs_rd_static_addr),
@@ -355,6 +415,14 @@ static struct ble_ll_hci_vs_cmd g_ble_ll_hci_vs_cmds[] = {
 #endif
 #if MYNEWT_VAL(BLE_FEM_ANTENNA)
     BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_SET_ANTENNA, ble_ll_hci_vs_set_antenna),
+#endif
+#if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_SET_LOCAL_IRK,
+                      ble_ll_hci_vs_set_local_irk),
+#endif
+#if MYNEWT_VAL(BLE_LL_HCI_VS_SET_SCAN_CFG)
+    BLE_LL_HCI_VS_CMD(BLE_HCI_OCF_VS_SET_SCAN_CFG,
+                      ble_ll_hci_vs_set_scan_cfg)
 #endif
 };
 

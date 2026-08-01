@@ -37,6 +37,7 @@ typedef uint8_t ble_hs_conn_flags_t;
 #define BLE_HS_CONN_F_MASTER        0x01
 #define BLE_HS_CONN_F_TERMINATING   0x02
 #define BLE_HS_CONN_F_TX_FRAG       0x04 /* Cur ACL packet partially txed. */
+#define BLE_HS_CONN_F_TERMINATED    0x08
 
 #if MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM)
 #define BLE_HS_CONN_L2CAP_COC_CID_MASK_LEN_REM \
@@ -68,8 +69,18 @@ struct ble_hs_conn {
     ble_hs_conn_flags_t bhc_flags;
 
     struct ble_l2cap_chan_list bhc_channels;
-    struct ble_l2cap_chan *bhc_rx_chan; /* Channel rxing current packet. */
-    ble_npl_time_t bhc_rx_timeout;
+
+    /* ACL RX fragments */
+    struct os_mbuf *rx_frags;
+    /* Expected data length for ACL RX */
+    uint16_t rx_len;
+    /* L2CAP Source CID for ACL RX */
+    uint16_t rx_cid;
+#if MYNEWT_VAL(BLE_L2CAP_RX_FRAG_TIMEOUT) != 0
+    /* Timeout for next fragment for ACL RX */
+    ble_npl_time_t rx_frag_tmo;
+#endif
+
 #if MYNEWT_VAL(BLE_L2CAP_COC_MAX_NUM)
     uint32_t l2cap_coc_cid_mask[BLE_HS_CONN_L2CAP_COC_CID_MASK_LEN];
 #endif
@@ -95,7 +106,6 @@ struct ble_hs_conn {
     struct ble_gatts_conn bhc_gatt_svr;
 
     struct ble_gap_sec_state bhc_sec_state;
-    struct ble_gap_read_rem_ver_params bhc_rd_rem_ver_params;
 
     ble_gap_event_fn *bhc_cb;
     void *bhc_cb_arg;
@@ -106,9 +116,6 @@ struct ble_hs_conn {
 
     STAILQ_HEAD(, os_mbuf_pkthdr) att_tx_q;
     bool client_att_busy;
-#if MYNEWT_VAL(BLE_EATT_CHAN_NUM) > 0
-    uint16_t default_cid;
-#endif
 };
 
 struct ble_hs_conn_addrs {

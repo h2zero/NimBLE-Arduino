@@ -70,7 +70,6 @@ void setup() {
     auto service        = server->createService(SERVICE_UUID);
     auto characteristic = service->createCharacteristic(CHARACTERISTIC_UUID, NIMBLE_PROPERTY::READ);
     characteristic->setValue(L2CAP_CHANNEL);
-    service->start();
 
     auto advertising = BLEDevice::getAdvertising();
     advertising->addServiceUUID(SERVICE_UUID);

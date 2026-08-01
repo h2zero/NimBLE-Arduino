@@ -91,10 +91,9 @@ ble_gatts_flags_to_str(uint16_t flags, char *buf,
     return buf;
 }
 
-
-#define STRINGIFY(X) #X
-#define FIELD_NAME_LEN STRINGIFY(12)
-#define FIELD_INDENT STRINGIFY(2)
+#define NIMBLE_STRINGIFY(X) #X
+#define FIELD_NAME_LEN      NIMBLE_STRINGIFY(12)
+#define FIELD_INDENT        NIMBLE_STRINGIFY(2)
 
 static void
 ble_gatt_show_local_chr(const struct ble_gatt_svc_def *svc,

@@ -1,3 +1,5 @@
+#ifndef ESP_PLATFORM
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +18,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-#ifndef ESP_PLATFORM
+
 #include <stdint.h>
 #include "syscfg/syscfg.h"
 #include "nimble/porting/nimble/include/os/os_trace_api.h"
@@ -54,4 +56,5 @@ ble_ll_trace_init(void)
                                      ble_ll_trace_module_send_desc);
 }
 #endif
-#endif
+
+#endif /* ESP_PLATFORM */

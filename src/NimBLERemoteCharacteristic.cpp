@@ -26,10 +26,13 @@
 
 # include <climits>
 
+// Private structure used to filter descriptors during discovery and return results.
 struct NimBLEDescriptorFilter {
-    NimBLERemoteDescriptor* dsc;
+    NimBLEDescriptorFilter() = delete;
+    NimBLEDescriptorFilter(const NimBLEUUID* uuid, NimBLEUtils::TaskData* td = nullptr) : uuid(uuid), taskData(td) {}
     const NimBLEUUID*       uuid;
-    void*                   taskData;
+    NimBLEUtils::TaskData*  taskData;
+    NimBLERemoteDescriptor* dsc{nullptr};
 };
 
 static const char* LOG_TAG = "NimBLERemoteCharacteristic";
@@ -66,7 +69,7 @@ int NimBLERemoteCharacteristic::descriptorDiscCB(
     uint16_t connHandle, const ble_gatt_error* error, uint16_t chrHandle, const ble_gatt_dsc* dsc, void* arg) {
     int        rc        = error->status;
     auto       filter    = (NimBLEDescriptorFilter*)arg;
-    auto       pTaskData = (NimBLETaskData*)filter->taskData;
+    auto       pTaskData = (NimBLEUtils::TaskData*)filter->taskData;
     const auto pChr      = (NimBLERemoteCharacteristic*)pTaskData->m_pInstance;
     const auto uuid      = filter->uuid; // UUID to filter for
     NIMBLE_LOGD(LOG_TAG, "Descriptor Discovery >> status: %d handle: %d", rc, (rc == 0) ? dsc->handle : -1);
@@ -116,10 +119,12 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFi
         return true;
     }
 
-    NimBLETaskData         taskData(const_cast<NimBLERemoteCharacteristic*>(this));
-    NimBLEDescriptorFilter defaultFilter{nullptr, nullptr, &taskData};
+    NimBLEUtils::TaskData  taskData(const_cast<NimBLERemoteCharacteristic*>(this));
+    NimBLEDescriptorFilter defaultFilter(nullptr, &taskData);
     if (pFilter == nullptr) {
         pFilter = &defaultFilter;
+    } else {
+        pFilter->taskData = &taskData;
     }
 
     int rc = ble_gattc_disc_all_dscs(getClient()->getConnHandle(),
@@ -134,7 +139,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFi
 
     auto prevDscCount = m_vDescriptors.size();
     NimBLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
-    rc = ((NimBLETaskData*)pFilter->taskData)->m_flags;
+    rc = taskData.m_flags;
     if (rc != BLE_HS_EDONE) {
         NIMBLE_LOGE(LOG_TAG, "<< retrieveDescriptors(): failed: rc=%d %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;
@@ -156,8 +161,7 @@ bool NimBLERemoteCharacteristic::retrieveDescriptors(NimBLEDescriptorFilter* pFi
 NimBLERemoteDescriptor* NimBLERemoteCharacteristic::getDescriptor(const NimBLEUUID& uuid) const {
     NIMBLE_LOGD(LOG_TAG, ">> getDescriptor: uuid: %s", uuid.toString().c_str());
     NimBLEUUID             uuidTmp{uuid};
-    NimBLETaskData         taskData(const_cast<NimBLERemoteCharacteristic*>(this));
-    NimBLEDescriptorFilter filter{nullptr, &uuidTmp, &taskData};
+    NimBLEDescriptorFilter filter(&uuidTmp);
 
     for (const auto& dsc : m_vDescriptors) {
         if (dsc->getUUID() == uuid) {

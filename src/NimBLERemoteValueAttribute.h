@@ -21,10 +21,10 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)
 
-# if defined(CONFIG_NIMBLE_CPP_IDF)
-#  include <host/ble_gatt.h>
+#ifdef USING_NIMBLE_ARDUINO_HEADERS
+#  include "nimble/nimble/host/include/host/ble_gatt.h"
 # else
-#  include <nimble/nimble/host/include/host/ble_gatt.h>
+#  include "host/ble_gatt.h"
 # endif
 
 /****  FIX COMPILATION ****/

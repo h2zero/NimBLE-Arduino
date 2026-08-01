@@ -20,6 +20,11 @@
 #ifndef H_BLE_
 #define H_BLE_
 
+/**
+ * @defgroup bt_low_energy Bluetooth Low Energy
+ * @{
+ */
+
 #include <inttypes.h>
 #include <string.h>
 #include "syscfg/syscfg.h"
@@ -29,15 +34,18 @@
 extern "C" {
 #endif
 
-/* The number of advertising instances */
+/** The number of advertising instances */
 #define BLE_ADV_INSTANCES    (MYNEWT_VAL(BLE_MULTI_ADV_INSTANCES) + 1)
 
-/* BLE encryption block definitions */
+/** BLE encryption block definitions */
 #define BLE_ENC_BLOCK_SIZE       (16)
 
-/* 4 byte header + 251 byte payload. */
+/** 4 byte header + 251 byte payload. */
 #define BLE_ACL_MAX_PKT_SIZE     255
 
+/**
+ * @cond INTERNAL_DOCS
+ */
 struct ble_encryption_block
 {
     uint8_t     key[BLE_ENC_BLOCK_SIZE];
@@ -112,7 +120,7 @@ struct ble_mbuf_hdr_rxinfo
 /* Transmit info. NOTE: no flags defined */
 struct ble_mbuf_hdr_txinfo
 {
-    uint8_t flags;
+    uint8_t num_data_pkt;
     uint8_t hdr_byte;
     uint16_t offset;
     uint16_t pyld_len;
@@ -120,19 +128,38 @@ struct ble_mbuf_hdr_txinfo
 
 struct ble_mbuf_hdr_txiso {
     uint16_t packet_seq_num;
+    uint32_t cpu_timestamp;
+    uint32_t hci_timestamp;
 };
 
+/**
+ * @endcond
+ */
+
+/** Structure representing a BLE mbuf header. */
 struct ble_mbuf_hdr
 {
     union {
+        /** RX info for received packets. */
         struct ble_mbuf_hdr_rxinfo rxinfo;
+
+        /** TX info for transmitted packets. */
         struct ble_mbuf_hdr_txinfo txinfo;
+
+        /** TX ISO info for transmitted isochronous packets. */
         struct ble_mbuf_hdr_txiso txiso;
     };
+
+    /** CPU time when the packet processing began. */
     uint32_t beg_cputime;
+
+    /** Remaining microseconds for packet processing. */
     uint32_t rem_usecs;
 };
 
+/**
+ * @cond INTERNAL_DOCS
+ */
 #define BLE_MBUF_HDR_IGNORED(hdr) \
     (!!((hdr)->rxinfo.flags & BLE_MBUF_HDR_F_IGNORED))
 
@@ -186,7 +213,16 @@ struct ble_mbuf_hdr
 /* Length of host user header.  Only contains the peer's connection handle. */
 #define BLE_MBUF_HS_HDR_LEN     (2)
 
+/**
+ * @endcond
+ */
+
+/** Length of a Bluetooth Device Address. */
 #define BLE_DEV_ADDR_LEN        (6)
+
+/**
+ * @cond INTERNAL_DOCS
+ */
 extern uint8_t g_dev_addr[BLE_DEV_ADDR_LEN];
 extern uint8_t g_random_addr[BLE_DEV_ADDR_LEN];
 
@@ -271,29 +307,109 @@ enum ble_error_codes
 #define BLE_HW_ERR_DO_NOT_USE           (0) /* XXX: reserve this one for now */
 #define BLE_HW_ERR_HCI_SYNC_LOSS        (1)
 
-/* Own Bluetooth Device address type */
+/**
+ * @endcond
+ */
+
+/**
+ * @defgroup ble_own_address_types Bluetooth Device Own Address Types
+ * @{
+ */
+
+/** Bluetooth Device Own Address Type: Public. */
 #define BLE_OWN_ADDR_PUBLIC                  (0x00)
+
+/** Bluetooth Device Own Address Type: Random. */
 #define BLE_OWN_ADDR_RANDOM                  (0x01)
+
+/**
+ * Bluetooth Device Own Address Type: Resolvable Private Address (RPA)
+ * with Public fallback.
+ */
 #define BLE_OWN_ADDR_RPA_PUBLIC_DEFAULT      (0x02)
+
+/**
+ * Bluetooth Device Own Address Type: Resolvable Private Address (RPA)
+ * with Random fallback.
+ */
 #define BLE_OWN_ADDR_RPA_RANDOM_DEFAULT      (0x03)
 
-/* Bluetooth Device address type */
+/** @} */
+
+/**
+ * @defgroup ble_address_types Bluetooth Device Address Types
+ * @{
+ */
+
+/** Bluetooth Device Address Type: Public. */
 #define BLE_ADDR_PUBLIC      (0x00)
+
+/** Bluetooth Device Address Type: Random. */
 #define BLE_ADDR_RANDOM      (0x01)
+
+/**
+ * Bluetooth Device Address Type: Public Identity Address
+ * (Corresponds to Resolved Private Address).
+ */
 #define BLE_ADDR_PUBLIC_ID   (0x02)
+
+/**
+ * Bluetooth Device Address Type: Random (Static) Identity Address
+ * (Corresponds to Resolved Private Address).
+ */
 #define BLE_ADDR_RANDOM_ID   (0x03)
 
+/**
+ * Bluetooth Device Address Type: Anonymous
+ * (Corresponds to devices sending anonymous advertisements).
+ */
+#define BLE_ADDR_ANONYMOUS   (0xFF)
+
+/** @} */
+
+/**
+ * @brief A macro representing any BLE address.
+ *
+ * This macro initializes a `ble_addr_t` structure to all zeros.
+ */
 #define BLE_ADDR_ANY (&(ble_addr_t) { 0, {0, 0, 0, 0, 0, 0} })
 
+/**
+ * Checks if the given address is a Resolvable Private Address (RPA).
+ *
+ * @param addr              Pointer to the `ble_addr_t` structure.
+ * @return                  Non-zero if the address is an RPA,
+ *                          zero otherwise.
+ */
 #define BLE_ADDR_IS_RPA(addr)     (((addr)->type == BLE_ADDR_RANDOM) && \
                                    ((addr)->val[5] & 0xc0) == 0x40)
+
+/**
+ * Checks if the given address is a Non-Resolvable Private Address (NRPA).
+ *
+ * @param addr              Pointer to the `ble_addr_t` structure.
+ * @return                  Non-zero if the address is an NRPA,
+ *                          zero otherwise.
+ */
 #define BLE_ADDR_IS_NRPA(addr)    (((addr)->type == BLE_ADDR_RANDOM) && \
                                    ((addr)->val[5] & 0xc0) == 0x00)
+
+/**
+ * @brief Checks if the given address is a Static Random Address.
+ *
+ * @param addr              Pointer to the `ble_addr_t` structure.
+ * @return                  Non-zero if the address is a Static Random Address,
+ *                          zero otherwise.
+ */
 #define BLE_ADDR_IS_STATIC(addr)  (((addr)->type == BLE_ADDR_RANDOM) && \
                                    ((addr)->val[5] & 0xc0) == 0xc0)
 
+/** Structure representing a BLE address. */
 typedef struct {
+    /** The type of the address. */
     uint8_t type;
+
+    /** The value of the address as an array of 6 bytes. */
     uint8_t val[6];
 } ble_addr_t;
 
@@ -313,5 +429,7 @@ static inline int ble_addr_cmp(const ble_addr_t *a, const ble_addr_t *b)
 #ifdef __cplusplus
 }
 #endif
+
+/** @} **/
 
 #endif /* H_BLE_ */

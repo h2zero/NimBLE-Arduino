@@ -56,6 +56,19 @@ Change the settings in the `src/nimconfig.h` file to customize NimBLE to your pr
 such as increasing max connections, default is 3 for the esp32.
 <br/>
 
+# Debugging
+All NimBLE debug configuration options are located in `src/nimconfig.h`.
+Uncomment and modify the desired settings before compiling.
+
+## Recommended debug configuration
+For connection and protocol debugging:
+```cpp
+#define MYNEWT_VAL_BLE_HS_LOG_LVL 1
+#define MYNEWT_VAL_NIMBLE_CPP_LOG_LEVEL 3
+#define MYNEWT_VAL_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT
+#define MYNEWT_VAL_NIMBLE_CPP_ENABLE_GAP_EVENT_CODE_TEXT
+```
+
 # Development Status
 This Library is tracking the esp-nimble repo, nimble-1.5.0-idf branch, currently [@e3cbdc0.](https://github.com/espressif/esp-nimble)  
 <br/>

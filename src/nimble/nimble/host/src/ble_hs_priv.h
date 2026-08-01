@@ -26,6 +26,7 @@
 #include "ble_att_priv.h"
 #include "ble_eatt_priv.h"
 #include "ble_gap_priv.h"
+#include "ble_audio_codec_priv.h"
 #include "ble_gatt_priv.h"
 #include "ble_hs_hci_priv.h"
 #include "ble_hs_atomic_priv.h"
@@ -45,9 +46,6 @@
 #include "nimble/nimble/host/include/host/ble_hs.h"
 #include "nimble/nimble/include/nimble/nimble_opt.h"
 #include "nimble/porting/nimble/include/stats/stats.h"
-#if MYNEWT_VAL(BLE_GATT_CACHING)
-#include "ble_gattc_cache_priv.h"
-#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -132,7 +130,6 @@ void ble_hs_timer_resched(void);
 void ble_hs_notifications_sched(void);
 struct ble_npl_eventq *ble_hs_evq_get(void);
 void ble_hs_stop_init(void);
-void ble_hs_stop_deinit(void);
 
 struct ble_mqueue {
     STAILQ_HEAD(, os_mbuf_pkthdr) head;
@@ -142,8 +139,6 @@ struct ble_mqueue {
 int ble_mqueue_init(struct ble_mqueue *mq, ble_npl_event_fn *ev_fn, void *ev_arg);
 struct os_mbuf *ble_mqueue_get(struct ble_mqueue *mq);
 int ble_mqueue_put(struct ble_mqueue *mq, struct ble_npl_eventq *evq, struct os_mbuf *om);
-
-void ble_gap_npl_sync_lost(struct ble_npl_event *ev);
 
 #if MYNEWT_VAL(BLE_HS_DEBUG)
     #define BLE_HS_DBG_ASSERT(x) assert(x)

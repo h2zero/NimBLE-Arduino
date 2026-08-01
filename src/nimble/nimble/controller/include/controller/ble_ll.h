@@ -27,7 +27,7 @@
 
 #ifdef MYNEWT
 #include "nimble/nimble/controller/include/controller/ble_ll_ctrl.h"
-#include "nimble/porting/nimble/include/hal/hal_system.h"
+
 #endif
 #ifdef RIOT_VERSION
 #include "nimble/porting/nimble/include/hal/hal_timer.h"
@@ -51,12 +51,6 @@ void ble_ll_assert(const char *file, unsigned line) __attribute((noreturn));
 #endif
 #else
 #define BLE_LL_ASSERT(cond) assert(cond)
-#endif
-
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_2M_PHY) || MYNEWT_VAL(BLE_LL_CFG_FEAT_LE_CODED_PHY)
-#define BLE_LL_BT5_PHY_SUPPORTED    (1)
-#else
-#define BLE_LL_BT5_PHY_SUPPORTED    (0)
 #endif
 
 /* Controller revision. */
@@ -179,6 +173,7 @@ STATS_SECT_START(ble_ll_stats)
     STATS_SECT_ENTRY(rx_connect_reqs)
     STATS_SECT_ENTRY(rx_scan_ind)
     STATS_SECT_ENTRY(rx_aux_connect_rsp)
+    STATS_SECT_ENTRY(rx_pdu_on_scan_disabled)
     STATS_SECT_ENTRY(adv_txg)
     STATS_SECT_ENTRY(adv_late_starts)
     STATS_SECT_ENTRY(adv_resched_pdu_fail)
@@ -250,46 +245,51 @@ extern STATS_SECT_DECL(ble_ll_stats) ble_ll_stats;
 #endif
 
 /* LL Features */
-#define BLE_LL_FEAT_LE_ENCRYPTION       (0x0000000001)
-#define BLE_LL_FEAT_CONN_PARM_REQ       (0x0000000002)
-#define BLE_LL_FEAT_EXTENDED_REJ        (0x0000000004)
-#define BLE_LL_FEAT_PERIPH_INIT         (0x0000000008)
-#define BLE_LL_FEAT_LE_PING             (0x0000000010)
-#define BLE_LL_FEAT_DATA_LEN_EXT        (0x0000000020)
-#define BLE_LL_FEAT_LL_PRIVACY          (0x0000000040)
-#define BLE_LL_FEAT_EXT_SCAN_FILT       (0x0000000080)
-#define BLE_LL_FEAT_LE_2M_PHY           (0x0000000100)
-#define BLE_LL_FEAT_STABLE_MOD_ID_TX    (0x0000000200)
-#define BLE_LL_FEAT_STABLE_MOD_ID_RX    (0x0000000400)
-#define BLE_LL_FEAT_LE_CODED_PHY        (0x0000000800)
-#define BLE_LL_FEAT_EXT_ADV             (0x0000001000)
-#define BLE_LL_FEAT_PERIODIC_ADV        (0x0000002000)
-#define BLE_LL_FEAT_CSA2                (0x0000004000)
-#define BLE_LL_FEAT_LE_POWER_CLASS_1    (0x0000008000)
-#define BLE_LL_FEAT_MIN_USED_CHAN       (0x0000010000)
-#define BLE_LL_FEAT_CTE_REQ             (0x0000020000)
-#define BLE_LL_FEAT_CTE_RSP             (0x0000040000)
-#define BLE_LL_FEAT_CTE_TX              (0x0000080000)
-#define BLE_LL_FEAT_CTE_RX              (0x0000100000)
-#define BLE_LL_FEAT_CTE_AOD             (0x0000200000)
-#define BLE_LL_FEAT_CTE_AOA             (0x0000400000)
-#define BLE_LL_FEAT_CTE_RECV            (0x0000800000)
-#define BLE_LL_FEAT_SYNC_TRANS_SEND     (0x0001000000)
-#define BLE_LL_FEAT_SYNC_TRANS_RECV     (0x0002000000)
-#define BLE_LL_FEAT_SCA_UPDATE          (0x0004000000)
-#define BLE_LL_FEAT_REM_PKEY            (0x0008000000)
-#define BLE_LL_FEAT_CIS_CENTRAL         (0x0010000000)
-#define BLE_LL_FEAT_CIS_PERIPH          (0x0020000000)
-#define BLE_LL_FEAT_ISO_BROADCASTER     (0x0040000000)
-#define BLE_LL_FEAT_SYNC_RECV           (0x0080000000)
-#define BLE_LL_FEAT_CIS_HOST            (0x0100000000)
-#define BLE_LL_FEAT_POWER_CTRL_REQ      (0x0200000000)
-#define BLE_LL_FEAT_POWER_CHANGE_IND    (0x0400000000)
-#define BLE_LL_FEAT_PATH_LOSS_MON       (0x0800000000)
-#define BLE_LL_FEAT_PERIODIC_ADV_ADI    (0x1000000000)
-#define BLE_LL_FEAT_CONN_SUBRATING      (0x2000000000)
-#define BLE_LL_FEAT_CONN_SUBRATING_HOST (0x4000000000)
-#define BLE_LL_FEAT_CHANNEL_CLASS       (0x8000000000)
+#define BLE_LL_FEAT_LE_ENCRYPTION       (0x0000000000001)
+#define BLE_LL_FEAT_CONN_PARM_REQ       (0x0000000000002)
+#define BLE_LL_FEAT_EXTENDED_REJ        (0x0000000000004)
+#define BLE_LL_FEAT_PERIPH_INIT         (0x0000000000008)
+#define BLE_LL_FEAT_LE_PING             (0x0000000000010)
+#define BLE_LL_FEAT_DATA_LEN_EXT        (0x0000000000020)
+#define BLE_LL_FEAT_LL_PRIVACY          (0x0000000000040)
+#define BLE_LL_FEAT_EXT_SCAN_FILT       (0x0000000000080)
+#define BLE_LL_FEAT_LE_2M_PHY           (0x0000000000100)
+#define BLE_LL_FEAT_STABLE_MOD_ID_TX    (0x0000000000200)
+#define BLE_LL_FEAT_STABLE_MOD_ID_RX    (0x0000000000400)
+#define BLE_LL_FEAT_LE_CODED_PHY        (0x0000000000800)
+#define BLE_LL_FEAT_EXT_ADV             (0x0000000001000)
+#define BLE_LL_FEAT_PERIODIC_ADV        (0x0000000002000)
+#define BLE_LL_FEAT_CSA2                (0x0000000004000)
+#define BLE_LL_FEAT_LE_POWER_CLASS_1    (0x0000000008000)
+#define BLE_LL_FEAT_MIN_USED_CHAN       (0x0000000010000)
+#define BLE_LL_FEAT_CTE_REQ             (0x0000000020000)
+#define BLE_LL_FEAT_CTE_RSP             (0x0000000040000)
+#define BLE_LL_FEAT_CTE_TX              (0x0000000080000)
+#define BLE_LL_FEAT_CTE_RX              (0x0000000100000)
+#define BLE_LL_FEAT_CTE_AOD             (0x0000000200000)
+#define BLE_LL_FEAT_CTE_AOA             (0x0000000400000)
+#define BLE_LL_FEAT_CTE_RECV            (0x0000000800000)
+#define BLE_LL_FEAT_SYNC_TRANS_SEND     (0x0000001000000)
+#define BLE_LL_FEAT_SYNC_TRANS_RECV     (0x0000002000000)
+#define BLE_LL_FEAT_SCA_UPDATE          (0x0000004000000)
+#define BLE_LL_FEAT_REM_PKEY            (0x0000008000000)
+#define BLE_LL_FEAT_CIS_CENTRAL         (0x0000010000000)
+#define BLE_LL_FEAT_CIS_PERIPH          (0x0000020000000)
+#define BLE_LL_FEAT_ISO_BROADCASTER     (0x0000040000000)
+#define BLE_LL_FEAT_SYNC_RECV           (0x0000080000000)
+#define BLE_LL_FEAT_CIS_HOST            (0x0000100000000)
+#define BLE_LL_FEAT_POWER_CTRL_REQ      (0x0000200000000)
+#define BLE_LL_FEAT_POWER_CHANGE_IND    (0x0000400000000)
+#define BLE_LL_FEAT_PATH_LOSS_MON       (0x0000800000000)
+#define BLE_LL_FEAT_PERIODIC_ADV_ADI    (0x0001000000000)
+#define BLE_LL_FEAT_CONN_SUBRATING      (0x0002000000000)
+#define BLE_LL_FEAT_CONN_SUBRATING_HOST (0x0004000000000)
+#define BLE_LL_FEAT_CHANNEL_CLASS       (0x0008000000000)
+#define BLE_LL_FEAT_ADV_CODING_SEL      (0x0010000000000)
+#define BLE_LL_FEAT_ADV_CODING_SEL_HOST (0x0020000000000)
+#define BLE_LL_FEAT_CS                  (0x0400000000000)
+#define BLE_LL_FEAT_CS_HOST_SUPPORT     (0x0800000000000)
+#define BLE_LL_FEAT_CS_PCT_QUALITY_IND  (0x1000000000000)
 
 /* This is initial mask, so if feature exchange will not happen,
  * but host will want to use this procedure, we will try. If not
@@ -300,8 +300,9 @@ extern STATS_SECT_DECL(ble_ll_stats) ble_ll_stats;
 #define BLE_LL_CONN_CLEAR_FEATURE(connsm, feature)   (connsm->conn_features &= ~(feature))
 
 /* All the features which can be controlled by the Host */
-#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE)
-#define BLE_LL_HOST_CONTROLLED_FEATURES (BLE_LL_FEAT_CONN_SUBRATING_HOST)
+#if MYNEWT_VAL(BLE_LL_CFG_FEAT_LL_ENHANCED_CONN_UPDATE) | \
+    MYNEWT_VAL(BLE_LL_ADV_CODING_SELECTION)
+#define BLE_LL_HOST_CONTROLLED_FEATURES (1)
 #else
 #define BLE_LL_HOST_CONTROLLED_FEATURES (0)
 #endif
