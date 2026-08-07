@@ -26,6 +26,7 @@ class NimBLEService;
 class NimBLECharacteristic;
 class NimBLEDescriptor;
 class NimBLE2904;
+class NimBLE2905;
 
 # include "NimBLELocalValueAttribute.h"
 
@@ -69,6 +70,7 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
                                        uint32_t          properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
                                        uint16_t          maxLen     = BLE_ATT_ATTR_MAX_LEN);
     NimBLE2904*       create2904();
+    NimBLE2905*       create2905();
     NimBLEDescriptor* getDescriptorByUUID(const char* uuid, uint16_t index = 0) const;
     NimBLEDescriptor* getDescriptorByUUID(const NimBLEUUID& uuid, uint16_t index = 0) const;
     NimBLEDescriptor* getDescriptorByHandle(uint16_t handle) const;
