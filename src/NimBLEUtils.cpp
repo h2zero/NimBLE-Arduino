@@ -95,7 +95,7 @@ bool NimBLEUtils::taskWait(const TaskData& taskData, uint32_t timeout) {
     }
 
     if (taskData.m_pSem == nullptr) {
-        auto* sem = new ble_npl_sem;
+        auto* sem = new ble_npl_sem{};
         if (ble_npl_sem_init(sem, 0) != BLE_NPL_OK) {
             NIMBLE_LOGE(LOG_TAG, "Failed to initialize semaphore for taskWait");
             delete sem;
