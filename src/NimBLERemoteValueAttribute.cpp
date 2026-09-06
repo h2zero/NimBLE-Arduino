@@ -207,8 +207,19 @@ int NimBLERemoteValueAttribute::onReadCB(uint16_t conn_handle, const ble_gatt_er
                 rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             } else {
                 NIMBLE_LOGD(LOG_TAG, "Got %u bytes", data_len);
-                valBuf->append(attr->om->om_data, data_len);
-                return 0;
+                for (const os_mbuf* om = attr->om; om != nullptr; om = SLIST_NEXT(om, om_next)) {
+                    const size_t expectedSize = valBuf->size() + om->om_len;
+                    valBuf->append(om->om_data, om->om_len);
+
+                    if (valBuf->size() != expectedSize) {
+                        rc = BLE_ATT_ERR_INSUFFICIENT_RES;
+                        break;
+                    }
+                }
+
+                if (rc == 0) {
+                    return 0;
+                }
             }
         }
     }
