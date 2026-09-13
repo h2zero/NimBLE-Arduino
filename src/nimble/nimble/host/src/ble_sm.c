@@ -2090,7 +2090,16 @@ ble_sm_sec_req_rx(uint16_t conn_handle, struct os_mbuf **om,
             }
         }
     } else {
-        /* no keys present, start pairing */
+        /* no keys present: start pairing, unless the application wants to
+         * initiate pairing itself. In that case only a clean "no keys"
+         * result is ignored; store errors are propagated.
+         */
+        if (!ble_hs_cfg.sm_sec_req_auto_pair) {
+            if (res->app_status == BLE_HS_ENOENT) {
+                res->app_status = 0;
+            }
+            return;
+        }
         start_pairing = true;
     }
 
