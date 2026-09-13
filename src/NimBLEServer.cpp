@@ -18,6 +18,7 @@
 #include "NimBLEServer.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
+# include "NimBLE2905.h"
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
 
@@ -316,6 +317,19 @@ bool NimBLEServer::start() {
         }
     }
 # endif
+
+    // Populate any Aggregate Format (0x2905) descriptors now that every attribute handle has been
+    // assigned during ble_gatts_start() (via the GATT register callback). A 0x2905 value is the
+    // ordered list of its aggregated 0x2904 presentation-format descriptor handles.
+    for (const auto& svc : m_svcVec) {
+        for (const auto& chr : svc->getCharacteristics()) {
+            for (auto& desc : chr->m_vDescriptors) {
+                if (desc->getUUID() == NimBLEUUID(static_cast<uint16_t>(0x2905))) {
+                    static_cast<NimBLE2905*>(desc)->initValue();
+                }
+            }
+        }
+    }
 
     // If the services have changed indicate it now
     if (m_svcChanged) {
