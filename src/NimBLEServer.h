@@ -83,6 +83,7 @@ class NimBLEServer {
     NimBLEConnInfo        getPeerInfo(const NimBLEAddress& address) const;
     NimBLEConnInfo        getPeerInfoByHandle(uint16_t connHandle) const;
     void                  advertiseOnDisconnect(bool enable);
+    void                  registerAppServicesFirst(bool enable);
     void                  setDataLen(uint16_t connHandle, uint16_t tx_octets) const;
     bool                  updatePhy(uint16_t connHandle, uint8_t txPhysMask, uint8_t rxPhysMask, uint16_t phyOptions);
     bool                  getPhy(uint16_t connHandle, uint8_t* txPhy, uint8_t* rxPhy);
@@ -130,6 +131,7 @@ class NimBLEServer {
 
     bool m_gattsStarted : 1;
     bool m_svcChanged : 1;
+    bool m_registerAppServicesFirst : 1;
     mutable bool m_svcChangedSent : 1;
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     bool m_advertiseOnDisconnect : 1;
