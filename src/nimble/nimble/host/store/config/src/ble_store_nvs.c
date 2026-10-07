@@ -426,6 +426,74 @@ ble_store_nvs_write(int obj_type, const union ble_store_value *val)
     }
 }
 
+#if MYNEWT_VAL(BLE_STORE_MAX_CCCDS) || MYNEWT_VAL(BLE_STORE_MAX_CSFCS)
+/* Returns true if the two values have the same store key, i.e. writing one
+ * of them to the RAM database overwrites the other in place.
+ */
+static bool
+ble_store_nvs_same_key(int obj_type, const void *a, const void *b)
+{
+    if (obj_type == BLE_STORE_OBJ_TYPE_CCCD) {
+        const struct ble_store_value_cccd *x = a;
+        const struct ble_store_value_cccd *y = b;
+
+        return ble_addr_cmp(&x->peer_addr, &y->peer_addr) == 0 &&
+               x->chr_val_handle == y->chr_val_handle;
+    }
+
+    /* BLE_STORE_OBJ_TYPE_CSFC */
+    return ble_addr_cmp(&((const struct ble_store_value_csfc *)a)->peer_addr,
+                        &((const struct ble_store_value_csfc *)b)->peer_addr) == 0;
+}
+
+/* Used when NVS and RAM hold the same number of entries. An existing RAM
+ * entry may have been overwritten in place (same key, new value), which the
+ * count comparison cannot see. Find the NVS entry that no longer matches any
+ * RAM entry and rewrite it with the RAM entry that has the same key.
+ * @Returns              0 if success or nothing to update
+ *                       BLE_HS_ESTORE_FAIL if failure
+ */
+static int
+ble_store_nvs_update_changed(int obj_type, void *db_list, int db_num,
+                             size_t item_size)
+{
+    union ble_store_value cur;
+    char key_string[NIMBLE_NVS_STR_NAME_MAX_LEN];
+    uint8_t *db_item;
+    esp_err_t err;
+    int i, j;
+
+    for (i = 1; i <= get_nvs_max_obj_value(obj_type); i++) {
+        get_nvs_key_string(obj_type, i, key_string);
+
+        memset(&cur, 0, sizeof cur);
+        err = get_nvs_db_value(obj_type, key_string, &cur);
+        if (err == ESP_ERR_NVS_NOT_FOUND) {
+            continue;
+        } else if (err != ESP_OK) {
+            ESP_LOGE(LOG_TAG, "NVS read operation failed !!");
+            return BLE_HS_ESTORE_FAIL;
+        }
+
+        if (get_nvs_matching_index(&cur, db_list, db_num, item_size) != -1) {
+            /* NVS entry is up to date */
+            continue;
+        }
+
+        db_item = (uint8_t *)db_list;
+        for (j = 0; j < db_num; j++) {
+            if (ble_store_nvs_same_key(obj_type, &cur, db_item)) {
+                ESP_LOGD(LOG_TAG, "Updating NVS index = %d for obj_type = %d", i, obj_type);
+                return ble_nvs_write_key_value(key_string, db_item, item_size);
+            }
+            db_item += item_size;
+        }
+    }
+
+    return 0;
+}
+#endif
+
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
 /* If Host based privacy is enabled */
 static int
@@ -693,6 +761,12 @@ int ble_store_config_persist_cccds(void)
         }
         ESP_LOGD(TAG, "Deleting CCCD, nvs idx = %d", nvs_idx);
         return ble_nvs_delete_value(BLE_STORE_OBJ_TYPE_CCCD, nvs_idx);
+    } else if (ble_store_config_num_cccds > 0) {
+        /* Same count, an existing entry may have been updated in place */
+        return ble_store_nvs_update_changed(BLE_STORE_OBJ_TYPE_CCCD,
+                                            ble_store_config_cccds,
+                                            ble_store_config_num_cccds,
+                                            sizeof(struct ble_store_value_cccd));
     }
     return 0;
 }
@@ -725,6 +799,12 @@ int ble_store_config_persist_csfcs(void)
         }
         ESP_LOGD(TAG, "Deleting CSFC, nvs idx = %d", nvs_idx);
         return ble_nvs_delete_value(BLE_STORE_OBJ_TYPE_CSFC, nvs_idx);
+    } else if (ble_store_config_num_csfcs > 0) {
+        /* Same count, an existing entry may have been updated in place */
+        return ble_store_nvs_update_changed(BLE_STORE_OBJ_TYPE_CSFC,
+                                            ble_store_config_csfcs,
+                                            ble_store_config_num_csfcs,
+                                            sizeof(struct ble_store_value_csfc));
     }
     return 0;
 }
