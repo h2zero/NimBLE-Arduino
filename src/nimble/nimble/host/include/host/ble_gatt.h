@@ -711,20 +711,6 @@ int ble_gatts_notify_multiple_custom(uint16_t conn_handle,
                                      struct ble_gatt_notif *tuples);
 
 /**
- * @deprecated Should not be used. Use ble_gatts_notify_custom instead.
- *
- * @param conn_handle           The connection over which to execute the
- *                                  procedure.
- * @param att_handle            The attribute handle to indicate in the
- *                                  outgoing notification.
- * @param om                    The value to write to the characteristic.
- *
- * @return                      0 on success; nonzero on failure.
- */
-int ble_gattc_notify_custom(uint16_t conn_handle, uint16_t att_handle,
-                            struct os_mbuf *om);
-
-/**
  * Sends a characteristic notification.  The content of the message is read
  * from the specified characteristic.
  *
@@ -737,19 +723,6 @@ int ble_gattc_notify_custom(uint16_t conn_handle, uint16_t att_handle,
  * @return                      0 on success; nonzero on failure.
  */
 int ble_gatts_notify(uint16_t conn_handle, uint16_t chr_val_handle);
-
-/**
- * @deprecated Should not be used. Use ble_gatts_notify instead.
- *
- * @param conn_handle           The connection over which to execute the
- *                                  procedure.
- * @param chr_val_handle        The value attribute handle of the
- *                                  characteristic to include in the outgoing
- *                                  notification.
- *
- * @return                      0 on success; nonzero on failure.
- */
-int ble_gattc_notify(uint16_t conn_handle, uint16_t chr_val_handle);
 
 /**
  * Sends a multiple handle variable length characteristic notification.  The
@@ -795,21 +768,6 @@ int ble_gatts_indicate_custom(uint16_t conn_handle, uint16_t chr_val_handle,
                               struct os_mbuf *txom);
 
 /**
- * @deprecated Should not be used. Use ble_gatts_indicate_custom instead.
- *
- * @param conn_handle           The connection over which to execute the
- *                                  procedure.
- * @param chr_val_handle        The value attribute handle of the
- *                                  characteristic to include in the outgoing
- *                                  indication.
- * @param txom                  The data to include in the indication.
- *
- * @return                      0 on success; nonzero on failure.
- */
-int ble_gattc_indicate_custom(uint16_t conn_handle, uint16_t chr_val_handle,
-                              struct os_mbuf *txom);
-
-/**
  * Sends a characteristic indication.  The content of the message is read from
  * the specified characteristic.
  *
@@ -822,12 +780,6 @@ int ble_gattc_indicate_custom(uint16_t conn_handle, uint16_t chr_val_handle,
  * @return                      0 on success; nonzero on failure.
  */
 int ble_gatts_indicate(uint16_t conn_handle, uint16_t chr_val_handle);
-
-/**
- * @deprecated Should not be used. Use ble_gatts_indicate instead.
- * @copydoc ble_gatts_indicate
- */
-int ble_gattc_indicate(uint16_t conn_handle, uint16_t chr_val_handle);
 
 /**
  * Initialize the BLE GATT client

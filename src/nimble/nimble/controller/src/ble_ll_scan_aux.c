@@ -437,7 +437,7 @@ ble_ll_hci_ev_update_ext_adv_report_from_ext(struct ble_hci_ev *hci_ev,
     report->pri_phy = rxinfo->phy;
     report->sec_phy = 0;
     report->sid = 0xff;
-    report->rssi = rxhdr->rxinfo.rssi - ble_ll_rx_gain();
+    report->rssi = rxhdr->rxinfo.rssi;
     report->periodic_itvl = 0;
     report->data_len = 0;
 
@@ -566,7 +566,7 @@ ble_ll_hci_ev_send_ext_adv_report(struct os_mbuf *rxpdu,
         hci_subev = (void *)(*hci_ev)->data;
         report = hci_subev->reports;
 
-        report->rssi = rxinfo->rssi - ble_ll_rx_gain();
+        report->rssi = rxinfo->rssi;
 
         report->data_len = MIN(max_data_len, data_len - offset);
         os_mbuf_copydata(rxpdu, offset, report->data_len, report->data);

@@ -1089,8 +1089,9 @@ ble_att_svr_fill_type_value(uint16_t conn_handle,
                             uint16_t mtu, uint8_t *out_att_err)
 {
     struct ble_att_svr_entry *ha;
-    uint8_t buf[16];
+    struct os_mbuf *attr_om;
     uint16_t attr_len;
+    uint16_t req_val_len;
     uint16_t first;
     uint16_t prev;
     int any_entries;
@@ -1099,6 +1100,11 @@ ble_att_svr_fill_type_value(uint16_t conn_handle,
     first = 0;
     prev = 0;
     rc = 0;
+    attr_om = NULL;
+
+    /* Length of the attribute value in the request. */
+    req_val_len = OS_MBUF_PKTLEN(rxom) -
+                  sizeof(struct ble_att_find_type_value_req);
 
     /* Iterate through the attribute list, keeping track of the current
      * matching group.  For each attribute entry, determine if data needs to be
@@ -1141,15 +1147,31 @@ ble_att_svr_fill_type_value(uint16_t conn_handle,
          * determine if this attribute matches.
          */
         if (ble_uuid_cmp(ha->ha_uuid, &attr_type.u) == 0) {
-            rc = ble_att_svr_read_flat(conn_handle, ha, 0, sizeof buf, buf,
-                                       &attr_len, out_att_err);
+            /* Lazily allocate a temporary mbuf for reading attribute values. */
+            if (attr_om == NULL) {
+                attr_om = ble_hs_mbuf_l2cap_pkt();
+                if (attr_om == NULL) {
+                    *out_att_err = BLE_ATT_ERR_INSUFFICIENT_RES;
+                    rc = BLE_HS_ENOMEM;
+                    goto done;
+                }
+            } else {
+                os_mbuf_adj(attr_om, OS_MBUF_PKTLEN(attr_om));
+            }
+
+            /* Read attribute value into temporary mbuf. */
+            rc = ble_att_svr_read(conn_handle, ha, 0, attr_om, out_att_err);
             if (rc != 0) {
                 goto done;
             }
-            /* value is at the end of req */
-            rc = os_mbuf_cmpf(rxom, sizeof(struct ble_att_find_type_value_req),
-                              buf, attr_len);
-            if (rc == 0) {
+
+            attr_len = OS_MBUF_PKTLEN(attr_om);
+
+            /* Compare attribute value with the value from the request. */
+            if (attr_len == req_val_len &&
+                os_mbuf_cmpm(rxom,
+                             sizeof(struct ble_att_find_type_value_req),
+                             attr_om, 0, attr_len) == 0) {
                 first = ha->ha_handle_id;
                 prev = ha->ha_handle_id;
             }
@@ -1170,6 +1192,8 @@ ble_att_svr_fill_type_value(uint16_t conn_handle,
     }
 
 done:
+    os_mbuf_free_chain(attr_om);
+
     any_entries = OS_MBUF_PKTHDR(txom)->omp_len >
                   BLE_ATT_FIND_TYPE_VALUE_RSP_BASE_SZ;
     if (rc == 0 && !any_entries) {
@@ -1293,9 +1317,10 @@ ble_att_svr_build_read_type_rsp(uint16_t conn_handle, uint16_t cid,
     struct ble_att_read_type_rsp *rsp;
     struct ble_att_svr_entry *entry;
     struct os_mbuf *txom;
+    struct os_mbuf *attr_om;
     uint16_t attr_len;
+    uint16_t max_attr_len;
     uint16_t mtu;
-    uint8_t buf[19];
     int entry_written;
     int txomlen;
     int prev_attr_len;
@@ -1306,6 +1331,7 @@ ble_att_svr_build_read_type_rsp(uint16_t conn_handle, uint16_t cid,
     *err_handle = start_handle;
     entry_written = 0;
     prev_attr_len = 0;
+    attr_om = NULL;
 
     /* Just reuse the request buffer for the response. */
     txom = *rxom;
@@ -1326,6 +1352,12 @@ ble_att_svr_build_read_type_rsp(uint16_t conn_handle, uint16_t cid,
 
     mtu = ble_att_mtu_by_cid(conn_handle, cid);
 
+    /* Per Core Spec: max attribute value length is min(ATT_MTU - 4, 253). */
+    max_attr_len = mtu - 4;
+    if (max_attr_len > 253) {
+        max_attr_len = 253;
+    }
+
     /* Find all matching attributes, writing a record for each. */
     entry = NULL;
     while (1) {
@@ -1336,15 +1368,29 @@ ble_att_svr_build_read_type_rsp(uint16_t conn_handle, uint16_t cid,
         }
 
         if (entry->ha_handle_id >= start_handle) {
-            rc = ble_att_svr_read_flat(conn_handle, entry, 0, sizeof buf, buf,
-                                       &attr_len, att_err);
+            /* Lazily allocate a temporary mbuf for reading attribute values. */
+            if (attr_om == NULL) {
+                attr_om = ble_hs_mbuf_l2cap_pkt();
+                if (attr_om == NULL) {
+                    *att_err = BLE_ATT_ERR_INSUFFICIENT_RES;
+                    *err_handle = entry->ha_handle_id;
+                    rc = BLE_HS_ENOMEM;
+                    goto done;
+                }
+            } else {
+                os_mbuf_adj(attr_om, OS_MBUF_PKTLEN(attr_om));
+            }
+
+            /* Read attribute value into temporary mbuf. */
+            rc = ble_att_svr_read(conn_handle, entry, 0, attr_om, att_err);
             if (rc != 0) {
                 *err_handle = entry->ha_handle_id;
                 goto done;
             }
 
-            if (attr_len > mtu - 4) {
-                attr_len = mtu - 4;
+            attr_len = OS_MBUF_PKTLEN(attr_om);
+            if (attr_len > max_attr_len) {
+                attr_len = max_attr_len;
             }
 
             if (prev_attr_len == 0) {
@@ -1367,12 +1413,14 @@ ble_att_svr_build_read_type_rsp(uint16_t conn_handle, uint16_t cid,
             }
 
             data->handle = htole16(entry->ha_handle_id);
-            memcpy(data->value, buf, attr_len);
+            os_mbuf_copydata(attr_om, 0, attr_len, data->value);
             entry_written = 1;
         }
     }
 
 done:
+    os_mbuf_free_chain(attr_om);
+
     if (!entry_written) {
         /* No matching attributes. */
         if (*att_err == 0) {
@@ -1682,10 +1730,9 @@ ble_att_svr_build_read_mult_rsp_var(uint16_t conn_handle, uint16_t cid,
     tmp = os_msys_get_pkthdr(2, 0);
 
     /* Iterate through requested handles, reading the corresponding attribute
-     * for each.  Stop when there are no more handles to process, or the
-     * response is full.
+     * for each.  Stop when there are no more handles to process.
      */
-    while (OS_MBUF_PKTLEN(*rxom) >= 2 && OS_MBUF_PKTLEN(txom) < mtu) {
+    while (OS_MBUF_PKTLEN(*rxom) >= 2) {
         /* Ensure the full 16-bit handle is contiguous at the start of the
          * mbuf.
          */
@@ -1707,27 +1754,42 @@ ble_att_svr_build_read_mult_rsp_var(uint16_t conn_handle, uint16_t cid,
             goto done;
         }
         tuple_len = OS_MBUF_PKTLEN(tmp);
-        rc = os_mbuf_append(txom, &tuple_len, sizeof(tuple_len));
-        if (rc != 0) {
-            *err_handle = handle;
-            goto done;
-        }
-        if (tuple_len != 0) {
-            rc = os_mbuf_appendfrom(txom, tmp, 0, tuple_len);
+
+        if (OS_MBUF_PKTLEN(txom) < mtu) {
+            rc = os_mbuf_append(txom, &tuple_len, sizeof(tuple_len));
             if (rc != 0) {
                 *err_handle = handle;
                 goto done;
             }
+            if (tuple_len != 0) {
+                rc = os_mbuf_appendfrom(txom, tmp, 0, tuple_len);
+                if (rc != 0) {
+                    *err_handle = handle;
+                    goto done;
+                }
+            }
+        }
+
+        if (tuple_len != 0) {
             os_mbuf_adj(tmp, tuple_len);
         }
     }
     rc = 0;
 
 done:
-
     if (tmp) {
         os_mbuf_free_chain(tmp);
     }
+
+    /* If an execution error occurred, immediately release the bloated success
+     * buffer back to the memory pool so the error handler has room to generate
+     * an error Response.
+     */
+    if (rc != 0 && txom != NULL) {
+        os_mbuf_free_chain(txom);
+        txom = NULL;
+    }
+
     *out_txom = txom;
     return rc;
 }
@@ -1773,7 +1835,7 @@ ble_att_svr_service_uuid(struct ble_att_svr_entry *entry,
                          ble_uuid_any_t *uuid, uint8_t *out_att_err)
 {
     uint8_t val[16];
-    uint16_t attr_len;
+    uint16_t attr_len = 0;
     int rc;
 
     rc = ble_att_svr_read_flat(BLE_HS_CONN_HANDLE_NONE, entry, 0, sizeof(val), val,

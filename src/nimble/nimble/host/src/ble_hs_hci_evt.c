@@ -552,7 +552,7 @@ ble_hs_hci_evt_le_adv_rpt(uint8_t subevent, const void *data, unsigned int len)
     for (i = 0; i < ev->num_reports; i++) {
         rpt = data;
 
-        data += sizeof(rpt) + rpt->data_len + 1;
+        data += sizeof(*rpt) + rpt->data_len + 1;
 
         desc.event_type = rpt->type;
         desc.addr.type = rpt->addr_type;

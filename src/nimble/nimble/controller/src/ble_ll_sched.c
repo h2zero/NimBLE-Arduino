@@ -529,7 +529,9 @@ ble_ll_sched_conn_central_new(struct ble_ll_conn_sm *connsm,
         OS_ENTER_CRITICAL(sr);
 
         if (!g_ble_ll_conn_css_ref) {
-            css->period_anchor_ticks = earliest_start;
+            css->period_anchor_ticks = earliest_start +
+                                       MYNEWT_VAL(BLE_LL_CONN_INIT_MIN_WIN_OFFSET) *
+                                       BLE_LL_SCHED_USECS_PER_SLOT;
             css->period_anchor_rem_us = 0;
             css->period_anchor_idx = 0;
             css->period_anchor_slot_idx = connsm->css_slot_idx;

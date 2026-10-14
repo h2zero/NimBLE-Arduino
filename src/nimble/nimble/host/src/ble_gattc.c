@@ -3361,49 +3361,62 @@ ble_gattc_read_mult_cb_var(struct ble_gattc_proc *proc, int status,
     for (i = 0; i < proc->read_mult.num_handles; i++) {
         attr[i].handle = proc->read_mult.handles[i];
         attr[i].offset = 0;
-        if (om == NULL || OS_MBUF_PKTLEN(*om) == 0) {
-            continue;
-        }
-
-        *om = os_mbuf_pullup(*om, 2);
-        assert(*om);
-
-        attr_len = get_le16((*om)->om_data);
-
-        os_mbuf_adj(*om, 2);
-
-        if (attr_len > BLE_ATT_ATTR_MAX_LEN) {
-            /*TODO Figure out what to do here */
-            break;
-        }
-
-        attr[i].om = os_msys_get_pkthdr(attr_len, 0);
-        if (!attr[i].om) {
-            /*TODO Figure out what to do here */
-            break;
-        }
-
-        rc = os_mbuf_appendfrom(attr[i].om, *om, 0, attr_len);
-        if (rc) {
-            /*TODO Figure out what to do here */
-            break;
-        }
-
-        os_mbuf_adj(*om, attr_len);
     }
 
-    /*FIXME Testing assert */
-    assert(i == proc->read_mult.num_handles);
+    if (status == 0) {
+        for (i = 0; i < proc->read_mult.num_handles; i++) {
+            if (OS_MBUF_PKTLEN(*om) < 2) {
+                break;
+            }
+
+            *om = os_mbuf_pullup(*om, 2);
+            if (*om == NULL) {
+                break;
+            }
+
+            attr_len = get_le16((*om)->om_data);
+            os_mbuf_adj(*om, 2);
+
+            if (attr_len > BLE_ATT_ATTR_MAX_LEN) {
+                break;
+            }
+
+            attr[i].om = os_msys_get_pkthdr(attr_len, 0);
+            if (!attr[i].om) {
+                /* this is OOM condition*/
+                status = BLE_HS_ENOMEM;
+                break;
+            }
+
+            rc = os_mbuf_appendfrom(attr[i].om, *om, 0, attr_len);
+            if (rc) {
+                break;
+            }
+
+            os_mbuf_adj(*om, attr_len);
+        }
+
+        /* failed to correctly parse response,
+         * cleanup any partial data and set status if not set already
+         */
+        if (i < proc->read_mult.num_handles || OS_MBUF_PKTLEN(*om) != 0) {
+            for (i = 0; i < proc->read_mult.num_handles; i++) {
+                os_mbuf_free_chain(attr[i].om);
+                attr[i].om = NULL;
+            }
+
+            if (status == 0) {
+                status = BLE_HS_EBADDATA;
+            }
+        }
+    }
 
     proc->read_mult.cb_mult(proc->conn_handle,
-                    ble_gattc_error(status, att_handle), &attr[0],
-                    i,
-                    proc->read_mult.cb_arg);
+                            ble_gattc_error(status, att_handle), &attr[0],
+                            proc->read_mult.num_handles, proc->read_mult.cb_arg);
 
     for (i = 0; i < proc->read_mult.num_handles; i++) {
-        if (attr[i].om != NULL) {
-            os_mbuf_free_chain(attr[i].om);
-        }
+        os_mbuf_free_chain(attr[i].om);
     }
 
     return 0;
@@ -4400,16 +4413,6 @@ done:
     return rc;
 }
 
-/**
- * Deprecated. Should not be used. Use ble_gatts_notify_custom instead.
- */
-int
-ble_gattc_notify_custom(uint16_t conn_handle, uint16_t chr_val_handle,
-                        struct os_mbuf *txom)
-{
-    return ble_gatts_notify_custom(conn_handle, chr_val_handle, txom);
-}
-
 int
 ble_gatts_notify(uint16_t conn_handle, uint16_t chr_val_handle)
 {
@@ -4434,7 +4437,7 @@ ble_gatts_notify_multiple_custom(uint16_t conn_handle,
 #endif
 
     int rc;
-    int i = 0;
+    size_t i = 0;
     uint16_t cur_chr_cnt = 0;
     /* mtu = MTU - 1 octet (OP code) */
     uint16_t mtu = ble_att_mtu(conn_handle) - 1;
@@ -4524,7 +4527,8 @@ ble_gatts_notify_multiple(uint16_t conn_handle,
 #if !MYNEWT_VAL(BLE_GATT_NOTIFY_MULTIPLE)
     return BLE_HS_ENOTSUP;
 #endif
-    int rc, i;
+    int rc;
+    size_t i;
     struct ble_gatt_notif tuples[num_handles];
     struct ble_hs_conn *conn;
 
@@ -4555,15 +4559,6 @@ ble_gatts_notify_multiple(uint16_t conn_handle,
 
     rc = ble_gatts_notify_multiple_custom(conn_handle, num_handles, tuples);
     return rc;
-}
-
-/**
- * Deprecated. Should not be used. Use ble_gatts_notify instead.
- */
-int
-ble_gattc_notify(uint16_t conn_handle, uint16_t chr_val_handle)
-{
-    return ble_gatts_notify(conn_handle, chr_val_handle);
 }
 
 /*****************************************************************************
@@ -4718,29 +4713,10 @@ done:
     return rc;
 }
 
-/**
- * Deprecated. Should not be used. Use ble_gatts_indicate_custom instead.
- */
-int
-ble_gattc_indicate_custom(uint16_t conn_handle, uint16_t chr_val_handle,
-                          struct os_mbuf *txom)
-{
-    return ble_gatts_indicate_custom(conn_handle, chr_val_handle, txom);
-}
-
 int
 ble_gatts_indicate(uint16_t conn_handle, uint16_t chr_val_handle)
 {
     return ble_gatts_indicate_custom(conn_handle, chr_val_handle, NULL);
-}
-
-/**
- * Deprecated. Should not be used. Use ble_gatts_indicate instead.
- */
-int
-ble_gattc_indicate(uint16_t conn_handle, uint16_t chr_val_handle)
-{
-    return ble_gatts_indicate(conn_handle, chr_val_handle);
 }
 
 /*****************************************************************************

@@ -2098,6 +2098,47 @@ ble_ll_ctrl_rx_reject_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
     return rsp_opcode;
 }
 
+static bool
+ble_ll_conn_chk_conn_update_req(const struct ble_ll_conn_upd_req *req)
+{
+    uint32_t timeout_usecs;
+    uint32_t min_timeout_usecs;
+
+    if ((req->interval < BLE_HCI_CONN_ITVL_MIN) ||
+        (req->interval > BLE_HCI_CONN_ITVL_MAX) ||
+        (req->latency > BLE_HCI_CONN_LATENCY_MAX) ||
+        (req->timeout < BLE_HCI_CONN_SPVN_TIMEOUT_MIN) ||
+        (req->timeout > BLE_HCI_CONN_SPVN_TIMEOUT_MAX)) {
+        return false;
+    }
+
+    /* Supervision timeout (in msecs) must be more than:
+     * (1 + connLatency) * connIntervalMax * 1.25 msecs * 2.
+     */
+    timeout_usecs = req->timeout;
+    timeout_usecs *= (BLE_HCI_CONN_SPVN_TMO_UNITS * 1000);
+    min_timeout_usecs = (uint32_t)req->interval * 2 * BLE_LL_CONN_ITVL_USECS;
+    min_timeout_usecs *= (1 + req->latency);
+    if (timeout_usecs <= min_timeout_usecs) {
+        return false;
+    }
+
+    /* The transmitWindowOffset shall be a multiple of 1.25 ms in the range
+     * 0 ms to connInterval.
+     */
+    if (req->winoffset > req->interval) {
+        return false;
+    }
+
+    /* The transmitWindowSize shall be a multiple of 1.25 ms in the range
+     * 1.25 ms to the lesser of 10 ms and (connInterval - 1.25 ms).
+     */
+    if ((req->winsize < 1) || (req->winsize > MIN(8, req->interval - 1))) {
+        return false;
+    }
+
+    return true;
+}
 /**
  * Called when we receive a connection update event
  *
@@ -2109,7 +2150,6 @@ ble_ll_ctrl_rx_reject_ind(struct ble_ll_conn_sm *connsm, uint8_t *dptr,
 static int
 ble_ll_ctrl_rx_conn_update(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
 {
-    uint8_t rsp_opcode;
     uint16_t conn_events;
     struct ble_ll_conn_upd_req *reqdata;
 
@@ -2129,9 +2169,11 @@ ble_ll_ctrl_rx_conn_update(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
     reqdata->timeout = get_le16(dptr + 7);
     reqdata->instant = get_le16(dptr + 9);
 
-    /* XXX: validate them at some point. If they dont check out, we
-       return the unknown response */
-    rsp_opcode = BLE_ERR_MAX;
+    /* Check if parameters are valid */
+    if (!ble_ll_conn_chk_conn_update_req(reqdata)) {
+        ble_ll_conn_timeout(connsm, BLE_ERR_INV_LMP_LL_PARM);
+        return BLE_ERR_MAX;
+    }
 
     /* If instant is in the past, we have to end the connection */
     conn_events = (reqdata->instant - connsm->event_cntr) & 0xFFFF;
@@ -2156,7 +2198,7 @@ ble_ll_ctrl_rx_conn_update(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
         }
     }
 
-    return rsp_opcode;
+    return BLE_ERR_MAX;
 }
 
 void
@@ -2484,6 +2526,17 @@ ble_ll_ctrl_rx_chanmap_req(struct ble_ll_conn_sm *connsm, uint8_t *dptr)
         return BLE_LL_CTRL_UNKNOWN_RSP;
     }
 #endif
+
+    /* Minimum number of channels is 2.
+     * If invalid map was provided we have to end the connection.
+     */
+    if (ble_ll_utils_chan_map_used_get(dptr) < 2) {
+        ble_ll_conn_timeout(connsm, BLE_ERR_INV_LMP_LL_PARM);
+        return BLE_ERR_MAX;
+    }
+
+    /* The bits in positions 37, 38 and 39 are reserved for future use */
+    dptr[4] &= 0x1f;
 
     /* If instant is in the past, we have to end the connection */
     instant = get_le16(dptr + BLE_LL_CHAN_MAP_LEN);
