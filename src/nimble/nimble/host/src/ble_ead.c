@@ -19,7 +19,7 @@ static uint8_t ble_ead_aad[] = {0xEA};
 static int ble_ead_rand(void *buf, size_t len)
 {
     int rc;
-    rc = ble_hs_hci_util_rand(buf, len);
+    rc = ble_hs_hci_rand(buf, len);
     if (rc != 0) {
         return -1;
     }

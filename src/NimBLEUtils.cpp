@@ -533,8 +533,8 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             return "BLE_GAP_EVENT_PATHLOSS_THRESHOLD";
         case BLE_GAP_EVENT_TRANSMIT_POWER: // 26
             return "BLE_GAP_EVENT_TRANSMIT_POWER";
-        case BLE_GAP_EVENT_PARING_COMPLETE: // 27
-            return "BLE_GAP_EVENT_PARING_COMPLETE";
+        case BLE_GAP_EVENT_PAIRING_COMPLETE: // 27
+            return "BLE_GAP_EVENT_PAIRING_COMPLETE";
         case BLE_GAP_EVENT_SUBRATE_CHANGE: // 28
             return "BLE_GAP_EVENT_SUBRATE_CHANGE";
 #   ifdef BLE_GAP_EVENT_VS_HCI

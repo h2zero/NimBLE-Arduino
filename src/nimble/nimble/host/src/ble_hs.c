@@ -385,6 +385,9 @@ ble_hs_reset(void)
     /* Clear configured addresses. */
     ble_hs_id_reset();
 
+    /* Drop cached privacy state so sync re-runs the full setup. */
+    ble_hs_pvcy_reset();
+
     if (ble_hs_cfg.reset_cb != NULL && ble_hs_reset_reason != 0) {
         ble_hs_cfg.reset_cb(ble_hs_reset_reason);
     }
@@ -444,6 +447,7 @@ ble_hs_timer_reset(uint32_t ticks)
 
     if (!ble_hs_is_enabled()) {
         ble_npl_callout_stop(&ble_hs_timer);
+        ble_npl_callout_deinit(&ble_hs_timer);
     } else {
         rc = ble_npl_callout_reset(&ble_hs_timer, ticks);
         BLE_HS_DBG_ASSERT_EVAL(rc == 0);

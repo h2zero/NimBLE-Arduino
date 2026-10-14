@@ -1191,6 +1191,9 @@ ble_ll_rx_end(uint8_t *rxbuf, struct ble_mbuf_hdr *rxhdr)
     ble_ll_trace_u32x3(BLE_LL_TRACE_ID_RX_END, pdu_type, len,
                        rxhdr->rxinfo.flags);
 
+    /* Update RSSI */
+    rxhdr->rxinfo.rssi -= ble_ll_rx_gain();
+
 #if MYNEWT_VAL(BLE_LL_EXT)
     if (BLE_MBUF_HDR_RX_STATE(rxhdr) == BLE_LL_STATE_EXTERNAL) {
         rc = ble_ll_ext_rx_isr_end(rxbuf, rxhdr);
@@ -1812,8 +1815,6 @@ ble_ll_init(void)
             g_dev_addr[i] = pub_dev_addr & 0xff;
             pub_dev_addr >>= 8;
         }
-#else
-        memcpy(g_dev_addr, MYNEWT_VAL(BLE_PUBLIC_DEV_ADDR), BLE_DEV_ADDR_LEN);
 #endif
         if (ble_ll_is_addr_empty(g_dev_addr)) {
             rc = ble_hw_get_public_addr(&addr);

@@ -509,11 +509,14 @@ ble_hs_conn_timer(void)
 #endif
 
     struct ble_hs_conn *conn;
-    ble_npl_time_t now = ble_npl_time_get();
     int32_t next_exp_in = BLE_HS_FOREVER;
     int32_t next_exp_in_new;
     bool next_exp_in_updated;
+
+#if BLE_HS_ATT_SVR_QUEUED_WRITE_TMO || MYNEWT_VAL(BLE_L2CAP_RX_FRAG_TIMEOUT) != 0
+    ble_npl_time_t now = ble_npl_time_get();
     int32_t time_diff;
+#endif
 
     ble_hs_lock();
 

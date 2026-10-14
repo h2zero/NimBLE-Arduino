@@ -140,25 +140,23 @@ static void
 ble_ll_resolv_rpa_timer_cb(struct ble_npl_event *ev)
 {
     int i;
-    os_sr_t sr;
+    uint8_t rpa[6];
     struct ble_ll_resolv_entry *rl;
 #if MYNEWT_VAL(BLE_LL_HCI_VS_LOCAL_IRK)
     struct local_irk_data *irk_data;
-    uint8_t rpa[6];
+    os_sr_t sr;
 #endif
 
     rl = &g_ble_ll_resolv_list[0];
     for (i = 0; i < g_ble_ll_resolv_data.rl_cnt; ++i) {
         if (rl->rl_has_local) {
-            OS_ENTER_CRITICAL(sr);
-            ble_ll_resolv_gen_priv_addr(rl, 1);
-            OS_EXIT_CRITICAL(sr);
+            generate_rpa(rl->rl_local_irk, rpa);
+            ble_ll_resolv_set_local_rpa(i, rpa);
         }
 
         if (rl->rl_has_peer) {
-            OS_ENTER_CRITICAL(sr);
-            ble_ll_resolv_gen_priv_addr(rl, 0);
-            OS_EXIT_CRITICAL(sr);
+            generate_rpa(rl->rl_peer_irk, rpa);
+            ble_ll_resolv_set_peer_rpa(i, rpa);
         }
         ++rl;
     }

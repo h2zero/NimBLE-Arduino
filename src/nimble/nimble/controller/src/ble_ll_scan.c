@@ -720,7 +720,7 @@ ble_ll_scan_send_adv_report(uint8_t pdu_type,
     if (scansm->ext_scanning) {
         rc = ble_ll_hci_send_legacy_ext_adv_report(evtype,
                                                    adva, adva_type,
-                                                   hdr->rxinfo.rssi - ble_ll_rx_gain(),
+                                                   hdr->rxinfo.rssi,
                                                    adv_data_len, om,
                                                    inita, inita_type);
 goto done;
@@ -729,12 +729,12 @@ goto done;
 
     if (subev == BLE_HCI_LE_SUBEV_DIRECT_ADV_RPT) {
         rc = ble_ll_hci_send_dir_adv_report(adva, adva_type, inita, inita_type,
-                                            hdr->rxinfo.rssi - ble_ll_rx_gain());
+                                            hdr->rxinfo.rssi);
         goto done;
     }
 
     rc = ble_ll_hci_send_adv_report(evtype, adva, adva_type,
-                                    hdr->rxinfo.rssi - ble_ll_rx_gain(),
+                                    hdr->rxinfo.rssi,
                                     adv_data_len, om);
 done:
     if (!rc && scansm->scan_filt_dups) {

@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include "nimble/porting/nimble/include/os/util.h"
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/host/include/host/ble_gatt.h"
 #include "nimble/nimble/host/include/host/ble_uuid.h"
@@ -830,11 +831,29 @@ ble_gatts_clt_cfg_access(uint16_t conn_handle, uint16_t attr_handle,
 }
 
 static int
-ble_gatts_register_clt_cfg_dsc(uint16_t *att_handle)
+ble_gatts_register_clt_cfg_dsc(const struct ble_gatt_chr_def *chr, uint16_t *att_handle)
 {
+    uint8_t chr_att_flags;
+    uint8_t att_flags;
     int rc;
 
-    rc = ble_att_svr_register(uuid_ccc, BLE_ATT_F_READ | BLE_ATT_F_WRITE, 0,
+    /* Writing the CCCD enables notifications/indications of the
+     * characteristic value, so require the same encryption/authentication
+     * level as the characteristic itself. Authorization is not inherited:
+     * the stack cannot enforce it on the internal CCCD access callback,
+     * and its flag alone would wrongly activate the key-size check.
+     */
+    chr_att_flags = ble_gatts_att_flags_from_chr_flags(chr->flags);
+
+    att_flags = BLE_ATT_F_READ | BLE_ATT_F_WRITE;
+    if (chr_att_flags & (BLE_ATT_F_READ_ENC | BLE_ATT_F_WRITE_ENC)) {
+        att_flags |= BLE_ATT_F_WRITE_ENC;
+    }
+    if (chr_att_flags & (BLE_ATT_F_READ_AUTHEN | BLE_ATT_F_WRITE_AUTHEN)) {
+        att_flags |= BLE_ATT_F_WRITE_AUTHEN;
+    }
+
+    rc = ble_att_svr_register(uuid_ccc, att_flags, chr->min_key_size,
                               att_handle, ble_gatts_clt_cfg_access, NULL);
     if (rc != 0) {
         return rc;
@@ -958,7 +977,7 @@ ble_gatts_register_chr(const struct ble_gatt_svc_def *svc,
     }
 
     if (ble_gatts_chr_clt_cfg_allowed(chr) != 0) {
-        rc = ble_gatts_register_clt_cfg_dsc(&dsc_handle);
+        rc = ble_gatts_register_clt_cfg_dsc(chr, &dsc_handle);
         if (rc != 0) {
             return rc;
         }

@@ -181,11 +181,6 @@
 
 # define MYNEWT_VAL_BLE_USE_ESP_TIMER (CONFIG_BT_NIMBLE_USE_ESP_TIMER)
 
-# ifdef CONFIG_BT_NIMBLE_EXT_ADV // Workaround for PlatformIO build flags causing redefinition warnings
-#  undef MYNEWT_VAL_BLE_EXT_ADV
-#  define MYNEWT_VAL_BLE_EXT_ADV (CONFIG_BT_NIMBLE_EXT_ADV)
-# endif
-
 # if CONFIG_IDF_TARGET_ESP32 && (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0))
 #  define MYNEWT_VAL_BLE_HCI_VS (0)
 # endif

@@ -316,6 +316,7 @@ nimble_port_init(void)
     os_msys_init();
 
 #if NIMBLE_CFG_CONTROLLER
+    extern void ble_ll_init(void);
     ble_ll_init();
 #endif
 
