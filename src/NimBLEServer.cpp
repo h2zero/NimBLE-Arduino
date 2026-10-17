@@ -745,9 +745,8 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
                 pAtt->readEvent(peerInfo);
             }
 
-            ble_npl_hw_enter_critical();
+            NimBLEAttValue::Lock lock;
             int rc = os_mbuf_append(ctxt->om, val.data(), val.size());
-            ble_npl_hw_exit_critical(0);
             return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
         }
 

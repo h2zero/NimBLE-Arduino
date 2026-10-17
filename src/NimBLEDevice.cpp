@@ -833,7 +833,7 @@ void NimBLEDevice::onReset(int reason) {
  * @brief Host synced with controller, all clear to make calls to the stack.
  */
 void NimBLEDevice::onSync(void) {
-    NIMBLE_LOGI(LOG_TAG, "NimBle host synced.");
+    NIMBLE_LOGI(LOG_TAG, "NimBLE host synced.");
     // This check is needed due to potentially being called multiple times in succession
     // If this happens, the call to scan start may get stuck or cause an advertising fault.
     if (m_synced) {
@@ -894,6 +894,12 @@ void NimBLEDevice::host_task(void* param) {
 bool NimBLEDevice::init(const std::string& deviceName) {
     if (!m_initialized) {
         NIMBLE_LOGD(LOG_TAG, "Starting %s", getVersion());
+
+        if (!NimBLEAttValue::Lock::init()) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to initialize NimBLEAttValue lock");
+            return false;
+        }
+
 # ifdef ESP_PLATFORM
 
 #  if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED
@@ -1015,7 +1021,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
     }
 
     m_initialized = true; // Set the initialization flag to ensure we are only initialized once.
-    NIMBLE_LOGD(LOG_TAG, "Initialized");
+    NIMBLE_LOGD(LOG_TAG, "Initialized BLE stack");
     return true;
 } // init
 
@@ -1088,6 +1094,7 @@ bool NimBLEDevice::deinit(bool clearAll) {
 # endif
 
         NimBLEUtils::deleteTaskSems();
+        NimBLEAttValue::Lock::deinit();
     }
 
     return rc == 0;

@@ -1179,13 +1179,16 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 return BLE_ATT_ERR_INVALID_HANDLE;
             }
 
-            auto len = event->notify_rx.om->om_len;
-            if (pChr->m_value.setValue(event->notify_rx.om->om_data, len)) {
+            // Build the value locally so the update of the characteristic value is atomic
+            // and the callback gets a stable copy without holding the value lock.
+            NimBLEAttValue value(MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH), pChr->m_value.max_size());
+            auto           len = event->notify_rx.om->om_len;
+            if (value.setValue(event->notify_rx.om->om_data, len)) {
                 os_mbuf* next;
                 next = SLIST_NEXT(event->notify_rx.om, om_next);
                 while (next != NULL) {
-                    pChr->m_value.append(next->om_data, next->om_len);
-                    if (pChr->m_value.length() != len + next->om_len) {
+                    value.append(next->om_data, next->om_len);
+                    if (value.length() != len + next->om_len) {
                         rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                         break;
                     }
@@ -1201,11 +1204,13 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
                 return rc;
             }
 
+            pChr->m_value = value;
+
             if (pChr->m_notifyCallback != nullptr) {
                 // TODO: change this callback to use the NimBLEAttValue class instead of raw data and length
                 pChr->m_notifyCallback(pChr,
-                                       const_cast<uint8_t*>(pChr->m_value.getValue().data()),
-                                       pChr->m_value.length(),
+                                       const_cast<uint8_t*>(value.data()),
+                                       value.length(),
                                        !event->notify_rx.indication);
             }
 
