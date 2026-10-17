@@ -21,6 +21,12 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED
 
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
+#  include "nimble/nimble/include/nimble/nimble_npl.h"
+# else
+#  include "nimble/nimble_npl.h"
+# endif
+
 /* Enables the use of Arduino String class for attribute values */
 # ifndef NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
 #  define NIMBLE_CPP_ARDUINO_STRING_AVAILABLE (__has_include(<Arduino.h>))
@@ -102,6 +108,39 @@ class NimBLEAttValue {
     void deepCopy(const NimBLEAttValue& source);
 
   public:
+    class Lock {
+        static ble_npl_mutex m_mutex;
+        static bool          m_initialized;
+        bool m_locked{false};
+
+      public:
+        Lock() {
+            if (m_initialized) {
+                m_locked = ble_npl_mutex_pend(&m_mutex, BLE_NPL_TIME_FOREVER) == BLE_NPL_OK;
+            }
+        }
+
+        ~Lock() {
+            if (m_initialized && m_locked) {
+                ble_npl_mutex_release(&m_mutex);
+            }
+        }
+
+        static bool init() {
+            if (!m_initialized) {
+                m_initialized = ble_npl_mutex_init(&m_mutex) == BLE_NPL_OK;
+            }
+            return m_initialized;
+        }
+
+        static void deinit() {
+            if (m_initialized) {
+                m_initialized = false;
+                ble_npl_mutex_deinit(&m_mutex);
+            }
+        }
+    };
+
     /**
      * @brief Default constructor.
      * @param[in] init_len The initial size in bytes.
@@ -181,16 +220,22 @@ class NimBLEAttValue {
     /** @brief Returns the current size of the value in bytes */
     uint16_t size() const { return m_attr_len; }
 
-    /** @brief Returns a pointer to the internal buffer of the value */
+    /**
+     * @brief Returns a pointer to the internal buffer of the value
+     * @note The pointer is not protected by the lock and can be invalidated by a concurrent update.
+     * Only use the pointer getters (`data()`, `c_str()`, `begin()`, `end()`) on a copy of the value.
+     */
     const uint8_t* data() const { return m_attr_value; }
 
-    /** @brief Returns a pointer to the internal buffer of the value as a const char* */
+    /** @brief Returns a pointer to the internal buffer of the value as a const char*
+     *  @note See data() for thread safety restrictions.
+     */
     const char* c_str() const { return reinterpret_cast<const char*>(m_attr_value); }
 
-    /** @brief Iterator begin */
+    /** @brief Iterator begin; see data() for thread safety restrictions. */
     const uint8_t* begin() const { return m_attr_value; }
 
-    /** @brief Iterator end */
+    /** @brief Iterator end; see data() for thread safety restrictions. */
     const uint8_t* end() const { return m_attr_value + m_attr_len; }
 
 # if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED)
@@ -262,9 +307,7 @@ class NimBLEAttValue {
 #  ifdef _DOXYGEN_
     bool
 #  else
-    typename std::enable_if<std::is_array<T>::value &&
-                                std::is_same<typename std::remove_extent<T>::type, char>::value,
-                            bool>::type
+    typename std::enable_if<std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, char>::value, bool>::type
 #  endif
     setValue(const T& s) {
         return setValue(reinterpret_cast<const uint8_t*>(s), strnlen(s, sizeof(T)));
@@ -281,8 +324,7 @@ class NimBLEAttValue {
     bool
 #  else
     typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value &&
-                                !(std::is_array<T>::value &&
-                                  std::is_same<typename std::remove_extent<T>::type, char>::value),
+                                !(std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, char>::value),
                             bool>::type
 #  endif
     setValue(const T& v) {
@@ -351,8 +393,7 @@ class NimBLEAttValue {
             }
         } else if constexpr (Has_c_str_length<T>::value) {
             return setValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length());
-        } else if constexpr (std::is_array<T>::value &&
-                             std::is_same<typename std::remove_extent<T>::type, char>::value) {
+        } else if constexpr (std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, char>::value) {
             return setValue(reinterpret_cast<const uint8_t*>(s), strnlen(s, sizeof(s)));
         } else {
             return setValue(reinterpret_cast<const uint8_t*>(&s), sizeof(s));
@@ -372,6 +413,7 @@ class NimBLEAttValue {
      */
     template <typename T>
     T getValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
+        Lock lock;
         if (timestamp != nullptr) {
 # if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED)
             *timestamp = m_timestamp;
@@ -392,16 +434,30 @@ class NimBLEAttValue {
     uint8_t operator[](int pos) const;
 
     /** @brief Operator; Get the value as a std::vector<uint8_t>. */
-    operator std::vector<uint8_t>() const { return std::vector<uint8_t>(m_attr_value, m_attr_value + m_attr_len); }
+    operator std::vector<uint8_t>() const {
+        Lock lock;
+        return std::vector<uint8_t>(m_attr_value, m_attr_value + m_attr_len);
+    }
 
     /** @brief Operator; Get the value as a std::string. */
-    operator std::string() const { return std::string(reinterpret_cast<char*>(m_attr_value), m_attr_len); }
+    operator std::string() const {
+        Lock lock;
+        return std::string(reinterpret_cast<char*>(m_attr_value), m_attr_len);
+    }
 
     /** @brief Operator; Get the value as a const uint8_t*. */
     operator const uint8_t*() const { return m_attr_value; }
 
     /** @brief Operator; Append another NimBLEAttValue. */
-    NimBLEAttValue& operator+=(const NimBLEAttValue& source) { return append(source.data(), source.size()); }
+    NimBLEAttValue& operator+=(const NimBLEAttValue& source) {
+        Lock lock; // Recursive; keeps the source data and size consistent while appending
+        if (&source == this) {
+            // append() may reallocate the buffer, so append from a copy of our own data
+            std::vector<uint8_t> copy(m_attr_value, m_attr_value + m_attr_len);
+            return append(copy.data(), copy.size());
+        }
+        return append(source.data(), source.size());
+    }
 
     /** @brief Operator; Set the value from a std::string source. */
     NimBLEAttValue& operator=(const std::string& source) {
@@ -417,6 +473,7 @@ class NimBLEAttValue {
 
     /** @brief Equality operator */
     bool operator==(const NimBLEAttValue& source) const {
+        Lock lock;
         return (m_attr_len == source.size()) ? memcmp(m_attr_value, source.data(), m_attr_len) == 0 : false;
     }
 
@@ -425,7 +482,10 @@ class NimBLEAttValue {
 
 # if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
     /** @brief Operator; Get the value as an Arduino String value. */
-    operator String() const { return String(reinterpret_cast<char*>(m_attr_value)); }
+    operator String() const {
+        Lock lock;
+        return String(reinterpret_cast<char*>(m_attr_value));
+    }
 # endif
 };
 
