@@ -687,6 +687,19 @@ ble_hs_hci_evt_le_adv_rpt(uint8_t subevent, const void *data, unsigned int len)
         desc.addr.type = rpt->addr_type;
         memcpy(desc.addr.val, rpt->addr, BLE_DEV_ADDR_LEN);
 
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+    struct ble_hs_resolv_entry *rl = NULL;
+    rl = ble_hs_resolv_rpa_addr(desc.addr.val, desc.addr.type);
+
+    if (rl != NULL) {
+        if(desc.addr.type == 1) {
+           rl->rl_isrpa = 1;
+        }
+        memcpy(desc.addr.val, rl->rl_identity_addr, BLE_DEV_ADDR_LEN);
+        desc.addr.type = rl->rl_addr_type;
+    }
+#endif
+
         desc.length_data = rpt->data_len;
         desc.data = rpt->data;
         desc.rssi = rpt->data[rpt->data_len];
