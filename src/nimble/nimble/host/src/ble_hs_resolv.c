@@ -724,6 +724,10 @@ ble_hs_resolv_set_rpa_tmo(uint16_t tmo_secs)
 
 struct ble_hs_resolv_entry *
 ble_hs_resolv_rpa_addr(uint8_t *addr, uint8_t addr_type) {
+    if (!ble_hs_is_rpa(addr, addr_type)) {
+        return NULL;
+    }
+
 #if MYNEWT_VAL(BLE_STORE_MAX_BONDS)
     int i;
     struct ble_hs_resolv_entry *rl = &g_ble_hs_resolv_list[1];
@@ -731,7 +735,6 @@ ble_hs_resolv_rpa_addr(uint8_t *addr, uint8_t addr_type) {
     for (i = 1; i < g_ble_hs_resolv_data.rl_cnt; ++i) {
         if(ble_hs_resolv_rpa(addr, rl->rl_peer_irk) == 0) {
             memcpy(g_ble_hs_resolv_list[i].rl_peer_rpa, addr, BLE_DEV_ADDR_LEN);
-            g_ble_hs_resolv_list[i].rl_addr_type = addr_type;
             return rl;
         }
 
