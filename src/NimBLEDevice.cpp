@@ -94,9 +94,9 @@ NimBLEAdvertising* NimBLEDevice::m_bleAdvertising = nullptr;
 std::array<NimBLEClient*, MYNEWT_VAL(BLE_MAX_CONNECTIONS)> NimBLEDevice::m_pClients{};
 # endif
 
-bool                       NimBLEDevice::m_initialized{false};
+std::atomic<bool>          NimBLEDevice::m_initialized{false};
 uint32_t                   NimBLEDevice::m_passkey{123456};
-bool                       NimBLEDevice::m_synced{false};
+std::atomic<bool>          NimBLEDevice::m_synced{false};
 ble_gap_event_listener     NimBLEDevice::m_listener{};
 std::vector<NimBLEAddress> NimBLEDevice::m_whiteList{};
 uint8_t                    NimBLEDevice::m_ownAddrType{BLE_OWN_ADDR_PUBLIC};
@@ -257,7 +257,7 @@ NimBLEScan* NimBLEDevice::getScan() {
  * @details Must only be called before calling NimBLEDevice::init.
  */
 void NimBLEDevice::setScanDuplicateCacheSize(uint16_t size) {
-    if (m_initialized) {
+    if (isInitialized()) {
         NIMBLE_LOGE(LOG_TAG, "Cannot change scan cache size while initialized");
         return;
     } else {
@@ -286,7 +286,7 @@ void NimBLEDevice::setScanDuplicateCacheSize(uint16_t size) {
  * @details Must only be called before calling NimBLEDevice::init.
  */
 void NimBLEDevice::setScanFilterMode(uint8_t mode) {
-    if (m_initialized) {
+    if (isInitialized()) {
         NIMBLE_LOGE(LOG_TAG, "Cannot change scan duplicate type while initialized");
         return;
     } else if (mode > 2) {
@@ -304,7 +304,7 @@ void NimBLEDevice::setScanFilterMode(uint8_t mode) {
  * even if already seen in the current scan. If set to 0 the cache will never be reset.
  */
 void NimBLEDevice::setScanDuplicateCacheResetTime(uint16_t time) {
-    if (m_initialized) {
+    if (isInitialized()) {
         NIMBLE_LOGE(LOG_TAG, "Cannot change scan cache reset time while initialized");
         return;
     } else if (time > 1000) {
@@ -820,11 +820,11 @@ bool NimBLEDevice::setDefaultPhy(uint8_t txPhyMask, uint8_t rxPhyMask) {
  * @param [in] reason The reason code for the reset.
  */
 void NimBLEDevice::onReset(int reason) {
-    if (!m_synced) {
+    if (!m_synced.load(std::memory_order_acquire)) {
         return;
     }
 
-    m_synced = false;
+    m_synced.store(false, std::memory_order_release);
 
     NIMBLE_LOGE(LOG_TAG, "Host reset; reason=%d, %s", reason, NimBLEUtils::returnCodeToString(reason));
 } // onReset
@@ -836,7 +836,7 @@ void NimBLEDevice::onSync(void) {
     NIMBLE_LOGI(LOG_TAG, "NimBLE host synced.");
     // This check is needed due to potentially being called multiple times in succession
     // If this happens, the call to scan start may get stuck or cause an advertising fault.
-    if (m_synced) {
+    if (m_synced.load(std::memory_order_acquire)) {
         return;
     }
 
@@ -861,9 +861,9 @@ void NimBLEDevice::onSync(void) {
     // Occasionally triggers exception without.
     ble_npl_time_delay(1);
 
-    m_synced = true;
+    m_synced.store(true, std::memory_order_release);
 
-    if (m_initialized) {
+    if (isInitialized()) {
 # if MYNEWT_VAL(BLE_ROLE_OBSERVER)
         if (m_pScan != nullptr) {
             m_pScan->onHostSync();
@@ -892,14 +892,8 @@ void NimBLEDevice::host_task(void* param) {
  * @param [in] deviceName The device name of the device.
  */
 bool NimBLEDevice::init(const std::string& deviceName) {
-    if (!m_initialized) {
+    if (!isInitialized()) {
         NIMBLE_LOGD(LOG_TAG, "Starting %s", getVersion());
-
-        if (!NimBLEAttValue::Lock::init()) {
-            NIMBLE_LOGE(LOG_TAG, "Failed to initialize NimBLEAttValue lock");
-            return false;
-        }
-
 # ifdef ESP_PLATFORM
 
 #  if defined(CONFIG_ENABLE_ARDUINO_DEPENDS) && SOC_BT_SUPPORTED
@@ -1010,17 +1004,23 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         ble_hs_cfg.sm_their_key_dist |= BLE_SM_PAIR_KEY_DIST_ID;
 # endif
 
+        if (!NimBLEAttValue::Lock::init()) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to initialize value lock");
+            nimble_port_deinit();
+            return false;
+        }
+
         setDeviceName(deviceName);
         ble_store_config_init();
         nimble_port_freertos_init(NimBLEDevice::host_task);
     }
 
     // Wait for host and controller to sync before returning and accepting new tasks
-    while (!m_synced) {
+    while (!m_synced.load(std::memory_order_acquire)) {
         ble_npl_time_delay(1);
     }
 
-    m_initialized = true; // Set the initialization flag to ensure we are only initialized once.
+    m_initialized.store(true); // Set the initialization flag to ensure we are only initialized once.
     NIMBLE_LOGD(LOG_TAG, "Initialized BLE stack");
     return true;
 } // init
@@ -1034,14 +1034,18 @@ bool NimBLEDevice::init(const std::string& deviceName) {
  */
 bool NimBLEDevice::deinit(bool clearAll) {
     int rc = 0;
-    if (m_initialized) {
+    if (isInitialized()) {
         rc = nimble_port_stop();
         if (rc == 0) {
+            m_initialized.store(false);
+            m_synced.store(false, std::memory_order_release);
 # if MYNEWT_VAL(BLE_ROLE_OBSERVER)
             if (NimBLEDevice::m_pScan != nullptr) {
                 NimBLEDevice::m_pScan->onHostDeinit();
             }
 # endif
+            NimBLEAttValue::Lock::deinit();
+            NimBLEUtils::deinit();
             nimble_port_deinit();
 # ifndef USING_NIMBLE_ARDUINO_HEADERS
 #  if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
@@ -1051,8 +1055,6 @@ bool NimBLEDevice::deinit(bool clearAll) {
             }
 #  endif
 # endif
-            m_initialized = false;
-            m_synced      = false;
         } else {
             NIMBLE_LOGE(LOG_TAG, "nimble_port_stop() failed with error: %d", rc);
             return false;
@@ -1092,9 +1094,6 @@ bool NimBLEDevice::deinit(bool clearAll) {
             deleteClient(clt);
         }
 # endif
-
-        NimBLEUtils::deleteTaskSems();
-        NimBLEAttValue::Lock::deinit();
     }
 
     return rc == 0;
@@ -1105,7 +1104,7 @@ bool NimBLEDevice::deinit(bool clearAll) {
  * @return true if initialized.
  */
 bool NimBLEDevice::isInitialized() {
-    return m_initialized;
+    return m_initialized.load();
 } // getInitialized
 
 /* -------------------------------------------------------------------------- */

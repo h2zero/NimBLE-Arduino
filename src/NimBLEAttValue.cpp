@@ -21,9 +21,46 @@
 # include "NimBLEUtils.h"
 # include "NimBLELog.h"
 
+# if defined(__ARM_ARCH_6M__)
+// Cortex-M0/M0+ has no LDREX/STREX, so GCC emits libcalls for 4 byte atomic read-modify-write
+// operations that are not provided by libgcc. Implement them by briefly masking interrupts.
+extern "C" {
+unsigned int __atomic_fetch_add_4(volatile void* ptr, unsigned int val, int) {
+    volatile unsigned int* p = static_cast<volatile unsigned int*>(ptr);
+    unsigned int           primask;
+    __asm volatile("mrs %0, primask\n\tcpsid i" : "=r"(primask)::"memory");
+    unsigned int old = *p;
+    *p               = old + val;
+    __asm volatile("msr primask, %0" ::"r"(primask) : "memory");
+    return old;
+}
+
+unsigned int __atomic_fetch_sub_4(volatile void* ptr, unsigned int val, int) {
+    volatile unsigned int* p = static_cast<volatile unsigned int*>(ptr);
+    unsigned int           primask;
+    __asm volatile("mrs %0, primask\n\tcpsid i" : "=r"(primask)::"memory");
+    unsigned int old = *p;
+    *p               = old - val;
+    __asm volatile("msr primask, %0" ::"r"(primask) : "memory");
+    return old;
+}
+
+unsigned char __atomic_exchange_1(volatile void* ptr, unsigned char val, int) {
+    volatile unsigned char* p = static_cast<volatile unsigned char*>(ptr);
+    unsigned int            primask;
+    __asm volatile("mrs %0, primask\n\tcpsid i" : "=r"(primask)::"memory");
+    unsigned char old = *p;
+    *p                = val;
+    __asm volatile("msr primask, %0" ::"r"(primask) : "memory");
+    return old;
+}
+}
+# endif
+
 static const char* LOG_TAG = "NimBLEAttValue";
-ble_npl_mutex NimBLEAttValue::Lock::m_mutex;
-bool          NimBLEAttValue::Lock::m_initialized = false;
+ble_npl_mutex     NimBLEAttValue::Lock::m_mutex{};
+std::atomic<bool> NimBLEAttValue::Lock::m_initialized{false};
+std::atomic<int>  NimBLEAttValue::Lock::m_activeCount{0};
 
 // Default constructor implementation.
 NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
@@ -83,7 +120,7 @@ NimBLEAttValue& NimBLEAttValue::operator=(const NimBLEAttValue& source) {
 
 // Copy all the data from the source object to this object, including allocated space.
 void NimBLEAttValue::deepCopy(const NimBLEAttValue& source) {
-    Lock lock;
+    Lock     lock;
     uint8_t* res = static_cast<uint8_t*>(realloc(m_attr_value, source.m_capacity + 1));
     NIMBLE_CPP_DEBUG_ASSERT(res);
     if (res == nullptr) {

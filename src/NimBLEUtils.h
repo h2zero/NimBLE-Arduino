@@ -42,6 +42,7 @@ void nimble_cpp_assert(const char* file, unsigned line) __attribute((weak, noret
 
 # include <string>
 # include <vector>
+# include <atomic>
 
 class NimBLEAddress;
 struct ble_npl_sem;
@@ -51,11 +52,24 @@ struct ble_npl_sem;
  */
 class NimBLEUtils {
     struct TaskSemEntry {
-        ble_npl_sem* sem;
-        bool         inUse{false};
+        ble_npl_sem*      sem;
+        std::atomic<bool> inUse{false};
     };
 
   public:
+    /**
+     * @brief A simple spinlock guard for atomic_flag.
+     * @details Acquires the lock on construction and releases it on destruction.
+     */
+    class SpinGuard {
+      public:
+        explicit SpinGuard(std::atomic_flag& flag);
+        ~SpinGuard();
+
+      private:
+        std::atomic_flag& m_flag;
+    };
+
     /**
      * @brief A structure to hold data for a task that is waiting for a response.
      * @details This structure is used in conjunction with NimBLEUtils::taskWait() and NimBLEUtils::taskRelease().
@@ -83,8 +97,10 @@ class NimBLEUtils {
 
   private:
     friend class NimBLEDevice;
-    static void                       deleteTaskSems();
+    static void                       deinit();
     static std::vector<TaskSemEntry*> m_taskSemEntries;
+    static std::atomic<int>           m_semUserCount;
+    static std::atomic_flag           m_taskSemLock;
 };
 
 #endif // CONFIG_BT_NIMBLE_ENABLED
