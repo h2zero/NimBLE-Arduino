@@ -7,6 +7,9 @@
  *  This allows you to use familiar methods like print(), println(),
  *  read(), and available() over BLE, similar to how you would use Serial.
  *
+ *  Uses the Nordic UART Service (NUS) UUIDs with separate TX and RX characteristics
+ *  for compatibility with NUS terminal apps (e.g. nRF UART, Serial Bluetooth Terminal).
+ *
  *  Created: November 2025
  *      Author: NimBLE-Arduino Contributors
  */
@@ -14,12 +17,26 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 
-// Create the stream server instance
-NimBLEStreamServer bleStream;
+// Nordic UART Service (NUS) UUIDs
+#define SERVICE_UUID  "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define TX_CHAR_UUID  "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"  // Server TX: notify (server -> client)
+#define RX_CHAR_UUID  "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"  // Server RX: write  (client -> server)
+
+/**
+ * Two stream server instances:
+ * - bleStreamTx sends notifications to the client (server -> client).
+ *   Backed by the TX characteristic (NOTIFY-only); TX buffer is enabled, RX buffer disabled.
+ * - bleStreamRx receives data written by the client (client -> server).
+ *   Backed by the RX characteristic (WRITE-only); RX buffer is enabled, TX buffer disabled.
+ *
+ * NimBLEStreamServer::begin(pChr) automatically enables only the directions supported
+ * by the characteristic's properties, so no special configuration is needed.
+ */
+NimBLEStreamServer bleStreamTx;
+NimBLEStreamServer bleStreamRx;
 
 struct RxOverflowStats {
     uint32_t droppedOld{0};
-    uint32_t droppedNew{0};
 };
 
 RxOverflowStats g_rxOverflowStats;
@@ -35,11 +52,6 @@ NimBLEStream::RxOverflowAction onRxOverflow(const uint8_t* data, size_t len, voi
     (void)len;
     return NimBLEStream::DROP_OLDER_DATA;
 }
-
-// Service and Characteristic UUIDs for the stream
-// Using custom UUIDs - you can change these as needed
-#define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 
 /** Server callbacks to handle connection/disconnection events */
 class ServerCallbacks : public NimBLEServerCallbacks {
@@ -66,32 +78,31 @@ void setup() {
     /** Initialize NimBLE and set the device name */
     NimBLEDevice::init("NimBLE-Stream");
 
-    /**
-     * Create the BLE server and set callbacks
-     * Note: The stream will create its own service and characteristic
-     */
     NimBLEServer* pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(&serverCallbacks);
 
     /**
-     * Initialize the stream server with:
-     * - Service UUID
-     * - Characteristic UUID
-     * - txBufSize: 1024 bytes for outgoing data (notifications)
-     * - rxBufSize: 1024 bytes for incoming data (writes)
-     * - secure: false (no encryption required - set to true for secure connections)
+     * Create the NUS service with two characteristics:
+     * - TX (6E400003): NOTIFY -- server sends data to the client
+     * - RX (6E400002): WRITE  -- client sends data to the server
      */
-    if (!bleStream.begin(NimBLEUUID(SERVICE_UUID),
-                         NimBLEUUID(CHARACTERISTIC_UUID),
-                         1024,   // txBufSize
-                         1024,   // rxBufSize
-                         false)) // secure
-    {
+    NimBLEService*        pSvc    = pServer->createService(SERVICE_UUID);
+    NimBLECharacteristic* pTxChar = pSvc->createCharacteristic(TX_CHAR_UUID, NIMBLE_PROPERTY::NOTIFY);
+    NimBLECharacteristic* pRxChar = pSvc->createCharacteristic(RX_CHAR_UUID,
+                                                               NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR);
+
+    /**
+     * Pass each characteristic to its own NimBLEStreamServer instance.
+     * begin() checks the characteristic properties and enables only the supported
+     * direction: pTxChar (NOTIFY-only) enables the TX buffer; pRxChar (WRITE-only)
+     * enables the RX buffer.
+     */
+    if (!bleStreamTx.begin(pTxChar) || !bleStreamRx.begin(pRxChar)) {
         Serial.println("Failed to initialize BLE stream!");
         return;
     }
 
-    bleStream.setRxOverflowCallback(onRxOverflow, &g_rxOverflowStats);
+    bleStreamRx.setRxOverflowCallback(onRxOverflow, &g_rxOverflowStats);
 
     /**
      * Create advertising instance and add service UUID
@@ -110,39 +121,37 @@ void setup() {
 
 void loop() {
     static uint32_t lastDroppedOld = 0;
-    static uint32_t lastDroppedNew = 0;
-    if (g_rxOverflowStats.droppedOld != lastDroppedOld || g_rxOverflowStats.droppedNew != lastDroppedNew) {
+    if (g_rxOverflowStats.droppedOld != lastDroppedOld) {
         lastDroppedOld = g_rxOverflowStats.droppedOld;
-        lastDroppedNew = g_rxOverflowStats.droppedNew;
-        Serial.printf("RX overflow handled (drop-old=%lu, drop-new=%lu)\n", lastDroppedOld, lastDroppedNew);
+        Serial.printf("RX overflow: %lu packets dropped\n", lastDroppedOld);
     }
 
-    // Check if a client is subscribed (connected and listening)
-    if (bleStream.ready()) {
+    // bleStreamTx.ready() is true when a client has subscribed to the TX characteristic
+    if (bleStreamTx.ready()) {
         // Send a message every 2 seconds using Stream methods
         static unsigned long lastSend = 0;
         if (millis() - lastSend > 2000) {
             lastSend = millis();
 
             // Using familiar Serial-like methods!
-            bleStream.print("Hello from BLE Server! Time: ");
-            bleStream.println(millis());
+            bleStreamTx.print("Hello from BLE Server! Time: ");
+            bleStreamTx.println(millis());
 
             // You can also use printf
-            bleStream.printf("Free heap: %d bytes\n", ESP.getFreeHeap());
+            bleStreamTx.printf("Free heap: %d bytes\n", ESP.getFreeHeap());
 
             Serial.println("Sent data to client via BLE stream");
         }
 
-        // Check if we received any data from the client
-        if (bleStream.available()) {
+        // Check if we received any data written by the client on the RX characteristic
+        if (bleStreamRx.available()) {
             Serial.print("Received from client: ");
 
             // Read all available data (just like Serial.read())
-            while (bleStream.available()) {
-                char c = bleStream.read();
-                Serial.write(c);    // Echo to Serial
-                bleStream.write(c); // Echo back to BLE client
+            while (bleStreamRx.available()) {
+                char c = bleStreamRx.read();
+                Serial.write(c);       // Echo to Serial
+                bleStreamTx.write(c);  // Echo back to BLE client via TX notification
             }
             Serial.println();
         }
