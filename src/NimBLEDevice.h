@@ -42,6 +42,7 @@
 
 # include <string>
 # include <vector>
+# include <atomic>
 
 # if MYNEWT_VAL(BLE_ROLE_CENTRAL)
 #  include <array>
@@ -214,8 +215,8 @@ class NimBLEDevice {
 # endif
 
   private:
-    static bool                       m_synced;
-    static bool                       m_initialized;
+    static std::atomic<bool>          m_synced;
+    static std::atomic<bool>          m_initialized;
     static uint32_t                   m_passkey;
     static ble_gap_event_listener     m_listener;
     static uint8_t                    m_ownAddrType;

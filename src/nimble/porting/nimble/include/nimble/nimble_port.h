@@ -78,7 +78,7 @@ void nimble_port_run(void);
 
 int nimble_port_stop(void);
 
-void nimble_port_deinit(void);
+int nimble_port_deinit(void);
 
 #endif //ESP_PLATFORM
 

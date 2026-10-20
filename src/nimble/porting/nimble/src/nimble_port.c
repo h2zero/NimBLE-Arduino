@@ -57,8 +57,6 @@ extern void ble_hs_deinit(void);
 #endif //CONFIG_BT_NIMBLE_ENABLED
 
 static struct ble_npl_eventq g_eventq_dflt;
-
-#ifdef ESP_PLATFORM
 static struct ble_npl_sem ble_hs_stop_sem;
 static struct ble_hs_stop_listener stop_listener;
 static struct ble_npl_event ble_hs_ev_stop;
@@ -78,6 +76,7 @@ nimble_port_stop_cb(struct ble_npl_event *ev)
     ble_npl_sem_release(&ble_hs_stop_sem);
 }
 
+#ifdef ESP_PLATFORM
 /**
  * @brief esp_nimble_init - Initialize the NimBLE host stack
  *
@@ -275,28 +274,6 @@ nimble_port_stop(void)
     return ESP_OK;
 }
 
-void
-nimble_port_run(void)
-{
-    struct ble_npl_event *ev;
-
-    while (1) {
-        ev = ble_npl_eventq_get(&g_eventq_dflt, BLE_NPL_TIME_FOREVER);
-        if (ev) {
-            ble_npl_event_run(ev);
-            if (ev == &ble_hs_ev_stop) {
-                break;
-            }
-        }
-    }
-}
-
-struct ble_npl_eventq *
-nimble_port_get_dflt_eventq(void)
-{
-    return &g_eventq_dflt;
-}
-
 #else // !ESP_PLATFORM
 
 #if NIMBLE_CFG_CONTROLLER
@@ -336,21 +313,63 @@ nimble_port_init(void)
     ble_transport_ll_init();
 }
 
-void
-nimble_port_run(void)
+int
+nimble_port_stop(void)
 {
-    struct ble_npl_event *ev;
+    ble_npl_error_t rc;
 
-    while (1) {
-        ev = ble_npl_eventq_get(&g_eventq_dflt, BLE_NPL_TIME_FOREVER);
-        ble_npl_event_run(ev);
+    rc = ble_npl_sem_init(&ble_hs_stop_sem, 0);
+    if( rc != 0) {
+	    return rc;
     }
+
+    /* Initiate a host stop procedure. */
+    rc = ble_hs_stop(&stop_listener, ble_hs_stop_cb, NULL);
+    if (rc != 0) {
+        ble_npl_sem_deinit(&ble_hs_stop_sem);
+        return rc;
+    }
+
+    /* Wait till the host stop procedure is complete */
+    ble_npl_sem_pend(&ble_hs_stop_sem, BLE_NPL_TIME_FOREVER);
+
+    ble_npl_event_init(&ble_hs_ev_stop, nimble_port_stop_cb, NULL);
+    ble_npl_eventq_put(&g_eventq_dflt, &ble_hs_ev_stop);
+
+    /* Wait till the event is serviced */
+    ble_npl_sem_pend(&ble_hs_stop_sem, BLE_NPL_TIME_FOREVER);
+
+    ble_npl_sem_deinit(&ble_hs_stop_sem);
+
+    ble_npl_event_deinit(&ble_hs_ev_stop);
+    return 0;
 }
 
-struct ble_npl_eventq *
-nimble_port_get_dflt_eventq(void)
+int
+nimble_port_deinit(void)
 {
-    return &g_eventq_dflt;
+    int rc = 0;
+    /* Reverse of nimble_port_init() */
+#if NIMBLE_CFG_CONTROLLER
+#ifndef RIOT_VERSION
+    rc = hal_timer_deinit(5);
+#endif
+#endif
+
+    if (rc == 0) {
+        ble_hs_deinit();
+    }
+
+    if (rc == 0) {
+        void ble_transport_deinit(void);
+        ble_transport_deinit();
+    }
+
+    if (rc == 0) {
+        ble_npl_eventq_deinit(&g_eventq_dflt);
+    }
+
+    return rc;
 }
 
 #if NIMBLE_CFG_CONTROLLER
@@ -363,3 +382,25 @@ nimble_port_ll_task_func(void *arg)
 }
 #endif
 #endif // ESP_PLATFORM
+
+void
+nimble_port_run(void)
+{
+    struct ble_npl_event *ev;
+
+    while (1) {
+        ev = ble_npl_eventq_get(&g_eventq_dflt, BLE_NPL_TIME_FOREVER);
+        if (ev) {
+            ble_npl_event_run(ev);
+            if (ev == &ble_hs_ev_stop) {
+                break;
+            }
+        }
+    }
+}
+
+struct ble_npl_eventq *
+nimble_port_get_dflt_eventq(void)
+{
+    return &g_eventq_dflt;
+}

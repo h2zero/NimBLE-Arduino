@@ -41,6 +41,7 @@
 # include <ctime>
 # include <cstring>
 # include <cstdint>
+# include <atomic>
 
 # ifndef MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
 #  ifndef CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
@@ -109,34 +110,61 @@ class NimBLEAttValue {
 
   public:
     class Lock {
-        static ble_npl_mutex m_mutex;
-        static bool          m_initialized;
-        bool m_locked{false};
+        static ble_npl_mutex     m_mutex;
+        static std::atomic<bool> m_initialized;
+        static std::atomic<int>  m_activeCount;
+        bool                     m_locked{false};
 
       public:
         Lock() {
-            if (m_initialized) {
-                m_locked = ble_npl_mutex_pend(&m_mutex, BLE_NPL_TIME_FOREVER) == BLE_NPL_OK;
+            // Increment active count to signal that a constructor is running
+            m_activeCount.fetch_add(1);
+
+            if (m_initialized.load()) {
+                m_locked = (ble_npl_mutex_pend(&m_mutex, BLE_NPL_TIME_FOREVER) == BLE_NPL_OK);
+
+                // Post-lock check: If deinit flipped the flag while we were waiting in line,
+                // we must abort, give it back, and act un-locked.
+                if (!m_initialized.load() && m_locked) {
+                    ble_npl_mutex_release(&m_mutex);
+                    m_locked = false;
+                }
             }
+
+            // Decrement active count to signal that the constructor has finished processing
+            m_activeCount.fetch_sub(1);
         }
 
         ~Lock() {
-            if (m_initialized && m_locked) {
+            if (m_locked) {
                 ble_npl_mutex_release(&m_mutex);
             }
         }
 
         static bool init() {
-            if (!m_initialized) {
-                m_initialized = ble_npl_mutex_init(&m_mutex) == BLE_NPL_OK;
+            if (!m_initialized.load()) {
+                if (ble_npl_mutex_init(&m_mutex) == BLE_NPL_OK) {
+                    m_initialized.store(true);
+                }
             }
-            return m_initialized;
+            return m_initialized.load();
         }
 
         static void deinit() {
-            if (m_initialized) {
-                m_initialized = false;
-                ble_npl_mutex_deinit(&m_mutex);
+            if (m_initialized.load()) {
+                // Prevent any new instances from acquiring the lock while we deinitialize
+                m_initialized.store(false);
+
+                // Wait for any active users to finish
+                while (m_activeCount.load() > 0) {
+                    ble_npl_time_delay(1);
+                }
+
+                // Acquire the mutex to ensure no other threads are holding it before deinitializing.
+                if (ble_npl_mutex_pend(&m_mutex, BLE_NPL_TIME_FOREVER) == BLE_NPL_OK) {
+                    // Deinitialize the mutex now that we have exclusive ownership and no active users.
+                    ble_npl_mutex_deinit(&m_mutex);
+                }
             }
         }
     };
