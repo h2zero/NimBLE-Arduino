@@ -141,6 +141,7 @@ class NimBLEDevice {
     static void          setSecurityAuth(bool bonding, bool mitm, bool sc);
     static void          setSecurityAuth(uint8_t auth);
     static void          setSecurityIOCap(uint8_t iocap);
+    static void          setSecurityAutoPairOnSecReq(bool enable);
     static void          setSecurityInitKey(uint8_t initKey);
     static void          setSecurityRespKey(uint8_t respKey);
     static void          setSecurityPasskey(uint32_t passKey);

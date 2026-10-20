@@ -1221,6 +1221,18 @@ void NimBLEDevice::setSecurityAuth(uint8_t auth_req) {
  * * 0x03 BLE_HS_IO_NO_INPUT_OUTPUT      NoInputNoOutput IO capability
  * * 0x04 BLE_HS_IO_KEYBOARD_DISPLAY     KeyboardDisplay Only IO capability
  */
+/**
+ * @brief Set whether a Security Request from a peer we have no keys for
+ *        automatically sends a Pairing Request.
+ * @param [in] enable true (default): pair immediately. false: ignore the
+ *        request; the application pairs via NimBLEClient::secureConnection().
+ * @details Some peripherals never answer a Pairing Request sent in the same
+ *        instant as their own Security Request.
+ */
+void NimBLEDevice::setSecurityAutoPairOnSecReq(bool enable) {
+    ble_hs_cfg.sm_sec_req_auto_pair = enable;
+} // setSecurityAutoPairOnSecReq
+
 void NimBLEDevice::setSecurityIOCap(uint8_t iocap) {
     ble_hs_cfg.sm_io_cap = iocap;
 } // setSecurityIOCap
