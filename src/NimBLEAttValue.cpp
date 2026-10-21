@@ -119,13 +119,13 @@ NimBLEAttValue& NimBLEAttValue::operator=(const NimBLEAttValue& source) {
 }
 
 // Copy all the data from the source object to this object, including allocated space.
-void NimBLEAttValue::deepCopy(const NimBLEAttValue& source) {
+bool NimBLEAttValue::deepCopy(const NimBLEAttValue& source) {
     Lock     lock;
     uint8_t* res = static_cast<uint8_t*>(realloc(m_attr_value, source.m_capacity + 1));
     NIMBLE_CPP_DEBUG_ASSERT(res);
     if (res == nullptr) {
         NIMBLE_LOGE(LOG_TAG, "Failed to realloc deepCopy");
-        return;
+        return false;
     }
 
     m_attr_value   = res;
@@ -134,6 +134,7 @@ void NimBLEAttValue::deepCopy(const NimBLEAttValue& source) {
     m_capacity     = source.m_capacity;
     setTimeStamp(source.getTimeStamp());
     memcpy(m_attr_value, source.m_attr_value, m_attr_len + 1);
+    return true;
 }
 
 // Set the value of the attribute.
