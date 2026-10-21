@@ -106,7 +106,7 @@ class NimBLEAttValue {
 # if MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED)
     time_t m_timestamp{};
 # endif
-    void deepCopy(const NimBLEAttValue& source);
+    bool deepCopy(const NimBLEAttValue& source);
 
   public:
     class Lock {
@@ -322,6 +322,13 @@ class NimBLEAttValue {
      * @returns A reference to the appended NimBLEAttValue.
      */
     NimBLEAttValue& append(const uint8_t* value, uint16_t len);
+
+    /**
+     * @brief Copy the value from another NimBLEAttValue instance.
+     * @param[in] source The NimBLEAttValue instance to copy from.
+     * @returns True if the copy was successful.
+     */
+    bool copyFrom(const NimBLEAttValue& source) { return deepCopy(source); }
 
     /*********************** Template Functions ************************/
 

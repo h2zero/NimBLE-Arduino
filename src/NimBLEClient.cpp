@@ -1181,37 +1181,30 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
 
             // Build the value locally so the update of the characteristic value is atomic
             // and the callback gets a stable copy without holding the value lock.
-            NimBLEAttValue value(MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH), pChr->m_value.max_size());
-            auto           len = event->notify_rx.om->om_len;
-            if (value.setValue(event->notify_rx.om->om_data, len)) {
-                os_mbuf* next;
-                next = SLIST_NEXT(event->notify_rx.om, om_next);
-                while (next != NULL) {
-                    value.append(next->om_data, next->om_len);
-                    if (value.length() != len + next->om_len) {
-                        rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
-                        break;
-                    }
-                    len  += next->om_len;
-                    next  = SLIST_NEXT(next, om_next);
-                }
-            } else {
-                rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
-            }
-
-            if (rc != 0) { // This should never happen
+            const auto totalLen = OS_MBUF_PKTLEN(event->notify_rx.om);
+            if (totalLen > BLE_ATT_ATTR_MAX_LEN) {
                 NIMBLE_LOGE(LOG_TAG, "notification value error; exceeds limit");
-                return rc;
+                return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             }
 
-            pChr->m_value = value;
+            NimBLEAttValue value(totalLen, BLE_ATT_ATTR_MAX_LEN);
+            if (value.data() == nullptr) {
+                NIMBLE_LOGE(LOG_TAG, "Failed to allocate notification value");
+                return BLE_ATT_ERR_INSUFFICIENT_RES;
+            }
+
+            for (os_mbuf* segment = event->notify_rx.om; segment != nullptr; segment = SLIST_NEXT(segment, om_next)) {
+                value.append(segment->om_data, segment->om_len);
+            }
+
+            if (!pChr->m_value.copyFrom(value)) {
+                NIMBLE_LOGE(LOG_TAG, "Failed to copy value to characteristic");
+                return BLE_ATT_ERR_INSUFFICIENT_RES;
+            }
 
             if (pChr->m_notifyCallback != nullptr) {
                 // TODO: change this callback to use the NimBLEAttValue class instead of raw data and length
-                pChr->m_notifyCallback(pChr,
-                                       const_cast<uint8_t*>(value.data()),
-                                       value.length(),
-                                       !event->notify_rx.indication);
+                pChr->m_notifyCallback(pChr, const_cast<uint8_t*>(value.data()), value.length(), !event->notify_rx.indication);
             }
 
             return 0;
