@@ -36,18 +36,13 @@ static const char*                   LOG_TAG = "NimBLEExtAdvertising";
  * @brief Constructor.
  */
 NimBLEExtAdvertising::NimBLEExtAdvertising()
-    : m_deleteCallbacks{false},
-      m_pCallbacks{&defaultCallbacks},
+    : m_pCallbacks{&defaultCallbacks},
       m_advStatus(MYNEWT_VAL(BLE_MULTI_ADV_INSTANCES) + 1, false) {}
 
 /**
- * @brief Destructor: deletes callback instances if requested.
+ * @brief Destructor.
  */
-NimBLEExtAdvertising::~NimBLEExtAdvertising() {
-    if (m_deleteCallbacks) {
-        delete m_pCallbacks;
-    }
-}
+NimBLEExtAdvertising::~NimBLEExtAdvertising() {}
 
 /**
  * @brief Register the extended advertisement data.
@@ -241,18 +236,18 @@ bool NimBLEExtAdvertising::stop() {
 
 /**
  * @brief Set a callback to call when the advertisement stops.
- * @param [in] pCallbacks A pointer to a callback to be invoked when an advertisement stops.
- * @param [in] deleteCallbacks if true callback class will be deleted when advertising is destructed.
+ * @param [in] callbacks A reference to a callback to be invoked when an advertisement stops.
  */
-void NimBLEExtAdvertising::setCallbacks(NimBLEExtAdvertisingCallbacks* pCallbacks, bool deleteCallbacks) {
-    if (pCallbacks != nullptr) {
-        m_pCallbacks      = pCallbacks;
-        m_deleteCallbacks = deleteCallbacks;
-    } else {
-        m_pCallbacks      = &defaultCallbacks;
-        m_deleteCallbacks = false;
-    }
+void NimBLEExtAdvertising::setCallbacks(NimBLEExtAdvertisingCallbacks& callbacks) {
+    m_pCallbacks = &callbacks;
 } // setCallbacks
+
+/**
+ * @brief Restore default callback handlers.
+ */
+void NimBLEExtAdvertising::resetCallbacks() {
+    m_pCallbacks = &defaultCallbacks;
+} // resetCallbacks
 
 /**
  * @brief Check if currently advertising.

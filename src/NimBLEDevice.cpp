@@ -69,7 +69,7 @@ extern "C" void ble_store_config_init(void);
  * Singletons for the NimBLEDevice.
  */
 NimBLEDeviceCallbacks  NimBLEDevice::defaultDeviceCallbacks{};
-NimBLEDeviceCallbacks* NimBLEDevice::m_pDeviceCallbacks = &defaultDeviceCallbacks;
+NimBLEDeviceCallbacks* NimBLEDevice::m_pCallbacks = &defaultDeviceCallbacks;
 
 # if MYNEWT_VAL(BLE_ROLE_OBSERVER)
 NimBLEScan* NimBLEDevice::m_pScan = nullptr;
@@ -989,7 +989,7 @@ bool NimBLEDevice::init(const std::string& deviceName) {
         ble_hs_cfg.reset_cb        = NimBLEDevice::onReset;
         ble_hs_cfg.sync_cb         = NimBLEDevice::onSync;
         ble_hs_cfg.store_status_cb = [](struct ble_store_status_event* event, void* arg) {
-            return m_pDeviceCallbacks->onStoreStatus(event, arg);
+            return m_pCallbacks->onStoreStatus(event, arg);
         };
 
         // Set initial security capabilities
@@ -1060,6 +1060,8 @@ bool NimBLEDevice::deinit(bool clearAll) {
             return false;
         }
     }
+
+    resetCallbacks();
 
     if (clearAll) {
 # if MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
@@ -1397,8 +1399,20 @@ void nimble_cpp_assert(const char* file, unsigned line) {
 }
 # endif // MYNEWT_VAL(NIMBLE_CPP_DEBUG_ASSERT_ENABLED)
 
-void NimBLEDevice::setDeviceCallbacks(NimBLEDeviceCallbacks* cb) {
-    m_pDeviceCallbacks = cb ? cb : &defaultDeviceCallbacks;
+/**
+ * @brief Set callbacks for NimBLEDevice host events.
+ * @param [in] callbacks Callback handler instance.
+ * @details The callback handler must outlive the active NimBLEDevice session or until resetCallbacks() is called.
+ */
+void NimBLEDevice::setCallbacks(NimBLEDeviceCallbacks& callbacks) {
+    m_pCallbacks = &callbacks;
+}
+
+/**
+ * @brief Restore default NimBLEDevice callback handlers.
+ */
+void NimBLEDevice::resetCallbacks() {
+    m_pCallbacks = &defaultDeviceCallbacks;
 }
 
 int NimBLEDeviceCallbacks::onStoreStatus(struct ble_store_status_event* event, void* arg) {

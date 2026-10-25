@@ -91,15 +91,18 @@ NimBLECharacteristic* NimBLEDescriptor::getCharacteristic() const {
 
 /**
  * @brief Set the callback handlers for this descriptor.
- * @param [in] pCallbacks An instance of a callback structure used to define any callbacks for the descriptor.
+ * @param [in] callbacks An instance of a callback structure used to define any callbacks for the descriptor.
  */
-void NimBLEDescriptor::setCallbacks(NimBLEDescriptorCallbacks* pCallbacks) {
-    if (pCallbacks != nullptr) {
-        m_pCallbacks = pCallbacks;
-    } else {
-        m_pCallbacks = &defaultCallbacks;
-    }
+void NimBLEDescriptor::setCallbacks(NimBLEDescriptorCallbacks& callbacks) {
+    m_pCallbacks = &callbacks;
 } // setCallbacks
+
+/**
+ * @brief Restore default callback handlers.
+ */
+void NimBLEDescriptor::resetCallbacks() {
+    m_pCallbacks = &defaultCallbacks;
+} // resetCallbacks
 
 /**
  * @brief Set the characteristic this descriptor belongs to.

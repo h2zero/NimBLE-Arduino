@@ -56,7 +56,9 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     void        addDescriptor(NimBLEDescriptor* pDescriptor);
     void        removeDescriptor(NimBLEDescriptor* pDescriptor, bool deleteDsc = false);
     uint16_t    getProperties() const;
-    void        setCallbacks(NimBLECharacteristicCallbacks* pCallbacks);
+    void        setCallbacks(NimBLECharacteristicCallbacks& callbacks);
+    void        setCallbacks(NimBLECharacteristicCallbacks&&) = delete; // Block rvalues
+    void        resetCallbacks();
     bool        indicate(uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const;
     bool        indicate(const uint8_t* value, size_t length, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const;
     bool        notify(uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const;

@@ -134,7 +134,9 @@ class NimBLEDevice {
     static bool          setOwnAddrType(uint8_t type);
     static bool          setOwnAddr(const NimBLEAddress& addr);
     static bool          setOwnAddr(const uint8_t* addr);
-    static void          setDeviceCallbacks(NimBLEDeviceCallbacks* cb);
+    static void          setCallbacks(NimBLEDeviceCallbacks& callbacks);
+    static void          setCallbacks(NimBLEDeviceCallbacks&&) = delete;
+    static void          resetCallbacks();
     static void          setScanDuplicateCacheSize(uint16_t cacheSize);
     static void          setScanFilterMode(uint8_t type);
     static void          setScanDuplicateCacheResetTime(uint16_t time);
@@ -221,7 +223,7 @@ class NimBLEDevice {
     static ble_gap_event_listener     m_listener;
     static uint8_t                    m_ownAddrType;
     static std::vector<NimBLEAddress> m_whiteList;
-    static NimBLEDeviceCallbacks*     m_pDeviceCallbacks;
+    static NimBLEDeviceCallbacks*     m_pCallbacks;
     static NimBLEDeviceCallbacks      defaultDeviceCallbacks;
 
 # if MYNEWT_VAL(BLE_ROLE_OBSERVER)

@@ -70,7 +70,9 @@ class NimBLEScan {
   public:
     bool              start(uint32_t duration, bool isContinue = false, bool restart = true);
     bool              isScanning();
-    void              setScanCallbacks(NimBLEScanCallbacks* pScanCallbacks, bool wantDuplicates = false);
+    void              setCallbacks(NimBLEScanCallbacks& callbacks, bool wantDuplicates = false);
+    void              setCallbacks(NimBLEScanCallbacks&&) = delete; // Block rvalues
+    void              resetCallbacks(bool wantDuplicates = false);
     void              setActiveScan(bool active);
     void              setInterval(uint16_t intervalMs);
     void              setWindow(uint16_t windowMs);
@@ -190,7 +192,7 @@ class NimBLEScan {
     void clearWaitingList();
     void resetWaitingTimer();
 
-    NimBLEScanCallbacks*    m_pScanCallbacks;
+    NimBLEScanCallbacks*    m_pCallbacks;
     ble_gap_disc_params     m_scanParams;
     NimBLEScanResults       m_scanResults;
     NimBLEUtils::TaskData*  m_pTaskData;

@@ -120,7 +120,9 @@ class NimBLEExtAdvertising {
     bool stop();
     bool isActive(uint8_t instId);
     bool isAdvertising();
-    void setCallbacks(NimBLEExtAdvertisingCallbacks* callbacks, bool deleteCallbacks = true);
+    void setCallbacks(NimBLEExtAdvertisingCallbacks& callbacks);
+    void setCallbacks(NimBLEExtAdvertisingCallbacks&&) = delete;
+    void resetCallbacks();
 
   private:
     friend class NimBLEDevice;
@@ -129,7 +131,6 @@ class NimBLEExtAdvertising {
     void       onHostSync();
     static int handleGapEvent(struct ble_gap_event* event, void* arg);
 
-    bool                           m_deleteCallbacks;
     NimBLEExtAdvertisingCallbacks* m_pCallbacks;
     std::vector<bool>              m_advStatus;
 };

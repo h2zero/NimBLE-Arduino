@@ -89,7 +89,7 @@ void setup() {
 
     /** Create the server and add the services/characteristics/descriptors */
     NimBLEServer* pServer = NimBLEDevice::createServer();
-    pServer->setCallbacks(&serverCallbacks);
+    pServer->setCallbacks(serverCallbacks);
 
     NimBLEService*        pService = pServer->createService(SERVICE_UUID);
     NimBLECharacteristic* pCharacteristic =
@@ -125,7 +125,7 @@ void setup() {
     NimBLEExtAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
 
     /** Set the callbacks for advertising events */
-    pAdvertising->setCallbacks(&advertisingCallbacks);
+    pAdvertising->setCallbacks(advertisingCallbacks);
 
     /**
      *  NimBLEExtAdvertising::setInstanceData takes the instance ID and

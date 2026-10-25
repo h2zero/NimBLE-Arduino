@@ -43,7 +43,7 @@ void setup() {
 
         if (device->isAdvertisingService(serviceUuid)) {
             NimBLEClient* pClient = NimBLEDevice::createClient();
-            pClient->setClientCallbacks(&clientCallbacks, false);
+            pClient->setCallbacks(clientCallbacks);
 
             if (pClient->connect(&device)) {
                 pClient->secureConnection();
