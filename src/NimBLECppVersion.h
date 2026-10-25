@@ -25,7 +25,7 @@
 #define NIMBLE_CPP_VERSION_MINOR 5
 
 /** @brief NimBLE-Arduino library patch version number. */
-#define NIMBLE_CPP_VERSION_PATCH 1
+#define NIMBLE_CPP_VERSION_PATCH 2
 
 /**
  * @brief Macro to create a version number for comparison.

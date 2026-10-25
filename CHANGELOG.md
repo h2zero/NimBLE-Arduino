@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.5.2] 2026-10-25
+
+## Fixed
+- Peer advertising identity address now correctly invalidates cached RPA for connecting.
+- Corrupted remote attribute reads when data spans multiple mbufs.
+- Prevent host timer deinit when it could still be in use.
+- Prevent NULL deref and use-after-free in ble_gap_rx_rd_rem_ver_info_complete.
+
 ## [2.5.1] 2026-07-29
 
 ## Fixed
