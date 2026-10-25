@@ -572,7 +572,7 @@ bool NimBLEStreamServer::begin(NimBLECharacteristic* pChr, uint32_t txBufSize, u
     }
 
     m_charCallbacks.m_userCallbacks = pChr->getCallbacks();
-    pChr->setCallbacks(&m_charCallbacks);
+    pChr->setCallbacks(m_charCallbacks);
     m_pChr = pChr;
     return true;
 }
@@ -661,7 +661,7 @@ void NimBLEStreamServer::end() {
                 }
             }
         } else {
-            m_pChr->setCallbacks(m_charCallbacks.m_userCallbacks); // restore any user callbacks
+            m_pChr->setCallbacks(*m_charCallbacks.m_userCallbacks); // restore any user callbacks
         }
     }
 

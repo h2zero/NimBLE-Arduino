@@ -21,7 +21,7 @@
 #include "syscfg/syscfg.h"
 #if (CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_BROADCASTER) && !MYNEWT_VAL(BLE_EXT_ADV)) || defined(_DOXYGEN_)
 
-#ifdef USING_NIMBLE_ARDUINO_HEADERS
+# ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_gap.h"
 # else
 #  include "host/ble_gap.h"

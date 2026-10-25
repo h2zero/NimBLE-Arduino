@@ -103,7 +103,7 @@ bool connectToServer() {
             Serial.println("Failed to create client");
             return false;
         }
-        pClient->setClientCallbacks(&clientCallbacks, false);
+        pClient->setCallbacks(clientCallbacks);
         pClient->setConnectionParams(12, 24, 0, 200);
         pClient->setConnectTimeout(5000);
     }
@@ -162,7 +162,7 @@ void setup() {
      * Configure scan parameters
      */
     NimBLEScan* pScan = NimBLEDevice::getScan();
-    pScan->setScanCallbacks(&scanCallbacks, false);
+    pScan->setCallbacks(scanCallbacks, false);
     pScan->setActiveScan(true);
 
     /** Start scanning for the server */

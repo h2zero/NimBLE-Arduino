@@ -41,7 +41,9 @@ class NimBLEDescriptor : public NimBLELocalValueAttribute {
     ~NimBLEDescriptor() = default;
 
     std::string           toString() const;
-    void                  setCallbacks(NimBLEDescriptorCallbacks* pCallbacks);
+    void                  setCallbacks(NimBLEDescriptorCallbacks& callbacks);
+    void                  setCallbacks(NimBLEDescriptorCallbacks&&) = delete;
+    void                  resetCallbacks();
     NimBLECharacteristic* getCharacteristic() const;
 
   private:

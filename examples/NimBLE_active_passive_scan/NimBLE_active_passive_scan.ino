@@ -37,7 +37,7 @@ void setup() {
 
     NimBLEDevice::init("active-passive-scan");
     pBLEScan = NimBLEDevice::getScan();
-    pBLEScan->setScanCallbacks(&scanCallbacks);
+    pBLEScan->setCallbacks(scanCallbacks);
     pBLEScan->setActiveScan(active);
     pBLEScan->setInterval(100);
     pBLEScan->setWindow(100);

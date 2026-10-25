@@ -34,7 +34,7 @@ void setup() {
 
     NimBLEDevice::init("");
     pBLEScan = NimBLEDevice::getScan();
-    pBLEScan->setScanCallbacks(&scanCallbacks);
+    pBLEScan->setCallbacks(scanCallbacks);
     pBLEScan->setActiveScan(true);
     pBLEScan->setInterval(100);
     pBLEScan->setFilterPolicy(BLE_HCI_SCAN_FILT_NO_WL);
