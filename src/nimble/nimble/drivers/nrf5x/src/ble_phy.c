@@ -1665,7 +1665,7 @@ ble_phy_init(void)
 #if PHY_USE_HEADERMASK_WORKAROUND
     NVIC_SetVector(CCM_AAR_IRQn, (uint32_t)ble_phy_ccm_isr);
     NVIC_EnableIRQ(CCM_AAR_IRQn);
-    NRF_CCM->INTENCLR = CCM_INTENCLR_ENDKSGEN_Msk;;
+    NRF_CCM->INTENCLR = CCM_INTENCLR_ENDKSGEN_Msk;
 #endif
 #endif
 

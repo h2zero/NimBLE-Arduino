@@ -31,7 +31,7 @@ For Nordic devices, this library provides access to a completely open source and
 * Open platformio.ini, a project configuration file located in the root of PlatformIO project.  
 * Add the following line to the lib_deps option of [env:] section:
 ```
-h2zero/NimBLE-Arduino@^2.1.0
+h2zero/NimBLE-Arduino@^2.5.1
 ```
 * Build a project, PlatformIO will automatically install dependencies.
 

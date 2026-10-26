@@ -1218,6 +1218,9 @@ static void
 ble_gap_master_failed(int status)
 {
     switch (ble_gap_master.op) {
+    case BLE_GAP_OP_NULL:
+        break;
+
 #if NIMBLE_BLE_CONNECT
     case BLE_GAP_OP_M_CONN:
         STATS_INC(ble_gap_stats, initiate_fail);
@@ -1296,7 +1299,7 @@ ble_gap_conn_broken(uint16_t conn_handle, int reason)
     ble_sm_connection_broken(conn_handle);
     ble_gatts_connection_broken(conn_handle);
     ble_gattc_connection_broken(conn_handle);
-    ble_hs_flow_connection_broken(conn_handle);;
+    ble_hs_flow_connection_broken(conn_handle);
 
     ble_hs_atomic_conn_delete(conn_handle);
 
@@ -5904,15 +5907,12 @@ ble_gap_connect(uint8_t own_addr_type, const ble_addr_t *peer_addr,
         memcpy(bhc_peer_addr.val, peer_addr->val, BLE_DEV_ADDR_LEN);
 
 #if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
-    if (ble_host_rpa_enabled())
-    {
-        struct ble_hs_resolv_entry *rl = NULL;
-        rl = ble_hs_resolv_list_find(bhc_peer_addr.val);
+    struct ble_hs_resolv_entry *rl;
 
-        if (rl != NULL && rl->rl_isrpa) {
-            memcpy(bhc_peer_addr.val, rl->rl_peer_rpa, BLE_DEV_ADDR_LEN);
-            bhc_peer_addr.type = rl->rl_addr_type;
-        }
+    rl = ble_hs_resolv_list_find(bhc_peer_addr.val);
+    if (rl != NULL && rl->rl_isrpa) {
+        memcpy(bhc_peer_addr.val, rl->rl_peer_rpa, BLE_DEV_ADDR_LEN);
+        bhc_peer_addr.type = BLE_ADDR_RANDOM;
     }
 #endif
     } else {
@@ -6402,6 +6402,18 @@ ble_gap_update_params(uint16_t conn_handle,
         rc = 0;
     } else {
         rc = ble_gap_update_tx(conn_handle, params);
+
+        /*
+         * If the controller rejects the LL update with "Unsupported Remote
+         * Feature" and we are the slave, fall back to L2CAP signaling.  This
+         * happens when the local controller supports the Connection Parameters
+         * Request procedure but the peer's controller does not.
+         */
+        if (rc == BLE_HS_HCI_ERR(BLE_ERR_UNSUPP_REM_FEATURE) &&
+            !(conn->bhc_flags & BLE_HS_CONN_F_MASTER)) {
+            l2cap_update = 1;
+            rc = 0;
+        }
     }
 
 done:

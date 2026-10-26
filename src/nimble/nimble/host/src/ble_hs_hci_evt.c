@@ -182,6 +182,34 @@ static ble_hs_hci_evt_le_fn * const ble_hs_hci_evt_le_dispatch[] = {
 #define BLE_HS_HCI_EVT_LE_DISPATCH_SZ \
     (sizeof ble_hs_hci_evt_le_dispatch / sizeof ble_hs_hci_evt_le_dispatch[0])
 
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+static inline void
+ble_hs_hci_evt_resolve_rpa(ble_addr_t *addr)
+{
+    struct ble_hs_resolv_entry *rl;
+
+    ble_hs_lock();
+    rl = ble_hs_resolv_rpa_addr(addr->val, addr->type);
+    if (rl != NULL) {
+        if (addr->type == BLE_ADDR_RANDOM) {
+            rl->rl_isrpa = 1;
+        }
+
+        memcpy(addr->val, rl->rl_identity_addr, BLE_DEV_ADDR_LEN);
+        addr->type = rl->rl_addr_type;
+    } else {
+        /* Peer is advertising its identity address now, so a cached RPA
+         * must no longer be used for connecting. */
+        rl = ble_hs_resolv_list_find(addr->val);
+        if (rl != NULL && rl->rl_addr_type == addr->type &&
+            memcmp(rl->rl_identity_addr, addr->val, BLE_DEV_ADDR_LEN) == 0) {
+            rl->rl_isrpa = 0;
+        }
+    }
+    ble_hs_unlock();
+}
+#endif
+
 static const struct ble_hs_hci_evt_dispatch_entry *
 ble_hs_hci_evt_dispatch_find(uint8_t event_code)
 {
@@ -552,11 +580,14 @@ ble_hs_hci_evt_le_adv_rpt(uint8_t subevent, const void *data, unsigned int len)
     for (i = 0; i < ev->num_reports; i++) {
         rpt = data;
 
-        data += sizeof(rpt) + rpt->data_len + 1;
+        data += sizeof(*rpt) + rpt->data_len + 1;
 
         desc.event_type = rpt->type;
         desc.addr.type = rpt->addr_type;
         memcpy(desc.addr.val, rpt->addr, BLE_DEV_ADDR_LEN);
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+        ble_hs_hci_evt_resolve_rpa(&desc.addr);
+#endif
         desc.length_data = rpt->data_len;
         desc.data = rpt->data;
         desc.rssi = rpt->data[rpt->data_len];
@@ -589,6 +620,9 @@ ble_hs_hci_evt_le_dir_adv_rpt(uint8_t subevent, const void *data, unsigned int l
         desc.direct_addr.type = ev->reports[i].dir_addr_type;
         memcpy(desc.direct_addr.val, ev->reports[i].dir_addr, BLE_DEV_ADDR_LEN);
         desc.rssi = ev->reports[i].rssi;
+#if MYNEWT_VAL(BLE_HOST_BASED_PRIVACY)
+        ble_hs_hci_evt_resolve_rpa(&desc.addr);
+#endif
 
         ble_gap_rx_adv_report(&desc);
     }

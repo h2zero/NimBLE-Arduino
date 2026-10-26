@@ -1724,7 +1724,7 @@ struct ble_hci_ev_hw_error {
 struct comp_pkt {
     uint16_t handle;
     uint16_t packets;
-} __attribute__((packed));;
+} __attribute__((packed));
 struct ble_hci_ev_num_comp_pkts {
     uint8_t count;
     struct comp_pkt completed[0];
@@ -2380,6 +2380,8 @@ struct ble_hci_ev_le_subev_cs_test_end_complete {
 #define BLE_HCI_VER_BCS_5_4                 (13)
 #define BLE_HCI_VER_BCS_6_0                 (14)
 #define BLE_HCI_VER_BCS_6_1                 (15)
+#define BLE_HCI_VER_BCS_6_2                 (16)
+#define BLE_HCI_VER_BCS_6_3                 (17)
 
 #define BLE_LMP_VER_BCS_1_0b                (0)
 #define BLE_LMP_VER_BCS_1_1                 (1)
@@ -2397,6 +2399,8 @@ struct ble_hci_ev_le_subev_cs_test_end_complete {
 #define BLE_LMP_VER_BCS_5_4                 (13)
 #define BLE_LMP_VER_BCS_6_0                 (14)
 #define BLE_LMP_VER_BCS_6_1                 (15)
+#define BLE_LMP_VER_BCS_6_2                 (16)
+#define BLE_LMP_VER_BCS_6_3                 (17)
 
 /* selected HCI and LMP version */
 #if MYNEWT_VAL(BLE_VERSION) == 50
@@ -2420,6 +2424,12 @@ struct ble_hci_ev_le_subev_cs_test_end_complete {
 #elif MYNEWT_VAL(BLE_VERSION) == 61
 #define BLE_HCI_VER_BCS BLE_HCI_VER_BCS_6_1
 #define BLE_LMP_VER_BCS BLE_LMP_VER_BCS_6_1
+#elif MYNEWT_VAL(BLE_VERSION) == 62
+#define BLE_HCI_VER_BCS BLE_HCI_VER_BCS_6_2
+#define BLE_LMP_VER_BCS BLE_LMP_VER_BCS_6_2
+#elif MYNEWT_VAL(BLE_VERSION) == 63
+#define BLE_HCI_VER_BCS BLE_HCI_VER_BCS_6_3
+#define BLE_LMP_VER_BCS BLE_LMP_VER_BCS_6_3
 #else
 #error Unsupported BLE_VERSION selected
 #endif
@@ -2463,7 +2473,7 @@ struct hci_data_hdr
 
 #define BLE_HCI_ISO_PKT_STATUS_VALID    0x00
 #define BLE_HCI_ISO_PKT_STATUS_INVALID  0x01
-#define BLE_HCI_ISO_PKT_STATUS_LOST     0x10
+#define BLE_HCI_ISO_PKT_STATUS_LOST     0x02
 
 #define BLE_HCI_ISO_BIG_HANDLE_MIN      0x00
 #define BLE_HCI_ISO_BIG_HANDLE_MAX      0xEF

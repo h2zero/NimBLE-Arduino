@@ -67,19 +67,22 @@ ble_hs_stop_done(int status)
     slist = ble_hs_stop_listeners;
     SLIST_INIT(&ble_hs_stop_listeners);
 
-    ble_hs_stop_hci_reset();
-
     ble_hs_enabled_state = BLE_HS_ENABLED_STATE_OFF;
 
-    /* Clear advertising, scanning and connection states. */
+    ble_hs_unlock();
+
+    ble_hs_stop_hci_reset();
+
+    /* Clear advertising, scanning and connection states.
+     * Called outside the lock because ble_gap_reset_state() acquires
+     * it internally (via ble_gap_conn_broken, ble_hs_atomic_*, etc).
+     */
     ble_gap_reset_state(0);
 
     /* After LL reset the controller loses its random address */
     ble_hs_id_reset();
 
     ble_hs_pvcy_reset();
-
-    ble_hs_unlock();
 
     SLIST_FOREACH(listener, &slist, link) {
         listener->fn(status, listener->arg);

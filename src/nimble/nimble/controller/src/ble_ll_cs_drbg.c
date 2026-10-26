@@ -25,7 +25,7 @@
 #include <assert.h>
 #include "nimble/porting/nimble/include/os/endian.h"
 #include "nimble/nimble/include/nimble/ble.h"
-#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
+#include "mbedtls/aes.h"
 #include "ble_ll_cs_drbg_priv.h"
 #if !(BABBLESIM || MYNEWT_VAL(SELFTEST))
 #include "nimble/nimble/controller/include/controller/ble_hw.h"

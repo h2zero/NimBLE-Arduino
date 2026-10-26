@@ -125,8 +125,8 @@ class NimBLELocalValueAttribute : public NimBLELocalAttribute, public NimBLEValu
     virtual void writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) = 0;
 
     /**
-     * @brief Get a pointer to value of the attribute.
-     * @return A pointer to the value of the attribute.
+     * @brief Get a reference to value of the attribute.
+     * @return A reference to the value of the attribute.
      * @details This function is used by NimBLEServer when handling read/write requests.
      */
     const NimBLEAttValue& getAttVal() const { return m_value; }

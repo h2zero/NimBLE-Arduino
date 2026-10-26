@@ -18,7 +18,7 @@
 #include "NimBLEUtils.h"
 #if CONFIG_BT_NIMBLE_ENABLED
 
-# include "NimBLEAddress.h"
+# include "NimBLEDevice.h"
 # include "NimBLELog.h"
 
 # ifdef USING_NIMBLE_ARDUINO_HEADERS
@@ -62,6 +62,8 @@
 static const char* LOG_TAG = "NimBLEUtils";
 
 std::vector<NimBLEUtils::TaskSemEntry*> NimBLEUtils::m_taskSemEntries{};
+std::atomic<int>                        NimBLEUtils::m_semUserCount{0};
+std::atomic_flag                        NimBLEUtils::m_taskSemLock = ATOMIC_FLAG_INIT;
 
 /**
  * @brief Construct a NimBLEUtils::TaskData instance.
@@ -79,6 +81,15 @@ NimBLEUtils::TaskData::TaskData(void* pInstance, int flags, void* buf)
  * @return True if the task completed, false if the timeout was reached.
  */
 bool NimBLEUtils::taskWait(const TaskData& taskData, uint32_t timeout) {
+    m_semUserCount.fetch_add(1);
+
+    if (!NimBLEDevice::isInitialized()) {
+        NIMBLE_LOGE(LOG_TAG, "NimBLE stack is not initialized");
+        taskData.m_flags = BLE_HS_EOS;
+        m_semUserCount.fetch_sub(1);
+        return false;
+    }
+
     ble_npl_time_t ticks;
     if (timeout == BLE_NPL_TIME_FOREVER) {
         ticks = BLE_NPL_TIME_FOREVER;
@@ -86,33 +97,49 @@ bool NimBLEUtils::taskWait(const TaskData& taskData, uint32_t timeout) {
         ble_npl_time_ms_to_ticks(timeout, &ticks);
     }
 
+    taskData.m_pSem = nullptr;
+
     // find a semaphore that is not currently in use, or create a new one
-    for (auto& entry : m_taskSemEntries) {
-        if (!entry->inUse) {
-            taskData.m_pSem = entry;
-            break;
+    {
+        SpinGuard guard(m_taskSemLock);
+        for (auto& entry : m_taskSemEntries) {
+            if (!entry->inUse.exchange(true, std::memory_order_acq_rel)) {
+                taskData.m_pSem = entry;
+                break;
+            }
         }
     }
 
     if (taskData.m_pSem == nullptr) {
-        auto* sem = new ble_npl_sem;
+        auto* sem = new ble_npl_sem{};
         if (ble_npl_sem_init(sem, 0) != BLE_NPL_OK) {
             NIMBLE_LOGE(LOG_TAG, "Failed to initialize semaphore for taskWait");
             delete sem;
+            m_semUserCount.fetch_sub(1);
             return false;
         }
 
         TaskSemEntry* entry = new TaskSemEntry;
         entry->sem          = sem;
         entry->inUse        = true;
-        m_taskSemEntries.push_back(entry);
+        {
+            SpinGuard guard(m_taskSemLock);
+            m_taskSemEntries.push_back(entry);
+        }
         taskData.m_pSem = entry;
-        NIMBLE_LOGD(LOG_TAG, "Created new semaphore for taskWait, total semaphores: %d\n", (int)m_taskSemEntries.size());
     }
 
+    taskData.m_pSem->inUse.store(true);
+    m_semUserCount.fetch_sub(1);
     NIMBLE_LOGD(LOG_TAG, "Task waiting with timeout %" PRIu32 "ms", timeout);
-    taskData.m_pSem->inUse = true;
-    return ble_npl_sem_pend(taskData.m_pSem->sem, ticks) == BLE_NPL_OK;
+    if (ble_npl_sem_pend(taskData.m_pSem->sem, ticks) == BLE_NPL_OK) {
+        taskData.m_pSem->inUse.store(false);
+        return true;
+    }
+
+    NIMBLE_LOGE(LOG_TAG, "Task wait timed out after %" PRIu32 "ms", timeout);
+    taskData.m_pSem->inUse.store(false);
+    return false;
 } // taskWait
 
 /**
@@ -123,11 +150,9 @@ bool NimBLEUtils::taskWait(const TaskData& taskData, uint32_t timeout) {
 void NimBLEUtils::taskRelease(const TaskData& taskData, int flags) {
     taskData.m_flags = flags;
     if (taskData.m_pSem == nullptr) {
-        NIMBLE_LOGE(LOG_TAG, "taskRelease called with null semaphore");
         return;
     }
 
-    taskData.m_pSem->inUse = false;
     auto rc = ble_npl_sem_release(taskData.m_pSem->sem);
     if (rc != BLE_NPL_OK) {
         NIMBLE_LOGE(LOG_TAG, "Failed to release semaphore: rc=%d %s", rc, returnCodeToString(rc));
@@ -136,13 +161,24 @@ void NimBLEUtils::taskRelease(const TaskData& taskData, int flags) {
 } // taskRelease
 
 /**
- * @brief Deletes all semaphores used for task waiting.
+ * @brief Deinitializes the NimBLEUtils class and deletes all semaphores used for task waiting.
  * @details This should be called when the NimBLE stack is deinitialized to clean up any resources used by waiting tasks.
  */
-void NimBLEUtils::deleteTaskSems() {
-    for (auto& entry : m_taskSemEntries) {
-        ble_npl_sem_release(entry->sem);
-        ble_npl_time_delay(10); // give time for any pending tasks to be released
+void NimBLEUtils::deinit() {
+    // wait for any active users of the semaphore vector to finish
+    while (m_semUserCount.load() > 0) {
+        ble_npl_time_delay(1);
+    }
+
+    for (auto entry : m_taskSemEntries) {
+        if (entry->inUse.load()) {
+            ble_npl_sem_release(entry->sem);
+            // wait for the pend to complete before deinitializing the semaphore
+            while (entry->inUse.load()) {
+                ble_npl_time_delay(1);
+            }
+        }
+
         ble_npl_sem_deinit(entry->sem);
         delete entry->sem;
         delete entry;
@@ -533,8 +569,8 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
             return "BLE_GAP_EVENT_PATHLOSS_THRESHOLD";
         case BLE_GAP_EVENT_TRANSMIT_POWER: // 26
             return "BLE_GAP_EVENT_TRANSMIT_POWER";
-        case BLE_GAP_EVENT_PARING_COMPLETE: // 27
-            return "BLE_GAP_EVENT_PARING_COMPLETE";
+        case BLE_GAP_EVENT_PAIRING_COMPLETE: // 27
+            return "BLE_GAP_EVENT_PAIRING_COMPLETE";
         case BLE_GAP_EVENT_SUBRATE_CHANGE: // 28
             return "BLE_GAP_EVENT_SUBRATE_CHANGE";
 #   ifdef BLE_GAP_EVENT_VS_HCI
@@ -606,5 +642,25 @@ NimBLEAddress NimBLEUtils::generateAddr(bool nrpa) {
 
     return NimBLEAddress{addr};
 } // generateAddr
+
+/**
+ * @brief Construct a SpinGuard and acquire the lock.
+ * @param [in] flag The atomic_flag to guard.
+ * @details Spins until the lock is acquired.
+ */
+NimBLEUtils::SpinGuard::SpinGuard(std::atomic_flag& flag) : m_flag(flag) {
+    while (m_flag.test_and_set(std::memory_order_acquire)) {
+        // spin until the lock is acquired
+        ble_npl_time_delay(1);
+    }
+}
+
+/**
+ * @brief Destruct a SpinGuard and release the lock.
+ * @details Releases the lock acquired by the constructor.
+ */
+NimBLEUtils::SpinGuard::~SpinGuard() {
+    m_flag.clear(std::memory_order_release);
+}
 
 #endif // CONFIG_BT_NIMBLE_ENABLED

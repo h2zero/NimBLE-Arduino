@@ -13,10 +13,11 @@
 #if CONFIG_MBEDTLS_VER_4_X_SUPPORT
 #include "psa/crypto.h"
 #else
-#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
+#include "mbedtls/aes.h"
 #endif // CONFIG_MBEDTLS_VER_4_X_SUPPORT
 #else
 #include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
+#include "nimble/ext/tinycrypt/include/tinycrypt/aes.h"
 #endif
 
 #if MYNEWT_VAL(ENC_ADV_DATA)

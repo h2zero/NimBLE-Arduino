@@ -385,6 +385,9 @@ ble_hs_reset(void)
     /* Clear configured addresses. */
     ble_hs_id_reset();
 
+    /* Drop cached privacy state so sync re-runs the full setup. */
+    ble_hs_pvcy_reset();
+
     if (ble_hs_cfg.reset_cb != NULL && ble_hs_reset_reason != 0) {
         ble_hs_cfg.reset_cb(ble_hs_reset_reason);
     }

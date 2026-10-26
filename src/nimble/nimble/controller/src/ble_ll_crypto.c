@@ -23,13 +23,25 @@
 #include "nimble/nimble/include/nimble/ble.h"
 #include "nimble/nimble/controller/include/controller/ble_ll_crypto.h"
 #include "nimble/nimble/controller/include/controller/ble_hw.h"
+#if MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS)
+#include <mbedtls/cmac.h>
+#else
 #include "nimble/ext/tinycrypt/include/tinycrypt/constants.h"
 #include "nimble/ext/tinycrypt/include/tinycrypt/cmac_mode.h"
+#endif
 
 int
 ble_ll_crypto_cmac(const uint8_t *key, const uint8_t *in, int len,
                    uint8_t *out)
 {
+#if MYNEWT_VAL(BLE_CRYPTO_STACK_MBEDTLS)
+    if (mbedtls_cipher_cmac(mbedtls_cipher_info_from_type(MBEDTLS_CIPHER_AES_128_ECB),
+                            key, 128, in, len, out)) {
+        return -1;
+    }
+
+    return 0;
+#else
     struct tc_aes_key_sched_struct sched;
     struct tc_cmac_struct state;
 
@@ -46,6 +58,7 @@ ble_ll_crypto_cmac(const uint8_t *key, const uint8_t *in, int len,
     }
 
     return 0;
+#endif
 }
 
 int
