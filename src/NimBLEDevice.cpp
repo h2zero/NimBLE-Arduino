@@ -54,7 +54,9 @@
 
 # if defined(ESP_PLATFORM) && defined(CONFIG_ENABLE_ARDUINO_DEPENDS)
 #  include "esp32-hal-bt.h"
-#  if __has_include("esp32-hal-bt-mem.h")
+#  if __has_include("esp32-hal-alloc-ble-mem.h")
+#   include "esp32-hal-alloc-ble-mem.h"
+#  elif __has_include("esp32-hal-bt-mem.h")
 #   include "esp32-hal-bt-mem.h"
 #  endif
 # endif
