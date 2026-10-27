@@ -162,12 +162,11 @@ class NimBLELocalValueAttribute : public NimBLELocalAttribute, public NimBLEValu
     /**
      * @brief Callback function to support a write request.
      * @param [in] val The value to write.
-     * @param [in] len The length of the value.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
      * @details This function is called by NimBLEServer when a write request is received.
      * @return NimBLEGattStatus::Success or other error code to reject the write.
      */
-    virtual NimBLEGattStatus writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) = 0;
+    virtual NimBLEGattStatus writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) = 0;
 
     /**
      * @brief Get a reference to value of the attribute.

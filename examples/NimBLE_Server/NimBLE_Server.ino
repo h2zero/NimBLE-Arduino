@@ -76,10 +76,8 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
         return NimBLEGattStatus::Success;
     }
 
-    NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
-        Serial.printf("%s : onWrite(), value: %s\n",
-               pCharacteristic->getUUID().toString().c_str(),
-               pCharacteristic->getValue().c_str());
+    NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEAttValue& value, NimBLEConnInfo& connInfo) override {
+        Serial.printf("%s : onWrite(), value: %s\n", pCharacteristic->getUUID().toString().c_str(), value.c_str());
         return NimBLEGattStatus::Success;
     }
 
@@ -113,9 +111,8 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
 
 /** Handler class for descriptor actions */
 class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
-    NimBLEGattStatus onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) override {
-        std::string dscVal = pDescriptor->getValue();
-        Serial.printf("Descriptor written value: %s\n", dscVal.c_str());
+    NimBLEGattStatus onWrite(NimBLEDescriptor* pDescriptor, NimBLEAttValue& value, NimBLEConnInfo& connInfo) override {
+        Serial.printf("Descriptor written value: %s\n", value.c_str());
         return NimBLEGattStatus::Success;
     }
 

@@ -75,13 +75,16 @@ NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
 {
     NIMBLE_CPP_DEBUG_ASSERT(m_attr_value);
     if (m_attr_value == nullptr) {
-        NIMBLE_LOGE(LOG_TAG, "Failed to calloc ctx");
+        NIMBLE_LOGE(LOG_TAG, "Failed to allocate value buffer");
+        m_attr_len = 0;
+        m_capacity = 0;
+        m_attr_max_len = 0;
     }
 }
 
 // Value constructor implementation.
 NimBLEAttValue::NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_len) : NimBLEAttValue(len, max_len) {
-    if (m_attr_value != nullptr) {
+    if (m_attr_value != nullptr && len > 0) {
         memcpy(m_attr_value, value, len);
         m_attr_len = len;
     }

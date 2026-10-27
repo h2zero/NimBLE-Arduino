@@ -171,7 +171,7 @@ class NimBLEStreamServer : public NimBLEStream {
     struct ChrCallbacks : public NimBLECharacteristicCallbacks {
         ChrCallbacks(NimBLEStreamServer* parent)
             : m_parent(parent), m_userCallbacks(nullptr), m_peerHandle(BLE_HS_CONN_HANDLE_NONE) {}
-        NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override;
+        NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEAttValue& value, NimBLEConnInfo& connInfo) override;
         void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue) override;
         void onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code) override;
 
