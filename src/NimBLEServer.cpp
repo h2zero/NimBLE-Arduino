@@ -196,24 +196,6 @@ void NimBLEServer::sendServiceChangedIndication() const {
 }
 
 /**
- * @brief Indicate a change to the handle range of one registered service only, so a client
- * rediscovers that service and keeps the rest of its table.
- * @details NimBLE allocates handles sequentially in registration order, so a service runs from its
- * own handle to the one before the next registered service; the last one runs to the table's end.
- */
-static void indicateServiceRangeChanged(const std::vector<NimBLEService*>& svcVec, const NimBLEService* pSvc) {
-    const uint16_t start = pSvc->getHandle();
-    uint16_t       end   = 0xffff;
-    for (const auto* pOther : svcVec) {
-        const uint16_t handle = pOther->getHandle();
-        if (handle > start && handle - 1 < end) {
-            end = handle - 1;
-        }
-    }
-    ble_svc_gatt_changed(start, end);
-}
-
-/**
  * @brief Callback for GATT registration events,
  * used to obtain the assigned handles for services, characteristics, and descriptors.
  * @param [in] ctxt The context of the registration event.
@@ -879,14 +861,9 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
     // Otherwise, ignore the call and return.
     if (service->getRemoved() > 0) {
         if (deleteSvc) {
-            for (auto it = m_svcVec.begin(); it != m_svcVec.end(); ++it) {
-                if ((*it) == service) {
-                    delete *it;
-                    m_svcVec.erase(it);
-                    break;
-                }
-            }
-            // A hidden service is still registered; only a reset drops it from the database.
+            // A hidden service is still registered and the stack keeps a pointer to its definition,
+            // so resetGATT() frees it once the reset has dropped it from the database.
+            service->setRemoved(NIMBLE_ATT_REMOVE_DELETE);
             setServiceChanged();
         }
 
@@ -902,7 +879,7 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
     if (deleteSvc) {
         setServiceChanged();
     } else {
-        indicateServiceRangeChanged(m_svcVec, service);
+        sendServiceChangedIndication();
     }
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
@@ -929,11 +906,12 @@ void NimBLEServer::addService(NimBLEService* service) {
         return;
     }
 
-    // Hidden but still registered: shown in place, no reset needed.
-    if (service->getRemoved() == NIMBLE_ATT_REMOVE_HIDE && service->getHandle() != 0 &&
+    // Hidden but still registered: shown in place, no reset needed. A pending reset may still change
+    // the database under it, so the service waits for that reset instead.
+    if (service->getRemoved() == NIMBLE_ATT_REMOVE_HIDE && service->getHandle() != 0 && !m_svcChanged &&
         ble_gatts_svc_set_visibility(service->getHandle(), 1) == 0) {
         service->setRemoved(0);
-        indicateServiceRangeChanged(m_svcVec, service);
+        sendServiceChangedIndication();
         return;
     }
 
