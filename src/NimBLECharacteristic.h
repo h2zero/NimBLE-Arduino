@@ -274,7 +274,7 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 
     void             setService(NimBLEService* pService);
     NimBLEGattStatus readEvent(NimBLEConnInfo& connInfo) override;
-    NimBLEGattStatus writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) override;
+    NimBLEGattStatus writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) override;
     bool             sendValue(const uint8_t* value,
                                size_t         length,
                                bool           is_notification = true,
@@ -320,7 +320,7 @@ class NimBLECharacteristicCallbacks {
   public:
     virtual ~NimBLECharacteristicCallbacks() {}
     virtual NimBLEGattStatus onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
-    virtual NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
+    virtual NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEAttValue& value, NimBLEConnInfo& connInfo);
     virtual void             onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code);
     virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue);
 };

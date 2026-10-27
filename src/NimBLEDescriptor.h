@@ -52,7 +52,7 @@ class NimBLEDescriptor : public NimBLELocalValueAttribute {
 
     void             setCharacteristic(NimBLECharacteristic* pChar);
     NimBLEGattStatus readEvent(NimBLEConnInfo& connInfo) override;
-    NimBLEGattStatus writeEvent(const uint8_t* val, uint16_t len, NimBLEConnInfo& connInfo) override;
+    NimBLEGattStatus writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) override;
 
     NimBLEDescriptorCallbacks* m_pCallbacks{nullptr};
     NimBLECharacteristic*      m_pCharacteristic{nullptr};
@@ -69,7 +69,7 @@ class NimBLEDescriptorCallbacks {
   public:
     virtual ~NimBLEDescriptorCallbacks() = default;
     virtual NimBLEGattStatus onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo);
-    virtual NimBLEGattStatus onWrite(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo);
+    virtual NimBLEGattStatus onWrite(NimBLEDescriptor* pDescriptor, NimBLEAttValue& value, NimBLEConnInfo& connInfo);
 };
 
 # include "NimBLE2904.h"

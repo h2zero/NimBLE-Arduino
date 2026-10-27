@@ -755,21 +755,27 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
                 return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
             }
 
-            uint8_t buf[maxLen];
-            memcpy(buf, ctxt->om->om_data, len);
+            NimBLEAttValue buf(ctxt->om->om_data, len, maxLen);
+            if (buf.data() == nullptr || buf.size() != len) {
+                return BLE_ATT_ERR_INSUFFICIENT_RES;
+            }
 
-            os_mbuf* next;
-            next = SLIST_NEXT(ctxt->om, om_next);
+            buf.setTimeStamp();
+
+            os_mbuf* next = SLIST_NEXT(ctxt->om, om_next);
             while (next != NULL) {
                 if ((len + next->om_len) > maxLen) {
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
-                memcpy(&buf[len], next->om_data, next->om_len);
+                buf.append(next->om_data, next->om_len);
                 len  += next->om_len;
+                if (buf.size() != len) {
+                    return BLE_ATT_ERR_INSUFFICIENT_RES;
+                }
                 next  = SLIST_NEXT(next, om_next);
             }
 
-            return static_cast<int>(pAtt->writeEvent(buf, len, peerInfo));
+            return static_cast<int>(pAtt->writeEvent(buf, peerInfo));
         }
 
         default:
