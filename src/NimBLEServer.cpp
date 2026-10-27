@@ -932,7 +932,13 @@ bool NimBLEServer::resetGATT() {
     NimBLEDevice::stopAdvertising();
 # endif
 
-    ble_gatts_reset();
+    // A refused reset leaves every attribute registered, so nothing may be freed below; the next
+    // start() retries, since services stay marked changed.
+    int rc = ble_gatts_reset();
+    if (rc != 0) {
+        NIMBLE_LOGE(LOG_TAG, "ble_gatts_reset; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
+        return false;
+    }
     ble_svc_gap_init();
     ble_svc_gatt_init();
 
