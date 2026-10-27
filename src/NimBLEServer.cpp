@@ -196,6 +196,24 @@ void NimBLEServer::sendServiceChangedIndication() const {
 }
 
 /**
+ * @brief Indicate a change to the handle range of one registered service only, so a client
+ * rediscovers that service and keeps the rest of its table.
+ * @details NimBLE allocates handles sequentially in registration order, so a service runs from its
+ * own handle to the one before the next registered service; the last one runs to the table's end.
+ */
+static void indicateServiceRangeChanged(const std::vector<NimBLEService*>& svcVec, const NimBLEService* pSvc) {
+    const uint16_t start = pSvc->getHandle();
+    uint16_t       end   = 0xffff;
+    for (const auto* pOther : svcVec) {
+        const uint16_t handle = pOther->getHandle();
+        if (handle > start && handle - 1 < end) {
+            end = handle - 1;
+        }
+    }
+    ble_svc_gatt_changed(start, end);
+}
+
+/**
  * @brief Callback for GATT registration events,
  * used to obtain the assigned handles for services, characteristics, and descriptors.
  * @param [in] ctxt The context of the registration event.
@@ -209,7 +227,7 @@ void NimBLEServer::gattRegisterCallback(ble_gatt_register_ctxt* ctxt, void* arg)
         NimBLEUUID uuid(ctxt->svc.svc_def->uuid);
         args->pSvc = nullptr;
         for (auto pSvc : NimBLEDevice::getServer()->m_svcVec) {
-            if (!pSvc->getRemoved() && pSvc->m_handle == 0 && pSvc->getUUID() == uuid) {
+            if (pSvc->getRemoved() != NIMBLE_ATT_REMOVE_DELETE && pSvc->m_handle == 0 && pSvc->getUUID() == uuid) {
                 pSvc->m_handle = ctxt->svc.handle;
                 NIMBLE_LOGD(LOG_TAG, "Service registered: %s, handle=%d", uuid.toString().c_str(), ctxt->svc.handle);
                 // Set the arg to the service so we know that the following
@@ -293,6 +311,13 @@ bool NimBLEServer::start() {
     if (rc != 0) {
         NIMBLE_LOGE(LOG_TAG, "ble_gatts_start; rc=%d, %s", rc, NimBLEUtils::returnCodeToString(rc));
         return false;
+    }
+
+    // resetGATT() registered the hidden services too; hide them again now that they have handles.
+    for (const auto& svc : m_svcVec) {
+        if (svc->getRemoved() == NIMBLE_ATT_REMOVE_HIDE) {
+            ble_gatts_svc_set_visibility(svc->getHandle(), 0);
+        }
     }
 
 # if MYNEWT_VAL(NIMBLE_CPP_LOG_LEVEL) >= 4
@@ -838,8 +863,9 @@ void NimBLEServer::resetCallbacks() {
  * available and can be re-added in the future. If desired a removed but not deleted service can
  * be deleted later by calling this method with deleteSvc set to true.
  *
- * @note The service will not be removed from the database until all open connections are closed
- * as it requires resetting the GATT server. In the interim the service will have it's visibility disabled.
+ * @note A service removed but not deleted stays registered with its visibility disabled, through any
+ * GATT reset, so addService() can show it again while clients are connected. A deleted service
+ * leaves the database at the next reset, which waits until all open connections are closed.
  *
  * @note Advertising will need to be restarted by the user after calling this as we must stop
  * advertising in order to remove the service.
@@ -860,6 +886,8 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
                     break;
                 }
             }
+            // A hidden service is still registered; only a reset drops it from the database.
+            setServiceChanged();
         }
 
         return;
@@ -871,7 +899,11 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
     }
 
     service->setRemoved(deleteSvc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE);
-    setServiceChanged();
+    if (deleteSvc) {
+        setServiceChanged();
+    } else {
+        indicateServiceRangeChanged(m_svcVec, service);
+    }
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
 # endif
@@ -897,6 +929,14 @@ void NimBLEServer::addService(NimBLEService* service) {
         return;
     }
 
+    // Hidden but still registered: shown in place, no reset needed.
+    if (service->getRemoved() == NIMBLE_ATT_REMOVE_HIDE && service->getHandle() != 0 &&
+        ble_gatts_svc_set_visibility(service->getHandle(), 1) == 0) {
+        service->setRemoved(0);
+        indicateServiceRangeChanged(m_svcVec, service);
+        return;
+    }
+
     service->setRemoved(0);
     setServiceChanged();
 } // addService
@@ -904,8 +944,8 @@ void NimBLEServer::addService(NimBLEService* service) {
 /**
  * @brief Resets the GATT server, used when services are added/removed after initialization.
  * @return True if successful.
- * @details This will reset the GATT server and re-register all services, characteristics, and
- * descriptors that have not been removed. Services, characteristics, and descriptors that have been
+ * @details This will reset the GATT server and re-register every service that has not been deleted,
+ * hidden ones included; start() hides those again. Characteristics and descriptors that have been
  * removed but not deleted will be skipped and have their handles cleared, and those that have been
  * deleted will be removed from the server's service vector.
  */
@@ -950,11 +990,11 @@ bool NimBLEServer::resetGATT() {
             ++chrIt;
         }
 
-        if (pSvc->getRemoved() == 0) {
-            if (!pSvc->start_internal()) {
-                NIMBLE_LOGE(LOG_TAG, "Failed to start service: %s", pSvc->getUUID().toString().c_str());
-                return false;
-            }
+        // A hidden service stays registered, so addService() can show it again while a client is
+        // connected — a reset, which needs none connected, is the only way to register one.
+        if (!pSvc->start_internal()) {
+            NIMBLE_LOGE(LOG_TAG, "Failed to start service: %s", pSvc->getUUID().toString().c_str());
+            return false;
         }
 
         pSvc->m_handle = 0;
