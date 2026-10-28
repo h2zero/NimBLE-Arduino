@@ -114,7 +114,7 @@ class NimBLEConnInfo {
 
     ble_gap_conn_desc m_desc{};
     NimBLEConnInfo() {};
-    NimBLEConnInfo(ble_gap_conn_desc desc) { m_desc = desc; }
+    explicit NimBLEConnInfo(ble_gap_conn_desc desc) : m_desc(desc) {}
 };
 
 #endif // NIMBLE_CPP_CONNINFO_H_

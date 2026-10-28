@@ -184,7 +184,7 @@ class NimBLERemoteValueAttribute : public NimBLEValueAttribute, public NimBLEAtt
     /**
      * @brief Construct a new NimBLERemoteValueAttribute object.
      */
-    NimBLERemoteValueAttribute(const ble_uuid_any_t& uuid, uint16_t handle) : NimBLEAttribute{uuid, handle} {}
+    NimBLERemoteValueAttribute(const ble_uuid_any_t& uuid, uint16_t handle) : NimBLEAttribute(NimBLEUUID(uuid), handle) {}
 
     /**
      * @brief Destroy the NimBLERemoteValueAttribute object.

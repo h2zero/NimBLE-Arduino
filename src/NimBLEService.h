@@ -33,8 +33,8 @@ class NimBLEService;
  */
 class NimBLEService : public NimBLELocalAttribute {
   public:
-    NimBLEService(const char* uuid);
-    NimBLEService(const NimBLEUUID& uuid);
+    explicit NimBLEService(const char* uuid);
+    explicit NimBLEService(const NimBLEUUID& uuid);
     ~NimBLEService();
 
     NimBLEServer* getServer() const;

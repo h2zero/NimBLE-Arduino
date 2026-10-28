@@ -34,7 +34,7 @@ static const char* LOG_TAG = "NimBLERemoteService";
  * @param [in] service A pointer to the structure with the service information.
  */
 NimBLERemoteService::NimBLERemoteService(NimBLEClient* pClient, const ble_gatt_svc* service)
-    : NimBLEAttribute{service->uuid, service->start_handle}, m_pClient{pClient}, m_endHandle{service->end_handle} {}
+    : NimBLEAttribute{NimBLEUUID(service->uuid), service->start_handle}, m_pClient{pClient}, m_endHandle{service->end_handle} {}
 
 /**
  * @brief When deleting the service make sure we delete all characteristics and descriptors.

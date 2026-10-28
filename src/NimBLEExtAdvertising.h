@@ -45,7 +45,7 @@ class NimBLEUUID;
  */
 class NimBLEExtAdvertisement {
   public:
-    NimBLEExtAdvertisement(uint8_t priPhy = BLE_HCI_LE_PHY_1M, uint8_t secPhy = BLE_HCI_LE_PHY_1M);
+    explicit NimBLEExtAdvertisement(uint8_t priPhy = BLE_HCI_LE_PHY_1M, uint8_t secPhy = BLE_HCI_LE_PHY_1M);
     bool        setAppearance(uint16_t appearance);
     bool        addServiceUUID(const NimBLEUUID& serviceUUID);
     bool        addServiceUUID(const char* serviceUUID);
