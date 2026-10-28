@@ -52,7 +52,10 @@ typedef enum {
     INDICATE     = BLE_GATT_CHR_F_INDICATE
 } NIMBLE_PROPERTY;
 
-enum class NimBLEGattStatus : uint8_t {
+// Status codes are scoped to the namespace (NimBLEGattStatus::Success) and convert implicitly to uint8_t and int.
+// Callbacks return uint8_t so any value, including application-defined 0x80-0x9F, can be returned.
+namespace NimBLEGattStatus {
+enum : uint8_t {
     // Standard GATT Success State
     Success = 0x00,
 
@@ -75,7 +78,7 @@ enum class NimBLEGattStatus : uint8_t {
     UnsupportedGroupType   = 0x10, ///< The attribute type is not a supported grouping attribute.
     InsufficientResources  = 0x11, ///< Temporary failure due to lack of device resources (RAM/buffers).
     DatabaseOutOfSync      = 0x12, ///< The database is out of sync.
-    ValueNotAllowed        = 0x13, ///< The parameter value written is outside the valid ranges of that application profile.
+    ValueNotAllowed = 0x13, ///< The parameter value written is outside the valid ranges of that application profile.
 
     // -------------------------------------------------------------------------
     // User / Application Defined Errors (0x80 - 0x9F)
@@ -93,6 +96,7 @@ enum class NimBLEGattStatus : uint8_t {
 
     AppErrorMax = 0x9F ///< Maximum boundary for custom application-specific errors.
 };
+} // namespace NimBLEGattStatus
 
 class NimBLEConnInfo;
 
@@ -155,18 +159,20 @@ class NimBLELocalValueAttribute : public NimBLELocalAttribute, public NimBLEValu
      * @brief Callback function to support a read request.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
      * @details This function is called by NimBLEServer when a read request is received.
-     * @return NimBLEGattStatus::Success or other error code to reject the read.
+     * @return GATT status code (uint8_t).
+     * @details the Enum NimBLEGattStatus defines the standard GATT status codes. Custom status codes can also be used.
      */
-    virtual NimBLEGattStatus readEvent(NimBLEConnInfo& connInfo) = 0;
+    virtual uint8_t readEvent(NimBLEConnInfo& connInfo) = 0;
 
     /**
      * @brief Callback function to support a write request.
      * @param [in] val The value to write.
      * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
      * @details This function is called by NimBLEServer when a write request is received.
-     * @return NimBLEGattStatus::Success or other error code to reject the write.
+     * @return GATT status code (uint8_t).
+     * @details the Enum NimBLEGattStatus defines the standard GATT status codes. Custom status codes can also be used.
      */
-    virtual NimBLEGattStatus writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) = 0;
+    virtual uint8_t writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) = 0;
 
     /**
      * @brief Get a reference to value of the attribute.

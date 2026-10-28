@@ -272,13 +272,13 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
     friend class NimBLEServer;
     friend class NimBLEService;
 
-    void             setService(NimBLEService* pService);
-    NimBLEGattStatus readEvent(NimBLEConnInfo& connInfo) override;
-    NimBLEGattStatus writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) override;
-    bool             sendValue(const uint8_t* value,
-                               size_t         length,
-                               bool           is_notification = true,
-                               uint16_t       connHandle      = BLE_HS_CONN_HANDLE_NONE) const;
+    void    setService(NimBLEService* pService);
+    uint8_t readEvent(NimBLEConnInfo& connInfo) override;
+    uint8_t writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) override;
+    bool    sendValue(const uint8_t* value,
+                      size_t         length,
+                      bool           is_notification = true,
+                      uint16_t       connHandle      = BLE_HS_CONN_HANDLE_NONE) const;
 
     struct SubPeerEntry {
         enum : uint8_t { AWAITING_SECURE = 1 << 0, SECURE = 1 << 1, SUB_NOTIFY = 1 << 2, SUB_INDICATE = 1 << 3 };
@@ -319,10 +319,10 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 class NimBLECharacteristicCallbacks {
   public:
     virtual ~NimBLECharacteristicCallbacks() {}
-    virtual NimBLEGattStatus onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
-    virtual NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEAttValue& value, NimBLEConnInfo& connInfo);
-    virtual void             onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code);
-    virtual void onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue);
+    virtual uint8_t onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo);
+    virtual uint8_t onWrite(NimBLECharacteristic* pCharacteristic, NimBLEAttValue& value, NimBLEConnInfo& connInfo);
+    virtual void    onStatus(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, int code);
+    virtual void    onSubscribe(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo, uint16_t subValue);
 };
 
 #endif // CONFIG_BT_NIMBLE_ENABLED  && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)

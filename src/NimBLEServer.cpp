@@ -736,13 +736,14 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
             // Don't call readEvent if the buffer len is 0 (this is a follow up to a previous read),
             // or if this is an internal read (handle is NONE)
             if (ctxt->om->om_len > 0 && connHandle != BLE_HS_CONN_HANDLE_NONE) {
-                NimBLEGattStatus status = pAtt->readEvent(peerInfo);
+                uint8_t status = pAtt->readEvent(peerInfo);
                 if (status != NimBLEGattStatus::Success) {
                     return static_cast<int>(status);
                 }
             }
 
             NimBLEAttValue::Lock lock;
+
             int rc = os_mbuf_append(ctxt->om, val.data(), val.size());
             return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
         }
@@ -768,11 +769,11 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
                     return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
                 }
                 buf.append(next->om_data, next->om_len);
-                len  += next->om_len;
+                len += next->om_len;
                 if (buf.size() != len) {
                     return BLE_ATT_ERR_INSUFFICIENT_RES;
                 }
-                next  = SLIST_NEXT(next, om_next);
+                next = SLIST_NEXT(next, om_next);
             }
 
             return static_cast<int>(pAtt->writeEvent(buf, peerInfo));

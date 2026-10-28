@@ -425,7 +425,7 @@ void NimBLECharacteristic::updatePeerStatus(const NimBLEConnInfo& peerInfo) cons
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  * @return The status of the read operation.
  */
-NimBLEGattStatus NimBLECharacteristic::readEvent(NimBLEConnInfo& connInfo) {
+uint8_t NimBLECharacteristic::readEvent(NimBLEConnInfo& connInfo) {
     return m_pCallbacks->onRead(this, connInfo);
 } // readEvent
 
@@ -435,8 +435,8 @@ NimBLEGattStatus NimBLECharacteristic::readEvent(NimBLEConnInfo& connInfo) {
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  * @return The status of the write operation.
  */
-NimBLEGattStatus NimBLECharacteristic::writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) {
-    NimBLEGattStatus rc = m_pCallbacks->onWrite(this, val, connInfo);
+uint8_t NimBLECharacteristic::writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) {
+    uint8_t rc = m_pCallbacks->onWrite(this, val, connInfo);
     if (rc == NimBLEGattStatus::Success) {
         m_value = std::move(val);
     }
@@ -492,7 +492,7 @@ std::string NimBLECharacteristic::toString() const {
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  * @return The status of the read operation, NimBLEGattStatus::Success if the read is accepted, or an error code otherwise.
  */
-NimBLEGattStatus NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
+uint8_t NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onRead: default");
     return NimBLEGattStatus::Success;
 } // onRead
@@ -502,14 +502,18 @@ NimBLEGattStatus NimBLECharacteristicCallbacks::onRead(NimBLECharacteristic* pCh
  * @param [in] pCharacteristic The characteristic that is the source of the event.
  * @param [in] value The value being written to the characteristic.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
- * @return The status of the write operation, NimBLEGattStatus::Success if the write is accepted, or an error code otherwise.
- * @details If the write is rejected, the characteristic's value will not be updated, otherwise it will be updated with the new value.
- * The value parameter contains the new value being written to the characteristic, it can be modified by the callback if needed.
- * WARNING: Modifying the value parameter directly affects the value being written to the characteristic,
- * if the max length of the value is modified, such as by assigning another value with a different max length, i.e. value = NimBLEAttValue();
- * it will change the max length used for the characteristic's value.
+ * @return The status of the write operation, NimBLEGattStatus::Success if the write is accepted, or an error code
+ * otherwise.
+ * @details If the write is rejected, the characteristic's value will not be updated, otherwise it will be updated with
+ * the new value. The value parameter contains the new value being written to the characteristic, it can be modified by
+ * the callback if needed.
+ * WARNING: Modifying the value parameter directly affects the value being written to the
+ * characteristic, if the max length of the value is modified, such as by assigning another value with a different max
+ * length, i.e. value = NimBLEAttValue(); it will change the max length used for the characteristic's value.
  */
-NimBLEGattStatus NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic, NimBLEAttValue& value, NimBLEConnInfo& connInfo) {
+uint8_t NimBLECharacteristicCallbacks::onWrite(NimBLECharacteristic* pCharacteristic,
+                                               NimBLEAttValue&       value,
+                                               NimBLEConnInfo&       connInfo) {
     NIMBLE_LOGD("NimBLECharacteristicCallbacks", "onWrite: default");
     return NimBLEGattStatus::Success;
 } // onWrite

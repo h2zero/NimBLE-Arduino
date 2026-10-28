@@ -817,9 +817,9 @@ bool NimBLEStreamServer::ready() const {
  * @return The user callback status, or success if no user callback is set.
  * @details Received data is pushed into the RX buffer only if the user callback succeeds.
  */
-NimBLEGattStatus NimBLEStreamServer::ChrCallbacks::onWrite(NimBLECharacteristic* pChr, NimBLEAttValue& value, NimBLEConnInfo& connInfo) {
+uint8_t NimBLEStreamServer::ChrCallbacks::onWrite(NimBLECharacteristic* pChr, NimBLEAttValue& value, NimBLEConnInfo& connInfo) {
     if (m_userCallbacks) {
-        NimBLEGattStatus status = m_userCallbacks->onWrite(pChr, value, connInfo);
+        uint8_t status = m_userCallbacks->onWrite(pChr, value, connInfo);
         if (status != NimBLEGattStatus::Success) {
             return status;
         }
