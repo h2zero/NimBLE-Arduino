@@ -124,12 +124,12 @@ std::string NimBLEDescriptor::toString() const {
     return res;
 } // toString
 
-NimBLEGattStatus NimBLEDescriptor::readEvent(NimBLEConnInfo& connInfo) {
+uint8_t NimBLEDescriptor::readEvent(NimBLEConnInfo& connInfo) {
     return m_pCallbacks->onRead(this, connInfo);
 } // readEvent
 
-NimBLEGattStatus NimBLEDescriptor::writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) {
-    NimBLEGattStatus rc = m_pCallbacks->onWrite(this, val, connInfo);
+uint8_t NimBLEDescriptor::writeEvent(NimBLEAttValue& val, NimBLEConnInfo& connInfo) {
+    uint8_t rc = m_pCallbacks->onWrite(this, val, connInfo);
     if (rc == NimBLEGattStatus::Success) {
         m_value = std::move(val);
     }
@@ -142,7 +142,7 @@ NimBLEGattStatus NimBLEDescriptor::writeEvent(NimBLEAttValue& val, NimBLEConnInf
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
  * @return The status of the read operation, NimBLEGattStatus::Success if the read is accepted, or an error code otherwise.
  */
-NimBLEGattStatus NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
+uint8_t NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onRead: default");
     return NimBLEGattStatus::Success;
 } // onRead
@@ -152,14 +152,16 @@ NimBLEGattStatus NimBLEDescriptorCallbacks::onRead(NimBLEDescriptor* pDescriptor
  * @param [in] pDescriptor The descriptor that is the source of the event.
  * @param [in] value The value being written to the descriptor.
  * @param [in] connInfo A reference to a NimBLEConnInfo instance containing the peer info.
- * @return The status of the write operation, NimBLEGattStatus::Success if the write is accepted, or an error code otherwise.
- * @details If the write is rejected, the descriptor's value will not be updated, otherwise it will be updated with the new value.
- * The value parameter contains the new value being written to the descriptor, it can be modified by the callback if needed.
- * WARNING: Modifying the value parameter directly affects the value being written to the descriptor,
- * if the max length of the value is modified, such as by assigning another value with a different max length, i.e. value = NimBLEAttValue();
- * it will change the max length used for the descriptor's value.
+ * @return The status of the write operation, NimBLEGattStatus::Success if the write is accepted, or an error code
+ * otherwise.
+ * @details If the write is rejected, the descriptor's value will not be updated, otherwise it will be updated with the
+ * new value. The value parameter contains the new value being written to the descriptor, it can be modified by the
+ * callback if needed.
+ * WARNING: Modifying the value parameter directly affects the value being written to the
+ * descriptor, if the max length of the value is modified, such as by assigning another value with a different max
+ * length, i.e. value = NimBLEAttValue(); it will change the max length used for the descriptor's value.
  */
-NimBLEGattStatus NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor, NimBLEAttValue& value, NimBLEConnInfo& connInfo) {
+uint8_t NimBLEDescriptorCallbacks::onWrite(NimBLEDescriptor* pDescriptor, NimBLEAttValue& value, NimBLEConnInfo& connInfo) {
     NIMBLE_LOGD("NimBLEDescriptorCallbacks", "onWrite: default");
     return NimBLEGattStatus::Success;
 } // onWrite

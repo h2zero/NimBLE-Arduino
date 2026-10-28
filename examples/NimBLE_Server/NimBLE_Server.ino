@@ -69,14 +69,14 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 
 /** Handler class for characteristic actions */
 class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
-    NimBLEGattStatus onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
+    uint8_t onRead(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
         Serial.printf("%s : onRead(), value: %s\n",
                pCharacteristic->getUUID().toString().c_str(),
                pCharacteristic->getValue().c_str());
         return NimBLEGattStatus::Success;
     }
 
-    NimBLEGattStatus onWrite(NimBLECharacteristic* pCharacteristic, NimBLEAttValue& value, NimBLEConnInfo& connInfo) override {
+    uint8_t onWrite(NimBLECharacteristic* pCharacteristic, NimBLEAttValue& value, NimBLEConnInfo& connInfo) override {
         Serial.printf("%s : onWrite(), value: %s\n", pCharacteristic->getUUID().toString().c_str(), value.c_str());
         return NimBLEGattStatus::Success;
     }
@@ -111,12 +111,12 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
 
 /** Handler class for descriptor actions */
 class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
-    NimBLEGattStatus onWrite(NimBLEDescriptor* pDescriptor, NimBLEAttValue& value, NimBLEConnInfo& connInfo) override {
+    uint8_t onWrite(NimBLEDescriptor* pDescriptor, NimBLEAttValue& value, NimBLEConnInfo& connInfo) override {
         Serial.printf("Descriptor written value: %s\n", value.c_str());
         return NimBLEGattStatus::Success;
     }
 
-    NimBLEGattStatus onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) override {
+    uint8_t onRead(NimBLEDescriptor* pDescriptor, NimBLEConnInfo& connInfo) override {
         Serial.printf("%s Descriptor read\n", pDescriptor->getUUID().toString().c_str());
         return NimBLEGattStatus::Success;
     }
