@@ -18,7 +18,6 @@
 #include "NimBLEServer.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
-# include "NimBLE2905.h"
 # include "NimBLEDevice.h"
 # include "NimBLELog.h"
 
@@ -313,14 +312,28 @@ bool NimBLEServer::start() {
     }
 # endif
 
-    // Populate any Aggregate Format (0x2905) descriptors now that every attribute handle has been
-    // assigned during ble_gatts_start() (via the GATT register callback). A 0x2905 value is the
-    // ordered list of its aggregated 0x2904 presentation-format descriptor handles.
+    // Populate Aggregate Format (0x2905) descriptors with the handle of each active 0x2904 descriptor.
     for (const auto& svc : m_svcVec) {
+        if (svc->getRemoved() != 0) {
+            continue;
+        }
+
         for (const auto& chr : svc->getCharacteristics()) {
-            for (auto& desc : chr->m_vDescriptors) {
-                if (desc->getUUID() == NimBLEUUID(static_cast<uint16_t>(0x2905))) {
-                    static_cast<NimBLE2905*>(desc)->initValue();
+            if (chr->getRemoved() != 0) {
+                continue;
+            }
+
+            auto dsc2905 = chr->getDescriptorByUUID(NimBLEUUID(static_cast<uint16_t>(0x2905)));
+            if (dsc2905 == nullptr || dsc2905->getRemoved() != 0) {
+                continue;
+            }
+
+            // Swap in an empty value (keeping the max length) so a restart doesn't duplicate entries
+            dsc2905->m_value = NimBLEAttValue(uint16_t(0), dsc2905->m_value.max_size());
+            for (const auto& dsc : chr->m_vDescriptors) {
+                if (dsc->getRemoved() == 0 && dsc->getUUID() == NimBLEUUID(static_cast<uint16_t>(0x2904))) {
+                    auto handle = dsc->getHandle();
+                    dsc2905->m_value.append(reinterpret_cast<const uint8_t*>(&handle), sizeof(handle));
                 }
             }
         }
