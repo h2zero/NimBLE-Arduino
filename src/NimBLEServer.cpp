@@ -53,6 +53,7 @@ struct gattRegisterCallbackArgs {
 NimBLEServer::NimBLEServer()
     : m_gattsStarted{false},
       m_svcChanged{false},
+      m_svcChangedSent{false},
 # if !MYNEWT_VAL(BLE_EXT_ADV)
       m_advertiseOnDisconnect{false},
 # endif
@@ -192,6 +193,7 @@ void NimBLEServer::setServiceChanged() {
  * @details This should be called when services are added, removed or modified after the server has been started.
  */
 void NimBLEServer::sendServiceChangedIndication() const {
+    m_svcChangedSent = true;
     ble_svc_gatt_changed(0x0001, 0xffff);
 }
 
@@ -565,6 +567,28 @@ int NimBLEServer::handleGapEvent(ble_gap_event* event, void* arg) {
 
             uint8_t subVal = event->subscribe.cur_notify + (event->subscribe.cur_indicate << 1);
             NIMBLE_LOGI(LOG_TAG, "subscribe event; attr_handle=%d, subscribed: %d", event->subscribe.attr_handle, subVal);
+
+            static const ble_uuid16_t gattSvcUuid      = BLE_UUID16_INIT(BLE_GATT_SVC_UUID16);
+            static const ble_uuid16_t svcChangedUuid   = BLE_UUID16_INIT(BLE_SVC_GATT_CHR_SERVICE_CHANGED_UUID16);
+            uint16_t                  svcChangedHandle = 0;
+            if (ble_gatts_find_chr(&gattSvcUuid.u, &svcChangedUuid.u, nullptr, &svcChangedHandle) == 0 &&
+                svcChangedHandle == event->subscribe.attr_handle) {
+                // GATT database changes can leave clients with stale attribute caches.
+                // NimBLE sends Service Changed indications to connected clients but preserves
+                // pending indications across disconnections only for bonded clients.
+                //
+                // Because unbonded clients cannot be recognized across connections, once any
+                // Service Changed has been sent the server indicates it to every client that
+                // enables it. A server may indicate only after the client enables it in the CCCD,
+                // so this is the earliest opportunity, and it stops a caching client
+                // (CoreBluetooth) from serving a stale table. A subscription restored for a bonded
+                // client is skipped: the host sends that client's pending indication itself.
+                if (pServer->m_svcChangedSent && event->subscribe.cur_indicate &&
+                    event->subscribe.reason == BLE_GAP_SUBSCRIBE_REASON_WRITE) {
+                    ble_gatts_indicate(event->subscribe.conn_handle, svcChangedHandle);
+                }
+                break;
+            }
 
             auto pChar = pServer->getCharacteristicByHandle(event->subscribe.attr_handle);
             if (!pChar) {
