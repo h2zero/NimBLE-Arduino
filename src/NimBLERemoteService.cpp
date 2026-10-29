@@ -64,6 +64,24 @@ std::vector<NimBLERemoteCharacteristic*>::iterator NimBLERemoteService::end() co
  * @param [in] uuid Remote characteristic uuid.
  * @return A pointer to the remote characteristic object.
  */
+NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(uint16_t uuid) const {
+    return getCharacteristic(NimBLEUUID(uuid));
+} // getCharacteristic
+
+/**
+ * @brief Get the remote characteristic object for the characteristic's 32-bit UUID.
+ * @param [in] uuid Remote characteristic 32-bit UUID.
+ * @return A pointer to the remote characteristic object.
+ */
+NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(uint32_t uuid) const {
+    return getCharacteristic(NimBLEUUID(uuid));
+} // getCharacteristic
+
+/**
+ * @brief Get the remote characteristic object for the characteristic UUID.
+ * @param [in] uuid Remote characteristic 16-bit UUID.
+ * @return A pointer to the remote characteristic object.
+ */
 NimBLERemoteCharacteristic* NimBLERemoteService::getCharacteristic(const char* uuid) const {
     return getCharacteristic(NimBLEUUID(uuid));
 } // getCharacteristic
