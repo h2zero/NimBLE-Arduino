@@ -35,6 +35,17 @@
 #  include "nimble/nimble_port.h"
 # endif
 
+namespace {
+// A visibility change waiting for the host task; lives on the waiting caller's stack.
+struct VisibilityRequest {
+    uint16_t      handle;
+    bool          visible;
+    int           rc;
+    ble_npl_sem   done;
+    ble_npl_event ev;
+};
+} // namespace
+
 # define NIMBLE_SERVER_GET_PEER_NAME_ON_CONNECT_CB 0
 # define NIMBLE_SERVER_GET_PEER_NAME_ON_AUTH_CB    1
 
@@ -866,32 +877,39 @@ int NimBLEServer::setServiceVisibility(uint16_t svcHandle, bool visible) {
         return ble_gatts_svc_set_visibility(svcHandle, visible);
     }
 
-    struct VisibilityRequest {
-        uint16_t      handle;
-        bool          visible;
-        int           rc;
-        ble_npl_sem   done;
-        ble_npl_event ev;
-    } req{svcHandle, visible, 0, {}, {}};
-
+    VisibilityRequest req{svcHandle, visible, 0, {}, {}};
     if (ble_npl_sem_init(&req.done, 0) != BLE_NPL_OK) {
         NIMBLE_LOGE(LOG_TAG, "Failed to initialize semaphore for service visibility");
         return BLE_HS_ENOMEM;
     }
-    ble_npl_event_init(
-        &req.ev,
-        [](ble_npl_event* ev) {
-            auto* r = static_cast<VisibilityRequest*>(ble_npl_event_get_arg(ev));
-            r->rc   = ble_gatts_svc_set_visibility(r->handle, r->visible);
-            ble_npl_sem_release(&r->done);
-        },
-        &req);
-    ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &req.ev);
+    ble_npl_event_init(&req.ev, setServiceVisibilityEvent, &req);
+
+    {
+        // Queued ahead of the host's stop event, or not at all.
+        NimBLEUtils::SpinGuard guard(NimBLEDevice::m_hostStopLock);
+        if (NimBLEDevice::m_hostStopping) {
+            ble_npl_event_deinit(&req.ev);
+            ble_npl_sem_deinit(&req.done);
+            return BLE_HS_EOS;
+        }
+        ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &req.ev);
+    }
+
     ble_npl_sem_pend(&req.done, BLE_NPL_TIME_FOREVER);
     ble_npl_event_deinit(&req.ev);
     ble_npl_sem_deinit(&req.done);
     return req.rc;
 } // setServiceVisibility
+
+/**
+ * @brief Host task handler for a visibility change queued by setServiceVisibility().
+ * @param [in] ev The event; its argument is the waiting caller's VisibilityRequest.
+ */
+void NimBLEServer::setServiceVisibilityEvent(ble_npl_event* ev) {
+    auto* req = static_cast<VisibilityRequest*>(ble_npl_event_get_arg(ev));
+    req->rc   = ble_gatts_svc_set_visibility(req->handle, req->visible);
+    ble_npl_sem_release(&req->done);
+} // setServiceVisibilityEvent
 
 /**
  * @brief Adds a service which was either already created but removed from availability,\n

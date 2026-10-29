@@ -128,6 +128,7 @@ class NimBLEServer {
     void        setServiceChanged();
     bool        resetGATT();
     static int  setServiceVisibility(uint16_t svcHandle, bool visible);
+    static void setServiceVisibilityEvent(struct ble_npl_event* ev);
 
     bool m_gattsStarted : 1;
     bool m_svcChanged : 1;
