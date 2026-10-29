@@ -28,10 +28,23 @@
 # ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/services/gap/include/services/gap/ble_svc_gap.h"
 #  include "nimble/nimble/host/services/gatt/include/services/gatt/ble_svc_gatt.h"
+#  include "nimble/porting/nimble/include/nimble/nimble_port.h"
 # else
 #  include "services/gap/ble_svc_gap.h"
 #  include "services/gatt/ble_svc_gatt.h"
+#  include "nimble/nimble_port.h"
 # endif
+
+namespace {
+// A visibility change waiting for the host task; lives on the waiting caller's stack.
+struct VisibilityRequest {
+    uint16_t      handle;
+    bool          visible;
+    int           rc;
+    ble_npl_sem   done;
+    ble_npl_event ev;
+};
+} // namespace
 
 # define NIMBLE_SERVER_GET_PEER_NAME_ON_CONNECT_CB 0
 # define NIMBLE_SERVER_GET_PEER_NAME_ON_AUTH_CB    1
@@ -865,7 +878,7 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
         return;
     }
 
-    int rc = ble_gatts_svc_set_visibility(service->getHandle(), 0);
+    int rc = setServiceVisibility(service->getHandle(), false);
     if (rc != 0) {
         return;
     }
@@ -876,6 +889,55 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
     NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
 # endif
 } // removeService
+
+/**
+ * @brief Show or hide a service on the host task.
+ * @details ble_gatts_svc_set_visibility() relinks the service's attributes without a lock while the
+ * host task walks the same list to answer ATT requests; a caller on another task waits for the host.
+ * @param [in] svcHandle The handle of the service.
+ * @param [in] visible True to show the service, false to hide it.
+ * @return 0 on success, BLE_HS_ENOENT if no service has that handle.
+ */
+int NimBLEServer::setServiceVisibility(uint16_t svcHandle, bool visible) {
+    // Before sync no peer can be connected, so nothing walks the list.
+    if (!NimBLEDevice::m_synced.load(std::memory_order_acquire) ||
+        ble_npl_get_current_task_id() == NimBLEDevice::m_hostTask) {
+        return ble_gatts_svc_set_visibility(svcHandle, visible);
+    }
+
+    VisibilityRequest req{svcHandle, visible, 0, {}, {}};
+    if (ble_npl_sem_init(&req.done, 0) != BLE_NPL_OK) {
+        NIMBLE_LOGE(LOG_TAG, "Failed to initialize semaphore for service visibility");
+        return BLE_HS_ENOMEM;
+    }
+    ble_npl_event_init(&req.ev, setServiceVisibilityEvent, &req);
+
+    {
+        // Queued ahead of the host's stop event, or not at all.
+        NimBLEUtils::SpinGuard guard(NimBLEDevice::m_hostStopLock);
+        if (NimBLEDevice::m_hostStopping) {
+            ble_npl_event_deinit(&req.ev);
+            ble_npl_sem_deinit(&req.done);
+            return BLE_HS_EOS;
+        }
+        ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &req.ev);
+    }
+
+    ble_npl_sem_pend(&req.done, BLE_NPL_TIME_FOREVER);
+    ble_npl_event_deinit(&req.ev);
+    ble_npl_sem_deinit(&req.done);
+    return req.rc;
+} // setServiceVisibility
+
+/**
+ * @brief Host task handler for a visibility change queued by setServiceVisibility().
+ * @param [in] ev The event; its argument is the waiting caller's VisibilityRequest.
+ */
+void NimBLEServer::setServiceVisibilityEvent(ble_npl_event* ev) {
+    auto* req = static_cast<VisibilityRequest*>(ble_npl_event_get_arg(ev));
+    req->rc   = ble_gatts_svc_set_visibility(req->handle, req->visible);
+    ble_npl_sem_release(&req->done);
+} // setServiceVisibilityEvent
 
 /**
  * @brief Adds a service which was either already created but removed from availability,\n

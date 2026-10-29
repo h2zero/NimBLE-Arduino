@@ -99,6 +99,9 @@ std::array<NimBLEClient*, MYNEWT_VAL(BLE_MAX_CONNECTIONS)> NimBLEDevice::m_pClie
 std::atomic<bool>          NimBLEDevice::m_initialized{false};
 uint32_t                   NimBLEDevice::m_passkey{123456};
 std::atomic<bool>          NimBLEDevice::m_synced{false};
+std::atomic<void*>         NimBLEDevice::m_hostTask{nullptr};
+bool                       NimBLEDevice::m_hostStopping{false};
+std::atomic_flag           NimBLEDevice::m_hostStopLock = ATOMIC_FLAG_INIT;
 ble_gap_event_listener     NimBLEDevice::m_listener{};
 std::vector<NimBLEAddress> NimBLEDevice::m_whiteList{};
 uint8_t                    NimBLEDevice::m_ownAddrType{BLE_OWN_ADDR_PUBLIC};
@@ -885,7 +888,13 @@ void NimBLEDevice::onSync(void) {
  */
 void NimBLEDevice::host_task(void* param) {
     NIMBLE_LOGI(LOG_TAG, "NimBLE Started!");
+    {
+        NimBLEUtils::SpinGuard guard(m_hostStopLock);
+        m_hostStopping = false;
+    }
+    m_hostTask = ble_npl_get_current_task_id();
     nimble_port_run(); // This function will return only when nimble_port_stop() is executed
+    m_hostTask = nullptr;
     nimble_port_freertos_deinit();
 } // host_task
 
@@ -1037,6 +1046,11 @@ bool NimBLEDevice::init(const std::string& deviceName) {
 bool NimBLEDevice::deinit(bool clearAll) {
     int rc = 0;
     if (isInitialized()) {
+        {
+            // Set before the stop event is queued: work queued after it never runs.
+            NimBLEUtils::SpinGuard guard(m_hostStopLock);
+            m_hostStopping = true;
+        }
         rc = nimble_port_stop();
         if (rc == 0) {
             m_initialized.store(false);
@@ -1059,6 +1073,8 @@ bool NimBLEDevice::deinit(bool clearAll) {
 # endif
         } else {
             NIMBLE_LOGE(LOG_TAG, "nimble_port_stop() failed with error: %d", rc);
+            NimBLEUtils::SpinGuard guard(m_hostStopLock);
+            m_hostStopping = false;
             return false;
         }
     }

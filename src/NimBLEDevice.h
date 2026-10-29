@@ -219,6 +219,9 @@ class NimBLEDevice {
 
   private:
     static std::atomic<bool>          m_synced;
+    static std::atomic<void*>         m_hostTask;
+    static bool                       m_hostStopping;
+    static std::atomic_flag           m_hostStopLock;
     static std::atomic<bool>          m_initialized;
     static uint32_t                   m_passkey;
     static ble_gap_event_listener     m_listener;
