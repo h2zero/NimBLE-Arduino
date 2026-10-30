@@ -784,7 +784,7 @@ int NimBLEServer::handleGattEvent(uint16_t connHandle, uint16_t attrHandle, ble_
             }
 
             NimBLEAttValue buf(ctxt->om->om_data, len, maxLen);
-            if (buf.data() == nullptr || buf.size() != len) {
+            if (buf.size() != len) {
                 return BLE_ATT_ERR_INSUFFICIENT_RES;
             }
 

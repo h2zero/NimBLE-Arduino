@@ -99,7 +99,10 @@ struct Has_value_type<T, decltype(void(sizeof(typename T::value_type)))> : std::
  * many different container classes.
  */
 class NimBLEAttValue {
-    uint8_t* m_attr_value{};
+    // Shared, never-freed buffer that m_attr_value points to when nothing is allocated (reset or allocation failure).
+    // Non-const and defined in the .cpp so it can be pointed at by a uint8_t* and odr-used before C++17.
+    static uint8_t EMPTY_VALUE;
+    uint8_t*       m_attr_value{&EMPTY_VALUE};
     uint16_t m_attr_max_len{};
     uint16_t m_attr_len{};
     uint16_t m_capacity{};
@@ -107,6 +110,9 @@ class NimBLEAttValue {
     time_t m_timestamp{};
 # endif
     bool deepCopy(const NimBLEAttValue& source);
+
+    // The heap buffer owned by this object, or nullptr if m_attr_value points at EMPTY_VALUE.
+    uint8_t* ownedBuffer() const { return m_attr_value == &EMPTY_VALUE ? nullptr : m_attr_value; }
 
     // Clamp so a large container size can't wrap when narrowed to uint16_t; the constructor then rejects it as > max_len.
     static constexpr uint16_t clampLen(size_t len) {
