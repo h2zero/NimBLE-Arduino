@@ -38,7 +38,7 @@ struct NimBLE2904Data {
  */
 class NimBLE2904 : public NimBLEDescriptor {
   public:
-    NimBLE2904(NimBLECharacteristic* pChr = nullptr);
+    explicit NimBLE2904(NimBLECharacteristic* pChr = nullptr);
     static const uint8_t FORMAT_BOOLEAN   = 1;
     static const uint8_t FORMAT_UINT2     = 2;
     static const uint8_t FORMAT_UINT4     = 3;

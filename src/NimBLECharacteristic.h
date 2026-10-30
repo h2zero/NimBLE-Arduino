@@ -41,14 +41,14 @@ class NimBLE2904;
  */
 class NimBLECharacteristic : public NimBLELocalValueAttribute {
   public:
-    NimBLECharacteristic(const char*    uuid,
-                         uint16_t       properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
-                         uint16_t       maxLen     = BLE_ATT_ATTR_MAX_LEN,
-                         NimBLEService* pService   = nullptr);
-    NimBLECharacteristic(const NimBLEUUID& uuid,
-                         uint16_t          properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
-                         uint16_t          maxLen     = BLE_ATT_ATTR_MAX_LEN,
-                         NimBLEService*    pService   = nullptr);
+    explicit NimBLECharacteristic(const char*    uuid,
+                                  uint16_t       properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
+                                  uint16_t       maxLen     = BLE_ATT_ATTR_MAX_LEN,
+                                  NimBLEService* pService   = nullptr);
+    explicit NimBLECharacteristic(const NimBLEUUID& uuid,
+                                  uint16_t          properties = NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE,
+                                  uint16_t          maxLen     = BLE_ATT_ATTR_MAX_LEN,
+                                  NimBLEService*    pService   = nullptr);
 
     ~NimBLECharacteristic();
 

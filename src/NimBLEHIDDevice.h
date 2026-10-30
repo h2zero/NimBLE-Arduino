@@ -46,7 +46,7 @@ class NimBLECharacteristic;
  */
 class NimBLEHIDDevice {
   public:
-    NimBLEHIDDevice(NimBLEServer* server);
+    explicit NimBLEHIDDevice(NimBLEServer* server);
 
     void                  setReportMap(uint8_t* map, uint16_t);
     void                  startServices() __attribute__((deprecated("Services are now started by the server when start() is called, " 

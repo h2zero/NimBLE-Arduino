@@ -45,10 +45,10 @@ class NimBLEAddress : private ble_addr_t {
      * @brief Create a blank address, i.e. 00:00:00:00:00:00, type 0.
      */
     NimBLEAddress() = default;
-    NimBLEAddress(const ble_addr_t address);
     NimBLEAddress(const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t type);
     NimBLEAddress(const std::string& stringAddress, uint8_t type);
     NimBLEAddress(const uint64_t& address, uint8_t type);
+    explicit NimBLEAddress(const ble_addr_t address);
 
     bool                 isRpa() const;
     bool                 isNrpa() const;

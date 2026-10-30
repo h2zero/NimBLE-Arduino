@@ -33,6 +33,8 @@ class NimBLEAttValue;
  */
 class NimBLERemoteService : public NimBLEAttribute {
   public:
+    NimBLERemoteCharacteristic* getCharacteristic(uint16_t uuid) const;
+    NimBLERemoteCharacteristic* getCharacteristic(uint32_t uuid) const;
     NimBLERemoteCharacteristic* getCharacteristic(const char* uuid) const;
     NimBLERemoteCharacteristic* getCharacteristic(const NimBLEUUID& uuid) const;
     void                        deleteCharacteristics() const;
