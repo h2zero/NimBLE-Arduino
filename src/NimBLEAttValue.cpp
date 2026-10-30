@@ -58,9 +58,9 @@ unsigned char __atomic_exchange_1(volatile void* ptr, unsigned char val, int) {
 # endif
 
 static const char* LOG_TAG = "NimBLEAttValue";
-ble_npl_mutex     NimBLEAttValue::Lock::m_mutex{};
-std::atomic<bool> NimBLEAttValue::Lock::m_initialized{false};
-std::atomic<int>  NimBLEAttValue::Lock::m_activeCount{0};
+ble_npl_mutex      NimBLEAttValue::Lock::m_mutex{};
+std::atomic<bool>  NimBLEAttValue::Lock::m_initialized{false};
+std::atomic<int>   NimBLEAttValue::Lock::m_activeCount{0};
 
 // Default constructor implementation.
 NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
@@ -76,14 +76,21 @@ NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
     NIMBLE_CPP_DEBUG_ASSERT(m_attr_value);
     if (m_attr_value == nullptr) {
         NIMBLE_LOGE(LOG_TAG, "Failed to allocate value buffer");
-        m_attr_len = 0;
-        m_capacity = 0;
+        m_attr_len     = 0;
+        m_capacity     = 0;
         m_attr_max_len = 0;
     }
 }
 
 // Value constructor implementation.
-NimBLEAttValue::NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_len) : NimBLEAttValue(len, max_len) {
+NimBLEAttValue::NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_len)
+    : NimBLEAttValue(len > std::min<uint16_t>(max_len, BLE_ATT_ATTR_MAX_LEN) ? 0 : len, max_len) {
+    // Same behavior as append(): a value larger than max_len is rejected, leaving the value empty.
+    if (len > m_attr_max_len) {
+        NIMBLE_LOGE(LOG_TAG, "val > max, len=%u, max=%u", len, m_attr_max_len);
+        return;
+    }
+
     if (m_attr_value != nullptr && len > 0) {
         memcpy(m_attr_value, value, len);
         m_attr_len = len;
@@ -108,6 +115,9 @@ NimBLEAttValue& NimBLEAttValue::operator=(NimBLEAttValue&& source) {
         m_capacity     = source.m_capacity;
         setTimeStamp(source.getTimeStamp());
         source.m_attr_value = nullptr;
+        source.m_attr_len     = 0;
+        source.m_capacity     = 0;
+        source.setTimeStamp(0);
     }
 
     return *this;

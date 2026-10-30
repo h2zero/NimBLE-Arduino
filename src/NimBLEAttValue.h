@@ -108,6 +108,11 @@ class NimBLEAttValue {
 # endif
     bool deepCopy(const NimBLEAttValue& source);
 
+    // Clamp so a large container size can't wrap when narrowed to uint16_t; the constructor then rejects it as > max_len.
+    static constexpr uint16_t clampLen(size_t len) {
+        return len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
+    }
+
   public:
     class Lock {
         static ble_npl_mutex     m_mutex;
@@ -191,7 +196,7 @@ class NimBLEAttValue {
      * @param[in] max_len The max size in bytes that the value can be.
      */
     NimBLEAttValue(const char* value, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue((uint8_t*)value, (uint16_t)strlen(value), max_len) {}
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(value), clampLen(strlen(value)), max_len) {}
 
     /**
      * @brief Construct with an initializer list.
@@ -199,23 +204,23 @@ class NimBLEAttValue {
      * @param[in] max_len The max size in bytes that the value can be.
      */
     NimBLEAttValue(std::initializer_list<uint8_t> list, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue(list.begin(), list.size(), max_len) {}
+        : NimBLEAttValue(list.begin(), clampLen(list.size()), max_len) {}
 
     /**
      * @brief Construct with an initial value from a std::string.
      * @param str A std::string containing to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const std::string str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(&str[0]), str.length(), max_len) {}
+    NimBLEAttValue(const std::string& str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.data()), clampLen(str.length()), max_len) {}
 
     /**
      * @brief Construct with an initial value from a std::vector<uint8_t>.
      * @param vec A std::vector<uint8_t> containing to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const std::vector<uint8_t> vec, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue(&vec[0], vec.size(), max_len) {}
+    NimBLEAttValue(const std::vector<uint8_t>& vec, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(vec.data(), clampLen(vec.size()), max_len) {}
 
 # if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
     /**
@@ -223,8 +228,16 @@ class NimBLEAttValue {
      * @param str An Arduino String containing to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const String str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.c_str()), str.length(), max_len) {}
+    NimBLEAttValue(const String& str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.c_str()), clampLen(str.length()), max_len) {}
+
+    /**
+     * @brief Construct with an initial value from an Arduino String rvalue.
+     * @param str An Arduino String containing to the initial value to set.
+     * @param[in] max_len The max size in bytes that the value can be.
+     */
+    NimBLEAttValue(String&& str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.c_str()), clampLen(str.length()), max_len) {}
 # endif
 
     /** @brief Copy constructor */
@@ -232,6 +245,26 @@ class NimBLEAttValue {
 
     /** @brief Move constructor */
     NimBLEAttValue(NimBLEAttValue&& source) { *this = std::move(source); }
+
+    /**
+     * @brief Construct with an initial value from a std::string rvalue.
+     * @param value A std::string containing the initial value to set.
+     * @param[in] max_len The max size in bytes that the value can be.
+     * @note The bytes are copied into this object's own buffer; the string's storage is not taken over.
+     * If the string is larger than max_len the value is left empty.
+     */
+    NimBLEAttValue(std::string&& value, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN) noexcept
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(value.data()), clampLen(value.size()), max_len) {}
+
+    /**
+     * @brief Construct with an initial value from a std::vector<uint8_t> rvalue.
+     * @param value A std::vector<uint8_t> containing the initial value to set.
+     * @param[in] max_len The max size in bytes that the value can be.
+     * @note The bytes are copied into this object's own buffer; the vector's storage is not taken over.
+     * If the vector is larger than max_len the value is left empty.
+     */
+    NimBLEAttValue(std::vector<uint8_t>&& value, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN) noexcept
+        : NimBLEAttValue(value.data(), clampLen(value.size()), max_len) {}
 
     /** @brief Destructor */
     ~NimBLEAttValue();
