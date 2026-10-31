@@ -284,7 +284,7 @@ bool NimBLEAdvertisementData::setManufacturerData(const uint8_t* data, size_t le
  * @param [in] data The manufacturer data to advertise.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::setManufacturerData(const std::string& data) {
+bool NimBLEAdvertisementData::setManufacturerData(std::string_view data) {
     return setManufacturerData(reinterpret_cast<const uint8_t*>(data.data()), data.length());
 } // setManufacturerData
 
@@ -302,7 +302,7 @@ bool NimBLEAdvertisementData::setManufacturerData(const std::vector<uint8_t>& da
  * @param [in] uri The uri to advertise.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::setURI(const std::string& uri) {
+bool NimBLEAdvertisementData::setURI(std::string_view uri) {
     if (uri.length() > BLE_HS_ADV_MAX_FIELD_SZ) {
         NIMBLE_LOGE(LOG_TAG, "URI too long");
         return false;
@@ -312,7 +312,7 @@ bool NimBLEAdvertisementData::setURI(const std::string& uri) {
     uint8_t length = 2 + uri.length();
     data[0]        = length - 1;
     data[1]        = BLE_HS_ADV_TYPE_URI;
-    memcpy(&data[2], uri.c_str(), uri.length());
+    memcpy(&data[2], uri.data(), uri.length());
     return addData(data, length);
 } // setURI
 
@@ -324,7 +324,7 @@ bool NimBLEAdvertisementData::setURI(const std::string& uri) {
  * and the data type will be set to incomplete name.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::setName(const std::string& name, bool isComplete) {
+bool NimBLEAdvertisementData::setName(std::string_view name, bool isComplete) {
     if (name.length() > BLE_HS_ADV_MAX_FIELD_SZ) {
         NIMBLE_LOGE(LOG_TAG, "Name too long - truncating");
         isComplete = false;
@@ -334,7 +334,7 @@ bool NimBLEAdvertisementData::setName(const std::string& name, bool isComplete) 
     uint8_t length = 2 + std::min<uint8_t>(name.length(), BLE_HS_ADV_MAX_FIELD_SZ);
     data[0]        = length - 1;
     data[1]        = isComplete ? BLE_HS_ADV_TYPE_COMP_NAME : BLE_HS_ADV_TYPE_INCOMP_NAME;
-    memcpy(&data[2], name.c_str(), std::min<uint8_t>(name.length(), BLE_HS_ADV_MAX_FIELD_SZ));
+    memcpy(&data[2], name.data(), std::min<uint8_t>(name.length(), BLE_HS_ADV_MAX_FIELD_SZ));
     return addData(data, length);
 } // setName
 
@@ -343,7 +343,7 @@ bool NimBLEAdvertisementData::setName(const std::string& name, bool isComplete) 
  * @param [in] name The short name of the device.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::setShortName(const std::string& name) {
+bool NimBLEAdvertisementData::setShortName(std::string_view name) {
     return setName(name, false);
 } // setShortName
 
@@ -501,7 +501,7 @@ bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, const uint8
  * @return True if the service data was set successfully.
  * @note If data length is 0 the service data will not be advertised.
  */
-bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, const std::string& data) {
+bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, std::string_view data) {
     return setServiceData(uuid, reinterpret_cast<const uint8_t*>(data.data()), data.length());
 } // setServiceData
 

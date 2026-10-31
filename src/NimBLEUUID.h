@@ -44,6 +44,7 @@ class NimBLEUUID {
      * @brief Created a blank UUID.
      */
     NimBLEUUID() = default;
+    explicit NimBLEUUID(const char* uuidStr);
     NimBLEUUID(const ble_uuid_any_t& uuid);
     NimBLEUUID(const ble_uuid_t* uuid);
     NimBLEUUID(const std::string& uuid);
@@ -66,6 +67,8 @@ class NimBLEUUID {
     bool operator==(const NimBLEUUID& rhs) const;
     bool operator!=(const NimBLEUUID& rhs) const;
          operator std::string() const;
+
+
 
   private:
     ble_uuid_any_t m_uuid{};

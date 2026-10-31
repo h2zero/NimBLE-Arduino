@@ -1184,7 +1184,7 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             }
 
             NimBLEAttValue value(totalLen, BLE_ATT_ATTR_MAX_LEN);
-            if (value.data() == nullptr) {
+            if (value.capacity() < totalLen) {
                 NIMBLE_LOGE(LOG_TAG, "Failed to allocate notification value");
                 return BLE_ATT_ERR_INSUFFICIENT_RES;
             }
