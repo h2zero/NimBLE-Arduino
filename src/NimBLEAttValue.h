@@ -46,6 +46,7 @@
 # include <cstring>
 # include <cstdint>
 # include <atomic>
+# include "NimBLEString.h"
 
 # ifndef MYNEWT_VAL_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
 #  ifndef CONFIG_NIMBLE_CPP_ATT_VALUE_TIMESTAMP_ENABLED
@@ -241,11 +242,21 @@ class NimBLEAttValue {
         : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.data()), clampLen(str.length()), max_len) {}
 
     /**
+     * @brief Construct with an initial value from any supported string type.
+     * @param str A non-owning string view; its contents are copied into this value.
+     */
+    NimBLEAttValue(NimBLEStringView str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.data()), clampLen(str.size()), max_len) {}
+
+    /**
      * @brief Construct with an initial value from a std::string_view.
      * @param str A std::string_view containing the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
     NimBLEAttValue(std::string_view str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.data()), clampLen(str.size()), max_len) {}
+
+    NimBLEAttValue(const NimBLEString& str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
         : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.data()), clampLen(str.size()), max_len) {}
 
     /**
@@ -465,7 +476,15 @@ class NimBLEAttValue {
      * @brief Operator; Get a std::string_view of the value.
      * @note See data() for thread safety restrictions, the view is invalidated by a concurrent update.
      */
-    operator std::string_view() const { return std::string_view(reinterpret_cast<const char*>(m_attr_value), m_attr_len); }
+    operator std::string_view() const & {
+        return std::string_view(reinterpret_cast<const char*>(m_attr_value), m_attr_len);
+    }
+    operator std::string_view() const && = delete;
+
+    /** @brief Get an owning string wrapper containing the value's bytes. */
+    operator NimBLEString() const {
+        return NimBLEString(std::string_view(reinterpret_cast<const char*>(m_attr_value), m_attr_len));
+    }
 
     /** @brief Operator; Get the value as a const uint8_t*. */
     operator const uint8_t*() const { return m_attr_value; }

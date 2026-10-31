@@ -382,7 +382,7 @@ bool NimBLERemoteCharacteristic::hasExtendedProps() const {
  * @brief Convert a NimBLERemoteCharacteristic to a string representation;
  * @return a String representation.
  */
-std::string NimBLERemoteCharacteristic::toString() const {
+NimBLEString NimBLERemoteCharacteristic::toString() const {
     std::string res = "Characteristic: uuid: " + m_uuid.toString();
     char        val[6];
     res += ", handle: ";
@@ -400,7 +400,7 @@ std::string NimBLERemoteCharacteristic::toString() const {
         res += "\n" + it->toString();
     }
 
-    return res;
+    return std::move(res);
 } // toString
 
 NimBLEClient* NimBLERemoteCharacteristic::getClient() const {

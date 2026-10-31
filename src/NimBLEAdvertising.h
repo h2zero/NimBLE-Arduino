@@ -40,6 +40,7 @@
 # include <string>
 # include <string_view>
 # include <vector>
+# include "NimBLEString.h"
 
 class NimBLEAdvertising;
 typedef std::function<void(NimBLEAdvertising*)> advCompleteCB_t;
@@ -80,13 +81,13 @@ class NimBLEAdvertising {
     bool setAppearance(uint16_t appearance);
     bool setPreferredParams(uint16_t minInterval, uint16_t maxInterval);
     bool addTxPower();
-    bool setName(std::string_view name);
+    bool setName(NimBLEStringView name);
     bool setManufacturerData(const uint8_t* data, size_t length);
-    bool setManufacturerData(std::string_view data);
+    bool setManufacturerData(NimBLEStringView data);
     bool setManufacturerData(const std::vector<uint8_t>& data);
-    bool setURI(std::string_view uri);
+    bool setURI(NimBLEStringView uri);
     bool setServiceData(const NimBLEUUID& uuid, const uint8_t* data, size_t length);
-    bool setServiceData(const NimBLEUUID& uuid, std::string_view data);
+    bool setServiceData(const NimBLEUUID& uuid, NimBLEStringView data);
     bool setServiceData(const NimBLEUUID& uuid, const std::vector<uint8_t>& data);
 
   private:

@@ -41,6 +41,7 @@
 /**************************/
 
 # include <string>
+# include "NimBLEString.h"
 # include <vector>
 # include <atomic>
 
@@ -120,12 +121,12 @@ typedef int (*gap_event_handler)(ble_gap_event* event, void* arg);
  */
 class NimBLEDevice {
   public:
-    static bool          init(const std::string& deviceName);
+    static bool          init(NimBLEStringView deviceName);
     static bool          deinit(bool clearAll = false);
-    static bool          setDeviceName(const std::string& deviceName);
+    static bool          setDeviceName(NimBLEStringView deviceName);
     static bool          isInitialized();
     static NimBLEAddress getAddress();
-    static std::string   toString();
+    static NimBLEString  toString();
     static const char*   getVersion();
     static bool          whiteListAdd(const NimBLEAddress& address);
     static bool          whiteListRemove(const NimBLEAddress& address);

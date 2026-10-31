@@ -284,7 +284,7 @@ bool NimBLEAdvertisementData::setManufacturerData(const uint8_t* data, size_t le
  * @param [in] data The manufacturer data to advertise.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::setManufacturerData(std::string_view data) {
+bool NimBLEAdvertisementData::setManufacturerData(NimBLEStringView data) {
     return setManufacturerData(reinterpret_cast<const uint8_t*>(data.data()), data.length());
 } // setManufacturerData
 
@@ -302,7 +302,7 @@ bool NimBLEAdvertisementData::setManufacturerData(const std::vector<uint8_t>& da
  * @param [in] uri The uri to advertise.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::setURI(std::string_view uri) {
+bool NimBLEAdvertisementData::setURI(NimBLEStringView uri) {
     if (uri.length() > BLE_HS_ADV_MAX_FIELD_SZ) {
         NIMBLE_LOGE(LOG_TAG, "URI too long");
         return false;
@@ -324,7 +324,7 @@ bool NimBLEAdvertisementData::setURI(std::string_view uri) {
  * and the data type will be set to incomplete name.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::setName(std::string_view name, bool isComplete) {
+bool NimBLEAdvertisementData::setName(NimBLEStringView name, bool isComplete) {
     if (name.length() > BLE_HS_ADV_MAX_FIELD_SZ) {
         NIMBLE_LOGE(LOG_TAG, "Name too long - truncating");
         isComplete = false;
@@ -343,7 +343,7 @@ bool NimBLEAdvertisementData::setName(std::string_view name, bool isComplete) {
  * @param [in] name The short name of the device.
  * @return True if successful.
  */
-bool NimBLEAdvertisementData::setShortName(std::string_view name) {
+bool NimBLEAdvertisementData::setShortName(NimBLEStringView name) {
     return setName(name, false);
 } // setShortName
 
@@ -501,7 +501,7 @@ bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, const uint8
  * @return True if the service data was set successfully.
  * @note If data length is 0 the service data will not be advertised.
  */
-bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, std::string_view data) {
+bool NimBLEAdvertisementData::setServiceData(const NimBLEUUID& uuid, NimBLEStringView data) {
     return setServiceData(uuid, reinterpret_cast<const uint8_t*>(data.data()), data.length());
 } // setServiceData
 
@@ -569,7 +569,7 @@ void NimBLEAdvertisementData::clearData() {
  * @brief Get the string representation of the advertisement data.
  * @return The string representation of the advertisement data.
  */
-std::string NimBLEAdvertisementData::toString() const {
+NimBLEString NimBLEAdvertisementData::toString() const {
     std::string hexStr = NimBLEUtils::dataToHexString(&m_payload[0], m_payload.size());
     std::string str;
     for (size_t i = 0; i < hexStr.length(); i += 2) {
@@ -580,7 +580,7 @@ std::string NimBLEAdvertisementData::toString() const {
         }
     }
 
-    return str;
+    return std::move(str);
 } // toString
 
 #endif // (CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_BROADCASTER) && !MYNEWT_VAL(BLE_EXT_ADV)) || defined(_DOXYGEN_)

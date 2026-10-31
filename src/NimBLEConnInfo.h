@@ -25,6 +25,7 @@
 #endif
 
 #include "NimBLEAddress.h"
+#include "NimBLEString.h"
 #include <cstdio>
 
 /**
@@ -72,7 +73,7 @@ class NimBLEConnInfo {
     uint8_t getSecKeySize() const { return m_desc.sec_state.key_size; }
 
     /** @brief Get a string representation of the connection info, useful for debugging */
-    std::string toString() const {
+    NimBLEString toString() const {
         std::string str;
         // 294 chars max expected from all labels + worst-case values, round up to 300.
         str.resize(300);
@@ -103,7 +104,7 @@ class NimBLEConnInfo {
                  isEncrypted() ? "Yes" : "No",
                  isAuthenticated() ? "Yes" : "No",
                  getSecKeySize());
-        return str;
+        return std::move(str);
     }
 
   private:

@@ -471,7 +471,7 @@ NimBLECharacteristicCallbacks* NimBLECharacteristic::getCallbacks() const {
  * @brief Return a string representation of the characteristic.
  * @return A string representation of the characteristic.
  */
-std::string NimBLECharacteristic::toString() const {
+NimBLEString NimBLECharacteristic::toString() const {
     std::string res = "UUID: " + m_uuid.toString() + ", handle : 0x";
     char        hex[5];
     snprintf(hex, sizeof(hex), "%04x", getHandle());
@@ -483,7 +483,7 @@ std::string NimBLECharacteristic::toString() const {
     if (m_properties & BLE_GATT_CHR_PROP_BROADCAST) res += "Broadcast ";
     if (m_properties & BLE_GATT_CHR_PROP_NOTIFY) res += "Notify ";
     if (m_properties & BLE_GATT_CHR_PROP_INDICATE) res += "Indicate ";
-    return res;
+    return std::move(res);
 } // toString
 
 /**

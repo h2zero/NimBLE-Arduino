@@ -10,11 +10,15 @@ All notable changes to this project will be documented in this file.
 ## Changed
 - **C++20 is now required.** Support for C++11/14/17 has been removed; builds must use `-std=gnu++20` or newer.
 - The `Has_data_size`, `Has_c_str_length` and `Has_value_type` SFINAE traits and the pre-C++17 `enable_if` overloads were replaced with C++20 concepts (`NimBLEDataContainer`, `NimBLEStringLike`, `NimBLECharArray`, `NimBLEByteValue`) and a single `NimBLEAsBytes` helper.
-- `NimBLEAddress(std::string_view, uint8_t)` and the advertising/HID string setters (`setName`, `setShortName`, `setURI`, `setManufacturerData`, `setServiceData`, `addData`, `setManufacturer`) now take `std::string_view`.
+- String-taking public APIs now accept `NimBLEStringView`, which adapts `std::string`, `std::string_view`, C strings, Arduino `String`, and `NimBLEString`.
+- String-returning public APIs now return the `NimBLEString` wrapper, convertible to `std::string` and Arduino `String`. Results may own their contents or borrow from existing storage; `view()` and lvalue conversion to `std::string_view` provide non-owning access while preventing views from temporary wrappers.
+- Advertisement payload getters return borrowed `NimBLEString` results to avoid copying. These remain valid only while the advertised device is alive and its payload has not been updated; calling `c_str()` on a borrowed result creates a null-terminated copy.
+- Existing `NimBLEAddress` and `NimBLEUUID` conversions to `std::string` remain available for source compatibility.
+- Changing public return types to `NimBLEString` requires rebuilding dependent applications; existing source assignments to `std::string` remain supported by conversion.
 - `NimBLEAdvertisedDevice::getManufacturerData<T>`/`getServiceData<T>` are now restricted to trivially copyable types and copy the bytes instead of casting the buffer.
 
 ## Added
-- `NimBLEAttValue` can be constructed from and converted to `std::string_view`.
+- `NimBLEAttValue` can be constructed from and converted to `std::string_view` and `NimBLEString`.
 - `std::string_view` and `std::span` can be passed to the `setValue`, `writeValue`, `notify` and `indicate` templates.
 
 ## [2.5.0] 2026-04-01

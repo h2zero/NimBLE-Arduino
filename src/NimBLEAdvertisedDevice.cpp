@@ -199,7 +199,7 @@ uint16_t NimBLEAdvertisedDevice::getMaxInterval() const {
  * @param [in] index The index of the of the manufacturer data set to get.
  * @return The manufacturer data.
  */
-std::string NimBLEAdvertisedDevice::getManufacturerData(uint8_t index) const {
+NimBLEString NimBLEAdvertisedDevice::getManufacturerData(uint8_t index) const {
     return getPayloadByType(BLE_HS_ADV_TYPE_MFG_DATA, index);
 } // getManufacturerData
 
@@ -215,7 +215,7 @@ uint8_t NimBLEAdvertisedDevice::getManufacturerDataCount() const {
  * @brief Get the URI from the advertisement.
  * @return The URI data.
  */
-std::string NimBLEAdvertisedDevice::getURI() const {
+NimBLEString NimBLEAdvertisedDevice::getURI() const {
     return getPayloadByType(BLE_HS_ADV_TYPE_URI);
 } // getURI
 
@@ -225,12 +225,13 @@ std::string NimBLEAdvertisedDevice::getURI() const {
  * @param [in] index The index of the data type.
  * @return The data available under the type `type`.
  */
-std::string NimBLEAdvertisedDevice::getPayloadByType(uint16_t type, uint8_t index) const {
+NimBLEString NimBLEAdvertisedDevice::getPayloadByType(uint16_t type, uint8_t index) const {
     size_t data_loc;
     if (findAdvField(type, index, &data_loc) > 0) {
         const ble_hs_adv_field* field = reinterpret_cast<const ble_hs_adv_field*>(&m_payload[data_loc]);
         if (field->length > 1) {
-            return std::string((char*)field->value, field->length - 1);
+            return NimBLEString::borrowed(
+                std::string_view(reinterpret_cast<const char*>(field->value), field->length - 1));
         }
     }
 
@@ -241,7 +242,7 @@ std::string NimBLEAdvertisedDevice::getPayloadByType(uint16_t type, uint8_t inde
  * @brief Get the advertised name.
  * @return The name of the advertised device.
  */
-std::string NimBLEAdvertisedDevice::getName() const {
+NimBLEString NimBLEAdvertisedDevice::getName() const {
     return getPayloadByType(BLE_HS_ADV_TYPE_COMP_NAME);
 } // getName
 
@@ -305,14 +306,14 @@ NimBLEAddress NimBLEAdvertisedDevice::getTargetAddress(uint8_t index) const {
  * @param [in] index The index of the service data requested.
  * @return The advertised service data or empty string if no data.
  */
-std::string NimBLEAdvertisedDevice::getServiceData(uint8_t index) const {
+NimBLEString NimBLEAdvertisedDevice::getServiceData(uint8_t index) const {
     uint8_t bytes;
     size_t  data_loc = findServiceData(index, &bytes);
     if (data_loc != ULONG_MAX) {
         const ble_hs_adv_field* field = reinterpret_cast<const ble_hs_adv_field*>(&m_payload[data_loc]);
         if (field->length > bytes) {
             const char* field_data = reinterpret_cast<const char*>(field->value + bytes);
-            return std::string(field_data, field->length - bytes - 1);
+            return NimBLEString::borrowed(std::string_view(field_data, field->length - bytes - 1));
         }
     }
 
@@ -324,7 +325,7 @@ std::string NimBLEAdvertisedDevice::getServiceData(uint8_t index) const {
  * @param [in] uuid The uuid of the service data requested.
  * @return The advertised service data or empty string if no data.
  */
-std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID& uuid) const {
+NimBLEString NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID& uuid) const {
     uint8_t bytes;
     uint8_t index      = 0;
     size_t  data_loc   = findServiceData(index, &bytes);
@@ -335,7 +336,7 @@ std::string NimBLEAdvertisedDevice::getServiceData(const NimBLEUUID& uuid) const
         const ble_hs_adv_field* field = reinterpret_cast<const ble_hs_adv_field*>(&m_payload[data_loc]);
         if (bytes == uuid_bytes && NimBLEUUID(field->value, bytes) == uuid) {
             const char* field_data = reinterpret_cast<const char*>(field->value + bytes);
-            return std::string(field_data, field->length - bytes - 1);
+            return NimBLEString::borrowed(std::string_view(field_data, field->length - bytes - 1));
         }
 
         index++;
@@ -709,8 +710,8 @@ uint8_t NimBLEAdvertisedDevice::findAdvField(uint8_t type, uint8_t index, size_t
  * @brief Create a string representation of this device.
  * @return A string representation of this device.
  */
-std::string NimBLEAdvertisedDevice::toString() const {
-    std::string res = "Name: " + getName() + ", Address: " + getAddress().toString();
+NimBLEString NimBLEAdvertisedDevice::toString() const {
+    std::string res = "Name: " + getName().toStdString() + ", Address: " + getAddress().toString().toStdString();
 
     if (haveAppearance()) {
         char val[6];
@@ -726,7 +727,7 @@ std::string NimBLEAdvertisedDevice::toString() const {
     }
 
     if (haveServiceUUID()) {
-        res += ", serviceUUID: " + getServiceUUID().toString();
+        res += ", serviceUUID: " + getServiceUUID().toString().toStdString();
     }
 
     if (haveTXPower()) {
@@ -740,12 +741,12 @@ std::string NimBLEAdvertisedDevice::toString() const {
         uint8_t count  = getServiceDataCount();
         res           += "\nService Data:";
         for (uint8_t i = 0; i < count; i++) {
-            res += "\nUUID: " + std::string(getServiceDataUUID(i));
+            res += "\nUUID: " + getServiceDataUUID(i).toString().toStdString();
             res += ", Data: " + getServiceData(i);
         }
     }
 
-    return res;
+    return std::move(res);
 
 } // toString
 

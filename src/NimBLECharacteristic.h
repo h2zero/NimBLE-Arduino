@@ -32,6 +32,7 @@ class NimBLE2904;
 # include <string>
 # include <vector>
 # include <array>
+# include "NimBLEString.h"
 
 /**
  * @brief The model of a BLE Characteristic.
@@ -52,7 +53,7 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 
     ~NimBLECharacteristic();
 
-    std::string toString() const;
+    NimBLEString toString() const;
     void        addDescriptor(NimBLEDescriptor* pDescriptor);
     void        removeDescriptor(NimBLEDescriptor* pDescriptor, bool deleteDsc = false);
     uint16_t    getProperties() const;

@@ -87,7 +87,7 @@ uint32_t NimBLEEddystoneTLM::getTime() {
  * @brief Get a string representation of the beacon.
  * @return The string representation.
  */
-std::string NimBLEEddystoneTLM::toString() {
+NimBLEString NimBLEEddystoneTLM::toString() {
     std::string out    = "";
     uint32_t    rawsec = ENDIAN_CHANGE_U32(m_eddystoneData.tmil);
     char        val[12];
@@ -138,7 +138,7 @@ std::string NimBLEEddystoneTLM::toString() {
     out += val;
     out += "\n";
 
-    return out;
+    return std::move(out);
 } // toString
 
 /**

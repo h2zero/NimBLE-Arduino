@@ -28,6 +28,7 @@
 # endif
 
 # include "NimBLEAddress.h"
+# include "NimBLEString.h"
 # include "NimBLEUtils.h"
 
 # include <stdint.h>
@@ -67,7 +68,7 @@ class NimBLEClient {
     void           setCallbacks(NimBLEClientCallbacks& callbacks);
     void           setCallbacks(NimBLEClientCallbacks&&) = delete; // Block rvalues
     void           resetCallbacks();
-    std::string    toString() const;
+    NimBLEString   toString() const;
     uint16_t       getConnHandle() const;
     uint16_t       getMTU() const;
     bool           exchangeMTU();

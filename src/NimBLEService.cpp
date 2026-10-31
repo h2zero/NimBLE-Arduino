@@ -72,7 +72,7 @@ void NimBLEService::dump() const {
         count++;
         res += "handle: 0x";
         res += hex;
-        res += ", uuid: " + std::string(it->getUUID());
+        res += ", uuid: " + it->getUUID().toString().toStdString();
     }
 
     NIMBLE_LOGD(LOG_TAG, "Characteristics:\n%s", res.c_str());
@@ -210,7 +210,7 @@ NimBLECharacteristic* NimBLEService::createCharacteristic(const char* uuid, uint
 NimBLECharacteristic* NimBLEService::createCharacteristic(const NimBLEUUID& uuid, uint32_t properties, uint16_t max_len) {
     NimBLECharacteristic* pChar = new NimBLECharacteristic(uuid, properties, max_len, this);
     if (getCharacteristic(uuid) != nullptr) {
-        NIMBLE_LOGD(LOG_TAG, "Adding a duplicate characteristic with UUID: %s", std::string(uuid).c_str());
+        NIMBLE_LOGD(LOG_TAG, "Adding a duplicate characteristic with UUID: %s", uuid.toString().c_str());
     }
 
     addCharacteristic(pChar);
@@ -355,13 +355,13 @@ std::vector<NimBLECharacteristic*> NimBLEService::getCharacteristics(const NimBL
  * * Its handle
  * @return A string representation of this service.
  */
-std::string NimBLEService::toString() const {
+NimBLEString NimBLEService::toString() const {
     std::string res = "UUID: " + getUUID().toString();
     char        hex[5];
     snprintf(hex, sizeof(hex), "%04x", getHandle());
     res += ", handle: 0x";
     res += hex;
-    return res;
+    return std::move(res);
 } // toString
 
 /**

@@ -24,6 +24,7 @@
 class NimBLEService;
 
 # include "NimBLEAttribute.h"
+# include "NimBLEString.h"
 # include "NimBLEServer.h"
 # include "NimBLECharacteristic.h"
 
@@ -38,7 +39,7 @@ class NimBLEService : public NimBLELocalAttribute {
     ~NimBLEService();
 
     NimBLEServer* getServer() const;
-    std::string   toString() const;
+    NimBLEString  toString() const;
     void          dump() const;
     bool          isStarted() const;
 

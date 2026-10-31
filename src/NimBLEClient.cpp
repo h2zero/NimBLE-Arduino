@@ -210,7 +210,7 @@ int NimBLEClient::startConnectionAttempt(const ble_addr_t* peerAddr) {
 
             case BLE_HS_EDONE:
                 // A connection to this device already exists, do not connect twice.
-                NIMBLE_LOGE(LOG_TAG, "Already connected to device; addr=%s", std::string(m_peerAddress).c_str());
+                NIMBLE_LOGE(LOG_TAG, "Already connected to device; addr=%s", m_peerAddress.toString().c_str());
                 break;
 
             case BLE_HS_EALREADY:
@@ -220,7 +220,7 @@ int NimBLEClient::startConnectionAttempt(const ble_addr_t* peerAddr) {
             default:
                 NIMBLE_LOGE(LOG_TAG,
                             "Failed to connect to %s, rc=%d; %s",
-                            std::string(m_peerAddress).c_str(),
+                            m_peerAddress.toString().c_str(),
                             rc,
                             NimBLEUtils::returnCodeToString(rc));
                 break;
@@ -1431,7 +1431,7 @@ void NimBLEClient::resetCallbacks() {
  * @brief Return a string representation of this client.
  * @return A string representation of this client.
  */
-std::string NimBLEClient::toString() const {
+NimBLEString NimBLEClient::toString() const {
     std::string res  = "peer address: " + m_peerAddress.toString();
     res             += "\nServices:\n";
 
@@ -1439,7 +1439,7 @@ std::string NimBLEClient::toString() const {
         res += it->toString() + "\n";
     }
 
-    return res;
+    return std::move(res);
 } // toString
 
 static const char* CB_TAG = "NimBLEClientCallbacks";

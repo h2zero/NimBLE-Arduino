@@ -22,6 +22,7 @@
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_PERIPHERAL)
 
 # include "NimBLELocalValueAttribute.h"
+# include "NimBLEString.h"
 # include <string>
 
 class NimBLECharacteristic;
@@ -40,7 +41,7 @@ class NimBLEDescriptor : public NimBLELocalValueAttribute {
                      NimBLECharacteristic* pCharacteristic = nullptr);
     ~NimBLEDescriptor() = default;
 
-    std::string           toString() const;
+    NimBLEString          toString() const;
     void                  setCallbacks(NimBLEDescriptorCallbacks& callbacks);
     void                  setCallbacks(NimBLEDescriptorCallbacks&&) = delete;
     void                  resetCallbacks();

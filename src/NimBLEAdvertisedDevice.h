@@ -34,6 +34,7 @@
 # endif
 
 # include <vector>
+# include "NimBLEString.h"
 # include <string>
 # include <string_view>
 # include <algorithm>
@@ -60,15 +61,21 @@ class NimBLEAdvertisedDevice {
     uint16_t             getMaxInterval() const;
     uint8_t              getManufacturerDataCount() const;
     const NimBLEAddress& getAddress() const;
-    std::string          getManufacturerData(uint8_t index = 0) const;
-    std::string          getURI() const;
-    std::string          getPayloadByType(uint16_t type, uint8_t index = 0) const;
-    std::string          getName() const;
+    /** @note The result may borrow the advertisement payload; if so, it is invalidated when this device is updated or destroyed. */
+    NimBLEString         getManufacturerData(uint8_t index = 0) const;
+    /** @note The result may borrow the advertisement payload; if so, it is invalidated when this device is updated or destroyed. */
+    NimBLEString         getURI() const;
+    /** @note The result may borrow the advertisement payload; if so, it is invalidated when this device is updated or destroyed. */
+    NimBLEString         getPayloadByType(uint16_t type, uint8_t index = 0) const;
+    /** @note The result may borrow the advertisement payload; if so, it is invalidated when this device is updated or destroyed. */
+    NimBLEString         getName() const;
     int8_t               getRSSI() const;
     NimBLEScan*          getScan() const;
     uint8_t              getServiceDataCount() const;
-    std::string          getServiceData(uint8_t index = 0) const;
-    std::string          getServiceData(const NimBLEUUID& uuid) const;
+    /** @note The result may borrow the advertisement payload; if so, it is invalidated when this device is updated or destroyed. */
+    NimBLEString         getServiceData(uint8_t index = 0) const;
+    /** @note The result may borrow the advertisement payload; if so, it is invalidated when this device is updated or destroyed. */
+    NimBLEString         getServiceData(const NimBLEUUID& uuid) const;
     NimBLEUUID           getServiceDataUUID(uint8_t index = 0) const;
     NimBLEUUID           getServiceUUID(uint8_t index = 0) const;
     uint8_t              getServiceUUIDCount() const;
@@ -89,7 +96,7 @@ class NimBLEAdvertisedDevice {
     bool                 haveTargetAddress() const;
     bool                 haveURI() const;
     bool                 haveType(uint16_t type) const;
-    std::string          toString() const;
+    NimBLEString         toString() const;
     bool                 isConnectable() const;
     bool                 isScannable() const;
     bool                 isLegacyAdvertisement() const;
@@ -117,7 +124,8 @@ class NimBLEAdvertisedDevice {
     template <typename T>
         requires std::is_trivially_copyable_v<T>
     T getManufacturerData(bool skipSizeCheck = false) const {
-        return fromBytes<T>(getManufacturerData(), skipSizeCheck);
+        const auto data = getManufacturerData();
+        return fromBytes<T>(data.view(), skipSizeCheck);
     }
 
     /**
@@ -132,7 +140,8 @@ class NimBLEAdvertisedDevice {
     template <typename T>
         requires std::is_trivially_copyable_v<T>
     T getServiceData(uint8_t index = 0, bool skipSizeCheck = false) const {
-        return fromBytes<T>(getServiceData(index), skipSizeCheck);
+        const auto data = getServiceData(index);
+        return fromBytes<T>(data.view(), skipSizeCheck);
     }
 
     /**
@@ -147,7 +156,8 @@ class NimBLEAdvertisedDevice {
     template <typename T>
         requires std::is_trivially_copyable_v<T>
     T getServiceData(const NimBLEUUID& uuid, bool skipSizeCheck = false) const {
-        return fromBytes<T>(getServiceData(uuid), skipSizeCheck);
+        const auto data = getServiceData(uuid);
+        return fromBytes<T>(data.view(), skipSizeCheck);
     }
 
   private:

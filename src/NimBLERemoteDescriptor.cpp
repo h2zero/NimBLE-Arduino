@@ -42,14 +42,14 @@ NimBLERemoteCharacteristic* NimBLERemoteDescriptor::getRemoteCharacteristic() co
  * @brief Return a string representation of this Remote Descriptor.
  * @return A string representation of this Remote Descriptor.
  */
-std::string NimBLERemoteDescriptor::toString() const {
+NimBLEString NimBLERemoteDescriptor::toString() const {
     std::string res = "Descriptor: uuid: " + getUUID().toString();
     char        val[6];
     res += ", handle: ";
     snprintf(val, sizeof(val), "%d", getHandle());
     res += val;
 
-    return res;
+    return std::move(res);
 } // toString
 
 NimBLEClient* NimBLERemoteDescriptor::getClient() const {

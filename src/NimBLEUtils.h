@@ -41,6 +41,7 @@ void nimble_cpp_assert(const char* file, unsigned line) __attribute((weak, noret
 # endif
 
 # include <string>
+# include "NimBLEString.h"
 # include <vector>
 # include <atomic>
 
@@ -88,7 +89,7 @@ class NimBLEUtils {
     };
 
     static const char*   gapEventToString(uint8_t eventType);
-    static std::string   dataToHexString(const uint8_t* source, uint8_t length);
+    static NimBLEString  dataToHexString(const uint8_t* source, uint8_t length);
     static const char*   advTypeToString(uint8_t advType);
     static const char*   returnCodeToString(int rc);
     static NimBLEAddress generateAddr(bool nrpa);

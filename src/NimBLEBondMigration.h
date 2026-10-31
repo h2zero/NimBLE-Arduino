@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <string>
+#include "NimBLEString.h"
 #include <vector>
 
 #include "esp_err.h"
@@ -487,7 +488,7 @@ inline bool migrateBondStore(bool toCurrent, uint16_t maxEntries) {
 
 } // namespace detail
 
-inline std::string dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
+inline NimBLEString dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {
     std::string out;
     out.reserve(2048);
 
@@ -498,7 +499,7 @@ inline std::string dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_B
                            "Failed to open NVS namespace '%s', err=%d\n",
                            detail::kBondNamespace,
                            static_cast<int>(err));
-        return out;
+        return std::move(out);
     }
 
     out += "NimBLE bond dump\n";
@@ -646,7 +647,7 @@ inline std::string dumpBondData(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_B
     }
 
     nvs_close(nvsHandle);
-    return out;
+    return std::move(out);
 }
 
 inline bool migrateBondStoreToCurrent(uint16_t maxEntries = MYNEWT_VAL(BLE_STORE_MAX_BONDS)) {

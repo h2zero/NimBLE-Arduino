@@ -21,6 +21,7 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)
 
+# include "NimBLEString.h"
 # include "NimBLERemoteValueAttribute.h"
 
 class NimBLERemoteCharacteristic;
@@ -32,7 +33,7 @@ class NimBLEClient;
 class NimBLERemoteDescriptor : public NimBLERemoteValueAttribute {
   public:
     NimBLERemoteCharacteristic* getRemoteCharacteristic() const;
-    std::string                 toString(void) const;
+    NimBLEString                toString(void) const;
     NimBLEClient*               getClient() const override;
 
   private:

@@ -614,7 +614,7 @@ const char* NimBLEUtils::gapEventToString(uint8_t eventType) {
  * @param [in] length The length of the data to convert.
  * @return A string representation of the data.
  */
-std::string NimBLEUtils::dataToHexString(const uint8_t* source, uint8_t length) {
+NimBLEString NimBLEUtils::dataToHexString(const uint8_t* source, uint8_t length) {
     constexpr char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     std::string    str{};
     str.resize(length << 1);
@@ -624,7 +624,7 @@ std::string NimBLEUtils::dataToHexString(const uint8_t* source, uint8_t length) 
         str[2 * i + 1] = hexmap[source[i] & 0x0F];
     }
 
-    return str;
+    return std::move(str);
 } // dataToHexString
 
 /**

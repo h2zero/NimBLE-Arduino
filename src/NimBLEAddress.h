@@ -32,8 +32,7 @@
 # undef max
 /**************************/
 
-# include <string>
-# include <string_view>
+# include "NimBLEString.h"
 /**
  * @brief A BLE device address.
  *
@@ -47,7 +46,7 @@ class NimBLEAddress : private ble_addr_t {
     NimBLEAddress() = default;
     NimBLEAddress(const ble_addr_t address);
     NimBLEAddress(const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t type);
-    NimBLEAddress(std::string_view stringAddress, uint8_t type);
+    NimBLEAddress(NimBLEStringView stringAddress, uint8_t type);
     NimBLEAddress(const uint64_t& address, uint8_t type);
 
     bool                 isRpa() const;
@@ -57,12 +56,13 @@ class NimBLEAddress : private ble_addr_t {
     bool                 isNull() const;
     bool                 equals(const NimBLEAddress& otherAddress) const;
     const ble_addr_t*    getBase() const;
-    std::string          toString() const;
+    NimBLEString         toString() const;
     uint8_t              getType() const;
     const uint8_t*       getVal() const;
     const NimBLEAddress& reverseByteOrder();
     bool                 operator==(const NimBLEAddress& rhs) const;
     bool                 operator!=(const NimBLEAddress& rhs) const;
+                         operator NimBLEString() const;
                          operator std::string() const;
                          operator uint64_t() const;
 };

@@ -887,7 +887,7 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
 void NimBLEServer::addService(NimBLEService* service) {
     // Check that a service with the supplied UUID does not already exist.
     if (getServiceByUUID(service->getUUID()) != nullptr) {
-        NIMBLE_LOGW(LOG_TAG, "Warning creating a duplicate service UUID: %s", std::string(service->getUUID()).c_str());
+        NIMBLE_LOGW(LOG_TAG, "Warning creating a duplicate service UUID: %s", service->getUUID().toString().c_str());
     }
 
     // If adding a service that was not removed add it and return.

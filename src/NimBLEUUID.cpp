@@ -75,7 +75,8 @@ NimBLEUUID::NimBLEUUID(const ble_uuid_t* uuid) {
  *
  * @param [in] value The string to build a UUID from.
  */
-NimBLEUUID::NimBLEUUID(const std::string& value) {
+NimBLEUUID::NimBLEUUID(NimBLEStringView stringValue) {
+    const std::string value{stringValue.view()};
     if (value.length() == 4) {
         m_uuid.u.type    = BLE_UUID_TYPE_16;
         m_uuid.u16.value = strtoul(value.c_str(), nullptr, 16);
@@ -212,7 +213,8 @@ bool NimBLEUUID::equals(const NimBLEUUID& uuid) const {
  *
  * @param [in] uuid The string to create the UUID from.
  */
-NimBLEUUID NimBLEUUID::fromString(const std::string& uuid) {
+NimBLEUUID NimBLEUUID::fromString(NimBLEStringView stringValue) {
+    const std::string uuid{stringValue.view()};
     uint8_t start = 0;
     if (strstr(uuid.c_str(), "0x") != nullptr) { // If the string starts with 0x, skip those characters.
         start = 2;
@@ -280,8 +282,8 @@ const NimBLEUUID& NimBLEUUID::to16() {
  * @return A string representation of the UUID.
  * @deprecated Use std::string() operator instead.
  */
-std::string NimBLEUUID::toString() const {
-    return std::string(*this);
+NimBLEString NimBLEUUID::toString() const {
+    return operator NimBLEString();
 } // toString
 
 /**
@@ -351,9 +353,13 @@ bool NimBLEUUID::operator!=(const NimBLEUUID& rhs) const {
  * @details This allows passing NimBLEUUID to functions
  * that accept std::string and/or or it's methods as a parameter.
  */
-NimBLEUUID::operator std::string() const {
+NimBLEUUID::operator NimBLEString() const {
     char buf[BLE_UUID_STR_LEN];
     return ble_uuid_to_str(&m_uuid.u, buf);
 } // operator std::string
+
+NimBLEUUID::operator std::string() const {
+    return operator NimBLEString().toStdString();
+}
 
 #endif /* CONFIG_BT_NIMBLE_ENABLED */

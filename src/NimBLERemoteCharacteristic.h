@@ -21,6 +21,7 @@
 #include "syscfg/syscfg.h"
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)
 
+# include "NimBLEString.h"
 # include "NimBLERemoteValueAttribute.h"
 # include <vector>
 # include <functional>
@@ -35,7 +36,7 @@ struct NimBLEDescriptorFilter;
  */
 class NimBLERemoteCharacteristic : public NimBLERemoteValueAttribute {
   public:
-    std::string                toString() const;
+    NimBLEString               toString() const;
     const NimBLERemoteService* getRemoteService() const;
     void                       deleteDescriptors() const;
     size_t                     deleteDescriptor(const NimBLEUUID& uuid) const;

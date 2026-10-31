@@ -76,7 +76,7 @@ NimBLEAddress::NimBLEAddress(ble_addr_t address) : ble_addr_t{address} {}
  * * BLE_ADDR_PUBLIC (0)
  * * BLE_ADDR_RANDOM (1)
  */
-NimBLEAddress::NimBLEAddress(std::string_view addr, uint8_t type) {
+NimBLEAddress::NimBLEAddress(NimBLEStringView addr, uint8_t type) {
     this->type = type;
 
     if (addr.length() == BLE_DEV_ADDR_LEN) {
@@ -85,7 +85,7 @@ NimBLEAddress::NimBLEAddress(std::string_view addr, uint8_t type) {
     }
 
     if (addr.length() == 17) {
-        std::string mac{addr};
+        std::string mac{addr.view()};
         mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
         uint64_t address = std::stoull(mac, nullptr, 16);
         memcpy(this->val, &address, sizeof(this->val));
@@ -210,8 +210,8 @@ bool NimBLEAddress::isNull() const {
  * @return The string representation of the address.
  * @deprecated Use std::string() operator instead.
  */
-std::string NimBLEAddress::toString() const {
-    return std::string(*this);
+NimBLEString NimBLEAddress::toString() const {
+    return operator NimBLEString();
 } // toString
 
 /**
@@ -245,7 +245,7 @@ bool NimBLEAddress::operator!=(const NimBLEAddress& rhs) const {
  * @brief Convenience operator to convert this address to string representation.
  * @details This allows passing NimBLEAddress to functions that accept std::string and/or it's methods as a parameter.
  */
-NimBLEAddress::operator std::string() const {
+NimBLEAddress::operator NimBLEString() const {
     char buffer[18];
     snprintf(buffer,
              sizeof(buffer),
@@ -261,7 +261,11 @@ NimBLEAddress::operator std::string() const {
              this->val[1],
              NIMBLE_CPP_ADDR_DELIMITER,
              this->val[0]);
-    return std::string{buffer};
+    return buffer;
+} // operator NimBLEString
+
+NimBLEAddress::operator std::string() const {
+    return operator NimBLEString().toStdString();
 } // operator std::string
 
 /**

@@ -25,6 +25,7 @@
 # include <string>
 # include <string_view>
 # include <vector>
+# include "NimBLEString.h"
 
 class NimBLEUUID;
 /**
@@ -47,11 +48,11 @@ class NimBLEAdvertisementData {
     bool removeServiceUUID(const char* serviceUUID);
     bool removeServices();
     bool setManufacturerData(const uint8_t* data, size_t length);
-    bool setManufacturerData(std::string_view data);
+    bool setManufacturerData(NimBLEStringView data);
     bool setManufacturerData(const std::vector<uint8_t>& data);
-    bool setURI(std::string_view uri);
-    bool setName(std::string_view name, bool isComplete = true);
-    bool setShortName(std::string_view name);
+    bool setURI(NimBLEStringView uri);
+    bool setName(NimBLEStringView name, bool isComplete = true);
+    bool setShortName(NimBLEStringView name);
     bool setCompleteServices(const NimBLEUUID& uuid);
     bool setCompleteServices16(const std::vector<NimBLEUUID>& uuids);
     bool setCompleteServices32(const std::vector<NimBLEUUID>& uuids);
@@ -59,13 +60,13 @@ class NimBLEAdvertisementData {
     bool setPartialServices16(const std::vector<NimBLEUUID>& uuids);
     bool setPartialServices32(const std::vector<NimBLEUUID>& uuids);
     bool setServiceData(const NimBLEUUID& uuid, const uint8_t* data, size_t length);
-    bool setServiceData(const NimBLEUUID& uuid, std::string_view data);
+    bool setServiceData(const NimBLEUUID& uuid, NimBLEStringView data);
     bool setServiceData(const NimBLEUUID& uuid, const std::vector<uint8_t>& data);
     bool removeData(uint8_t type);
     void clearData();
     int  getDataLocation(uint8_t type) const;
 
-    std::string          toString() const;
+    NimBLEString         toString() const;
     std::vector<uint8_t> getPayload() const;
 
   private:

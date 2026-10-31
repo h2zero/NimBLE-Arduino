@@ -24,6 +24,7 @@
 class NimBLEUUID;
 
 # include <string>
+# include "NimBLEString.h"
 
 # define EDDYSTONE_TLM_FRAME_TYPE 0x20
 
@@ -50,7 +51,7 @@ class NimBLEEddystoneTLM {
     int16_t          getTemp();
     uint32_t         getCount();
     uint32_t         getTime();
-    std::string      toString();
+    NimBLEString     toString();
     void             setData(const uint8_t* data, uint8_t length);
     void             setData(const BeaconData& data);
     void             setUUID(const NimBLEUUID& l_uuid);

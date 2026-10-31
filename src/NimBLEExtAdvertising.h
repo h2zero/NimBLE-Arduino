@@ -37,6 +37,7 @@
 # include <string>
 # include <string_view>
 # include <vector>
+# include "NimBLEString.h"
 
 class NimBLEExtAdvertisingCallbacks;
 class NimBLEUUID;
@@ -58,20 +59,20 @@ class NimBLEExtAdvertisement {
     bool        setCompleteServices32(const std::vector<NimBLEUUID>& uuids);
     bool        setFlags(uint8_t flag);
     bool        setManufacturerData(const uint8_t* data, size_t length);
-    bool        setManufacturerData(std::string_view data);
+    bool        setManufacturerData(NimBLEStringView data);
     bool        setManufacturerData(const std::vector<uint8_t>& data);
-    bool        setURI(std::string_view uri);
-    bool        setName(std::string_view name, bool isComplete = true);
+    bool        setURI(NimBLEStringView uri);
+    bool        setName(NimBLEStringView name, bool isComplete = true);
     bool        setPartialServices(const NimBLEUUID& uuid);
     bool        setPartialServices16(const std::vector<NimBLEUUID>& uuids);
     bool        setPartialServices32(const std::vector<NimBLEUUID>& uuids);
     bool        setServiceData(const NimBLEUUID& uuid, const uint8_t* data, size_t length);
-    bool        setServiceData(const NimBLEUUID& uuid, std::string_view data);
+    bool        setServiceData(const NimBLEUUID& uuid, NimBLEStringView data);
     bool        setServiceData(const NimBLEUUID& uuid, const std::vector<uint8_t>& data);
-    bool        setShortName(std::string_view name);
+    bool        setShortName(NimBLEStringView name);
     bool        setData(const uint8_t* data, size_t length);
     bool        addData(const uint8_t* data, size_t length);
-    bool        addData(std::string_view data);
+    bool        addData(NimBLEStringView data);
     bool        setPreferredParams(uint16_t min, uint16_t max);
     bool        addTxPower();
     void        setLegacyAdvertising(bool enable);
@@ -93,7 +94,7 @@ class NimBLEExtAdvertisement {
     int         getDataLocation(uint8_t type) const;
     bool        removeData(uint8_t type);
     size_t      getDataSize() const;
-    std::string toString() const;
+    NimBLEString toString() const;
 
   private:
     friend class NimBLEExtAdvertising;

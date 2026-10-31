@@ -893,7 +893,8 @@ void NimBLEDevice::host_task(void* param) {
  * @brief Initialize the BLE environment.
  * @param [in] deviceName The device name of the device.
  */
-bool NimBLEDevice::init(const std::string& deviceName) {
+bool NimBLEDevice::init(NimBLEStringView stringView) {
+    const std::string deviceName{stringView.view()};
     if (!isInitialized()) {
         NIMBLE_LOGD(LOG_TAG, "Starting %s", getVersion());
 # ifdef ESP_PLATFORM
@@ -1343,7 +1344,8 @@ bool NimBLEDevice::injectConfirmPasskey(const NimBLEConnInfo& peerInfo, bool acc
  * @brief Set the BLEDevice name.
  * @param [in] deviceName The name to set.
  */
-bool NimBLEDevice::setDeviceName(const std::string& deviceName) {
+bool NimBLEDevice::setDeviceName(NimBLEStringView stringView) {
+    const std::string deviceName{stringView.view()};
 # if !defined(MYNEWT_VAL_BLE_GATTS) || MYNEWT_VAL(BLE_GATTS) > 0
     int rc = ble_svc_gap_device_name_set(deviceName.c_str());
     if (rc != 0) {
@@ -1376,7 +1378,7 @@ bool NimBLEDevice::setCustomGapHandler(gap_event_handler handler, void* arg) {
  * @brief Return a string representation of the address of this device.
  * @return A string representation of this device address.
  */
-std::string NimBLEDevice::toString() {
+NimBLEString NimBLEDevice::toString() {
     return getAddress().toString();
 } // toString
 

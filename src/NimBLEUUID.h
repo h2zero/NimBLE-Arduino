@@ -32,7 +32,7 @@
 # undef max
 /**************************/
 
-# include <string>
+# include "NimBLEString.h"
 # include <cstring>
 
 /**
@@ -47,7 +47,7 @@ class NimBLEUUID {
     explicit NimBLEUUID(const char* uuidStr);
     NimBLEUUID(const ble_uuid_any_t& uuid);
     NimBLEUUID(const ble_uuid_t* uuid);
-    NimBLEUUID(const std::string& uuid);
+    NimBLEUUID(NimBLEStringView uuid);
     NimBLEUUID(uint16_t uuid);
     NimBLEUUID(uint32_t uuid);
     NimBLEUUID(const ble_uuid128_t* uuid);
@@ -58,14 +58,15 @@ class NimBLEUUID {
     const uint8_t*    getValue() const;
     const ble_uuid_t* getBase() const;
     bool              equals(const NimBLEUUID& uuid) const;
-    std::string       toString() const;
-    static NimBLEUUID fromString(const std::string& uuid);
+    NimBLEString      toString() const;
+    static NimBLEUUID fromString(NimBLEStringView uuid);
     const NimBLEUUID& to128();
     const NimBLEUUID& to16();
     const NimBLEUUID& reverseByteOrder();
 
     bool operator==(const NimBLEUUID& rhs) const;
     bool operator!=(const NimBLEUUID& rhs) const;
+         operator NimBLEString() const;
          operator std::string() const;
 
 

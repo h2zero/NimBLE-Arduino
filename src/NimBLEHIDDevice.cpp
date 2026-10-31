@@ -92,7 +92,7 @@ void NimBLEHIDDevice::startServices() {
  * @details The characteristic will be created if not already existing.
  * @returns True if the name was set and/or the characteristic created.
  */
-bool NimBLEHIDDevice::setManufacturer(std::string_view name) {
+bool NimBLEHIDDevice::setManufacturer(NimBLEStringView name) {
     if (m_manufacturerChr == nullptr) {
         m_manufacturerChr = m_deviceInfoSvc->createCharacteristic(m_manufacturerChrUuid, NIMBLE_PROPERTY::READ);
     }

@@ -22,6 +22,7 @@
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)
 
 # include "NimBLEAttribute.h"
+# include "NimBLEString.h"
 # include <vector>
 
 class NimBLERemoteCharacteristic;
@@ -40,7 +41,7 @@ class NimBLERemoteService : public NimBLEAttribute {
     NimBLEClient*               getClient(void) const;
     NimBLEAttValue              getValue(const NimBLEUUID& characteristicUuid) const;
     bool                        setValue(const NimBLEUUID& characteristicUuid, const NimBLEAttValue& value) const;
-    std::string                 toString(void) const;
+    NimBLEString                toString(void) const;
     uint16_t                    getStartHandle() const { return getHandle(); }
     uint16_t                    getEndHandle() const { return m_endHandle; }
 

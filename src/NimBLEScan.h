@@ -22,6 +22,7 @@
 #if CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_OBSERVER)
 
 # include "NimBLEAdvertisedDevice.h"
+# include "NimBLEString.h"
 # include "NimBLEUtils.h"
 
 # ifdef USING_NIMBLE_ARDUINO_HEADERS
@@ -87,7 +88,7 @@ class NimBLEScan {
     void              erase(const NimBLEAddress& address);
     void              erase(const NimBLEAdvertisedDevice* device);
     void              setScanResponseTimeout(uint32_t timeoutMs);
-    std::string       getStatsString() const { return m_stats.toString(); }
+    NimBLEString      getStatsString() const { return m_stats.toString(); }
 
 # if MYNEWT_VAL(BLE_EXT_ADV)
     enum Phy { SCAN_1M = 0x01, SCAN_CODED = 0x02, SCAN_ALL = 0x03 };
@@ -125,7 +126,7 @@ class NimBLEScan {
         void incMissedSrCount() { missedSrCount++; }
         void incOrphanedSrCount() { orphanedSrCount++; }
 
-        std::string toString() const {
+        NimBLEString toString() const {
             std::string out;
             out.resize(400); // should be more than enough for the stats string
             snprintf(&out[0],
@@ -150,7 +151,7 @@ class NimBLEScan {
                      srCount ? srTotalMs / srCount : 0,
                      orphanedSrCount,
                      missedSrCount);
-            return out;
+            return std::move(out);
         }
 
         // Records scan-response round-trip time.
@@ -174,7 +175,7 @@ class NimBLEScan {
         void        incDupCount() {}
         void        incMissedSrCount() {}
         void        incOrphanedSrCount() {}
-        std::string toString() const { return ""; }
+        NimBLEString toString() const { return ""; }
         void        recordSrTime(uint32_t ticks) {}
 # endif
     } m_stats;

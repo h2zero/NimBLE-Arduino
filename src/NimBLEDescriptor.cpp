@@ -117,11 +117,11 @@ void NimBLEDescriptor::setCharacteristic(NimBLECharacteristic* pChar) {
  * @brief Return a string representation of the descriptor.
  * @return A string representation of the descriptor.
  */
-std::string NimBLEDescriptor::toString() const {
+NimBLEString NimBLEDescriptor::toString() const {
     char hex[5];
     snprintf(hex, sizeof(hex), "%04x", getHandle());
     std::string res = "UUID: " + m_uuid.toString() + ", handle: 0x" + hex;
-    return res;
+    return std::move(res);
 } // toString
 
 uint8_t NimBLEDescriptor::readEvent(NimBLEConnInfo& connInfo) {

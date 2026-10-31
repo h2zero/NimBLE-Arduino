@@ -286,7 +286,7 @@ size_t NimBLERemoteService::deleteCharacteristic(const NimBLEUUID& uuid) const {
  * @brief Create a string representation of this remote service.
  * @return A string representation of this remote service.
  */
-std::string NimBLERemoteService::toString() const {
+NimBLEString NimBLERemoteService::toString() const {
     std::string res = "Service: uuid: " + m_uuid.toString() + ", start_handle: 0x";
     char        val[5];
     snprintf(val, sizeof(val), "%04x", getHandle());
@@ -299,7 +299,7 @@ std::string NimBLERemoteService::toString() const {
         res += "\n" + chr->toString();
     }
 
-    return res;
+    return std::move(res);
 } // toString
 
 #endif // CONFIG_BT_NIMBLE_ENABLED && MYNEWT_VAL(BLE_ROLE_CENTRAL)
