@@ -58,10 +58,6 @@ unsigned char __atomic_exchange_1(volatile void* ptr, unsigned char val, int) {
 # endif
 
 static const char* LOG_TAG = "NimBLEAttValue";
-ble_npl_mutex      NimBLEAttValue::Lock::m_mutex{};
-std::atomic<bool>  NimBLEAttValue::Lock::m_initialized{false};
-std::atomic<int>   NimBLEAttValue::Lock::m_activeCount{0};
-uint8_t            NimBLEAttValue::EMPTY_VALUE{0};
 
 // Default constructor implementation.
 NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)

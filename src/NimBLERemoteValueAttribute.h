@@ -71,99 +71,19 @@ class NimBLERemoteValueAttribute : public NimBLEValueAttribute, public NimBLEAtt
         return writeValue(reinterpret_cast<const uint8_t*>(str), length ? length : strlen(str), response);
     }
 
-# if __cplusplus < 201703L
     /**
-     * @brief Template to set the remote characteristic value to <type\>val.
+     * @brief Template to write a container, string or trivially copyable object to the remote attribute.
+     * @tparam T The type of the value, must not be a pointer.
      * @param [in] v The value to write.
      * @param [in] response True == request write response.
-     * @details Only used for types without a `c_str()` and `length()` or `data()` and `size()` method.
-     * <type\> size must be evaluatable by `sizeof()` if no length is provided.
+     * @details Types with `data()` and `size()` or `c_str()` and `length()` (including `std::string_view` and
+     * `std::span`) are written by their contents, anything else is written by its object representation using `sizeof()`.
      */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
-#  endif
-    writeValue(const T& v, bool response = false) const {
-        return writeValue(reinterpret_cast<const uint8_t*>(&v), sizeof(T), response);
+    template <NimBLEByteValue T>
+    bool writeValue(const T& v, bool response = false) const {
+        const auto bytes = NimBLEAsBytes(v);
+        return writeValue(bytes.data(), bytes.size(), response);
     }
-
-    /**
-     * @brief Template to set the remote characteristic value to <type\>val.
-     * @param [in] s The value to write.
-     * @param [in] response True == request write response.
-     * @details Only used if the <type\> has a `c_str()` and `length()` method.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
-#  endif
-    writeValue(const T& s, bool response = false) const {
-        return writeValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length(), response);
-    }
-
-    /**
-     * @brief Template to set the remote characteristic value to <type\>val.
-     * @param [in] v The value to write.
-     * @param [in] response True == request write response.
-     * @details Only used if the <type\> has a `data()` and `size()` method with `value_type`.
-     * Correctly calculates byte size for containers with multi-byte element types.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
-#  endif
-    writeValue(const T& v, bool response = false) const {
-        return writeValue(
-            reinterpret_cast<const uint8_t*>(v.data()),
-            v.size() * sizeof(typename T::value_type),
-            response
-        );
-    }
-
-    /**
-     * @brief Template to set the remote characteristic value to <type\>val.
-     * @param [in] v The value to write.
-     * @param [in] response True == request write response.
-     * @details Only used if the <type\> has a `data()` and `size()` method without `value_type`.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_data_size<T>::value && !Has_value_type<T>::value, bool>::type
-#  endif
-    writeValue(const T& v, bool response = false) const {
-        return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size(), response);
-    }
-
-# else
-    /**
-     * @brief Template to set the remote characteristic value to <type\>val.
-     * @param [in] s The value to write.
-     * @param [in] response True == request write response.
-     * @note This function is only available if the type T is not a pointer.
-     */
-    template <typename T>
-    typename std::enable_if<!std::is_pointer<T>::value, bool>::type writeValue(const T& v, bool response = false) const {
-        if constexpr (Has_data_size<T>::value) {
-            if constexpr (Has_value_type<T>::value) {
-                return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size() * sizeof(typename T::value_type), response);
-            } else {
-                return writeValue(reinterpret_cast<const uint8_t*>(v.data()), v.size(), response);
-            }
-        } else if constexpr (Has_c_str_length<T>::value) {
-            return writeValue(reinterpret_cast<const uint8_t*>(v.c_str()), v.length(), response);
-        } else {
-            return writeValue(reinterpret_cast<const uint8_t*>(&v), sizeof(v), response);
-        }
-    }
-# endif
 
     /**
      * @brief Template to convert the remote characteristic data to <type\>.
