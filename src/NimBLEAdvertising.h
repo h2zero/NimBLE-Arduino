@@ -38,6 +38,7 @@
 
 # include <functional>
 # include <string>
+# include <string_view>
 # include <vector>
 
 class NimBLEAdvertising;
@@ -79,13 +80,13 @@ class NimBLEAdvertising {
     bool setAppearance(uint16_t appearance);
     bool setPreferredParams(uint16_t minInterval, uint16_t maxInterval);
     bool addTxPower();
-    bool setName(const std::string& name);
+    bool setName(std::string_view name);
     bool setManufacturerData(const uint8_t* data, size_t length);
-    bool setManufacturerData(const std::string& data);
+    bool setManufacturerData(std::string_view data);
     bool setManufacturerData(const std::vector<uint8_t>& data);
-    bool setURI(const std::string& uri);
+    bool setURI(std::string_view uri);
     bool setServiceData(const NimBLEUUID& uuid, const uint8_t* data, size_t length);
-    bool setServiceData(const NimBLEUUID& uuid, const std::string& data);
+    bool setServiceData(const NimBLEUUID& uuid, std::string_view data);
     bool setServiceData(const NimBLEUUID& uuid, const std::vector<uint8_t>& data);
 
   private:

@@ -28,6 +28,7 @@
 # endif
 
 # include <functional>
+# include <concepts>
 # include <type_traits>
 # include <cstdarg>
 
@@ -81,8 +82,9 @@ class NimBLEStream : public Stream {
     virtual size_t write(uint8_t data) override { return write(&data, 1); }
 
     // Template for other integral types (char, int, long, etc.)
-    template <typename T>
-    typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, uint8_t>::value, size_t>::type write(T data) {
+    template <std::integral T>
+        requires(!std::is_same_v<T, uint8_t>)
+    size_t write(T data) {
         return write(static_cast<uint8_t>(data));
     }
 

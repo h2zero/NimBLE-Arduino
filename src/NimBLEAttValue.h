@@ -37,6 +37,10 @@
 # endif
 
 # include <string>
+# include <string_view>
+# include <span>
+# include <concepts>
+# include <type_traits>
 # include <vector>
 # include <ctime>
 # include <cstring>
@@ -69,28 +73,44 @@
 #  error NIMBLE_CPP_ATT_VALUE_INIT_LENGTH cannot be less than 1; Range = 1 : 512
 # endif
 
-/* Used to determine if the type passed to a template has a data() and size() method. */
-template <typename T, typename = void, typename = void>
-struct Has_data_size : std::false_type {};
-
+/** @brief Satisfied by types with `data()` and `size()` methods (std::vector, std::array, std::string, std::span, etc.). */
 template <typename T>
-struct Has_data_size<T, decltype(void(std::declval<T&>().data())), decltype(void(std::declval<T&>().size()))>
-    : std::true_type {};
+concept NimBLEDataContainer = requires(const T& t) {
+    t.data();
+    t.size();
+};
 
-/* Used to determine if the type passed to a template has a c_str() and length() method. */
-template <typename T, typename = void, typename = void>
-struct Has_c_str_length : std::false_type {};
-
+/** @brief Satisfied by types with `c_str()` and `length()` methods (Arduino String, etc.). */
 template <typename T>
-struct Has_c_str_length<T, decltype(void(std::declval<T&>().c_str())), decltype(void(std::declval<T&>().length()))>
-    : std::true_type {};
+concept NimBLEStringLike = requires(const T& t) {
+    t.c_str();
+    t.length();
+};
 
-/* Used to determine if the type passed to a template has a value_type member (std::vector, std::array, std::string, etc.). */
-template <typename T, typename = void>
-struct Has_value_type : std::false_type {};
-
+/** @brief Satisfied by arrays of char, e.g. string literals and char buffers. */
 template <typename T>
-struct Has_value_type<T, decltype(void(sizeof(typename T::value_type)))> : std::true_type {};
+concept NimBLECharArray = std::is_bounded_array_v<T> && std::same_as<std::remove_extent_t<T>, char>;
+
+/** @brief Satisfied by types that can be sent/stored as raw bytes through the value templates. */
+template <typename T>
+concept NimBLEByteValue = !std::is_pointer_v<T>;
+
+/**
+ * @brief Get the bytes of a value as a span.
+ * @details Containers with `data()` and `size()` are viewed element-wise (size is scaled by the element size),
+ * types with `c_str()` and `length()` are viewed as characters, everything else is viewed as its object representation.
+ * The returned span references the argument and must not outlive it.
+ */
+template <typename T>
+std::span<const uint8_t> NimBLEAsBytes(const T& v) {
+    if constexpr (NimBLEDataContainer<T>) {
+        return {reinterpret_cast<const uint8_t*>(v.data()), v.size() * sizeof(*v.data())};
+    } else if constexpr (NimBLEStringLike<T>) {
+        return {reinterpret_cast<const uint8_t*>(v.c_str()), static_cast<size_t>(v.length())};
+    } else {
+        return {reinterpret_cast<const uint8_t*>(&v), sizeof(T)};
+    }
+}
 
 /**
  * @brief A specialized container class to hold BLE attribute values.
@@ -99,7 +119,10 @@ struct Has_value_type<T, decltype(void(sizeof(typename T::value_type)))> : std::
  * many different container classes.
  */
 class NimBLEAttValue {
-    uint8_t* m_attr_value{};
+    // Shared, never-freed buffer that m_attr_value points to when nothing is allocated (reset or allocation failure).
+    // Non-const so it can be pointed at by a uint8_t*.
+    static inline uint8_t EMPTY_VALUE{0};
+    uint8_t*       m_attr_value{&EMPTY_VALUE};
     uint16_t m_attr_max_len{};
     uint16_t m_attr_len{};
     uint16_t m_capacity{};
@@ -108,11 +131,19 @@ class NimBLEAttValue {
 # endif
     bool deepCopy(const NimBLEAttValue& source);
 
+    // The heap buffer owned by this object, or nullptr if m_attr_value points at EMPTY_VALUE.
+    uint8_t* ownedBuffer() const { return m_attr_value == &EMPTY_VALUE ? nullptr : m_attr_value; }
+
+    // Clamp so a large container size can't wrap when narrowed to uint16_t; the constructor then rejects it as > max_len.
+    static constexpr uint16_t clampLen(size_t len) {
+        return len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
+    }
+
   public:
     class Lock {
-        static ble_npl_mutex     m_mutex;
-        static std::atomic<bool> m_initialized;
-        static std::atomic<int>  m_activeCount;
+        static inline ble_npl_mutex     m_mutex{};
+        static inline std::atomic<bool> m_initialized{false};
+        static inline std::atomic<int>  m_activeCount{0};
         bool                     m_locked{false};
 
       public:
@@ -191,7 +222,7 @@ class NimBLEAttValue {
      * @param[in] max_len The max size in bytes that the value can be.
      */
     NimBLEAttValue(const char* value, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue((uint8_t*)value, (uint16_t)strlen(value), max_len) {}
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(value), clampLen(strlen(value)), max_len) {}
 
     /**
      * @brief Construct with an initializer list.
@@ -199,23 +230,31 @@ class NimBLEAttValue {
      * @param[in] max_len The max size in bytes that the value can be.
      */
     NimBLEAttValue(std::initializer_list<uint8_t> list, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue(list.begin(), list.size(), max_len) {}
+        : NimBLEAttValue(list.begin(), clampLen(list.size()), max_len) {}
 
     /**
      * @brief Construct with an initial value from a std::string.
      * @param str A std::string containing to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const std::string str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(&str[0]), str.length(), max_len) {}
+    NimBLEAttValue(const std::string& str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.data()), clampLen(str.length()), max_len) {}
+
+    /**
+     * @brief Construct with an initial value from a std::string_view.
+     * @param str A std::string_view containing the initial value to set.
+     * @param[in] max_len The max size in bytes that the value can be.
+     */
+    NimBLEAttValue(std::string_view str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.data()), clampLen(str.size()), max_len) {}
 
     /**
      * @brief Construct with an initial value from a std::vector<uint8_t>.
      * @param vec A std::vector<uint8_t> containing to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const std::vector<uint8_t> vec, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue(&vec[0], vec.size(), max_len) {}
+    NimBLEAttValue(const std::vector<uint8_t>& vec, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(vec.data(), clampLen(vec.size()), max_len) {}
 
 # if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE
     /**
@@ -223,8 +262,16 @@ class NimBLEAttValue {
      * @param str An Arduino String containing to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const String str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
-        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.c_str()), str.length(), max_len) {}
+    NimBLEAttValue(const String& str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.c_str()), clampLen(str.length()), max_len) {}
+
+    /**
+     * @brief Construct with an initial value from an Arduino String rvalue.
+     * @param str An Arduino String containing to the initial value to set.
+     * @param[in] max_len The max size in bytes that the value can be.
+     */
+    NimBLEAttValue(String&& str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(str.c_str()), clampLen(str.length()), max_len) {}
 # endif
 
     /** @brief Copy constructor */
@@ -232,6 +279,26 @@ class NimBLEAttValue {
 
     /** @brief Move constructor */
     NimBLEAttValue(NimBLEAttValue&& source) { *this = std::move(source); }
+
+    /**
+     * @brief Construct with an initial value from a std::string rvalue.
+     * @param value A std::string containing the initial value to set.
+     * @param[in] max_len The max size in bytes that the value can be.
+     * @note The bytes are copied into this object's own buffer; the string's storage is not taken over.
+     * If the string is larger than max_len the value is left empty.
+     */
+    NimBLEAttValue(std::string&& value, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN) noexcept
+        : NimBLEAttValue(reinterpret_cast<const uint8_t*>(value.data()), clampLen(value.size()), max_len) {}
+
+    /**
+     * @brief Construct with an initial value from a std::vector<uint8_t> rvalue.
+     * @param value A std::vector<uint8_t> containing the initial value to set.
+     * @param[in] max_len The max size in bytes that the value can be.
+     * @note The bytes are copied into this object's own buffer; the vector's storage is not taken over.
+     * If the vector is larger than max_len the value is left empty.
+     */
+    NimBLEAttValue(std::vector<uint8_t>&& value, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN) noexcept
+        : NimBLEAttValue(value.data(), clampLen(value.size()), max_len) {}
 
     /** @brief Destructor */
     ~NimBLEAttValue();
@@ -332,109 +399,23 @@ class NimBLEAttValue {
 
     /*********************** Template Functions ************************/
 
-# if __cplusplus < 201703L
     /**
-     * @brief Template to set value to the value of a char array using strnlen.
-     * @param [in] s A reference to a char array.
-     * @details Only used for char array types to correctly determine length via strnlen.
+     * @brief Template to set the value from a container, string, char array or trivially copyable object.
+     * @tparam T The type of the value, must not be a pointer.
+     * @param [in] s The value to set.
+     * @details Containers with `data()` and `size()` and types with `c_str()` and `length()` (including
+     * `std::string_view` and `std::span`) are copied by their contents, char arrays are measured with `strnlen`,
+     * anything else is copied by its object representation using `sizeof()`.
      */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, char>::value, bool>::type
-#  endif
-    setValue(const T& s) {
-        return setValue(reinterpret_cast<const uint8_t*>(s), strnlen(s, sizeof(T)));
-    }
-
-    /**
-     * @brief Template to set value to the value of <type\>val.
-     * @param [in] v The <type\>value to set.
-     * @details Only used for types without a `c_str()` and `length()` or `data()` and `size()` method.
-     * <type\> size must be evaluatable by `sizeof()`.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<!std::is_pointer<T>::value && !Has_c_str_length<T>::value && !Has_data_size<T>::value &&
-                                !(std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, char>::value),
-                            bool>::type
-#  endif
-    setValue(const T& v) {
-        return setValue(reinterpret_cast<const uint8_t*>(&v), sizeof(T));
-    }
-
-    /**
-     * @brief Template to set value to the value of <type\>val.
-     * @param [in] s The <type\>value to set.
-     * @details Only used if the <type\> has a `c_str()` method.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
-#  endif
-    setValue(const T& s) {
-        return setValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length());
-    }
-
-    /**
-     * @brief Template to set value to the value of <type\>val.
-     * @param [in] v The <type\>value to set.
-     * @details Only used if the <type\> has a `data()` and `size()` method with `value_type`.
-     * Correctly calculates byte size for containers with multi-byte element types.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
-#  endif
-    setValue(const T& v) {
-        return setValue(reinterpret_cast<const uint8_t*>(v.data()), v.size() * sizeof(typename T::value_type));
-    }
-
-    /**
-     * @brief Template to set value to the value of <type\>val.
-     * @param [in] v The <type\>value to set.
-     * @details Only used if the <type\> has a `data()` and `size()` method without `value_type`.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_data_size<T>::value && !Has_value_type<T>::value, bool>::type
-#  endif
-    setValue(const T& v) {
-        return setValue(reinterpret_cast<const uint8_t*>(v.data()), v.size());
-    }
-
-# else
-    /**
-     * @brief Template to set value to the value of <type\>val.
-     * @param [in] s The <type\>value to set.
-     * @note This function is only available if the type T is not a pointer.
-     */
-    template <typename T>
-    typename std::enable_if<!std::is_pointer<T>::value, bool>::type setValue(const T& s) {
-        if constexpr (Has_data_size<T>::value) {
-            if constexpr (Has_value_type<T>::value) {
-                return setValue(reinterpret_cast<const uint8_t*>(s.data()), s.size() * sizeof(typename T::value_type));
-            } else {
-                return setValue(reinterpret_cast<const uint8_t*>(s.data()), s.size());
-            }
-        } else if constexpr (Has_c_str_length<T>::value) {
-            return setValue(reinterpret_cast<const uint8_t*>(s.c_str()), s.length());
-        } else if constexpr (std::is_array<T>::value && std::is_same<typename std::remove_extent<T>::type, char>::value) {
+    template <NimBLEByteValue T>
+    bool setValue(const T& s) {
+        if constexpr (NimBLECharArray<T>) {
             return setValue(reinterpret_cast<const uint8_t*>(s), strnlen(s, sizeof(s)));
         } else {
-            return setValue(reinterpret_cast<const uint8_t*>(&s), sizeof(s));
+            const auto bytes = NimBLEAsBytes(s);
+            return setValue(bytes.data(), clampLen(bytes.size()));
         }
     }
-# endif
 
     /**
      * @brief Template to return the value as a <type\>.
@@ -479,6 +460,12 @@ class NimBLEAttValue {
         Lock lock;
         return std::string(reinterpret_cast<char*>(m_attr_value), m_attr_len);
     }
+
+    /**
+     * @brief Operator; Get a std::string_view of the value.
+     * @note See data() for thread safety restrictions, the view is invalidated by a concurrent update.
+     */
+    operator std::string_view() const { return std::string_view(reinterpret_cast<const char*>(m_attr_value), m_attr_len); }
 
     /** @brief Operator; Get the value as a const uint8_t*. */
     operator const uint8_t*() const { return m_attr_value; }
