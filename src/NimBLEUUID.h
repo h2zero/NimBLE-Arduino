@@ -44,6 +44,15 @@ class NimBLEUUID {
      * @brief Created a blank UUID.
      */
     NimBLEUUID() = default;
+    explicit constexpr NimBLEUUID(const char* uuidStr) {
+        size_t byteIdx = 0;
+        for (size_t i = 0; uuidStr[i] != '\0'; ++i) {
+            if (uuidStr[i] == '-') continue;
+            uint8_t high                 = hexToByte(uuidStr[i]);
+            uint8_t low                  = hexToByte(uuidStr[++i]);
+            m_uuid.u128.value[byteIdx++] = (high << 4) | low;
+        }
+    }
     NimBLEUUID(const ble_uuid_any_t& uuid);
     NimBLEUUID(const ble_uuid_t* uuid);
     NimBLEUUID(const std::string& uuid);
@@ -67,7 +76,17 @@ class NimBLEUUID {
     bool operator!=(const NimBLEUUID& rhs) const;
          operator std::string() const;
 
+
+
   private:
+    // Helper to evaluate hex strings at compile time
+    static constexpr uint8_t hexToByte(char c) {
+        return (c >= '0' && c <= '9')   ? (c - '0')
+               : (c >= 'a' && c <= 'f') ? (c - 'a' + 10)
+               : (c >= 'A' && c <= 'F') ? (c - 'A' + 10)
+                                        : 0;
+    }
+
     ble_uuid_any_t m_uuid{};
 }; // NimBLEUUID
 

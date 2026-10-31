@@ -35,6 +35,7 @@
 # include "NimBLEAddress.h"
 
 # include <string>
+# include <string_view>
 # include <vector>
 
 class NimBLEExtAdvertisingCallbacks;
@@ -57,20 +58,20 @@ class NimBLEExtAdvertisement {
     bool        setCompleteServices32(const std::vector<NimBLEUUID>& uuids);
     bool        setFlags(uint8_t flag);
     bool        setManufacturerData(const uint8_t* data, size_t length);
-    bool        setManufacturerData(const std::string& data);
+    bool        setManufacturerData(std::string_view data);
     bool        setManufacturerData(const std::vector<uint8_t>& data);
-    bool        setURI(const std::string& uri);
-    bool        setName(const std::string& name, bool isComplete = true);
+    bool        setURI(std::string_view uri);
+    bool        setName(std::string_view name, bool isComplete = true);
     bool        setPartialServices(const NimBLEUUID& uuid);
     bool        setPartialServices16(const std::vector<NimBLEUUID>& uuids);
     bool        setPartialServices32(const std::vector<NimBLEUUID>& uuids);
     bool        setServiceData(const NimBLEUUID& uuid, const uint8_t* data, size_t length);
-    bool        setServiceData(const NimBLEUUID& uuid, const std::string& data);
+    bool        setServiceData(const NimBLEUUID& uuid, std::string_view data);
     bool        setServiceData(const NimBLEUUID& uuid, const std::vector<uint8_t>& data);
-    bool        setShortName(const std::string& name);
+    bool        setShortName(std::string_view name);
     bool        setData(const uint8_t* data, size_t length);
     bool        addData(const uint8_t* data, size_t length);
-    bool        addData(const std::string& data);
+    bool        addData(std::string_view data);
     bool        setPreferredParams(uint16_t min, uint16_t max);
     bool        addTxPower();
     void        setLegacyAdvertising(bool enable);

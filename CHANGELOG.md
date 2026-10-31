@@ -1,6 +1,18 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] 3.0.0-dev
+
+## Changed
+- **C++20 is now required.** Support for C++11/14/17 has been removed; builds must use `-std=gnu++20` or newer.
+- The `Has_data_size`, `Has_c_str_length` and `Has_value_type` SFINAE traits and the pre-C++17 `enable_if` overloads were replaced with C++20 concepts (`NimBLEDataContainer`, `NimBLEStringLike`, `NimBLECharArray`, `NimBLEByteValue`) and a single `NimBLEAsBytes` helper.
+- `NimBLEAddress(std::string_view, uint8_t)` and the advertising/HID string setters (`setName`, `setShortName`, `setURI`, `setManufacturerData`, `setServiceData`, `addData`, `setManufacturer`) now take `std::string_view`.
+- `NimBLEAdvertisedDevice::getManufacturerData<T>`/`getServiceData<T>` are now restricted to trivially copyable types and copy the bytes instead of casting the buffer.
+
+## Added
+- `NimBLEAttValue` can be constructed from and converted to `std::string_view`.
+- `std::string_view` and `std::span` can be passed to the `setValue`, `writeValue`, `notify` and `indicate` templates.
+
 ## [2.5.0] 2026-04-01
 
 ## Fixed
