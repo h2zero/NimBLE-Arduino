@@ -902,9 +902,8 @@ void NimBLEServer::removeService(NimBLEService* service, bool deleteSvc) {
     service->setRemoved(deleteSvc ? NIMBLE_ATT_REMOVE_DELETE : NIMBLE_ATT_REMOVE_HIDE);
     if (deleteSvc) {
         setServiceChanged();
-    } else {
-        sendServiceChangedIndication();
     }
+    sendServiceChangedIndication();
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     NimBLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
 # endif
