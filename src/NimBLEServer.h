@@ -130,6 +130,7 @@ class NimBLEServer {
 
     bool m_gattsStarted : 1;
     bool m_svcChanged : 1;
+    mutable bool m_svcChangedSent : 1;
 # if !MYNEWT_VAL(BLE_EXT_ADV) && MYNEWT_VAL(BLE_ROLE_BROADCASTER)
     bool m_advertiseOnDisconnect : 1;
 # endif
