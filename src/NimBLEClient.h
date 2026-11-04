@@ -130,7 +130,7 @@ class NimBLEClient {
   private:
     enum ConnStatus : uint8_t { CONNECTED, DISCONNECTED, CONNECTING, DISCONNECTING };
 
-    NimBLEClient(const NimBLEAddress& peerAddress);
+    explicit NimBLEClient(const NimBLEAddress& peerAddress);
     ~NimBLEClient();
     NimBLEClient(const NimBLEClient&)            = delete;
     NimBLEClient& operator=(const NimBLEClient&) = delete;

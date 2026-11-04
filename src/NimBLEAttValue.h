@@ -174,8 +174,8 @@ class NimBLEAttValue {
      * @param[in] init_len The initial size in bytes.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(uint16_t init_len = MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH),
-                   uint16_t max_len  = BLE_ATT_ATTR_MAX_LEN);
+    explicit NimBLEAttValue(uint16_t init_len = MYNEWT_VAL(NIMBLE_CPP_ATT_VALUE_INIT_LENGTH),
+                            uint16_t max_len  = BLE_ATT_ATTR_MAX_LEN);
 
     /**
      * @brief Construct with an initial value from a buffer.
@@ -206,7 +206,7 @@ class NimBLEAttValue {
      * @param str A std::string containing to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const std::string str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+    NimBLEAttValue(const std::string& str, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
         : NimBLEAttValue(reinterpret_cast<const uint8_t*>(&str[0]), str.length(), max_len) {}
 
     /**
@@ -214,7 +214,7 @@ class NimBLEAttValue {
      * @param vec A std::vector<uint8_t> containing to the initial value to set.
      * @param[in] max_len The max size in bytes that the value can be.
      */
-    NimBLEAttValue(const std::vector<uint8_t> vec, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
+    NimBLEAttValue(const std::vector<uint8_t>& vec, uint16_t max_len = BLE_ATT_ATTR_MAX_LEN)
         : NimBLEAttValue(&vec[0], vec.size(), max_len) {}
 
 # if NIMBLE_CPP_ARDUINO_STRING_AVAILABLE

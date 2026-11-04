@@ -281,6 +281,26 @@ void NimBLEService::removeCharacteristic(NimBLECharacteristic* pChar, bool delet
  * @param idx The index of the characteristic to return (used when multiple characteristics have the same UUID).
  * @return A pointer to the characteristic object or nullptr if not found.
  */
+NimBLECharacteristic* NimBLEService::getCharacteristic(uint16_t uuid, uint16_t idx) const {
+    return getCharacteristic(NimBLEUUID(uuid), idx);
+} // getCharacteristic
+
+/**
+ * @brief Get a pointer to the characteristic object with the specified 32-bit UUID.
+ * @param [in] uuid The characteristic's 32-bit UUID.
+ * @param idx The index of the characteristic to return (used when multiple characteristics have the same UUID).
+ * @return A pointer to the characteristic object or nullptr if not found.
+ */
+NimBLECharacteristic* NimBLEService::getCharacteristic(uint32_t uuid, uint16_t idx) const {
+    return getCharacteristic(NimBLEUUID(uuid), idx);
+} // getCharacteristic
+
+/**
+ * @brief Get a pointer to the characteristic object with the specified UUID.
+ * @param [in] uuid The characteristic UUID string.
+ * @param idx The index of the characteristic to return (used when multiple characteristics have the same UUID).
+ * @return A pointer to the characteristic object or nullptr if not found.
+ */
 NimBLECharacteristic* NimBLEService::getCharacteristic(const char* uuid, uint16_t idx) const {
     return getCharacteristic(NimBLEUUID(uuid), idx);
 } // getCharacteristic

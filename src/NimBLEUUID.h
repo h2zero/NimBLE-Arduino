@@ -41,17 +41,17 @@
 class NimBLEUUID {
   public:
     /**
-     * @brief Created a blank UUID.
+     * @brief Create a blank UUID.
      */
     NimBLEUUID() = default;
-    NimBLEUUID(const ble_uuid_any_t& uuid);
-    NimBLEUUID(const ble_uuid_t* uuid);
-    NimBLEUUID(const std::string& uuid);
-    NimBLEUUID(uint16_t uuid);
-    NimBLEUUID(uint32_t uuid);
-    NimBLEUUID(const ble_uuid128_t* uuid);
+    explicit NimBLEUUID(const ble_uuid_t* uuid);
     NimBLEUUID(const uint8_t* pData, size_t size);
     NimBLEUUID(uint32_t first, uint16_t second, uint16_t third, uint64_t fourth);
+    NimBLEUUID(const std::string& uuid);
+    explicit NimBLEUUID(uint16_t uuid);
+    explicit NimBLEUUID(uint32_t uuid);
+    explicit NimBLEUUID(const ble_uuid128_t* uuid);
+    explicit NimBLEUUID(const ble_uuid_any_t& uuid);
 
     uint8_t           bitSize() const;
     const uint8_t*    getValue() const;

@@ -1017,11 +1017,11 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
             // workaround for bug in NimBLE stack where disconnect event argument is not passed correctly
             pClient = NimBLEDevice::getClientByHandle(event->disconnect.conn.conn_handle);
             if (pClient == nullptr) {
-                pClient = NimBLEDevice::getClientByPeerAddress(event->disconnect.conn.peer_ota_addr);
+                pClient = NimBLEDevice::getClientByPeerAddress(NimBLEAddress(event->disconnect.conn.peer_ota_addr));
             }
 
             if (pClient == nullptr) {
-                pClient = NimBLEDevice::getClientByPeerAddress(event->disconnect.conn.peer_id_addr);
+                pClient = NimBLEDevice::getClientByPeerAddress(NimBLEAddress(event->disconnect.conn.peer_id_addr));
             }
 
             if (pClient == nullptr) {

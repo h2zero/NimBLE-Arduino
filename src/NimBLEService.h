@@ -33,8 +33,8 @@ class NimBLEService;
  */
 class NimBLEService : public NimBLELocalAttribute {
   public:
-    NimBLEService(const char* uuid);
-    NimBLEService(const NimBLEUUID& uuid);
+    explicit NimBLEService(const char* uuid);
+    explicit NimBLEService(const NimBLEUUID& uuid);
     ~NimBLEService();
 
     NimBLEServer* getServer() const;
@@ -59,6 +59,8 @@ class NimBLEService : public NimBLELocalAttribute {
                                                uint16_t max_len    = BLE_ATT_ATTR_MAX_LEN);
     void                  addCharacteristic(NimBLECharacteristic* pCharacteristic);
     void                  removeCharacteristic(NimBLECharacteristic* pCharacteristic, bool deleteChr = false);
+    NimBLECharacteristic* getCharacteristic(uint16_t uuid, uint16_t instanceId = 0) const;
+    NimBLECharacteristic* getCharacteristic(uint32_t uuid, uint16_t instanceId = 0) const;
     NimBLECharacteristic* getCharacteristic(const char* uuid, uint16_t instanceId = 0) const;
     NimBLECharacteristic* getCharacteristic(const NimBLEUUID& uuid, uint16_t instanceId = 0) const;
     NimBLECharacteristic* getCharacteristicByHandle(uint16_t handle) const;
