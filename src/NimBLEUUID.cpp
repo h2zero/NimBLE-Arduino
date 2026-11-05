@@ -69,29 +69,83 @@ NimBLEUUID::NimBLEUUID(const ble_uuid_t* uuid) {
  *
  * @param [in] value The string to build a UUID from.
  */
-NimBLEUUID::NimBLEUUID(const std::string& value) {
-    if (value.length() == 4) {
-        m_uuid.u.type    = BLE_UUID_TYPE_16;
-        m_uuid.u16.value = strtoul(value.c_str(), nullptr, 16);
-    } else if (value.length() == 8) {
-        m_uuid.u.type    = BLE_UUID_TYPE_32;
-        m_uuid.u32.value = strtoul(value.c_str(), nullptr, 16);
-    } else if (value.length() == 16) {
-        memcpy(m_uuid.u128.value, &value[0], 16);
-        m_uuid.u.type = BLE_UUID_TYPE_128;
-    } else if (value.length() == 36) {
-        char*    position;
-        uint64_t first_half = (strtoull(&value[0], &position, 16) << 32) +
-                              (strtoull(position + 1, &position, 16) << 16) + strtoull(position + 1, &position, 16);
-        uint64_t second_half = (strtoull(position + 1, &position, 16) << 48) + strtoull(position + 1, nullptr, 16);
-        memcpy(m_uuid.u128.value + 8, &first_half, 8);
-        memcpy(m_uuid.u128.value, &second_half, 8);
-        m_uuid.u.type = BLE_UUID_TYPE_128;
-    } else {
-        NIMBLE_LOGE(LOG_TAG, "Invalid UUID length");
-        m_uuid.u.type = 0;
+NimBLEUUID::NimBLEUUID(const char* value) {
+    uint8_t* dest      = nullptr;
+    size_t   byteIdx   = 0;
+    bool     lowNibble = true;
+    size_t   len       = 0;
+
+    if (value == nullptr) {
+        goto error;
     }
-} // NimBLEUUID(std::string)
+
+    len = strlen(value);
+    if (len < 4) {
+        goto error;
+    }
+
+    if (value[0] == '0' && (value[1] == 'x' || value[1] == 'X')) {
+        value += 2;
+        len   -= 2;
+    }
+
+    // NimBLE stores UUIDs little endian, so write the bytes directly into the value field.
+    if (len == 4) {
+        m_uuid.u.type = BLE_UUID_TYPE_16;
+        dest          = reinterpret_cast<uint8_t*>(&m_uuid.u16.value);
+    } else if (len == 8) {
+        m_uuid.u.type = BLE_UUID_TYPE_32;
+        dest          = reinterpret_cast<uint8_t*>(&m_uuid.u32.value);
+    } else if (len == 36) {
+        m_uuid.u.type = BLE_UUID_TYPE_128;
+        dest          = m_uuid.u128.value;
+    } else {
+        goto error;
+    }
+
+    // Parse the string from the end so the least significant byte is stored first.
+    for (size_t i = len; i-- > 0;) {
+        // Ensure hyphens are in the correct positions for 36-character UUIDs.
+        if (len == 36 && (i == 8 || i == 13 || i == 18 || i == 23)) {
+            if (value[i] != '-') {
+                goto error;
+            }
+            continue;
+        }
+
+        uint8_t nibble = NimBLEUtils::hexToByte(value[i]);
+        if (nibble == 0xFF) {
+            goto error;
+        }
+
+        if (lowNibble) {
+            dest[byteIdx] = nibble;
+        } else {
+            dest[byteIdx++] |= nibble << 4;
+        }
+        lowNibble = !lowNibble;
+    }
+
+    return;
+
+error:
+    m_uuid = ble_uuid_any_t{};
+    NIMBLE_LOGE(LOG_TAG, "Invalid UUID");
+} // NimBLEUUID(const char*)
+
+/**
+ * @brief Create a UUID from a std::string.
+ * @param [in] value The string to build a UUID from.
+ */
+NimBLEUUID::NimBLEUUID(const std::string& value) {
+    if (value.length() == 16) {
+        m_uuid.u.type = BLE_UUID_TYPE_128;
+        memcpy(m_uuid.u128.value, value.data(), 16);
+        return;
+    }
+
+    *this = NimBLEUUID(value.c_str());
+} // NimBLEUUID(const std::string& value)
 
 /**
  * @brief Create a UUID from 2, 4, 16 bytes of memory.
@@ -106,22 +160,17 @@ NimBLEUUID::NimBLEUUID(const uint8_t* pData, size_t size) {
 } // NimBLEUUID(const uint8_t* pData, size_t size)
 
 /**
- * @brief Create a UUID from the 16bit value.
- * @param [in] uuid The 16bit short form UUID.
- */
-NimBLEUUID::NimBLEUUID(uint16_t uuid) {
-    m_uuid.u.type    = BLE_UUID_TYPE_16;
-    m_uuid.u16.value = uuid;
-} // NimBLEUUID(uint16_t uuid)
-
-/**
- * @brief Create a UUID from the 32bit value.
- * @param [in] uuid The 32bit short form UUID.
+ * @brief Create a UUID from an int value.
+ * @param [in] uuid The int short form UUID.
  */
 NimBLEUUID::NimBLEUUID(uint32_t uuid) {
-    m_uuid.u.type    = BLE_UUID_TYPE_32;
-    m_uuid.u32.value = uuid;
-} // NimBLEUUID(uint32_t uuid)
+    m_uuid.u.type = (uuid > UINT16_MAX) ? BLE_UUID_TYPE_32 : BLE_UUID_TYPE_16;
+    if (m_uuid.u.type == BLE_UUID_TYPE_16) {
+        m_uuid.u16.value = static_cast<uint16_t>(uuid);
+    } else {
+        m_uuid.u32.value = static_cast<uint32_t>(uuid);
+    }
+} // NimBLEUUID(int uuid)
 
 /**
  * @brief Create a UUID from the native UUID.
@@ -196,34 +245,11 @@ bool NimBLEUUID::equals(const NimBLEUUID& uuid) const {
 } // equals
 
 /**
- * Create a NimBLEUUID from a string of the form:
- * 0xNNNN
- * 0xNNNNNNNN
- * 0x<UUID\>
- * NNNN
- * NNNNNNNN
- * <UUID\>
- *
+ * Create a NimBLEUUID from a string.
  * @param [in] uuid The string to create the UUID from.
  */
 NimBLEUUID NimBLEUUID::fromString(const std::string& uuid) {
-    uint8_t start = 0;
-    if (strstr(uuid.c_str(), "0x") != nullptr) { // If the string starts with 0x, skip those characters.
-        start = 2;
-    }
-
-    uint8_t len = uuid.length() - start; // Calculate the length of the string we are going to use.
-    if (len == 4) {
-        uint16_t x = strtoul(uuid.substr(start, len).c_str(), NULL, 16);
-        return NimBLEUUID(x);
-    } else if (len == 8) {
-        uint32_t x = strtoul(uuid.substr(start, len).c_str(), NULL, 16);
-        return NimBLEUUID(x);
-    } else if (len == 36) {
-        return NimBLEUUID(uuid);
-    }
-
-    return NimBLEUUID();
+    return NimBLEUUID(uuid.c_str());
 } // fromString
 
 /**

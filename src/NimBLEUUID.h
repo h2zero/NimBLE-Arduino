@@ -46,8 +46,8 @@ class NimBLEUUID {
     NimBLEUUID() = default;
     NimBLEUUID(const ble_uuid_any_t& uuid);
     NimBLEUUID(const ble_uuid_t* uuid);
+    NimBLEUUID(const char* value);
     NimBLEUUID(const std::string& uuid);
-    NimBLEUUID(uint16_t uuid);
     NimBLEUUID(uint32_t uuid);
     NimBLEUUID(const ble_uuid128_t* uuid);
     NimBLEUUID(const uint8_t* pData, size_t size);

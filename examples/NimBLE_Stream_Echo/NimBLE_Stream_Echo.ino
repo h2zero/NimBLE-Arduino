@@ -52,11 +52,11 @@ void setup() {
      * - rxBufSize: 1024 bytes for incoming data (writes)
      * - secure: false (no encryption required - set to true for secure connections)
      */
-    if (!bleStream.begin(NimBLEUUID(uint16_t(0xc0de)), // Service UUID
-                         NimBLEUUID(uint16_t(0xfeed)), // Characteristic UUID
-                         1024,                         // txBufSize
-                         1024,                         // rxBufSize
-                         false)) {                     // secure
+    if (!bleStream.begin(0xc0de, // Service UUID
+                         0xfeed, // Characteristic UUID
+                         1024,   // txBufSize
+                         1024,   // rxBufSize
+                         false)) { // secure
         Serial.println("Failed to initialize BLE stream");
         return;
     }
