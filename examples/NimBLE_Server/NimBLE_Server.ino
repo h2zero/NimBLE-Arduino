@@ -150,7 +150,7 @@ void setup(void) {
     pServer = NimBLEDevice::createServer();
     pServer->setCallbacks(serverCallbacks);
 
-    NimBLEService*        pDeadService = pServer->createService("DEAD");
+    NimBLEService*        pDeadService = pServer->createService(0xDEAD);
     NimBLECharacteristic* pBeefCharacteristic =
         pDeadService->createCharacteristic("BEEF",
                                            NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE |
@@ -172,7 +172,7 @@ void setup(void) {
     pBeef2904->setFormat(NimBLE2904::FORMAT_UTF8);
     pBeef2904->setCallbacks(dscCallbacks);
 
-    NimBLEService*        pBaadService = pServer->createService("BAAD");
+    NimBLEService*        pBaadService = pServer->createService(0xBAAD);
     NimBLECharacteristic* pFoodCharacteristic =
         pBaadService->createCharacteristic("F00D", NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::NOTIFY);
 
@@ -207,7 +207,7 @@ void loop() {
     delay(2000);
 
     if (pServer->getConnectedCount()) {
-        NimBLEService* pSvc = pServer->getServiceByUUID("BAAD");
+        NimBLEService* pSvc = pServer->getServiceByUUID(0xBAAD);
         if (pSvc) {
             NimBLECharacteristic* pChr = pSvc->getCharacteristic("F00D");
             if (pChr) {

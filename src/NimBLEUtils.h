@@ -94,6 +94,12 @@ class NimBLEUtils {
     static NimBLEAddress generateAddr(bool nrpa);
     static bool          taskWait(const TaskData& taskData, uint32_t timeout);
     static void          taskRelease(const TaskData& taskData, int rc = 0);
+    static constexpr uint8_t hexToByte(char c) {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return 0xFF;
+    }
 
   private:
     friend class NimBLEDevice;
