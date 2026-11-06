@@ -23,8 +23,10 @@
 
 # ifdef USING_NIMBLE_ARDUINO_HEADERS
 #  include "nimble/nimble/host/include/host/ble_hs.h"
+#  include "nimble/porting/nimble/include/nimble/nimble_port.h"
 # else
 #  include "host/ble_hs.h"
+#  include "nimble/nimble_port.h"
 # endif
 
 /****  FIX COMPILATION ****/
@@ -34,6 +36,8 @@
 
 # include <stdlib.h>
 # include <climits>
+# include <memory>
+# include <new>
 
 # ifndef MYNEWT_VAL_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT
 #  ifdef CONFIG_NIMBLE_CPP_ENABLE_RETURN_CODE_TEXT
@@ -64,6 +68,9 @@ static const char* LOG_TAG = "NimBLEUtils";
 std::vector<NimBLEUtils::TaskSemEntry*> NimBLEUtils::m_taskSemEntries{};
 std::atomic<int>                        NimBLEUtils::m_semUserCount{0};
 std::atomic_flag                        NimBLEUtils::m_taskSemLock = ATOMIC_FLAG_INIT;
+std::atomic<void*>                      NimBLEUtils::m_hostTaskHandle{nullptr};
+std::atomic_flag                        NimBLEUtils::m_hostTaskLock = ATOMIC_FLAG_INIT;
+NimBLEUtils::HostTaskContext*           NimBLEUtils::m_pendingHostTasks{nullptr};
 
 /**
  * @brief Construct a NimBLEUtils::TaskData instance.
@@ -165,6 +172,8 @@ void NimBLEUtils::taskRelease(const TaskData& taskData, int flags) {
  * @details This should be called when the NimBLE stack is deinitialized to clean up any resources used by waiting tasks.
  */
 void NimBLEUtils::deinit() {
+    drainHostTasks();
+
     // wait for any active users of the semaphore vector to finish
     while (m_semUserCount.load() > 0) {
         ble_npl_time_delay(1);
@@ -184,6 +193,85 @@ void NimBLEUtils::deinit() {
         delete entry;
     }
     m_taskSemEntries.clear();
+}
+
+struct NimBLEUtils::HostTaskContext {
+    ble_npl_event         ev;
+    std::function<void()> func;
+    HostTaskContext*      next{nullptr};
+};
+
+/**
+ * @brief Run a callable on the NimBLE host task.
+ * @param [in] func The callable to run; capture any needed context by value (or shared_ptr).
+ * @return true if func was run or queued, false if it was dropped because the host task is not running.
+ * @details If called from the host task, func runs immediately. Otherwise it is moved into
+ * an owned context and queued, so it runs asynchronously later. Anything func borrows by
+ * reference or raw pointer must remain valid until it runs. func must not throw.
+ * Tasks still queued when the stack is deinitialized are discarded without running.
+ */
+bool NimBLEUtils::runOnHostTask(std::function<void()> func) {
+    if (!func) {
+        return false;
+    }
+
+    if (m_hostTaskHandle.load() == ble_npl_get_current_task_id()) {
+        func();
+        return true;
+    }
+
+    auto* ctx = new HostTaskContext{{}, std::move(func)};
+    ble_npl_event_init(&ctx->ev, executeHostTask, ctx);
+
+    // The handle check and queueing are under the lock so deinit() cannot drain between them.
+    SpinGuard guard(m_hostTaskLock);
+    if (m_hostTaskHandle.load() == nullptr) {
+        delete ctx;
+        return false;
+    }
+
+    ctx->next        = m_pendingHostTasks;
+    m_pendingHostTasks = ctx;
+    ble_npl_eventq_put(nimble_port_get_dflt_eventq(), &ctx->ev);
+    return true;
+}
+
+void NimBLEUtils::executeHostTask(ble_npl_event* ev) {
+    auto* ctx = static_cast<HostTaskContext*>(ev->arg);
+    {
+        SpinGuard guard(m_hostTaskLock);
+        for (HostTaskContext** p = &m_pendingHostTasks; *p != nullptr; p = &(*p)->next) {
+            if (*p == ctx) {
+                *p = ctx->next;
+                break;
+            }
+        }
+    }
+
+    std::unique_ptr<HostTaskContext> owner{ctx};
+    ctx->func();
+}
+
+/**
+ * @brief Stops accepting host task work and discards any tasks that were queued but never ran.
+ */
+void NimBLEUtils::drainHostTasks() {
+    HostTaskContext* list = nullptr;
+    {
+        SpinGuard guard(m_hostTaskLock);
+        m_hostTaskHandle.store(nullptr);
+        list               = m_pendingHostTasks;
+        m_pendingHostTasks = nullptr;
+        for (auto* c = list; c != nullptr; c = c->next) {
+            ble_npl_eventq_remove(nimble_port_get_dflt_eventq(), &c->ev);
+        }
+    }
+
+    while (list != nullptr) {
+        auto* next = list->next;
+        delete list;
+        list = next;
+    }
 }
 
 /**

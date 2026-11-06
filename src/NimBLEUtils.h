@@ -43,9 +43,11 @@ void nimble_cpp_assert(const char* file, unsigned line) __attribute((weak, noret
 # include <string>
 # include <vector>
 # include <atomic>
+# include <functional>
 
 class NimBLEAddress;
 struct ble_npl_sem;
+struct ble_npl_event;
 
 /**
  * @brief A BLE Utility class with methods for debugging and general purpose use.
@@ -94,6 +96,7 @@ class NimBLEUtils {
     static NimBLEAddress generateAddr(bool nrpa);
     static bool          taskWait(const TaskData& taskData, uint32_t timeout);
     static void          taskRelease(const TaskData& taskData, int rc = 0);
+    static bool          runOnHostTask(std::function<void()> func);
 
   private:
     friend class NimBLEDevice;
@@ -101,6 +104,13 @@ class NimBLEUtils {
     static std::vector<TaskSemEntry*> m_taskSemEntries;
     static std::atomic<int>           m_semUserCount;
     static std::atomic_flag           m_taskSemLock;
+    static std::atomic<void*>         m_hostTaskHandle;
+
+    struct HostTaskContext;
+    static std::atomic_flag m_hostTaskLock;
+    static HostTaskContext* m_pendingHostTasks;
+    static void             executeHostTask(ble_npl_event* ev);
+    static void             drainHostTasks();
 };
 
 #endif // CONFIG_BT_NIMBLE_ENABLED
