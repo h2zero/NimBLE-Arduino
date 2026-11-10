@@ -1345,7 +1345,12 @@ int NimBLEClient::handleGapEvent(struct ble_gap_event* event, void* arg) {
         } // BLE_GAP_EVENT_MTU
 
         case BLE_GAP_EVENT_PASSKEY_ACTION: {
-            if (pClient->m_connHandle != event->passkey.conn_handle) {
+            // The host reports BLE_GAP_EVENT_CONNECT only after reading the peer's features, but
+            // already runs SMP on the link. A peer that sends a Security Request right after
+            // connecting can therefore trigger this before m_connHandle is set. This callback is
+            // registered only for the connection this client is creating, so accept it.
+            if (pClient->m_connHandle != event->passkey.conn_handle &&
+                !(pClient->m_connStatus == CONNECTING && pClient->m_connHandle == BLE_HS_CONN_HANDLE_NONE)) {
                 return 0;
             }
 
