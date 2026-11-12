@@ -5,9 +5,10 @@
  *  and communicate using the Arduino Stream interface.
  *
  *  This allows you to use familiar methods like print(), println(),
- *  read(), and available() over BLE, similar to how you would use Serial.
+ *  and write() over BLE, similar to how you would use Serial.
  *
- *  This example connects to the NimBLE_Stream_Server example.
+ *  This example connects to the NimBLE_Stream_Server example using the Nordic UART
+ *  Service (NUS) with separate TX and RX characteristics.
  *
  *  Created: November 2025
  *      Author: NimBLE-Arduino Contributors
@@ -16,38 +17,32 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 
-// Service and Characteristic UUIDs (must match the server)
-#define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+// Nordic UART Service (NUS) UUIDs (must match the server)
+#define SERVICE_UUID  "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
+#define TX_CHAR_UUID  "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"  // Server TX: client subscribes here
+#define RX_CHAR_UUID  "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"  // Server RX: client writes here
 
-// Create the stream client instance
+/**
+ * Stream for sending data to the server.
+ * Attached to the server's RX characteristic (6E400002, WRITE_NR).
+ * Data received from the server arrives via the onServerNotify() callback below.
+ */
 NimBLEStreamClient bleStream;
 
-struct RxOverflowStats {
-    uint32_t droppedOld{0};
-    uint32_t droppedNew{0};
-};
-
-RxOverflowStats g_rxOverflowStats;
 uint32_t scanTime = 5000; // Scan duration in milliseconds
-
-NimBLEStream::RxOverflowAction onRxOverflow(const uint8_t* data, size_t len, void* userArg) {
-    auto* stats = static_cast<RxOverflowStats*>(userArg);
-    if (stats) {
-        stats->droppedOld++;
-    }
-
-    // For status/telemetry streams, prioritize newest packets.
-    (void)data;
-    (void)len;
-    return NimBLEStream::DROP_OLDER_DATA;
-}
 
 // Connection state variables
 static bool                          doConnect     = false;
 static bool                          connected     = false;
 static const NimBLEAdvertisedDevice* pServerDevice = nullptr;
 static NimBLEClient*                 pClient       = nullptr;
+
+/** Callback invoked when the server sends a notification on its TX characteristic (6E400003) */
+void onServerNotify(NimBLERemoteCharacteristic* pChar, uint8_t* pData, size_t len, bool isNotify) {
+    Serial.print("Received from server: ");
+    Serial.write(pData, len);
+    Serial.println();
+}
 
 /** Scan callbacks to find the server */
 class ScanCallbacks : public NimBLEScanCallbacks {
@@ -116,7 +111,7 @@ bool connectToServer() {
 
     Serial.println("Connected! Discovering services...");
 
-    // Get the service and characteristic
+    // Get the service
     NimBLERemoteService* pRemoteService = pClient->getService(SERVICE_UUID);
     if (!pRemoteService) {
         Serial.println("Failed to find our service UUID");
@@ -125,25 +120,45 @@ bool connectToServer() {
     }
     Serial.println("Found the stream service");
 
-    NimBLERemoteCharacteristic* pRemoteCharacteristic = pRemoteService->getCharacteristic(CHARACTERISTIC_UUID);
-    if (!pRemoteCharacteristic) {
-        Serial.println("Failed to find our characteristic UUID");
+    // Get the server's RX characteristic -- client writes here (our TX path)
+    NimBLERemoteCharacteristic* pRxChar = pRemoteService->getCharacteristic(RX_CHAR_UUID);
+    if (!pRxChar) {
+        Serial.println("Failed to find RX characteristic");
         pClient->disconnect();
         return false;
     }
-    Serial.println("Found the stream characteristic");
+    Serial.println("Found the RX characteristic");
+
+    // Get the server's TX characteristic -- client subscribes here (our RX path)
+    NimBLERemoteCharacteristic* pTxChar = pRemoteService->getCharacteristic(TX_CHAR_UUID);
+    if (!pTxChar) {
+        Serial.println("Failed to find TX characteristic");
+        pClient->disconnect();
+        return false;
+    }
+    Serial.println("Found the TX characteristic");
 
     /**
-     * Initialize the stream client with the remote characteristic
-     * subscribeNotify=true means we'll receive notifications in the RX buffer
+     * Initialize the stream with the server's RX characteristic for writing (our TX).
+     * The RX characteristic (6E400002) supports WRITE but not NOTIFY, so subscribeNotify
+     * must be false. Notifications are handled separately on the TX characteristic below.
      */
-    if (!bleStream.begin(pRemoteCharacteristic, true)) {
+    if (!bleStream.begin(pRxChar, false)) {
         Serial.println("Failed to initialize BLE stream!");
         pClient->disconnect();
         return false;
     }
 
-    bleStream.setRxOverflowCallback(onRxOverflow, &g_rxOverflowStats);
+    /**
+     * Subscribe to the server's TX characteristic (6E400003) to receive notifications.
+     * Received data is handled directly in the onServerNotify callback.
+     */
+    if (!pTxChar->subscribe(true, onServerNotify)) {
+        Serial.println("Failed to subscribe to server TX characteristic");
+        bleStream.end();
+        pClient->disconnect();
+        return false;
+    }
 
     Serial.println("BLE Stream initialized successfully!");
     connected = true;
@@ -171,14 +186,6 @@ void setup() {
 }
 
 void loop() {
-    static uint32_t lastDroppedOld = 0;
-    static uint32_t lastDroppedNew = 0;
-    if (g_rxOverflowStats.droppedOld != lastDroppedOld || g_rxOverflowStats.droppedNew != lastDroppedNew) {
-        lastDroppedOld = g_rxOverflowStats.droppedOld;
-        lastDroppedNew = g_rxOverflowStats.droppedNew;
-        Serial.printf("RX overflow handled (drop-old=%lu, drop-new=%lu)\n", lastDroppedOld, lastDroppedNew);
-    }
-
     // If we found a server, try to connect
     if (doConnect) {
         doConnect = false;
@@ -191,20 +198,8 @@ void loop() {
         }
     }
 
-    // If we're connected, demonstrate the stream interface
+    // If we're connected, use the stream to send data
     if (connected && bleStream) {
-        // Check if we received any data from the server
-        if (bleStream.available()) {
-            Serial.print("Received from server: ");
-
-            // Read all available data (just like Serial.read())
-            while (bleStream.available()) {
-                char c = bleStream.read();
-                Serial.write(c);
-            }
-            Serial.println();
-        }
-
         // Send a message every 5 seconds using Stream methods
         static unsigned long lastSend = 0;
         if (millis() - lastSend > 5000) {
@@ -218,7 +213,7 @@ void loop() {
             Serial.println("Sent data to server via BLE stream");
         }
 
-        // You can also read from Serial and send over BLE
+        // Read from Serial and send over BLE
         if (Serial.available()) {
             Serial.println("Reading from Serial and sending via BLE:");
             while (Serial.available()) {
