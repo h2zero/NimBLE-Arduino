@@ -2782,6 +2782,25 @@ ble_gap_rx_conn_complete(struct ble_gap_conn_complete *evt, uint8_t instance)
 #endif
 }
 
+#if NIMBLE_BLE_CONNECT
+static int
+ble_gap_peer_dle_unsupported(uint16_t conn_handle)
+{
+    struct ble_hs_conn *conn;
+    int unsupported = 0;
+
+    ble_hs_lock();
+    conn = ble_hs_conn_find(conn_handle);
+    if (conn != NULL && conn->supported_feat_valid &&
+            (conn->supported_feat & BLE_HS_HCI_LE_FEAT_DATA_PACKET_LENGTH_EXT) == 0) {
+        unsupported = 1;
+    }
+    ble_hs_unlock();
+
+    return unsupported;
+}
+#endif
+
 void
 ble_gap_event_connect_call(uint16_t conn_handle, int status)
 {
@@ -2815,8 +2834,16 @@ ble_gap_event_connect_call(uint16_t conn_handle, int status)
     ble_gap_event_listener_call(&event);
     ble_gap_call_conn_event_cb(&event, handle);
 
-    ble_hs_hci_util_set_data_len(le16toh(conn_handle), BLE_HCI_SUGG_DEF_DATALEN_TX_OCTETS_MAX,
-            BLE_HCI_SUGG_DEF_DATALEN_TX_TIME_MAX);
+    /* Only send the default DLE request when peer support is unknown or
+     * advertised. A peer feature response can be absent or fail; in that case
+     * preserve the existing request behavior rather than treating zeroed
+     * feature bits as proof of lack of support.
+     */
+    if (status != BLE_ERR_SUCCESS || !ble_gap_peer_dle_unsupported(handle)) {
+        ble_hs_hci_util_set_data_len(le16toh(conn_handle),
+                BLE_HCI_SUGG_DEF_DATALEN_TX_OCTETS_MAX,
+                BLE_HCI_SUGG_DEF_DATALEN_TX_TIME_MAX);
+    }
 #endif
 }
 
@@ -2825,22 +2852,28 @@ ble_gap_rx_rd_rem_sup_feat_complete(const struct ble_hci_ev_le_subev_rd_rem_used
 {
 #if NIMBLE_BLE_CONNECT
     struct ble_hs_conn *conn;
+    uint16_t conn_handle = le16toh(ev->conn_handle);
+    uint32_t supported_feat = ev->status == BLE_ERR_SUCCESS ?
+            get_le32(ev->features) : 0;
+    int conn_found;
+    int is_master = 0;
 
     ble_hs_lock();
 
-    conn = ble_hs_conn_find(le16toh(ev->conn_handle));
+    conn = ble_hs_conn_find(conn_handle);
+    conn_found = conn != NULL;
+    if (conn_found) {
+        is_master = (conn->bhc_flags & BLE_HS_CONN_F_MASTER) != 0;
+        conn->supported_feat = supported_feat;
+        conn->supported_feat_valid = ev->status == BLE_ERR_SUCCESS;
+    }
 
     ble_hs_unlock();
 
-    if ((conn != NULL) &&  (conn->bhc_flags & BLE_HS_CONN_F_MASTER)) {
-        conn->supported_feat = get_le32(ev->features);
+    if (conn_found && is_master) {
         ble_gap_rd_rem_ver_tx(ev->conn_handle);
     } else {
-        if ((conn != NULL) && (ev->status == 0)) {
-            conn->supported_feat = get_le32(ev->features);
-        }
-
-	if (conn != NULL) {
+        if (conn_found) {
             ble_gap_event_connect_call(ev->conn_handle, ev->status);
             slave_conn[ev->conn_handle] = 1;
         }
