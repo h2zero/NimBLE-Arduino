@@ -64,6 +64,7 @@ struct ble_hs_conn {
     uint8_t bhc_master_clock_accuracy;
 
     uint32_t supported_feat;
+    uint8_t supported_feat_valid;
 
     ble_hs_conn_flags_t bhc_flags;
 
