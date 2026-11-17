@@ -33,7 +33,7 @@
 /**************************/
 
 # include <string>
-
+# include <string_view>
 /**
  * @brief A BLE device address.
  *
@@ -47,7 +47,7 @@ class NimBLEAddress : private ble_addr_t {
     NimBLEAddress() = default;
     NimBLEAddress(const ble_addr_t address);
     NimBLEAddress(const uint8_t address[BLE_DEV_ADDR_LEN], uint8_t type);
-    NimBLEAddress(const std::string& stringAddress, uint8_t type);
+    NimBLEAddress(std::string_view stringAddress, uint8_t type);
     NimBLEAddress(const uint64_t& address, uint8_t type);
 
     bool                 isRpa() const;

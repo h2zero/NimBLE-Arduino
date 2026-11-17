@@ -58,13 +58,10 @@ unsigned char __atomic_exchange_1(volatile void* ptr, unsigned char val, int) {
 # endif
 
 static const char* LOG_TAG = "NimBLEAttValue";
-ble_npl_mutex     NimBLEAttValue::Lock::m_mutex{};
-std::atomic<bool> NimBLEAttValue::Lock::m_initialized{false};
-std::atomic<int>  NimBLEAttValue::Lock::m_activeCount{0};
 
 // Default constructor implementation.
 NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
-    : m_attr_value{static_cast<uint8_t*>(calloc(init_len + 1, 1))},
+    : m_attr_value{init_len > 0 ? static_cast<uint8_t*>(calloc(init_len + 1, 1)) : &EMPTY_VALUE},
       m_attr_max_len{std::min<uint16_t>(BLE_ATT_ATTR_MAX_LEN, max_len)},
       m_attr_len{},
       m_capacity{init_len}
@@ -75,16 +72,23 @@ NimBLEAttValue::NimBLEAttValue(uint16_t init_len, uint16_t max_len)
 {
     NIMBLE_CPP_DEBUG_ASSERT(m_attr_value);
     if (m_attr_value == nullptr) {
+        // Keep max_len so the object can still allocate later; callers detect the failure by size() != requested len.
         NIMBLE_LOGE(LOG_TAG, "Failed to allocate value buffer");
-        m_attr_len = 0;
-        m_capacity = 0;
-        m_attr_max_len = 0;
+        m_attr_value = &EMPTY_VALUE;
+        m_capacity   = 0;
     }
 }
 
 // Value constructor implementation.
-NimBLEAttValue::NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_len) : NimBLEAttValue(len, max_len) {
-    if (m_attr_value != nullptr && len > 0) {
+NimBLEAttValue::NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_len)
+    : NimBLEAttValue(len > std::min<uint16_t>(max_len, BLE_ATT_ATTR_MAX_LEN) ? 0 : len, max_len) {
+    // Same behavior as append(): a value larger than max_len is rejected, leaving the value empty.
+    if (len > m_attr_max_len) {
+        NIMBLE_LOGE(LOG_TAG, "val > max, len=%u, max=%u", len, m_attr_max_len);
+        return;
+    }
+
+    if (len > 0 && m_capacity >= len) {
         memcpy(m_attr_value, value, len);
         m_attr_len = len;
     }
@@ -92,22 +96,23 @@ NimBLEAttValue::NimBLEAttValue(const uint8_t* value, uint16_t len, uint16_t max_
 
 // Destructor implementation.
 NimBLEAttValue::~NimBLEAttValue() {
-    if (m_attr_value != nullptr) {
-        free(m_attr_value);
-    }
+    free(ownedBuffer());
 }
 
 // Move assignment operator implementation.
 NimBLEAttValue& NimBLEAttValue::operator=(NimBLEAttValue&& source) {
     if (this != &source) {
         Lock lock;
-        free(m_attr_value);
+        free(ownedBuffer());
         m_attr_value   = source.m_attr_value;
         m_attr_max_len = source.m_attr_max_len;
         m_attr_len     = source.m_attr_len;
         m_capacity     = source.m_capacity;
         setTimeStamp(source.getTimeStamp());
-        source.m_attr_value = nullptr;
+        source.m_attr_value = &EMPTY_VALUE;
+        source.m_attr_len   = 0;
+        source.m_capacity   = 0;
+        source.setTimeStamp(0);
     }
 
     return *this;
@@ -123,8 +128,12 @@ NimBLEAttValue& NimBLEAttValue::operator=(const NimBLEAttValue& source) {
 
 // Copy all the data from the source object to this object, including allocated space.
 bool NimBLEAttValue::deepCopy(const NimBLEAttValue& source) {
+    if (this == &source) {
+        return true; // Self-copy; reallocating would leave an aliased, uninitialized buffer when source is EMPTY_VALUE.
+    }
+
     Lock     lock;
-    uint8_t* res = static_cast<uint8_t*>(realloc(m_attr_value, source.m_capacity + 1));
+    uint8_t* res = static_cast<uint8_t*>(realloc(ownedBuffer(), source.m_capacity + 1));
     NIMBLE_CPP_DEBUG_ASSERT(res);
     if (res == nullptr) {
         NIMBLE_LOGE(LOG_TAG, "Failed to realloc deepCopy");
@@ -144,9 +153,11 @@ bool NimBLEAttValue::deepCopy(const NimBLEAttValue& source) {
 bool NimBLEAttValue::setValue(const uint8_t* value, uint16_t len) {
     Lock lock;
     m_attr_len      = 0;    // Just set the value length to 0 and append instead of repeating code.
-    m_attr_value[0] = '\0'; // Set the first byte to 0 incase the len of the new value is 0.
+    if (m_attr_value != &EMPTY_VALUE) {
+        m_attr_value[0] = '\0'; // Set the first byte to 0 incase the len of the new value is 0.
+    }
     append(value, len);
-    return memcmp(m_attr_value, value, len) == 0 && m_attr_len == len;
+    return m_attr_len == len && memcmp(m_attr_value, value, len) == 0;
 }
 
 // Append the new data, allocate as necessary.
@@ -165,7 +176,7 @@ NimBLEAttValue& NimBLEAttValue::append(const uint8_t* value, uint16_t len) {
     uint16_t new_len = m_attr_len + len;
     bool     grow    = new_len > m_capacity;
     if (grow) {
-        res = static_cast<uint8_t*>(realloc(m_attr_value, (new_len + 1)));
+        res = static_cast<uint8_t*>(realloc(ownedBuffer(), (new_len + 1)));
     }
     NIMBLE_CPP_DEBUG_ASSERT(res);
     if (res == nullptr) {

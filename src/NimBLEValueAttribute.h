@@ -58,8 +58,8 @@ class NimBLEValueAttribute {
      * Used for types that are trivially copyable and convertible to NimBLEAttValue.
      */
     template <typename T>
-    typename std::enable_if<std::is_trivially_copyable<T>::value, T>::type
-    getValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
+        requires std::is_trivially_copyable_v<T>
+    T getValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
         return m_value.getValue<T>(timestamp, skipSizeCheck);
     }
 
@@ -73,8 +73,8 @@ class NimBLEValueAttribute {
      * Used for types that are not trivially copyable and convertible to NimBLEAttValue via it's operators.
      */
     template <typename T>
-    typename std::enable_if<!std::is_trivially_copyable<T>::value && std::is_convertible<T, NimBLEAttValue>::value, T>::type
-    getValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
+        requires(!std::is_trivially_copyable_v<T> && std::is_convertible_v<T, NimBLEAttValue>)
+    T getValue(time_t* timestamp = nullptr, bool skipSizeCheck = false) const {
         return m_value;
     }
 

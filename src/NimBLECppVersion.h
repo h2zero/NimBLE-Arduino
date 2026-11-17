@@ -18,6 +18,11 @@
 #ifndef NIMBLE_CPP_VERSION_H_
 #define NIMBLE_CPP_VERSION_H_
 
+// GCC 10 reports 201709L for -std=c++20 (then called c++2a).
+#if defined(__cplusplus) && __cplusplus < 201709L
+# error "NimBLE-Arduino requires C++20 or later; compile with -std=gnu++20 (or newer)."
+#endif
+
 /** @brief NimBLE-Arduino library major version number. */
 #define NIMBLE_CPP_VERSION_MAJOR 3
 

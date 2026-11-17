@@ -34,8 +34,14 @@
 # endif
 
 # include <vector>
+# include <string>
+# include <string_view>
+# include <algorithm>
+# include <cstring>
+# include <type_traits>
 
 class NimBLEScan;
+
 /**
  * @brief A representation of a %BLE advertised device found by a scan.
  *
@@ -109,11 +115,9 @@ class NimBLEAdvertisedDevice {
      * @details <b>Use:</b> <tt>getManufacturerData<type>(skipSizeCheck);</tt>
      */
     template <typename T>
+        requires std::is_trivially_copyable_v<T>
     T getManufacturerData(bool skipSizeCheck = false) const {
-        std::string data = getManufacturerData();
-        if (!skipSizeCheck && data.size() < sizeof(T)) return T();
-        const char* pData = data.data();
-        return *((T*)pData);
+        return fromBytes<T>(getManufacturerData(), skipSizeCheck);
     }
 
     /**
@@ -126,11 +130,9 @@ class NimBLEAdvertisedDevice {
      * @details <b>Use:</b> <tt>getServiceData<type>(skipSizeCheck);</tt>
      */
     template <typename T>
+        requires std::is_trivially_copyable_v<T>
     T getServiceData(uint8_t index = 0, bool skipSizeCheck = false) const {
-        std::string data = getServiceData(index);
-        if (!skipSizeCheck && data.size() < sizeof(T)) return T();
-        const char* pData = data.data();
-        return *((T*)pData);
+        return fromBytes<T>(getServiceData(index), skipSizeCheck);
     }
 
     /**
@@ -143,15 +145,22 @@ class NimBLEAdvertisedDevice {
      * @details <b>Use:</b> <tt>getServiceData<type>(skipSizeCheck);</tt>
      */
     template <typename T>
+        requires std::is_trivially_copyable_v<T>
     T getServiceData(const NimBLEUUID& uuid, bool skipSizeCheck = false) const {
-        std::string data = getServiceData(uuid);
-        if (!skipSizeCheck && data.size() < sizeof(T)) return T();
-        const char* pData = data.data();
-        return *((T*)pData);
+        return fromBytes<T>(getServiceData(uuid), skipSizeCheck);
     }
 
   private:
     friend class NimBLEScan;
+
+    // Copies the bytes into a T instead of reinterpreting the buffer, avoiding unaligned/aliased access.
+    template <typename T>
+    static T fromBytes(std::string_view data, bool skipSizeCheck) {
+        T value{};
+        if (!skipSizeCheck && data.size() < sizeof(T)) return value;
+        std::memcpy(&value, data.data(), std::min(data.size(), sizeof(T)));
+        return value;
+    }
 
     NimBLEAdvertisedDevice(const ble_gap_event* event, uint8_t eventType);
     void    update(const ble_gap_event* event, uint8_t eventType);

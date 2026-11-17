@@ -80,193 +80,34 @@ class NimBLECharacteristic : public NimBLELocalValueAttribute {
 
     /*********************** Template Functions ************************/
 
-# if __cplusplus < 201703L
     /**
-     * @brief Template to send a notification with a value from a struct or array.
-     * @param [in] v The value to send.
+     * @brief Template to send a notification from a container, string or trivially copyable object.
+     * @tparam T The type of the value, must not be a pointer or array.
+     * @param [in] value The value to send.
      * @param [in] connHandle Optional, a connection handle to send the notification to.
-     * @details <type\> size must be evaluatable by `sizeof()`.
+     * @details Types with `data()` and `size()` or `c_str()` and `length()` (including `std::string_view` and
+     * `std::span`) are sent by their contents, anything else is sent by its object representation using `sizeof()`.
      */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<!std::is_pointer<T>::value && !std::is_array<T>::value && !Has_c_str_length<T>::value &&
-                                !Has_data_size<T>::value,
-                            bool>::type
-#  endif
-    notify(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        return notify(reinterpret_cast<const uint8_t*>(&v), sizeof(T), connHandle);
+    template <NimBLEByteValue T>
+        requires(!std::is_array_v<T>)
+    bool notify(const T& value, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        const auto bytes = NimBLEAsBytes(value);
+        return notify(bytes.data(), bytes.size(), connHandle);
     }
 
     /**
-     * @brief Template to send a notification with a value from a class that has a c_str() and length() method.
-     * @param [in] s The value to send.
-     * @param [in] connHandle Optional, a connection handle to send the notification to.
+     * @brief Template to send an indication from a container, string or trivially copyable object.
+     * @tparam T The type of the value, must not be a pointer or array.
+     * @param [in] value The value to send.
+     * @param [in] connHandle Optional, a connection handle to send the indication to.
+     * @details See notify(const T&, uint16_t) for how the bytes are determined.
      */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
-#  endif
-    notify(const T& s, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        return notify(reinterpret_cast<const uint8_t*>(s.c_str()), s.length(), connHandle);
+    template <NimBLEByteValue T>
+        requires(!std::is_array_v<T>)
+    bool indicate(const T& value, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
+        const auto bytes = NimBLEAsBytes(value);
+        return indicate(bytes.data(), bytes.size(), connHandle);
     }
-
-    /**
-     * @brief Template to send a notification with a value from a class that has a data() and size() method with value_type.
-     * @param [in] v The value to send.
-     * @param [in] connHandle Optional, a connection handle to send the notification to.
-     * @details Correctly calculates byte size for containers with multi-byte element types.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
-#  endif
-    notify(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        return notify(reinterpret_cast<const uint8_t*>(v.data()), v.size() * sizeof(typename T::value_type), connHandle);
-    }
-
-    /**
-     * @brief Template to send a notification with a value from a class that has a data() and size() method without value_type.
-     * @param [in] v The value to send.
-     * @param [in] connHandle Optional, a connection handle to send the notification to.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_data_size<T>::value && !Has_value_type<T>::value, bool>::type
-#  endif
-    notify(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        return notify(reinterpret_cast<const uint8_t*>(v.data()), v.size(), connHandle);
-    }
-
-    /**
-     * @brief Template to send an indication with a value from a struct or array.
-     * @param [in] v The value to send.
-     * @param [in] connHandle Optional, a connection handle to send the notification to.
-     * @details <type\> size must be evaluatable by `sizeof()`.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<!std::is_pointer<T>::value && !std::is_array<T>::value && !Has_c_str_length<T>::value &&
-                                !Has_data_size<T>::value,
-                            bool>::type
-#  endif
-    indicate(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        return indicate(reinterpret_cast<const uint8_t*>(&v), sizeof(T), connHandle);
-    }
-
-    /**
-     * @brief Template to send a indication with a value from a class that has a c_str() and length() method.
-     * @param [in] s The value to send.
-     * @param [in] connHandle Optional, a connection handle to send the notification to.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_c_str_length<T>::value && !Has_data_size<T>::value, bool>::type
-#  endif
-    indicate(const T& s, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        return indicate(reinterpret_cast<const uint8_t*>(s.c_str()), s.length(), connHandle);
-    }
-
-    /**
-     * @brief Template to send a indication with a value from a class that has a data() and size() method with value_type.
-     * @param [in] v The value to send.
-     * @param [in] connHandle Optional, a connection handle to send the notification to.
-     * @details Correctly calculates byte size for containers with multi-byte element types.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_data_size<T>::value && Has_value_type<T>::value, bool>::type
-#  endif
-    indicate(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        return indicate(reinterpret_cast<const uint8_t*>(v.data()), v.size() * sizeof(typename T::value_type), connHandle);
-    }
-
-    /**
-     * @brief Template to send a indication with a value from a class that has a data() and size() method without value_type.
-     * @param [in] v The value to send.
-     * @param [in] connHandle Optional, a connection handle to send the notification to.
-     */
-    template <typename T>
-#  ifdef _DOXYGEN_
-    bool
-#  else
-    typename std::enable_if<Has_data_size<T>::value && !Has_value_type<T>::value, bool>::type
-#  endif
-    indicate(const T& v, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        return indicate(reinterpret_cast<const uint8_t*>(v.data()), v.size(), connHandle);
-    }
-
-# else
-
-    /**
-     * @brief Template to send a notification for classes which may have
-     *        data()/size() or c_str()/length() methods. Falls back to sending
-     *        the data by casting the first element of the array to a uint8_t
-     *        pointer and getting the length of the array using sizeof.
-     * @tparam T The a reference to a class containing the data to send.
-     * @param[in] value The <type\>value to set.
-     * @param[in] connHandle The connection handle to send the notification to.
-     * @note This function is only available if the type T is not a pointer.
-     */
-    template <typename T>
-    typename std::enable_if<!std::is_pointer<T>::value && !std::is_array<T>::value, bool>::type notify(
-        const T& value, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        if constexpr (Has_data_size<T>::value) {
-            if constexpr (Has_value_type<T>::value) {
-                return notify(reinterpret_cast<const uint8_t*>(value.data()),
-                              value.size() * sizeof(typename T::value_type),
-                              connHandle);
-            } else {
-                return notify(reinterpret_cast<const uint8_t*>(value.data()), value.size(), connHandle);
-            }
-        } else if constexpr (Has_c_str_length<T>::value) {
-            return notify(reinterpret_cast<const uint8_t*>(value.c_str()), value.length(), connHandle);
-        } else {
-            return notify(reinterpret_cast<const uint8_t*>(&value), sizeof(value), connHandle);
-        }
-    }
-
-    /**
-     * @brief Template to send an indication for classes which may have
-     *       data()/size() or c_str()/length() methods. Falls back to sending
-     *       the data by casting the first element of the array to a uint8_t
-     *       pointer and getting the length of the array using sizeof.
-     * @tparam T The a reference to a class containing the data to send.
-     * @param[in] value The <type\>value to set.
-     * @param[in] connHandle The connection handle to send the indication to.
-     * @note This function is only available if the type T is not a pointer.
-     */
-    template <typename T>
-    typename std::enable_if<!std::is_pointer<T>::value && !std::is_array<T>::value, bool>::type indicate(
-        const T& value, uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE) const {
-        if constexpr (Has_data_size<T>::value) {
-            if constexpr (Has_value_type<T>::value) {
-                return indicate(reinterpret_cast<const uint8_t*>(value.data()),
-                                value.size() * sizeof(typename T::value_type),
-                                connHandle);
-            } else {
-                return indicate(reinterpret_cast<const uint8_t*>(value.data()), value.size(), connHandle);
-            }
-        } else if constexpr (Has_c_str_length<T>::value) {
-            return indicate(reinterpret_cast<const uint8_t*>(value.c_str()), value.length(), connHandle);
-        } else {
-            return indicate(reinterpret_cast<const uint8_t*>(&value), sizeof(value), connHandle);
-        }
-    }
-# endif
 
   private:
     friend class NimBLEServer;

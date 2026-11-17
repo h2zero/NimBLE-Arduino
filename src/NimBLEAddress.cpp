@@ -76,7 +76,7 @@ NimBLEAddress::NimBLEAddress(ble_addr_t address) : ble_addr_t{address} {}
  * * BLE_ADDR_PUBLIC (0)
  * * BLE_ADDR_RANDOM (1)
  */
-NimBLEAddress::NimBLEAddress(const std::string& addr, uint8_t type) {
+NimBLEAddress::NimBLEAddress(std::string_view addr, uint8_t type) {
     this->type = type;
 
     if (addr.length() == BLE_DEV_ADDR_LEN) {
@@ -93,7 +93,7 @@ NimBLEAddress::NimBLEAddress(const std::string& addr, uint8_t type) {
     }
 
     *this = NimBLEAddress{};
-    NIMBLE_LOGE(LOG_TAG, "Invalid address '%s'", addr.c_str());
+    NIMBLE_LOGE(LOG_TAG, "Invalid address '%.*s'", static_cast<int>(addr.length()), addr.data());
 } // NimBLEAddress
 
 /**

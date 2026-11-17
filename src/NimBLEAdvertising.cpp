@@ -516,7 +516,7 @@ bool NimBLEAdvertising::addTxPower() {
  * @note If the name is too long it will be truncated.
  * @details If scan response is enabled the name will be set in the scan response data.
  */
-bool NimBLEAdvertising::setName(const std::string& name) {
+bool NimBLEAdvertising::setName(std::string_view name) {
     if (m_scanResp && m_scanData.setName(name)) {
         m_advDataSet = false;
         return true;
@@ -552,7 +552,7 @@ bool NimBLEAdvertising::setManufacturerData(const uint8_t* data, size_t length) 
  * @param [in] data The data to advertise.
  * @return True if the manufacturer data was set successfully.
  */
-bool NimBLEAdvertising::setManufacturerData(const std::string& data) {
+bool NimBLEAdvertising::setManufacturerData(std::string_view data) {
     return setManufacturerData(reinterpret_cast<const uint8_t*>(data.data()), data.length());
 } // setManufacturerData
 
@@ -570,7 +570,7 @@ bool NimBLEAdvertising::setManufacturerData(const std::vector<uint8_t>& data) {
  * @param [in] uri The URI to advertise.
  * @return True if the URI was set successfully.
  */
-bool NimBLEAdvertising::setURI(const std::string& uri) {
+bool NimBLEAdvertising::setURI(std::string_view uri) {
     if (!m_advData.setURI(uri)) {
         if (!m_scanData.setURI(uri)) {
             return false;
@@ -618,7 +618,7 @@ bool NimBLEAdvertising::setServiceData(const NimBLEUUID& uuid, const std::vector
  * @return True if the service data was set successfully.
  * @note If data length is 0 the service data will not be advertised.
  */
-bool NimBLEAdvertising::setServiceData(const NimBLEUUID& uuid, const std::string& data) {
+bool NimBLEAdvertising::setServiceData(const NimBLEUUID& uuid, std::string_view data) {
     return setServiceData(uuid, reinterpret_cast<const uint8_t*>(data.data()), data.length());
 } // setServiceData
 

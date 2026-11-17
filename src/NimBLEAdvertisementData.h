@@ -23,6 +23,7 @@
 
 # include <cstdint>
 # include <string>
+# include <string_view>
 # include <vector>
 
 class NimBLEUUID;
@@ -46,11 +47,11 @@ class NimBLEAdvertisementData {
     bool removeServiceUUID(const char* serviceUUID);
     bool removeServices();
     bool setManufacturerData(const uint8_t* data, size_t length);
-    bool setManufacturerData(const std::string& data);
+    bool setManufacturerData(std::string_view data);
     bool setManufacturerData(const std::vector<uint8_t>& data);
-    bool setURI(const std::string& uri);
-    bool setName(const std::string& name, bool isComplete = true);
-    bool setShortName(const std::string& name);
+    bool setURI(std::string_view uri);
+    bool setName(std::string_view name, bool isComplete = true);
+    bool setShortName(std::string_view name);
     bool setCompleteServices(const NimBLEUUID& uuid);
     bool setCompleteServices16(const std::vector<NimBLEUUID>& uuids);
     bool setCompleteServices32(const std::vector<NimBLEUUID>& uuids);
@@ -58,7 +59,7 @@ class NimBLEAdvertisementData {
     bool setPartialServices16(const std::vector<NimBLEUUID>& uuids);
     bool setPartialServices32(const std::vector<NimBLEUUID>& uuids);
     bool setServiceData(const NimBLEUUID& uuid, const uint8_t* data, size_t length);
-    bool setServiceData(const NimBLEUUID& uuid, const std::string& data);
+    bool setServiceData(const NimBLEUUID& uuid, std::string_view data);
     bool setServiceData(const NimBLEUUID& uuid, const std::vector<uint8_t>& data);
     bool removeData(uint8_t type);
     void clearData();

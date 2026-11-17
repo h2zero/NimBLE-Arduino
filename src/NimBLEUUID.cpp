@@ -33,6 +33,12 @@ static const uint8_t ble_base_uuid[] = {
     0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 /**
+ * @brief Create a UUID from a null-terminated string.
+ * @param [in] uuidStr The string representation of the UUID.
+ */
+NimBLEUUID::NimBLEUUID(const char* uuidStr) : NimBLEUUID(std::string(uuidStr != nullptr ? uuidStr : "")) {}
+
+/**
  * @brief Create a UUID from the native UUID.
  * @param [in] uuid The native UUID.
  */
