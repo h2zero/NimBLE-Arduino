@@ -2,6 +2,11 @@
 
 #ifdef ESP_PLATFORM
 #include "sdkconfig.h"
+#undef CONFIG_BT_NIMBLE_EXT_ADV
+#ifdef MYNEWT_VAL_BLE_EXT_ADV
+#define CONFIG_BT_NIMBLE_EXT_ADV MYNEWT_VAL_BLE_EXT_ADV
+#endif
+#undef CONFIG_BT_NIMBLE_TRANSPORT_EVT_SIZE // fix warning on arduino core 4.x
 #else
 #include "ext_nimble_config.h"
 /* Clear redefinition warnings */
@@ -380,10 +385,6 @@ defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
 #endif
 
 #endif // ESP_PLATFORM
-
-#if CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV && !CONFIG_BT_NIMBLE_EXT_ADV
-#  error Extended advertising must be enabled to use periodic advertising.
-#endif
 
 /* Must have max instances and data length set if extended advertising is enabled */
 #if CONFIG_BT_NIMBLE_EXT_ADV
