@@ -32,7 +32,7 @@ var searchData=
   ['11_29',['[2.3.1] 2025-06-11',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md231-2025-06-11',1,'']]],
   ['11_2020_30',['[1.3.2] - 2021-11-20',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md132---2021-11-20',1,'']]],
   ['11_2024_31',['[1.3.3] - 2021-11-24',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md133---2021-11-24',1,'']]],
-  ['11_2027_32',['[1.4.3] 2024-11-27',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md143-2024-11-27',1,'']]],
+  ['11_2027_32',['11 27',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md143-2024-11-27',1,'[1.4.3] 2024-11-27'],['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md260-2026-11-27',1,'[2.6.0] 2026-11-27']]],
   ['12_33',['[2.2.0] 2025-01-12',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md220-2025-01-12',1,'']]],
   ['12_2008_34',['[2.3.7] 2025-12-08',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md237-2025-12-08',1,'']]],
   ['12_2014_35',['[2.1.0] 2024-12-14',['../md__2github_2workspace_2_c_h_a_n_g_e_l_o_g.html#autotoc_md210-2024-12-14',1,'']]],
