@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.6.0] 2026-11-27
+
+## Fixed
+- Build with Arduino 4.x
+- Extended Advertising config to work with the new Arduino 4.x core
+
+## Changed
+- *BREAKING* ``CONFIG_BT_NIMBLE_EXT_ADV`` is now replaced with `MYNEWT_VAL_BLE_EXT_ADV` due to changes in the Arduino 4.x core.
+- DLE exchange is no longer triggered if not supported by peer.
+
 ## [2.5.2] 2026-10-25
 
 ## Fixed
